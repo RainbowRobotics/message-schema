@@ -42,10 +42,16 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="tab_slamnav">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
        <attribute name="title">
         <string>SLAMNAV</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,2">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,0">
         <property name="spacing">
          <number>0</number>
         </property>
@@ -217,6 +223,33 @@
                <string>Init</string>
               </property>
              </widget>
+             <widget class="QLabel" name="lb_MapInfo">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>180</y>
+                <width>311</width>
+                <height>161</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="text">
+               <string>[Mapping info]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="tab_2">
              <attribute name="title">
@@ -234,8 +267,8 @@
            <widget class="QFrame" name="frame">
             <property name="minimumSize">
              <size>
-              <width>0</width>
-              <height>150</height>
+              <width>330</width>
+              <height>300</height>
              </size>
             </property>
             <property name="frameShape">
@@ -247,8 +280,8 @@
             <widget class="QPushButton" name="bt_JogF">
              <property name="geometry">
               <rect>
-               <x>70</x>
-               <y>20</y>
+               <x>80</x>
+               <y>190</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -260,8 +293,8 @@
             <widget class="QPushButton" name="bt_JogB">
              <property name="geometry">
               <rect>
-               <x>70</x>
-               <y>70</y>
+               <x>80</x>
+               <y>240</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -273,8 +306,8 @@
             <widget class="QPushButton" name="bt_JogL">
              <property name="geometry">
               <rect>
-               <x>20</x>
-               <y>70</y>
+               <x>30</x>
+               <y>240</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -286,8 +319,8 @@
             <widget class="QPushButton" name="bt_JogR">
              <property name="geometry">
               <rect>
-               <x>120</x>
-               <y>70</y>
+               <x>130</x>
+               <y>240</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -299,8 +332,8 @@
             <widget class="QDoubleSpinBox" name="spb_JogV">
              <property name="geometry">
               <rect>
-               <x>190</x>
-               <y>20</y>
+               <x>200</x>
+               <y>190</y>
                <width>101</width>
                <height>31</height>
               </rect>
@@ -321,8 +354,8 @@
             <widget class="QDoubleSpinBox" name="spb_JogW">
              <property name="geometry">
               <rect>
-               <x>190</x>
-               <y>50</y>
+               <x>200</x>
+               <y>220</y>
                <width>101</width>
                <height>31</height>
               </rect>
@@ -340,14 +373,41 @@
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>190</x>
-               <y>80</y>
+               <x>200</x>
+               <y>250</y>
                <width>101</width>
                <height>31</height>
               </rect>
              </property>
              <property name="text">
               <string>Init</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_MobileInfo">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>311</width>
+               <height>161</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="text">
+              <string>[Mobile info]</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
             </widget>
            </widget>
@@ -364,6 +424,11 @@
       <widget class="QWidget" name="tab_config">
        <attribute name="title">
         <string>CONFIG</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="tab_fms">
+       <attribute name="title">
+        <string>FMS</string>
        </attribute>
       </widget>
      </widget>
