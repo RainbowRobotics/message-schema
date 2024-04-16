@@ -11,15 +11,19 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 SOURCES += \
+    config.cpp \
     cv_to_qt.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    utils.cpp
 
 HEADERS += \
+    config.h \
     cv_to_qt.h \
     global_defines.h \
     mainwindow.h \
-    nanoflann.hpp
+    nanoflann.hpp \
+    utils.h
 
 FORMS += \
     mainwindow.ui
