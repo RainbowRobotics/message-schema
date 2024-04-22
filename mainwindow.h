@@ -6,6 +6,7 @@
 
 // modules
 #include "config.h"
+#include "mobile.h"
 
 // qt
 #include <QMainWindow>
@@ -28,6 +29,7 @@ public:
     // modules
     PICKING pick;
     CONFIG config;
+    MOBILE mobile;
 
     void init_modules();
 
@@ -48,14 +50,28 @@ private:
     // plot timer
     QTimer plot_timer;
 
+    // watchdog timer
+    QTimer watchdog_timer;
+
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 private Q_SLOTS:
     void plot_loop();
+    void watchdog_loop();
 
     void bt_ConfigLoad();
     void bt_ConfigSave();
+
+    void bt_MotorInit();
+
+    void bt_Sync();
+
+    void bt_JogF();
+    void bt_JogB();
+    void bt_JogL();
+    void bt_JogR();
+    void bt_JogReleased();
 
 };
 #endif // MAINWINDOW_H

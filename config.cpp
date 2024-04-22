@@ -52,21 +52,87 @@ void CONFIG::load()
             // param load
             ROBOT_SIZE_X[0] = obj["ROBOT_SIZE_MIN_X"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_X", obj["ROBOT_SIZE_MIN_X"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             ROBOT_SIZE_X[1] = obj["ROBOT_SIZE_MAX_X"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_X", obj["ROBOT_SIZE_MAX_X"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             ROBOT_SIZE_Y[0] = obj["ROBOT_SIZE_MIN_Y"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Y", obj["ROBOT_SIZE_MIN_Y"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             ROBOT_SIZE_Y[1] = obj["ROBOT_SIZE_MAX_Y"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Y", obj["ROBOT_SIZE_MAX_Y"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             ROBOT_SIZE_Z[0] = obj["ROBOT_SIZE_MIN_Z"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Z", obj["ROBOT_SIZE_MIN_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             ROBOT_SIZE_Z[1] = obj["ROBOT_SIZE_MAX_Z"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Z", obj["ROBOT_SIZE_MAX_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_WHEEL_BASE = obj["ROBOT_WHEEL_BASE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_BASE", obj["ROBOT_WHEEL_BASE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_ID_L = obj["MOTOR_ID_L"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_ID_L", obj["MOTOR_ID_L"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_ID_R = obj["MOTOR_ID_R"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_ID_R", obj["MOTOR_ID_R"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_DIR = obj["MOTOR_DIR"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_DIR", obj["MOTOR_DIR"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_GEAR_RATIO = obj["MOTOR_GEAR_RATIO"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_GEAR_RATIO", obj["MOTOR_GEAR_RATIO"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_LIMIT_V = obj["MOTOR_LIMIT_V"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_V", obj["MOTOR_LIMIT_V"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_LIMIT_V_ACC = obj["MOTOR_LIMIT_V_ACC"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_V_ACC", obj["MOTOR_LIMIT_V_ACC"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_LIMIT_W = obj["MOTOR_LIMIT_W"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_W", obj["MOTOR_LIMIT_W"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_LIMIT_W_ACC = obj["MOTOR_LIMIT_W_ACC"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_W_ACC", obj["MOTOR_LIMIT_W_ACC"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_GAIN_KP = obj["MOTOR_GAIN_KP"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KP", obj["MOTOR_GAIN_KP"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_GAIN_KI = obj["MOTOR_GAIN_KI"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KI", obj["MOTOR_GAIN_KI"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            MOTOR_GAIN_KD = obj["MOTOR_GAIN_KD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KD", obj["MOTOR_GAIN_KD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             // complete
             is_load = true;

@@ -1,7 +1,7 @@
 #ifndef GLOBAL_DEFINES_H
 #define GLOBAL_DEFINES_H
 
-// STL
+// stl
 #include <stdio.h>
 #include <vector>
 #include <memory>
@@ -10,6 +10,9 @@
 #include <unordered_map>
 #include <mutex>
 #include <thread>
+
+// tbb
+#include <tbb/concurrent_queue.h>
 
 // vtk
 #include <QVTKOpenGLNativeWidget.h>
@@ -125,9 +128,96 @@ struct PICKING
     }
 };
 
+struct MOBILE_STATUS
+{
+    double t = 0;
 
+    // motor status
+    uint8_t connection_m0 = 0;
+    uint8_t connection_m1 = 0;
 
+    uint8_t status_m0 = 0;
+    uint8_t status_m1 = 0;
 
+    uint8_t temp_m0 = 0;
+    uint8_t temp_m1 = 0;
+
+    uint8_t temp_ex_m0 = 0;
+    uint8_t temp_ex_m1 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+
+    uint8_t charge_state = 0;
+    uint8_t power_state = 0;
+    uint8_t emo_state = 0;
+    uint8_t remote_state = 0;
+
+    float bat_in = 0;
+    float bat_out = 0;
+    float bat_current = 0;
+    float power = 0;
+    float total_power = 0;
+
+    // for timesync
+    uint32_t recv_tick = 0;
+    float return_time = 0;
+
+    // roller status
+    uint8_t roller_controller_state = 0;
+    uint8_t roller_sensor0 = 0;
+    uint8_t roller_sensor1 = 0;
+    uint8_t roller_sensor2 = 0;
+    uint8_t roller_sensor3 = 0;
+    uint8_t roller_manual_sw0 = 0;
+    uint8_t roller_manual_sw1 = 0;
+    uint8_t roller_blocking_state0 = 0;
+    uint8_t roller_blocking_state1 = 0;
+    uint8_t roller_blocking_manual_sw0 = 0;
+    uint8_t roller_blocking_manual_sw1 = 0;
+    uint8_t roller_blocking_manual_sw2 = 0;
+    uint8_t roller_blocking_manual_sw3 = 0;
+    uint8_t orgo_on_init = 0;
+    uint8_t orgo_on_run = 0;
+    uint8_t orgo_pos_state0 = 0;
+    uint8_t orgo_pos_state1 = 0;
+    uint8_t orgo_manual_sw0 = 0;
+    uint8_t orgo_manual_sw1 = 0;
+    uint32_t orgo_pos0 = 0;
+    uint32_t orgo_pos1 = 0;
+
+    // imu status
+    float imu_gyr_x =0;
+    float imu_gyr_y =0;
+    float imu_gyr_z =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
+};
+
+struct MOBILE_POSE
+{
+    double t;
+    Eigen::Vector3d pose; // global (x, y, th)
+    Eigen::Vector3d vel;  // global (x_dot, y_dot, th_dot)
+    Eigen::Vector2d vw;   // local (v, w)
+
+    MOBILE_POSE()
+    {
+        t = 0;
+        pose.setZero();
+        vel.setZero();
+        vw.setZero();
+    }
+
+    MOBILE_POSE(const MOBILE_POSE& p)
+    {
+        t = p.t;
+        pose = p.pose;
+        vel = p.vel;
+        vw = p.vw;
+    }
+};
 
 
 #endif // GLOBAL_DEFINES_H

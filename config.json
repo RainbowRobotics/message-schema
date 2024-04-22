@@ -1,8 +1,21 @@
 {
-    "ROBOT_SIZE_MAX_X": "0.5",
-    "ROBOT_SIZE_MAX_Y": "0.4",
-    "ROBOT_SIZE_MAX_Z": "0.3",
-    "ROBOT_SIZE_MIN_X": "-0.5",
-    "ROBOT_SIZE_MIN_Y": "-0.4",
-    "ROBOT_SIZE_MIN_Z": "0.0"
+    "ROBOT_SIZE_MAX_X": 0.5,
+    "ROBOT_SIZE_MAX_Y": 0.4,
+    "ROBOT_SIZE_MAX_Z": 0.3,
+    "ROBOT_SIZE_MIN_X": -0.5,
+    "ROBOT_SIZE_MIN_Y": -0.4,
+    "ROBOT_SIZE_MIN_Z": 0.0,    
+    "ROBOT_WHEEL_BASE": 0.467,
+    "ROBOT_WHEEL_RADIUS": 0.075,
+    "MOTOR_ID_L": 1,
+    "MOTOR_ID_R": 0,
+    "MOTOR_DIR": 1.0,
+    "MOTOR_GEAR_RATIO": 11.0,
+    "MOTOR_LIMIT_V": 2.0,
+    "MOTOR_LIMIT_V_ACC": 1.5,
+    "MOTOR_LIMIT_W": 180.0,
+    "MOTOR_LIMIT_W_ACC": 360.0,
+    "MOTOR_GAIN_KP": 4400.0,
+    "MOTOR_GAIN_KI": 0.0,
+    "MOTOR_GAIN_KD": 100.0
 }

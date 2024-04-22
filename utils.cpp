@@ -3,6 +3,23 @@
 
 #include "utils.h"
 
+double st_time_for_get_time = get_time();
+double get_time()
+{
+    std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
+    return (timestamp*1.0e-9) - st_time_for_get_time;
+}
+
+QString get_time_str()
+{
+    QString str = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh:mm:ss.zzz");
+    str.replace("-", "_");
+    str.replace(":", "_");
+    str.replace(".", "_");
+    return str;
+}
+
 Eigen::Matrix4d ZYX_to_TF(double tx, double ty, double tz, double rx, double ry, double rz)
 {
     Eigen::Matrix4d mat;

@@ -11,17 +11,21 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 SOURCES += \
+    complementary_filter.cpp \
     config.cpp \
     cv_to_qt.cpp \
     main.cpp \
     mainwindow.cpp \
+    mobile.cpp \
     utils.cpp
 
 HEADERS += \
+    complementary_filter.h \
     config.h \
     cv_to_qt.h \
     global_defines.h \
     mainwindow.h \
+    mobile.h \
     nanoflann.hpp \
     utils.h
 
@@ -102,3 +106,7 @@ LIBS += -lpcl_common \
 # Eigen and Sophus library
 INCLUDEPATH += /usr/include/eigen3
 INCLUDEPATH += /usr/local/include/sophus
+
+# TBB
+LIBS += -L/usr/lib/x86_64-linux-gnu/
+LIBS += -ltbb
