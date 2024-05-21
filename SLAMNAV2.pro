@@ -11,22 +11,37 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 SOURCES += \
+    LakiBeamHTTP.cpp \
+    LakiBeamUDP.cpp \
     complementary_filter.cpp \
     config.cpp \
     cv_to_qt.cpp \
+    lidar_2d.cpp \
+    logger.cpp \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
+    pgo.cpp \
+    slam_2d.cpp \
+    unimap.cpp \
     utils.cpp
 
 HEADERS += \
+    LakiBeamHTTP.h \
+    LakiBeamUDP.h \
     complementary_filter.h \
     config.h \
     cv_to_qt.h \
     global_defines.h \
+    lidar_2d.h \
+    logger.h \
     mainwindow.h \
     mobile.h \
     nanoflann.hpp \
+    pgo.h \
+    slam_2d.h \
+    tinycolormap.hpp \
+    unimap.h \
     utils.h
 
 FORMS += \
@@ -110,3 +125,17 @@ INCLUDEPATH += /usr/local/include/sophus
 # TBB
 LIBS += -L/usr/lib/x86_64-linux-gnu/
 LIBS += -ltbb
+
+# GTSAM
+INCLUDEPATH += /usr/local/include/gtsam/
+LIBS += -L/usr/local/lib/
+LIBS += -lgtsam \
+        -lmetis-gtsam
+
+# Lakibeam lidar
+INCLUDEPATH += /usr/include/rapidjson/
+INCLUDEPATH += /usr/include/boost/
+INCLUDEPATH += /usr/include/boost/beast/
+LIBS += -L/usr/lib/x86_64-linux-gnu/
+LIBS += -lboost_system \
+        -lboost_thread

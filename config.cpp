@@ -82,6 +82,10 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            ROBOT_RADIUS = obj["ROBOT_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_RADIUS", obj["ROBOT_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
             MOTOR_ID_L = obj["MOTOR_ID_L"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("MOTOR_ID_L", obj["MOTOR_ID_L"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
@@ -132,6 +136,94 @@ void CONFIG::load()
 
             MOTOR_GAIN_KD = obj["MOTOR_GAIN_KD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KD", obj["MOTOR_GAIN_KD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            LIDAR_MAX_RANGE = obj["LIDAR_MAX_RANGE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("LIDAR_MAX_RANGE", obj["LIDAR_MAX_RANGE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            LIDAR_TF_F = obj["LIDAR_TF_F"].toString();
+            params.push_back(std::make_pair<QString, QString>("LIDAR_TF_F", obj["LIDAR_TF_F"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            LIDAR_TF_B = obj["LIDAR_TF_B"].toString();
+            params.push_back(std::make_pair<QString, QString>("LIDAR_TF_B", obj["LIDAR_TF_B"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_VOXEL_SIZE = obj["SLAM_VOXEL_SIZE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_VOXEL_SIZE", obj["SLAM_VOXEL_SIZE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_WINDOW_SIZE = obj["SLAM_WINDOW_SIZE"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_WINDOW_SIZE", obj["SLAM_WINDOW_SIZE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_KFRM_UPDATE_NUM = obj["SLAM_KFRM_UPDATE_NUM"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_KFRM_UPDATE_NUM", obj["SLAM_KFRM_UPDATE_NUM"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_DO_ERASE_GAP = obj["SLAM_DO_ERASE_GAP"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_DO_ERASE_GAP", obj["SLAM_DO_ERASE_GAP"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_DO_ACCUM_NUM = obj["SLAM_DO_ACCUM_NUM"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_DO_ACCUM_NUM", obj["SLAM_DO_ACCUM_NUM"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_MAX_FEATURE_NUM = obj["SLAM_MAX_FEATURE_NUM"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_MAX_FEATURE_NUM", obj["SLAM_MAX_FEATURE_NUM"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_COST_THRESHOLD = obj["SLAM_COST_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_COST_THRESHOLD", obj["SLAM_COST_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_ERROR_THRESHOLD = obj["SLAM_ERROR_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_ERROR_THRESHOLD", obj["SLAM_ERROR_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LC_MAX_FEATURE_NUM = obj["SLAM_LC_MAX_FEATURE_NUM"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LC_MAX_FEATURE_NUM", obj["SLAM_LC_MAX_FEATURE_NUM"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LC_TRY_DIST = obj["SLAM_LC_TRY_DIST"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LC_TRY_DIST", obj["SLAM_LC_TRY_DIST"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LC_TRY_OVERLAP = obj["SLAM_LC_TRY_OVERLAP"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LC_TRY_OVERLAP", obj["SLAM_LC_TRY_OVERLAP"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LC_COST_THRESHOLD = obj["SLAM_LC_COST_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LC_COST_THRESHOLD", obj["SLAM_LC_COST_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LC_ERROR_THRESHOLD = obj["SLAM_LC_ERROR_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LC_ERROR_THRESHOLD", obj["SLAM_LC_ERROR_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_VIEW_THRESHOLD = obj["SLAM_VIEW_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_VIEW_THRESHOLD", obj["SLAM_VIEW_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_VIEW_THRESHOLD = obj["SLAM_VIEW_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_VIEW_THRESHOLD", obj["SLAM_VIEW_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_INLIER_DIST = obj["SLAM_INLIER_DIST"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_INLIER_DIST", obj["SLAM_INLIER_DIST"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_IE_THRESHOLD = obj["SLAM_IE_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_IE_THRESHOLD", obj["SLAM_IE_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_IR_THRESHOLD = obj["SLAM_IR_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_IR_THRESHOLD", obj["SLAM_IR_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            SLAM_LOC_FUSION_RATIO = obj["SLAM_LOC_FUSION_RATIO"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LOC_FUSION_RATIO", obj["SLAM_LOC_FUSION_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             // complete

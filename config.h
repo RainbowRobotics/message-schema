@@ -18,6 +18,7 @@ public:
     double ROBOT_SIZE_Z[2] = {0.0, 0.3};
     double ROBOT_WHEEL_BASE = 0.467;
     double ROBOT_WHEEL_RADIUS = 0.075;
+    double ROBOT_RADIUS = 0.3;
 
     int MOTOR_ID_L = 1;
     int MOTOR_ID_R = 0;
@@ -27,10 +28,35 @@ public:
     double MOTOR_LIMIT_V_ACC = 1.5;
     double MOTOR_LIMIT_W = 180.0*D2R;
     double MOTOR_LIMIT_W_ACC = 360.0*D2R;
-    double MOTOR_GAIN_KP=4400.0;
-    double MOTOR_GAIN_KI=0.0;
-    double MOTOR_GAIN_KD=100.0;
+    double MOTOR_GAIN_KP = 4400.0;
+    double MOTOR_GAIN_KI = 0.0;
+    double MOTOR_GAIN_KD = 100.0;
 
+    double LIDAR_MAX_RANGE = 40.0;
+    QString LIDAR_TF_F = "";
+    QString LIDAR_TF_B = "";
+
+    double SLAM_VOXEL_SIZE = 0.05;
+    int SLAM_WINDOW_SIZE = 100;
+    int SLAM_KFRM_UPDATE_NUM = 50;
+    int SLAM_DO_ERASE_GAP = 5;
+    int SLAM_DO_ACCUM_NUM = 3;
+    int SLAM_MAX_FEATURE_NUM = 2000;
+    double SLAM_COST_THRESHOLD = 1.0;
+    double SLAM_ERROR_THRESHOLD = 0.1;
+
+    double SLAM_LC_MAX_FEATURE_NUM = 2000;
+    double SLAM_LC_TRY_DIST = 5.0;
+    double SLAM_LC_TRY_OVERLAP = 0.4;
+    double SLAM_LC_COST_THRESHOLD = 2.0;
+    double SLAM_LC_ERROR_THRESHOLD = 0.1;
+    double SLAM_VIEW_THRESHOLD = 150.0*D2R;
+
+    double SLAM_INLIER_DIST = 0.3;
+    double SLAM_IE_THRESHOLD = 0.2;
+    double SLAM_IR_THRESHOLD = 0.5;
+
+    double SLAM_LOC_FUSION_RATIO = 0.5;
 
     std::vector<std::pair<QString, QString>> params;
 

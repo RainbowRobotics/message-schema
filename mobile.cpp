@@ -52,7 +52,9 @@ void MOBILE::sync()
     sync_st_time = get_time();
     is_sync = true;
 
-    printf("[MOBILE] send time sync, sync_st_time:%f\n", (double)sync_st_time);
+    QString str;
+    str.sprintf("[MOBILE] time sync, sync_st_time:%f\n", (double)sync_st_time);
+    logger->PrintLog(str, "DeepSkyBlue", true, false);
 }
 
 MOBILE_POSE MOBILE::get_pose()
@@ -73,10 +75,55 @@ MOBILE_STATUS MOBILE::get_status()
     return res;
 }
 
-Eigen::Vector3d MOBILE::get_rpy()
+Eigen::Vector3d MOBILE::get_imu()
 {
     mtx.lock();
-    Eigen::Vector3d res = cur_rpy;
+    Eigen::Vector3d res = cur_imu;
+    mtx.unlock();
+
+    return res;
+}
+
+Eigen::Vector3d MOBILE::get_control_input()
+{
+    mtx.lock();
+    Eigen::Vector3d res(vx0, vy0, wz0);
+    mtx.unlock();
+
+    return res;
+}
+
+std::vector<MOBILE_IMU> MOBILE::get_imu_storage()
+{
+    mtx.lock();
+    std::vector<MOBILE_IMU> res = imu_storage;
+    mtx.unlock();
+
+    return res;
+}
+
+std::vector<MOBILE_POSE> MOBILE::get_pose_storage()
+{
+    mtx.lock();
+    std::vector<MOBILE_POSE> res = pose_storage;
+    mtx.unlock();
+
+    return res;
+}
+
+int MOBILE::get_pose_storage_size()
+{
+    mtx.lock();
+    int res = pose_storage.size();
+    mtx.unlock();
+
+    return res;
+}
+
+int MOBILE::get_imu_storage_size()
+{
+    mtx.lock();
+    int res = imu_storage.size();
     mtx.unlock();
 
     return res;
@@ -250,7 +297,7 @@ void MOBILE::motor_on()
         }
     }
 
-    printf("[MOBILE] motor lock on\n");
+    logger->PrintLog("[MOBILE] motor lock on", "DeepSkyBlue", true, false);
 }
 
 void MOBILE::motor_off()
@@ -274,7 +321,7 @@ void MOBILE::motor_off()
         msg_que.push(send_byte);
     }
 
-    printf("[MOBILE] motor lock off\n");
+    logger->PrintLog("[MOBILE] motor lock off", "DeepSkyBlue", true, false);
 }
 
 void MOBILE::move(double vx, double vy, double wz)
@@ -301,6 +348,72 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[7] = 10; // cmd move
 
     memcpy(&send_byte[8], &_v, 4); // param1 linear vel
+    memcpy(&send_byte[12], &_w, 4); // param2 angular vel
+    send_byte[24] = 0x25;
+
+    if(is_connected)
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::move_linear(double d, double v)
+{
+    // set last v,w
+    vx0 = v;
+    vy0 = 0;
+    wz0 = 0;
+
+    // packet
+    float _d = d;
+    float _v = v;
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00;
+    send_byte[7] = 117; // cmd move linear
+
+    memcpy(&send_byte[8], &_d, 4); // param1 dist
+    memcpy(&send_byte[12], &_v, 4); // param2 linear vel
+    send_byte[24] = 0x25;
+
+    if(is_connected)
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::move_rotate(double th, double w)
+{
+    // set last v,w
+    vx0 = 0;
+    vy0 = 0;
+    wz0 = w;
+
+    // packet
+    float _th = th;
+    float _w = w;
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00;
+    send_byte[7] = 118; // cmd move rotate
+
+    memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
     send_byte[24] = 0x25;
 
@@ -373,13 +486,16 @@ void MOBILE::recv_loop()
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(pdu_ip.toLocal8Bit().data());
     server_addr.sin_port = htons(pdu_port);
-    printf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
+
+    QString str;
+    str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
+    logger->PrintLog(str, "DeepSkyBlue", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0)
     {
-        printf("[MOBILE] socket create failed\n");
+        logger->PrintLog("[MOBILE] socket create failed", "Red", true, false);
         return;
     }
 
@@ -389,15 +505,39 @@ void MOBILE::recv_loop()
         ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
     }
 
+    // set non-blocking
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
     int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
-    if(status < 0)
+    if(status < 0 && errno != EINPROGRESS)
     {
-        printf("[MOBILE] connect failed\n");
+        logger->PrintLog("[MOBILE] connect failed", "Red", true, false);
         return;
     }
 
+    // wait for connection with timeout
+    fd_set writefds;
+    struct timeval tv;
+    tv.tv_sec = 10; // 10 seconds timeout
+    tv.tv_usec = 0;
+
+    FD_ZERO(&writefds);
+    FD_SET(fd, &writefds);
+
+    status = select(fd + 1, NULL, &writefds, NULL, &tv);
+    if (status <= 0) // timeout or error
+    {
+        logger->PrintLog("[MOBILE] connect timeout or error", "Red", true, false);
+        close(fd);
+        return;
+    }
+
+    // set back to blocking mode
+    fcntl(fd, F_SETFL, flags);
+
     is_connected = true;
-    printf("[MOBILE] connected\n");
+    logger->PrintLog("[MOBILE] connected", "Green", true, false);
 
     // var init
     const int packet_size = 134;
@@ -427,7 +567,7 @@ void MOBILE::recv_loop()
         buf.insert(buf.end(), recv_buf.begin(), recv_buf.begin()+num);
 
         // parsing
-        while((int)buf.size() >= packet_size)
+        while((int)buf.size() >= packet_size && recv_flag)
         {
             uchar *_buf = (uchar*)buf.data();
             if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
@@ -549,6 +689,11 @@ void MOBILE::recv_loop()
                     double _offset_t = return_time - recv_tick*0.002;
                     offset_t = _offset_t;
 
+                    mtx.lock();
+                    pose_storage.clear();
+                    mtx.unlock();
+
+                    is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
 
@@ -556,8 +701,7 @@ void MOBILE::recv_loop()
                 MOBILE_POSE mobile_pose;
                 mobile_pose.t = mobile_t + offset_t;
                 mobile_pose.pose = Eigen::Vector3d(x, y, toWrap(th));
-                mobile_pose.vel = Eigen::Vector3d(x_dot, y_dot, th_dot);
-                mobile_pose.vw = Eigen::Vector2d(local_v, local_w);
+                mobile_pose.vel = Eigen::Vector3d(local_v, 0, local_w);
 
                 // received mobile status update
                 MOBILE_STATUS mobile_status;
@@ -628,18 +772,40 @@ void MOBILE::recv_loop()
                     r = Sophus::SO3d(R).log();
                 }
 
+                MOBILE_IMU imu;
+                imu.t = mobile_status.t;
+                imu.acc_x = mobile_status.imu_acc_x;
+                imu.acc_y = mobile_status.imu_acc_y;
+                imu.acc_z = mobile_status.imu_acc_z;
+                imu.gyr_x = mobile_status.imu_gyr_x;
+                imu.gyr_y = mobile_status.imu_gyr_y;
+                imu.gyr_z = mobile_status.imu_gyr_z;
+                imu.rx = r[0];
+                imu.ry = r[1];
+                imu.rz = r[2];
+
                 // storing
                 mtx.lock();
                 cur_pose = mobile_pose;
                 cur_status = mobile_status;
-                cur_rpy = r;
+                cur_imu = r;
 
                 pose_storage.push_back(mobile_pose);
-                if(pose_storage.size() > 300)
+                if(pose_storage.size() > MO_STORAGE_NUM)
                 {
                     pose_storage.erase(pose_storage.begin());
                 }
+
+                imu_storage.push_back(imu);
+                if(imu_storage.size() > MO_STORAGE_NUM)
+                {
+                    imu_storage.erase(imu_storage.begin());
+                }
                 mtx.unlock();
+
+                // update last t
+                last_pose_t = mobile_pose.t;
+                last_imu_t = imu.t;
             }
 
             // erase used packet
@@ -647,6 +813,7 @@ void MOBILE::recv_loop()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    printf("[MOBILE] recv loop stop\n");
 }
 
 // send loop
@@ -666,4 +833,5 @@ void MOBILE::send_loop()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    printf("[MOBILE] send loop stop\n");
 }
