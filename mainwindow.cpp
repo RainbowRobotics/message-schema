@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
+    connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));
     connect(ui->bt_MinGapNodeX, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeX()));
     connect(ui->bt_MinGapNodeY, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeY()));
     connect(ui->bt_AlignNodeX, SIGNAL(clicked()), this, SLOT(bt_AlignNodeX()));
@@ -93,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // start plot loop
     plot_timer.start(50);
+    plot_timer2.start(50);
     watchdog_timer.start(1000);
 }
 
@@ -202,24 +204,49 @@ void MainWindow::draw_picking(Eigen::Vector3d pose)
 {
     Eigen::Matrix4d tf = se2_to_TF(pose);
 
-    // draw axis
-    if(viewer->contains("picking_axis"))
+    if(ui->main_tab->currentIndex() == TAB_SLAM)
     {
-        viewer->removeCoordinateSystem("picking_axis");
-    }
-    viewer->addCoordinateSystem(1.0, "picking_axis");
-    viewer->updateCoordinateSystemPose("picking_axis", Eigen::Affine3f(tf.cast<float>()));
+        // draw axis
+        if(viewer->contains("picking_axis"))
+        {
+            viewer->removeCoordinateSystem("picking_axis");
+        }
+        viewer->addCoordinateSystem(1.0, "picking_axis");
+        viewer->updateCoordinateSystemPose("picking_axis", Eigen::Affine3f(tf.cast<float>()));
 
-    // draw body
-    if(viewer->contains("picking_body"))
-    {
-        viewer->removeShape("picking_body");
+        // draw body
+        if(viewer->contains("picking_body"))
+        {
+            viewer->removeShape("picking_body");
+        }
+        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.75, 0.75, 0.75, "picking_body");
+        viewer->updateShapePose("picking_body", Eigen::Affine3f(tf.cast<float>()));
+        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "picking_body");
     }
-    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.75, 0.75, 0.75, "picking_body");
-    viewer->updateShapePose("picking_body", Eigen::Affine3f(tf.cast<float>()));
-    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "picking_body");
+
+    else if(ui->main_tab->currentIndex() == TAB_ANNOTATION)
+    {
+        // draw axis
+        if(viewer2->contains("picking_axis"))
+        {
+            viewer2->removeCoordinateSystem("picking_axis");
+        }
+        viewer2->addCoordinateSystem(1.0, "picking_axis");
+        viewer2->updateCoordinateSystemPose("picking_axis", Eigen::Affine3f(tf.cast<float>()));
+
+        // draw body
+        if(viewer2->contains("picking_body"))
+        {
+            viewer2->removeShape("picking_body");
+        }
+        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                         config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.75, 0.75, 0.75, "picking_body");
+        viewer2->updateShapePose("picking_body", Eigen::Affine3f(tf.cast<float>()));
+        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "picking_body");
+    }
 }
 
 bool MainWindow::eventFilter(QObject *object, QEvent *ev)
@@ -358,6 +385,250 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         }
     }
 
+    else if(object == ui->qvtkWidget2)
+    {
+        if(ui->tabAnnotation->currentIndex() == TAB_MAP)
+        {
+            // mouse event
+            if(ev->type() == QEvent::MouseButtonPress)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+                if(me->button() == Qt::LeftButton)
+                {
+                    return true;
+                }
+
+                if(me->button() == Qt::RightButton)
+                {
+                    return true;
+                }
+            }
+
+            if(ev->type() == QEvent::MouseMove)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+
+            }
+
+            if(ev->type() == QEvent::MouseButtonRelease)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+                if(me->button() == Qt::LeftButton)
+                {
+                    return true;
+                }
+
+                if(me->button() == Qt::RightButton)
+                {
+
+                }
+            }
+        }
+        else if(ui->tabAnnotation->currentIndex() == TAB_TOPO)
+        {
+            // keyboard event
+            if(ev->type() == QEvent::KeyPress)
+            {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                if(!ke->isAutoRepeat()) // 키 반복이 아닐 때만 처리
+                {
+                    switch(ke->key())
+                    {
+                        case Qt::Key_N:
+                            unimap.add_node(pick, ui->cb_NodeType->currentText());
+                            break;
+                        case Qt::Key_L:
+                            unimap.add_link1(pick);
+                            break;
+                        case Qt::Key_B:
+                            unimap.add_link2(pick);
+                            break;
+                        case Qt::Key_E:
+                            unimap.edit_node_pos(pick);
+                            break;
+                        case Qt::Key_T:
+                            unimap.edit_node_type(pick, ui->cb_NodeType->currentText());
+                            break;
+                        default:
+                            break;
+                    }
+
+                    is_topo_update = true;
+                    return true;
+                }
+            }
+            else if(ev->type() == QEvent::KeyRelease)
+            {
+                return true;
+            }
+
+            // mouse event
+            if(ev->type() == QEvent::MouseButtonPress)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+                if(me->button() == Qt::LeftButton)
+                {
+                    return true;
+                }
+
+                if(me->button() == Qt::RightButton)
+                {
+                    // ray casting
+                    double x = me->pos().x();
+                    double y = me->pos().y();
+                    double w = ui->qvtkWidget2->size().width();
+                    double h = ui->qvtkWidget2->size().height();
+
+                    Eigen::Vector3d ray_center;
+                    Eigen::Vector3d ray_direction;
+                    picking_ray(x, y, w, h, ray_center, ray_direction);
+
+                    Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+
+                    pick.pre_node = pick.cur_node;
+
+                    NODE* pre_node = unimap.get_node_by_id(pick.pre_node);
+                    if(pre_node != NULL)
+                    {
+                        QString str = "pre_node: " + pre_node->id;
+                        ui->lb_PreNode->setText(str);
+                    }
+
+                    pick.cur_node = unimap.get_node_id(pt);
+                    NODE* node = unimap.get_node_by_id(pick.cur_node);
+                    if(node != NULL)
+                    {
+                        Eigen::Matrix3d R = node->tf.block(0,0,3,3);
+                        Eigen::Vector3d euler = R.eulerAngles(2,1,0);
+                        double th = euler[0];
+
+                        Eigen::Vector3d t = node->tf.block(0,3,3,1);
+                        pt = Eigen::Vector3d(t[0], t[1], th);
+
+                        ui->le_CurNodeId->setText(node->id);
+                        ui->le_CurNodeName->setText(node->name);
+                        ui->le_CurNodeType->setText(node->type);
+                        ui->le_CurNodeInfo->setText(node->info);
+                    }
+
+                    pick.r_pt0 = pt;
+                    pick.r_drag = true;
+
+                    // draw picking point
+                    if(viewer2->contains("picking_point"))
+                    {
+                        viewer2->removeShape("picking_point");
+                    }
+                    viewer2->addSphere(pcl::PointXYZ(pt[0], pt[1],
+                            pt[2]), 0.05, 1.0, 0.0, 0.0, "picking_point");
+
+                    ui->le_CurNodeX->setText(QString::number(pt[0]));
+                    ui->le_CurNodeY->setText(QString::number(pt[1]));
+                    ui->le_CurNodeTh->setText(QString::number(pt[2]*R2D));
+
+                    return true;
+                }
+            }
+
+            if(ev->type() == QEvent::MouseMove)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+                if(pick.l_drag)
+                {
+                    return true;
+                }
+
+                if(pick.r_drag)
+                {
+                    // ray casting
+                    double x = me->pos().x();
+                    double y = me->pos().y();
+                    double w = ui->qvtkWidget2->size().width();
+                    double h = ui->qvtkWidget2->size().height();
+
+                    Eigen::Vector3d ray_center;
+                    Eigen::Vector3d ray_direction;
+                    picking_ray(x, y, w, h, ray_center, ray_direction);
+
+                    Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+                    pick.r_pt1 = pt;
+
+                    // draw guide line
+                    if(viewer2->contains("picking_line"))
+                    {
+                        viewer2->removeShape("picking_line");
+                    }
+                    viewer2->addLine(pcl::PointXYZ(pick.r_pt0[0], pick.r_pt0[1], pick.r_pt0[2]),
+                                    pcl::PointXYZ(pick.r_pt1[0], pick.r_pt1[1], pick.r_pt1[2]), 1.0, 0, 0, "picking_line");
+
+                    // calc pose
+                    pick.r_pose[0] = pick.r_pt0[0];
+                    pick.r_pose[1] = pick.r_pt0[1];
+                    pick.r_pose[2] = std::atan2(pick.r_pt1[1] - pick.r_pt0[1], pick.r_pt1[0] - pick.r_pt0[0]);
+
+                    // plot picking
+                    draw_picking(pick.r_pose);
+
+                    NODE* node = unimap.get_node_by_id(pick.cur_node);
+                    if(node == NULL)
+                    {
+                        ui->le_CurNodeTh->setText(QString::number(pick.r_pose[2]*R2D));
+                    }
+
+                    return true;
+                }
+            }
+
+            if(ev->type() == QEvent::MouseButtonRelease)
+            {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+                if(me->button() == Qt::LeftButton)
+                {
+                    return true;
+                }
+
+                if(me->button() == Qt::RightButton)
+                {
+                    // ray casting
+                    double x = me->pos().x();
+                    double y = me->pos().y();
+                    double w = ui->qvtkWidget2->size().width();
+                    double h = ui->qvtkWidget2->size().height();
+
+                    Eigen::Vector3d ray_center;
+                    Eigen::Vector3d ray_direction;
+                    picking_ray(x, y, w, h, ray_center, ray_direction);
+
+                    Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+                    pick.r_pt1 = pt;
+                    pick.r_drag = false;
+
+                    // remove guide line
+                    if(viewer2->contains("picking_line"))
+                    {
+                        viewer2->removeShape("picking_line");
+                    }
+
+                    // calc pose
+                    pick.r_pose[0] = pick.r_pt0[0];
+                    pick.r_pose[1] = pick.r_pt0[1];
+                    pick.r_pose[2] = std::atan2(pick.r_pt1[1] - pick.r_pt0[1], pick.r_pt1[0] - pick.r_pt0[0]);
+
+                    // plot picking
+                    draw_picking(pick.r_pose);
+
+                    NODE* node = unimap.get_node_by_id(pick.cur_node);
+                    if(node == NULL)
+                    {
+                        ui->le_CurNodeTh->setText(QString::number(pick.r_pose[2]*R2D));
+                    }
+
+                    return true;
+                }
+            }
+        }
+    }
+
     return QWidget::eventFilter(object, ev);
 }
 
@@ -365,7 +636,14 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
 {
     // ray casting
     std::vector<pcl::visualization::Camera> cams;
-    viewer->getCameras(cams);
+    if(ui->main_tab->currentIndex() == TAB_SLAM)
+    {
+        viewer->getCameras(cams);
+    }
+    else if(ui->main_tab->currentIndex() == TAB_ANNOTATION)
+    {
+        viewer2->getCameras(cams);
+    }
 
     Eigen::Matrix4d proj;
     Eigen::Matrix4d view;
@@ -433,6 +711,10 @@ void MainWindow::init_modules()
     slam.mobile = &mobile;
     slam.lidar = &lidar;
     slam.unimap = &unimap;
+
+    // unimap module init
+    unimap.config = &config;
+    unimap.logger = &logger;
 }
 
 void MainWindow::bt_ConfigLoad()
@@ -654,7 +936,6 @@ void MainWindow::bt_LocInit()
 void MainWindow::bt_LocInit2()
 {
     // auto init
-
 }
 
 void MainWindow::bt_LocStart()
@@ -708,10 +989,16 @@ void MainWindow::bt_EditNodePos()
 
 void MainWindow::bt_EditNodeType()
 {
-    unimap.edit_node_type(pick, ui->cb_NodeType->currentText());
+    QString type = ui->cb_NodeType->currentText();
+    unimap.edit_node_type(pick, type);
 
     // for topology update
     is_topo_update = true;
+}
+
+void MainWindow::bt_EditNodeInfo()
+{
+    unimap.edit_node_info(pick, ui->te_NodeInfo->toPlainText());
 }
 
 void MainWindow::bt_AddLink1()

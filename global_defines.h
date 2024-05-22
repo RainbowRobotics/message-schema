@@ -144,8 +144,8 @@ struct PICKING
         r_pt1 = p.r_pt1;
         r_pose = p.r_pose;
 
-        pre_node = p.cur_node;
-        cur_node = p.pre_node;
+        pre_node = p.pre_node;
+        cur_node = p.cur_node;
     }
 
     PICKING& operator=(const PICKING& p)

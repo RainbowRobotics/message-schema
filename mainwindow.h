@@ -111,6 +111,7 @@ private Q_SLOTS:
     void bt_AddLink2();
     void bt_EditNodePos();
     void bt_EditNodeType();
+    void bt_EditNodeInfo();
     void bt_MinGapNodeX();
     void bt_MinGapNodeY();
     void bt_MinGapNodeZ();
@@ -144,3 +145,4 @@ private Q_SLOTS:
 
 };
 #endif // MAINWINDOW_H
+

@@ -281,6 +281,21 @@ void UNIMAP::edit_node_type(PICKING pick, QString type)
     }
 }
 
+void UNIMAP::edit_node_info(PICKING pick, QString info)
+{
+    if(pick.cur_node == "")
+    {
+        printf("cur_node empty\n");
+        return;
+    }
+
+    NODE* node = get_node_by_id(pick.cur_node);
+    if(node != NULL)
+    {
+        node->info = info;
+    }
+}
+
 void UNIMAP::save_node_pos(PICKING pick)
 {
     if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))

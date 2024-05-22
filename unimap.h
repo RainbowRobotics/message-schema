@@ -43,6 +43,7 @@ public:
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
+    void edit_node_info(PICKING pick, QString info);
     void save_node_pos(PICKING pick);
     void save_node_pos(QString cur_node);
     void clear_nodes();
