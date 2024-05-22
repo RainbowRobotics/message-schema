@@ -81,7 +81,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_NodePoseThDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseThDown()));
 
     connect(ui->spb_MapPointSize, SIGNAL(valueChanged(int)), this, SLOT(updateMap(int)));
-    connect(ui->ckb_PlotAreas, SIGNAL(stateChanged(int)), this, SLOT(updateMap(int)));
     connect(ui->ckb_PlotEdges, SIGNAL(stateChanged(int)), this, SLOT(updateTopo(int)));
     connect(ui->ckb_PlotNames, SIGNAL(stateChanged(int)), this, SLOT(updateTopo(int)));
     connect(ui->ckb_PlotNodes, SIGNAL(stateChanged(int)), this, SLOT(updateTopo(int)));
@@ -1433,9 +1432,187 @@ void MainWindow::plot_loop()
 
         // point size
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+
+        // erase first
+        {
+            // remove nodes
+            if(last_plot_nodes.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_nodes.size(); p++)
+                {
+                    QString id = last_plot_nodes[p];
+                    if(viewer->contains(id.toStdString()))
+                    {
+                        viewer->removeShape(id.toStdString());
+                    }
+
+                    QString axis_id = id + "_axis";
+                    if(viewer->contains(axis_id.toStdString()))
+                    {
+                        viewer->removeCoordinateSystem(axis_id.toStdString());
+                    }
+
+                    QString text_id = id + "_text";
+                    if(viewer->contains(text_id.toStdString()))
+                    {
+                        viewer->removeShape(text_id.toStdString());
+                    }
+                }
+                last_plot_nodes.clear();
+            }
+
+            // remove edges
+            if(last_plot_edges.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_edges.size(); p++)
+                {
+                    QString id = last_plot_edges[p];
+                    if(viewer->contains(id.toStdString()))
+                    {
+                        viewer->removeShape(id.toStdString());
+                    }
+                }
+                last_plot_edges.clear();
+            }
+        }
+
+        // draw
+        if(unimap.nodes.size() > 0)
+        {
+            //if(ui->ckb_PlotNodes->isChecked())
+            {
+                // draw nodes
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
+                {
+                    QString id = unimap.nodes[p].id;
+                    if(unimap.nodes[p].type == "ROUTE")
+                    {
+                        viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "GOAL")
+                    {
+                        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+
+
+                        QString axis_id = id + "_axis";
+                        viewer->addCoordinateSystem(1.0, axis_id.toStdString());
+                        viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+
+                        // pose_to_tf
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+
+                    // for erase
+                    last_plot_nodes.push_back(id);
+                }
+            }
+
+            //if(ui->ckb_PlotNames->isChecked())
+            {
+                // draw nodes
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
+                {
+                    QString id = unimap.nodes[p].id;
+
+                    // plot text
+                    QString text_id = id + "_text";
+                    pcl::PointXYZ position;
+                    position.x = unimap.nodes[p].tf(0,3);
+                    position.y = unimap.nodes[p].tf(1,3);
+                    position.z = unimap.nodes[p].tf(2,3) + 1.0;
+                    viewer->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
+                }
+            }
+
+            //if(ui->ckb_PlotEdges->isChecked())
+            {
+                // draw edges
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
+                {
+                    Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
+                    for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
+                    {
+                        NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
+                        Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
+                        Eigen::Vector3d P_mid = (P0+P1)/2;
+
+                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
+                        pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
+                        pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+
+                        QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
+                        QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
+
+                        viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
+                        viewer->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
+
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
+
+                        last_plot_edges.push_back(id0);
+                        last_plot_edges.push_back(id1);
+                    }
+                }
+            }
+        }
+
+        // erase first
+        if(viewer->contains("O_pick"))
+        {
+            viewer->removeCoordinateSystem("O_pick");
+        }
+
+        if(viewer->contains("pick_body"))
+        {
+            viewer->removeShape("pick_body");
+        }
+
+        if(viewer->contains("sel_cur"))
+        {
+            viewer->removeShape("sel_cur");
+        }
+
+        if(viewer->contains("sel_pre"))
+        {
+            viewer->removeShape("sel_pre");
+        }
+
+        if(pick.cur_node != "")
+        {
+            NODE *node = unimap.get_node_by_id(pick.cur_node);
+            if(node != NULL)
+            {
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.1, node->tf, 0.0, 1.0, 0.0);
+                viewer->addPolygonMesh(donut, "sel_cur");
+            }
+        }
+
+        // draw pose
+        viewer->addCoordinateSystem(1.0, "O_pick");
+        if(ui->cb_NodeType->currentText() == "ROUTE")
+        {
+            viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 0.0, 1.0, "pick_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+            viewer->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
+        }
+        else if(ui->cb_NodeType->currentText() == "GOAL")
+        {
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                             config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                             config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 1.0, "pick_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+            viewer->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
+        }
+
+        viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
     }
-
-
 
     // plot cloud data
     if(slam.is_slam)
@@ -1906,6 +2083,7 @@ void MainWindow::plot_loop2()
 
     if(ui->tabAnnotation->currentIndex() == TAB_MAP)
     {
+        // not yet
     }
     else if(ui->tabAnnotation->currentIndex() == TAB_TOPO)
     {
@@ -1945,26 +2123,6 @@ void MainWindow::plot_loop2()
                              config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 1.0, "pick_body");
             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
             viewer2->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
-        }
-        else if(ui->cb_NodeType->currentText() == "CROSS")
-        {
-            viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 0.0, 1.0, "pick_body");
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-            viewer2->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
-        }
-        else if(ui->cb_NodeType->currentText() == "SIGN")
-        {
-            viewer2->addCube(-0.15, 0.15, -0.15, 0.15, 0.0, 2.0, 1.0, 0.0, 1.0, "pick_body");
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-            viewer2->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
-        }
-        else if(ui->cb_NodeType->currentText() == "STAIR")
-        {
-            Eigen::Quaternionf rot(Eigen::AngleAxisf(-M_PI/4, Eigen::Vector3f::UnitY()));
-            viewer2->addCube(Eigen::Vector3f(0,0,0), rot, 0.5, 0.25, 0.05, "pick_body");
-            viewer2->updateShapePose("pick_body", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 0.0, 1.0, "pick_body");
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
         }
 
         viewer2->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]).cast<float>()));
