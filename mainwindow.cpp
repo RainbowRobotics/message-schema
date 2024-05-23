@@ -1773,6 +1773,7 @@ void MainWindow::plot_loop()
     else if(slam.is_loc)
     {
         // localzation
+        Eigen::Matrix4d init_tf = slam.get_init_tf();
         TIME_POSE_PTS cur_tpp = slam.get_cur_tpp();
 
         // draw points
@@ -1801,6 +1802,14 @@ void MainWindow::plot_loop()
 
         // draw robot
         {
+            // draw axis
+            if(viewer->contains("init_axis"))
+            {
+                viewer->removeCoordinateSystem("init_axis");
+            }
+            viewer->addCoordinateSystem(1.0, "init_axis");
+            viewer->updateCoordinateSystemPose("init_axis", Eigen::Affine3f(init_tf.cast<float>()));
+
             // draw axis
             if(viewer->contains("robot_axis"))
             {

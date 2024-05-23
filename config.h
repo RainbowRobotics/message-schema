@@ -58,6 +58,7 @@ public:
 
     double SLAM_LOC_FUSION_RATIO = 0.5;
     double SLAM_LOC_COST_THRESHOLD = 2.0;
+    int SLAM_LOC_MAX_FEATURE_NUM = 750;
 
     std::vector<std::pair<QString, QString>> params;
 

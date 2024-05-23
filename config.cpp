@@ -230,6 +230,10 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("SLAM_LOC_COST_THRESHOLD", obj["SLAM_LOC_COST_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            SLAM_LOC_MAX_FEATURE_NUM = obj["SLAM_LOC_MAX_FEATURE_NUM"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LOC_MAX_FEATURE_NUM", obj["SLAM_LOC_MAX_FEATURE_NUM"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
             // complete
             is_load = true;
             config_file.close();

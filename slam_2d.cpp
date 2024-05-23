@@ -3,6 +3,7 @@
 SLAM_2D::SLAM_2D(QObject *parent)
     : QObject{parent}
 {
+    init_tf.setIdentity();
     cur_tf.setIdentity();
 
     /*
@@ -163,6 +164,15 @@ void SLAM_2D::localization_stop()
     }
 
     is_loc = false;
+}
+
+Eigen::Matrix4d SLAM_2D::get_init_tf()
+{
+    mtx.lock();
+    Eigen::Matrix4d res = init_tf;
+    mtx.unlock();
+
+    return res;
 }
 
 Eigen::Matrix4d SLAM_2D::get_cur_tf()
@@ -572,6 +582,8 @@ void SLAM_2D::map_b_loop()
 
 void SLAM_2D::loc_a_loop()
 {
+    lidar->scan_que.clear();
+
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {        
@@ -580,6 +592,7 @@ void SLAM_2D::loc_a_loop()
         {
             mtx.lock();
             Eigen::Matrix4d _cur_tf = cur_tf;
+            init_tf = _cur_tf;
             mtx.unlock();
 
             // pose estimation
@@ -596,12 +609,19 @@ void SLAM_2D::loc_a_loop()
                 tpp.tf2 = se2_to_TF(frm.mo.pose);
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
+
+                // update
+                mtx.lock();
+                cur_tpp = tpp;
+                mtx.unlock();
             }
 
             // update ieir
             mtx.lock();
-            cur_ieir = ieir;
+            cur_ieir = ieir;            
             mtx.unlock();
+
+            lidar->scan_que.clear();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -611,13 +631,11 @@ void SLAM_2D::loc_a_loop()
 
 void SLAM_2D::loc_b_loop()
 {
-    const double dt = 0.02; // 50hz
+    const double dt = 0.01; // 100hz
     double pre_loop_time = get_time();
 
     bool is_first = true;
     Eigen::Matrix4d pre_mo_tf;
-
-    TIME_POSE_PTS last_tpp;
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -641,10 +659,11 @@ void SLAM_2D::loc_b_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;
             mtx.unlock();
 
-            if(tpp_que.try_pop(last_tpp))
+            TIME_POSE_PTS tpp;
+            if(tpp_que.try_pop(tpp))
             {
-                Eigen::Matrix4d fused_tf = intp_tf(config->SLAM_LOC_FUSION_RATIO, last_tpp.tf, _cur_tf);
-                Eigen::Matrix4d delta_tf = last_tpp.tf2.inverse()*cur_mo_tf;
+                Eigen::Matrix4d fused_tf = intp_tf(config->SLAM_LOC_FUSION_RATIO, tpp.tf, _cur_tf);
+                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
                 _cur_tf = fused_tf*delta_tf;
             }
             else
@@ -654,25 +673,9 @@ void SLAM_2D::loc_b_loop()
                 _cur_tf = _cur_tf*delta_tf;
             }
 
-            if(last_tpp.t == 0)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
-            std::vector<Eigen::Vector3d> pts = transform_pts(last_tpp.pts, last_tpp.tf);
-            std::vector<Eigen::Vector3d> _pts = transform_pts(pts, _cur_tf.inverse());
-
-            // set tpp
-            TIME_POSE_PTS tpp;
-            tpp.t = mo.t;
-            tpp.tf = _cur_tf;
-            tpp.pts = _pts;
-
             // update
             mtx.lock();
-            cur_tf = _cur_tf;
-            cur_tpp = tpp;
+            cur_tf = _cur_tf;            
             mtx.unlock();
 
             // update pre mobile tf
@@ -725,7 +728,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     int num_correspondence = 0;
 
     const double cost_threshold = config->SLAM_LOC_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_MAX_FEATURE_NUM);
+    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_LOC_MAX_FEATURE_NUM);
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -741,8 +744,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
-            // find nn
-            std::vector<Eigen::Vector3d> near_pts(1);
+            // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
 
@@ -762,6 +764,28 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_G);
 
+            // _P1 = R * P1 + t
+            double cos_theta = std::cos(xi[2]);
+            double sin_theta = std::sin(xi[2]);
+
+            // Jacobian calculation
+            double J[3] = {0,};
+
+            // Partial derivatives with respect to x, y, and theta
+            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
+            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
+
+            // ∂/∂theta
+            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
+            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
+
+            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
+            {
+                continue;
+            }
+
+            /*
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -771,6 +795,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             {
                 continue;
             }
+            */
 
             // additional weight
             double weight = 1.0;
@@ -796,7 +821,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[frm_icp] not enough correspondences, %d!!\n", num_correspondence);
+            printf("[map_icp] not enough correspondences, %d!!\n", num_correspondence);
             return 9999;
         }
 
@@ -854,7 +879,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             err_cnt += w;
         }
         err /= err_cnt;
-        err = std::sqrt(err);
 
         // set diagonal term
         for(int p = 0; p < 3; p++)
@@ -907,7 +931,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     //if(first_err > config.SLAM_ERROR_THRESHOLD || last_err > config.SLAM_ERROR_THRESHOLD)
     {
-        printf("[frm_icp0] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
+        printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
     }
 
@@ -989,6 +1013,31 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_G);
 
+            // _P1 = R * P1 + t
+            double cos_theta = std::cos(xi[2]);
+            double sin_theta = std::sin(xi[2]);
+
+            // Jacobian calculation
+            double J[3] = {0,};
+
+            // Partial derivatives with respect to x, y, and theta
+            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
+            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
+
+            // ∂/∂theta
+            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
+            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
+
+            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
+            {
+                continue;
+            }
+
+            /*
+            // jacobian
+            Eigen::Vector3d xi = TF_to_se2(_G);
+
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -998,6 +1047,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             {
                 continue;
             }
+            */
 
             // dynamic object filter
             if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
@@ -1086,7 +1136,6 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             err_cnt += w;
         }
         err /= err_cnt;
-        err = std::sqrt(err);
 
         // set diagonal term
         for(int p = 0; p < 3; p++)
@@ -1230,6 +1279,31 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_dG);
 
+            // _P1 = R * P1 + t
+            double cos_theta = std::cos(xi[2]);
+            double sin_theta = std::sin(xi[2]);
+
+            // Jacobian calculation
+            double J[3] = {0,};
+
+            // Partial derivatives with respect to x, y, and theta
+            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
+            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
+
+            // ∂/∂theta
+            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
+            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
+
+            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
+            {
+                continue;
+            }
+
+            /*
+            // jacobian
+            Eigen::Vector3d xi = TF_to_se2(_dG);
+
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -1239,6 +1313,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             {
                 continue;
             }
+            */
 
             // dynamic object filter
             if(cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
@@ -1327,7 +1402,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             err_cnt += w;
         }
         err /= err_cnt;
-        err = std::sqrt(err);
 
         // set diagonal term
         for(int p = 0; p < 3; p++)

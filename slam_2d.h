@@ -42,6 +42,7 @@ public:
     void localization_start();
     void localization_stop();
 
+    Eigen::Matrix4d get_init_tf();
     Eigen::Matrix4d get_cur_tf();
     TIME_POSE_PTS get_cur_tpp();
 
@@ -61,6 +62,7 @@ public:
     KD_TREE_XYZR *live_tree = NULL;
 
     // result    
+    Eigen::Matrix4d init_tf;
     Eigen::Matrix4d cur_tf;
     Eigen::Vector2d cur_ieir;
     TIME_POSE_PTS cur_tpp;
