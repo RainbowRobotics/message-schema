@@ -226,6 +226,10 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("SLAM_LOC_FUSION_RATIO", obj["SLAM_LOC_FUSION_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            SLAM_LOC_COST_THRESHOLD = obj["SLAM_LOC_COST_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("SLAM_LOC_COST_THRESHOLD", obj["SLAM_LOC_COST_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
             // complete
             is_load = true;
             config_file.close();

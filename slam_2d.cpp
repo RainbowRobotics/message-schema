@@ -724,16 +724,14 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_COST_THRESHOLD;
+    const double cost_threshold = config->SLAM_LOC_COST_THRESHOLD;
     const int num_feature = std::min<int>(idx_list.size(), config->SLAM_MAX_FEATURE_NUM);
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
     {
         std::vector<double> costs;
-        std::vector<COST_JACOBIAN> cj_set;
-
-        Eigen::Matrix4d cur_G = _G*G;
+        std::vector<COST_JACOBIAN> cj_set;        
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index
@@ -775,7 +773,8 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double weight = 1.0 + ret_near_sq_dists[0];
+            double weight = 1.0;
+            //double weight = 1.0 + ret_near_sq_dists[0];
 
             // storing cost jacobian
             COST_JACOBIAN cj;

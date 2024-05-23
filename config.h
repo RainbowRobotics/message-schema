@@ -57,6 +57,7 @@ public:
     double SLAM_IR_THRESHOLD = 0.5;
 
     double SLAM_LOC_FUSION_RATIO = 0.5;
+    double SLAM_LOC_COST_THRESHOLD = 2.0;
 
     std::vector<std::pair<QString, QString>> params;
 
