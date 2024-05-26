@@ -172,7 +172,7 @@ void LIDAR_2D::grab_loop_f()
                 }
 
                 // angle filter
-                if(deg < 45.0 + angle_offset || deg > 315.0 - angle_offset)
+                if((deg < 45.0 + angle_offset) || (deg > 315.0 - angle_offset))
                 {
                     continue;
                 }
@@ -219,28 +219,61 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            // deskewing
-            double mo_t0 = pose_storage[idx0].t;
-            double mo_t1 = pose_storage[idx1].t;
-
-            Eigen::Matrix4d mo_tf0 = se2_to_TF(pose_storage[idx0].pose);
-            Eigen::Matrix4d mo_tf1 = se2_to_TF(pose_storage[idx1].pose);
-
-            Eigen::Matrix4d tf0 = intp_tf((t0 - mo_t0)/(mo_t1-mo_t0), mo_tf0, mo_tf1);
-            Eigen::Matrix4d tf1 = intp_tf((t1 - mo_t0)/(mo_t1-mo_t0), mo_tf0, mo_tf1);
-            Eigen::Matrix4d d_tf = tf0.inverse()*tf1;
+            // precise deskewing
+            double min_t = 0;
+            double min_dt = 99999999;
+            Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+            for(size_t p = 0; p < pose_storage.size(); p++)
+            {
+                double dt = std::abs(pose_storage[p].t - t1);
+                if(dt < min_dt)
+                {
+                    min_t = pose_storage[p].t;
+                    min_dt = dt;
+                    min_tf = se2_to_TF(pose_storage[p].pose);
+                }
+            }
+            Eigen::Matrix4d min_tf_inv = min_tf.inverse();
 
             std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
             for(size_t p = 0; p < raw_pts.size(); p++)
             {
-                double alpha = (times[p]-t0)/(t1-t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), d_tf);
+                double t = times[p];
+
+                int i1 = 0;
+                for(int i = idx0; i <= idx1; i++)
+                {
+                    if(pose_storage[i].t > t)
+                    {
+                        i1 = i;
+                        break;
+                    }
+                }
+
+                int i0 = i1 - 1;
+                if(i0 < 0)
+                {
+                    i0 = idx0;
+                    i1 = idx1;
+                }
+
+                // get bound_t
+                double _mo_t0 = pose_storage[i0].t;
+                double _mo_t1 = pose_storage[i1].t;
+
+                Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
+                Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);
+
+                double alpha = (t-_mo_t0)/(_mo_t1-_mo_t0);
+                Eigen::Matrix4d tf = intp_tf(alpha, _mo_tf0, _mo_tf1);
+
                 dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
+                dsk_pts[p] = min_tf_inv.block(0,0,3,3)*dsk_pts[p] + min_tf_inv.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
-            mo.t = t0;
-            mo.pose = TF_to_se2(tf0);
+            mo.t = min_t;
+            mo.pose = TF_to_se2(min_tf);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -251,7 +284,7 @@ void LIDAR_2D::grab_loop_f()
             frm.mo = mo;
             raw_que_f.push(frm);
 
-            last_t_f = t0;
+            last_t_f = min_t;
 
             // que overflow control
             if(raw_que_f.unsafe_size() > 50)
@@ -347,7 +380,7 @@ void LIDAR_2D::grab_loop_b()
                 }
 
                 // angle filter
-                if(deg < 45.0 + angle_offset || deg > 315.0 - angle_offset)
+                if((deg < 45.0 + angle_offset) || (deg > 315.0 - angle_offset))
                 {
                     continue;
                 }
@@ -394,28 +427,61 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            // deskewing
-            double mo_t0 = pose_storage[idx0].t;
-            double mo_t1 = pose_storage[idx1].t;
-
-            Eigen::Matrix4d mo_tf0 = se2_to_TF(pose_storage[idx0].pose);
-            Eigen::Matrix4d mo_tf1 = se2_to_TF(pose_storage[idx1].pose);
-
-            Eigen::Matrix4d tf0 = intp_tf((t0 - mo_t0)/(mo_t1-mo_t0), mo_tf0, mo_tf1);
-            Eigen::Matrix4d tf1 = intp_tf((t1 - mo_t0)/(mo_t1-mo_t0), mo_tf0, mo_tf1);
-            Eigen::Matrix4d d_tf = tf0.inverse()*tf1;
+            // precise deskewing
+            double min_t = 0;
+            double min_dt = 99999999;
+            Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+            for(size_t p = 0; p < pose_storage.size(); p++)
+            {
+                double dt = std::abs(pose_storage[p].t - t1);
+                if(dt < min_dt)
+                {
+                    min_t = pose_storage[p].t;
+                    min_dt = dt;
+                    min_tf = se2_to_TF(pose_storage[p].pose);
+                }
+            }
+            Eigen::Matrix4d min_tf_inv = min_tf.inverse();
 
             std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
             for(size_t p = 0; p < raw_pts.size(); p++)
             {
-                double alpha = (times[p]-t0)/(t1-t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), d_tf);
+                double t = times[p];
+
+                int i1 = 0;
+                for(int i = idx0; i <= idx1; i++)
+                {
+                    if(pose_storage[i].t > t)
+                    {
+                        i1 = i;
+                        break;
+                    }
+                }
+
+                int i0 = i1 - 1;
+                if(i0 < 0)
+                {
+                    i0 = idx0;
+                    i1 = idx1;
+                }
+
+                // get bound_t
+                double _mo_t0 = pose_storage[i0].t;
+                double _mo_t1 = pose_storage[i1].t;
+
+                Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
+                Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);
+
+                double alpha = (t-_mo_t0)/(_mo_t1-_mo_t0);
+                Eigen::Matrix4d tf = intp_tf(alpha, _mo_tf0, _mo_tf1);
+
                 dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
+                dsk_pts[p] = min_tf_inv.block(0,0,3,3)*dsk_pts[p] + min_tf_inv.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
-            mo.t = t0;
-            mo.pose = TF_to_se2(tf0);
+            mo.t = min_t;
+            mo.pose = TF_to_se2(min_tf);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -426,7 +492,7 @@ void LIDAR_2D::grab_loop_b()
             frm.mo = mo;
             raw_que_b.push(frm);
 
-            last_t_b = t0;
+            last_t_b = min_t;
 
             // que overflow control
             if(raw_que_b.unsafe_size() > 50)
@@ -502,10 +568,13 @@ void LIDAR_2D::a_loop()
                     reflects.push_back(frm0.reflects[p]);
                 }
 
+                Eigen::Matrix4d dtf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm1.mo.pose);
+
                 std::vector<Eigen::Vector3d> pts_b;
                 for(size_t p = 0; p < frm1.dsk.size(); p++)
                 {
-                    Eigen::Vector3d P = tf_b.block(0,0,3,3)*frm1.dsk[p] + tf_b.block(0,3,3,1);
+                    Eigen::Vector3d _P = tf_b.block(0,0,3,3)*frm1.dsk[p] + tf_b.block(0,3,3,1);
+                    Eigen::Vector3d P = dtf.block(0,0,3,3)*_P + dtf.block(0,3,3,1);
 
                     if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                        P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])

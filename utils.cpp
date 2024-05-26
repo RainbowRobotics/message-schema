@@ -264,4 +264,18 @@ std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Ei
     return res;
 }
 
+double saturation(double val, double min, double max)
+{
+    if(val < min)
+    {
+        val = min;
+    }
+    else if(val > max)
+    {
+        val = max;
+    }
+
+    return val;
+}
+
 #endif // UTILS_CPP

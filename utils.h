@@ -28,4 +28,6 @@ bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double th
 
 std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Eigen::Matrix4d tf);
 
+double saturation(double val, double min, double max);
+
 #endif // UTILS_H

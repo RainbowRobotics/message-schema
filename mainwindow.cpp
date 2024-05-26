@@ -1620,6 +1620,12 @@ void MainWindow::plot_loop()
         // mapping
         if(slam.mtx.try_lock())
         {
+            // remove first
+            if(viewer->contains("raw_pts"))
+            {
+                viewer->removePointCloud("raw_pts");
+            }
+
             // plot live cloud
             if(ui->ckb_PlotLive->isChecked())
             {
@@ -1807,7 +1813,7 @@ void MainWindow::plot_loop()
             {
                 viewer->removeCoordinateSystem("init_axis");
             }
-            viewer->addCoordinateSystem(1.0, "init_axis");
+            viewer->addCoordinateSystem(0.5, "init_axis");
             viewer->updateCoordinateSystemPose("init_axis", Eigen::Affine3f(init_tf.cast<float>()));
 
             // draw axis

@@ -503,10 +503,10 @@ void SLAM_2D::map_b_loop()
             }
 
             // loop closing process
-            if(kfrm_storage.size() >= 3)
+            if(kfrm_storage.size() >= 2)
             {
                 // check loop closure
-                for(size_t p = 0; p < kfrm_storage.size()-2; p++)
+                for(size_t p = 0; p < kfrm_storage.size()-1; p++)
                 {
                     int p0 = p;
                     int p1 = kfrm_storage.size()-1;
@@ -631,7 +631,7 @@ void SLAM_2D::loc_a_loop()
 
 void SLAM_2D::loc_b_loop()
 {
-    const double dt = 0.01; // 100hz
+    const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
     bool is_first = true;
@@ -721,7 +721,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     // optimization param
     const int max_iter = 100;
-    double lambda = 0.1;
+    double lambda = 0.01;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -729,6 +729,11 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     const double cost_threshold = config->SLAM_LOC_COST_THRESHOLD;
     const int num_feature = std::min<int>(idx_list.size(), config->SLAM_LOC_MAX_FEATURE_NUM);
+
+    // for rmt
+    double rmt_sigma = 0.01;
+    double tm0 = 0;
+    double tm1 = 0;
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -754,9 +759,20 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             int nn_idx = ret_near_idxs[0];            
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
 
+            // rmt
+            double rmt = 1.0;
+            if(iter >= 2)
+            {
+                rmt = tm1/tm0;
+                if(rmt > 1.0)
+                {
+                    rmt = 1.0;
+                }
+            }
+
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(std::sqrt(cost) > cost_threshold)
+            if(std::sqrt(cost) > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -764,28 +780,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_G);
 
-            // _P1 = R * P1 + t
-            double cos_theta = std::cos(xi[2]);
-            double sin_theta = std::sin(xi[2]);
-
-            // Jacobian calculation
-            double J[3] = {0,};
-
-            // Partial derivatives with respect to x, y, and theta
-            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
-            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
-
-            // ∂/∂theta
-            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
-            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
-            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
-
-            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
-            {
-                continue;
-            }
-
-            /*
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -795,11 +789,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             {
                 continue;
             }
-            */
 
             // additional weight
-            double weight = 1.0;
-            //double weight = 1.0 + ret_near_sq_dists[0];
+            double weight = 1.0 + saturation(0.1*std::sqrt(ret_near_sq_dists[0]), 0, 1.0);
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -875,7 +867,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // error
             //err += std::abs(w*c);
-            err += std::abs(c);
+            err += std::sqrt(std::abs(c));
             err_cnt += w;
         }
         err /= err_cnt;
@@ -918,6 +910,10 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         _G = se2_to_TF(xi)*_G;
         refine_pose(_G);
 
+        // for rmt
+        tm0 = tm1;
+        tm1 = _G.block(0,3,3,1).norm();
+
         // convergence check
         convergence = X.cwiseAbs().maxCoeff();
         if(convergence < 1e-7)
@@ -959,7 +955,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     // optimization param
     const int max_iter = 100;
-    double lambda = 0.1;
+    double lambda = 0.01;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -1013,31 +1009,6 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_G);
 
-            // _P1 = R * P1 + t
-            double cos_theta = std::cos(xi[2]);
-            double sin_theta = std::sin(xi[2]);
-
-            // Jacobian calculation
-            double J[3] = {0,};
-
-            // Partial derivatives with respect to x, y, and theta
-            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
-            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
-
-            // ∂/∂theta
-            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
-            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
-            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
-
-            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
-            {
-                continue;
-            }
-
-            /*
-            // jacobian
-            Eigen::Vector3d xi = TF_to_se2(_G);
-
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -1047,7 +1018,6 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             {
                 continue;
             }
-            */
 
             // dynamic object filter
             if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
@@ -1056,7 +1026,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double weight = 1.0 + ret_near_sq_dists[0];
+            double weight = 1.0 + saturation(0.1*std::sqrt(ret_near_sq_dists[0]), 0, 1.0);
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1132,7 +1102,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // error
             //err += std::abs(w*c);
-            err += std::abs(c);
+            err += std::sqrt(std::abs(c));
             err_cnt += w;
         }
         err /= err_cnt;
@@ -1232,7 +1202,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
     // optimization param
     const int max_iter = 100;
-    double lambda = 0.1;
+    double lambda = 0.01;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -1279,31 +1249,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             // jacobian
             Eigen::Vector3d xi = TF_to_se2(_dG);
 
-            // _P1 = R * P1 + t
-            double cos_theta = std::cos(xi[2]);
-            double sin_theta = std::sin(xi[2]);
-
-            // Jacobian calculation
-            double J[3] = {0,};
-
-            // Partial derivatives with respect to x, y, and theta
-            J[0] = 2.0 * (_P1[0] - P0[0]); // ∂/∂x
-            J[1] = 2.0 * (_P1[1] - P0[1]); // ∂/∂y
-
-            // ∂/∂theta
-            double dR_dtheta_11 = -sin_theta * P1[0] - cos_theta * P1[1];
-            double dR_dtheta_12 = cos_theta * P1[0] - sin_theta * P1[1];
-            J[2] = 2.0 * ((_P1[0] - P0[0]) * dR_dtheta_11 + (_P1[1] - P0[1]) * dR_dtheta_12);
-
-            if(!std::isfinite(J[0]) || !std::isfinite(J[1]) || !std::isfinite(J[2]))
-            {
-                continue;
-            }
-
-            /*
-            // jacobian
-            Eigen::Vector3d xi = TF_to_se2(_dG);
-
             double J[3] = {0,};
             J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
             J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
@@ -1313,7 +1258,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             {
                 continue;
             }
-            */
 
             // dynamic object filter
             if(cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
@@ -1398,7 +1342,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
             // error
             //err += std::abs(w*c);
-            err += std::abs(c);
+            err += std::sqrt(std::abs(c));
             err_cnt += w;
         }
         err /= err_cnt;

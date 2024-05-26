@@ -45,6 +45,7 @@
 // Eigen
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 // sophus
 #define SOPHUS_USE_BASIC_LOGGING
