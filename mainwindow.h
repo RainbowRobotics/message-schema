@@ -43,11 +43,9 @@ public:
 
     // funcs
     void setup_vtk();
-    void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir);
+    void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
-    void draw_picking(Eigen::Vector3d pose);
-    pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf,
-                                double r=1.0, double g=1.0, double b=1.0, double a=1.0, int num_segments=30);
+    pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r=1.0, double g=1.0, double b=1.0, double a=1.0, int num_segments=30);
 
     QString map_dir = "";
 
@@ -76,9 +74,9 @@ private:
 
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_edges;
-    std::vector<QString> last_plot_global_path;
-    std::vector<QString> last_plot_predictions;
-    std::vector<QString> last_plot_keyframe;
+
+    std::vector<QString> last_plot_nodes2;
+    std::vector<QString> last_plot_edges2;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
@@ -104,8 +102,7 @@ private Q_SLOTS:
     void bt_JogReleased();
 
     // annotation
-    void bt_MapEditLoad();
-    void bt_MapEditSave();
+    void bt_MapSave2();
     void bt_AddNode();
     void bt_AddLink1();
     void bt_AddLink2();
@@ -120,8 +117,6 @@ private Q_SLOTS:
     void bt_AlignNodeZ();
     void bt_AlignNodeTh();
     void bt_ClearTopo();
-    void updateMap(int val);
-    void updateTopo(int val);
 
     void bt_NodePoseXUp();
     void bt_NodePoseYUp();
@@ -129,8 +124,6 @@ private Q_SLOTS:
     void bt_NodePoseXDown();
     void bt_NodePoseYDown();
     void bt_NodePoseThDown();
-
-    void ckb_PlotKfrm();
 
     // mapping
     void bt_MapBuild();

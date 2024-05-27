@@ -39,7 +39,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_slamnav">
        <property name="minimumSize">
@@ -115,27 +115,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="ckb_PlotKfrm">
-              <property name="text">
-               <string>kfrm</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="ckb_PlotTopo">
-              <property name="text">
-               <string>topo</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
+             <spacer name="horizontalSpacer_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -146,6 +126,36 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotNodes">
+              <property name="text">
+               <string>nodes</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotEdges">
+              <property name="text">
+               <string>edges</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotNames">
+              <property name="text">
+               <string>names</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -250,7 +260,7 @@
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>150</y>
+                <y>140</y>
                 <width>311</width>
                 <height>91</height>
                </rect>
@@ -264,7 +274,7 @@
                <string notr="true">background-color: rgb(255, 255, 255);</string>
               </property>
               <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+               <enum>QFrame::Box</enum>
               </property>
               <property name="text">
                <string>[Mapping info]</string>
@@ -618,7 +628,7 @@
                <x>10</x>
                <y>10</y>
                <width>311</width>
-               <height>81</height>
+               <height>71</height>
               </rect>
              </property>
              <property name="font">
@@ -630,7 +640,7 @@
               <string notr="true">background-color: rgb(255, 255, 255);</string>
              </property>
              <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
+              <enum>QFrame::Box</enum>
              </property>
              <property name="text">
               <string>[MOBILE_POSE]</string>
@@ -643,9 +653,9 @@
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>100</y>
+               <y>90</y>
                <width>311</width>
-               <height>111</height>
+               <height>151</height>
               </rect>
              </property>
              <property name="font">
@@ -657,7 +667,7 @@
               <string notr="true">background-color: rgb(255, 255, 255);</string>
              </property>
              <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
+              <enum>QFrame::Box</enum>
              </property>
              <property name="text">
               <string>[MOBILE_STATUS]</string>
@@ -670,9 +680,9 @@
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>220</y>
+               <y>250</y>
                <width>311</width>
-               <height>71</height>
+               <height>51</height>
               </rect>
              </property>
              <property name="font">
@@ -684,7 +694,7 @@
               <string notr="true">background-color: rgb(255, 255, 255);</string>
              </property>
              <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
+              <enum>QFrame::Box</enum>
              </property>
              <property name="text">
               <string>[IMU_FILTERED]</string>
@@ -697,9 +707,9 @@
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>300</y>
+               <y>310</y>
                <width>311</width>
-               <height>71</height>
+               <height>51</height>
               </rect>
              </property>
              <property name="font">
@@ -711,7 +721,7 @@
               <string notr="true">background-color: rgb(255, 255, 255);</string>
              </property>
              <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
+              <enum>QFrame::Box</enum>
              </property>
              <property name="text">
               <string>[QUE_STATUS]</string>
@@ -751,7 +761,7 @@
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>194</height>
+             <height>180</height>
             </size>
            </property>
            <property name="frameShape">
@@ -760,7 +770,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <widget class="QPushButton" name="bt_MapEditLoad">
+           <widget class="QPushButton" name="bt_MapLoad2">
             <property name="geometry">
              <rect>
               <x>10</x>
@@ -773,11 +783,11 @@
              <string>Load</string>
             </property>
            </widget>
-           <widget class="QPushButton" name="bt_MapEditSave">
+           <widget class="QPushButton" name="bt_MapSave2">
             <property name="geometry">
              <rect>
-              <x>10</x>
-              <y>40</y>
+              <x>100</x>
+              <y>10</y>
               <width>81</width>
               <height>31</height>
              </rect>
@@ -786,83 +796,43 @@
              <string>Save</string>
             </property>
            </widget>
-           <widget class="QLabel" name="lb_MapEditPath">
-            <property name="geometry">
-             <rect>
-              <x>12</x>
-              <y>81</y>
-              <width>288</width>
-              <height>31</height>
-             </rect>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>8</pointsize>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>Map name:</string>
-            </property>
-           </widget>
-           <widget class="QSpinBox" name="spb_MapPointSize">
-            <property name="geometry">
-             <rect>
-              <x>90</x>
-              <y>111</y>
-              <width>71</width>
-              <height>26</height>
-             </rect>
-            </property>
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>20</number>
-            </property>
-            <property name="value">
-             <number>3</number>
-            </property>
-           </widget>
-           <widget class="QLabel" name="label_20">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>110</y>
-              <width>91</width>
-              <height>31</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Point size:</string>
-            </property>
-           </widget>
            <widget class="QPushButton" name="bt_ClearTopo">
             <property name="geometry">
              <rect>
-              <x>330</x>
-              <y>130</y>
-              <width>111</width>
+              <x>190</x>
+              <y>10</y>
+              <width>81</width>
               <height>31</height>
              </rect>
             </property>
             <property name="text">
-             <string>Clear topo</string>
+             <string>Clear</string>
             </property>
            </widget>
-           <widget class="QPushButton" name="bt_ClearTravel">
+           <widget class="QPushButton" name="bt_QuickAnnotStart">
             <property name="geometry">
              <rect>
-              <x>330</x>
-              <y>160</y>
-              <width>111</width>
+              <x>10</x>
+              <y>50</y>
+              <width>81</width>
               <height>31</height>
              </rect>
             </property>
             <property name="text">
-             <string>Clear travel</string>
+             <string>QA start</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="bt_QuickAnnotStop">
+            <property name="geometry">
+             <rect>
+              <x>100</x>
+              <y>50</y>
+              <width>81</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>QA stop</string>
             </property>
            </widget>
           </widget>
@@ -878,9 +848,9 @@
            <property name="currentIndex">
             <number>1</number>
            </property>
-           <widget class="QWidget" name="tab_4">
+           <widget class="QWidget" name="EDIT_MAP">
             <attribute name="title">
-             <string>EDIT MAP</string>
+             <string>EDIT_MAP</string>
             </attribute>
             <widget class="QLabel" name="label_12">
              <property name="geometry">
@@ -970,9 +940,9 @@
              </property>
             </widget>
            </widget>
-           <widget class="QWidget" name="tab_5">
+           <widget class="QWidget" name="EDIT_TOPO">
             <attribute name="title">
-             <string>EDIT TOPO</string>
+             <string>EDIT_TOPO</string>
             </attribute>
             <widget class="QPushButton" name="bt_EditNodeInfo">
              <property name="geometry">
@@ -985,6 +955,9 @@
              </property>
              <property name="text">
               <string>Edit info[F]</string>
+             </property>
+             <property name="shortcut">
+              <string>F</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_AddLink2">
@@ -999,6 +972,9 @@
              <property name="text">
               <string>Add link2[B]</string>
              </property>
+             <property name="shortcut">
+              <string>B</string>
+             </property>
             </widget>
             <widget class="QPushButton" name="bt_EditNodePos">
              <property name="geometry">
@@ -1011,6 +987,9 @@
              </property>
              <property name="text">
               <string>Edit pos[E]</string>
+             </property>
+             <property name="shortcut">
+              <string>E</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_AddNode">
@@ -1025,6 +1004,9 @@
              <property name="text">
               <string>Add node[N]</string>
              </property>
+             <property name="shortcut">
+              <string>N</string>
+             </property>
             </widget>
             <widget class="QPushButton" name="bt_AddLink1">
              <property name="geometry">
@@ -1037,6 +1019,9 @@
              </property>
              <property name="text">
               <string>Add link1[L]</string>
+             </property>
+             <property name="shortcut">
+              <string>L</string>
              </property>
             </widget>
             <widget class="QComboBox" name="cb_NodeType">
@@ -1053,20 +1038,20 @@
              </property>
              <item>
               <property name="text">
-               <string>ROUTE</string>
+               <string>GOAL</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>GOAL</string>
+               <string>ROUTE</string>
               </property>
              </item>
             </widget>
             <widget class="QPushButton" name="bt_AlignNodeX">
              <property name="geometry">
               <rect>
-               <x>350</x>
-               <y>145</y>
+               <x>60</x>
+               <y>290</y>
                <width>71</width>
                <height>31</height>
               </rect>
@@ -1078,8 +1063,8 @@
             <widget class="QPushButton" name="bt_MinGapNodeY">
              <property name="geometry">
               <rect>
-               <x>350</x>
-               <y>210</y>
+               <x>140</x>
+               <y>330</y>
                <width>71</width>
                <height>31</height>
               </rect>
@@ -1091,8 +1076,8 @@
             <widget class="QPushButton" name="bt_MinGapNodeX">
              <property name="geometry">
               <rect>
-               <x>280</x>
-               <y>210</y>
+               <x>220</x>
+               <y>330</y>
                <width>71</width>
                <height>31</height>
               </rect>
@@ -1104,11 +1089,14 @@
             <widget class="QDoubleSpinBox" name="spb_NodeGap">
              <property name="geometry">
               <rect>
-               <x>280</x>
-               <y>145</y>
+               <x>60</x>
+               <y>330</y>
                <width>71</width>
                <height>31</height>
               </rect>
+             </property>
+             <property name="suffix">
+              <string> m</string>
              </property>
              <property name="maximum">
               <double>5.000000000000000</double>
@@ -1123,8 +1111,8 @@
             <widget class="QPushButton" name="bt_AlignNodeY">
              <property name="geometry">
               <rect>
-               <x>280</x>
-               <y>180</y>
+               <x>140</x>
+               <y>290</y>
                <width>71</width>
                <height>31</height>
               </rect>
@@ -1136,8 +1124,8 @@
             <widget class="QPushButton" name="bt_AlignNodeTh">
              <property name="geometry">
               <rect>
-               <x>350</x>
-               <y>180</y>
+               <x>220</x>
+               <y>290</y>
                <width>71</width>
                <height>31</height>
               </rect>
@@ -1146,29 +1134,11 @@
               <string>Align Th</string>
              </property>
             </widget>
-            <widget class="QLabel" name="label_11">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>300</y>
-               <width>51</width>
-               <height>21</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>name :</string>
-             </property>
-            </widget>
             <widget class="QCheckBox" name="ckb_TransformEntireNode">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>310</y>
+               <x>20</x>
+               <y>380</y>
                <width>141</width>
                <height>23</height>
               </rect>
@@ -1185,10 +1155,10 @@
             <widget class="QLineEdit" name="le_CurNodeY">
              <property name="geometry">
               <rect>
-               <x>230</x>
-               <y>372</y>
+               <x>40</x>
+               <y>440</y>
                <width>101</width>
-               <height>25</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="dragEnabled">
@@ -1201,10 +1171,10 @@
             <widget class="QLabel" name="label_14">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>340</y>
+               <x>10</x>
+               <y>410</y>
                <width>21</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1214,10 +1184,10 @@
             <widget class="QLineEdit" name="le_CurNodeX">
              <property name="geometry">
               <rect>
-               <x>230</x>
-               <y>344</y>
+               <x>40</x>
+               <y>410</y>
                <width>101</width>
-               <height>25</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="dragEnabled">
@@ -1227,26 +1197,13 @@
               <bool>true</bool>
              </property>
             </widget>
-            <widget class="QLineEdit" name="le_CurNodeName">
-             <property name="geometry">
-              <rect>
-               <x>49</x>
-               <y>300</y>
-               <width>131</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
             <widget class="QLabel" name="label_15">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>370</y>
+               <x>10</x>
+               <y>440</y>
                <width>21</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1256,10 +1213,10 @@
             <widget class="QLineEdit" name="le_CurNodeTh">
              <property name="geometry">
               <rect>
-               <x>230</x>
-               <y>440</y>
+               <x>40</x>
+               <y>470</y>
                <width>101</width>
-               <height>25</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="dragEnabled">
@@ -1272,10 +1229,10 @@
             <widget class="QLabel" name="label_16">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>440</y>
+               <x>10</x>
+               <y>470</y>
                <width>21</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1303,116 +1260,23 @@
             <widget class="QLabel" name="label_8">
              <property name="geometry">
               <rect>
-               <x>230</x>
-               <y>150</y>
+               <x>20</x>
+               <y>330</y>
                <width>41</width>
-               <height>21</height>
+               <height>31</height>
               </rect>
              </property>
              <property name="text">
               <string>gap:</string>
              </property>
             </widget>
-            <widget class="QLineEdit" name="le_CurNodeType">
-             <property name="geometry">
-              <rect>
-               <x>49</x>
-               <y>330</y>
-               <width>131</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label_17">
-             <property name="geometry">
-              <rect>
-               <x>9</x>
-               <y>330</y>
-               <width>51</width>
-               <height>21</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>type :</string>
-             </property>
-            </widget>
-            <widget class="QLineEdit" name="le_CurNodeId">
-             <property name="geometry">
-              <rect>
-               <x>49</x>
-               <y>270</y>
-               <width>131</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label_18">
-             <property name="geometry">
-              <rect>
-               <x>20</x>
-               <y>270</y>
-               <width>21</width>
-               <height>21</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>id :</string>
-             </property>
-            </widget>
-            <widget class="QLineEdit" name="le_CurNodeInfo">
-             <property name="geometry">
-              <rect>
-               <x>49</x>
-               <y>360</y>
-               <width>131</width>
-               <height>171</height>
-              </rect>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label_22">
-             <property name="geometry">
-              <rect>
-               <x>9</x>
-               <y>360</y>
-               <width>51</width>
-               <height>21</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>info :</string>
-             </property>
-            </widget>
             <widget class="QPushButton" name="bt_NodePoseXDown">
              <property name="geometry">
               <rect>
-               <x>340</x>
-               <y>340</y>
+               <x>150</x>
+               <y>410</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1422,10 +1286,10 @@
             <widget class="QPushButton" name="bt_NodePoseYDown">
              <property name="geometry">
               <rect>
-               <x>340</x>
-               <y>370</y>
+               <x>150</x>
+               <y>440</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1435,10 +1299,10 @@
             <widget class="QPushButton" name="bt_NodePoseThDown">
              <property name="geometry">
               <rect>
-               <x>340</x>
-               <y>440</y>
+               <x>150</x>
+               <y>470</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1448,10 +1312,10 @@
             <widget class="QPushButton" name="bt_NodePoseYUp">
              <property name="geometry">
               <rect>
-               <x>380</x>
-               <y>370</y>
+               <x>200</x>
+               <y>440</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1461,10 +1325,10 @@
             <widget class="QPushButton" name="bt_NodePoseThUp">
              <property name="geometry">
               <rect>
-               <x>380</x>
-               <y>440</y>
+               <x>200</x>
+               <y>470</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1474,10 +1338,10 @@
             <widget class="QPushButton" name="bt_NodePoseXUp">
              <property name="geometry">
               <rect>
-               <x>380</x>
-               <y>340</y>
+               <x>200</x>
+               <y>410</y>
                <width>41</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="text">
@@ -1487,11 +1351,14 @@
             <widget class="QDoubleSpinBox" name="spb_NodeMovementXY">
              <property name="geometry">
               <rect>
-               <x>340</x>
-               <y>400</y>
+               <x>260</x>
+               <y>410</y>
                <width>81</width>
-               <height>26</height>
+               <height>21</height>
               </rect>
+             </property>
+             <property name="suffix">
+              <string> m</string>
              </property>
              <property name="maximum">
               <double>5.000000000000000</double>
@@ -1521,32 +1388,17 @@
               <string>info:</string>
              </property>
             </widget>
-            <widget class="QLabel" name="lb_PreNode">
-             <property name="geometry">
-              <rect>
-               <x>190</x>
-               <y>270</y>
-               <width>151</width>
-               <height>21</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>9</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>pre id:</string>
-             </property>
-            </widget>
             <widget class="QDoubleSpinBox" name="spb_NodeMovementTh">
              <property name="geometry">
               <rect>
-               <x>340</x>
+               <x>260</x>
                <y>470</y>
                <width>81</width>
-               <height>26</height>
+               <height>21</height>
               </rect>
+             </property>
+             <property name="suffix">
+              <string> deg</string>
              </property>
              <property name="minimum">
               <double>-180.000000000000000</double>
@@ -1567,7 +1419,7 @@
                <x>50</x>
                <y>60</y>
                <width>131</width>
-               <height>181</height>
+               <height>71</height>
               </rect>
              </property>
             </widget>
@@ -1582,6 +1434,57 @@
              </property>
              <property name="text">
               <string>Edit type[T]</string>
+             </property>
+             <property name="shortcut">
+              <string>T</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_PreNodeInfo">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>150</y>
+               <width>201</width>
+               <height>121</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Box</enum>
+             </property>
+             <property name="text">
+              <string>pre node info</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_CurNodeInfo">
+             <property name="geometry">
+              <rect>
+               <x>220</x>
+               <y>150</y>
+               <width>201</width>
+               <height>121</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>9</pointsize>
+              </font>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Box</enum>
+             </property>
+             <property name="text">
+              <string>cur node info</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
             </widget>
            </widget>
@@ -1614,9 +1517,9 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QCheckBox" name="ckb_PlotNodes">
+            <widget class="QCheckBox" name="ckb_PlotNodes2">
              <property name="text">
-              <string>Nodes</string>
+              <string>nodes</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -1624,9 +1527,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="ckb_PlotEdges">
+            <widget class="QCheckBox" name="ckb_PlotEdges2">
              <property name="text">
-              <string>Edges</string>
+              <string>edges</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -1634,9 +1537,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="ckb_PlotNames">
+            <widget class="QCheckBox" name="ckb_PlotNames2">
              <property name="text">
-              <string>Names</string>
+              <string>names</string>
              </property>
              <property name="checked">
               <bool>true</bool>

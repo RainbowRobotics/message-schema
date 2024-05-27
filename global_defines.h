@@ -88,19 +88,6 @@
 #define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 
-enum MAIN_TAB_IDX
-{
-    TAB_SLAM = 0,
-    TAB_ANNOTATION,
-};
-
-enum ANNOTAITON_TAB_IDX
-{
-    TAB_MAP = 0,
-    TAB_TOPO,
-    TAB_MERGE
-};
-
 struct PICKING
 {
     bool l_drag;
