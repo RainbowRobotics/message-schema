@@ -77,6 +77,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_NodePoseYDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseYDown()));
     connect(ui->bt_NodePoseThDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseThDown()));
 
+    connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
+    connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+
     // set plot window
     setup_vtk();
 
@@ -1093,6 +1096,16 @@ void MainWindow::bt_AlignNodeTh()
     is_topo_update = true;
 }
 
+void MainWindow::bt_QuickAnnotStart()
+{
+
+}
+
+void MainWindow::bt_QuickAnnotStop()
+{
+
+}
+
 void MainWindow::watchdog_loop()
 {
     // check mobile
@@ -1175,12 +1188,22 @@ void MainWindow::plot_loop()
         ui->lb_ImuInfo->setText(mobile_rpy_str);
     }
 
+    // plot slam info
+    Eigen::Vector2d cur_ieir = slam.get_cur_ieir();
+    QString slam_info_str;
+    slam_info_str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f",
+                          (double)slam.proc_time_map_a, (double)slam.proc_time_map_b,
+                          (double)slam.proc_time_loc_a, (double)slam.proc_time_loc_b,
+                          (int)slam.kfrm_storage.size(),
+                          cur_ieir[0], cur_ieir[1]);
+    ui->lb_SlamInfo->setText(slam_info_str);
+
     // plot que info
     QString que_info_str;
-    que_info_str.sprintf("[QUES]\nraw_q:%d, raw_q_ex:%d, scan_q:%d, l2c_q:%d", (int)lidar.raw_que_f.unsafe_size(), (int)lidar.raw_que_b.unsafe_size(), (int)lidar.scan_que.unsafe_size(), (int)mobile.msg_que.unsafe_size());
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d", (int)lidar.scan_que.unsafe_size(), (int)mobile.msg_que.unsafe_size());
     ui->lb_QueInfo->setText(que_info_str);
 
-    // plot map data
+    // plot map & annotation
     if(unimap.is_loaded)
     {
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -1377,7 +1400,7 @@ void MainWindow::plot_loop()
                     pt.b = c.b()*255;
 
                     // dynamic object
-                    if(slam.live_cloud.pts[p].do_cnt < config.SLAM_DO_ACCUM_NUM)
+                    if(slam.live_cloud.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
                     {
                         pt.r = 255;
                         pt.g = 0;
@@ -1419,7 +1442,7 @@ void MainWindow::plot_loop()
                         for(size_t p = 0; p < kfrm.pts.size(); p++)
                         {
                             // no drawing dynamic object
-                            if(kfrm.pts[p].do_cnt < config.SLAM_DO_ACCUM_NUM)
+                            if(kfrm.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
                             {
                                 continue;
                             }
@@ -1445,8 +1468,7 @@ void MainWindow::plot_loop()
                         {
                             viewer->addPointCloud(cloud, name.toStdString());
                             viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(slam.kfrm_storage[kfrm_id].opt_G.cast<float>()));
-
-                            plot_kfrm_names.push_back(name);
+                            last_plot_kfrms.push_back(name);
                         }
 
                         // point size
@@ -1464,36 +1486,26 @@ void MainWindow::plot_loop()
 
             slam.mtx.unlock();
         }
-
-        // draw robot
-        {
-            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-            // draw axis
-            if(viewer->contains("robot_axis"))
-            {
-                viewer->removeCoordinateSystem("robot_axis");
-            }
-            viewer->addCoordinateSystem(1.0, "robot_axis");
-            viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
-
-            // draw body
-            if(viewer->contains("robot_body"))
-            {
-                viewer->removeShape("robot_body");
-            }
-            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
-            viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-        }
-
     }
     else if(slam.is_loc)
     {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+
         // localzation
-        Eigen::Matrix4d init_tf = slam.get_init_tf();
         TIME_POSE_PTS cur_tpp = slam.get_cur_tpp();
 
         // draw points
@@ -1519,36 +1531,6 @@ void MainWindow::plot_loop()
         // pose update
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tpp.tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
-
-        // draw robot
-        {
-            // draw axis
-            if(viewer->contains("init_axis"))
-            {
-                viewer->removeCoordinateSystem("init_axis");
-            }
-            viewer->addCoordinateSystem(0.5, "init_axis");
-            viewer->updateCoordinateSystemPose("init_axis", Eigen::Affine3f(init_tf.cast<float>()));
-
-            // draw axis
-            if(viewer->contains("robot_axis"))
-            {
-                viewer->removeCoordinateSystem("robot_axis");
-            }
-            viewer->addCoordinateSystem(1.0, "robot_axis");
-            viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tpp.tf.cast<float>()));
-
-            // draw body
-            if(viewer->contains("robot_body"))
-            {
-                viewer->removeShape("robot_body");
-            }
-            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
-            viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tpp.tf.cast<float>()));
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-        }
     }
     else
     {
@@ -1598,6 +1580,30 @@ void MainWindow::plot_loop()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 
+    // draw robot
+    {
+        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+        // draw axis
+        if(viewer->contains("robot_axis"))
+        {
+            viewer->removeCoordinateSystem("robot_axis");
+        }
+        viewer->addCoordinateSystem(1.0, "robot_axis");
+        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(viewer->contains("robot_body"))
+        {
+            viewer->removeShape("robot_body");
+        }
+        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+    }
+
     // draw cursors
     {
         // erase first
@@ -1635,7 +1641,7 @@ void MainWindow::plot_loop()
         viewer->addCoordinateSystem(1.0, "O_pick");
         viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 1.0, "pick_body");
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
         viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
 
         viewer->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
@@ -1835,6 +1841,30 @@ void MainWindow::plot_loop2()
         }
     }
 
+    // draw robot
+    {
+        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+        // draw axis
+        if(viewer2->contains("robot_axis"))
+        {
+            viewer2->removeCoordinateSystem("robot_axis");
+        }
+        viewer2->addCoordinateSystem(1.0, "robot_axis");
+        viewer2->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(viewer2->contains("robot_body"))
+        {
+            viewer2->removeShape("robot_body");
+        }
+        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+        viewer2->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+    }
+
     // draw cursors
     {
         // erase first
@@ -1883,7 +1913,7 @@ void MainWindow::plot_loop2()
         viewer2->addCoordinateSystem(1.0, "O_pick");
         if(ui->cb_NodeType->currentText() == "ROUTE")
         {
-            viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 0.0, 1.0, "pick_body");
+            viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
             viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
         }
@@ -1891,7 +1921,7 @@ void MainWindow::plot_loop2()
         {
             viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                              config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                             config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 1.0, "pick_body");
+                             config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
             viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
         }

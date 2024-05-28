@@ -39,7 +39,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_slamnav">
        <property name="minimumSize">
@@ -256,7 +256,7 @@
                <string>Init</string>
               </property>
              </widget>
-             <widget class="QLabel" name="lb_MapInfo">
+             <widget class="QLabel" name="lb_SlamInfo">
               <property name="geometry">
                <rect>
                 <x>10</x>
@@ -277,7 +277,7 @@
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[Mapping info]</string>
+               <string>[SLAM_INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

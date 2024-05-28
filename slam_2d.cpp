@@ -3,21 +3,7 @@
 SLAM_2D::SLAM_2D(QObject *parent)
     : QObject{parent}
 {
-    init_tf.setIdentity();
     cur_tf.setIdentity();
-
-    /*
-    Eigen::Vector3d xi;
-    xi[0] = 10.0;
-    xi[1] = 5.0;
-    xi[2] = -90.0*D2R;
-
-    Eigen::Matrix4d G = se2_to_TF(xi);
-    std::cout << G << std::endl;
-
-    Eigen::Vector3d _xi = TF_to_se2(G);
-    std::cout << _xi << std::endl;
-    */
 }
 
 SLAM_2D::~SLAM_2D()
@@ -166,15 +152,6 @@ void SLAM_2D::localization_stop()
     is_loc = false;
 }
 
-Eigen::Matrix4d SLAM_2D::get_init_tf()
-{
-    mtx.lock();
-    Eigen::Matrix4d res = init_tf;
-    mtx.unlock();
-
-    return res;
-}
-
 Eigen::Matrix4d SLAM_2D::get_cur_tf()
 {
     mtx.lock();
@@ -193,13 +170,22 @@ TIME_POSE_PTS SLAM_2D::get_cur_tpp()
     return res;
 }
 
+Eigen::Vector2d SLAM_2D::get_cur_ieir()
+{
+    mtx.lock();
+    Eigen::Vector2d res = cur_ieir;
+    mtx.unlock();
+
+    return res;
+}
+
 void SLAM_2D::map_a_loop()
 {
+    const int window_size = config->SLAM_WINDOW_SIZE;
     const double voxel_size = config->SLAM_VOXEL_SIZE;
     const double do_cnt_check_range = 1.0*voxel_size;
-    const int window_size = config->SLAM_WINDOW_SIZE;
-    const int erase_gap = config->SLAM_DO_ERASE_GAP;
-    const int accum_num = config->SLAM_DO_ACCUM_NUM;
+    const int erase_gap = config->SLAM_ICP_DO_ERASE_GAP;
+    const int accum_num = config->SLAM_ICP_DO_ACCUM_NUM;
 
     int frm_cnt = 0;
     int add_cnt = 0;
@@ -214,6 +200,8 @@ void SLAM_2D::map_a_loop()
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
+            double st_time = get_time();
+
             if(frm_cnt == 0)
             {
                 // get last global tf
@@ -282,7 +270,8 @@ void SLAM_2D::map_a_loop()
                 {
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
-                    if(err < config->SLAM_ERROR_THRESHOLD)
+                    Eigen::Vector2d ieir = calc_ie_ir(*live_tree, live_cloud, frm, G);
+                    if(err < config->SLAM_ICP_ERROR_THRESHOLD)
                     {
                         // local to global
                         std::vector<PT_XYZR> dsk;
@@ -430,11 +419,19 @@ void SLAM_2D::map_a_loop()
                             printf("keyframe created, id:%d\n", kfrm.id);
                         }
                     }
+
+                    // update ieir
+                    mtx.lock();
+                    cur_ieir = ieir;
+                    mtx.unlock();
                 }
             }
 
             // update frame count
             frm_cnt++;
+
+            // update processing time
+            proc_time_map_a = get_time() - st_time;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -452,6 +449,8 @@ void SLAM_2D::map_b_loop()
         KFRAME kfrm;
         if(kfrm_que.try_pop(kfrm))
         {
+            double st_time = get_time();
+
             printf("[SLAM] kfrm:%d processing start\n", kfrm.id);
 
             // keyframe pts transform global to kfrm local
@@ -465,7 +464,7 @@ void SLAM_2D::map_b_loop()
                 PT_XYZR pt = kfrm.pts[p];
                 if(pt.k0 >= k0 && pt.k0 < k1)
                 {
-                    if(pt.do_cnt < config->SLAM_DO_ACCUM_NUM)
+                    if(pt.do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
                     {
                         continue;
                     }
@@ -512,7 +511,7 @@ void SLAM_2D::map_b_loop()
                     int p1 = kfrm_storage.size()-1;
 
                     double d = (kfrm_storage[p1].opt_G.block(0,3,3,1) - kfrm_storage[p0].opt_G.block(0,3,3,1)).norm();
-                    if(d < config->SLAM_LC_TRY_DIST)
+                    if(d < config->SLAM_KFRM_LC_TRY_DIST)
                     {
                         // check overlap ratio
                         std::vector<Eigen::Vector3d> pts0;
@@ -540,7 +539,7 @@ void SLAM_2D::map_b_loop()
                         }
 
                         double overlap_ratio = calc_overlap_ratio(pts0, pts1);
-                        if(overlap_ratio < config->SLAM_LC_TRY_OVERLAP)
+                        if(overlap_ratio < config->SLAM_KFRM_LC_TRY_OVERLAP)
                         {
                             printf("[SLAM] less overlap, id:%d-%d, d:%f, overlap:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, d, overlap_ratio);
                             continue;
@@ -550,7 +549,7 @@ void SLAM_2D::map_b_loop()
 
                         Eigen::Matrix4d dG = kfrm_storage[p0].opt_G.inverse()*kfrm_storage[p1].opt_G;
                         double err = kfrm_icp(kfrm_storage[p0], kfrm_storage[p1], dG);
-                        if(err < config->SLAM_LC_ERROR_THRESHOLD)
+                        if(err < config->SLAM_ICP_ERROR_THRESHOLD)
                         {
                             pgo.add_lc(kfrm_storage[p0].id, kfrm_storage[p1].id, dG, err);
                             printf("[SLAM] pose graph optimization, id:%d-%d, err:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, err);
@@ -573,6 +572,9 @@ void SLAM_2D::map_b_loop()
             }
 
             printf("[SLAM] kfrm:%d processing complete\n", kfrm.id);
+
+            // update processing time
+            proc_time_map_b = get_time() - st_time;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -590,9 +592,10 @@ void SLAM_2D::loc_a_loop()
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
+            double st_time = get_time();
+
             mtx.lock();
-            Eigen::Matrix4d _cur_tf = cur_tf;
-            init_tf = _cur_tf;
+            Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
             // pose estimation
@@ -600,7 +603,7 @@ void SLAM_2D::loc_a_loop()
 
             // check inlier error, inlier ratio
             Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-            if(ieir[0] < config->SLAM_IE_THRESHOLD && ieir[1] > config->SLAM_IR_THRESHOLD)
+            if(ieir[0] < config->LOC_CHECK_IE && ieir[1] > config->LOC_CHECK_IR)
             {
                 // for loc b loop
                 TIME_POSE_PTS tpp;
@@ -622,7 +625,10 @@ void SLAM_2D::loc_a_loop()
             mtx.unlock();
 
             lidar->scan_que.clear();
-        }
+
+            // update processing time
+            proc_time_loc_a = get_time() - st_time;
+        }        
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -643,6 +649,8 @@ void SLAM_2D::loc_b_loop()
         MOBILE_POSE mo = mobile->get_pose();
         if(mo.t > 0)
         {
+            double st_time = get_time();
+
             Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
 
             // check first
@@ -662,9 +670,11 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
-                Eigen::Matrix4d fused_tf = intp_tf(config->SLAM_LOC_FUSION_RATIO, tpp.tf, _cur_tf);
                 Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
-                _cur_tf = fused_tf*delta_tf;
+                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+
+                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
+                _cur_tf = fused_tf;
             }
             else
             {
@@ -680,6 +690,9 @@ void SLAM_2D::loc_b_loop()
 
             // update pre mobile tf
             pre_mo_tf = cur_mo_tf;
+
+            // update processing time
+            proc_time_loc_b = get_time() - st_time;
         }
 
         // for real time loop
@@ -727,8 +740,8 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_LOC_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_LOC_MAX_FEATURE_NUM);
+    const double cost_threshold = config->LOC_ICP_COST_THRESHOLD;
+    const int num_feature = std::min<int>(idx_list.size(), config->LOC_ICP_MAX_FEATURE_NUM);
 
     // for rmt
     double rmt_sigma = 0.01;
@@ -961,8 +974,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_MAX_FEATURE_NUM);
+    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD;
+    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -981,8 +994,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
             Eigen::Vector3d V1 = (_P1 - cur_G.block(0,3,3,1)).normalized();
 
-            // find nn
-            std::vector<Eigen::Vector3d> near_pts(1);
+            // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
 
@@ -994,7 +1006,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
 
             // view filter
-            if(compare_view_vector(V0, V1, config->SLAM_VIEW_THRESHOLD))
+            if(compare_view_vector(V0, V1, config->SLAM_ICP_VIEW_THRESHOLD))
             {
                 continue;
             }
@@ -1020,7 +1032,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
             {
                 continue;
             }
@@ -1208,8 +1220,8 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_LC_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_LC_MAX_FEATURE_NUM);
+    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD;
+    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -1229,7 +1241,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             Eigen::Vector3d _P1 = _dG.block(0,0,3,3)*P1 + _dG.block(0,3,3,1);
 
             // find nn
-            std::vector<Eigen::Vector3d> near_pts(1);
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
 
@@ -1260,7 +1271,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt < config->SLAM_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
             {
                 continue;
             }
@@ -1399,7 +1410,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     // check
-    if(last_err > first_err || last_err > config->SLAM_LC_ERROR_THRESHOLD)
+    if(last_err > first_err || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         return 9999;
     }
@@ -1477,7 +1488,6 @@ Eigen::Vector2d SLAM_2D::calc_ie_ir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME
         Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
 
         // find nn
-        std::vector<Eigen::Vector3d> near_pts(1);
         std::vector<unsigned int> ret_near_idxs(1);
         std::vector<double> ret_near_sq_dists(1);
 
@@ -1486,7 +1496,7 @@ Eigen::Vector2d SLAM_2D::calc_ie_ir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME
 
         // point to point distance
         double err = std::sqrt(ret_near_sq_dists[0]);
-        if(err > config->SLAM_INLIER_DIST)
+        if(err > config->LOC_CHECK_DIST)
         {
             continue;
         }

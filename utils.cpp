@@ -223,18 +223,8 @@ double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 {
-    Eigen::Matrix4d dG = tf0.inverse()*tf1;
-
-    Sophus::Vector6d dxi = Sophus::SE3d(dG).log();
-    dxi[0] *= alpha;
-    dxi[1] *= alpha;
-    dxi[2] *= alpha;
-    dxi[3] *= alpha;
-    dxi[4] *= alpha;
-    dxi[5] *= alpha;
-
-    Eigen::Matrix4d res = tf0*Sophus::SE3d::exp(dxi).matrix();
-    return res;
+    alpha = saturation(alpha, 0, 1.0);
+    return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d(tf0), Sophus::SE3d(tf1), alpha).matrix();
 }
 
 void refine_pose(Eigen::Matrix4d& G)

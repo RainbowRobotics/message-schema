@@ -42,9 +42,10 @@ public:
     void localization_start();
     void localization_stop();
 
-    Eigen::Matrix4d get_init_tf();
     Eigen::Matrix4d get_cur_tf();
+    Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();
+
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
@@ -61,8 +62,7 @@ public:
     XYZR_CLOUD live_cloud;
     KD_TREE_XYZR *live_tree = NULL;
 
-    // result    
-    Eigen::Matrix4d init_tf;
+    // result        
     Eigen::Matrix4d cur_tf;
     Eigen::Vector2d cur_ieir;
     TIME_POSE_PTS cur_tpp;
@@ -74,6 +74,13 @@ public:
 
     // for loc
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
+
+    // for plot
+    std::atomic<double> proc_time_map_a = {0};
+    std::atomic<double> proc_time_map_b = {0};
+
+    std::atomic<double> proc_time_loc_a = {0};
+    std::atomic<double> proc_time_loc_b = {0};
 
 public:
     std::atomic<bool> map_a_flag = {false};

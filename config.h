@@ -36,29 +36,30 @@ public:
     QString LIDAR_TF_F = "";
     QString LIDAR_TF_B = "";
 
-    double SLAM_VOXEL_SIZE = 0.05;
     int SLAM_WINDOW_SIZE = 100;
+    double SLAM_VOXEL_SIZE = 0.05;
+
+    double SLAM_ICP_COST_THRESHOLD = 0.5;
+    double SLAM_ICP_ERROR_THRESHOLD = 0.2;
+    int SLAM_ICP_MAX_FEATURE_NUM = 1000;
+    int SLAM_ICP_DO_ERASE_GAP = 10;
+    int SLAM_ICP_DO_ACCUM_NUM = 3;
+    double SLAM_ICP_VIEW_THRESHOLD = 150.0*D2R;
+
     int SLAM_KFRM_UPDATE_NUM = 50;
-    int SLAM_DO_ERASE_GAP = 5;
-    int SLAM_DO_ACCUM_NUM = 3;
-    int SLAM_MAX_FEATURE_NUM = 2000;
-    double SLAM_COST_THRESHOLD = 1.0;
-    double SLAM_ERROR_THRESHOLD = 0.1;
+    double SLAM_KFRM_LC_TRY_DIST = 2.0;
+    double SLAM_KFRM_LC_TRY_OVERLAP = 0.5;
 
-    double SLAM_LC_MAX_FEATURE_NUM = 2000;
-    double SLAM_LC_TRY_DIST = 5.0;
-    double SLAM_LC_TRY_OVERLAP = 0.4;
-    double SLAM_LC_COST_THRESHOLD = 2.0;
-    double SLAM_LC_ERROR_THRESHOLD = 0.1;
-    double SLAM_VIEW_THRESHOLD = 150.0*D2R;
+    double LOC_ICP_COST_THRESHOLD = 2.0;
+    double LOC_ICP_ERROR_THRESHOLD = 0.2;
+    int LOC_ICP_MAX_FEATURE_NUM = 750;
 
-    double SLAM_INLIER_DIST = 0.3;
-    double SLAM_IE_THRESHOLD = 0.2;
-    double SLAM_IR_THRESHOLD = 0.5;
+    double LOC_CHECK_DIST = 0.3;
+    double LOC_CHECK_IE = 0.2;
+    double LOC_CHECK_IR = 0.5;
+    double LOC_FUSION_RATIO = 0.5;
 
-    double SLAM_LOC_FUSION_RATIO = 0.5;
-    double SLAM_LOC_COST_THRESHOLD = 2.0;
-    int SLAM_LOC_MAX_FEATURE_NUM = 750;
+    double ANOT_QA_STEP = 0.25;
 
     std::vector<std::pair<QString, QString>> params;
 

@@ -64,13 +64,13 @@ private:
     // watchdog timer
     QTimer watchdog_timer;
 
-    // plot object names
-    std::vector<QString> plot_kfrm_names;
-
-    // vars
+    // flags
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
+
+    // plot object names
+    std::vector<QString> last_plot_kfrms;
 
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_edges;
@@ -82,13 +82,16 @@ protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 private Q_SLOTS:
+    // loops
     void plot_loop();
     void plot_loop2();
     void watchdog_loop();
 
+    // config
     void bt_ConfigLoad();
     void bt_ConfigSave();
 
+    // mobile
     void bt_MotorInit();
 
     void bt_Sync();
@@ -125,7 +128,10 @@ private Q_SLOTS:
     void bt_NodePoseYDown();
     void bt_NodePoseThDown();
 
-    // mapping
+    void bt_QuickAnnotStart();
+    void bt_QuickAnnotStop();
+
+    // mapping & localization
     void bt_MapBuild();
     void bt_MapStop();
     void bt_MapSave();
