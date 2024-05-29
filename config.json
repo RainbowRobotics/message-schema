@@ -40,5 +40,6 @@
     "LOC_CHECK_IE": "0.2",
     "LOC_CHECK_IR": "0.5",
     "LOC_FUSION_RATIO": "0.5",
-    "ANNOT_QA_STEP": "0.25"
+    "ANNOT_QA_STEP": "0.25",
+    "SIM_MODE": "1"
 }

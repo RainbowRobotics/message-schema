@@ -1131,17 +1131,22 @@ void MainWindow::bt_Sim()
     if(is_sim == false)
     {
         // clear storages
+        mobile.mtx.lock();
         mobile.msg_que.clear();
         mobile.pose_storage.clear();
         mobile.imu_storage.clear();
+        mobile.cur_pose = MOBILE_POSE();
+        mobile.cur_status = MOBILE_STATUS();
+        mobile.mtx.unlock();
 
+        lidar.mtx.lock();
         lidar.cur_scan_f.clear();
         lidar.cur_scan_b.clear();
         lidar.cur_scan.clear();
-
         lidar.raw_que_f.clear();
         lidar.raw_que_b.clear();
         lidar.scan_que.clear();
+        lidar.mtx.unlock();
 
         mobile.is_sim = true;
         lidar.is_sim = true;
@@ -1152,27 +1157,6 @@ void MainWindow::bt_Sim()
 
         ui->bt_Sim->setStyleSheet("background-color: rgb(0,255,0);");
         printf("[SIM] start\n");
-    }
-    else
-    {
-        // clear storages
-        mobile.msg_que.clear();
-        mobile.pose_storage.clear();
-        mobile.imu_storage.clear();
-
-        lidar.raw_que_f.clear();
-        lidar.raw_que_b.clear();
-        lidar.scan_que.clear();
-
-        mobile.is_sim = false;
-        lidar.is_sim = false;
-        is_sim = false;
-
-        // simulation stop
-        sim.stop();
-
-        ui->bt_Sim->setStyleSheet("background-color: rgb(255,0,0);");
-        printf("[SIM] stop\n");
     }
 }
 

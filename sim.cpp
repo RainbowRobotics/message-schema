@@ -179,9 +179,9 @@ void SIM::a_loop()
         Eigen::Matrix4d tf_inv = tf.inverse();
         std::vector<double> reflects;
         std::vector<Eigen::Vector3d> pts;
-        for(const auto& it : res_idxs)
+        for(size_t p = 0; p < res_idxs.size(); p += 4)
         {
-            unsigned int idx = it.first;
+            unsigned int idx = res_idxs[p].first;
             double x = unimap->kdtree_cloud.pts[idx].x;
             double y = unimap->kdtree_cloud.pts[idx].y;
             double z = unimap->kdtree_cloud.pts[idx].z;
