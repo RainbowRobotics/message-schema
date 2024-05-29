@@ -556,6 +556,13 @@ void MOBILE::recv_loop()
             continue;
         }
 
+        // for sim
+        if(is_sim)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
         // initial drop
         if(drop_cnt > 0)
         {
@@ -822,7 +829,7 @@ void MOBILE::send_loop()
     printf("[MOBILE] send loop start\n");
     while(send_flag)
     {
-        if(is_connected)
+        if(is_connected && is_sim == false)
         {
             // send
             std::vector<uchar> msg;

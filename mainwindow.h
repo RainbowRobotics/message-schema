@@ -11,6 +11,7 @@
 #include "lidar_2d.h"
 #include "slam_2d.h"
 #include "unimap.h"
+#include "sim.h"
 
 // qt
 #include <QMainWindow>
@@ -38,6 +39,7 @@ public:
     LIDAR_2D lidar;
     SLAM_2D slam;
     UNIMAP unimap;
+    SIM sim;
 
     void init_modules();
 
@@ -65,6 +67,7 @@ private:
     QTimer watchdog_timer;
 
     // flags
+    std::atomic<bool> is_sim = {false};
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
@@ -132,8 +135,7 @@ private Q_SLOTS:
     void bt_QuickAnnotStop();
 
     // mapping & localization
-    void bt_MapBuild();
-    void bt_MapStop();
+    void bt_MapBuild();    
     void bt_MapSave();
     void bt_MapLoad();
 
@@ -141,6 +143,9 @@ private Q_SLOTS:
     void bt_LocInit2();
     void bt_LocStart();
     void bt_LocStop();
+
+    // simulation
+    void bt_Sim();
 
 };
 #endif // MAINWINDOW_H

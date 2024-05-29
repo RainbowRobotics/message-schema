@@ -3,6 +3,7 @@ QT       += core gui websockets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
+CONFIG += resources_big
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -22,6 +23,7 @@ SOURCES += \
     mainwindow.cpp \
     mobile.cpp \
     pgo.cpp \
+    sim.cpp \
     slam_2d.cpp \
     unimap.cpp \
     utils.cpp
@@ -39,6 +41,7 @@ HEADERS += \
     mobile.h \
     nanoflann.hpp \
     pgo.h \
+    sim.h \
     slam_2d.h \
     tinycolormap.hpp \
     unimap.h \

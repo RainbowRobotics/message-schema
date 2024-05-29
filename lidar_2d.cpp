@@ -33,19 +33,19 @@ void LIDAR_2D::open(MOBILE *_mobile)
     mobile = _mobile;
 
     // start grab loop
-    if (grab_thread_f == NULL)
+    if(grab_thread_f == NULL)
     {
         grab_flag_f = true;
         grab_thread_f = new std::thread(&LIDAR_2D::grab_loop_f, this);
     }
 
-    if (grab_thread_b == NULL)
+    if(grab_thread_b == NULL)
     {
         grab_flag_b = true;
         grab_thread_b = new std::thread(&LIDAR_2D::grab_loop_b, this);
     }
 
-    if (a_thread == NULL)
+    if(a_thread == NULL)
     {
         a_flag = true;
         a_thread = new std::thread(&LIDAR_2D::a_loop, this);
@@ -105,10 +105,18 @@ void LIDAR_2D::grab_loop_f()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
+            // for sim
+            if(is_sim)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
             // initial drop
             if(drop_cnt > 0)
             {
                 drop_cnt--;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
@@ -313,6 +321,13 @@ void LIDAR_2D::grab_loop_b()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
+            // for sim
+            if(is_sim)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
             // initial drop
             if(drop_cnt > 0)
             {
@@ -517,6 +532,13 @@ void LIDAR_2D::a_loop()
         RAW_FRAME frm0;
         if(raw_que_f.try_pop(frm0))
         {
+            // for sim
+            if(is_sim)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
             // wait
             while(frm0.t0 > last_t_b && a_flag)
             {

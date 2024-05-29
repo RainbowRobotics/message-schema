@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , lidar(this)
     , slam(this)
     , unimap(this)
+    , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
@@ -43,8 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_JogR, SIGNAL(released()), this, SLOT(bt_JogReleased()));
 
     // mapping
-    connect(ui->bt_MapBuild, SIGNAL(clicked()), this, SLOT(bt_MapBuild()));
-    connect(ui->bt_MapStop, SIGNAL(clicked()), this, SLOT(bt_MapStop()));
+    connect(ui->bt_MapBuild, SIGNAL(clicked()), this, SLOT(bt_MapBuild()));    
     connect(ui->bt_MapSave, SIGNAL(clicked()), this, SLOT(bt_MapSave()));
     connect(ui->bt_MapLoad, SIGNAL(clicked()), this, SLOT(bt_MapLoad()));
 
@@ -79,6 +79,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+
+    // sim
+    connect(ui->bt_Sim, SIGNAL(clicked()), this, SLOT(bt_Sim()));
 
     // set plot window
     setup_vtk();
@@ -522,6 +525,10 @@ void MainWindow::init_modules()
     lidar.logger = &logger;
     lidar.open(&mobile);
 
+    // unimap module init
+    unimap.config = &config;
+    unimap.logger = &logger;
+
     // slam module init
     slam.config = &config;
     slam.logger = &logger;
@@ -529,9 +536,13 @@ void MainWindow::init_modules()
     slam.lidar = &lidar;
     slam.unimap = &unimap;
 
-    // unimap module init
-    unimap.config = &config;
-    unimap.logger = &logger;
+    // simulation module init
+    sim.config = &config;
+    sim.logger = &logger;
+    sim.mobile = &mobile;
+    sim.lidar = &lidar;
+    sim.slam = &slam;
+    sim.unimap = &unimap;
 }
 
 void MainWindow::bt_ConfigLoad()
@@ -632,11 +643,6 @@ void MainWindow::bt_MapBuild()
 
     // mapping start
     slam.mapping_start();
-}
-
-void MainWindow::bt_MapStop()
-{
-    slam.mapping_stop();
 }
 
 void MainWindow::bt_MapSave()
@@ -1104,6 +1110,70 @@ void MainWindow::bt_QuickAnnotStart()
 void MainWindow::bt_QuickAnnotStop()
 {
 
+}
+
+void MainWindow::bt_Sim()
+{
+    // check map
+    if(unimap.is_loaded == false)
+    {
+        printf("check map loaded\n");
+        return;
+    }
+
+    // check other algorithms
+    if(slam.is_loc == true || slam.is_slam == true)
+    {
+        printf("check slam or loc running\n");
+        return;
+    }
+
+    if(is_sim == false)
+    {
+        // clear storages
+        mobile.msg_que.clear();
+        mobile.pose_storage.clear();
+        mobile.imu_storage.clear();
+
+        lidar.cur_scan_f.clear();
+        lidar.cur_scan_b.clear();
+        lidar.cur_scan.clear();
+
+        lidar.raw_que_f.clear();
+        lidar.raw_que_b.clear();
+        lidar.scan_que.clear();
+
+        mobile.is_sim = true;
+        lidar.is_sim = true;
+        is_sim = true;
+
+        // simulation start
+        sim.start();
+
+        ui->bt_Sim->setStyleSheet("background-color: rgb(0,255,0);");
+        printf("[SIM] start\n");
+    }
+    else
+    {
+        // clear storages
+        mobile.msg_que.clear();
+        mobile.pose_storage.clear();
+        mobile.imu_storage.clear();
+
+        lidar.raw_que_f.clear();
+        lidar.raw_que_b.clear();
+        lidar.scan_que.clear();
+
+        mobile.is_sim = false;
+        lidar.is_sim = false;
+        is_sim = false;
+
+        // simulation stop
+        sim.stop();
+
+        ui->bt_Sim->setStyleSheet("background-color: rgb(255,0,0);");
+        printf("[SIM] stop\n");
+    }
 }
 
 void MainWindow::watchdog_loop()

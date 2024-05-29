@@ -23,10 +23,14 @@ class LIDAR_2D : public QObject
 public:
     explicit LIDAR_2D(QObject *parent = nullptr);
     ~LIDAR_2D();
+    std::mutex mtx;
 
+    // other modules
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
+    MOBILE *mobile = NULL;
 
+    // interface funcs
     void open(MOBILE *_mobile);
     void sync_f();
     void sync_b();
@@ -35,10 +39,7 @@ public:
     std::vector<Eigen::Vector3d> get_cur_scan_b();
     std::vector<Eigen::Vector3d> get_cur_scan();
 
-    tbb::concurrent_queue<RAW_FRAME> raw_que_f;
-    tbb::concurrent_queue<RAW_FRAME> raw_que_b;
-    tbb::concurrent_queue<FRAME> scan_que;
-
+    // flags
     std::atomic<bool> is_connected_f = {false};
     std::atomic<bool> is_connected_b = {false};
 
@@ -54,16 +55,20 @@ public:
     std::atomic<double> last_t_f = {0};
     std::atomic<double> last_t_b = {0};
 
+    std::atomic<bool> is_sim = {false}; // for simulation
+
+    // storage
+    tbb::concurrent_queue<RAW_FRAME> raw_que_f;
+    tbb::concurrent_queue<RAW_FRAME> raw_que_b;
+    tbb::concurrent_queue<FRAME> scan_que;
+
+    // vars
     const double angle_offset = 8.0;
-private:
-    MOBILE *mobile = NULL;
-
-    std::mutex mtx;
-
     std::vector<Eigen::Vector3d> cur_scan_f;
     std::vector<Eigen::Vector3d> cur_scan_b;
     std::vector<Eigen::Vector3d> cur_scan;
 
+    // loops
     std::atomic<bool> grab_flag_f;
     std::thread* grab_thread_f = NULL;
     void grab_loop_f();
