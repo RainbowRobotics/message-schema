@@ -12,6 +12,7 @@
 #include "slam_2d.h"
 #include "unimap.h"
 #include "sim.h"
+#include "autocontrol.h"
 
 // qt
 #include <QMainWindow>
@@ -40,6 +41,8 @@ public:
     SLAM_2D slam;
     UNIMAP unimap;
     SIM sim;
+    AUTOCONTROL ctrl;
+
 
     void init_modules();
 
@@ -66,8 +69,11 @@ private:
     // watchdog timer
     QTimer watchdog_timer;
 
+    // quick annotation timer
+    QTimer qa_timer;
+    QString qa_last_node = "";
+
     // flags
-    std::atomic<bool> is_sim = {false};
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
@@ -85,10 +91,11 @@ protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 private Q_SLOTS:
-    // loops
+    // timer loops
     void plot_loop();
     void plot_loop2();
     void watchdog_loop();
+    void qa_loop();
 
     // config
     void bt_ConfigLoad();
@@ -144,8 +151,8 @@ private Q_SLOTS:
     void bt_LocStart();
     void bt_LocStop();
 
-    // simulation
-    void bt_Sim();
+    // for simulation
+    void bt_SimInit();
 
 };
 #endif // MAINWINDOW_H

@@ -93,9 +93,6 @@ public:
     CONFIG* config = NULL;
     LOGGER* logger = NULL;
 
-    // for simulation
-    std::atomic<bool> is_sim = {false};
-
 Q_SIGNALS:
 
 };

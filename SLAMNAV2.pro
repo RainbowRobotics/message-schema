@@ -14,6 +14,7 @@ DEFINES += QT_NO_KEYWORDS
 SOURCES += \
     LakiBeamHTTP.cpp \
     LakiBeamUDP.cpp \
+    autocontrol.cpp \
     complementary_filter.cpp \
     config.cpp \
     cv_to_qt.cpp \
@@ -31,6 +32,7 @@ SOURCES += \
 HEADERS += \
     LakiBeamHTTP.h \
     LakiBeamUDP.h \
+    autocontrol.h \
     complementary_filter.h \
     config.h \
     cv_to_qt.h \

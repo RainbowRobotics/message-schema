@@ -28,9 +28,14 @@ LIDAR_2D::~LIDAR_2D()
     }
 }
 
-void LIDAR_2D::open(MOBILE *_mobile)
+void LIDAR_2D::open()
 {
-    mobile = _mobile;
+    // check simulation mode
+    if(config->SIM_MODE == 1)
+    {
+        printf("[LIDAR] simulation mode\n");
+        return;
+    }
 
     // start grab loop
     if(grab_thread_f == NULL)
@@ -105,13 +110,6 @@ void LIDAR_2D::grab_loop_f()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
-            // for sim
-            if(is_sim)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
             // initial drop
             if(drop_cnt > 0)
             {
@@ -321,13 +319,6 @@ void LIDAR_2D::grab_loop_b()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
-            // for sim
-            if(is_sim)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
             // initial drop
             if(drop_cnt > 0)
             {
@@ -532,13 +523,6 @@ void LIDAR_2D::a_loop()
         RAW_FRAME frm0;
         if(raw_que_f.try_pop(frm0))
         {
-            // for sim
-            if(is_sim)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
             // wait
             while(frm0.t0 > last_t_b && a_flag)
             {

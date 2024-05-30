@@ -31,7 +31,7 @@ public:
     MOBILE *mobile = NULL;
 
     // interface funcs
-    void open(MOBILE *_mobile);
+    void open();
     void sync_f();
     void sync_b();
 
@@ -54,8 +54,6 @@ public:
 
     std::atomic<double> last_t_f = {0};
     std::atomic<double> last_t_b = {0};
-
-    std::atomic<bool> is_sim = {false}; // for simulation
 
     // storage
     tbb::concurrent_queue<RAW_FRAME> raw_que_f;

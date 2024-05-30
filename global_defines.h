@@ -104,6 +104,8 @@ struct PICKING
     QString pre_node;
     QString cur_node;
 
+    int last_btn = 0; // 0: left, 1: right
+
     PICKING()
     {
         l_drag = false;
@@ -118,6 +120,8 @@ struct PICKING
 
         pre_node = "";
         cur_node = "";
+
+        last_btn = 0;
     }
 
     PICKING(const PICKING& p)
@@ -134,6 +138,8 @@ struct PICKING
 
         pre_node = p.pre_node;
         cur_node = p.cur_node;
+
+        last_btn = p.last_btn;
     }
 
     PICKING& operator=(const PICKING& p)
@@ -151,6 +157,7 @@ struct PICKING
         pre_node = p.cur_node;
         cur_node = p.pre_node;
 
+        last_btn = p.last_btn;
         return *this;
     }
 };

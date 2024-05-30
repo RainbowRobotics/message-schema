@@ -7,12 +7,14 @@ MainWindow::MainWindow(QWidget *parent)
     , mobile(this)
     , lidar(this)
     , slam(this)
-    , unimap(this)
+    , unimap(this)    
     , sim(this)
+    , ctrl(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
     , watchdog_timer(this)
+    , qa_timer(this)
 {
     ui->setupUi(this);
 
@@ -20,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
     connect(&watchdog_timer, SIGNAL(timeout()), this, SLOT(watchdog_loop()));
+    connect(&qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
 
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
@@ -80,8 +83,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
 
-    // sim
-    connect(ui->bt_Sim, SIGNAL(clicked()), this, SLOT(bt_Sim()));
+    // for simulation
+    connect(ui->bt_SimInit, SIGNAL(clicked()), this, SLOT(bt_SimInit()));
 
     // set plot window
     setup_vtk();
@@ -201,6 +204,52 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
     if(object == ui->qvtkWidget)
     {
+        // keyboard event
+        if(ev->type() == QEvent::KeyPress)
+        {
+            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            switch(ke->key())
+            {
+                case Qt::Key_Up:
+                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_Left:
+                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                    break;
+                case Qt::Key_Down:
+                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_Right:
+                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+        else if(ev->type() == QEvent::KeyRelease)
+        {
+            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            switch(ke->key())
+            {
+                case Qt::Key_Up:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_Left:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
+                case Qt::Key_Down:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_Right:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+
         // mouse event
         if(ev->type() == QEvent::MouseButtonPress)
         {
@@ -220,6 +269,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                 pick.cur_node = unimap.get_node_id(pt);
 
+                // update last mouse button
+                pick.last_btn = 0;
+
                 return true;
             }
 
@@ -238,6 +290,14 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                 pick.r_pt0 = pt;
                 pick.r_drag = true;
+
+                // calc pose
+                pick.r_pose[0] = pick.r_pt0[0];
+                pick.r_pose[1] = pick.r_pt0[1];
+                pick.r_pose[2] = 0;
+
+                // update last mouse button
+                pick.last_btn = 1;
 
                 return true;
             }
@@ -310,6 +370,52 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
     }
     else if(object == ui->qvtkWidget2)
     {
+        // keyboard event
+        if(ev->type() == QEvent::KeyPress)
+        {
+            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            switch(ke->key())
+            {
+                case Qt::Key_Up:
+                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_Left:
+                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                    break;
+                case Qt::Key_Down:
+                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_Right:
+                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+        else if(ev->type() == QEvent::KeyRelease)
+        {
+            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            switch(ke->key())
+            {
+                case Qt::Key_Up:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_Left:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
+                case Qt::Key_Down:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_Right:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+
         // mouse event
         if(ev->type() == QEvent::MouseButtonPress)
         {
@@ -362,6 +468,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     }
                 }
 
+                // update last mouse button
+                pick.last_btn = 0;
+
                 return true;
             }
 
@@ -385,6 +494,14 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
                 pick.r_pt0 = pt;
                 pick.r_drag = true;
+
+                // calc pose
+                pick.r_pose[0] = pick.r_pt0[0];
+                pick.r_pose[1] = pick.r_pt0[1];
+                pick.r_pose[2] = 0;
+
+                // update last mouse button
+                pick.last_btn = 1;
 
                 return true;
             }
@@ -511,6 +628,17 @@ void MainWindow::init_modules()
     config.load();
     config.config_to_ui();
 
+    if(config.SIM_MODE == 1)
+    {
+        this->setWindowTitle("SLAMNAV2 (SIMULATION MODE)");
+
+        QPalette palette = this->palette();
+        palette.setColor(QPalette::Window, Qt::red);
+        this->setPalette(palette);
+
+        ui->bt_SimInit->setEnabled(true);
+    }
+
     // log module init
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
@@ -523,7 +651,8 @@ void MainWindow::init_modules()
     // lidar module init
     lidar.config = &config;
     lidar.logger = &logger;
-    lidar.open(&mobile);
+    lidar.mobile = &mobile;
+    lidar.open();
 
     // unimap module init
     unimap.config = &config;
@@ -536,13 +665,49 @@ void MainWindow::init_modules()
     slam.lidar = &lidar;
     slam.unimap = &unimap;
 
+    // autocontrol module init
+    ctrl.config = &config;
+    ctrl.logger = &logger;
+    ctrl.mobile = &mobile;
+    ctrl.lidar = &lidar;
+    ctrl.slam = &slam;
+    ctrl.unimap = &unimap;
+
     // simulation module init
     sim.config = &config;
     sim.logger = &logger;
     sim.mobile = &mobile;
     sim.lidar = &lidar;
     sim.slam = &slam;
-    sim.unimap = &unimap;
+    sim.unimap = &unimap;    
+}
+
+void MainWindow::bt_SimInit()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[SIM] map load first\n");
+        return;
+    }
+
+    // stop first
+    if(slam.is_loc)
+    {
+        slam.localization_stop();
+    }
+    sim.stop();
+
+    // start
+    sim.start();
+
+    mobile.is_connected = true;
+    mobile.is_synced = true;
+
+    lidar.is_connected_f = true;
+    lidar.is_connected_b = true;
+
+    lidar.is_synced_f = true;
+    lidar.is_synced_b = true;
 }
 
 void MainWindow::bt_ConfigLoad()
@@ -636,6 +801,12 @@ void MainWindow::bt_JogReleased()
 
 void MainWindow::bt_MapBuild()
 {
+    if(config.SIM_MODE == 1)
+    {
+        printf("Map build not allowed SIM_MODE\n");
+        return;
+    }
+
     // auto generation dir path
     QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
     QDir().mkpath(_map_dir);
@@ -647,6 +818,12 @@ void MainWindow::bt_MapBuild()
 
 void MainWindow::bt_MapSave()
 {
+    if(config.SIM_MODE == 1)
+    {
+        printf("Map save not allowed SIM_MODE\n");
+        return;
+    }
+
     // check
     if(map_dir == "")
     {
@@ -1104,59 +1281,86 @@ void MainWindow::bt_AlignNodeTh()
 
 void MainWindow::bt_QuickAnnotStart()
 {
+    if(unimap.is_loaded == false)
+    {
+        printf("[QA] check map load\n");
+        return;
+    }
 
+    if(slam.is_loc == false)
+    {
+        printf("[QA] check localization\n");
+        return;
+    }
+
+    if(qa_timer.isActive())
+    {
+        printf("[QA] qa already running\n");
+        return;
+    }
+
+    printf("[QA] qa start\n");
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+    qa_last_node = unimap.add_node(cur_tf, "GOAL");
+    is_topo_update = true;
+
+    qa_timer.start(1000);
 }
 
 void MainWindow::bt_QuickAnnotStop()
 {
+    if(!qa_timer.isActive())
+    {
+        return;
+    }
 
+    // loop stop
+    qa_timer.stop();
+
+    NODE* last_node = unimap.get_node_by_id(qa_last_node);
+    if(last_node == NULL)
+    {
+        printf("[QA] last node empty\n");
+        return;
+    }
+
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+    double d = (cur_tf.block(0,3,3,1) - last_node->tf.block(0,3,3,1)).norm();
+    if(d > config.ANNOT_QA_STEP)
+    {
+        QString cur_node = unimap.add_node(cur_tf, "GOAL"); // final node
+        unimap.add_link2(qa_last_node, cur_node);
+        qa_last_node = cur_node;
+    }
+    else
+    {
+        last_node->type = "GOAL";
+    }
+
+    is_topo_update = true;
+    printf("[QA] qa stop\n");
 }
 
-void MainWindow::bt_Sim()
+void MainWindow::qa_loop()
 {
-    // check map
-    if(unimap.is_loaded == false)
+    NODE* last_node = unimap.get_node_by_id(qa_last_node);
+    if(last_node == NULL)
     {
-        printf("check map loaded\n");
+        printf("[QA] last node empty\n");
+        qa_timer.stop();
         return;
     }
 
-    // check other algorithms
-    if(slam.is_loc == true || slam.is_slam == true)
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+    double d = (cur_tf.block(0,3,3,1) - last_node->tf.block(0,3,3,1)).norm();
+    if(d > config.ANNOT_QA_STEP)
     {
-        printf("check slam or loc running\n");
-        return;
-    }
-
-    if(is_sim == false)
-    {
-        // clear storages
-        mobile.mtx.lock();
-        mobile.msg_que.clear();
-        mobile.pose_storage.clear();
-        mobile.imu_storage.clear();
-        mobile.cur_pose = MOBILE_POSE();
-        mobile.cur_status = MOBILE_STATUS();
-        mobile.mtx.unlock();
-
-        lidar.mtx.lock();
-        lidar.cur_scan_f.clear();
-        lidar.cur_scan_b.clear();
-        lidar.cur_scan.clear();
-        lidar.raw_que_f.clear();
-        lidar.raw_que_b.clear();
-        lidar.scan_que.clear();
-        lidar.mtx.unlock();
-
-        mobile.is_sim = true;
-        lidar.is_sim = true;
-        is_sim = true;
-
-        // simulation start
-        sim.start();
-
-        ui->bt_Sim->setStyleSheet("background-color: rgb(0,255,0);");
-        printf("[SIM] start\n");
+        QString cur_node = unimap.add_node(cur_tf, "ROUTE");
+        unimap.add_link2(qa_last_node, cur_node);
+        qa_last_node = cur_node;
+        is_topo_update = true;
     }
 }
 
@@ -1634,7 +1838,7 @@ void MainWindow::plot_loop()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 
-    // draw robot
+    // draw robot    
     {
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
@@ -1686,20 +1890,23 @@ void MainWindow::plot_loop()
             NODE *node = unimap.get_node_by_id(pick.cur_node);
             if(node != NULL)
             {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.1, node->tf, 0.0, 1.0, 0.0);
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
                 viewer->addPolygonMesh(donut, "sel_cur");
             }
         }
 
-        // draw pose
-        viewer->addCoordinateSystem(1.0, "O_pick");
-        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+        if(pick.last_btn == 1)
+        {
+            // draw pose
+            viewer->addCoordinateSystem(1.0, "O_pick");
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
 
-        viewer->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
-        viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            viewer->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+        }
     }
 
     // cam control
@@ -1895,7 +2102,7 @@ void MainWindow::plot_loop2()
         }
     }
 
-    // draw robot
+    // draw robot    
     {
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
@@ -1948,7 +2155,7 @@ void MainWindow::plot_loop2()
             NODE *node = unimap.get_node_by_id(pick.pre_node);
             if(node != NULL)
             {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.1, node->tf, 1.0, 0.0, 0.0);
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
                 viewer2->addPolygonMesh(donut, "sel_pre");
             }
         }
@@ -1958,29 +2165,32 @@ void MainWindow::plot_loop2()
             NODE *node = unimap.get_node_by_id(pick.cur_node);
             if(node != NULL)
             {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.1, node->tf, 0.0, 1.0, 0.0);
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
                 viewer2->addPolygonMesh(donut, "sel_cur");
             }
         }
 
-        // draw pose
-        viewer2->addCoordinateSystem(1.0, "O_pick");
-        if(ui->cb_NodeType->currentText() == "ROUTE")
+        if(pick.last_btn == 1)
         {
-            viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-            viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
-        }
-        else if(ui->cb_NodeType->currentText() == "GOAL")
-        {
-            viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                             config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                             config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
-            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-            viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
-        }
+            // draw pose
+            viewer2->addCoordinateSystem(1.0, "O_pick");
+            if(ui->cb_NodeType->currentText() == "ROUTE")
+            {
+                viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
+                viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            }
+            else if(ui->cb_NodeType->currentText() == "GOAL")
+            {
+                viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                 config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                 config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
+                viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            }
 
-        viewer2->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            viewer2->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+        }
     }
 
     // rendering

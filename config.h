@@ -59,7 +59,8 @@ public:
     double LOC_CHECK_IR = 0.5;
     double LOC_FUSION_RATIO = 0.5;
 
-    double ANOT_QA_STEP = 0.25;
+    double ANNOT_QA_STEP = 0.3;
+    int SIM_MODE = 0;
 
     std::vector<std::pair<QString, QString>> params;
 

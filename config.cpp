@@ -232,10 +232,14 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("LOC_FUSION_RATIO", obj["LOC_FUSION_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            ANNOT_QA_STEP = obj["ANNOT_QA_STEP"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ANNOT_QA_STEP", obj["ANNOT_QA_STEP"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
-            ANOT_QA_STEP = obj["ANOT_QA_STEP"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ANOT_QA_STEP", obj["ANOT_QA_STEP"].toString()));
+
+            SIM_MODE = obj["SIM_MODE"].toString().toInt();
+            params.push_back(std::make_pair<QString, QString>("SIM_MODE", obj["SIM_MODE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             // complete
