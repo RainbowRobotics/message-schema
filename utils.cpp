@@ -107,9 +107,9 @@ Sophus::Vector6d TF_to_ZYX(Eigen::Matrix4d tf)
     res[0] = t[0];
     res[1] = t[1];
     res[2] = t[2];
-    res[3] = euler[2];
-    res[4] = euler[1];
-    res[5] = euler[0];
+    res[3] = euler[2]; // rx
+    res[4] = euler[1]; // ry
+    res[5] = euler[0]; // rz
     return res;
 }
 
@@ -203,24 +203,6 @@ QString TF_to_string(Eigen::Matrix4d TF)
     return res;
 }
 
-double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
-{
-    Eigen::Vector3d ab = P1-P0;
-    Eigen::Vector3d av = P-P0;
-    if(av.dot(ab) <= 0)
-    {
-        return av.norm();
-    }
-
-    Eigen::Vector3d bv = P-P1;
-    if(bv.dot(ab) >= 0)
-    {
-        return bv.norm();
-    }
-
-    return (ab.cross(av)).norm() / ab.norm();
-}
-
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 {
     alpha = saturation(alpha, 0, 1.0);
@@ -266,6 +248,255 @@ double saturation(double val, double min, double max)
     }
 
     return val;
+}
+
+double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
+{
+    Eigen::Vector3d ab = P1-P0;
+    Eigen::Vector3d av = P-P0;
+    if(av.dot(ab) <= 0)
+    {
+        return av.norm();
+    }
+
+    Eigen::Vector3d bv = P-P1;
+    if(bv.dot(ab) >= 0)
+    {
+        return bv.norm();
+    }
+
+    return (ab.cross(av)).norm() / ab.norm();
+}
+
+std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
+{
+    Eigen::Vector3d v = P1 - P0;
+    Eigen::Vector3d w = P - P0;
+
+    double c1 = w.dot(v);
+    double c2 = v.dot(v);
+
+    if (c1 <= 0)
+    {
+        return std::make_pair(P0, (P - P0).norm());
+    }
+    else if (c2 <= c1)
+    {
+        return std::make_pair(P1, (P - P1).norm());
+    }
+    else
+    {
+        double b = c1 / c2;
+        Eigen::Vector3d Pb = P0 + b * v;
+        return std::make_pair(Pb, (P - Pb).norm());
+    }
+}
+
+bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection)
+{
+    Eigen::Vector3d d = P1 - P0;
+    Eigen::Vector3d v = P0 - P;
+    double a = d.dot(d);
+    double b = 2.0 * d.dot(v);
+    double c = v.dot(v) - r * r;
+
+    double discriminant = b * b - 4 * a * c;
+    if (discriminant < 0)
+    {
+        return false;
+    }
+
+    double t1 = (-b - std::sqrt(discriminant)) / (2 * a);
+    double t2 = (-b + std::sqrt(discriminant)) / (2 * a);
+
+    bool intersect1 = (t1 >= 0 && t1 <= 1);
+    bool intersect2 = (t2 >= 0 && t2 <= 1);
+
+    if (intersect1 && intersect2)
+    {
+        Eigen::Vector3d point1 = P0 + t1 * d;
+        Eigen::Vector3d point2 = P0 + t2 * d;
+        if ((point1 - P1).norm() < (point2 - P1).norm())
+        {
+            intersection = point1;
+        }
+        else
+        {
+            intersection = point2;
+        }
+
+        return true;
+    }
+
+    if(intersect1)
+    {
+        intersection = P0 + t1 * d;
+        return true;
+    }
+
+    if(intersect2)
+    {
+        intersection = P0 + t2 * d;
+        return true;
+    }
+
+    return false;
+}
+
+double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2)
+{
+    double x1 = P0[0], y1 = P0[1];
+    double x2 = P1[0], y2 = P1[1];
+    double x3 = P2[0], y3 = P2[1];
+
+    double numerator = std::abs((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1));
+    double denominator = std::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1)) *
+                         std::sqrt((x3-x2)*(x3-x2) + (y3-y2)*(y3-y2)) *
+                         std::sqrt((x3-x1)*(x3-x1) + (y3-y1)*(y3-y1));
+
+    if (denominator == 0)
+    {
+        // 세 점이 일직선 상에 있는 경우, 곡률은 0입니다.
+        return 0;
+    }
+
+    double curvature = 2 * numerator / denominator;
+    return curvature;
+}
+
+double calc_motion_time(double _s, double _v0, double _v1, double _acc)
+{
+    if(std::abs(_s) == 0)
+    {
+        return 0;
+    }
+
+    double sign = _v0*_v1;
+    if(sign >= 0)
+    {
+        // v0, v1 same sign
+        double v0 = std::abs(_v0);
+        double v1 = std::abs(_v1);
+        double s = std::abs(_s);
+        double acc;
+        if(v1 - v0 > 0)
+        {
+            // accel
+            acc = _acc;
+        }
+        else if(v1 - v0 < 0)
+        {
+            // decel
+            acc = -_acc;
+        }
+        else
+        {
+            // constant case
+            double t = s/v0;
+            return t;
+        }
+
+        double t0 = (v1-v0)/acc;
+        double s0 = v0*t0+0.5*acc*t0*t0;
+        if(s0 >= s)
+        {
+            double a = 0.5*acc;
+            double b = v0;
+            double c = -s;
+
+            // always b^2 - 4ac > 0, because c is minus
+            double tmp0 = (-b - std::sqrt(b*b - 4*a*c))/(2*a);
+            double tmp1 = (-b + std::sqrt(b*b - 4*a*c))/(2*a);
+            double t = std::max<double>(tmp0, tmp1);
+            return t;
+        }
+
+        double t1 = (s - v0*t0 - 0.5*(v1-v0)*t0 + v1*t0)/v1;
+        return t1;
+    }
+    else
+    {
+        // v0, v1 different sign
+        double v0 = std::abs(_v0);
+        double v1 = std::abs(_v1);
+        double s = std::abs(_s);
+        double acc = std::abs(_acc);
+
+        double t0 = v0/acc;
+        double t1 = t0 + v1/acc;
+
+        double s1 = -0.5*v0*t0 + 0.5*v1*(t1-t0);
+        if(s1 >= s)
+        {
+            v0 *= -1;
+            double a = 0.5*acc;
+            double b = v0;
+            double c = -s;
+
+            // always b^2 - 4ac > 0, because c is minus
+            double tmp0 = (-b - std::sqrt(b*b - 4*a*c))/(2*a);
+            double tmp1 = (-b + std::sqrt(b*b - 4*a*c))/(2*a);
+            double t = std::max<double>(tmp0, tmp1);
+            return t;
+        }
+
+        double t2 = (s + 0.5*v0*t0 - 0.5*v1*(t1-t0) + v1*t1)/v1;
+        return t2;
+    }
+}
+
+pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a, int num_segments)
+{
+    pcl::PolygonMesh mesh;
+    pcl::PointCloud<pcl::PointXYZRGBA> cloud;
+    cloud.width = num_segments * num_segments;
+    cloud.height = 1;
+    cloud.is_dense = false;
+    cloud.points.resize(cloud.width * cloud.height);
+
+    for (int i = 0; i < num_segments; ++i)
+    {
+        double theta = 2.0 * M_PI * i / num_segments;
+        double cos_theta = std::cos(theta);
+        double sin_theta = std::sin(theta);
+
+        for (int j = 0; j < num_segments; ++j)
+        {
+            double phi = 2.0 * M_PI * j / num_segments;
+            double cos_phi = std::cos(phi);
+            double sin_phi = std::sin(phi);
+
+            pcl::PointXYZRGBA point;
+            point.x = (donut_radius + tube_radius * cos_phi) * cos_theta;
+            point.y = (donut_radius + tube_radius * cos_phi) * sin_theta;
+            point.z = tube_radius * sin_phi;
+            point.r = static_cast<uint8_t>(r * 255);
+            point.g = static_cast<uint8_t>(g * 255);
+            point.b = static_cast<uint8_t>(b * 255);
+            point.a = static_cast<uint8_t>(a * 255);
+
+            cloud.points[i * num_segments + j] = point;
+        }
+    }
+
+    pcl::transformPointCloud(cloud, cloud, tf);
+    pcl::toPCLPointCloud2(cloud, mesh.cloud);
+
+    mesh.polygons.resize(num_segments * num_segments);
+    for (int i = 0; i < num_segments; ++i)
+    {
+        for (int j = 0; j < num_segments; ++j)
+        {
+            pcl::Vertices vertices;
+            vertices.vertices.push_back((i * num_segments + j) % (num_segments * num_segments));
+            vertices.vertices.push_back(((i + 1) * num_segments + j) % (num_segments * num_segments));
+            vertices.vertices.push_back(((i + 1) * num_segments + (j + 1)) % (num_segments * num_segments));
+            vertices.vertices.push_back((i * num_segments + (j + 1)) % (num_segments * num_segments));
+            mesh.polygons[i * num_segments + j] = vertices;
+        }
+    }
+
+    return mesh;
 }
 
 #endif // UTILS_CPP

@@ -43,20 +43,18 @@ public:
     SIM sim;
     AUTOCONTROL ctrl;
 
-
-    void init_modules();
-
     // funcs
+    void init_modules();
     void setup_vtk();
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
-    pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r=1.0, double g=1.0, double b=1.0, double a=1.0, int num_segments=30);
-
-    QString map_dir = "";
 
 private:
     Ui::MainWindow *ui;
     std::mutex mtx;
+
+    // vars
+    QString map_dir = "";
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -77,6 +75,11 @@ private:
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
+    std::atomic<bool> is_path_update = {false};
+
+    std::atomic<bool> is_map_update2 = {false};
+    std::atomic<bool> is_topo_update2 = {false};
+    std::atomic<bool> is_pick_update2 = {false};
 
     // plot object names
     std::vector<QString> last_plot_kfrms;
@@ -87,10 +90,18 @@ private:
     std::vector<QString> last_plot_nodes2;
     std::vector<QString> last_plot_edges2;
 
+    std::vector<QString> last_plot_global_path;
+
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 private Q_SLOTS:
+    // replot
+    void map_update();
+    void topo_update();
+    void pick_update();
+    void all_update();
+
     // timer loops
     void plot_loop();
     void plot_loop2();
@@ -115,6 +126,7 @@ private Q_SLOTS:
     void bt_JogReleased();
 
     // annotation
+    void bt_MapReload();
     void bt_MapSave2();
     void bt_AddNode();
     void bt_AddLink1();
@@ -153,6 +165,12 @@ private Q_SLOTS:
 
     // for simulation
     void bt_SimInit();
+
+    // for autocontrol
+    void bt_AutoMove();
+    void bt_AutoMove2();
+    void bt_AutoMove3();
+    void bt_AutoStop();
 
 };
 #endif // MAINWINDOW_H

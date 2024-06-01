@@ -588,10 +588,16 @@ void SLAM_2D::loc_a_loop()
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
-    {        
+    {
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
+            if(unimap->is_loaded == false)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
             double st_time = get_time();
 
             mtx.lock();
@@ -740,11 +746,10 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->LOC_ICP_COST_THRESHOLD;
+    const double cost_threshold = config->LOC_ICP_COST_THRESHOLD*config->LOC_ICP_COST_THRESHOLD;
     const int num_feature = std::min<int>(idx_list.size(), config->LOC_ICP_MAX_FEATURE_NUM);
 
     // for rmt
-    double rmt_sigma = 0.01;
     double tm0 = 0;
     double tm1 = 0;
 
@@ -785,7 +790,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(std::sqrt(cost) > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -938,7 +943,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    //if(first_err > config.SLAM_ERROR_THRESHOLD || last_err > config.SLAM_ERROR_THRESHOLD)
+    if(last_err > first_err || first_err > config->LOC_ICP_ERROR_THRESHOLD || last_err > config->LOC_ICP_ERROR_THRESHOLD)
     {
         printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
@@ -974,8 +979,12 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD;
+    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD*config->SLAM_ICP_COST_THRESHOLD;
     const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
+
+    // for rmt
+    double tm0 = 0;
+    double tm1 = 0;
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -1006,14 +1015,25 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
 
             // view filter
-            if(compare_view_vector(V0, V1, config->SLAM_ICP_VIEW_THRESHOLD))
+            if(compare_view_vector(V0, V1, config->SLAM_ICP_VIEW_THRESHOLD*D2R))
             {
                 continue;
             }
 
+            // rmt
+            double rmt = 1.0;
+            if(iter >= 2)
+            {
+                rmt = tm1/tm0;
+                if(rmt > 1.0)
+                {
+                    rmt = 1.0;
+                }
+            }
+
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(std::sqrt(cost) > cost_threshold)
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -1157,6 +1177,10 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         _G = se2_to_TF(xi)*_G;
         refine_pose(_G);
 
+        // for rmt
+        tm0 = tm1;
+        tm1 = _G.block(0,3,3,1).norm();
+
         // convergence check
         convergence = X.cwiseAbs().maxCoeff();
         if(convergence < 1e-7)
@@ -1168,7 +1192,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    //if(first_err > config.SLAM_ERROR_THRESHOLD || last_err > config.SLAM_ERROR_THRESHOLD)
+    if(last_err > first_err || first_err > config->SLAM_ICP_ERROR_THRESHOLD || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         printf("[frm_icp0] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
@@ -1220,8 +1244,12 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     double convergence = 9999;
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD;
+    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD*config->SLAM_ICP_COST_THRESHOLD;
     const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
+
+    // for rmt
+    double tm0 = 0;
+    double tm1 = 0;
 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
@@ -1250,9 +1278,20 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = ret_near_idxs[0];
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
 
+            // rmt
+            double rmt = 1.0;
+            if(iter >= 2)
+            {
+                rmt = tm1/tm0;
+                if(rmt > 1.0)
+                {
+                    rmt = 1.0;
+                }
+            }
+
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(std::sqrt(cost) > cost_threshold)
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -1396,6 +1435,10 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         _dG = se2_to_TF(xi)*_dG;
         refine_pose(_dG);
 
+        // for rmt
+        tm0 = tm1;
+        tm1 = _dG.block(0,3,3,1).norm();
+
         // convergence check
         convergence = X.cwiseAbs().maxCoeff();
         if(convergence < 1e-7)
@@ -1407,9 +1450,8 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     // update
     dG = _dG*dG;
 
-    printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-
     // check
+    printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
     if(last_err > first_err || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         return 9999;

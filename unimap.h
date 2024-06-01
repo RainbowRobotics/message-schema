@@ -29,11 +29,13 @@ public:
     void load_map(QString path);
     void save_map();
     void save_annotation();
+    void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
 
     // topology
     std::vector<QString> get_nodes(QString type);
     QString gen_node_id();
     QString get_node_id(Eigen::Vector3d pt);
+    QString get_node_id_nn(Eigen::Vector3d pt);
     NODE* get_node_by_id(QString name);
     NODE* get_node_nn(Eigen::Vector3d pose);
     NODE* get_edge_nn(Eigen::Vector3d pose);
@@ -60,6 +62,7 @@ public:
     std::vector<NODE> nodes;
 
     // tree for map icp
+    std::vector<int> kdtree_mask;
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
 

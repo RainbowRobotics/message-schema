@@ -41,5 +41,8 @@
     "LOC_CHECK_IR": "0.5",
     "LOC_FUSION_RATIO": "0.5",
     "ANNOT_QA_STEP": "0.3",
-    "SIM_MODE": "1"
+    "SIM_MODE": "1",
+    "DRIVE_GOAL_D": "0.05",
+    "DRIVE_GOAL_TH": "3.0",
+    "DRIVE_EXTENDED_CONTROL_TIME": "2.0"
 }

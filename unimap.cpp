@@ -25,6 +25,7 @@ void UNIMAP::load_map(QString path)
         if(cloud_csv_info.exists() && cloud_csv_info.isFile())
         {
             // clear first
+            kdtree_mask.clear();
             kdtree_cloud.pts.clear();
 
             // csv file format : x,y,z,r
@@ -49,6 +50,7 @@ void UNIMAP::load_map(QString path)
                     pt.r = r;
 
                     kdtree_cloud.pts.push_back(pt);
+                    kdtree_mask.push_back(1);
                 }
                 cloud_csv_file.close();
 
@@ -129,6 +131,11 @@ void UNIMAP::save_map()
     {
         for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)
         {
+            if(kdtree_mask[p] == 0)
+            {
+                continue;
+            }
+
             PT_XYZR pt = kdtree_cloud.pts[p];
 
             double x = pt.x;
@@ -176,6 +183,26 @@ void UNIMAP::save_annotation()
         topo_file.close();
 
         printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+    }
+}
+
+void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
+{
+    if(is_loaded == false || kdtree_mask.size() == 0)
+    {
+        return;
+    }
+
+    double query_pt[3] = {P[0], P[1], P[2]};
+    double sq_radius = radius*radius;
+
+    std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
+    nanoflann::SearchParameters params;
+    kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+    for(size_t p = 0; p < res_idxs.size(); p++)
+    {
+        int idx = res_idxs[p].first;
+        kdtree_mask[idx] = val;
     }
 }
 
@@ -460,6 +487,36 @@ QString UNIMAP::get_node_id(Eigen::Vector3d pt)
     return "";
 }
 
+QString UNIMAP::get_node_id_nn(Eigen::Vector3d pt)
+{
+    if(nodes.size() == 0)
+    {
+        return "";
+    }
+
+    // find node
+    int min_idx = -1;
+    double min_d = 99999999;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
+        {
+            double d = (nodes[p].tf.block(0,3,3,1) - pt).norm();
+            if(d < min_d)
+            {
+                min_d = d;
+                min_idx = p;
+            }
+        }
+    }
+
+    if(min_idx != -1)
+    {
+        return nodes[min_idx].id;
+    }
+    return "";
+}
+
 NODE* UNIMAP::get_node_by_id(QString id)
 {
     if(id == "")
@@ -495,16 +552,14 @@ NODE* UNIMAP::get_node_nn(Eigen::Vector3d pos)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        if(nodes[p].type == "SIGN")
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
         {
-            continue;
-        }
-
-        double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-        if(d < min_d)
-        {
-            min_d = d;
-            min_idx = p;
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+            if(d < min_d)
+            {
+                min_d = d;
+                min_idx = p;
+            }
         }
     }
 
@@ -525,25 +580,28 @@ NODE* UNIMAP::get_edge_nn(Eigen::Vector3d pos)
     Eigen::Vector3d min_pos1;
     for(auto& it: nodes)
     {
-        for(size_t p = 0; p < it.linked.size(); p++)
+        if(it.type == "ROUTE" || it.type == "GOAL")
         {
-            QString id0 = it.id;
-            QString id1 = it.linked[p];
-
-            NODE* node0 = get_node_by_id(id0);
-            NODE* node1 = get_node_by_id(id1);
-
-            Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
-            Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
-
-            double d = calc_seg_dist(P0, P1, pos);
-            if(d < min_d)
+            for(size_t p = 0; p < it.linked.size(); p++)
             {
-                min_d = d;
-                min_node0 = node0;
-                min_node1 = node1;
-                min_pos0 = P0;
-                min_pos1 = P1;
+                QString id0 = it.id;
+                QString id1 = it.linked[p];
+
+                NODE* node0 = get_node_by_id(id0);
+                NODE* node1 = get_node_by_id(id1);
+
+                Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
+                Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
+
+                double d = calc_seg_dist(P0, P1, pos);
+                if(d < min_d)
+                {
+                    min_d = d;
+                    min_node0 = node0;
+                    min_node1 = node1;
+                    min_pos0 = P0;
+                    min_pos1 = P1;
+                }
             }
         }
     }

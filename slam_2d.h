@@ -46,7 +46,6 @@ public:
     Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();
 
-
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
@@ -81,6 +80,9 @@ public:
 
     std::atomic<double> proc_time_loc_a = {0};
     std::atomic<double> proc_time_loc_b = {0};
+
+    // algorithm params
+    const double rmt_sigma = 0.01;
 
 public:
     std::atomic<bool> map_a_flag = {false};

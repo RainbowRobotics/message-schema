@@ -237,9 +237,22 @@ void CONFIG::load()
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
-
             SIM_MODE = obj["SIM_MODE"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SIM_MODE", obj["SIM_MODE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+
+
+            DRIVE_GOAL_D = obj["DRIVE_GOAL_D"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("DRIVE_GOAL_D", obj["DRIVE_GOAL_D"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            DRIVE_GOAL_TH = obj["DRIVE_GOAL_TH"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("DRIVE_GOAL_TH", obj["DRIVE_GOAL_TH"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            DRIVE_EXTENDED_CONTROL_TIME = obj["DRIVE_EXTENDED_CONTROL_TIME"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("DRIVE_EXTENDED_CONTROL_TIME", obj["DRIVE_EXTENDED_CONTROL_TIME"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             // complete

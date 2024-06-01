@@ -87,6 +87,8 @@
 
 #define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
+#define VIRTUAL_OBS_SIZE 0.3
+#define GLOBAL_PATH_STEP 0.1
 
 struct PICKING
 {
@@ -539,6 +541,87 @@ struct NODE
             return true;
         }
         return false;
+    }
+};
+
+// autocontrol parameters
+struct CTRL_PARAM
+{
+    double LIMIT_V = 0.5;
+    double LIMIT_W = 60.0;
+    double LIMIT_V_ACC = 0.5;
+    double LIMIT_W_ACC = 90.0;
+    double LIMIT_PIVOT_W = 30.0;
+    double PP_MIN_LD = 0.5;
+    double PP_MAX_LD = 1.0;
+    double PP_ST_V = 0.1;
+    double PP_ED_V = 0.1;
+};
+
+struct ASTAR_NODE
+{
+    ASTAR_NODE* parent = NULL;
+    NODE* node = NULL;
+    double g = 0;
+    double h = 0;
+    double f = 0;
+
+    ASTAR_NODE()
+    {
+        parent = NULL;
+        node = NULL;
+        g = 0;
+        h = 0;
+        f = 0;
+    }
+
+    ASTAR_NODE(const ASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+    }
+
+    ASTAR_NODE& operator=(const ASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        return *this;
+    }
+};
+
+struct GLOBAL_PATH
+{
+    std::vector<QString> nodes;
+    std::vector<Eigen::Vector3d> pos;
+    std::vector<double> ref_v;
+    Eigen::Matrix4d goal_tf;
+
+    GLOBAL_PATH()
+    {
+        goal_tf.setIdentity();
+    }
+
+    GLOBAL_PATH(const GLOBAL_PATH& p)
+    {
+        nodes = p.nodes;
+        pos = p.pos;
+        ref_v = p.ref_v;
+        goal_tf = p.goal_tf;
+    }
+
+    GLOBAL_PATH& operator=(const GLOBAL_PATH& p)
+    {
+        nodes = p.nodes;
+        pos = p.pos;
+        ref_v = p.ref_v;
+        goal_tf = p.goal_tf;
+        return *this;
     }
 };
 
