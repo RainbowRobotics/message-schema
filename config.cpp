@@ -255,6 +255,25 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("DRIVE_EXTENDED_CONTROL_TIME", obj["DRIVE_EXTENDED_CONTROL_TIME"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+
+
+            OBS_MAP_RANGE = obj["OBS_MAP_RANGE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_RANGE", obj["OBS_MAP_RANGE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_MAP_GRID_SIZE = obj["OBS_MAP_GRID_SIZE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_GRID_SIZE", obj["OBS_MAP_GRID_SIZE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_MAP_MARGIN = obj["OBS_MAP_MARGIN"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_MARGIN", obj["OBS_MAP_MARGIN"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_SIZE_THRESHOLD = obj["OBS_SIZE_THRESHOLD"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_SIZE_THRESHOLD", obj["OBS_SIZE_THRESHOLD"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+
             // complete
             is_load = true;
             config_file.close();

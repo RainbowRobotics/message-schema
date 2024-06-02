@@ -10,6 +10,7 @@
 #include "lidar_2d.h"
 #include "slam_2d.h"
 #include "unimap.h"
+#include "obsmap.h"
 
 #include <QObject>
 
@@ -28,6 +29,7 @@ public:
     LIDAR_2D *lidar = NULL;
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
+    OBSMAP *obsmap = NULL;
 
     // params
     CTRL_PARAM params;
@@ -50,6 +52,8 @@ public:
     std::vector<double> smoothing_v(std::vector<double> src);
 
     // local path planning (using obs_map)
+
+
 
     // for control
     bool is_everything_fine();

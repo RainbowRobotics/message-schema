@@ -133,10 +133,10 @@ Eigen::Matrix4d se2_to_TF(Eigen::Vector3d xi)
     tf(1, 3) = xi[1];
 
     double rz = xi[2];
-    tf(0, 0) = cos(rz);
-    tf(0, 1) = -sin(rz);
-    tf(1, 0) = sin(rz);
-    tf(1, 1) = cos(rz);
+    tf(0, 0) = std::cos(rz);
+    tf(0, 1) = -std::sin(rz);
+    tf(1, 0) = std::sin(rz);
+    tf(1, 1) = std::cos(rz);
 
     return tf;
 }
@@ -443,6 +443,127 @@ double calc_motion_time(double _s, double _v0, double _v1, double _acc)
         double t2 = (s + 0.5*v0*t0 - 0.5*v1*(t1-t0) + v1*t1)/v1;
         return t2;
     }
+}
+
+std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
+{
+    std::vector<cv::Vec2i> res;
+
+    int x1 = pt0[0];
+    int y1 = pt0[1];
+    int x2 = pt1[0];
+    int y2 = pt1[1];
+
+    int add_x = 0;
+    int add_y = 0;
+    int count = 0;
+
+    int dx = x2-x1;
+    int dy = y2-y1;
+
+    if(dx < 0)
+    {
+        add_x = -1;
+        dx = -dx;
+    }
+    else
+    {
+        add_x = 1;
+    }
+
+    if(dy < 0)
+    {
+        add_y = -1;
+        dy = -dy;
+    }
+    else
+    {
+        add_y = 1;
+    }
+
+    int x = x1;
+    int y = y1;
+
+    if(dx >= dy)
+    {
+        for(int i = 0; i < dx; i++)
+        {
+            x += add_x;
+            count += dy;
+
+            if(count >= dx)
+            {
+                y += add_y;
+                count -= dx;
+            }
+
+            res.push_back(cv::Vec2i(x,y));
+        }
+    }
+    else
+    {
+        for(int i = 0; i < dy; i++)
+        {
+            y += add_y;
+            count += dx;
+
+            if(count >= dy)
+            {
+                x += add_x;
+                count -= dy;
+            }
+
+            res.push_back(cv::Vec2i(x,y));
+        }
+    }
+
+    return res;
+}
+
+std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r)
+{
+    int x = r;
+    int y = 0;
+    int error = 3 - 2*r;
+
+    std::vector<cv::Vec2i> res;
+    while (x >= y)
+    {
+        res.push_back(cv::Vec2i(x, y) + pt);
+        res.push_back(cv::Vec2i(x, -y) + pt);
+        res.push_back(cv::Vec2i(-x, y) + pt);
+        res.push_back(cv::Vec2i(-x, -y) + pt);
+
+        res.push_back(cv::Vec2i(y, x) + pt);
+        res.push_back(cv::Vec2i(y, -x) + pt);
+        res.push_back(cv::Vec2i(-y, x) + pt);
+        res.push_back(cv::Vec2i(-y, -x) + pt);
+
+        if (error > 0)
+        {
+            error -= 4 * (--x);
+        }
+        error += 4 * (++y) + 2;
+    }
+
+    return res;
+}
+
+std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r)
+{
+    std::vector<cv::Vec2i> res;
+    for(int i = -r; i <= r; i++)
+    {
+        for(int j = -r; j <= r; j++)
+        {
+            double d = i*i + j*j;
+            if(d <= r*r)
+            {
+                res.push_back(cv::Vec2i(i,j) + pt);
+            }
+        }
+    }
+    return res;
 }
 
 pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a, int num_segments)

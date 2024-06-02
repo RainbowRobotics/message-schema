@@ -11,8 +11,9 @@
 #include "lidar_2d.h"
 #include "slam_2d.h"
 #include "unimap.h"
-#include "sim.h"
+#include "obsmap.h"
 #include "autocontrol.h"
+#include "sim.h"
 
 // qt
 #include <QMainWindow>
@@ -40,8 +41,9 @@ public:
     LIDAR_2D lidar;
     SLAM_2D slam;
     UNIMAP unimap;
-    SIM sim;
+    OBSMAP obsmap;
     AUTOCONTROL ctrl;
+    SIM sim;
 
     // funcs
     void init_modules();

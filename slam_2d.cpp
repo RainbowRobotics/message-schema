@@ -779,7 +779,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // rmt
             double rmt = 1.0;
-            if(iter >= 2)
+            if(iter >= 1)
             {
                 rmt = tm1/tm0;
                 if(rmt > 1.0)
@@ -799,10 +799,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d xi = TF_to_se2(_G);
 
             double J[3] = {0,};
-            J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
-            J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
-            J[2] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0])*(-std::sin(xi[2])*_P1[0] - std::cos(xi[2])*_P1[1])
-                 + 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1])*(std::cos(xi[2])*_P1[0] - std::sin(xi[2])*_P1[1]);            
+            J[0] = 2.0 * (_P1[0] - P0[0]);
+            J[1] = 2.0 * (_P1[1] - P0[1]);
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * (-std::sin(xi[2]) * P1[0] - std::cos(xi[2]) * P1[1]) + (_P1[1] - P0[1]) * (std::cos(xi[2]) * P1[0] - std::sin(xi[2]) * P1[1]));
             if(!isfinite(J[0]) || !isfinite(J[1]) || !isfinite(J[2]))
             {
                 continue;
@@ -831,7 +830,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[map_icp] not enough correspondences, %d!!\n", num_correspondence);
+            printf("[map_icp] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
             return 9999;
         }
 
@@ -904,8 +903,10 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
         // solve
         Eigen::Matrix<double, 3, 3> A(_A);
+        A += 1e-6*Eigen::Matrix<double, 3, 3>::Identity();
+
         Eigen::Matrix<double, 3, 1> b(_b);
-        Eigen::Matrix<double, 3, 3> diag_A(_diag_A);
+        Eigen::Matrix<double, 3, 3> diag_A = A.diagonal().asDiagonal();
         Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).ldlt().solve(b);
 
         // lambda update
@@ -1022,7 +1023,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // rmt
             double rmt = 1.0;
-            if(iter >= 2)
+            if(iter >= 1)
             {
                 rmt = tm1/tm0;
                 if(rmt > 1.0)
@@ -1042,10 +1043,9 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d xi = TF_to_se2(_G);
 
             double J[3] = {0,};
-            J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
-            J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
-            J[2] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0])*(-std::sin(xi[2])*_P1[0] - std::cos(xi[2])*_P1[1])
-                 + 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1])*(std::cos(xi[2])*_P1[0] - std::sin(xi[2])*_P1[1]);
+            J[0] = 2.0 * (_P1[0] - P0[0]);
+            J[1] = 2.0 * (_P1[1] - P0[1]);
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * (-std::sin(xi[2]) * P1[0] - std::cos(xi[2]) * P1[1]) + (_P1[1] - P0[1]) * (std::cos(xi[2]) * P1[0] - std::sin(xi[2]) * P1[1]));
             if(!isfinite(J[0]) || !isfinite(J[1]) || !isfinite(J[2]))
             {
                 continue;
@@ -1111,8 +1111,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
 
         // make matrix
-        double _A[3*3] = { 0, };
-        double _diag_A[3*3] = { 0, };
+        double _A[3*3] = { 0, };        
         double _b[3] = { 0, };
         double err = 0;
         double err_cnt = 0;
@@ -1139,12 +1138,6 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         err /= err_cnt;
 
-        // set diagonal term
-        for(int p = 0; p < 3; p++)
-        {
-            _diag_A[p * 3 + p] = _A[p * 3 + p];
-        }
-
         // set first error
         if(iter == 0)
         {
@@ -1153,8 +1146,10 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
         // solve
         Eigen::Matrix<double, 3, 3> A(_A);
+        A += 1e-6*Eigen::Matrix<double, 3, 3>::Identity();
+
         Eigen::Matrix<double, 3, 1> b(_b);
-        Eigen::Matrix<double, 3, 3> diag_A(_diag_A);
+        Eigen::Matrix<double, 3, 3> diag_A = A.diagonal().asDiagonal();
         Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).ldlt().solve(b);
 
         // lambda update
@@ -1280,7 +1275,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
             // rmt
             double rmt = 1.0;
-            if(iter >= 2)
+            if(iter >= 1)
             {
                 rmt = tm1/tm0;
                 if(rmt > 1.0)
@@ -1413,7 +1408,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         Eigen::Matrix<double, 3, 3> A(_A);
         Eigen::Matrix<double, 3, 1> b(_b);
         Eigen::Matrix<double, 3, 3> diag_A(_diag_A);
-        Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).ldlt().solve(b);
+        Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).colPivHouseholderQr().solve(b);
 
         // lambda update
         if(err < last_err)

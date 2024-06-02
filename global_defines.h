@@ -53,6 +53,9 @@
 #include <sophus/se3.hpp>
 #include <sophus/interpolate.hpp>
 
+// opencv
+#include <opencv2/opencv.hpp>
+
 // nanoflann
 #include "nanoflann.hpp"
 

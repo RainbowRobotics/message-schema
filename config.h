@@ -67,6 +67,11 @@ public:
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 
+    double OBS_MAP_RANGE = 2.5;
+    double OBS_MAP_GRID_SIZE = 0.05;
+    double OBS_MAP_MARGIN = 0.05;
+    double OBS_SIZE_THRESHOLD = 0.1;
+
     std::vector<std::pair<QString, QString>> params;
 
 public:

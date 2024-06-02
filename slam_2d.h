@@ -82,7 +82,7 @@ public:
     std::atomic<double> proc_time_loc_b = {0};
 
     // algorithm params
-    const double rmt_sigma = 0.01;
+    const double rmt_sigma = 0.05;
 
 public:
     std::atomic<bool> map_a_flag = {false};

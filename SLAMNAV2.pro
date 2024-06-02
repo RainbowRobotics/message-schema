@@ -23,6 +23,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
+    obsmap.cpp \
     pgo.cpp \
     sim.cpp \
     slam_2d.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     mainwindow.h \
     mobile.h \
     nanoflann.hpp \
+    obsmap.h \
     pgo.h \
     sim.h \
     slam_2d.h \

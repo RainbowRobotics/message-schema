@@ -35,6 +35,10 @@ double saturation(double val, double min, double max);
 double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2);
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
 
+std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
+std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);
+std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r);
+
 pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a=1.0, int num_segments=30);
 
 #endif // UTILS_H

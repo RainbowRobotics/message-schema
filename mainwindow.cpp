@@ -7,9 +7,10 @@ MainWindow::MainWindow(QWidget *parent)
     , mobile(this)
     , lidar(this)
     , slam(this)
-    , unimap(this)    
-    , sim(this)
+    , unimap(this)
+    , obsmap(this)
     , ctrl(this)
+    , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
@@ -235,6 +236,11 @@ void MainWindow::init_modules()
     unimap.config = &config;
     unimap.logger = &logger;
 
+    // obsmap module init
+    obsmap.config = &config;
+    obsmap.logger = &logger;
+    obsmap.init();
+
     // slam module init
     slam.config = &config;
     slam.logger = &logger;
@@ -249,6 +255,7 @@ void MainWindow::init_modules()
     ctrl.lidar = &lidar;
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
+    ctrl.obsmap = &obsmap;
 
     // simulation module init
     sim.config = &config;
@@ -2038,6 +2045,8 @@ void MainWindow::plot_loop()
         // pose update
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tpp.tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
+
+        obsmap.update_obs_map(cur_tpp);
     }
     else
     {
