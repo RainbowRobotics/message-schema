@@ -619,6 +619,9 @@ void SLAM_2D::loc_a_loop()
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
 
+                // update obsmap
+                obsmap->update_obs_map(tpp);
+
                 // update
                 mtx.lock();
                 cur_tpp = tpp;

@@ -55,6 +55,7 @@
 
 // opencv
 #include <opencv2/opencv.hpp>
+#include "cv_to_qt.h"
 
 // nanoflann
 #include "nanoflann.hpp"
@@ -93,6 +94,17 @@
 #define VIRTUAL_OBS_SIZE 0.3
 #define GLOBAL_PATH_STEP 0.1
 
+// enumulator
+enum AUTO_FSM_STATE
+{
+    AUTO_FSM_FIRST_ALIGN = 0,
+    AUTO_FSM_DRIVE,
+    AUTO_FSM_FINAL_ALIGN,    
+    AUTO_FSM_WAIT,
+    AUTO_FSM_COMPLETE,
+};
+
+// structure
 struct PICKING
 {
     bool l_drag;

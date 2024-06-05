@@ -93,6 +93,8 @@ private:
     std::vector<QString> last_plot_edges2;
 
     std::vector<QString> last_plot_global_path;
+    std::vector<QString> last_plot_local_path;
+    std::vector<QString> last_plot_tactile;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);

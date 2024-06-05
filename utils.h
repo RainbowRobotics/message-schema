@@ -23,6 +23,7 @@ QString TF_to_string(Eigen::Matrix4d TF);
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1);
 void refine_pose(Eigen::Matrix4d& G);
+void refine_zero(Eigen::Matrix4d& G);
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold);
 
 std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Eigen::Matrix4d tf);

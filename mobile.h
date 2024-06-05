@@ -85,9 +85,9 @@ public:
     std::atomic<double> last_imu_t = {0};
 
     // last control input
-    double vx0 = 0;
-    double vy0 = 0;
-    double wz0 = 0;
+    std::atomic<double> vx0 = {0};
+    std::atomic<double> vy0 = {0};
+    std::atomic<double> wz0 = {0};
 
     // other modules
     CONFIG* config = NULL;

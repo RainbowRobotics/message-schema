@@ -28,6 +28,13 @@ void UNIMAP::load_map(QString path)
             kdtree_mask.clear();
             kdtree_cloud.pts.clear();
 
+            map_min_x = 99999999;
+            map_max_x = -99999999;
+            map_min_y = 99999999;
+            map_max_y = -99999999;
+            map_min_z = 99999999;
+            map_max_z = -99999999;
+
             // csv file format : x,y,z,r
             QFile cloud_csv_file(cloud_csv_path);
             if(cloud_csv_file.open(QIODevice::ReadOnly))
@@ -51,10 +58,43 @@ void UNIMAP::load_map(QString path)
 
                     kdtree_cloud.pts.push_back(pt);
                     kdtree_mask.push_back(1);
+
+                    // for bounding box
+                    if(x < map_min_x)
+                    {
+                        map_min_x = x;
+                    }
+
+                    if(x > map_max_x)
+                    {
+                        map_max_x = x;
+                    }
+
+                    if(y < map_min_y)
+                    {
+                        map_min_y = y;
+                    }
+
+                    if(y > map_max_y)
+                    {
+                        map_max_y = y;
+                    }
+
+                    if(z < map_min_z)
+                    {
+                        map_min_z = z;
+                    }
+
+                    if(z > map_max_z)
+                    {
+                        map_max_z = z;
+                    }
                 }
                 cloud_csv_file.close();
 
                 printf("[UNIMAP] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud.pts.size());
+                printf("[UNIMAP] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n", map_min_x, map_max_x,
+                       map_min_y, map_max_y, map_min_z, map_max_z);
             }
         }
         else

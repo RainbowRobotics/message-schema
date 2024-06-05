@@ -11,6 +11,7 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "unimap.h"
+#include "obsmap.h"
 
 // third party
 #include "pgo.h"
@@ -34,6 +35,7 @@ public:
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
     UNIMAP *unimap = NULL;
+    OBSMAP *obsmap = NULL;
 
     // interface
     void mapping_start();

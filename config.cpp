@@ -273,6 +273,9 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("OBS_SIZE_THRESHOLD", obj["OBS_SIZE_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            OBS_AVOID_DIST = obj["OBS_AVOID_DIST"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_AVOID_DIST", obj["OBS_AVOID_DIST"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
             // complete
             is_load = true;

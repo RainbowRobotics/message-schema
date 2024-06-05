@@ -45,8 +45,9 @@
     "DRIVE_GOAL_D": "0.05",
     "DRIVE_GOAL_TH": "3.0",
     "DRIVE_EXTENDED_CONTROL_TIME": "2.0",
-    "OBS_MAP_RANGE": "3.0",
+    "OBS_MAP_RANGE": "5.0",
     "OBS_MAP_GRID_SIZE": "0.05",
-    "OBS_MAP_MARGIN": "0.05",    
-    "OBS_SIZE_THRESHOLD": "0.1"
+    "OBS_MAP_MARGIN": "0.05",
+    "OBS_SIZE_THRESHOLD": "0.1",
+    "OBS_AVOID_DIST": "1.0"
 }

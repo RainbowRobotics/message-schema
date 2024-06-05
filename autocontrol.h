@@ -1,9 +1,11 @@
 #ifndef AUTOCONTROL_H
 #define AUTOCONTROL_H
 
+// global headers
 #include "global_defines.h"
 #include "utils.h"
 
+// other modules
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
@@ -12,6 +14,27 @@
 #include "unimap.h"
 #include "obsmap.h"
 
+// ompl
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/spaces/SE2StateSpace.h>
+#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/goals/GoalState.h>
+#include <ompl/base/goals/GoalStates.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/geometric/SimpleSetup.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/prm/PRM.h>
+#include <ompl/geometric/planners/sst/SST.h>
+#include <ompl/geometric/planners/kpiece/KPIECE1.h>
+#include <ompl/geometric/planners/fmt/FMT.h>
+#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/config.h>
+
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
+
+// qt
 #include <QObject>
 
 class AUTOCONTROL : public QObject
@@ -37,6 +60,7 @@ public:
 
     // interface funcs
     GLOBAL_PATH get_cur_global_path();
+    std::vector<Eigen::Matrix4d> get_cur_local_path();
 
     void stop();
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
@@ -52,7 +76,8 @@ public:
     std::vector<double> smoothing_v(std::vector<double> src);
 
     // local path planning (using obs_map)
-
+    std::vector<Eigen::Matrix4d> calc_tactile(double vx, double vy, double wz, double dt, double predict_t, Eigen::Matrix4d G0);
+    std::vector<Eigen::Matrix4d> calc_local_path(Eigen::Vector3d st_pos, Eigen::Vector3d ed_pos);
 
 
     // for control
@@ -70,9 +95,22 @@ public:
 
     // storage
     GLOBAL_PATH cur_global_path;
+    std::vector<Eigen::Matrix4d> cur_local_path;
+
+    Eigen::Vector3d last_nn_pos;
+    Eigen::Vector3d last_pp_tgt;
+    Eigen::Vector3d last_local_tgt;
 
     // flags
     std::atomic<bool> is_moving = {false};
+
+    // for ompl    
+    cv::Mat obs_map;
+    Eigen::Matrix4d obs_tf;
+    cv::Mat avoid_area;
+
+public:
+    bool isStateValid(const ob::State *state) const;    
 
 Q_SIGNALS:
 

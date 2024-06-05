@@ -247,6 +247,7 @@ void MainWindow::init_modules()
     slam.mobile = &mobile;
     slam.lidar = &lidar;
     slam.unimap = &unimap;
+    slam.obsmap = &obsmap;
 
     // autocontrol module init
     ctrl.config = &config;
@@ -2044,9 +2045,51 @@ void MainWindow::plot_loop()
 
         // pose update
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tpp.tf.cast<float>()));
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");        
 
-        obsmap.update_obs_map(cur_tpp);
+        // plot obs map
+        {
+            cv::Mat plot_obs_map = obsmap.get_plot_map();
+            obsmap.draw_robot(plot_obs_map, cur_tpp.tf);
+            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+            ui->lb_Screen1->setScaledContents(true);
+            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+
+        // plot tactile
+        {
+            // erase first
+            if(last_plot_tactile.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_tactile.size(); p++)
+                {
+                    QString name = last_plot_tactile[p];
+                    if(viewer->contains(name.toStdString()))
+                    {
+                        viewer->removeShape(name.toStdString());
+                    }
+                }
+                last_plot_tactile.clear();
+            }
+
+            std::vector<Eigen::Matrix4d> traj = ctrl.calc_tactile(mobile.vx0, mobile.vy0, mobile.wz0, 0.2, 3.0, cur_tpp.tf);
+            for(size_t p = 0; p < traj.size(); p++)
+            {
+                QString name;
+                name.sprintf("traj_%d", p);
+
+                viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
+
+                viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
+
+                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                    pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                    name.toStdString());
+                last_plot_tactile.push_back(name);
+            }
+        }
     }
     else
     {
@@ -2140,6 +2183,36 @@ void MainWindow::plot_loop()
         }
     }
 
+    // plot local path
+    std::vector<Eigen::Matrix4d> local_path = ctrl.get_cur_local_path();
+    if(local_path.size() > 0)
+    {
+        // erase first
+        for(size_t p = 0; p < last_plot_local_path.size(); p++)
+        {
+            QString name = last_plot_local_path[p];
+            if(viewer->contains(name.toStdString()))
+            {
+                //viewer->removeShape(name.toStdString());
+                viewer->removeCoordinateSystem(name.toStdString());
+            }
+        }
+        last_plot_local_path.clear();
+
+        // draw local path
+        for(size_t p = 0; p < local_path.size(); p++)
+        {
+            QString name;
+            name.sprintf("local_path_%d", (int)p);
+
+            Eigen::Matrix4d tf = local_path[p];
+            viewer->addCoordinateSystem(0.5, name.toStdString());
+            viewer->updateCoordinateSystemPose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+
+            last_plot_local_path.push_back(name);
+        }
+    }
+
     // draw robot    
     {
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
@@ -2211,6 +2284,37 @@ void MainWindow::plot_loop()
 
             viewer->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
             viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+        }
+    }
+
+    // draw tgts
+    {
+        if(viewer->contains("nn_pos"))
+        {
+            viewer->removeShape("nn_pos");
+        }
+
+        if(viewer->contains("pp_tgt"))
+        {
+            viewer->removeShape("pp_tgt");
+        }
+
+        if(viewer->contains("local_tgt"))
+        {
+            viewer->removeShape("local_tgt");
+        }
+
+        // draw dwa tgt
+        {
+            ctrl.mtx.lock();
+            Eigen::Vector3d nn_pos = ctrl.last_nn_pos;
+            Eigen::Vector3d pp_tgt = ctrl.last_pp_tgt;
+            Eigen::Vector3d local_tgt = ctrl.last_local_tgt;
+            ctrl.mtx.unlock();
+
+            viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.15, 1.0, 1.0, 1.0, "nn_pos");
+            viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.15, 1.0, 0.0, 0.0, "pp_tgt");
+            viewer->addSphere(pcl::PointXYZ(local_tgt[0], local_tgt[1], local_tgt[2]), 0.15, 0.0, 1.0, 0.0, "local_tgt");
         }
     }
 

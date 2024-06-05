@@ -22,7 +22,7 @@ SOURCES += \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
-    mobile.cpp \
+    mobile.cpp \    
     obsmap.cpp \
     pgo.cpp \
     sim.cpp \
@@ -41,7 +41,7 @@ HEADERS += \
     lidar_2d.h \
     logger.h \
     mainwindow.h \
-    mobile.h \
+    mobile.h \    
     nanoflann.hpp \
     obsmap.h \
     pgo.h \
@@ -138,6 +138,11 @@ INCLUDEPATH += /usr/local/include/gtsam/
 LIBS += -L/usr/local/lib/
 LIBS += -lgtsam \
         -lmetis-gtsam
+
+# OMPL
+INCLUDEPATH += /usr/include/ompl-1.5/
+LIBS += -L/usr/lib/
+LIBS += -lompl
 
 # Lakibeam lidar
 INCLUDEPATH += /usr/include/rapidjson/

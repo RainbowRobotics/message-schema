@@ -71,6 +71,7 @@ public:
     double OBS_MAP_GRID_SIZE = 0.05;
     double OBS_MAP_MARGIN = 0.05;
     double OBS_SIZE_THRESHOLD = 0.1;
+    double OBS_AVOID_DIST = 1.0;
 
     std::vector<std::pair<QString, QString>> params;
 

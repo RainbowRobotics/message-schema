@@ -215,6 +215,20 @@ void refine_pose(Eigen::Matrix4d& G)
     G.block(0,0,3,3) = Eigen::Quaterniond(R).normalized().toRotationMatrix();
 }
 
+void refine_zero(Eigen::Matrix4d& G)
+{
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            if(std::abs(G(i,j)) < 1e-6)
+            {
+                G(i,j) = 0;
+            }
+        }
+    }
+}
+
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold)
 {
     double angle = std::acos(V0.dot(V1));

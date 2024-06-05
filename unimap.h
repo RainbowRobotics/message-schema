@@ -66,6 +66,14 @@ public:
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
 
+    // bounding box
+    double map_min_x = 99999999;
+    double map_max_x = -99999999;
+    double map_min_y = 99999999;
+    double map_max_y = -99999999;
+    double map_min_z = 99999999;
+    double map_max_z = -99999999;
+
     // flags
     std::atomic<bool> is_loaded = {false};    
 
