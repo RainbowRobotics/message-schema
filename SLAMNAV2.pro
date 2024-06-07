@@ -140,8 +140,8 @@ LIBS += -lgtsam \
         -lmetis-gtsam
 
 # OMPL
-INCLUDEPATH += /usr/include/ompl-1.5/
-LIBS += -L/usr/lib/
+INCLUDEPATH += /usr/local/include/ompl-1.6/
+LIBS += -L/usr/local/lib/
 LIBS += -lompl
 
 # Lakibeam lidar

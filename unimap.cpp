@@ -500,7 +500,7 @@ QString UNIMAP::gen_node_id()
     return res;
 }
 
-QString UNIMAP::get_node_id(Eigen::Vector3d pt)
+QString UNIMAP::get_node_id(Eigen::Vector3d pos)
 {
     if(nodes.size() == 0)
     {
@@ -512,7 +512,7 @@ QString UNIMAP::get_node_id(Eigen::Vector3d pt)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        double d = (nodes[p].tf.block(0,3,3,1) - pt).norm();
+        double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
         if(d < config->ROBOT_RADIUS*2 && d < min_d)
         {
             min_d = d;
@@ -527,7 +527,7 @@ QString UNIMAP::get_node_id(Eigen::Vector3d pt)
     return "";
 }
 
-QString UNIMAP::get_node_id_nn(Eigen::Vector3d pt)
+QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
 {
     if(nodes.size() == 0)
     {
@@ -541,7 +541,7 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pt)
     {
         if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
         {
-            double d = (nodes[p].tf.block(0,3,3,1) - pt).norm();
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
             if(d < min_d)
             {
                 min_d = d;
@@ -555,6 +555,54 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pt)
         return nodes[min_idx].id;
     }
     return "";
+}
+
+QString UNIMAP::get_node_id_edge_nn(Eigen::Vector3d pos)
+{
+    double min_d = 99999999;
+    NODE* min_node0 = NULL;
+    NODE* min_node1 = NULL;
+    Eigen::Vector3d min_pos0;
+    Eigen::Vector3d min_pos1;
+    for(auto& it: nodes)
+    {
+        if(it.type == "ROUTE" || it.type == "GOAL")
+        {
+            for(size_t p = 0; p < it.linked.size(); p++)
+            {
+                QString id0 = it.id;
+                QString id1 = it.linked[p];
+
+                NODE* node0 = get_node_by_id(id0);
+                NODE* node1 = get_node_by_id(id1);
+
+                Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
+                Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
+
+                double d = calc_seg_dist(P0, P1, pos);
+                if(d < min_d)
+                {
+                    min_d = d;
+                    min_node0 = node0;
+                    min_node1 = node1;
+                    min_pos0 = P0;
+                    min_pos1 = P1;
+                }
+            }
+        }
+    }
+
+    double d0 = (min_pos0 - pos).norm();
+    double d1 = (min_pos1 - pos).norm();
+
+    if(d0 < d1)
+    {
+        return min_node0->id;
+    }
+    else
+    {
+        return min_node1->id;
+    }
 }
 
 NODE* UNIMAP::get_node_by_id(QString id)

@@ -2160,7 +2160,7 @@ void MainWindow::plot_loop()
         }
 
         // draw
-        GLOBAL_PATH global_path = ctrl.get_cur_global_path();
+        PATH global_path = ctrl.get_cur_global_path();
         if(global_path.pos.size() >= 2)
         {
             for(size_t p = 0; p < global_path.pos.size()-1; p++)
@@ -2184,8 +2184,8 @@ void MainWindow::plot_loop()
     }
 
     // plot local path
-    std::vector<Eigen::Matrix4d> local_path = ctrl.get_cur_local_path();
-    if(local_path.size() > 0)
+    PATH local_path = ctrl.get_cur_local_path();
+    if(local_path.pos.size() > 0)
     {
         // erase first
         for(size_t p = 0; p < last_plot_local_path.size(); p++)
@@ -2200,13 +2200,13 @@ void MainWindow::plot_loop()
         last_plot_local_path.clear();
 
         // draw local path
-        for(size_t p = 0; p < local_path.size(); p++)
+        for(size_t p = 0; p < local_path.pose.size(); p++)
         {
             QString name;
             name.sprintf("local_path_%d", (int)p);
 
-            Eigen::Matrix4d tf = local_path[p];
-            viewer->addCoordinateSystem(0.5, name.toStdString());
+            Eigen::Matrix4d tf = local_path.pose[p];
+            viewer->addCoordinateSystem(config.ROBOT_SIZE_Y[1], name.toStdString());
             viewer->updateCoordinateSystemPose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
 
             last_plot_local_path.push_back(name);
@@ -2315,6 +2315,10 @@ void MainWindow::plot_loop()
             viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.15, 1.0, 1.0, 1.0, "nn_pos");
             viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.15, 1.0, 0.0, 0.0, "pp_tgt");
             viewer->addSphere(pcl::PointXYZ(local_tgt[0], local_tgt[1], local_tgt[2]), 0.15, 0.0, 1.0, 0.0, "local_tgt");
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "nn_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pp_tgt");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_tgt");
         }
     }
 

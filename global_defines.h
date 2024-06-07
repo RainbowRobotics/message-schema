@@ -92,7 +92,7 @@
 #define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3
-#define GLOBAL_PATH_STEP 0.1
+#define PATH_STEP 0.05
 
 // enumulator
 enum AUTO_FSM_STATE
@@ -610,29 +610,29 @@ struct ASTAR_NODE
     }
 };
 
-struct GLOBAL_PATH
+struct PATH
 {
-    std::vector<QString> nodes;
+    std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;
     std::vector<double> ref_v;
     Eigen::Matrix4d goal_tf;
 
-    GLOBAL_PATH()
+    PATH()
     {
         goal_tf.setIdentity();
     }
 
-    GLOBAL_PATH(const GLOBAL_PATH& p)
+    PATH(const PATH& p)
     {
-        nodes = p.nodes;
-        pos = p.pos;
+        pose = p.pose;
+        pos = p.pos;        
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
     }
 
-    GLOBAL_PATH& operator=(const GLOBAL_PATH& p)
+    PATH& operator=(const PATH& p)
     {
-        nodes = p.nodes;
+        pose = p.pose;
         pos = p.pos;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
