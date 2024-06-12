@@ -110,6 +110,7 @@ void AUTOCONTROL::stop()
 
     mtx.lock();
     cur_global_path = PATH();
+    cur_local_path = PATH();
     mtx.unlock();
 }
 
@@ -917,9 +918,9 @@ std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_ve
     return res;
 }
 
-bool AUTOCONTROL::is_state_valid(const ob::State *state) const
+bool AUTOCONTROL::is_state_valid(const ompl::base::State *state) const
 {
-    const auto *cur_state = state->as<ob::DubinsStateSpace::StateType>();
+    const auto *cur_state = state->as<ompl::base::DubinsStateSpace::StateType>();
     const double x = cur_state->getX();
     const double y = cur_state->getY();
     const double th = cur_state->getYaw();
@@ -971,257 +972,6 @@ bool AUTOCONTROL::is_path_valid(std::vector<Eigen::Matrix4d>& path, bool first_p
     // no collision
     return true;
 }
-
-/*
-void AUTOCONTROL::a_loop()
-{
-    // local path calculation loop        
-
-    printf("[AUTO] a_loop start\n");
-    while(a_flag)
-    {
-        if(local_path_state == LOCAL_PATH_REQUEST)
-        {            
-            printf("[AUTO] local planning start\n");            
-
-            PATH global_path = get_cur_global_path();
-            if(global_path.pos.size() > 0)
-            {
-                // get current status
-                Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-                Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-                double cur_th = TF_to_se2(cur_tf)[2];
-                int cur_idx = get_nn_idx(global_path.pos, cur_pos);
-
-                // get obs tgt
-                int obs_tgt_idx = cur_idx + config->OBS_TARGET_DIST/GLOBAL_PATH_STEP;
-                if(obs_tgt_idx > (int)global_path.pos.size()-1)
-                {
-                    obs_tgt_idx = global_path.pos.size()-1;
-                }
-
-                // calc tgt points
-                Eigen::Matrix4d obs_tgt_tf = global_path.pose[obs_tgt_idx];
-                Eigen::Vector3d obs_tgt = obs_tgt_tf.block(0,3,3,1);
-                double obs_tgt_th = TF_to_se2(obs_tgt_tf)[2];
-
-                mtx.lock();
-                last_obs_tgt = obs_tgt;
-                mtx.unlock();
-
-                if(cur_idx == obs_tgt_idx)
-                {
-                    local_path_state = LOCAL_PATH_FAILED;
-
-                    printf("[AUTO] nn_idx same as obs_tgt_idx\n");
-                    continue;
-                }
-
-                // get global path segment
-                std::vector<Eigen::Matrix4d> segment_pose;
-                std::vector<Eigen::Vector3d> segment_pos;
-                for(int p = cur_idx; p <= obs_tgt_idx; p++)
-                {
-                    segment_pose.push_back(global_path.pose[p]);
-                    segment_pos.push_back(global_path.pos[p]);
-                }
-
-                // check global path segment
-                if(is_path_valid(segment_pose, true))
-                {
-                    // global path segment to local path
-                    std::vector<Eigen::Vector3d> _path_pos = segment_pos;
-
-                    // divide and smooth metric path
-                    _path_pos = path_dividing(_path_pos, LOCAL_PATH_STEP);
-                    _path_pos = path_ccma(_path_pos);
-
-                    // recalc pose
-                    std::vector<Eigen::Matrix4d> _path_pose;
-                    for(size_t p = 0; p < _path_pos.size()-1; p++)
-                    {
-                        _path_pose.push_back(calc_tf(_path_pos[p], _path_pos[p+1]));
-                    }
-                    _path_pose.push_back(segment_pose.back());
-
-                    // recheck nn
-                    Eigen::Matrix4d _cur_tf = slam->get_cur_tf();
-                    Eigen::Vector3d _cur_pos = _cur_tf.block(0,3,3,1);
-                    int _cur_idx = get_nn_idx(_path_pos, _cur_pos);
-
-                    std::vector<Eigen::Matrix4d> path_pose;
-                    std::vector<Eigen::Vector3d> path_pos;
-                    for(size_t p = _cur_idx; p < _path_pose.size(); p++)
-                    {
-                        path_pose.push_back(_path_pose[p]);
-                        path_pos.push_back(_path_pos[p]);
-                    }
-
-                    // set ref_v
-                    std::vector<double> ref_v = calc_ref_v(path_pos);
-
-                    // smoothing ref_v
-                    ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);                    
-
-                    // set result
-                    PATH res;
-                    res.pose = path_pose;
-                    res.pos = path_pos;
-                    res.ref_v = ref_v;
-                    res.goal_tf = path_pose.back();
-
-                    // update
-                    mtx.lock();
-                    cur_local_path = res;
-                    mtx.unlock();
-
-                    local_path_state = LOCAL_PATH_SUCCEED_1;
-
-                    printf("[AUTO] solution found 1\n");
-                    continue;
-                }
-                else
-                {
-                    // calc avoid path two step
-
-                    // get obs map
-                    obsmap->get_obs_map(obs_map, obs_tf);
-
-                    // set avoid area
-                    cv::Mat _avoid_area = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
-                    Eigen::Matrix4d inv_obs_tf = obs_tf.inverse();
-                    for(size_t p = 0; p < global_path.pos.size()-1; p++)
-                    {
-                        Eigen::Vector3d P0 = global_path.pos[p];
-                        Eigen::Vector3d P1 = global_path.pos[p+1];
-
-                        Eigen::Vector3d _P0 = inv_obs_tf.block(0,0,3,3)*P0 + inv_obs_tf.block(0,3,3,1);
-                        Eigen::Vector3d _P1 = inv_obs_tf.block(0,0,3,3)*P1 + inv_obs_tf.block(0,3,3,1);
-
-                        cv::Vec2i uv0 = obsmap->xy_uv(_P0[0], _P0[1]);
-                        cv::Vec2i uv1 = obsmap->xy_uv(_P1[0], _P1[1]);
-
-                        cv::line(_avoid_area, cv::Point(uv0[0], uv0[1]), cv::Point(uv1[0], uv1[1]), cv::Scalar(255), 2*(config->OBS_AVOID_DIST/obsmap->gs)+1);
-                    }
-                    avoid_area = _avoid_area;
-
-                    // make ss
-                    og::SimpleSetup ss(std::make_shared<ob::DubinsStateSpace>(params.PP_MIN_LD, false));
-
-                    // set boundary
-                    auto space = std::static_pointer_cast<ob::DubinsStateSpace>(ss.getStateSpace());
-                    ob::RealVectorBounds bounds(2);
-                    bounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); bounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
-                    bounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); bounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
-                    space->setBounds(bounds);
-
-                    // validator
-                    ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
-
-                    // set start pose
-                    ob::ScopedState<ob::DubinsStateSpace> start(ss.getStateSpace());
-                    start->setX(cur_pos[0]);
-                    start->setY(cur_pos[1]);
-                    start->setYaw(cur_th);
-
-                    // set end pose
-                    ob::ScopedState<ob::DubinsStateSpace> end(ss.getStateSpace());
-                    end->setX(obs_tgt[0]);
-                    end->setY(obs_tgt[1]);
-                    end->setYaw(obs_tgt_th);
-
-                    ss.setStartAndGoalStates(start, end);
-                    ss.setOptimizationObjective(std::make_shared<ob::PathLengthOptimizationObjective>(ss.getSpaceInformation()));
-                    ss.setPlanner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
-
-                    // solve
-                    ob::PlannerStatus solved = ss.solve(0.1);
-                    if(solved)
-                    {
-                        ss.simplifySolution();
-
-                        og::PathGeometric path = ss.getSolutionPath();
-                        if(path.getStateCount() >= 2)
-                        {
-                            double length = 0;
-                            for(size_t p = 1; p < path.getStateCount(); p++)
-                            {
-                                length += path.getSpaceInformation()->distance(path.getState(p-1), path.getState(p));
-                            }
-                            path.interpolate(length/LOCAL_PATH_STEP);
-                        }
-
-                        // set result
-                        std::vector<Eigen::Matrix4d> _path_pose;
-                        std::vector<Eigen::Vector3d> _path_pos;
-                        for(size_t p = 0; p < path.getStateCount(); p++)
-                        {
-                            const ob::DubinsStateSpace::StateType *state = path.getState(p)->as<ob::DubinsStateSpace::StateType>();
-                            Eigen::Vector3d xi(state->getX(), state->getY(), state->getYaw());
-                            _path_pose.push_back(se2_to_TF(xi));
-                            _path_pos.push_back(Eigen::Vector3d(xi[0], xi[1], 0));
-                        }
-
-                        // recheck nn
-                        Eigen::Matrix4d _cur_tf = slam->get_cur_tf();
-                        Eigen::Vector3d _cur_pos = _cur_tf.block(0,3,3,1);
-                        int _cur_idx = get_nn_idx(_path_pos, _cur_pos);
-
-                        std::vector<Eigen::Matrix4d> path_pose;
-                        std::vector<Eigen::Vector3d> path_pos;
-                        for(size_t p = _cur_idx; p < _path_pose.size(); p++)
-                        {
-                            path_pose.push_back(_path_pose[p]);
-                            path_pos.push_back(_path_pos[p]);
-                        }
-
-                        // set ref_v
-                        std::vector<double> ref_v = calc_ref_v(path_pos);
-
-                        // smoothing ref_v
-                        ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
-
-                        // set result
-                        PATH res;
-                        res.pose = path_pose;
-                        res.pos = path_pos;
-                        res.ref_v = ref_v;
-                        res.goal_tf = path_pose.back();
-
-                        // update
-                        mtx.lock();
-                        cur_local_path = res;
-                        mtx.unlock();
-
-                        local_path_state = LOCAL_PATH_SUCCEED_2;
-
-                        printf("[AUTO] solution found 2\n");
-                        continue;
-                    }
-                    else
-                    {
-                        local_path_state = LOCAL_PATH_FAILED;
-
-                        printf("[AUTO] solution failed\n");
-                        continue;
-                    }
-                }
-            }
-            else
-            {
-                local_path_state = LOCAL_PATH_FAILED;
-
-                printf("[AUTO] global path empty\n");
-                continue;
-            }
-
-
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    printf("[AUTO] a_loop stop\n");
-}
-*/
 
 void AUTOCONTROL::a_loop()
 {
@@ -1283,11 +1033,11 @@ void AUTOCONTROL::a_loop()
                 mtx.unlock();
 
                 // make ss
-                og::SimpleSetup ss(std::make_shared<ob::DubinsStateSpace>(params.PP_MIN_LD, false));
+                ompl::geometric::SimpleSetup ss(std::make_shared<ompl::base::DubinsStateSpace>(params.PP_MIN_LD, false));
 
                 // set boundary
-                auto space = std::static_pointer_cast<ob::DubinsStateSpace>(ss.getStateSpace());
-                ob::RealVectorBounds bounds(2);
+                auto space = std::static_pointer_cast<ompl::base::DubinsStateSpace>(ss.getStateSpace());
+                ompl::base::RealVectorBounds bounds(2);
                 bounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); bounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
                 bounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); bounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
                 space->setBounds(bounds);
@@ -1296,35 +1046,35 @@ void AUTOCONTROL::a_loop()
                 ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
 
                 // set start pose
-                ob::ScopedState<ob::DubinsStateSpace> start(ss.getStateSpace());
+                ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
                 start->setX(cur_pos[0]);
                 start->setY(cur_pos[1]);
                 start->setYaw(cur_th);
 
                 // set end pose
-                ob::ScopedState<ob::DubinsStateSpace> end(ss.getStateSpace());
+                ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
                 end->setX(obs_tgt[0]);
                 end->setY(obs_tgt[1]);
                 end->setYaw(obs_tgt_th);
 
                 ss.setStartAndGoalStates(start, end);
-                ss.setOptimizationObjective(std::make_shared<ob::PathLengthOptimizationObjective>(ss.getSpaceInformation()));
-                ss.setPlanner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
+                ss.setOptimizationObjective(std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation()));
+                ss.setPlanner(std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation()));
 
                 // solve
-                ob::PlannerStatus solved = ss.solve(0.5);
+                ompl::base::PlannerStatus solved = ss.solve(1.0);
                 if(solved)
                 {
                     ss.simplifySolution();
 
-                    og::PathGeometric path = ss.getSolutionPath();
+                    ompl::geometric::PathGeometric path = ss.getSolutionPath();
                     if(path.getStateCount() >= 2)
                     {
                         double sum_d = 0;
                         for(size_t p = 0; p < path.getStateCount()-1; p++)
                         {
-                            const ob::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ob::DubinsStateSpace::StateType>();
-                            const ob::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ob::DubinsStateSpace::StateType>();
+                            const ompl::base::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
+                            const ompl::base::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::DubinsStateSpace::StateType>();
 
                             double dx = state1->getX() - state0->getX();
                             double dy = state1->getY() - state0->getY();
@@ -1338,7 +1088,7 @@ void AUTOCONTROL::a_loop()
                     std::vector<Eigen::Matrix4d> path_pose;
                     for(size_t p = 0; p < path.getStateCount(); p++)
                     {
-                        const ob::DubinsStateSpace::StateType *state = path.getState(p)->as<ob::DubinsStateSpace::StateType>();
+                        const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
                         Eigen::Vector3d xi(state->getX(), state->getY(), state->getYaw());
                         path_pose.push_back(se2_to_TF(xi));                        
                     }
@@ -1398,7 +1148,7 @@ void AUTOCONTROL::a_loop()
                 if(obsmap->is_collision(obs_map, obs_tf, obs_tgt_tf, avoid_area))
                 {
                     printf("[AUTO] skip\n");
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
 
@@ -1416,11 +1166,11 @@ void AUTOCONTROL::a_loop()
                 Eigen::Vector3d st_xi = TF_to_se2(pre_local_path.pose[st_idx]);
 
                 // make ss
-                og::SimpleSetup ss(std::make_shared<ob::DubinsStateSpace>(params.PP_MIN_LD, false));
+                ompl::geometric::SimpleSetup ss(std::make_shared<ompl::base::DubinsStateSpace>(params.PP_MIN_LD, false));
 
                 // set boundary
-                auto space = std::static_pointer_cast<ob::DubinsStateSpace>(ss.getStateSpace());
-                ob::RealVectorBounds bounds(2);
+                auto space = std::static_pointer_cast<ompl::base::DubinsStateSpace>(ss.getStateSpace());
+                ompl::base::RealVectorBounds bounds(2);
                 bounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); bounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
                 bounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); bounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
                 space->setBounds(bounds);
@@ -1429,35 +1179,35 @@ void AUTOCONTROL::a_loop()
                 ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
 
                 // set start pose
-                ob::ScopedState<ob::DubinsStateSpace> start(ss.getStateSpace());
+                ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
                 start->setX(st_xi[0]);
                 start->setY(st_xi[1]);
                 start->setYaw(st_xi[2]);
 
                 // set end pose
-                ob::ScopedState<ob::DubinsStateSpace> end(ss.getStateSpace());
+                ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
                 end->setX(obs_tgt[0]);
                 end->setY(obs_tgt[1]);
                 end->setYaw(obs_tgt_th);
 
                 ss.setStartAndGoalStates(start, end);
-                ss.setOptimizationObjective(std::make_shared<ob::PathLengthOptimizationObjective>(ss.getSpaceInformation()));
-                ss.setPlanner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
+                ss.setOptimizationObjective(std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation()));
+                ss.setPlanner(std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation()));
 
                 // solve
-                ob::PlannerStatus solved = ss.solve(0.5);
+                ompl::base::PlannerStatus solved = ss.solve(1.0);
                 if(solved)
                 {
                     ss.simplifySolution();
 
-                    og::PathGeometric path = ss.getSolutionPath();
+                    ompl::geometric::PathGeometric path = ss.getSolutionPath();
                     if(path.getStateCount() >= 2)
                     {
                         double sum_d = 0;
                         for(size_t p = 0; p < path.getStateCount()-1; p++)
                         {
-                            const ob::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ob::DubinsStateSpace::StateType>();
-                            const ob::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ob::DubinsStateSpace::StateType>();
+                            const ompl::base::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
+                            const ompl::base::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::DubinsStateSpace::StateType>();
 
                             double dx = state1->getX() - state0->getX();
                             double dy = state1->getY() - state0->getY();
@@ -1471,7 +1221,7 @@ void AUTOCONTROL::a_loop()
                     std::vector<Eigen::Matrix4d> _path_pose;                    
                     for(size_t p = 0; p < path.getStateCount(); p++)
                     {
-                        const ob::DubinsStateSpace::StateType *state = path.getState(p)->as<ob::DubinsStateSpace::StateType>();
+                        const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
                         Eigen::Vector3d xi(state->getX(), state->getY(), state->getYaw());
                         _path_pose.push_back(se2_to_TF(xi));                        
                     }
@@ -1484,6 +1234,15 @@ void AUTOCONTROL::a_loop()
                     for(size_t p = 0; p < _path_pose.size(); p++)
                     {
                         _path_pos.push_back(_path_pose[p].block(0,3,3,1));
+                    }
+
+                    // check valid
+                    double chk_d = (obs_tgt - _path_pos.back()).norm();
+                    if(chk_d > config->DRIVE_GOAL_D)
+                    {
+                        printf("[AUTO] skip\n");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        continue;
                     }
 
                     // merge path

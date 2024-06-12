@@ -75,6 +75,12 @@ public:
     double OBS_TARGET_DIST0 = 2.0;
     double OBS_TARGET_DIST1 = 3.0;
 
+    // cam
+    QString CAM_SERIAL_NUMBER = "";
+    QString CAM_TF = "";
+    double CAM_HEIGHT_MIN = 0.1;
+    double CAM_HEIGHT_MAX = 1.0;
+
     std::vector<std::pair<QString, QString>> params;
 
 public:

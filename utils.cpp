@@ -700,4 +700,16 @@ double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y)
     return s;
 }
 
+Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf)
+{
+    Eigen::Matrix4d reverse;
+    reverse.setIdentity();
+
+    reverse(1,1) = -1;
+    reverse(2,2) = -1;
+
+    Eigen::Matrix4d ref = tf*reverse;
+    return ref;
+}
+
 #endif // UTILS_CPP

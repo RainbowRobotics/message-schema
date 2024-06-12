@@ -11,10 +11,18 @@ CONFIG += resources_big
 DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
+DEFINES += USE_LIDAR_SICK
+#DEFINES += USE_LIDAR_LAKI
+
+HOME = $$system(echo $HOME)
+message($$HOME)
+
 SOURCES += \
     LakiBeamHTTP.cpp \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
+    cam.cpp \
+    code_reader.cpp \
     complementary_filter.cpp \
     config.cpp \
     cv_to_qt.cpp \
@@ -34,6 +42,8 @@ HEADERS += \
     LakiBeamHTTP.h \
     LakiBeamUDP.h \
     autocontrol.h \
+    cam.h \
+    code_reader.h \
     complementary_filter.h \
     config.h \
     cv_to_qt.h \
@@ -151,3 +161,13 @@ INCLUDEPATH += /usr/include/boost/beast/
 LIBS += -L/usr/lib/x86_64-linux-gnu/
 LIBS += -lboost_system \
         -lboost_thread
+
+# sick sdk
+INCLUDEPATH += /usr/local/include/sick_safetyscanners_base/
+LIBS += -L/usr/local/lib/
+LIBS += -lsick_safetyscanners_base
+
+# Gemini2L sdk
+INCLUDEPATH += $$HOME/OrbbecSDK/include/
+LIBS += -L$$HOME/OrbbecSDK/lib/linux_x64/
+LIBS += -lOrbbecSDK

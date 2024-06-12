@@ -28,9 +28,6 @@
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/config.h>
 
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
-
 // qt
 #include <QObject>
 
@@ -76,7 +73,7 @@ public:
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
-    bool is_state_valid(const ob::State *state) const;
+    bool is_state_valid(const ompl::base::State *state) const;
     bool is_path_valid(std::vector<Eigen::Matrix4d>& path, bool first_pivot);
 
     // local path loop

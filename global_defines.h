@@ -327,6 +327,54 @@ struct PT_SURFEL
     int lb = 0; // 0:none, 1:travel
 };
 
+struct CAM_DEPTH_FRAME
+{
+    double t = 0;
+    std::vector<Eigen::Vector3d> pts;
+    MOBILE_POSE mo; // mobile pose at t
+
+    CAM_DEPTH_FRAME()
+    {
+    }
+    CAM_DEPTH_FRAME(const CAM_DEPTH_FRAME& p)
+    {
+        t = p.t;
+        pts = p.pts;
+        mo = p.mo;
+    }
+    CAM_DEPTH_FRAME& operator=(const CAM_DEPTH_FRAME& p)
+    {
+        t = p.t;
+        pts = p.pts;
+        mo = p.mo;
+        return *this;
+    }
+};
+
+struct CAM_IMG_FRAME
+{
+    double t = 0;
+    cv::Mat img;
+    MOBILE_POSE mo; // mobile pose at t0
+
+    CAM_IMG_FRAME()
+    {
+    }
+    CAM_IMG_FRAME(const CAM_IMG_FRAME& p)
+    {
+        t = p.t;
+        img = p.img.clone();
+        mo = p.mo;
+    }
+    CAM_IMG_FRAME& operator=(const CAM_IMG_FRAME& p)
+    {
+        t = p.t;
+        img = p.img.clone();
+        mo = p.mo;
+        return *this;
+    }
+};
+
 struct RAW_FRAME
 {
     double t0 = 0;
@@ -647,6 +695,53 @@ struct PATH
         pos = p.pos;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
+        return *this;
+    }
+};
+
+struct CODE_INFO
+{
+    QString id;
+    double xmcl;
+    double ymcl;
+    double tilt;
+    int timestamp;
+    int x;
+    int y;
+    int z;
+
+    CODE_INFO()
+    {
+        id = "";
+        xmcl = 0;
+        ymcl = 0;
+        tilt = 0;
+        timestamp = 0;
+        x = 0;
+        y = 0;
+        z = 0;
+    }
+    CODE_INFO(const CODE_INFO& p)
+    {
+        id = p.id;
+        xmcl = p.xmcl;
+        ymcl = p.ymcl;
+        tilt = p.tilt;
+        timestamp = p.timestamp;
+        x = p.x;
+        y = p.y;
+        z = p.z;
+    }
+    CODE_INFO& operator=(const CODE_INFO& p)
+    {
+        id = p.id;
+        xmcl = p.xmcl;
+        ymcl = p.ymcl;
+        tilt = p.tilt;
+        timestamp = p.timestamp;
+        x = p.x;
+        y = p.y;
+        z = p.z;
         return *this;
     }
 };

@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     , unimap(this)
     , obsmap(this)
     , ctrl(this)
+    , code_reader(this)
     , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -232,6 +233,12 @@ void MainWindow::init_modules()
     lidar.mobile = &mobile;
     lidar.open();
 
+    // cam module init
+    cam.config = &config;
+    cam.logger = &logger;
+    cam.mobile = &mobile;
+    cam.init();
+
     // unimap module init
     unimap.config = &config;
     unimap.logger = &logger;
@@ -257,6 +264,12 @@ void MainWindow::init_modules()
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
     ctrl.obsmap = &obsmap;
+
+    // code reader module init
+    code_reader.config = &config;
+    code_reader.logger = &logger;
+    code_reader.unimap = &unimap;
+    code_reader.init();
 
     // simulation module init
     sim.config = &config;

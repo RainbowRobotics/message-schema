@@ -286,6 +286,24 @@ void CONFIG::load()
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
+
+            CAM_SERIAL_NUMBER = obj["CAM_SERIAL_NUMBER"].toString();
+            params.push_back(std::make_pair<QString, QString>("CAM_SERIAL_NUMBER", obj["CAM_SERIAL_NUMBER"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            CAM_TF = obj["CAM_TF"].toString();
+            params.push_back(std::make_pair<QString, QString>("CAM_TF", obj["CAM_TF"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            CAM_HEIGHT_MIN = obj["CAM_HEIGHT_MIN"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("CAM_HEIGHT_MIN", obj["CAM_HEIGHT_MIN"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            CAM_HEIGHT_MAX = obj["CAM_HEIGHT_MAX"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("CAM_HEIGHT_MAX", obj["CAM_HEIGHT_MAX"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+
             // set robot radius
             ROBOT_RADIUS = std::sqrt(ROBOT_SIZE_X[1]*ROBOT_SIZE_X[1] + ROBOT_SIZE_Y[1]*ROBOT_SIZE_Y[1]);
 

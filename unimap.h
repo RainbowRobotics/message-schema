@@ -64,6 +64,9 @@ public:
     // annotation
     std::vector<NODE> nodes;
 
+    // code ref
+    std::map<QString, cv::Vec2d> ref_codes;
+
     // tree for map icp
     std::vector<int> kdtree_mask;
     XYZR_CLOUD kdtree_cloud;

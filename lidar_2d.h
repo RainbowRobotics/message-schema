@@ -9,6 +9,12 @@
 #include "LakiBeamHTTP.h"
 #include "LakiBeamUDP.h"
 
+// Sick Lidar
+#include "sick_safetyscanners_base/SickSafetyscanners.h"
+#include "sick_safetyscanners_base/Exceptions.h"
+#include "sick_safetyscanners_base/Types.h"
+#include "sick_safetyscanners_base/datastructure/CommSettings.h"
+
 // module
 #include "config.h"
 #include "logger.h"
@@ -61,7 +67,7 @@ public:
     tbb::concurrent_queue<FRAME> scan_que;
 
     // vars
-    const double angle_offset = 8.0;
+    const double angle_offset = 10.0; // LAKI:8.0, SICK:10.0
     std::vector<Eigen::Vector3d> cur_scan_f;
     std::vector<Eigen::Vector3d> cur_scan_b;
     std::vector<Eigen::Vector3d> cur_scan;
