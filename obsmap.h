@@ -57,6 +57,8 @@ public:
     double prob(double m_old, double P);
     void shift_grid_map(cv::Mat& src, double x, double y, double th);
 
+    std::vector<TIME_POSE_PTS> tpp_storage;
+
 Q_SIGNALS:
 
 };

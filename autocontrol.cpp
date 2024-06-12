@@ -1476,7 +1476,7 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double k = 2.0;
-            double epsilon = 0.3;
+            double epsilon = 0.2;
 
             double v = ref_v;
             double w = err_th + std::atan2(k * cte, v + epsilon);

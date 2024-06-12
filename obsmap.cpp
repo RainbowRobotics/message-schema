@@ -384,16 +384,55 @@ bool OBSMAP::is_pivot_collision(cv::Mat obs_map, Eigen::Matrix4d obs_tf, Eigen::
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
-    mtx.lock();
-    cv::Mat _map = map.clone();
-    Eigen::Matrix4d G0 = tf;
-    Eigen::Matrix4d G1 = tpp.tf;
-    Eigen::Matrix4d G = G0.inverse()*G1;
-    mtx.unlock();
+    cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
+    for(size_t p = 0; p < tpp_storage.size(); p++)
+    {
+        Eigen::Matrix4d G = tpp.tf.inverse()*tpp_storage[p].tf;
 
-    // pull map to local
-    Eigen::Vector3d xi = TF_to_se2(G.inverse());
-    shift_grid_map(_map, xi[0], xi[1], xi[2]);
+        // update old points
+        cv::Mat hit_map(h, w, CV_8U, cv::Scalar(0));
+        cv::Mat miss_map(h, w, CV_8U, cv::Scalar(0));
+        for(size_t q = 0; q < tpp_storage[p].pts.size(); q++)
+        {
+            Eigen::Vector3d P = tpp_storage[p].pts[q];
+            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+
+            cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+            int u = uv[0];
+            int v = uv[1];
+            if(u < 0 || u >= w || v < 0 || v >= h)
+            {
+                continue;
+            }
+
+            cv::Vec2i uv0 = xy_uv(G(0,3), G(1,3));
+
+            hit_map.ptr<uchar>(v)[u] = 255;
+            cv::line(miss_map, cv::Point(uv0[0], uv0[1]), cv::Point(u, v), cv::Scalar(255), 1);
+        }
+
+        for(int i = 0; i < h; i++)
+        {
+            for(int j = 0; j < w; j++)
+            {
+                if(hit_map.ptr<uchar>(i)[j] == 255)
+                {
+                    double m_old = _map.ptr<double>(i)[j];
+                    double m_new = prob(m_old, P_hit);
+                    _map.ptr<double>(i)[j] = m_new;
+                }
+                else
+                {
+                    if(miss_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        double m_old = _map.ptr<double>(i)[j];
+                        double m_new = prob(m_old, P_miss);
+                        _map.ptr<double>(i)[j] = m_new;
+                    }
+                }
+            }
+        }
+    }
 
     // update new points
     cv::Mat hit_map(h, w, CV_8U, cv::Scalar(0));
@@ -410,10 +449,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             continue;
         }
 
-        cv::Vec2i uv0 = xy_uv(G(0,3), G(1,3));
-
         hit_map.ptr<uchar>(v)[u] = 255;
-        cv::line(miss_map, cv::Point(uv0[0], uv0[1]), cv::Point(u, v), cv::Scalar(255), 1);
+        cv::line(miss_map, cv::Point(cx, cy), cv::Point(u, v), cv::Scalar(255), 1);
     }
 
     for(int i = 0; i < h; i++)
@@ -437,6 +474,16 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             }
         }
     }
+
+    // update storage
+    tpp_storage.push_back(tpp);
+    if(tpp_storage.size() > 30)
+    {
+        tpp_storage.erase(tpp_storage.begin());
+    }
+
+    // add margin
+    cv::dilate(_map, _map, cv::Mat());
 
     // update map
     mtx.lock();
@@ -492,11 +539,13 @@ void OBSMAP::shift_grid_map(cv::Mat& src, double x, double y, double th)
 {
     cv::Mat R = cv::getRotationMatrix2D(cv::Point(cx, cy), th*R2D, 1.0);
     cv::Mat rotated;
-    cv::warpAffine(src, rotated, R, src.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0));
+    cv::warpAffine(src, rotated, R, src.size(), cv::INTER_NEAREST, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     cv::Mat T = (cv::Mat_<double>(2,3) << 1, 0, x/gs, 0, 1, -y/gs);
     cv::Mat shifted;
-    cv::warpAffine(rotated, shifted, T, src.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(0));
+    cv::warpAffine(rotated, shifted, T, src.size(), cv::INTER_NEAREST, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     src = shifted;
+
+    cv::imshow("src", src);
 }
