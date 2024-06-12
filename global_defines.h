@@ -92,16 +92,27 @@
 #define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3
-#define PATH_STEP 0.05
+
+#define GLOBAL_PATH_STEP 0.1
+#define LOCAL_PATH_STEP 0.01
 
 // enumulator
 enum AUTO_FSM_STATE
 {
     AUTO_FSM_FIRST_ALIGN = 0,
-    AUTO_FSM_DRIVE,
+    AUTO_FSM_DRIVING,
+    AUTO_FSM_DOCKING,
     AUTO_FSM_FINAL_ALIGN,    
-    AUTO_FSM_WAIT,
+    AUTO_FSM_WAITING,
     AUTO_FSM_COMPLETE,
+};
+
+enum LOCAL_PATH_STATE
+{
+    LOCAL_PATH_FAILED = 0,
+    LOCAL_PATH_REQUEST,
+    LOCAL_PATH_SUCCEED_1,
+    LOCAL_PATH_SUCCEED_2,
 };
 
 // structure
@@ -619,7 +630,7 @@ struct PATH
 
     PATH()
     {
-        goal_tf.setIdentity();
+        goal_tf.setIdentity();        
     }
 
     PATH(const PATH& p)

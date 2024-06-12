@@ -72,6 +72,8 @@ public:
     double OBS_MAP_MARGIN = 0.05;
     double OBS_SIZE_THRESHOLD = 0.1;
     double OBS_AVOID_DIST = 1.0;
+    double OBS_TARGET_DIST0 = 2.0;
+    double OBS_TARGET_DIST1 = 3.0;
 
     std::vector<std::pair<QString, QString>> params;
 

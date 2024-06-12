@@ -30,6 +30,7 @@ public:
     void save_map();
     void save_annotation();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
+    bool is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius);
 
     // topology
     std::vector<QString> get_nodes(QString type);
@@ -37,6 +38,7 @@ public:
     QString get_node_id(Eigen::Vector3d pos);
     QString get_node_id_nn(Eigen::Vector3d pos);
     QString get_node_id_edge_nn(Eigen::Vector3d pos);
+    QString get_node_id_los(Eigen::Vector3d pos);
     NODE* get_node_by_id(QString name);
     NODE* get_node_nn(Eigen::Vector3d pose);
     NODE* get_edge_nn(Eigen::Vector3d pose);

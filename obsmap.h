@@ -31,6 +31,7 @@ public:
     bool is_collision(Eigen::Matrix4d robot_tf);
     bool is_collision(std::vector<Eigen::Matrix4d> robot_tfs);
     bool is_collision(cv::Mat obs_map, Eigen::Matrix4d obs_tf, Eigen::Matrix4d robot_tf, cv::Mat avoid_area);
+    bool is_pivot_collision(cv::Mat obs_map, Eigen::Matrix4d obs_tf, Eigen::Matrix4d robot_tf, cv::Mat avoid_area);
 
     Eigen::Matrix4d tf;
     cv::Mat map;

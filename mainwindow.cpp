@@ -946,7 +946,7 @@ void MainWindow::bt_MapBuild()
 {
     if(config.SIM_MODE == 1)
     {
-        printf("Map build not allowed SIM_MODE\n");
+        printf("[MAIN] map build not allowed SIM_MODE\n");
         return;
     }
 
@@ -963,14 +963,14 @@ void MainWindow::bt_MapSave()
 {
     if(config.SIM_MODE == 1)
     {
-        printf("Map save not allowed SIM_MODE\n");
+        printf("[MAIN] map save not allowed SIM_MODE\n");
         return;
     }
 
     // check
     if(map_dir == "")
     {
-        printf("no map_dir\n");
+        printf("[MAIN] no map_dir\n");
         return;
     }
 
@@ -980,7 +980,7 @@ void MainWindow::bt_MapSave()
     // check kfrm
     if(slam.kfrm_storage.size() == 0)
     {
-        printf("no keyframe\n");
+        printf("[MAIN] no keyframe\n");
         return;
     }
 
@@ -1021,7 +1021,7 @@ void MainWindow::bt_MapSave()
             }
         }
 
-        printf("convert: %d/%d ..\n", (int)(p+1), (int)slam.kfrm_storage.size());
+        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)slam.kfrm_storage.size());
     }
 
     // write file
@@ -1042,7 +1042,7 @@ void MainWindow::bt_MapSave()
         }
 
         cloud_csv_file.close();
-        printf("%s saved\n", cloud_csv_path.toLocal8Bit().data());
+        printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
     }
 }
 
@@ -1091,7 +1091,7 @@ void MainWindow::bt_MapReload()
 {
     if(unimap.is_loaded == false)
     {
-        printf("check map load\n");
+        printf("[MAIN] check map load\n");
         return;
     }
 
@@ -1502,7 +1502,7 @@ void MainWindow::bt_AutoMove()
 {
     if(unimap.is_loaded == false)
     {
-        printf("check map load\n");
+        printf("[MAIN] check map load\n");
         return;
     }
 
@@ -1514,14 +1514,22 @@ void MainWindow::bt_AutoMove()
         if(node != NULL)
         {
             goal_tf = node->tf;
+            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
         }
     }
     else
     {
-        goal_tf = se2_to_TF(pick.r_pose);
+        if(pick.last_btn == 1)
+        {
+            goal_tf = se2_to_TF(pick.r_pose);
+            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+        }
+        else
+        {
+            printf("[MAIN] goal empty\n");
+            return;
+        }
     }
-
-    printf("%s\n", pick.cur_node.toLocal8Bit().data());
 
     // pure pursuit
     ctrl.move_pp(goal_tf, 0);
@@ -1534,7 +1542,7 @@ void MainWindow::bt_AutoMove2()
 {
     if(unimap.is_loaded == false)
     {
-        printf("check map load\n");
+        printf("[MAIN] check map load\n");
         return;
     }
 
@@ -1546,11 +1554,21 @@ void MainWindow::bt_AutoMove2()
         if(node != NULL)
         {
             goal_tf = node->tf;
+            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
         }
     }
     else
     {
-        goal_tf = se2_to_TF(pick.r_pose);
+        if(pick.last_btn == 1)
+        {
+            goal_tf = se2_to_TF(pick.r_pose);
+            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+        }
+        else
+        {
+            printf("[MAIN] goal empty\n");
+            return;
+        }
     }
 
     // holonomic pure pursuit
@@ -1564,7 +1582,7 @@ void MainWindow::bt_AutoMove3()
 {
     if(unimap.is_loaded == false)
     {
-        printf("check map load\n");
+        printf("[MAIN] check map load\n");
         return;
     }
 
@@ -1576,11 +1594,21 @@ void MainWindow::bt_AutoMove3()
         if(node != NULL)
         {
             goal_tf = node->tf;
+            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
         }
     }
     else
     {
-        goal_tf = se2_to_TF(pick.r_pose);
+        if(pick.last_btn == 1)
+        {
+            goal_tf = se2_to_TF(pick.r_pose);
+            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+        }
+        else
+        {
+            printf("[MAIN] goal empty\n");
+            return;
+        }
     }
 
     // turn and go
@@ -2072,7 +2100,7 @@ void MainWindow::plot_loop()
                 last_plot_tactile.clear();
             }
 
-            std::vector<Eigen::Matrix4d> traj = ctrl.calc_tactile(mobile.vx0, mobile.vy0, mobile.wz0, 0.2, 3.0, cur_tpp.tf);
+            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tpp.tf);
             for(size_t p = 0; p < traj.size(); p++)
             {
                 QString name;
@@ -2199,17 +2227,20 @@ void MainWindow::plot_loop()
         }
         last_plot_local_path.clear();
 
-        // draw local path
+        // draw local path        
         for(size_t p = 0; p < local_path.pose.size(); p++)
         {
-            QString name;
-            name.sprintf("local_path_%d", (int)p);
+            if(p == local_path.pose.size()-1 || p % 10 == 0)
+            {
+                QString name;
+                name.sprintf("local_path_%d", (int)p);
 
-            Eigen::Matrix4d tf = local_path.pose[p];
-            viewer->addCoordinateSystem(config.ROBOT_SIZE_Y[1], name.toStdString());
-            viewer->updateCoordinateSystemPose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                Eigen::Matrix4d tf = local_path.pose[p];
+                viewer->addCoordinateSystem(config.ROBOT_SIZE_Y[1], name.toStdString());
+                viewer->updateCoordinateSystemPose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
 
-            last_plot_local_path.push_back(name);
+                last_plot_local_path.push_back(name);
+            }
         }
     }
 
@@ -2299,9 +2330,9 @@ void MainWindow::plot_loop()
             viewer->removeShape("pp_tgt");
         }
 
-        if(viewer->contains("local_tgt"))
+        if(viewer->contains("obs_tgt"))
         {
-            viewer->removeShape("local_tgt");
+            viewer->removeShape("obs_tgt");
         }
 
         // draw dwa tgt
@@ -2309,16 +2340,16 @@ void MainWindow::plot_loop()
             ctrl.mtx.lock();
             Eigen::Vector3d nn_pos = ctrl.last_nn_pos;
             Eigen::Vector3d pp_tgt = ctrl.last_pp_tgt;
-            Eigen::Vector3d local_tgt = ctrl.last_local_tgt;
+            Eigen::Vector3d obs_tgt = ctrl.last_obs_tgt;
             ctrl.mtx.unlock();
 
             viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.15, 1.0, 1.0, 1.0, "nn_pos");
             viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.15, 1.0, 0.0, 0.0, "pp_tgt");
-            viewer->addSphere(pcl::PointXYZ(local_tgt[0], local_tgt[1], local_tgt[2]), 0.15, 0.0, 1.0, 0.0, "local_tgt");
+            viewer->addSphere(pcl::PointXYZ(obs_tgt[0], obs_tgt[1], obs_tgt[2]), 0.15, 0.0, 1.0, 0.0, "obs_tgt");
 
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "nn_pos");
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pp_tgt");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_tgt");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt");
         }
     }
 

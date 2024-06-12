@@ -277,6 +277,18 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("OBS_AVOID_DIST", obj["OBS_AVOID_DIST"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            OBS_TARGET_DIST0 = obj["OBS_TARGET_DIST0"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_TARGET_DIST0", obj["OBS_TARGET_DIST0"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_TARGET_DIST1 = obj["OBS_TARGET_DIST1"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_TARGET_DIST1", obj["OBS_TARGET_DIST1"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+
+            // set robot radius
+            ROBOT_RADIUS = std::sqrt(ROBOT_SIZE_X[1]*ROBOT_SIZE_X[1] + ROBOT_SIZE_Y[1]*ROBOT_SIZE_Y[1]);
+
             // complete
             is_load = true;
             config_file.close();

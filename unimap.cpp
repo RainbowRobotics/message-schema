@@ -246,6 +246,35 @@ void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
     }
 }
 
+bool UNIMAP::is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius)
+{
+    if(is_loaded == false)
+    {
+        return true;
+    }
+
+    double sq_radius = radius*radius;
+    double length = (P1-P0).norm();
+    Eigen::Vector3d dir = (P1-P0).normalized();
+
+    for(double l = 0; l < length; l += radius)
+    {
+        Eigen::Vector3d P = P0 + l*dir;
+
+        // radius search
+        double query_pt[3] = {P[0], P[1], P[2]};
+
+        std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
+        nanoflann::SearchParameters params;
+        kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+        if(res_idxs.size() > 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void UNIMAP::add_node(PICKING pick, QString type, QString info)
 {
     if(pick.cur_node == "")
@@ -603,6 +632,39 @@ QString UNIMAP::get_node_id_edge_nn(Eigen::Vector3d pos)
     {
         return min_node1->id;
     }
+}
+
+QString UNIMAP::get_node_id_los(Eigen::Vector3d pos)
+{
+    if(nodes.size() == 0)
+    {
+        return "";
+    }
+
+    // find node
+    int min_idx = -1;
+    double min_d = 99999999;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
+        {
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+            if(d < min_d)
+            {
+                if(is_los(nodes[p].tf.block(0,3,3,1), pos, config->ROBOT_SIZE_Y[1]))
+                {
+                    min_d = d;
+                    min_idx = p;
+                }
+            }
+        }
+    }
+
+    if(min_idx != -1)
+    {
+        return nodes[min_idx].id;
+    }
+    return "";
 }
 
 NODE* UNIMAP::get_node_by_id(QString id)

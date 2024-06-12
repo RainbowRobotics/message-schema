@@ -67,14 +67,17 @@ public:
     // global path planning (using topo)
     PATH calc_global_path(Eigen::Matrix4d goal);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
-    std::vector<Eigen::Vector3d> path_dividing(std::vector<Eigen::Vector3d> src, double step);
+    std::vector<Eigen::Vector3d> path_dividing(std::vector<Eigen::Vector3d> src, double step);    
+    std::vector<Eigen::Matrix4d> path_dividing(std::vector<Eigen::Matrix4d> src, double step);
     std::vector<Eigen::Vector3d> path_ccma(std::vector<Eigen::Vector3d> src);
-    std::vector<double> calc_ref_v(std::vector<Eigen::Vector3d> src);
-    std::vector<double> smoothing_v(std::vector<double> src);
+    std::vector<double> calc_ref_v(std::vector<Eigen::Matrix4d> src, double st_v);
+    std::vector<double> smoothing_v(std::vector<double> src, double path_step);
+    std::vector<double> gaussian_filter(std::vector<double>& src, int mask, double sigma);
 
     // for local path planning (using obs_map)
-    std::vector<Eigen::Matrix4d> calc_tactile(double vx, double vy, double wz, double dt, double predict_t, Eigen::Matrix4d G0);
-    bool isStateValid(const ob::State *state) const;
+    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
+    bool is_state_valid(const ob::State *state) const;
+    bool is_path_valid(std::vector<Eigen::Matrix4d>& path, bool first_pivot);
 
     // local path loop
     std::atomic<bool> a_flag = {false};
@@ -82,8 +85,8 @@ public:
     void a_loop();
 
     // for control
-    bool is_everything_fine();
-    std::pair<int, Eigen::Vector3d> get_nn_pos(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+    bool is_everything_fine();    
+    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);    
     Eigen::Vector3d get_tgt(std::vector<Eigen::Vector3d>& path, double dist, Eigen::Vector3d nn_pos, int nn_idx);
 
     // control loop
@@ -92,6 +95,7 @@ public:
     void b_loop_pp();
     void b_loop_hpp();
     void b_loop_tng();
+    void b_loop_pivot();
 
     // storage    
     PATH cur_global_path;
@@ -99,11 +103,12 @@ public:
 
     Eigen::Vector3d last_nn_pos;
     Eigen::Vector3d last_pp_tgt;
-    Eigen::Vector3d last_local_tgt;
+    Eigen::Vector3d last_obs_tgt;
 
-    // flags
+    // flags    
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_local_path_request = {false};
+    std::atomic<int> local_path_state = {LOCAL_PATH_FAILED};
 
     // for ompl    
     cv::Mat obs_map;

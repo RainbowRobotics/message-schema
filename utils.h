@@ -31,7 +31,9 @@ std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Ei
 double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection);
+bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 
+double sgn(double val);
 double saturation(double val, double min, double max);
 double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2);
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
@@ -41,5 +43,8 @@ std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);
 std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r);
 
 pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a=1.0, int num_segments=30);
+Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1);
+
+double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y);
 
 #endif // UTILS_H

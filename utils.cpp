@@ -250,6 +250,18 @@ std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Ei
     return res;
 }
 
+double sgn(double val)
+{
+    if(val >= 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
 double saturation(double val, double min, double max)
 {
     if(val < min)
@@ -357,25 +369,46 @@ bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen:
     return false;
 }
 
-double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2)
+bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
 {
-    double x1 = P0[0], y1 = P0[1];
-    double x2 = P1[0], y2 = P1[1];
-    double x3 = P2[0], y3 = P2[1];
+    Eigen::Vector3d P0P1 = P1 - P0;
+    Eigen::Vector3d P0P = P - P0;
 
-    double numerator = std::abs((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1));
-    double denominator = std::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1)) *
-                         std::sqrt((x3-x2)*(x3-x2) + (y3-y2)*(y3-y2)) *
-                         std::sqrt((x3-x1)*(x3-x1) + (y3-y1)*(y3-y1));
-
-    if (denominator == 0)
+    double lengthSquared = P0P1.squaredNorm();
+    if(lengthSquared == 0.0)
     {
-        // 세 점이 일직선 상에 있는 경우, 곡률은 0입니다.
-        return 0;
+        return false;
     }
 
-    double curvature = 2 * numerator / denominator;
-    return curvature;
+    double t = P0P.dot(P0P1) / lengthSquared;
+    if(t >= 0.0 && t <= 1.0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2)
+{
+    double dx1 = P1.x() - P0.x();
+    double dy1 = P1.y() - P0.y();
+    double dx2 = P2.x() - P1.x();
+    double dy2 = P2.y() - P1.y();
+
+    double area = std::abs(dx1 * dy2 - dx2 * dy1);
+    double len1 = std::sqrt(dx1 * dx1 + dy1 * dy1);
+    double len2 = std::sqrt(dx2 * dx2 + dy2 * dy2);
+    double len3 = std::sqrt((P2.x() - P0.x()) * (P2.x() - P0.x()) + (P2.y() - P0.y()) * (P2.y() - P0.y()));
+
+    if(area == 0 || len1 == 0 || len2 == 0 || len3 == 0)
+    {
+        return 0.0;
+    }
+
+    return std::abs(2.0 * area / (len1 * len2 * len3));
 }
 
 double calc_motion_time(double _s, double _v0, double _v1, double _acc)
@@ -632,6 +665,39 @@ pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matr
     }
 
     return mesh;
+}
+
+Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1)
+{
+    Eigen::Vector3d x_axis = (P1 - P0).normalized();
+    Eigen::Vector3d temp_z_axis(0, 0, 1);
+
+    Eigen::Vector3d y_axis = temp_z_axis.cross(x_axis).normalized();
+    Eigen::Vector3d z_axis = x_axis.cross(y_axis).normalized();
+
+    Eigen::Matrix3d rotation_matrix;
+    rotation_matrix.col(0) = x_axis;
+    rotation_matrix.col(1) = y_axis;
+    rotation_matrix.col(2) = z_axis;
+
+    Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
+    transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
+    transformation_matrix.block<3, 1>(0, 3) = P0;
+    return transformation_matrix;
+}
+
+double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y)
+{
+    double x1 = ref_x;
+    double y1 = ref_y;
+    double x2 = ref_x + 1.0 * std::cos(ref_yaw);
+    double y2 = ref_y + 1.0 * std::sin(ref_yaw);
+    double vx = x2 - x1;
+    double vy = y2 - y1;
+    double wx = x - x1;
+    double wy = y - y1;
+    double s = vx * wy - vy * wx; // s>0 : 차량이 경로의 왼쪽, s<0 : 차량이 경로의 오른쪽
+    return s;
 }
 
 #endif // UTILS_CPP
