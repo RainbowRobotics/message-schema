@@ -15,20 +15,6 @@
 #include "obsmap.h"
 
 // ompl
-/*
-#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
-#include <ompl/base/spaces/SE2StateSpace.h>
-#include <ompl/control/spaces/RealVectorControlSpace.h>
-#include <ompl/control/SimpleSetup.h>
-#include <ompl/control/SpaceInformation.h>
-#include <ompl/control/PathControl.h>
-#include <ompl/control/SimpleSetup.h>
-#include <ompl/control/ODESolver.h>
-#include <ompl/control/planners/sst/SST.h>
-#include <ompl/geometric/PathSimplifier.h>
-#include <ompl/config.h>
-*/
-
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/spaces/DubinsStateSpace.h>
 #include <ompl/base/SpaceInformation.h>
@@ -76,12 +62,13 @@ public:
     // global path planning (using topo)
     PATH calc_global_path(Eigen::Matrix4d goal);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
-    std::vector<Eigen::Vector3d> path_dividing(std::vector<Eigen::Vector3d> src, double step);    
-    std::vector<Eigen::Matrix4d> path_dividing(std::vector<Eigen::Matrix4d> src, double step);
-    std::vector<Eigen::Vector3d> path_ccma(std::vector<Eigen::Vector3d> src);
-    std::vector<double> calc_ref_v(std::vector<Eigen::Matrix4d> src, double st_v);
-    std::vector<double> smoothing_v(std::vector<double> src, double path_step);
-    std::vector<double> gaussian_filter(std::vector<double>& src, int mask, double sigma);
+    std::vector<Eigen::Vector3d> path_dividing(const std::vector<Eigen::Vector3d>& src, double step);
+    std::vector<Eigen::Matrix4d> path_dividing(const std::vector<Eigen::Matrix4d>& src, double step);
+    std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step);
+    std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
+    std::vector<double> calc_ref_v(const std::vector<Eigen::Matrix4d>& src, double st_v);
+    std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
+    std::vector<double> gaussian_filter(const std::vector<double>& src, int mask, double sigma);
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
