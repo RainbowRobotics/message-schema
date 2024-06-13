@@ -2343,9 +2343,14 @@ void MainWindow::plot_loop()
             viewer->removeShape("pp_tgt");
         }
 
-        if(viewer->contains("obs_tgt"))
+        if(viewer->contains("obs_tgt0"))
         {
-            viewer->removeShape("obs_tgt");
+            viewer->removeShape("obs_tgt0");
+        }
+
+        if(viewer->contains("obs_tgt1"))
+        {
+            viewer->removeShape("obs_tgt1");
         }
 
         // draw dwa tgt
@@ -2353,16 +2358,19 @@ void MainWindow::plot_loop()
             ctrl.mtx.lock();
             Eigen::Vector3d nn_pos = ctrl.last_nn_pos;
             Eigen::Vector3d pp_tgt = ctrl.last_pp_tgt;
-            Eigen::Vector3d obs_tgt = ctrl.last_obs_tgt;
+            Eigen::Vector3d obs_tgt0 = ctrl.last_obs_tgt0;
+            Eigen::Vector3d obs_tgt1 = ctrl.last_obs_tgt1;
             ctrl.mtx.unlock();
 
-            viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.15, 1.0, 1.0, 1.0, "nn_pos");
-            viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.15, 1.0, 0.0, 0.0, "pp_tgt");
-            viewer->addSphere(pcl::PointXYZ(obs_tgt[0], obs_tgt[1], obs_tgt[2]), 0.15, 0.0, 1.0, 0.0, "obs_tgt");
+            viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.1, 1.0, 1.0, 1.0, "nn_pos");
+            viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.1, 1.0, 0.0, 0.0, "pp_tgt");
+            viewer->addSphere(pcl::PointXYZ(obs_tgt0[0], obs_tgt0[1], obs_tgt0[2]), 0.1, 0.0, 0.0, 1.0, "obs_tgt0");
+            viewer->addSphere(pcl::PointXYZ(obs_tgt1[0], obs_tgt1[1], obs_tgt1[2]), 0.1, 0.0, 1.0, 0.0, "obs_tgt1");
 
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "nn_pos");
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pp_tgt");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt0");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt1");
         }
     }
 

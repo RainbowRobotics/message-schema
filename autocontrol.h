@@ -15,7 +15,20 @@
 #include "obsmap.h"
 
 // ompl
-#include <ompl/base/OptimizationObjective.h>
+/*
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/base/spaces/SE2StateSpace.h>
+#include <ompl/control/spaces/RealVectorControlSpace.h>
+#include <ompl/control/SimpleSetup.h>
+#include <ompl/control/SpaceInformation.h>
+#include <ompl/control/PathControl.h>
+#include <ompl/control/SimpleSetup.h>
+#include <ompl/control/ODESolver.h>
+#include <ompl/control/planners/sst/SST.h>
+#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/config.h>
+*/
+
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/spaces/DubinsStateSpace.h>
 #include <ompl/base/SpaceInformation.h>
@@ -24,7 +37,6 @@
 #include <ompl/base/goals/GoalStates.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
-#include <ompl/geometric/planners/kpiece/KPIECE1.h>
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/config.h>
 
@@ -72,9 +84,10 @@ public:
     std::vector<double> gaussian_filter(std::vector<double>& src, int mask, double sigma);
 
     // for local path planning (using obs_map)
-    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
+    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
     bool is_state_valid(const ompl::base::State *state) const;
     bool is_path_valid(std::vector<Eigen::Matrix4d>& path, bool first_pivot);
+    int get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx);
 
     // local path loop
     std::atomic<bool> a_flag = {false};
@@ -100,7 +113,8 @@ public:
 
     Eigen::Vector3d last_nn_pos;
     Eigen::Vector3d last_pp_tgt;
-    Eigen::Vector3d last_obs_tgt;
+    Eigen::Vector3d last_obs_tgt0;
+    Eigen::Vector3d last_obs_tgt1;
 
     // flags    
     std::atomic<bool> is_moving = {false};
