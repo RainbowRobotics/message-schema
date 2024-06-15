@@ -629,6 +629,8 @@ struct CTRL_PARAM
     double PP_MAX_LD = 1.0;
     double PP_ST_V = 0.1;
     double PP_ED_V = 0.1;
+    double PP_K = 3.0;
+    double PP_EPS = 0.1;
 };
 
 struct ASTAR_NODE

@@ -115,16 +115,6 @@ void LIDAR_2D::grab_loop_f()
     comm_settings.e_interface_type = 4;
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
-    double cycle_time;
-    if(comm_settings.publishing_frequency == 1)
-    {
-        cycle_time = 1/25;
-    }
-    else if(comm_settings.publishing_frequency == 2)
-    {
-        cycle_time = 1/12.5;
-    }
-
     double pre_lidar_t = 0;
 
     // create instance
@@ -151,6 +141,14 @@ void LIDAR_2D::grab_loop_f()
             // time sync
             double pc_t = get_time();
             double lidar_t = data.getDataHeaderPtr()->getTimestampTime() * 0.001;
+            if(pre_lidar_t == 0)
+            {
+                pre_lidar_t = lidar_t;
+
+                // drop
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
 
             if(is_sync_f)
             {
@@ -170,10 +168,9 @@ void LIDAR_2D::grab_loop_f()
             }
 
             // lidar frame synced ref time
-            double t0 = lidar_t + offset_t_f;
-           // double t1 = lidar_t + offset_t_f + cycle_time;
-
-            pre_lidar_t = t0;
+            double t0 = pre_lidar_t + offset_t_f;
+            double t1 = lidar_t + offset_t_f;
+            pre_lidar_t = lidar_t;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -184,7 +181,7 @@ void LIDAR_2D::grab_loop_f()
             }
 
             // wait
-            while(t0 > mobile->last_pose_t && grab_flag_f)
+            while(t1 > mobile->last_pose_t && grab_flag_f)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
@@ -205,7 +202,8 @@ void LIDAR_2D::grab_loop_f()
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
                 double rssi = sp[p].getReflectivity();
 
-                double t = t0 + (deg+47.5)/360.0*(p/sp.size());
+                double ratio = saturation((deg+47.5)/360.0, 0, 1.0);
+                double t = t0 + ratio*(t1-t0);
 
                 // dist filter
                 if(dist < 0.05 || dist > config->LIDAR_MAX_RANGE)
@@ -319,7 +317,8 @@ void LIDAR_2D::grab_loop_f()
 
             RAW_FRAME frm;
             frm.t0 = t0;
-            frm.t1 = times[times.size()-1];
+            //frm.t1 = times[times.size()-1];
+            frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
             frm.dsk = dsk_pts;
@@ -359,15 +358,7 @@ void LIDAR_2D::grab_loop_b()
     comm_settings.e_interface_type = 4;
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
-    double cycle_time;
-    if(comm_settings.publishing_frequency == 1)
-    {
-        cycle_time = 1/25;
-    }
-    else if(comm_settings.publishing_frequency == 2)
-    {
-        cycle_time = 1/12.5;
-    }
+    double pre_lidar_t = 0;
 
     // create instance
     auto safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
@@ -393,6 +384,14 @@ void LIDAR_2D::grab_loop_b()
             // time sync
             double pc_t = get_time();
             double lidar_t = data.getDataHeaderPtr()->getTimestampTime() * 0.001;
+            if(pre_lidar_t == 0)
+            {
+                pre_lidar_t = lidar_t;
+
+                // drop
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
 
             if(is_sync_b)
             {
@@ -412,8 +411,9 @@ void LIDAR_2D::grab_loop_b()
             }
 
             // lidar frame synced ref time
-            double t0 = lidar_t + offset_t_b;
-            //double t1 = lidar_t + offset_t_b + cycle_time;
+            double t0 = pre_lidar_t + offset_t_b;
+            double t1 = lidar_t + offset_t_b;
+            pre_lidar_t = lidar_t;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -424,7 +424,7 @@ void LIDAR_2D::grab_loop_b()
             }
 
             // wait
-            while(t0 > mobile->last_pose_t && grab_flag_b)
+            while(t1 > mobile->last_pose_t && grab_flag_b)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
@@ -441,12 +441,11 @@ void LIDAR_2D::grab_loop_b()
             std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
             for(size_t p = 0; p < sp.size(); p++)
             {
-                //double t = (p/sp.size())*cycle_time + offset_t_b;
                 double deg = sp[p].getAngle();
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
                 double rssi = sp[p].getReflectivity();
-
-                double t = t0 + (deg+47.5)/360.0*(p/sp.size());
+                double ratio = saturation((deg+47.5)/360.0, 0, 1.0);
+                double t = t0 + ratio*(t1-t0);
 
                 // dist filter
                 if(dist < 0.05 || dist > config->LIDAR_MAX_RANGE)
@@ -560,7 +559,8 @@ void LIDAR_2D::grab_loop_b()
 
             RAW_FRAME frm;
             frm.t0 = t0;
-            frm.t1 = times[times.size()-1];
+            //frm.t1 = times[times.size()-1];
+            frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
             frm.dsk = dsk_pts;

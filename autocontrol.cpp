@@ -85,6 +85,12 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
             res.PP_ED_V = obj["PP_ED_V"].toString().toDouble();
             printf("[PRESET] PP_ED_V :%f\n", res.PP_ED_V);
 
+            res.PP_K = obj["PP_K"].toString().toDouble();
+            printf("[PRESET] PP_K :%f\n", res.PP_K);
+
+            res.PP_EPS = obj["PP_EPS"].toString().toDouble();
+            printf("[PRESET] PP_EPS :%f\n", res.PP_EPS);
+
             file.close();
         }
     }
@@ -565,14 +571,20 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::sample_and_interpolation(const std::ve
 
     for(size_t p = 1; p < src.size(); p++)
     {
-
+        bool is_ok = true;
         for(size_t q = 0; q < sampled.size(); q++)
         {
             double d = (src[p] - sampled[q]).norm();
-            if(d > large_step)
+            if(d < large_step)
             {
-                sampled.push_back(src[p]);
+                is_ok = false;
+                break;
             }
+        }
+
+        if(is_ok)
+        {
+            sampled.push_back(src[p]);
         }
     }
 
@@ -1074,8 +1086,8 @@ void AUTOCONTROL::a_loop()
 
                 // get current status
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-                Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-                double cur_th = TF_to_se2(cur_tf)[2];
+                Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+                Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);                
                 int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
                 // get obs tgt idx
@@ -1084,8 +1096,8 @@ void AUTOCONTROL::a_loop()
 
                 // calc tgt points (local path goal)
                 Eigen::Matrix4d obs_tgt_tf = global_path.pose[obs_tgt_idx1];
-                Eigen::Vector3d obs_tgt_pos = obs_tgt_tf.block(0,3,3,1);
-                double obs_tgt_th = TF_to_se2(obs_tgt_tf)[2];
+                Eigen::Vector3d obs_tgt_xi = TF_to_se2(obs_tgt_tf);
+                Eigen::Vector3d obs_tgt_pos = obs_tgt_tf.block(0,3,3,1);                
 
                 // update for plot
                 mtx.lock();
@@ -1110,15 +1122,15 @@ void AUTOCONTROL::a_loop()
 
                     // set start pose
                     ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
-                    start->setX(cur_pos[0]);
-                    start->setY(cur_pos[1]);
-                    start->setYaw(cur_th);
+                    start->setX(cur_xi[0]);
+                    start->setY(cur_xi[1]);
+                    start->setYaw(cur_xi[2]);
 
                     // set end pose
                     ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
-                    end->setX(obs_tgt_pos[0]);
-                    end->setY(obs_tgt_pos[1]);
-                    end->setYaw(obs_tgt_th);
+                    end->setX(obs_tgt_xi[0]);
+                    end->setY(obs_tgt_xi[1]);
+                    end->setYaw(obs_tgt_xi[2]);
 
                     ss.setStartAndGoalStates(start, end);
 
@@ -1199,6 +1211,17 @@ void AUTOCONTROL::a_loop()
                 }
                 else
                 {
+                    // check
+                    if((pre_local_path.pos.back() - global_path.pos.back()).norm() < config->DRIVE_GOAL_D)
+                    {
+                        if(!obsmap->is_collision(obs_map, obs_tf, pre_local_path.pose, avoid_area))
+                        {
+                            printf("[AUTO] no need new local path\n");
+                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                            continue;
+                        }
+                    }
+
                     // new start point
                     int nn_idx = get_nn_idx(pre_local_path.pos, cur_pos);
                     int new_st_idx0 = nn_idx + config->OBS_TARGET_DIST0/LOCAL_PATH_STEP;
@@ -1209,6 +1232,13 @@ void AUTOCONTROL::a_loop()
 
                     int new_st_idx = get_valid_idx(obs_map, obs_tf, avoid_area, pre_local_path.pose, new_st_idx0);
                     Eigen::Vector3d st_xi = TF_to_se2(pre_local_path.pose[new_st_idx]);
+
+                    bool is_new_st = true;
+                    if(st_xi == obs_tgt_xi)
+                    {
+                        st_xi = cur_xi;
+                        is_new_st = false;
+                    }
 
                     // for plot
                     mtx.lock();
@@ -1236,9 +1266,9 @@ void AUTOCONTROL::a_loop()
 
                     // set end pose
                     ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
-                    end->setX(obs_tgt_pos[0]);
-                    end->setY(obs_tgt_pos[1]);
-                    end->setYaw(obs_tgt_th);
+                    end->setX(obs_tgt_xi[0]);
+                    end->setY(obs_tgt_xi[1]);
+                    end->setYaw(obs_tgt_xi[2]);
 
                     ss.setStartAndGoalStates(start, end);
 
@@ -1255,10 +1285,13 @@ void AUTOCONTROL::a_loop()
                         // merge path
                         std::vector<Eigen::Matrix4d> path_pose;
                         std::vector<Eigen::Vector3d> path_pos;
-                        for(int p = nn_idx; p < new_st_idx; p++)
+                        if(is_new_st)
                         {
-                            path_pose.push_back(pre_local_path.pose[p]);
-                            path_pos.push_back(pre_local_path.pos[p]);
+                            for(int p = nn_idx; p < new_st_idx; p++)
+                            {
+                                path_pose.push_back(pre_local_path.pose[p]);
+                                path_pos.push_back(pre_local_path.pos[p]);
+                            }
                         }
 
                         // solution interpolation
@@ -1535,11 +1568,8 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(tgt_th, cur_th);
 
             // calc control input
-            double k = 3.0;
-            double epsilon = 0.1;
-
             double v = ref_v;
-            double w = err_th + std::atan2(k * cte, v + epsilon);
+            double w = err_th + std::atan2(params.PP_K * cte, v + params.PP_EPS);
 
             double v0 = cur_vel[0];
             //double w0 = cur_vel[2];
@@ -1589,7 +1619,7 @@ void AUTOCONTROL::b_loop_pp()
                 is_moving = false;
 
                 fsm_state = AUTO_FSM_COMPLETE;
-                printf("[AUTO] FINAL ALIGN COMPLETE, err: %.3f, %.3f, %.3f\n", goal_xi[0], goal_xi[1], goal_xi[2]*R2D);
+                printf("[AUTO] FINAL ALIGN COMPLETE, err_th: %.3f\n", err_th*R2D);
                 break;
             }
 

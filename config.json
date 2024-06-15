@@ -1,7 +1,7 @@
 {
     "ANNOT_QA_STEP": "0.3",
     "DRIVE_EXTENDED_CONTROL_TIME": "2.0",
-    "DRIVE_GOAL_D": "0.1",
+    "DRIVE_GOAL_D": "0.15",
     "DRIVE_GOAL_TH": "3.0",
     "LIDAR_MAX_RANGE": "40.0",
     "LIDAR_TF_B": "-0.36, 0.235, 0.0, 0.0, 0.0, -45.0",

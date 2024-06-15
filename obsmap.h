@@ -28,10 +28,11 @@ public:
     cv::Mat get_plot_map();
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
 
-    bool is_collision(Eigen::Matrix4d robot_tf);
-    bool is_collision(std::vector<Eigen::Matrix4d> robot_tfs);
-    bool is_collision(cv::Mat obs_map, Eigen::Matrix4d obs_tf, Eigen::Matrix4d robot_tf, cv::Mat avoid_area);
-    bool is_pivot_collision(cv::Mat obs_map, Eigen::Matrix4d obs_tf, Eigen::Matrix4d robot_tf, cv::Mat avoid_area);
+    bool is_collision(const Eigen::Matrix4d& robot_tf);
+    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs);
+    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
+    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);
+    bool is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
 
     Eigen::Matrix4d tf;
     cv::Mat map;
@@ -42,10 +43,10 @@ public:
     int cy = 150;
     double gs = 0.05;
 
-    const double P_hit = 0.55;
-    const double P_miss = 0.48;
-    const double P_min = 0.1;
-    const double P_max = 0.9;
+    const double P_hit = 0.7;
+    const double P_miss = 0.4;
+    const double P_min = 0.2;
+    const double P_max = 0.8;
     const double P_wall = 0.6;
 
     cv::Vec2i xy_uv(double x, double y);
