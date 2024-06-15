@@ -264,6 +264,7 @@ void MainWindow::init_modules()
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
     ctrl.obsmap = &obsmap;
+    ctrl.init();
 
     // code reader module init
     code_reader.config = &config;
@@ -2225,9 +2226,9 @@ void MainWindow::plot_loop()
     }
 
     // plot local path
-    PATH local_path = ctrl.get_cur_local_path();
-    if(local_path.pos.size() > 0)
     {
+        PATH local_path = ctrl.get_cur_local_path();
+
         // erase first
         for(size_t p = 0; p < last_plot_local_path.size(); p++)
         {
@@ -2240,7 +2241,7 @@ void MainWindow::plot_loop()
         }
         last_plot_local_path.clear();
 
-        // draw local path        
+        // draw local path
         for(size_t p = 0; p < local_path.pose.size(); p++)
         {
             if(p == local_path.pose.size()-1 || p % 10 == 0)
@@ -2256,6 +2257,7 @@ void MainWindow::plot_loop()
             }
         }
     }
+
 
     // draw robot    
     {

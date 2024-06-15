@@ -6,22 +6,34 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent)
     last_nn_pos.setZero();
     last_pp_tgt.setZero();
     last_obs_tgt0.setZero();
-    last_obs_tgt1.setZero();
-
-    a_flag = true;
-    a_thread = new std::thread(&AUTOCONTROL::a_loop, this);
+    last_obs_tgt1.setZero();    
 }
 
 AUTOCONTROL::~AUTOCONTROL()
 {
-    stop();
+    // control loop stop
+    if(b_thread != NULL)
+    {
+        b_flag = false;
+        b_thread->join();
+        b_thread = NULL;
+    }
+    mobile->move(0, 0, 0);
+    is_moving = false;
 
+    // local path loop stop
     if(a_thread != NULL)
     {
         a_flag = false;
         a_thread->join();
         a_thread = NULL;
     }
+}
+
+void AUTOCONTROL::init()
+{
+    a_flag = true;
+    a_thread = new std::thread(&AUTOCONTROL::a_loop, this);
 }
 
 CTRL_PARAM AUTOCONTROL::load_preset(int preset)
@@ -98,21 +110,25 @@ PATH AUTOCONTROL::get_cur_local_path()
     return res;
 }
 
+void AUTOCONTROL::clear_path()
+{
+    mtx.lock();
+    cur_global_path = PATH();
+    cur_local_path = PATH();
+    mtx.unlock();
+}
+
 void AUTOCONTROL::stop()
 {
+    // control loop stop
     if(b_thread != NULL)
     {
         b_flag = false;
         b_thread->join();
         b_thread = NULL;
     }
-
-    mobile->move(0,0,0);
-
-    mtx.lock();
-    cur_global_path = PATH();
-    cur_local_path = PATH();
-    mtx.unlock();
+    mobile->move(0, 0, 0);
+    is_moving = false;
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -124,36 +140,23 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 
     // global path finding
     PATH _cur_global_path = calc_global_path(goal_tf);
-    if(_cur_global_path.pos.size() == 0)
+    if(_cur_global_path.pos.size() > 0)
     {
-        // control loop start
-        if(b_thread != NULL)
-        {
-            b_flag = false;
-            b_thread->join();
-            b_thread = NULL;
-        }
+        // stop first
+        stop();
 
-        b_flag = true;
-        b_thread = new std::thread(&AUTOCONTROL::b_loop_pivot, this);
-    }
-    else
-    {
         // update global path
         mtx.lock();
         cur_global_path = _cur_global_path;
         mtx.unlock();
 
-        // control loop start
-        if(b_thread != NULL)
-        {
-            b_flag = false;
-            b_thread->join();
-            b_thread = NULL;
-        }
-
+        // start control loop
         b_flag = true;
         b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
+    }
+    else
+    {
+        printf("[AUTO] no global path\n");
     }
 }
 
@@ -559,12 +562,17 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::sample_and_interpolation(const std::ve
 
     std::vector<Eigen::Vector3d> sampled;
     sampled.push_back(src.front());
+
     for(size_t p = 1; p < src.size(); p++)
     {
-        double d = (src[p] - sampled.back()).norm();
-        if(d > large_step)
+
+        for(size_t q = 0; q < sampled.size(); q++)
         {
-            sampled.push_back(src[p]);
+            double d = (src[p] - sampled[q]).norm();
+            if(d > large_step)
+            {
+                sampled.push_back(src[p]);
+            }
         }
     }
 
@@ -1019,57 +1027,51 @@ int AUTOCONTROL::get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::
 
 void AUTOCONTROL::a_loop()
 {
-    // final path pose offset
+    // local path calculation loop    
+    const double calc_time = 1.0;
+    const double turn_radius = 0.01;
 
-    // local path calculation loop
     printf("[AUTO] a_loop start\n");
     while(a_flag)
     {
-        const double calc_time = 1.0;
-
-        // check global path
-        PATH global_path = get_cur_global_path();
-        if(global_path.pos.size() > 0 && is_moving)
+        if(is_moving == true)
         {
-            // get obs map
-            obsmap->get_obs_map(obs_map, obs_tf);
-
-            // set avoid area
-            const int r = 2*((config->ROBOT_RADIUS+config->OBS_MAP_MARGIN)/obsmap->gs) + 1;
-            cv::Mat _avoid_area = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
-            Eigen::Matrix4d inv_obs_tf = obs_tf.inverse();
-            for(size_t p = 0; p < global_path.pos.size()-1; p++)
+            PATH global_path = get_cur_global_path();
+            if(global_path.pos.size() > 0)
             {
-                Eigen::Vector3d P0 = global_path.pos[p];
-                Eigen::Vector3d P1 = global_path.pos[p+1];
+                // get obs map
+                obsmap->get_obs_map(obs_map, obs_tf);
 
-                Eigen::Vector3d _P0 = inv_obs_tf.block(0,0,3,3)*P0 + inv_obs_tf.block(0,3,3,1);
-                Eigen::Vector3d _P1 = inv_obs_tf.block(0,0,3,3)*P1 + inv_obs_tf.block(0,3,3,1);
-
-                cv::Vec2i uv0 = obsmap->xy_uv(_P0[0], _P0[1]);
-                cv::Vec2i uv1 = obsmap->xy_uv(_P1[0], _P1[1]);
-
-                //cv::line(_avoid_area, cv::Point(uv0[0], uv0[1]), cv::Point(uv1[0], uv1[1]), cv::Scalar(255), 2*(config->OBS_AVOID_DIST/obsmap->gs)+1);
-                cv::line(_avoid_area, cv::Point(uv0[0], uv0[1]), cv::Point(uv1[0], uv1[1]), cv::Scalar(255), r);
-            }
-
-            cv::Mat _avoid_area2 = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
-            for(int i = 0; i < obsmap->h; i++)
-            {
-                for(int j = 0; j < obsmap->w; j++)
+                // set avoid area
+                const int r = 2*((config->ROBOT_RADIUS+config->OBS_MAP_MARGIN)/obsmap->gs) + 1;
+                cv::Mat _avoid_area = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
+                Eigen::Matrix4d inv_obs_tf = obs_tf.inverse();
+                for(size_t p = 0; p < global_path.pos.size()-1; p++)
                 {
-                    if(obs_map.ptr<uchar>(i)[j] == 255 && _avoid_area.ptr<uchar>(i)[j] == 255)
+                    Eigen::Vector3d P0 = global_path.pos[p];
+                    Eigen::Vector3d P1 = global_path.pos[p+1];
+
+                    Eigen::Vector3d _P0 = inv_obs_tf.block(0,0,3,3)*P0 + inv_obs_tf.block(0,3,3,1);
+                    Eigen::Vector3d _P1 = inv_obs_tf.block(0,0,3,3)*P1 + inv_obs_tf.block(0,3,3,1);
+
+                    cv::Vec2i uv0 = obsmap->xy_uv(_P0[0], _P0[1]);
+                    cv::Vec2i uv1 = obsmap->xy_uv(_P1[0], _P1[1]);
+                    cv::line(_avoid_area, cv::Point(uv0[0], uv0[1]), cv::Point(uv1[0], uv1[1]), cv::Scalar(255), r);
+                }
+
+                cv::Mat _avoid_area2 = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
+                for(int i = 0; i < obsmap->h; i++)
+                {
+                    for(int j = 0; j < obsmap->w; j++)
                     {
-                        cv::circle(_avoid_area2, cv::Point(j,i), r, cv::Scalar(255), -1);
+                        if(obs_map.ptr<uchar>(i)[j] == 255 && _avoid_area.ptr<uchar>(i)[j] == 255)
+                        {
+                            cv::circle(_avoid_area2, cv::Point(j,i), r, cv::Scalar(255), -1);
+                        }
                     }
                 }
-            }
-            cv::bitwise_or(_avoid_area, _avoid_area2, avoid_area);
+                cv::bitwise_or(_avoid_area, _avoid_area2, avoid_area);
 
-            // calc local path
-            PATH pre_local_path = get_cur_local_path();
-            if(pre_local_path.pos.size() == 0)
-            {
                 // get current status
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
                 Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
@@ -1078,276 +1080,261 @@ void AUTOCONTROL::a_loop()
 
                 // get obs tgt idx
                 int obs_tgt_idx0 = std::min<int>(cur_idx + config->OBS_TARGET_DIST1/GLOBAL_PATH_STEP, (int)global_path.pose.size()-1);
-                int obs_tgt_idx = get_valid_idx(obs_map, obs_tf, avoid_area, global_path.pose, obs_tgt_idx0);
+                int obs_tgt_idx1 = get_valid_idx(obs_map, obs_tf, avoid_area, global_path.pose, obs_tgt_idx0);
 
-                // calc tgt points
-                Eigen::Matrix4d obs_tgt_tf = global_path.pose[obs_tgt_idx];
+                // calc tgt points (local path goal)
+                Eigen::Matrix4d obs_tgt_tf = global_path.pose[obs_tgt_idx1];
                 Eigen::Vector3d obs_tgt_pos = obs_tgt_tf.block(0,3,3,1);
                 double obs_tgt_th = TF_to_se2(obs_tgt_tf)[2];
 
-                // for plot
+                // update for plot
                 mtx.lock();
-                last_obs_tgt0 = cur_pos;
                 last_obs_tgt1 = obs_tgt_pos;
                 mtx.unlock();
 
-                // set state space
-                //auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(params.PP_MIN_LD, false));
-                auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(0.001, false));
-                ompl::base::RealVectorBounds stateBounds(2);
-                stateBounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); stateBounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
-                stateBounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); stateBounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
-                stateSpace->setBounds(stateBounds);
-
-                ompl::geometric::SimpleSetup ss(stateSpace);
-
-                // validator
-                ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
-
-                // set start pose
-                ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
-                start->setX(cur_pos[0]);
-                start->setY(cur_pos[1]);
-                start->setYaw(cur_th);
-
-                // set end pose
-                ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
-                end->setX(obs_tgt_pos[0]);
-                end->setY(obs_tgt_pos[1]);
-                end->setYaw(obs_tgt_th);
-
-                ss.setStartAndGoalStates(start, end);
-
-                auto objective = std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation());
-                ss.getProblemDefinition()->setOptimizationObjective(objective);
-
-                auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
-                ss.setPlanner(planner);
-
-                // solve
-                ompl::base::PlannerStatus solved = ss.solve(calc_time);
-                if(solved == ompl::base::PlannerStatus::EXACT_SOLUTION)
+                PATH pre_local_path = get_cur_local_path();
+                if(pre_local_path.pos.size() == 0)
                 {
-                    // solution interpolation
-                    ss.simplifySolution();
+                    // set state space
+                    auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(turn_radius, false));
 
-                    auto path = ss.getSolutionPath();
-                    ss.getPathSimplifier()->simplifyMax(path);
-                    ss.getPathSimplifier()->smoothBSpline(path);
-                    if(path.getStateCount() >= 2)
+                    ompl::base::RealVectorBounds stateBounds(2);
+                    stateBounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); stateBounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
+                    stateBounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); stateBounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
+                    stateSpace->setBounds(stateBounds);
+
+                    ompl::geometric::SimpleSetup ss(stateSpace);
+
+                    // validator
+                    ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
+
+                    // set start pose
+                    ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
+                    start->setX(cur_pos[0]);
+                    start->setY(cur_pos[1]);
+                    start->setYaw(cur_th);
+
+                    // set end pose
+                    ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
+                    end->setX(obs_tgt_pos[0]);
+                    end->setY(obs_tgt_pos[1]);
+                    end->setYaw(obs_tgt_th);
+
+                    ss.setStartAndGoalStates(start, end);
+
+                    auto objective = std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation());
+                    ss.getProblemDefinition()->setOptimizationObjective(objective);
+
+                    auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
+                    ss.setPlanner(planner);
+
+                    // solve
+                    ompl::base::PlannerStatus solved = ss.solve(calc_time);
+                    if(solved == ompl::base::PlannerStatus::EXACT_SOLUTION)
                     {
-                        double sum_d = 0;
-                        for(size_t p = 0; p < path.getStateCount()-1; p++)
+                        // solution interpolation
+                        ss.simplifySolution();
+
+                        auto path = ss.getSolutionPath();
+                        ss.getPathSimplifier()->simplifyMax(path);
+                        ss.getPathSimplifier()->smoothBSpline(path);
+                        if(path.getStateCount() >= 2)
                         {
-                            const ompl::base::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
-                            const ompl::base::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::DubinsStateSpace::StateType>();
+                            double sum_d = 0;
+                            for(size_t p = 0; p < path.getStateCount()-1; p++)
+                            {
+                                const ompl::base::DubinsStateSpace::StateType *state0 = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
+                                const ompl::base::DubinsStateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::DubinsStateSpace::StateType>();
 
-                            double dx = state1->getX() - state0->getX();
-                            double dy = state1->getY() - state0->getY();
-                            double d = std::sqrt(dx*dx + dy*dy);
-                            sum_d += d;
+                                double dx = state1->getX() - state0->getX();
+                                double dy = state1->getY() - state0->getY();
+                                double d = std::sqrt(dx*dx + dy*dy);
+                                sum_d += d;
+                            }
+                            path.interpolate(sum_d/LOCAL_PATH_STEP);
                         }
-                        path.interpolate(sum_d/LOCAL_PATH_STEP);
-                    }
 
-                    // set pos
-                    std::vector<Eigen::Matrix4d> path_pose;
-                    std::vector<Eigen::Vector3d> path_pos;
-                    for(size_t p = 0; p < path.getStateCount(); p++)
+                        // set pos
+                        std::vector<Eigen::Matrix4d> path_pose;
+                        std::vector<Eigen::Vector3d> path_pos;
+                        for(size_t p = 0; p < path.getStateCount(); p++)
+                        {
+                            const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
+                            path_pose.push_back(se2_to_TF(Eigen::Vector3d(state->getX(), state->getY(), state->getYaw())));
+                            path_pos.push_back(Eigen::Vector3d(state->getX(), state->getY(), 0));
+                        }
+
+                        // resampling
+                        std::vector<Eigen::Vector3d> _path_pos = sample_and_interpolation(path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
+                        std::vector<Eigen::Matrix4d> _path_pose;
+                        for(size_t p = 0; p < _path_pos.size()-1; p++)
+                        {
+                            _path_pose.push_back(calc_tf(_path_pos[p], _path_pos[p+1]));
+                        }
+                        _path_pose.push_back(path_pose.back());
+
+                        path_pose = _path_pose;
+                        path_pos = _path_pos;
+
+                        // set ref_v
+                        std::vector<double> ref_v = calc_ref_v(path_pose, params.PP_ST_V);
+
+                        // smoothing ref_v
+                        ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+                        // set result
+                        PATH res;
+                        res.pose = path_pose;
+                        res.pos = path_pos;
+                        res.ref_v = ref_v;
+                        res.goal_tf = path_pose.back();
+
+                        // update local path
+                        mtx.lock();
+                        cur_local_path = res;
+                        mtx.unlock();
+
+                        printf("[AUTO] solution found, first time\n");
+                    }
+                }
+                else
+                {
+                    // new start point
+                    int nn_idx = get_nn_idx(pre_local_path.pos, cur_pos);
+                    int new_st_idx0 = nn_idx + config->OBS_TARGET_DIST0/LOCAL_PATH_STEP;
+                    if(new_st_idx0 > (int)pre_local_path.pos.size()-1)
                     {
-                        const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
-                        path_pose.push_back(se2_to_TF(Eigen::Vector3d(state->getX(), state->getY(), state->getYaw())));
-                        path_pos.push_back(Eigen::Vector3d(state->getX(), state->getY(), 0));
+                        new_st_idx0 = pre_local_path.pos.size()-1;
                     }
 
-                    // resampling
-                    std::vector<Eigen::Vector3d> _path_pos = sample_and_interpolation(path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
-                    std::vector<Eigen::Matrix4d> _path_pose;
-                    for(size_t p = 0; p < _path_pos.size()-1; p++)
-                    {
-                        _path_pose.push_back(calc_tf(_path_pos[p], _path_pos[p+1]));
-                    }
-                    _path_pose.push_back(path_pose.back());
+                    int new_st_idx = get_valid_idx(obs_map, obs_tf, avoid_area, pre_local_path.pose, new_st_idx0);
+                    Eigen::Vector3d st_xi = TF_to_se2(pre_local_path.pose[new_st_idx]);
 
-                    path_pose = _path_pose;
-                    path_pos = _path_pos;
-
-                    // set ref_v
-                    std::vector<double> ref_v = calc_ref_v(path_pose, params.PP_ST_V);
-
-                    // smoothing ref_v
-                    ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
-
-                    // set result
-                    PATH res;
-                    res.pose = path_pose;
-                    res.pos = path_pos;
-                    res.ref_v = ref_v;
-                    res.goal_tf = path_pose.back();
-
-                    // update
+                    // for plot
                     mtx.lock();
-                    cur_local_path = res;
+                    last_obs_tgt0 = pre_local_path.pos[new_st_idx];
                     mtx.unlock();
 
-                    printf("[AUTO] solution found\n");
-                    continue;
-                }
-            }
-            else
-            {
-                // get current status
-                Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-                Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-                int cur_idx = get_nn_idx(global_path.pos, cur_pos);
+                    // set state space
+                    auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(turn_radius, false));
+                    ompl::base::RealVectorBounds stateBounds(2);
+                    stateBounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); stateBounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
+                    stateBounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); stateBounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
+                    stateSpace->setBounds(stateBounds);
 
-                // get obs tgt idx
-                int obs_tgt_st_idx = std::min<int>(cur_idx + config->OBS_TARGET_DIST1/GLOBAL_PATH_STEP, (int)global_path.pose.size()-1);
-                int obs_tgt_idx = get_valid_idx(obs_map, obs_tf, avoid_area, global_path.pose, obs_tgt_st_idx);
+                    // set ss
+                    ompl::geometric::SimpleSetup ss(stateSpace);
 
-                // calc tgt points
-                Eigen::Matrix4d obs_tgt_tf = global_path.pose[obs_tgt_idx];
-                Eigen::Vector3d obs_tgt_pos = obs_tgt_tf.block(0,3,3,1);
-                double obs_tgt_th = TF_to_se2(obs_tgt_tf)[2];
+                    // validator
+                    ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
 
-                // new start point
-                int nn_idx = get_nn_idx(pre_local_path.pos, cur_pos);
-                int new_st_idx0 = nn_idx + config->OBS_TARGET_DIST0/LOCAL_PATH_STEP;
-                if(new_st_idx0 > (int)pre_local_path.pos.size()-1)
-                {
-                    new_st_idx0 = pre_local_path.pos.size()-1;
-                }
+                    // set start pose
+                    ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
+                    start->setX(st_xi[0]);
+                    start->setY(st_xi[1]);
+                    start->setYaw(st_xi[2]);
 
-                int new_st_idx = get_valid_idx(obs_map, obs_tf, avoid_area, pre_local_path.pose, new_st_idx0);
-                Eigen::Vector3d st_xi = TF_to_se2(pre_local_path.pose[new_st_idx]);
+                    // set end pose
+                    ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
+                    end->setX(obs_tgt_pos[0]);
+                    end->setY(obs_tgt_pos[1]);
+                    end->setYaw(obs_tgt_th);
 
-                // for plot
-                mtx.lock();
-                last_obs_tgt0 = pre_local_path.pos[new_st_idx];
-                last_obs_tgt1 = obs_tgt_pos;
-                mtx.unlock();
+                    ss.setStartAndGoalStates(start, end);
 
-                // set state space
-                //auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(params.PP_MIN_LD, false));
-                auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(0.001, false));
-                ompl::base::RealVectorBounds stateBounds(2);
-                stateBounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); stateBounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
-                stateBounds.setLow(1, cur_pos[1] - config->OBS_MAP_RANGE); stateBounds.setHigh(1, cur_pos[1] + config->OBS_MAP_RANGE);
-                stateSpace->setBounds(stateBounds);
+                    auto objective = std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation());
+                    ss.getProblemDefinition()->setOptimizationObjective(objective);
 
-                // set ss
-                ompl::geometric::SimpleSetup ss(stateSpace);
+                    auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
+                    ss.setPlanner(planner);
 
-                // validator
-                ss.setStateValidityChecker(std::bind(&AUTOCONTROL::is_state_valid, this, std::placeholders::_1));
-
-                // set start pose
-                ompl::base::ScopedState<ompl::base::DubinsStateSpace> start(ss.getStateSpace());
-                start->setX(st_xi[0]);
-                start->setY(st_xi[1]);
-                start->setYaw(st_xi[2]);
-
-                // set end pose
-                ompl::base::ScopedState<ompl::base::DubinsStateSpace> end(ss.getStateSpace());
-                end->setX(obs_tgt_pos[0]);
-                end->setY(obs_tgt_pos[1]);
-                end->setYaw(obs_tgt_th);
-
-                ss.setStartAndGoalStates(start, end);
-
-                auto objective = std::make_shared<ompl::base::PathLengthOptimizationObjective>(ss.getSpaceInformation());
-                ss.getProblemDefinition()->setOptimizationObjective(objective);
-
-                auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
-                ss.setPlanner(planner);
-
-                // solve
-                ompl::base::PlannerStatus solved = ss.solve(calc_time);
-                if(solved == ompl::base::PlannerStatus::EXACT_SOLUTION)
-                {
-                    // merge path
-                    std::vector<Eigen::Matrix4d> path_pose;
-                    std::vector<Eigen::Vector3d> path_pos;
-                    for(int p = nn_idx; p < new_st_idx; p++)
+                    // solve
+                    ompl::base::PlannerStatus solved = ss.solve(calc_time);
+                    if(solved == ompl::base::PlannerStatus::EXACT_SOLUTION)
                     {
-                        path_pose.push_back(pre_local_path.pose[p]);
-                        path_pos.push_back(pre_local_path.pos[p]);
-                    }
-
-                    // solution interpolation
-                    ss.simplifySolution();
-
-                    auto path = ss.getSolutionPath();
-                    ss.getPathSimplifier()->simplifyMax(path);
-                    ss.getPathSimplifier()->smoothBSpline(path);
-                    if(path.getStateCount() >= 2)
-                    {
-                        double sum_d = 0;
-                        for(size_t p = 0; p < path.getStateCount()-1; p++)
+                        // merge path
+                        std::vector<Eigen::Matrix4d> path_pose;
+                        std::vector<Eigen::Vector3d> path_pos;
+                        for(int p = nn_idx; p < new_st_idx; p++)
                         {
-                            const ompl::base::SE2StateSpace::StateType *state0 = path.getState(p)->as<ompl::base::SE2StateSpace::StateType>();
-                            const ompl::base::SE2StateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::SE2StateSpace::StateType>();
-
-                            double dx = state1->getX() - state0->getX();
-                            double dy = state1->getY() - state0->getY();
-                            double d = std::sqrt(dx*dx + dy*dy);
-                            sum_d += d;
+                            path_pose.push_back(pre_local_path.pose[p]);
+                            path_pos.push_back(pre_local_path.pos[p]);
                         }
-                        path.interpolate(sum_d/LOCAL_PATH_STEP);
+
+                        // solution interpolation
+                        ss.simplifySolution();
+
+                        auto path = ss.getSolutionPath();
+                        ss.getPathSimplifier()->simplifyMax(path);
+                        ss.getPathSimplifier()->smoothBSpline(path);
+                        if(path.getStateCount() >= 2)
+                        {
+                            double sum_d = 0;
+                            for(size_t p = 0; p < path.getStateCount()-1; p++)
+                            {
+                                const ompl::base::SE2StateSpace::StateType *state0 = path.getState(p)->as<ompl::base::SE2StateSpace::StateType>();
+                                const ompl::base::SE2StateSpace::StateType *state1 = path.getState(p+1)->as<ompl::base::SE2StateSpace::StateType>();
+
+                                double dx = state1->getX() - state0->getX();
+                                double dy = state1->getY() - state0->getY();
+                                double d = std::sqrt(dx*dx + dy*dy);
+                                sum_d += d;
+                            }
+                            path.interpolate(sum_d/LOCAL_PATH_STEP);
+                        }
+
+                        // set pos
+                        for(size_t p = 0; p < path.getStateCount(); p++)
+                        {
+                            const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
+                            path_pose.push_back(se2_to_TF(Eigen::Vector3d(state->getX(), state->getY(), state->getYaw())));
+                            path_pos.push_back(Eigen::Vector3d(state->getX(), state->getY(), 0));
+                        }
+
+                        // resampling
+                        std::vector<Eigen::Vector3d> _path_pos = sample_and_interpolation(path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
+                        std::vector<Eigen::Matrix4d> _path_pose;
+                        for(size_t p = 0; p < _path_pos.size()-1; p++)
+                        {
+                            _path_pose.push_back(calc_tf(_path_pos[p], _path_pos[p+1]));
+                        }
+                        _path_pose.push_back(path_pose.back());
+
+                        path_pose = _path_pose;
+                        path_pos = _path_pos;
+
+                        // set ref_v
+                        std::vector<double> ref_v = calc_ref_v(path_pose, pre_local_path.ref_v[nn_idx]);
+
+                        // smoothing ref_v
+                        ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+                        // set result
+                        PATH res;
+                        res.pose = path_pose;
+                        res.pos = path_pos;
+                        res.ref_v = ref_v;
+                        res.goal_tf = path_pose.back();
+
+                        // update
+                        mtx.lock();
+                        cur_local_path = res;
+                        mtx.unlock();
+
+                        printf("[AUTO] solution found\n");
                     }
-
-                    // set pos
-                    for(size_t p = 0; p < path.getStateCount(); p++)
-                    {
-                        const ompl::base::DubinsStateSpace::StateType *state = path.getState(p)->as<ompl::base::DubinsStateSpace::StateType>();
-                        path_pose.push_back(se2_to_TF(Eigen::Vector3d(state->getX(), state->getY(), state->getYaw())));
-                        path_pos.push_back(Eigen::Vector3d(state->getX(), state->getY(), 0));
-                    }
-
-                    // resampling
-                    std::vector<Eigen::Vector3d> _path_pos = sample_and_interpolation(path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
-                    std::vector<Eigen::Matrix4d> _path_pose;
-                    for(size_t p = 0; p < _path_pos.size()-1; p++)
-                    {
-                        _path_pose.push_back(calc_tf(_path_pos[p], _path_pos[p+1]));
-                    }
-                    _path_pose.push_back(path_pose.back());
-
-                    path_pose = _path_pose;
-                    path_pos = _path_pos;
-
-                    // set ref_v
-                    std::vector<double> ref_v = calc_ref_v(path_pose, pre_local_path.ref_v[nn_idx]);
-
-                    // smoothing ref_v
-                    ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
-
-                    // set result
-                    PATH res;
-                    res.pose = path_pose;
-                    res.pos = path_pos;
-                    res.ref_v = ref_v;
-                    res.goal_tf = path_pose.back();
-
-                    // update
-                    mtx.lock();
-                    cur_local_path = res;
-                    mtx.unlock();
-
-                    printf("[AUTO] solution found\n");
-                    continue;
                 }
             }
         }
         else
         {
-            // clear
+            // clear local path
             mtx.lock();
             cur_local_path = PATH();
             mtx.unlock();
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[AUTO] a_loop stop\n");
 }
@@ -1411,13 +1398,13 @@ Eigen::Vector3d AUTOCONTROL::get_tgt(std::vector<Eigen::Vector3d>& path, double 
 // loops
 void AUTOCONTROL::b_loop_pp()
 {
+    // set params
     is_moving = true;
 
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
 
     PATH global_path = get_cur_global_path();
-
     int fsm_state = AUTO_FSM_FIRST_ALIGN;
 
     printf("[AUTO] b_loop_pp start\n");
@@ -1426,11 +1413,11 @@ void AUTOCONTROL::b_loop_pp()
         // check
         if(is_everything_fine() == false)
         {
-            mobile->move(0,0,0);
+            mobile->move(0, 0, 0);
             is_moving = false;
 
             printf("[AUTO] something wrong\n");
-            return;
+            break;
         }
 
         // get current local path
@@ -1444,17 +1431,17 @@ void AUTOCONTROL::b_loop_pp()
             continue;
         }
 
+        // get current status
+        Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+        double cur_th = TF_to_se2(cur_tf)[2];
+        int cur_idx = get_nn_idx(local_path.pos, cur_pos);
+
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
         {
-            // get current status
-            Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
-            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-            double cur_th = TF_to_se2(cur_tf)[2];
-            int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-
-            // find nn pos
+            // find tgt
             int tgt_idx = cur_idx + params.PP_MIN_LD/LOCAL_PATH_STEP;
             if(tgt_idx > (int)local_path.pos.size()-1)
             {
@@ -1463,13 +1450,14 @@ void AUTOCONTROL::b_loop_pp()
 
             Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];                                    
             Eigen::Vector3d tgt_pos = tgt_tf.block(0,3,3,1);
+            double tgt_th = TF_to_se2(tgt_tf)[2];
 
             mtx.lock();
             last_pp_tgt = tgt_pos;
             mtx.unlock();
 
             // calc error
-            double err_th = deltaRad(std::atan2(tgt_pos[1]-cur_pos[1], tgt_pos[0]-cur_pos[0]), cur_th);
+            double err_th = deltaRad(tgt_th, cur_th);
 
             // pivot control
             double kp = 1.0;
@@ -1496,21 +1484,16 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
-            // get current local path
-            PATH local_path = get_cur_local_path();
-
-            // get current status
-            Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
-            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-            double cur_th = TF_to_se2(cur_tf)[2];            
-            int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-
-            // find tgt pos
-            int tgt_idx = cur_idx + params.PP_MIN_LD/LOCAL_PATH_STEP;
-            if(tgt_idx > (int)local_path.pos.size()-1)
+            // find tgt            
+            int tgt_idx = cur_idx;
+            for(int p = cur_idx; p < (int)local_path.pos.size(); p++)
             {
-                tgt_idx = local_path.pos.size()-1;
+                double d = (local_path.pos[p] - cur_pos).norm();
+                if(d > params.PP_MIN_LD)
+                {
+                    tgt_idx = p;
+                    break;
+                }
             }
 
             Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];
@@ -1553,15 +1536,15 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double k = 3.0;
-            double epsilon = 0.15;
+            double epsilon = 0.1;
 
             double v = ref_v;
             double w = err_th + std::atan2(k * cte, v + epsilon);
 
             double v0 = cur_vel[0];
-            double w0 = cur_vel[2];
+            //double w0 = cur_vel[2];
 
-            // check limitations            
+            // check limitations
             v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0, params.LIMIT_V);
 
@@ -1582,22 +1565,14 @@ void AUTOCONTROL::b_loop_pp()
 
             // send control
             mobile->move(v, 0, w);
-            printf("v:%f, w:%f, ref_v:%f\n", v, w*R2D, ref_v);            
-        }
-        else if(fsm_state == AUTO_FSM_DOCKING)
-        {
-
-        }
+        }        
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
-            // get current status
-            Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
-            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-            double cur_th = TF_to_se2(cur_tf)[2];
-            double goal_th = TF_to_se2(global_path.goal_tf)[2];
+            // get goal state
+            Eigen::Vector3d goal_xi = TF_to_se2(global_path.goal_tf);
 
             // calc error
-            double err_th = deltaRad(goal_th, cur_th);
+            double err_th = deltaRad(goal_xi[2], cur_th);
 
             // pivot control
             double kp = 1.0;
@@ -1611,15 +1586,19 @@ void AUTOCONTROL::b_loop_pp()
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
                 mobile->move(0, 0, 0);
+                is_moving = false;
 
                 fsm_state = AUTO_FSM_COMPLETE;
-
-                printf("[AUTO] FINAL ALIGN COMPLETE, err_th:%f\n", err_th*R2D);
+                printf("[AUTO] FINAL ALIGN COMPLETE, err: %.3f, %.3f, %.3f\n", goal_xi[0], goal_xi[1], goal_xi[2]*R2D);
                 break;
             }
 
             // send control
             mobile->move(0, 0, w);
+        }
+        else if(fsm_state == AUTO_FSM_DOCKING)
+        {
+
         }
 
         // for real time loop
@@ -1637,6 +1616,7 @@ void AUTOCONTROL::b_loop_pp()
         pre_loop_time = get_time();
     }
 
+    mobile->move(0, 0, 0);
     is_moving = false;
     printf("[AUTO] b_loop_pp stop\n");
 }

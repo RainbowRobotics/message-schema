@@ -53,7 +53,9 @@ public:
     // interface funcs
     PATH get_cur_global_path();
     PATH get_cur_local_path();
+    void clear_path();
 
+    void init();
     void stop();
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_hpp(Eigen::Matrix4d goal_tf, int preset);
@@ -104,9 +106,7 @@ public:
     Eigen::Vector3d last_obs_tgt1;
 
     // flags    
-    std::atomic<bool> is_moving = {false};
-    std::atomic<bool> is_local_path_request = {false};
-    std::atomic<int> local_path_state = {LOCAL_PATH_FAILED};
+    std::atomic<bool> is_moving = {false};    
 
     // for ompl    
     cv::Mat obs_map;
