@@ -25,6 +25,7 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/config.h>
+#include <ompl/util/Console.h>
 
 // qt
 #include <QObject>
@@ -100,13 +101,14 @@ public:
     PATH cur_global_path;
     PATH cur_local_path;
 
-    Eigen::Vector3d last_nn_pos;
-    Eigen::Vector3d last_pp_tgt;
-    Eigen::Vector3d last_obs_tgt0;
-    Eigen::Vector3d last_obs_tgt1;
+    Eigen::Vector3d last_cur_pos;
+    Eigen::Vector3d last_tgt_pos;
+    Eigen::Vector3d last_replan_st;
+    Eigen::Vector3d last_local_goal;
 
     // flags    
-    std::atomic<bool> is_moving = {false};    
+    std::atomic<bool> is_moving = {false};
+    std::atomic<bool> is_local_path = {false};
 
     // for ompl    
     cv::Mat obs_map;

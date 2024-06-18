@@ -2333,46 +2333,46 @@ void MainWindow::plot_loop()
         }
     }
 
-    // draw tgts
+    // draw control points
     {
-        if(viewer->contains("nn_pos"))
+        if(viewer->contains("cur_pos"))
         {
-            viewer->removeShape("nn_pos");
+            viewer->removeShape("cur_pos");
         }
 
-        if(viewer->contains("pp_tgt"))
+        if(viewer->contains("tgt_pos"))
         {
-            viewer->removeShape("pp_tgt");
+            viewer->removeShape("tgt_pos");
         }
 
-        if(viewer->contains("obs_tgt0"))
+        if(viewer->contains("local_goal"))
         {
-            viewer->removeShape("obs_tgt0");
+            viewer->removeShape("local_goal");
         }
 
-        if(viewer->contains("obs_tgt1"))
+        if(viewer->contains("replan_st"))
         {
-            viewer->removeShape("obs_tgt1");
+            viewer->removeShape("replan_st");
         }
 
-        // draw dwa tgt
+        // draw monitoring points
         {
             ctrl.mtx.lock();
-            Eigen::Vector3d nn_pos = ctrl.last_nn_pos;
-            Eigen::Vector3d pp_tgt = ctrl.last_pp_tgt;
-            Eigen::Vector3d obs_tgt0 = ctrl.last_obs_tgt0;
-            Eigen::Vector3d obs_tgt1 = ctrl.last_obs_tgt1;
+            Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
+            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
+            Eigen::Vector3d replan_st = ctrl.last_replan_st;
+            Eigen::Vector3d local_goal = ctrl.last_local_goal;
             ctrl.mtx.unlock();
 
-            viewer->addSphere(pcl::PointXYZ(nn_pos[0], nn_pos[1], nn_pos[2]), 0.1, 1.0, 1.0, 1.0, "nn_pos");
-            viewer->addSphere(pcl::PointXYZ(pp_tgt[0], pp_tgt[1], pp_tgt[2]), 0.1, 1.0, 0.0, 0.0, "pp_tgt");
-            viewer->addSphere(pcl::PointXYZ(obs_tgt0[0], obs_tgt0[1], obs_tgt0[2]), 0.1, 0.0, 0.0, 1.0, "obs_tgt0");
-            viewer->addSphere(pcl::PointXYZ(obs_tgt1[0], obs_tgt1[1], obs_tgt1[2]), 0.1, 0.0, 1.0, 0.0, "obs_tgt1");
+            viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
+            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
+            viewer->addSphere(pcl::PointXYZ(replan_st[0], replan_st[1], replan_st[2]), 0.1, 0.0, 0.0, 1.0, "replan_st");
+            viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
 
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "nn_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pp_tgt");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt0");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "obs_tgt1");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "replan_st");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
         }
     }
 

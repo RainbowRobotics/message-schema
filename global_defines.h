@@ -101,9 +101,8 @@ enum AUTO_FSM_STATE
 {
     AUTO_FSM_FIRST_ALIGN = 0,
     AUTO_FSM_DRIVING,
-    AUTO_FSM_DOCKING,
-    AUTO_FSM_FINAL_ALIGN,    
-    AUTO_FSM_WAITING,
+    AUTO_FSM_APPROACH,
+    AUTO_FSM_FINAL_ALIGN,
     AUTO_FSM_COMPLETE,
 };
 
@@ -620,17 +619,15 @@ struct NODE
 // autocontrol parameters
 struct CTRL_PARAM
 {
-    double LIMIT_V = 0.5;
-    double LIMIT_W = 60.0;
+    double LIMIT_V = 1.0;
+    double LIMIT_W = 50.0;
     double LIMIT_V_ACC = 0.5;
-    double LIMIT_W_ACC = 90.0;
+    double LIMIT_W_ACC = 360.0;
     double LIMIT_PIVOT_W = 30.0;
-    double PP_MIN_LD = 0.5;
-    double PP_MAX_LD = 1.0;
-    double PP_ST_V = 0.1;
-    double PP_ED_V = 0.1;
-    double PP_K = 3.0;
-    double PP_EPS = 0.1;
+    double MIN_LD = 0.1;
+    double MAX_LD = 1.0;
+    double MIN_V = 0.05;
+    double MIN_W = 10.0;
 };
 
 struct ASTAR_NODE

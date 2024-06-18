@@ -31,8 +31,10 @@ public:
     bool is_collision(const Eigen::Matrix4d& robot_tf);
     bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs);
     bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
-    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);
+    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);    
     bool is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
+
+    int get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0);
 
     Eigen::Matrix4d tf;
     cv::Mat map;
@@ -48,6 +50,7 @@ public:
     const double P_min = 0.2;
     const double P_max = 0.8;
     const double P_wall = 0.6;
+    const double hidden_margin = 0.05;
 
     cv::Vec2i xy_uv(double x, double y);
     cv::Vec2d uv_xy(int u, int v);
@@ -56,7 +59,6 @@ public:
     double odds_inv(double odd);
     double clamp(double p, double min, double max);
     double prob(double m_old, double P);
-    void shift_grid_map(cv::Mat& src, double x, double y, double th);
 
     std::vector<TIME_POSE_PTS> tpp_storage;
 

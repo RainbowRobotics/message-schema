@@ -66,6 +66,9 @@ public:
     double DRIVE_GOAL_D = 0.05;
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
+    double DRIVE_H = 20.0;
+    double DRIVE_K = 3.0;
+    double DRIVE_EPS = 0.1;
 
     double OBS_MAP_RANGE = 2.5;
     double OBS_MAP_GRID_SIZE = 0.05;

@@ -456,10 +456,91 @@ bool OBSMAP::is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& o
     return false;
 }
 
+int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0)
+{
+    const double x_min = config->ROBOT_SIZE_X[0];
+    const double x_max = config->ROBOT_SIZE_X[1];
+    const double y_min = config->ROBOT_SIZE_Y[0];
+    const double y_max = config->ROBOT_SIZE_Y[1];
+
+    Eigen::Vector3d P0(x_min, y_min, 0);
+    Eigen::Vector3d P1(x_min, y_max, 0);
+    Eigen::Vector3d P2(x_max, y_max, 0);
+    Eigen::Vector3d P3(x_max, y_min, 0);
+
+    int conflict_idx = idx0;
+    for(size_t p = idx0; p < robot_tfs.size(); p++)
+    {
+        Eigen::Matrix4d G = obs_tf.inverse()*robot_tfs[p];
+
+        Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
+        Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
+        Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
+        Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
+
+        cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
+        if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+        {
+            return true;
+        }
+
+        cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
+        if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+        {
+            return true;
+        }
+
+        cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
+        if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
+        {
+            return true;
+        }
+
+        cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
+        if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
+        {
+            return true;
+        }
+
+        std::vector<std::vector<cv::Point>> pts(1);
+        pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+        pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+        pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+        pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+        cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
+        cv::fillPoly(mask, pts, cv::Scalar(255));
+
+        for(int i = 0; i < h; i++)
+        {
+            for(int j = 0; j < w; j++)
+            {
+                if(mask.ptr<uchar>(i)[j] == 255 && obs_map.ptr<uchar>(i)[j] == 255)
+                {
+                    // return previous non confilict index
+                    return conflict_idx;
+                }
+
+                if(mask.ptr<uchar>(i)[j] == 255 && avoid_area.ptr<uchar>(i)[j] == 0)
+                {
+                    // return previous non confilict index
+                    return conflict_idx;
+                }
+            }
+        }
+
+        // update
+        conflict_idx = p;
+    }
+
+    // idx0 or last index of pre local path
+    return conflict_idx;
+}
+
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
-    for(size_t p = 0; p < tpp_storage.size(); p++)
+    for(size_t p = 0; p < tpp_storage.size(); p+=2)
     {
         Eigen::Matrix4d G = tpp.tf.inverse()*tpp_storage[p].tf;
 
@@ -469,7 +550,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         for(size_t q = 0; q < tpp_storage[p].pts.size(); q++)
         {
             Eigen::Vector3d P = tpp_storage[p].pts[q];
-            if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] && P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
+            if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] &&
+               P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
             {
                 continue;
             }
@@ -519,7 +601,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     for(size_t p = 0; p < tpp.pts.size(); p++)
     {
         Eigen::Vector3d P = tpp.pts[p];
-        if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] && P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
+        if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] &&
+           P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
         {
             continue;
         }
@@ -565,7 +648,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         tpp_storage.erase(tpp_storage.begin());
     }
 
-    // add margin
+    // add hidden margin
     cv::dilate(_map, _map, cv::Mat());
 
     // update map
@@ -616,19 +699,4 @@ double OBSMAP::clamp(double p, double min, double max)
 double OBSMAP::prob(double m_old, double P)
 {
     return clamp(odds_inv(odds(m_old)*odds(P)), P_min, P_max);
-}
-
-void OBSMAP::shift_grid_map(cv::Mat& src, double x, double y, double th)
-{
-    cv::Mat R = cv::getRotationMatrix2D(cv::Point(cx, cy), th*R2D, 1.0);
-    cv::Mat rotated;
-    cv::warpAffine(src, rotated, R, src.size(), cv::INTER_NEAREST, cv::BORDER_CONSTANT, cv::Scalar(0));
-
-    cv::Mat T = (cv::Mat_<double>(2,3) << 1, 0, x/gs, 0, 1, -y/gs);
-    cv::Mat shifted;
-    cv::warpAffine(rotated, shifted, T, src.size(), cv::INTER_NEAREST, cv::BORDER_CONSTANT, cv::Scalar(0));
-
-    src = shifted;
-
-    cv::imshow("src", src);
 }
