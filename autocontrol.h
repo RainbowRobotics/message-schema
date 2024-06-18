@@ -86,8 +86,7 @@ public:
 
     // for control
     bool is_everything_fine();    
-    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);    
-    Eigen::Vector3d get_tgt(std::vector<Eigen::Vector3d>& path, double dist, Eigen::Vector3d nn_pos, int nn_idx);
+    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);        
 
     // control loop
     std::atomic<bool> b_flag = {false};

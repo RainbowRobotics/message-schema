@@ -60,7 +60,7 @@ void SIM::a_loop()
 
         // calc vx
         double vx = 0;
-        if(vx1-vx0 > 0.001)
+        if(vx1-vx0 > 0.0001)
         {
             double dvx = config->MOTOR_LIMIT_V_ACC*dt;
             vx = vx0 + dvx;
@@ -69,7 +69,7 @@ void SIM::a_loop()
                 vx = vx1;
             }
         }
-        else if(vx1-vx0 < -0.001)
+        else if(vx1-vx0 < -0.0001)
         {
             double dvx = -config->MOTOR_LIMIT_V_ACC*dt;
             vx = vx0 + dvx;
@@ -85,7 +85,7 @@ void SIM::a_loop()
 
         // calc vy
         double vy = 0;
-        if(vy1-vy0 > 0.001)
+        if(vy1-vy0 > 0.0001)
         {
             double dvy = config->MOTOR_LIMIT_V_ACC*dt;
             vy = vy0 + dvy;
@@ -94,7 +94,7 @@ void SIM::a_loop()
                 vy = vy1;
             }
         }
-        else if(vy1-vy0 < -0.001)
+        else if(vy1-vy0 < -0.0001)
         {
             double dvy = -config->MOTOR_LIMIT_V_ACC*dt;
             vy = vy0 + dvy;
@@ -110,7 +110,7 @@ void SIM::a_loop()
 
         // calc wz
         double wz = 0;
-        if(wz1-wz0 > 0.001)
+        if(wz1-wz0 > 0.0001)
         {
             double dwz = (config->MOTOR_LIMIT_W_ACC*D2R)*dt;
             wz = wz0 + dwz;
@@ -119,7 +119,7 @@ void SIM::a_loop()
                 wz = wz1;
             }
         }
-        else if(wz1-wz0 < -0.001)
+        else if(wz1-wz0 < -0.0001)
         {
             double dwz = -(config->MOTOR_LIMIT_W_ACC*D2R)*dt;
             wz = wz0 + dwz;

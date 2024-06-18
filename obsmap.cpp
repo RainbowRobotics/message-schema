@@ -649,7 +649,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
 
     // add hidden margin
-    cv::dilate(_map, _map, cv::Mat());
+    //cv::dilate(_map, _map, cv::Mat());
 
     // update map
     mtx.lock();
