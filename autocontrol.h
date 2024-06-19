@@ -107,7 +107,7 @@ public:
 
     // flags    
     std::atomic<bool> is_moving = {false};
-    std::atomic<bool> is_local_path = {false};
+    std::atomic<bool> use_local_path = {false};
 
     // for ompl    
     cv::Mat obs_map;

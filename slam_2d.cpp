@@ -682,7 +682,14 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
+                /*
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, tpp.tf, _cur_tf); // 1.0 mean odometry 100%
+                _cur_tf = fused_tf;
+                */
+                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
+                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+
+                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
                 _cur_tf = fused_tf;
             }
 

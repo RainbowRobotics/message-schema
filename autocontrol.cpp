@@ -20,7 +20,7 @@ AUTOCONTROL::~AUTOCONTROL()
     }
     mobile->move(0, 0, 0);
     is_moving = false;
-    is_local_path = false;
+    use_local_path = false;
 
     // local path loop stop
     if(a_thread != NULL)
@@ -130,7 +130,7 @@ void AUTOCONTROL::stop()
     }
     mobile->move(0, 0, 0);
     is_moving = false;
-    is_local_path = false;
+    use_local_path = false;
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -1050,7 +1050,7 @@ void AUTOCONTROL::a_loop()
     printf("[AUTO] a_loop start\n");
     while(a_flag)
     {
-        if(is_local_path == true)
+        if(use_local_path == true)
         {
             PATH global_path = get_cur_global_path();
             if(global_path.pos.size() > 0)
@@ -1401,7 +1401,7 @@ void AUTOCONTROL::b_loop_pp()
 {
     // set params
     is_moving = true;
-    is_local_path = true;
+    use_local_path = true;
 
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
@@ -1418,7 +1418,7 @@ void AUTOCONTROL::b_loop_pp()
         {
             mobile->move(0, 0, 0);
             is_moving = false;
-            is_local_path = false;
+            use_local_path = false;
 
             printf("[AUTO] something wrong\n");
             break;
@@ -1438,8 +1438,8 @@ void AUTOCONTROL::b_loop_pp()
         // get current status
         Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-        double cur_th = TF_to_se2(cur_tf)[2];
 
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
@@ -1466,7 +1466,7 @@ void AUTOCONTROL::b_loop_pp()
             mtx.unlock();
 
             // calc error
-            double err_th = deltaRad(tgt_xi[2], cur_th);
+            double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
 
             // pivot control
             double kp = 1.0;
@@ -1498,7 +1498,7 @@ void AUTOCONTROL::b_loop_pp()
             int tgt_idx = local_path.pos.size()-1;
             for(int p = cur_idx; p < (int)local_path.pos.size(); p++)
             {
-                double d = (local_path.pos[p] - cur_pos).norm();
+                double d = (local_path.pos[p] - local_path.pos[cur_idx]).norm();
                 if(d > params.MIN_LD)
                 {
                     tgt_idx = p;
@@ -1534,10 +1534,11 @@ void AUTOCONTROL::b_loop_pp()
             double ref_v = std::min<double>({path_v, obs_v, goal_v});
 
             // calc error theta
-            double err_th = deltaRad(tgt_xi[2], cur_th);
+            double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
 
             // calc cross track error
-            Eigen::Vector3d front_pos = cur_tf.block(0,0,3,3)*Eigen::Vector3d(params.MIN_LD, 0, 0) + cur_tf.block(0,3,3,1);
+            double ld = (tgt_xi.block(0,0,2,1) - cur_xi.block(0,0,2,1)).norm();
+            Eigen::Vector3d front_pos = cur_tf.block(0,0,3,3)*Eigen::Vector3d(ld, 0, 0) + cur_tf.block(0,3,3,1);
             double s = check_lr(tgt_xi[0], tgt_xi[1], tgt_xi[2], front_pos[0], front_pos[1]);
             double cte = -std::copysign(std::sqrt(std::pow(tgt_xi[0] - front_pos[0], 2) + std::pow(tgt_xi[1] - front_pos[1], 2)), s);
 
@@ -1548,19 +1549,21 @@ void AUTOCONTROL::b_loop_pp()
             v = saturation(v, 0, params.LIMIT_V);
 
             double th = err_th + std::atan2(config->DRIVE_K * cte, v + config->DRIVE_EPS);
+            th = saturation(th, -90.0*D2R, 90.0*D2R);
+
             double w = (v/config->ROBOT_WHEEL_BASE) * std::tan(th);            
             if(std::abs(w) > params.LIMIT_W*D2R)
             {
                 double ratio = (params.LIMIT_W*D2R)/std::abs(w);
                 w = (params.LIMIT_W*D2R) * (w/std::abs(w));
                 v = v * ratio;
-            }
-            w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
+            }            
 
             // goal check
             if(goal_d < config->DRIVE_GOAL_D)
             {
                 extend_dt += dt;
+                printf("v:%f, w:%f\n", v, w);
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
                     extend_dt = 0;
@@ -1575,8 +1578,7 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // send control
-            mobile->move(v, 0, w);
-            printf("v:%f, w:%f\n", v, w);
+            mobile->move(v, 0, w);            
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
@@ -1584,7 +1586,7 @@ void AUTOCONTROL::b_loop_pp()
             Eigen::Vector3d goal_xi = TF_to_se2(global_path.goal_tf);
 
             // calc error
-            double err_th = deltaRad(goal_xi[2], cur_th);
+            double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
             // pivot control
             double kp = 1.5;
@@ -1602,7 +1604,7 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     mobile->move(0, 0, 0);
                     is_moving = false;
-                    is_local_path = false;
+                    use_local_path = false;
 
                     fsm_state = AUTO_FSM_COMPLETE;
                     printf("[AUTO] FINAL ALIGN COMPLETE, err_th: %.3f\n", err_th*R2D);
@@ -1631,7 +1633,7 @@ void AUTOCONTROL::b_loop_pp()
 
     mobile->move(0, 0, 0);
     is_moving = false;
-    is_local_path = false;
+    use_local_path = false;
     printf("[AUTO] b_loop_pp stop\n");
 }
 
