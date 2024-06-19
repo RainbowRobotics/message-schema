@@ -44,7 +44,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     // read
     QString preset_path;
     preset_path.sprintf("/preset_%d.json", preset);
-    preset_path = QDir::homePath() + "/RB_CONFIG" + preset_path;
+    preset_path = QCoreApplication::applicationDirPath() + preset_path;
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
@@ -1469,7 +1469,7 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
 
             // pivot control
-            double kp = 1.0;
+            double kp = 1.5;
             double kd = 0.1;
             double w0 = cur_vel[2];
             double w = kp*err_th + kd*w0;

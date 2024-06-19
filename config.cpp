@@ -34,26 +34,9 @@ void CONFIG::config_to_ui()
 
 void CONFIG::load()
 {
-    bool is_config_exist = false;
-
     // load params
     QFileInfo config_info(config_path);
     if(config_info.exists() && config_info.isFile())
-    {
-        is_config_exist = true;
-    }
-    else
-    {
-        QString _config_path = QDir::homePath() + "/config.json";
-        QFileInfo config_info2(_config_path);
-        if(config_info2.exists() && config_info2.isFile())
-        {
-            config_path = _config_path;
-            is_config_exist = true;
-        }
-    }
-
-    if(is_config_exist == true)
     {
         // clear first
         params.clear();

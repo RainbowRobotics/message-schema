@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , obsmap(this)
     , ctrl(this)
     , code_reader(this)
+    , ws(this)
     , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -99,6 +100,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoMove3, SIGNAL(clicked()), this, SLOT(bt_AutoMove3()));
     connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
 
+    // for ws
+    connect(&ws, SIGNAL(recv_command_motorinit(double)), this, SLOT(ws_command_motorinit(double)));
+    connect(&ws, SIGNAL(recv_command_move(double, double, double, double)), this, SLOT(ws_command_move(double, double, double, double)));
+
     // set plot window
     setup_vtk();
 
@@ -108,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent)
     // start plot loop
     plot_timer.start(50);
     plot_timer2.start(50);
-    watchdog_timer.start(1000);
+    watchdog_timer.start(100);
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -202,7 +207,7 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // config module init
-    config.config_path = QDir::homePath() + "/RB_CONFIG/config.json";
+    config.config_path = QCoreApplication::applicationDirPath() + "/config.json";
     config.ui_table = ui->tw_Config;
     config.load();
     config.config_to_ui();
@@ -219,7 +224,7 @@ void MainWindow::init_modules()
     }
 
     // log module init
-    logger.log_path = QDir::homePath() + "/RB_CONFIG/snlog/";
+    logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
 
     // mobile module init
@@ -271,6 +276,9 @@ void MainWindow::init_modules()
     code_reader.logger = &logger;
     code_reader.unimap = &unimap;
     code_reader.init();
+
+    // websocket client init
+    ws.init();
 
     // simulation module init
     sim.config = &config;
@@ -1641,54 +1649,77 @@ void MainWindow::bt_AutoStop()
     is_path_update = true;
 }
 
+// for ws
+void MainWindow::ws_command_motorinit(double time)
+{
+    mobile.motor_on();
+}
+
+void MainWindow::ws_command_move(double time, double vx, double vy, double wz)
+{
+    mobile.move(vx, vy, wz*D2R);
+}
+
 // watchdog
 void MainWindow::watchdog_loop()
 {
-    // check mobile
-    if(mobile.is_connected)
-    {
-        if(mobile.is_synced == false)
-        {
-            mobile.sync();
-            printf("[WATCH] try time sync, pc and mobile\n");
-        }
+    watchdog_count++;
 
-        MOBILE_STATUS ms = mobile.get_status();
-        if(ms.t != 0)
+    // for 100ms loop
+    if(ws.is_connected)
+    {
+        ws.send_status();
+    }
+
+    // for 1 sec loop
+    if(watchdog_count % 10 == 0)
+    {
+        // check mobile
+        if(mobile.is_connected)
         {
-            // when motor status 0, emo released, no charging
-            if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
+            if(mobile.is_synced == false)
             {
-                mobile.motor_on();
+                mobile.sync();
+                printf("[WATCH] try time sync, pc and mobile\n");
+            }
+
+            MOBILE_STATUS ms = mobile.get_status();
+            if(ms.t != 0)
+            {
+                // when motor status 0, emo released, no charging
+                if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
+                {
+                    mobile.motor_on();
+                }
             }
         }
-    }
 
-    // check lidar
-    if(lidar.is_connected_f)
-    {
-        if(lidar.is_synced_f == false)
+        // check lidar
+        if(lidar.is_connected_f)
         {
-            lidar.sync_f();
-            printf("[WATCH] try time sync, pc and front lidar\n");
+            if(lidar.is_synced_f == false)
+            {
+                lidar.sync_f();
+                printf("[WATCH] try time sync, pc and front lidar\n");
+            }
         }
-    }
 
-    if(lidar.is_connected_b)
-    {
-        if(lidar.is_synced_b == false)
+        if(lidar.is_connected_b)
         {
-            lidar.sync_b();
-            printf("[WATCH] try time sync, pc and back lidar\n");
+            if(lidar.is_synced_b == false)
+            {
+                lidar.sync_b();
+                printf("[WATCH] try time sync, pc and back lidar\n");
+            }
         }
+
+        // check camera
+
+
+        // check loc
+
+
     }
-
-    // check camera
-
-
-    // check loc
-
-
 }
 
 // plot

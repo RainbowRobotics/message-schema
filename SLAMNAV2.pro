@@ -30,7 +30,8 @@ SOURCES += \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
-    mobile.cpp \    
+    mobile.cpp \
+    ws_client.cpp \
     obsmap.cpp \
     pgo.cpp \
     sim.cpp \
@@ -51,7 +52,8 @@ HEADERS += \
     lidar_2d.h \
     logger.h \
     mainwindow.h \
-    mobile.h \    
+    mobile.h \
+    ws_client.h \
     nanoflann.hpp \
     obsmap.h \
     pgo.h \

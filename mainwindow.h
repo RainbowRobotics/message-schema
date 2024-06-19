@@ -15,6 +15,7 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "code_reader.h"
+#include "ws_client.h"
 #include "sim.h"
 
 // qt
@@ -47,6 +48,7 @@ public:
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
     CODE_READER code_reader;
+    WS_CLIENT ws;
     SIM sim;
 
     // funcs
@@ -71,6 +73,7 @@ private:
     QTimer plot_timer2;
 
     // watchdog timer
+    int watchdog_count = 0;
     QTimer watchdog_timer;
 
     // quick annotation timer
@@ -179,6 +182,10 @@ private Q_SLOTS:
     void bt_AutoMove2();
     void bt_AutoMove3();
     void bt_AutoStop();
+
+    // for ws
+    void ws_command_motorinit(double time);
+    void ws_command_move(double time, double vx, double vy, double wz);
 
 };
 #endif // MAINWINDOW_H
