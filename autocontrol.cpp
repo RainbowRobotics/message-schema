@@ -44,7 +44,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     // read
     QString preset_path;
     preset_path.sprintf("/preset_%d.json", preset);
-    preset_path = QCoreApplication::applicationDirPath() + preset_path;
+    preset_path = QDir::homePath() + "/RB_CONFIG" + preset_path;
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())

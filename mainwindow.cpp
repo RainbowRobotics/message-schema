@@ -202,7 +202,7 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // config module init
-    config.config_path = QCoreApplication::applicationDirPath() + "/config.json";
+    config.config_path = QDir::homePath() + "/RB_CONFIG/config.json";
     config.ui_table = ui->tw_Config;
     config.load();
     config.config_to_ui();
@@ -219,7 +219,7 @@ void MainWindow::init_modules()
     }
 
     // log module init
-    logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
+    logger.log_path = QDir::homePath() + "/RB_CONFIG/snlog/";
     logger.init();
 
     // mobile module init
