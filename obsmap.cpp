@@ -539,12 +539,19 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
+    // update storage
+    tpp_storage.push_back(tpp);
+    if(tpp_storage.size() > 30)
+    {
+        tpp_storage.erase(tpp_storage.begin());
+    }
+
+    // build obs map
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
     for(size_t p = 0; p < tpp_storage.size(); p+=2)
     {
         Eigen::Matrix4d G = tpp.tf.inverse()*tpp_storage[p].tf;
 
-        // update old points
         cv::Mat hit_map(h, w, CV_8U, cv::Scalar(0));
         cv::Mat miss_map(h, w, CV_8U, cv::Scalar(0));
         for(size_t q = 0; q < tpp_storage[p].pts.size(); q++)
@@ -594,62 +601,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             }
         }
     }
-
-    // update new points
-    cv::Mat hit_map(h, w, CV_8U, cv::Scalar(0));
-    cv::Mat miss_map(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = 0; p < tpp.pts.size(); p++)
-    {
-        Eigen::Vector3d P = tpp.pts[p];
-        if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] &&
-           P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
-        {
-            continue;
-        }
-
-        cv::Vec2i uv = xy_uv(P[0], P[1]);
-        int u = uv[0];
-        int v = uv[1];
-        if(u < 0 || u >= w || v < 0 || v >= h)
-        {
-            continue;
-        }
-
-        hit_map.ptr<uchar>(v)[u] = 255;
-        cv::line(miss_map, cv::Point(cx, cy), cv::Point(u, v), cv::Scalar(255), 1);
-    }
-
-    for(int i = 0; i < h; i++)
-    {
-        for(int j = 0; j < w; j++)
-        {
-            if(hit_map.ptr<uchar>(i)[j] == 255)
-            {
-                double m_old = _map.ptr<double>(i)[j];
-                double m_new = prob(m_old, P_hit);
-                _map.ptr<double>(i)[j] = m_new;
-            }
-            else
-            {
-                if(miss_map.ptr<uchar>(i)[j] == 255)
-                {
-                    double m_old = _map.ptr<double>(i)[j];
-                    double m_new = prob(m_old, P_miss);
-                    _map.ptr<double>(i)[j] = m_new;
-                }
-            }
-        }
-    }
-
-    // update storage
-    tpp_storage.push_back(tpp);
-    if(tpp_storage.size() > 30)
-    {
-        tpp_storage.erase(tpp_storage.begin());
-    }
-
-    // add hidden margin
-    //cv::dilate(_map, _map, cv::Mat());
 
     // update map
     mtx.lock();

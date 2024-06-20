@@ -83,9 +83,6 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
             res.MIN_V = obj["MIN_V"].toString().toDouble();
             printf("[PRESET] MIN_V :%f\n", res.MIN_V);
 
-            res.MIN_W = obj["MIN_W"].toString().toDouble();
-            printf("[PRESET] MIN_W :%f\n", res.MIN_W);
-
             file.close();
         }
     }
@@ -1234,8 +1231,14 @@ void AUTOCONTROL::a_loop()
                     // get replan point from pre_local_path
                     int _cur_idx = get_nn_idx(pre_local_path.pos, cur_pos);
                     int replan_st_idx = obsmap->get_conflict_idx(obs_map, obs_tf, pre_local_path.pose, avoid_area, _cur_idx);
-                    Eigen::Vector3d replan_st_xi = TF_to_se2(pre_local_path.pose[replan_st_idx]);
-                    //printf("[AUTO] _cur_idx:%d, replan_idx:%d, pre_path_num:%d\n", _cur_idx, replan_st_idx, (int)pre_local_path.pos.size());
+                    Eigen::Vector3d replan_st_xi = TF_to_se2(pre_local_path.pose[replan_st_idx]);                    
+
+                    bool is_blend = true;
+                    if(_cur_idx == replan_st_idx)
+                    {
+                        replan_st_xi = cur_xi;
+                        is_blend = false;
+                    }
 
                     // for plot
                     mtx.lock();
@@ -1281,9 +1284,12 @@ void AUTOCONTROL::a_loop()
                     {
                         // for merge path
                         std::vector<Eigen::Vector3d> _path_pos;
-                        for(int p = _cur_idx; p < replan_st_idx; p++)
+                        if(is_blend)
                         {
-                            _path_pos.push_back(pre_local_path.pos[p]);
+                            for(int p = _cur_idx; p < replan_st_idx; p++)
+                            {
+                                _path_pos.push_back(pre_local_path.pos[p]);
+                            }
                         }
 
                         // solution interpolation
@@ -1557,6 +1563,10 @@ void AUTOCONTROL::b_loop_pp()
                 double ratio = (params.LIMIT_W*D2R)/std::abs(w);
                 w = (params.LIMIT_W*D2R) * (w/std::abs(w));
                 v = v * ratio;
+                if(v < params.MIN_V)
+                {
+                    v = params.MIN_V;
+                }
             }            
 
             // goal check
@@ -1700,37 +1710,4 @@ void AUTOCONTROL::b_loop_tng()
     is_moving = false;
     printf("[AUTO] b_loop_tng stop\n");
 }
-
-void AUTOCONTROL::b_loop_pivot()
-{
-    is_moving = true;
-
-    const double dt = 0.05; // 20hz
-    double pre_loop_time = get_time();
-
-    printf("[AUTO] b_loop_pivot start\n");
-    while(b_flag)
-    {
-
-
-
-        // for real time loop
-        double cur_loop_time = get_time();
-        double delta_loop_time = cur_loop_time - pre_loop_time;
-        if(delta_loop_time < dt)
-        {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-        }
-        else
-        {
-            printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
-        }
-        pre_loop_time = get_time();
-    }
-
-    is_moving = false;
-    printf("[AUTO] b_loop_pivot stop\n");
-}
-
 

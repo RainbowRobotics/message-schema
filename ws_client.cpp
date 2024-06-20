@@ -35,7 +35,7 @@ void WS_CLIENT::disconnected()
     // clear parameters
     disconnect(&client, &QWebSocket::textMessageReceived, this, &WS_CLIENT::recv_message);
 
-    printf("[WS] server disconnected\n");
+    //printf("[WS] server disconnected\n");
 }
 
 void WS_CLIENT::reconnect_loop()

@@ -94,7 +94,6 @@ public:
     void b_loop_pp();
     void b_loop_hpp();
     void b_loop_tng();
-    void b_loop_pivot();
 
     // storage    
     PATH cur_global_path;

@@ -626,7 +626,6 @@ struct CTRL_PARAM
     double MIN_LD = 0.1;
     double MAX_LD = 1.0;
     double MIN_V = 0.05;
-    double MIN_W = 10.0;
 };
 
 struct ASTAR_NODE
