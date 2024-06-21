@@ -58,43 +58,10 @@ void UNIMAP::load_map(QString path)
 
                     kdtree_cloud.pts.push_back(pt);
                     kdtree_mask.push_back(1);
-
-                    // for bounding box
-                    if(x < map_min_x)
-                    {
-                        map_min_x = x;
-                    }
-
-                    if(x > map_max_x)
-                    {
-                        map_max_x = x;
-                    }
-
-                    if(y < map_min_y)
-                    {
-                        map_min_y = y;
-                    }
-
-                    if(y > map_max_y)
-                    {
-                        map_max_y = y;
-                    }
-
-                    if(z < map_min_z)
-                    {
-                        map_min_z = z;
-                    }
-
-                    if(z > map_max_z)
-                    {
-                        map_max_z = z;
-                    }
                 }
                 cloud_csv_file.close();
 
-                printf("[UNIMAP] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud.pts.size());
-                printf("[UNIMAP] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n", map_min_x, map_max_x,
-                       map_min_y, map_max_y, map_min_z, map_max_z);
+                printf("[UNIMAP] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud.pts.size());                
             }
         }
         else
@@ -115,7 +82,66 @@ void UNIMAP::load_map(QString path)
         kdtree_index = new KD_TREE_XYZR(3, kdtree_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         kdtree_index->buildIndex();
 
-        printf("[UNIMAP] build kd tree for map icp\n");
+        // set boundary
+        KD_TREE_XYZR::BoundingBox bbox;
+        kdtree_index->computeBoundingBox(bbox);
+
+        map_min_x = bbox[0].low;
+        map_max_x = bbox[0].high;
+        map_min_y = bbox[1].low;
+        map_max_y = bbox[1].high;
+        map_min_z = bbox[2].low;
+        map_max_z = bbox[2].high;
+
+        // boundary loosing
+        double gap_x = map_max_x - map_min_x;
+        if(std::abs(gap_x) < 1.0)
+        {
+            map_min_x -= 0.5;
+            map_max_x += 0.5;
+        }
+
+        double gap_y = map_max_y - map_min_y;
+        if(std::abs(gap_y) < 1.0)
+        {
+            map_min_y -= 0.5;
+            map_max_y += 0.5;
+        }
+
+        double gap_z = map_max_z - map_min_z;
+        if(std::abs(gap_z) < 1.0)
+        {
+            map_min_z -= 0.5;
+            map_max_z += 0.5;
+        }
+
+        printf("[UNIMAP] build kdtree for map icp\n");
+        printf("[UNIMAP] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
+               map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
+    }
+
+    // set octomap
+    {
+        // erase first
+        if(octree != NULL)
+        {
+            octree->clear();
+            delete octree;
+            octree = NULL;
+        }
+
+        // set point cloud
+        octomap::Pointcloud cloud;
+        for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)
+        {
+            cloud.push_back(kdtree_cloud.pts[p].x, kdtree_cloud.pts[p].y, kdtree_cloud.pts[p].z);
+        }
+
+        // build octomap
+        octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+        octree->insertPointCloud(cloud, octomap::point3d(0,0,0));
+
+        printf("[UNIMAP] build octree for obsmap, total nodes: %d\n", (int)octree->calcNumNodes());
     }
 
     // load topology file

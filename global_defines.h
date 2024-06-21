@@ -60,6 +60,10 @@
 // nanoflann
 #include "nanoflann.hpp"
 
+// octomap
+#include <octomap/octomap.h>
+#include <octomap/math/Utils.h>
+
 // pseudo color
 #include "tinycolormap.hpp"
 

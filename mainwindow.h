@@ -85,6 +85,7 @@ private:
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
     std::atomic<bool> is_path_update = {false};
+    std::atomic<bool> is_obs_update = {false};
 
     std::atomic<bool> is_map_update2 = {false};
     std::atomic<bool> is_topo_update2 = {false};
@@ -109,8 +110,9 @@ protected:
 private Q_SLOTS:
     // replot
     void map_update();
+    void obs_update();
     void topo_update();
-    void pick_update();
+    void pick_update();    
     void all_update();
 
     // timer loops

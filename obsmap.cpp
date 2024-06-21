@@ -539,6 +539,33 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
+    Eigen::Matrix4d tf = tpp.tf;
+
+    octomap::Pointcloud cloud;
+    for(size_t p = 0; p < tpp.pts.size(); p++)
+    {
+        Eigen::Vector3d P = tpp.pts[p];
+
+        // range filtering
+        double d = calc_dist_2d(P);
+        if(d > config->OBS_MAP_RANGE)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d _P = tf.block(0,0,3,3)*P + tf.block(0,3,3,1);
+        cloud.push_back(_P[0], _P[1], _P[2]);
+    }
+
+    unimap->octree->insertPointCloud(cloud, octomap::point3d(tf(0,3), tf(1,3), tf(2,3)));
+
+    // signal for redrawing
+    Q_EMIT obs_updated();
+}
+
+/*
+void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
+{
     // update storage
     tpp_storage.push_back(tpp);
     if(tpp_storage.size() > 30)
@@ -608,6 +635,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     tf = tpp.tf;
     mtx.unlock();
 }
+*/
 
 cv::Vec2i OBSMAP::xy_uv(double x, double y)
 {

@@ -492,6 +492,11 @@ double calc_motion_time(double _s, double _v0, double _v1, double _acc)
     }
 }
 
+double calc_dist_2d(Eigen::Vector3d P)
+{
+    return std::sqrt(P[0]*P[0] + P[1]*P[1]);
+}
+
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
 {
     std::vector<cv::Vec2i> res;

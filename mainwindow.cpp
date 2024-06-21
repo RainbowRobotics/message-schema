@@ -104,6 +104,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ws, SIGNAL(recv_command_motorinit(double)), this, SLOT(ws_command_motorinit(double)));
     connect(&ws, SIGNAL(recv_command_move(double, double, double, double)), this, SLOT(ws_command_move(double, double, double, double)));
 
+    // for obsmap
+    connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
+
     // set plot window
     setup_vtk();
 
@@ -150,14 +153,20 @@ void MainWindow::pick_update()
     is_pick_update2 = true;
 }
 
+void MainWindow::obs_update()
+{
+    is_obs_update = true;
+}
+
 void MainWindow::all_update()
 {
     // clear picking info
     pick = PICKING();
 
-    map_update();
+    map_update();    
     topo_update();
     pick_update();
+    obs_update();
 }
 
 // for init
@@ -251,6 +260,7 @@ void MainWindow::init_modules()
     // obsmap module init
     obsmap.config = &config;
     obsmap.logger = &logger;
+    obsmap.unimap = &unimap;
     obsmap.init();
 
     // slam module init
@@ -1811,6 +1821,56 @@ void MainWindow::plot_loop()
             viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
         }
 
+        // obsmap update
+        if(is_obs_update)
+        {
+            is_obs_update = false;
+
+            if(unimap.octree != NULL)
+            {
+                Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+                // obsmap boundary
+                octomap::point3d bbx_min(cur_tf(0,3) - config.OBS_MAP_RANGE, cur_tf(1,3) - config.OBS_MAP_RANGE, cur_tf(2,3) + config.OBS_MAP_MIN_Z);
+                octomap::point3d bbx_max(cur_tf(0,3) + config.OBS_MAP_RANGE, cur_tf(1,3) + config.OBS_MAP_RANGE, cur_tf(2,3) + config.OBS_MAP_MAX_Z);
+
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                for(octomap::OcTree::leaf_bbx_iterator it = unimap.octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != unimap.octree->end_leafs_bbx(); it++)
+                {
+                    double x = it.getX();
+                    double y = it.getY();
+                    double z = it.getZ();
+                    double prob = it->getOccupancy();
+
+                    /*
+                    if(prob <= 0.5)
+                    {
+                        continue;
+                    }
+                    */
+
+                    tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+                    pcl::PointXYZRGB pt;
+                    pt.x = x;
+                    pt.y = y;
+                    pt.z = z;
+                    pt.r = c.r()*255;
+                    pt.g = c.g()*255;
+                    pt.b = c.b()*255;
+                    cloud->push_back(pt);
+                }
+
+                if(!viewer->updatePointCloud(cloud, "obs_pts"))
+                {
+                    viewer->addPointCloud(cloud, "obs_pts");
+                }
+
+                // point size
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+            }
+        }
+
         // draw topo
         if(is_topo_update)
         {
@@ -1876,7 +1936,6 @@ void MainWindow::plot_loop()
                             viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                                              config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                              0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
-
 
                             QString axis_id = id + "_axis";
                             viewer->addCoordinateSystem(1.0, axis_id.toStdString());
@@ -1953,6 +2012,7 @@ void MainWindow::plot_loop()
                 }
             }
         }
+
     }
 
     // plot cloud data

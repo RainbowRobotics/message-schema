@@ -4,9 +4,12 @@
 #include "global_defines.h"
 #include "utils.h"
 
+// other modules
 #include "config.h"
 #include "logger.h"
+#include "unimap.h"
 
+// qt
 #include <QObject>
 
 class OBSMAP : public QObject
@@ -17,8 +20,10 @@ public:
     ~OBSMAP();
     std::mutex mtx;
 
+    // other modules
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
+    UNIMAP *unimap = NULL;
 
     void init();    
     void update_obs_map(TIME_POSE_PTS& tpp);
@@ -63,6 +68,7 @@ public:
     std::vector<TIME_POSE_PTS> tpp_storage;
 
 Q_SIGNALS:
+    void obs_updated();
 
 };
 

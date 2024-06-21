@@ -25,7 +25,7 @@ public:
     // map dir
     QString map_dir;
 
-    // interface func    
+    // interface func
     void load_map(QString path);
     void save_map();
     void save_annotation();
@@ -71,6 +71,9 @@ public:
     std::vector<int> kdtree_mask;
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
+
+    // octree for obsmap
+    octomap::OcTree* octree = NULL;
 
     // bounding box
     double map_min_x = 99999999;

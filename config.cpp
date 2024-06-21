@@ -273,6 +273,14 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_RANGE", obj["OBS_MAP_RANGE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            OBS_MAP_MIN_Z = obj["OBS_MAP_MIN_Z"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_MIN_Z", obj["OBS_MAP_MIN_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_MAP_MAX_Z = obj["OBS_MAP_MAX_Z"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_MAX_Z", obj["OBS_MAP_MAX_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
             OBS_MAP_GRID_SIZE = obj["OBS_MAP_GRID_SIZE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_GRID_SIZE", obj["OBS_MAP_GRID_SIZE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());

@@ -156,6 +156,12 @@ INCLUDEPATH += /usr/local/include/ompl-1.6/
 LIBS += -L/usr/local/lib/
 LIBS += -lompl
 
+# Octomap
+INCLUDEPATH += /usr/local/include/octomap
+LIBS += -L/usr/local/lib/
+LIBS += -loctomath \
+        -loctomap
+
 # Lakibeam lidar
 INCLUDEPATH += /usr/include/rapidjson/
 INCLUDEPATH += /usr/include/boost/

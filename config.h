@@ -71,6 +71,9 @@ public:
     double DRIVE_EPS = 0.1;
 
     double OBS_MAP_RANGE = 2.5;
+    double OBS_MAP_MIN_Z = -1.0;
+    double OBS_MAP_MAX_Z = 1.0;
+
     double OBS_MAP_GRID_SIZE = 0.05;
     double OBS_MAP_MARGIN = 0.05;
     double OBS_SIZE_THRESHOLD = 0.1;
