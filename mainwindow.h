@@ -189,6 +189,9 @@ private Q_SLOTS:
     void ws_command_motorinit(double time);
     void ws_command_move(double time, double vx, double vy, double wz);
 
+    // for obsmap
+    void bt_ObsClear();
+
 };
 #endif // MAINWINDOW_H
 

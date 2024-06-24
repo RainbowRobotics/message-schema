@@ -80,8 +80,20 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
             res.MAX_LD = obj["MAX_LD"].toString().toDouble();
             printf("[PRESET] MAX_LD :%f\n", res.MAX_LD);
 
-            res.MIN_V = obj["MIN_V"].toString().toDouble();
-            printf("[PRESET] MIN_V :%f\n", res.MIN_V);
+            res.ST_V = obj["ST_V"].toString().toDouble();
+            printf("[PRESET] ST_V :%f\n", res.ST_V);
+
+            res.ED_V = obj["ST_V"].toString().toDouble();
+            printf("[PRESET] ST_V :%f\n", res.ST_V);
+
+            res.DRIVE_H = obj["DRIVE_H"].toString().toDouble();
+            printf("[PRESET] DRIVE_H :%f\n", res.DRIVE_H);
+
+            res.DRIVE_K = obj["DRIVE_K"].toString().toDouble();
+            printf("[PRESET] DRIVE_K :%f\n", res.DRIVE_K);
+
+            res.DRIVE_EPS = obj["DRIVE_EPS"].toString().toDouble();
+            printf("[PRESET] DRIVE_EPS :%f\n", res.DRIVE_EPS);
 
             file.close();
         }
@@ -225,7 +237,8 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
     // get st node id
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-    QString st_node_id = unimap->get_node_id_los(cur_pos);
+    //QString st_node_id = unimap->get_node_id_los(cur_pos);
+    QString st_node_id = unimap->get_node_id_nn(cur_pos);
     if(st_node_id == "")
     {
         printf("[AUTO] st_node_id empty\n");
@@ -234,7 +247,8 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
     // set ed node id
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
-    QString ed_node_id = unimap->get_node_id_los(goal_pos);
+    //QString ed_node_id = unimap->get_node_id_los(goal_pos);
+    QString ed_node_id = unimap->get_node_id_nn(goal_pos);
     if(ed_node_id == "")
     {
         printf("[AUTO] ed_node_id empty\n");
@@ -266,9 +280,16 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // add cur pos
-    if(!check_point_on_segment(metric_path[0], metric_path[1], cur_pos))
+    if(metric_path.size() == 1)
     {
         metric_path.insert(metric_path.begin(), cur_pos);
+    }
+    else
+    {
+        if(!check_point_on_segment(metric_path[0], metric_path[1], cur_pos))
+        {
+            metric_path.insert(metric_path.begin(), cur_pos);
+        }
     }
 
     // add goal pos
@@ -293,7 +314,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     path_pose.push_back(final_tf);
 
     // set ref_v
-    std::vector<double> ref_v = calc_ref_v(path_pose, params.MIN_V);
+    std::vector<double> ref_v = calc_ref_v(path_pose, params.ST_V);
 
     // smoothing ref_v
     ref_v = smoothing_v(ref_v, GLOBAL_PATH_STEP);
@@ -831,11 +852,11 @@ std::vector<double> AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& 
     for(size_t p = 0; p < curvatures.size(); p++)
     {
         double kappa = curvatures[p];
-        double scale_factor = saturation(1.0 - kappa*config->DRIVE_H, 0.0, 1.0);
+        double scale_factor = saturation(1.0 - kappa*params.DRIVE_H, 0.0, 1.0);
         double adjusted_v = params.LIMIT_V * scale_factor;
-        if(adjusted_v < params.MIN_V)
+        if(adjusted_v < params.ST_V)
         {
-            adjusted_v = params.MIN_V;
+            adjusted_v = params.ST_V;
         }
 
         res[p] = adjusted_v;        
@@ -1206,7 +1227,7 @@ void AUTOCONTROL::a_loop()
                         path_pose.push_back(se2_to_TF(local_goal_xi));
 
                         // set ref_v
-                        std::vector<double> ref_v = calc_ref_v(path_pose, params.MIN_V);
+                        std::vector<double> ref_v = calc_ref_v(path_pose, params.ST_V);
 
                         // smoothing ref_v
                         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
@@ -1455,7 +1476,7 @@ void AUTOCONTROL::b_loop_pp()
             int tgt_idx = cur_idx;
             for(int p = cur_idx; p < (int)local_path.pos.size(); p++)
             {
-                double d = (local_path.pos[p] - local_path.pos[cur_idx]).norm();
+                double d = calc_dist_2d(local_path.pos[p] - local_path.pos[cur_idx]);
                 if(d > params.MIN_LD)
                 {
                     tgt_idx = p;
@@ -1504,7 +1525,7 @@ void AUTOCONTROL::b_loop_pp()
             int tgt_idx = local_path.pos.size()-1;
             for(int p = cur_idx; p < (int)local_path.pos.size(); p++)
             {
-                double d = (local_path.pos[p] - local_path.pos[cur_idx]).norm();
+                double d = calc_dist_2d(local_path.pos[p] - local_path.pos[cur_idx]);
                 if(d > params.MIN_LD)
                 {
                     tgt_idx = p;
@@ -1533,9 +1554,8 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // calc ref_v            
-            double goal_d = (global_path.goal_tf.block(0,3,3,1) - cur_pos).norm();
-
-            double goal_v = goal_d;
+            double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
+            double goal_v = goal_d + params.ED_V;
             double path_v = local_path.ref_v[cur_idx];
             double ref_v = std::min<double>({path_v, obs_v, goal_v});
 
@@ -1543,18 +1563,18 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
 
             // calc cross track error
-            double ld = (tgt_xi.block(0,0,2,1) - cur_xi.block(0,0,2,1)).norm();
+            double ld = calc_dist_2d(tgt_pos - cur_pos);
             Eigen::Vector3d front_pos = cur_tf.block(0,0,3,3)*Eigen::Vector3d(ld, 0, 0) + cur_tf.block(0,3,3,1);
             double s = check_lr(tgt_xi[0], tgt_xi[1], tgt_xi[2], front_pos[0], front_pos[1]);
-            double cte = -std::copysign(std::sqrt(std::pow(tgt_xi[0] - front_pos[0], 2) + std::pow(tgt_xi[1] - front_pos[1], 2)), s);
+            double cte = -std::copysign(calc_dist_2d(tgt_pos - front_pos), s);
 
             // calc control input
             double v0 = cur_vel[0];
             double v = ref_v;
-            v = saturation(v, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0, params.LIMIT_V);
 
-            double th = err_th + std::atan2(config->DRIVE_K * cte, v + config->DRIVE_EPS);
+            double th = err_th + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -90.0*D2R, 90.0*D2R);
 
             double w = (v/config->ROBOT_WHEEL_BASE) * std::tan(th);            
@@ -1563,11 +1583,11 @@ void AUTOCONTROL::b_loop_pp()
                 double ratio = (params.LIMIT_W*D2R)/std::abs(w);
                 w = (params.LIMIT_W*D2R) * (w/std::abs(w));
                 v = v * ratio;
-                if(v < params.MIN_V)
+                if(v < params.ED_V)
                 {
-                    v = params.MIN_V;
+                    v = params.ED_V;
                 }
-            }            
+            }
 
             // goal check
             if(goal_d < config->DRIVE_GOAL_D)

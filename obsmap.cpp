@@ -23,6 +23,14 @@ void OBSMAP::init()
     gs = config->OBS_MAP_GRID_SIZE;
 
     map = cv::Mat(h, w, CV_64F, cv::Scalar(0)); // obstacle is 255    
+    octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+}
+
+void OBSMAP::clear()
+{
+    mtx.lock();
+    octree->clear();
+    mtx.unlock();
 }
 
 void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
@@ -42,26 +50,6 @@ void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
     obs_map = res;
     obs_tf = tf;
     mtx.unlock();
-}
-
-cv::Mat OBSMAP::get_plot_map()
-{
-    cv::Mat res(h, w, CV_8UC3, cv::Scalar(0,0,0));
-
-    mtx.lock();
-    for(int i = 0; i < h; i++)
-    {
-        for(int j = 0; j < w; j++)
-        {
-            if(map.ptr<double>(i)[j] >= P_wall)
-            {
-                res.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255, 255, 255);
-            }
-        }
-    }
-    mtx.unlock();
-
-    return res;
 }
 
 void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
@@ -540,8 +528,8 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
     Eigen::Matrix4d cur_tf = tpp.tf;
-    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
+    // update octomap
     octomap::Pointcloud cloud;
     for(size_t p = 0; p < tpp.pts.size(); p++)
     {
@@ -555,18 +543,23 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
 
         Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
-        cloud.push_back(_P[0], _P[1], _P[2]);
+        cloud.push_back(_P[0], _P[1], 0);
     }
 
-    unimap->octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)));
-
-    // set local grid map
-    cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
+    // update
+    mtx.lock();
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)));
 
     // obsmap boundary
-    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);
-    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MAX_Z);
-    for(octomap::OcTree::leaf_bbx_iterator it = unimap->octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != unimap->octree->end_leafs_bbx(); it++)
+    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, -0.1);
+    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, 0.1);
+
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    Eigen::Matrix4d _cur_tf = se2_to_TF(cur_xi);
+    Eigen::Matrix4d _cur_tf_inv = _cur_tf.inverse();
+
+    cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
+    for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
     {
         double x = it.getX();
         double y = it.getY();
@@ -574,7 +567,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         double prob = it->getOccupancy();
 
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+        Eigen::Vector3d _P = _cur_tf_inv.block(0,0,3,3)*P + _cur_tf_inv.block(0,3,3,1);
 
         cv::Vec2i uv = xy_uv(_P[0], _P[1]);
         int u = uv[0];
@@ -584,11 +577,12 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             continue;
         }
 
-        _map.ptr<double>(v)[u] = prob;
+        if(_map.ptr<double>(v)[u] == 0 || prob > _map.ptr<double>(v)[u])
+        {
+            _map.ptr<double>(v)[u] = prob;
+        }
     }
 
-    // update map
-    mtx.lock();
     map = _map;
     tf = cur_tf;
     mtx.unlock();
@@ -596,80 +590,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     // signal for redrawing
     Q_EMIT obs_updated();
 }
-
-/*
-void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
-{
-    // update storage
-    tpp_storage.push_back(tpp);
-    if(tpp_storage.size() > 30)
-    {
-        tpp_storage.erase(tpp_storage.begin());
-    }
-
-    // build obs map
-    cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
-    for(size_t p = 0; p < tpp_storage.size(); p+=2)
-    {
-        Eigen::Matrix4d G = tpp.tf.inverse()*tpp_storage[p].tf;
-
-        cv::Mat hit_map(h, w, CV_8U, cv::Scalar(0));
-        cv::Mat miss_map(h, w, CV_8U, cv::Scalar(0));
-        for(size_t q = 0; q < tpp_storage[p].pts.size(); q++)
-        {
-            Eigen::Vector3d P = tpp_storage[p].pts[q];
-            if(P[0] >= config->ROBOT_SIZE_X[0] && P[0] <= config->ROBOT_SIZE_X[1] &&
-               P[1] >= config->ROBOT_SIZE_Y[0] && P[1] <= config->ROBOT_SIZE_Y[1])
-            {
-                continue;
-            }
-
-            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
-
-            cv::Vec2i uv = xy_uv(_P[0], _P[1]);
-            int u = uv[0];
-            int v = uv[1];
-            if(u < 0 || u >= w || v < 0 || v >= h)
-            {
-                continue;
-            }
-
-            cv::Vec2i uv0 = xy_uv(G(0,3), G(1,3));
-
-            hit_map.ptr<uchar>(v)[u] = 255;
-            cv::line(miss_map, cv::Point(uv0[0], uv0[1]), cv::Point(u, v), cv::Scalar(255), 1);
-        }
-
-        for(int i = 0; i < h; i++)
-        {
-            for(int j = 0; j < w; j++)
-            {
-                if(hit_map.ptr<uchar>(i)[j] == 255)
-                {
-                    double m_old = _map.ptr<double>(i)[j];
-                    double m_new = prob(m_old, P_hit);
-                    _map.ptr<double>(i)[j] = m_new;
-                }
-                else
-                {
-                    if(miss_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        double m_old = _map.ptr<double>(i)[j];
-                        double m_new = prob(m_old, P_miss);
-                        _map.ptr<double>(i)[j] = m_new;
-                    }
-                }
-            }
-        }
-    }
-
-    // update map
-    mtx.lock();
-    map = _map;
-    tf = tpp.tf;
-    mtx.unlock();
-}
-*/
 
 cv::Vec2i OBSMAP::xy_uv(double x, double y)
 {

@@ -26,11 +26,11 @@ public:
     UNIMAP *unimap = NULL;
 
     void init();    
+    void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf);
 
     // for plot
-    cv::Mat get_plot_map();
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
 
     bool is_collision(const Eigen::Matrix4d& robot_tf);
@@ -41,6 +41,10 @@ public:
 
     int get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0);
 
+    // octree for obsmap
+    octomap::OcTree* octree = NULL;
+
+    // grid map
     Eigen::Matrix4d tf;
     cv::Mat map;
 
@@ -64,8 +68,6 @@ public:
     double odds_inv(double odd);
     double clamp(double p, double min, double max);
     double prob(double m_old, double P);
-
-    std::vector<TIME_POSE_PTS> tpp_storage;
 
 Q_SIGNALS:
     void obs_updated();

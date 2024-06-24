@@ -106,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
+    connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
 
     // set plot window
     setup_vtk();
@@ -1670,6 +1671,12 @@ void MainWindow::ws_command_move(double time, double vx, double vy, double wz)
     mobile.move(vx, vy, wz*D2R);
 }
 
+// for obsmap
+void MainWindow::bt_ObsClear()
+{
+    obsmap.clear();
+}
+
 // watchdog
 void MainWindow::watchdog_loop()
 {
@@ -1826,46 +1833,64 @@ void MainWindow::plot_loop()
         {
             is_obs_update = false;
 
-            if(unimap.octree != NULL)
+            if(obsmap.octree != NULL)
             {
-                Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+                cv::Mat obs_map;
+                Eigen::Matrix4d obs_tf;
+                obsmap.get_obs_map(obs_map, obs_tf);
+
+                // plot grid map
+                {
+                    cv::Mat plot_obs_map;
+                    cv::cvtColor(obs_map, plot_obs_map, cv::COLOR_GRAY2BGR);
+                    obsmap.draw_robot(plot_obs_map, obs_tf);
+
+                    ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+                    ui->lb_Screen1->setScaledContents(true);
+                    ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                }
 
                 // obsmap boundary
-                octomap::point3d bbx_min(cur_tf(0,3) - config.OBS_MAP_RANGE, cur_tf(1,3) - config.OBS_MAP_RANGE, cur_tf(2,3) + config.OBS_MAP_MIN_Z);
-                octomap::point3d bbx_max(cur_tf(0,3) + config.OBS_MAP_RANGE, cur_tf(1,3) + config.OBS_MAP_RANGE, cur_tf(2,3) + config.OBS_MAP_MAX_Z);
-
-                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-                for(octomap::OcTree::leaf_bbx_iterator it = unimap.octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != unimap.octree->end_leafs_bbx(); it++)
+                if(obsmap.mtx.try_lock())
                 {
-                    double x = it.getX();
-                    double y = it.getY();
-                    double z = it.getZ();
-                    double prob = it->getOccupancy();
+                    octomap::point3d bbx_min(obs_tf(0,3) - config.OBS_MAP_RANGE, obs_tf(1,3) - config.OBS_MAP_RANGE, -0.1);
+                    octomap::point3d bbx_max(obs_tf(0,3) + config.OBS_MAP_RANGE, obs_tf(1,3) + config.OBS_MAP_RANGE, 0.1);
 
-                    if(prob <= 0.5)
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                    for(octomap::OcTree::leaf_bbx_iterator it = obsmap.octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != obsmap.octree->end_leafs_bbx(); it++)
                     {
-                        continue;
+                        double x = it.getX();
+                        double y = it.getY();
+                        double z = it.getZ();
+                        double prob = it->getOccupancy();
+
+                        if(prob <= 0.5)
+                        {
+                            continue;
+                        }
+
+                        tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = x;
+                        pt.y = y;
+                        pt.z = z;
+                        pt.r = c.r()*255;
+                        pt.g = c.g()*255;
+                        pt.b = c.b()*255;
+                        cloud->push_back(pt);
                     }
 
-                    tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+                    if(!viewer->updatePointCloud(cloud, "obs_pts"))
+                    {
+                        viewer->addPointCloud(cloud, "obs_pts");
+                    }
 
-                    pcl::PointXYZRGB pt;
-                    pt.x = x;
-                    pt.y = y;
-                    pt.z = z;
-                    pt.r = c.r()*255;
-                    pt.g = c.g()*255;
-                    pt.b = c.b()*255;
-                    cloud->push_back(pt);
+                    // point size
+                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+
+                    obsmap.mtx.unlock();
                 }
-
-                if(!viewer->updatePointCloud(cloud, "obs_pts"))
-                {
-                    viewer->addPointCloud(cloud, "obs_pts");
-                }
-
-                // point size
-                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
             }
         }
 
@@ -2178,15 +2203,6 @@ void MainWindow::plot_loop()
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tpp.tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");        
 
-        // plot obs map
-        {
-            cv::Mat plot_obs_map = obsmap.get_plot_map();
-            obsmap.draw_robot(plot_obs_map, cur_tpp.tf);
-            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
-            ui->lb_Screen1->setScaledContents(true);
-            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-
         // plot tactile
         {
             // erase first
@@ -2324,25 +2340,60 @@ void MainWindow::plot_loop()
             QString name = last_plot_local_path[p];
             if(viewer->contains(name.toStdString()))
             {
-                //viewer->removeShape(name.toStdString());
-                viewer->removeCoordinateSystem(name.toStdString());
+                viewer->removeShape(name.toStdString());
             }
         }
         last_plot_local_path.clear();
 
         // draw local path
-        for(size_t p = 0; p < local_path.pose.size(); p++)
+        if(local_path.pos.size() >= 2)
         {
-            if(p == local_path.pose.size()-1 || p % 10 == 0)
+            if(local_path.pos.size()/10 >= 2)
             {
-                QString name;
-                name.sprintf("local_path_%d", (int)p);
+                int last_p = 0;
+                for(size_t p = 1; p < local_path.pos.size(); p++)
+                {
+                    if(p == local_path.pos.size()-1 || p % 10 == 0)
+                    {
+                        QString name;
+                        name.sprintf("local_path_%d_%d", last_p, (int)p);
 
-                Eigen::Matrix4d tf = local_path.pose[p];
-                viewer->addCoordinateSystem(config.ROBOT_SIZE_Y[1], name.toStdString());
-                viewer->updateCoordinateSystemPose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        Eigen::Vector3d P0 = local_path.pos[last_p];
+                        Eigen::Vector3d P1 = local_path.pos[p];
 
-                last_plot_local_path.push_back(name);
+                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
+                        pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
+
+                        viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, name.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
+
+                        last_plot_local_path.push_back(name);
+                        last_p = p;
+                    }
+                }
+            }
+            else
+            {
+                int last_p = 0;
+                for(size_t p = 1; p < local_path.pos.size(); p++)
+                {
+                    QString name;
+                    name.sprintf("local_path_%d_%d", last_p, (int)p);
+
+                    Eigen::Vector3d P0 = local_path.pos[last_p];
+                    Eigen::Vector3d P1 = local_path.pos[p];
+
+                    pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
+                    pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
+
+                    viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, name.toStdString());
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
+
+                    last_plot_local_path.push_back(name);
+                    last_p = p;
+                }
             }
         }
     }

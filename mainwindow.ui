@@ -346,6 +346,19 @@
                <string>Sim init</string>
               </property>
              </widget>
+             <widget class="QPushButton" name="bt_ObsClear">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>100</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>OBS clear</string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="tab_2">
              <attribute name="title">

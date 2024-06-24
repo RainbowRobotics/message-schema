@@ -5,6 +5,10 @@
     "LIMIT_W_ACC": "360.0",
     "LIMIT_PIVOT_W": "30.0",
     "MIN_LD": "0.1",
-    "MAX_LD": "1.0",
-    "MIN_V" : "0.1"
+    "MAX_LD": "1.0",      
+    "ST_V": "0.1",
+    "ED_V": "0.05",
+    "DRIVE_H": "25.0",
+    "DRIVE_K": "3.0",
+    "DRIVE_EPS": "0.1"
 }

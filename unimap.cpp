@@ -28,13 +28,6 @@ void UNIMAP::load_map(QString path)
             kdtree_mask.clear();
             kdtree_cloud.pts.clear();
 
-            map_min_x = 99999999;
-            map_max_x = -99999999;
-            map_min_y = 99999999;
-            map_max_y = -99999999;
-            map_min_z = 99999999;
-            map_max_z = -99999999;
-
             // csv file format : x,y,z,r
             QFile cloud_csv_file(cloud_csv_path);
             if(cloud_csv_file.open(QIODevice::ReadOnly))
@@ -118,30 +111,6 @@ void UNIMAP::load_map(QString path)
         printf("[UNIMAP] build kdtree for map icp\n");
         printf("[UNIMAP] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
                map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
-    }
-
-    // set octomap
-    {
-        // erase first
-        if(octree != NULL)
-        {
-            octree->clear();
-            delete octree;
-            octree = NULL;
-        }
-
-        // set point cloud
-        octomap::Pointcloud cloud;
-        for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)
-        {
-            cloud.push_back(kdtree_cloud.pts[p].x, kdtree_cloud.pts[p].y, kdtree_cloud.pts[p].z);
-        }
-
-        // build octomap
-        octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
-        octree->insertPointCloud(cloud, octomap::point3d(0,0,0));
-
-        printf("[UNIMAP] build octree for obsmap, total nodes: %d\n", (int)octree->calcNumNodes());
     }
 
     // load topology file

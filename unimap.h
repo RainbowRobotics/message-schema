@@ -72,9 +72,6 @@ public:
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
 
-    // octree for obsmap
-    octomap::OcTree* octree = NULL;
-
     // bounding box
     double map_min_x = 99999999;
     double map_max_x = -99999999;

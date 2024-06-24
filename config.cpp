@@ -255,18 +255,6 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("DRIVE_EXTENDED_CONTROL_TIME", obj["DRIVE_EXTENDED_CONTROL_TIME"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            DRIVE_H = obj["DRIVE_H"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("DRIVE_H", obj["DRIVE_H"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            DRIVE_K = obj["DRIVE_K"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("DRIVE_K", obj["DRIVE_K"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            DRIVE_EPS = obj["DRIVE_EPS"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("DRIVE_EPS", obj["DRIVE_EPS"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
 
 
             OBS_MAP_RANGE = obj["OBS_MAP_RANGE"].toString().toDouble();
@@ -324,8 +312,6 @@ void CONFIG::load()
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
-            // set robot radius
-            ROBOT_RADIUS = std::sqrt(ROBOT_SIZE_X[1]*ROBOT_SIZE_X[1] + ROBOT_SIZE_Y[1]*ROBOT_SIZE_Y[1]);
 
             // complete
             is_load = true;
