@@ -539,7 +539,8 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
-    Eigen::Matrix4d tf = tpp.tf;
+    Eigen::Matrix4d cur_tf = tpp.tf;
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
     octomap::Pointcloud cloud;
     for(size_t p = 0; p < tpp.pts.size(); p++)
@@ -553,11 +554,44 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             continue;
         }
 
-        Eigen::Vector3d _P = tf.block(0,0,3,3)*P + tf.block(0,3,3,1);
+        Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
         cloud.push_back(_P[0], _P[1], _P[2]);
     }
 
-    unimap->octree->insertPointCloud(cloud, octomap::point3d(tf(0,3), tf(1,3), tf(2,3)));
+    unimap->octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)));
+
+    // set local grid map
+    cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
+
+    // obsmap boundary
+    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);
+    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MAX_Z);
+    for(octomap::OcTree::leaf_bbx_iterator it = unimap->octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != unimap->octree->end_leafs_bbx(); it++)
+    {
+        double x = it.getX();
+        double y = it.getY();
+        double z = it.getZ();
+        double prob = it->getOccupancy();
+
+        Eigen::Vector3d P(x,y,z);
+        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+        int u = uv[0];
+        int v = uv[1];
+        if(u < 0 || u >= w || v < 0 || v >= h)
+        {
+            continue;
+        }
+
+        _map.ptr<double>(v)[u] = prob;
+    }
+
+    // update map
+    mtx.lock();
+    map = _map;
+    tf = cur_tf;
+    mtx.unlock();
 
     // signal for redrawing
     Q_EMIT obs_updated();

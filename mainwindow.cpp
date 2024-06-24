@@ -1842,12 +1842,10 @@ void MainWindow::plot_loop()
                     double z = it.getZ();
                     double prob = it->getOccupancy();
 
-                    /*
                     if(prob <= 0.5)
                     {
                         continue;
                     }
-                    */
 
                     tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
 
