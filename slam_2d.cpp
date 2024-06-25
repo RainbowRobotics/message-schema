@@ -40,6 +40,13 @@ SLAM_2D::~SLAM_2D()
         loc_b_thread = NULL;
     }
 
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
+    }
+
     is_loc = false;
 }
 
@@ -123,6 +130,12 @@ void SLAM_2D::localization_start()
             loc_b_thread = new std::thread(&SLAM_2D::loc_b_loop, this);
         }
 
+        if(obs_thread == NULL)
+        {
+            obs_flag = true;
+            obs_thread = new std::thread(&SLAM_2D::obs_loop, this);
+        }
+
         // set flag
         is_loc = true;
     }
@@ -147,6 +160,13 @@ void SLAM_2D::localization_stop()
         loc_b_flag = false;
         loc_b_thread->join();
         loc_b_thread = NULL;
+    }
+
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
     }
 
     is_loc = false;
@@ -619,8 +639,8 @@ void SLAM_2D::loc_a_loop()
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
 
-                // update obsmap
-                obsmap->update_obs_map(tpp);
+                // for obs loop
+                tpp_que2.push(tpp);
 
                 // update
                 mtx.lock();
@@ -686,6 +706,7 @@ void SLAM_2D::loc_b_loop()
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, tpp.tf, _cur_tf); // 1.0 mean odometry 100%
                 _cur_tf = fused_tf;
                 */
+
                 Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
                 Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
 
@@ -738,6 +759,21 @@ void SLAM_2D::loc_b_loop()
         pre_loop_time = get_time();
     }
     printf("[SLAM] loc_b_loop stop\n");
+}
+
+void SLAM_2D::obs_loop()
+{
+    printf("[SLAM] obs_loop start\n");
+    while(obs_flag)
+    {
+        TIME_POSE_PTS tpp;
+        if(tpp_que2.try_pop(tpp))
+        {
+            obsmap->update_obs_map(tpp);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    printf("[SLAM] obs_loop stop\n");
 }
 
 // algorithms

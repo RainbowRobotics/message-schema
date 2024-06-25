@@ -533,46 +533,6 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::path_dividing(const std::vector<Eigen:
     return divided_path;
 }
 
-std::vector<Eigen::Matrix4d> AUTOCONTROL::path_dividing(const std::vector<Eigen::Matrix4d>& src, double step)
-{
-    if(src.size() < 2)
-    {
-        return src;
-    }
-
-    std::vector<Eigen::Matrix4d> res;
-    for(size_t p = 0; p < src.size() - 1; p++)
-    {
-        Eigen::Matrix4d st_tf = src[p];
-        Eigen::Matrix4d ed_tf = src[p+1];
-
-        Eigen::Vector3d st_tr = st_tf.block(0,3,3,1);
-        Eigen::Vector3d ed_tr = ed_tf.block(0,3,3,1);
-
-        Eigen::Quaterniond st_quat(st_tf.block<3,3>(0,0));
-        Eigen::Quaterniond ed_quat(ed_tf.block<3,3>(0,0));
-
-        double l = (ed_tr - st_tr).norm();
-        int num_step = std::max((int)(l / step), 1);
-
-        for(int q = 0; q < num_step; q++)
-        {
-            double alpha = (double)q/num_step;
-
-            Eigen::Vector3d interp_tr = st_tr + alpha * (ed_tr - st_tr);
-            Eigen::Quaterniond interp_quat = st_quat.slerp(alpha, ed_quat);
-
-            Eigen::Matrix4d TF = Eigen::Matrix4d::Identity();
-            TF.block(0,0,3,3) = interp_quat.toRotationMatrix();
-            TF.block(0,3,3,1) = interp_tr;
-            res.push_back(TF);
-        }
-    }
-
-    res.push_back(src.back());
-    return res;
-}
-
 std::vector<Eigen::Vector3d> AUTOCONTROL::sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step)
 {
     if(src.empty())

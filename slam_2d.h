@@ -75,6 +75,7 @@ public:
 
     // for loc
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
+    tbb::concurrent_queue<TIME_POSE_PTS> tpp_que2;
 
     // for plot
     std::atomic<double> proc_time_map_a = {0};
@@ -102,6 +103,10 @@ public:
     std::atomic<bool> loc_b_flag = {false};
     std::thread* loc_b_thread = NULL;
     void loc_b_loop();
+
+    std::atomic<bool> obs_flag = {false};
+    std::thread* obs_thread = NULL;
+    void obs_loop();
 
 Q_SIGNALS:
 
