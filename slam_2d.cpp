@@ -849,6 +849,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
+            /*
             // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
@@ -858,6 +859,25 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             int nn_idx = ret_near_idxs[0];            
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
+            */
+
+            int nn_idx = 0;
+            Eigen::Vector3d P0(0, 0, 0);
+            {
+                std::vector<unsigned int> ret_near_idxs(3);
+                std::vector<double> ret_near_sq_dists(3);
+
+                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
+                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+                nn_idx = ret_near_idxs[0];
+                for(size_t q = 0; q < 3; q++)
+                {
+                    int idx = ret_near_idxs[q];
+                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                }
+                P0 /= 3;
+            }
 
             // rmt
             double rmt = 1.0;
@@ -890,7 +910,8 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double weight = 1.0 + saturation(0.1*std::sqrt(ret_near_sq_dists[0]), 0, 1.0);
+            double dist = frm.pts[i].norm();
+            double weight = 1.0 + 0.1*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1026,7 +1047,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    if(last_err > first_err || first_err > config->LOC_ICP_ERROR_THRESHOLD || last_err > config->LOC_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || first_err > config->LOC_ICP_ERROR_THRESHOLD || last_err > config->LOC_ICP_ERROR_THRESHOLD)
     {
         printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
@@ -1042,13 +1063,17 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     // for random selection
     std::vector<int> idx_list;
+    std::vector<Eigen::Vector3d> pts;
     for(size_t p = 0; p < frm.pts.size(); p++)
     {
         idx_list.push_back(p);
+
+        Eigen::Vector3d P = G.block(0,0,3,3)*frm.pts[p] + G.block(0,3,3,1);
+        pts.push_back(P);
     }
 
     // solution
-    Eigen::Matrix4d _G = G;
+    Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
 
     // optimization param
     const int max_iter = 100;
@@ -1071,16 +1096,18 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         std::vector<double> costs;
         std::vector<COST_JACOBIAN> cj_set;
 
+        Eigen::Matrix4d cur_G = _G*G;
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index
             int i = idx_list[p];
 
             // local to global
-            Eigen::Vector3d P1 = frm.pts[i];
+            Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
-            Eigen::Vector3d V1 = (_P1 - _G.block(0,3,3,1)).normalized();
+            Eigen::Vector3d V1 = (_P1 - cur_G.block(0,3,3,1)).normalized();
 
+            /*
             // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
@@ -1091,6 +1118,28 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             int nn_idx = ret_near_idxs[0];
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
             Eigen::Vector3d V0(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
+            */
+
+            int nn_idx = 0;
+            Eigen::Vector3d V0;
+            Eigen::Vector3d P0(0, 0, 0);
+            {
+                std::vector<unsigned int> ret_near_idxs(3);
+                std::vector<double> ret_near_sq_dists(3);
+
+                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
+                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+                nn_idx = ret_near_idxs[0];
+                V0 = Eigen::Vector3d(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
+
+                for(size_t q = 0; q < 3; q++)
+                {
+                    int idx = ret_near_idxs[q];
+                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                }
+                P0 /= 3;
+            }
 
             // view filter
             if(compare_view_vector(V0, V1, config->SLAM_ICP_VIEW_THRESHOLD*D2R))
@@ -1136,7 +1185,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // additional weight
             double dist = frm.pts[i].norm();
-            double weight = 1.0 + dist;
+            double weight = 1.0 + 0.1*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1263,9 +1312,9 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     }
 
     // update
-    G = _G;
+    G = _G*G;
 
-    if(last_err > first_err || first_err > config->SLAM_ICP_ERROR_THRESHOLD || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || first_err > config->SLAM_ICP_ERROR_THRESHOLD || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         printf("[frm_icp0] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
@@ -1341,6 +1390,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             Eigen::Vector3d P1(pts[i].x, pts[i].y, pts[i].z);
             Eigen::Vector3d _P1 = _dG.block(0,0,3,3)*P1 + _dG.block(0,3,3,1);
 
+            /*
             // find nn
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
@@ -1350,6 +1400,25 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
             int nn_idx = ret_near_idxs[0];
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
+            */
+
+            int nn_idx = 0;
+            Eigen::Vector3d P0(0, 0, 0);
+            {
+                std::vector<unsigned int> ret_near_idxs(3);
+                std::vector<double> ret_near_sq_dists(3);
+
+                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
+                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+                nn_idx = ret_near_idxs[0];
+                for(size_t q = 0; q < 3; q++)
+                {
+                    int idx = ret_near_idxs[q];
+                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                }
+                P0 /= 3;
+            }
 
             // rmt
             double rmt = 1.0;
@@ -1524,7 +1593,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
     // check
     printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-    if(last_err > first_err || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         return 9999;
     }

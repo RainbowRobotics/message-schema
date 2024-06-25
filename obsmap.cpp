@@ -22,7 +22,7 @@ void OBSMAP::init()
     cy = h/2;
     gs = config->OBS_MAP_GRID_SIZE;
 
-    map = cv::Mat(h, w, CV_64F, cv::Scalar(0)); // obstacle is 255    
+    map = cv::Mat(h, w, CV_64F, cv::Scalar(0)); // obstacle is 255
     octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
 }
 
@@ -64,10 +64,10 @@ void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
     Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
     Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
@@ -118,10 +118,10 @@ bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf)
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
     Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
     Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
@@ -188,12 +188,12 @@ bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs)
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
-    std::vector<std::vector<cv::Point>> pts(robot_tfs.size());
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < robot_tfs.size(); p++)
     {
         Eigen::Matrix4d G = _obs_tf.inverse()*robot_tfs[p];
@@ -227,14 +227,14 @@ bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs)
             return true;
         }
 
-        pts[p].push_back(cv::Point(uv0[0], uv0[1]));
-        pts[p].push_back(cv::Point(uv1[0], uv1[1]));
-        pts[p].push_back(cv::Point(uv2[0], uv2[1]));
-        pts[p].push_back(cv::Point(uv3[0], uv3[1]));
-    }
+        std::vector<std::vector<cv::Point>> pts(1);
+        pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+        pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+        pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+        pts[0].push_back(cv::Point(uv3[0], uv3[1]));
 
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    cv::fillPoly(mask, pts, cv::Scalar(255));
+        cv::fillPoly(mask, pts, cv::Scalar(255));
+    }
 
     for(int i = 0; i < h; i++)
     {
@@ -263,10 +263,10 @@ bool OBSMAP::is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf,
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
     Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
     Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
@@ -335,12 +335,12 @@ bool OBSMAP::is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf,
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
-    std::vector<std::vector<cv::Point>> pts(robot_tfs.size());
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < robot_tfs.size(); p++)
     {
         Eigen::Matrix4d G = obs_tf.inverse()*robot_tfs[p];
@@ -374,14 +374,14 @@ bool OBSMAP::is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf,
             return true;
         }
 
-        pts[p].push_back(cv::Point(uv0[0], uv0[1]));
-        pts[p].push_back(cv::Point(uv1[0], uv1[1]));
-        pts[p].push_back(cv::Point(uv2[0], uv2[1]));
-        pts[p].push_back(cv::Point(uv3[0], uv3[1]));
-    }
+        std::vector<std::vector<cv::Point>> pts(1);
+        pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+        pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+        pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+        pts[0].push_back(cv::Point(uv3[0], uv3[1]));
 
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    cv::fillPoly(mask, pts, cv::Scalar(255));
+        cv::fillPoly(mask, pts, cv::Scalar(255));
+    }
 
     for(int i = 0; i < h; i++)
     {
@@ -451,10 +451,10 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
     const double y_min = config->ROBOT_SIZE_Y[0];
     const double y_max = config->ROBOT_SIZE_Y[1];
 
-    Eigen::Vector3d P0(x_min, y_min, 0);
-    Eigen::Vector3d P1(x_min, y_max, 0);
-    Eigen::Vector3d P2(x_max, y_max, 0);
-    Eigen::Vector3d P3(x_max, y_min, 0);
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
 
     int conflict_idx = idx0;
     for(size_t p = idx0; p < robot_tfs.size(); p++)

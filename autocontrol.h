@@ -81,6 +81,7 @@ public:
     bool is_state_valid(const ompl::base::State *state) const;
     bool is_path_valid(std::vector<Eigen::Matrix4d>& path, bool first_pivot);
     int get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx);
+    PATH calc_local_path();
 
     // local path loop
     std::atomic<bool> a_flag = {false};
