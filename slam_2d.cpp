@@ -299,10 +299,15 @@ void SLAM_2D::map_a_loop()
                 Eigen::Matrix4d G = _cur_tf * delta_tf;
 
                 // check moving
-                Eigen::Vector3d input = mobile->get_control_input();
-                Eigen::Vector3d feedback = mobile->get_pose().vel;
-                double diff = (feedback - input).norm();
-                if((std::abs(input[0]) > 0 || std::abs(input[1]) > 0 || std::abs(input[2]) > 0) && diff < 0.05)
+                //Eigen::Vector3d input = mobile->get_control_input();
+                //Eigen::Vector3d feedback = mobile->get_pose().vel;
+                //double diff = (feedback - input).norm();
+                //if((std::abs(input[0]) > 0 || std::abs(input[1]) > 0 || std::abs(input[2]) > 0) && diff < 0.05)
+                //if(std::abs(input[0]) > 0 || std::abs(input[1]) > 0 || std::abs(input[2]) > 0)
+
+                Eigen::Matrix4d dtf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
+                Eigen::Vector3d dxi = TF_to_se2(dtf);
+                if(std::abs(dxi[0]) > 0.05 || std::abs(dxi[1]) > 0.05 || std::abs(dxi[2]) > 3.0*D2R)
                 {
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
@@ -718,16 +723,18 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
-                /*
+
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, tpp.tf, _cur_tf); // 1.0 mean odometry 100%
                 _cur_tf = fused_tf;
-                */
 
+
+                /*
                 Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
                 Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
 
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
                 _cur_tf = fused_tf;
+                */
             }
 
             /*
@@ -1035,17 +1042,13 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     // for random selection
     std::vector<int> idx_list;
-    std::vector<Eigen::Vector3d> pts;
     for(size_t p = 0; p < frm.pts.size(); p++)
     {
         idx_list.push_back(p);
-
-        Eigen::Vector3d P = G.block(0,0,3,3)*frm.pts[p] + G.block(0,3,3,1);
-        pts.push_back(P);
     }
 
     // solution
-    Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d _G = G;
 
     // optimization param
     const int max_iter = 100;
@@ -1068,16 +1071,15 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         std::vector<double> costs;
         std::vector<COST_JACOBIAN> cj_set;
 
-        Eigen::Matrix4d cur_G = _G*G;
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index
             int i = idx_list[p];
 
             // local to global
-            Eigen::Vector3d P1 = pts[i];
+            Eigen::Vector3d P1 = frm.pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
-            Eigen::Vector3d V1 = (_P1 - cur_G.block(0,3,3,1)).normalized();
+            Eigen::Vector3d V1 = (_P1 - _G.block(0,3,3,1)).normalized();
 
             // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
@@ -1133,7 +1135,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double weight = 1.0 + saturation(0.1*std::sqrt(ret_near_sq_dists[0]), 0, 1.0);
+            double dist = frm.pts[i].norm();
+            double weight = 1.0 + dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1260,7 +1263,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     }
 
     // update
-    G = _G*G;
+    G = _G;
 
     if(last_err > first_err || first_err > config->SLAM_ICP_ERROR_THRESHOLD || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
@@ -1370,10 +1373,9 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             Eigen::Vector3d xi = TF_to_se2(_dG);
 
             double J[3] = {0,};
-            J[0] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0]);
-            J[1] = 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1]);
-            J[2] = 2.0*(std::cos(xi[2])*P1[0] - std::sin(xi[2])*P1[1] + xi[0] - P0[0])*(-std::sin(xi[2])*_P1[0] - std::cos(xi[2])*_P1[1])
-                 + 2.0*(std::sin(xi[2])*P1[0] + std::cos(xi[2])*P1[1] + xi[1] - P0[1])*(std::cos(xi[2])*_P1[0] - std::sin(xi[2])*_P1[1]);
+            J[0] = 2.0 * (_P1[0] - P0[0]);
+            J[1] = 2.0 * (_P1[1] - P0[1]);
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * (-std::sin(xi[2]) * P1[0] - std::cos(xi[2]) * P1[1]) + (_P1[1] - P0[1]) * (std::cos(xi[2]) * P1[0] - std::sin(xi[2]) * P1[1]));
             if(!isfinite(J[0]) || !isfinite(J[1]) || !isfinite(J[2]))
             {
                 continue;
