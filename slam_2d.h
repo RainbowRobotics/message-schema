@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
+#include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
 
@@ -34,6 +35,7 @@ public:
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
+    CAM *cam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
 
@@ -47,6 +49,9 @@ public:
     Eigen::Matrix4d get_cur_tf();
     Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();
+
+    QString get_cur_loc_state();
+    void set_cur_loc_state(QString str);
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
@@ -67,6 +72,7 @@ public:
     Eigen::Matrix4d cur_tf;
     Eigen::Vector2d cur_ieir;
     TIME_POSE_PTS cur_tpp;
+    QString cur_loc_state = "none";
 
     // keyframe que
     tbb::concurrent_queue<KFRAME> kfrm_que;

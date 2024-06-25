@@ -95,56 +95,67 @@ void WS_CLIENT::send_status()
     rootObj["time"] = QString::number((int)(time*1000), 10);
 
     // Adding the pose object
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+
     QJsonObject poseObj;
-    poseObj["x"] = "0.3";
-    poseObj["y"] = "0.2";
-    poseObj["rz"] = "40.0";
+    poseObj["x"] = QString::number(cur_xi[0], 'f', 3);
+    poseObj["y"] = QString::number(cur_xi[1], 'f', 3);
+    poseObj["rz"] = QString::number(cur_xi[2]*R2D, 'f', 3);
     rootObj["pose"] = poseObj;
 
     // Adding the velocity object
+    MOBILE_POSE mo = mobile->get_pose();
+
     QJsonObject velObj;
-    velObj["vx"] = "0";
-    velObj["vy"] = "0";
-    velObj["wz"] = "30.0";
+    velObj["vx"] = QString::number(mo.vel[0], 'f', 3);
+    velObj["vy"] = QString::number(mo.vel[1], 'f', 3);
+    velObj["wz"] = QString::number(mo.vel[2]*R2D, 'f', 3);
     rootObj["vel"] = velObj;
 
     // Adding the motor array
+    MOBILE_STATUS ms = mobile->get_status();
+
     QJsonArray motorArray;
     QJsonObject motorObj1;
-    motorObj1["connection"] = "true";
-    motorObj1["status"] = "1";
-    motorObj1["temp"] = "36.5";
+    motorObj1["connection"] = (ms.connection_m0 == 1) ? "true" : "false";
+    motorObj1["status"] = QString::number(ms.status_m0, 10);
+    motorObj1["temp"] = QString::number(ms.temp_m0, 'f', 3);
     motorArray.append(motorObj1);
 
     QJsonObject motorObj2;
-    motorObj2["connection"] = "true";
-    motorObj2["status"] = "4";
-    motorObj2["temp"] = "32.5";
+    motorObj2["connection"] = (ms.connection_m1 == 1) ? "true" : "false";
+    motorObj2["status"] = QString::number(ms.status_m1, 10);
+    motorObj2["temp"] = QString::number(ms.temp_m1, 'f', 3);
     motorArray.append(motorObj2);
 
     rootObj["motor"] = motorArray;
 
     // Adding the power object
     QJsonObject powerObj;
-    powerObj["bat_in"] = "48.2";
-    powerObj["bat_out"] = "48.2";
-    powerObj["bat_current"] = "0";
-    powerObj["power"] = "0";
-    powerObj["total_power"] = "0";
+    powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
+    powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
+    powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
+    powerObj["power"] = QString::number(ms.power, 'f', 3);
+    powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
     rootObj["power"] = powerObj;
 
     // Adding the state object
+    QString cur_loc_state = slam->get_cur_loc_state();
+
     QJsonObject stateObj;
-    stateObj["power"] = "true";
-    stateObj["emo"] = "false";
-    stateObj["charge"] = "false";
-    stateObj["localization"] = "none"; // "none", "busy", "good", "fail"
+    stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
+    stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
+    stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
+    stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
 
     // Adding the condition object
+    Eigen::Vector2d ieir = slam->get_cur_ieir();
+
     QJsonObject conditionObj;
-    conditionObj["inlier_error"] = "0.05";
-    conditionObj["inlier_ratio"] = "0.5";
+    conditionObj["inlier_error"] = QString::number(ieir[0], 'f', 3);
+    conditionObj["inlier_ratio"] = QString::number(ieir[1], 'f', 3);
     rootObj["condition"] = conditionObj;
 
     QJsonDocument doc(rootObj);

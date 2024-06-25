@@ -199,6 +199,22 @@ Eigen::Vector2d SLAM_2D::get_cur_ieir()
     return res;
 }
 
+QString SLAM_2D::get_cur_loc_state()
+{
+    mtx.lock();
+    QString res = cur_loc_state;
+    mtx.unlock();
+
+    return res;
+}
+
+void SLAM_2D::set_cur_loc_state(QString str)
+{
+    mtx.lock();
+    cur_loc_state = str;
+    mtx.unlock();
+}
+
 void SLAM_2D::map_a_loop()
 {
     const int window_size = config->SLAM_WINDOW_SIZE;
@@ -770,6 +786,7 @@ void SLAM_2D::obs_loop()
         if(tpp_que2.try_pop(tpp))
         {
             obsmap->update_obs_map(tpp);
+            tpp_que2.clear();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

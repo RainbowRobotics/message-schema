@@ -6,11 +6,12 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , mobile(this)
     , lidar(this)
+    , cam(this)
+    , code(this)
     , slam(this)
     , unimap(this)
     , obsmap(this)
-    , ctrl(this)
-    , code_reader(this)
+    , ctrl(this)    
     , ws(this)
     , sim(this)
     , ui(new Ui::MainWindow)
@@ -237,6 +238,16 @@ void MainWindow::init_modules()
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
 
+    // unimap module init
+    unimap.config = &config;
+    unimap.logger = &logger;
+
+    // obsmap module init
+    obsmap.config = &config;
+    obsmap.logger = &logger;
+    obsmap.unimap = &unimap;
+    obsmap.init();
+
     // mobile module init
     mobile.config = &config;
     mobile.logger = &logger;
@@ -254,21 +265,18 @@ void MainWindow::init_modules()
     cam.mobile = &mobile;
     cam.init();
 
-    // unimap module init
-    unimap.config = &config;
-    unimap.logger = &logger;
-
-    // obsmap module init
-    obsmap.config = &config;
-    obsmap.logger = &logger;
-    obsmap.unimap = &unimap;
-    obsmap.init();
+    // code reader module init
+    code.config = &config;
+    code.logger = &logger;
+    code.unimap = &unimap;
+    code.init();
 
     // slam module init
     slam.config = &config;
     slam.logger = &logger;
     slam.mobile = &mobile;
     slam.lidar = &lidar;
+    slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
 
@@ -277,18 +285,24 @@ void MainWindow::init_modules()
     ctrl.logger = &logger;
     ctrl.mobile = &mobile;
     ctrl.lidar = &lidar;
+    ctrl.cam = &cam;
+    ctrl.code = &code;
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
     ctrl.obsmap = &obsmap;
     ctrl.init();
 
-    // code reader module init
-    code_reader.config = &config;
-    code_reader.logger = &logger;
-    code_reader.unimap = &unimap;
-    code_reader.init();
-
     // websocket client init
+    ws.config = &config;
+    ws.logger = &logger;
+    ws.mobile = &mobile;
+    ws.lidar = &lidar;
+    ws.cam = &cam;
+    ws.code = &code;
+    ws.slam = &slam;
+    ws.unimap = &unimap;
+    ws.obsmap = &obsmap;
+    ws.ctrl = &ctrl;
     ws.init();
 
     // simulation module init
@@ -1734,8 +1748,28 @@ void MainWindow::watchdog_loop()
 
 
         // check loc
-
-
+        if(slam.is_loc == false)
+        {
+            loc_fail_cnt = 0;
+            slam.set_cur_loc_state("none");
+        }
+        else
+        {
+            Eigen::Vector2d ieir = slam.get_cur_ieir();
+            if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
+            {
+                loc_fail_cnt++;
+                if(loc_fail_cnt > 3)
+                {
+                    slam.set_cur_loc_state("fail");
+                }
+            }
+            else
+            {
+                loc_fail_cnt = 0;
+                slam.set_cur_loc_state("good");
+            }
+        }
     }
 }
 
@@ -1774,13 +1808,14 @@ void MainWindow::plot_loop()
     }
 
     // plot slam info
+    QString cur_loc_state = slam.get_cur_loc_state();
     Eigen::Vector2d cur_ieir = slam.get_cur_ieir();
     QString slam_info_str;
-    slam_info_str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f",
+    slam_info_str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f, loc_state: %s",
                           (double)slam.proc_time_map_a, (double)slam.proc_time_map_b,
                           (double)slam.proc_time_loc_a, (double)slam.proc_time_loc_b,
                           (int)slam.kfrm_storage.size(),
-                          cur_ieir[0], cur_ieir[1]);
+                          cur_ieir[0], cur_ieir[1], cur_loc_state.toLocal8Bit().data());
     ui->lb_SlamInfo->setText(slam_info_str);
 
     // plot que info

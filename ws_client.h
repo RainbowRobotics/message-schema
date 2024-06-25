@@ -4,6 +4,17 @@
 #include "global_defines.h"
 #include "utils.h"
 
+#include "config.h"
+#include "logger.h"
+#include "mobile.h"
+#include "lidar_2d.h"
+#include "cam.h"
+#include "code_reader.h"
+#include "slam_2d.h"
+#include "unimap.h"
+#include "obsmap.h"
+#include "autocontrol.h"
+
 #include <QObject>
 #include <QTimer>
 #include <QWebSocket>
@@ -18,8 +29,20 @@ public:
     explicit WS_CLIENT(QObject *parent = nullptr);
     ~WS_CLIENT();
 
-    QString ws_addr = "ws://127.0.0.1:11337";
+    // other modules
+    CONFIG *config = NULL;
+    LOGGER *logger = NULL;
+    MOBILE *mobile = NULL;
+    LIDAR_2D *lidar = NULL;
+    CAM *cam = NULL;
+    CODE_READER *code = NULL;
+    SLAM_2D *slam = NULL;
+    UNIMAP *unimap = NULL;
+    OBSMAP *obsmap = NULL;
+    AUTOCONTROL *ctrl = NULL;
 
+    // params
+    QString ws_addr = "ws://127.0.0.1:11337";
     QWebSocket client;
     QTimer reconnect_timer;
     std::atomic<bool> is_connected = {false};

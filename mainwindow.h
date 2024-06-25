@@ -10,11 +10,11 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "cam.h"
+#include "code_reader.h"
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
-#include "code_reader.h"
 #include "ws_client.h"
 #include "sim.h"
 
@@ -43,11 +43,11 @@ public:
     MOBILE mobile;
     LIDAR_2D lidar;
     CAM cam;
+    CODE_READER code;
     SLAM_2D slam;
     UNIMAP unimap;
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
-    CODE_READER code_reader;
     WS_CLIENT ws;
     SIM sim;
 
@@ -74,6 +74,7 @@ private:
 
     // watchdog timer
     int watchdog_count = 0;
+    int loc_fail_cnt = 0;
     QTimer watchdog_timer;
 
     // quick annotation timer
