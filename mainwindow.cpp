@@ -2282,6 +2282,7 @@ void MainWindow::plot_loop()
         std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
         std::vector<Eigen::Vector3d> cur_scan_b = lidar.get_cur_scan_b();
 
+        // front lidar red
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(size_t p = 0; p < cur_scan_f.size(); p++)
         {
@@ -2297,6 +2298,7 @@ void MainWindow::plot_loop()
             cloud->push_back(pt);
         }
 
+        // rear lidar blue
         for(size_t p = 0; p < cur_scan_b.size(); p++)
         {
             // set pos

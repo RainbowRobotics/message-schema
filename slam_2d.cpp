@@ -724,17 +724,16 @@ void SLAM_2D::loc_b_loop()
             if(tpp_que.try_pop(tpp))
             {
 
+                /*
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, tpp.tf, _cur_tf); // 1.0 mean odometry 100%
                 _cur_tf = fused_tf;
+                */
 
-
-                /*
                 Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
                 Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
 
                 Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
-                _cur_tf = fused_tf;
-                */
+                _cur_tf = fused_tf;                
             }
 
             /*
@@ -849,7 +848,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
-            /*
             // find nn            
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
@@ -859,25 +857,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             int nn_idx = ret_near_idxs[0];            
             Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
-            */
-
-            int nn_idx = 0;
-            Eigen::Vector3d P0(0, 0, 0);
-            {
-                std::vector<unsigned int> ret_near_idxs(3);
-                std::vector<double> ret_near_sq_dists(3);
-
-                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
-                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
-
-                nn_idx = ret_near_idxs[0];
-                for(size_t q = 0; q < 3; q++)
-                {
-                    int idx = ret_near_idxs[q];
-                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
-                }
-                P0 /= 3;
-            }
 
             // rmt
             double rmt = 1.0;
