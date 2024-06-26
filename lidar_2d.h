@@ -45,6 +45,10 @@ public:
     std::vector<Eigen::Vector3d> get_cur_scan_b();
     std::vector<Eigen::Vector3d> get_cur_scan();
 
+    // algorithm
+    void icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1, Eigen::Matrix4d& dG);
+    void align(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1, Eigen::Matrix4d& dG);
+
     // flags
     std::atomic<bool> is_connected_f = {false};
     std::atomic<bool> is_connected_b = {false};

@@ -2278,6 +2278,26 @@ void MainWindow::plot_loop()
         // get tf
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
+        /*
+        // raw data
+        std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < cur_scan.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan[p][0];
+            pt.y = cur_scan[p][1];
+            pt.z = cur_scan[p][2];
+            pt.r = 255;
+            pt.g = 0;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+        */
+
         // raw data
         std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
         std::vector<Eigen::Vector3d> cur_scan_b = lidar.get_cur_scan_b();

@@ -944,7 +944,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
         // make matrix
         double _A[3*3] = { 0, };
-        double _diag_A[3*3] = { 0, };
         double _b[3] = { 0, };
         double err = 0;
         double err_cnt = 0;
@@ -970,12 +969,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             err_cnt += w;
         }
         err /= err_cnt;
-
-        // set diagonal term
-        for(int p = 0; p < 3; p++)
-        {
-            _diag_A[p * 3 + p] = _A[p * 3 + p];
-        }
 
         // set first error
         if(iter == 0)
@@ -1490,7 +1483,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
         // make matrix
         double _A[3*3] = { 0, };
-        double _diag_A[3*3] = { 0, };
         double _b[3] = { 0, };
         double err = 0;
         double err_cnt = 0;
@@ -1517,12 +1509,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         }
         err /= err_cnt;
 
-        // set diagonal term
-        for(int p = 0; p < 3; p++)
-        {
-            _diag_A[p * 3 + p] = _A[p * 3 + p];
-        }
-
         // set first error
         if(iter == 0)
         {
@@ -1531,9 +1517,11 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
         // solve
         Eigen::Matrix<double, 3, 3> A(_A);
+        A += 1e-6*Eigen::Matrix<double, 3, 3>::Identity();
+
         Eigen::Matrix<double, 3, 1> b(_b);
-        Eigen::Matrix<double, 3, 3> diag_A(_diag_A);
-        Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).colPivHouseholderQr().solve(b);
+        Eigen::Matrix<double, 3, 3> diag_A = A.diagonal().asDiagonal();
+        Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).ldlt().solve(b);
 
         // lambda update
         if(err < last_err)
