@@ -243,7 +243,7 @@ void LIDAR_2D::grab_loop_f()
             int idx1 = -1;
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
-                if(pose_storage[p].t > times[times.size()-1])
+                if(pose_storage[p].t > t1)
                 {
                     idx1 = p;
                     break;
@@ -265,7 +265,7 @@ void LIDAR_2D::grab_loop_f()
             Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
-                double dt = std::abs(pose_storage[p].t - times[times.size()-1]);
+                double dt = std::abs(pose_storage[p].t - t1);
                 if(dt < min_dt)
                 {
                     min_t = pose_storage[p].t;
@@ -317,7 +317,6 @@ void LIDAR_2D::grab_loop_f()
 
             RAW_FRAME frm;
             frm.t0 = t0;
-            //frm.t1 = times[times.size()-1];
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
@@ -325,7 +324,7 @@ void LIDAR_2D::grab_loop_f()
             frm.mo = mo;
             raw_que_f.push(frm);
 
-            last_t_f = min_t;
+            last_t_f = t1;
 
             // que overflow control
             if(raw_que_f.unsafe_size() > 50)
@@ -485,7 +484,7 @@ void LIDAR_2D::grab_loop_b()
             int idx1 = -1;
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
-                if(pose_storage[p].t > times[times.size()-1])
+                if(pose_storage[p].t > t1)
                 {
                     idx1 = p;
                     break;
@@ -507,7 +506,7 @@ void LIDAR_2D::grab_loop_b()
             Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
-                double dt = std::abs(pose_storage[p].t - times[times.size()-1]);
+                double dt = std::abs(pose_storage[p].t - t1);
                 if(dt < min_dt)
                 {
                     min_t = pose_storage[p].t;
@@ -559,7 +558,6 @@ void LIDAR_2D::grab_loop_b()
 
             RAW_FRAME frm;
             frm.t0 = t0;
-            //frm.t1 = times[times.size()-1];
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
@@ -567,7 +565,7 @@ void LIDAR_2D::grab_loop_b()
             frm.mo = mo;
             raw_que_b.push(frm);
 
-            last_t_b = min_t;
+            last_t_b = t1;
 
             // que overflow control
             if(raw_que_b.unsafe_size() > 50)
@@ -778,7 +776,7 @@ void LIDAR_2D::grab_loop_f()
             frm.mo = mo;
             raw_que_f.push(frm);
 
-            last_t_f = min_t;
+            last_t_f = t1;
 
             // que overflow control
             if(raw_que_f.unsafe_size() > 50)
@@ -986,7 +984,7 @@ void LIDAR_2D::grab_loop_b()
             frm.mo = mo;
             raw_que_b.push(frm);
 
-            last_t_b = min_t;
+            last_t_b = t1;
 
             // que overflow control
             if(raw_que_b.unsafe_size() > 50)
@@ -1013,7 +1011,7 @@ void LIDAR_2D::a_loop()
         if(raw_que_f.try_pop(frm0))
         {
             // wait
-            while(frm0.t0 > last_t_b && a_flag)
+            while(frm0.t1 > last_t_b && a_flag)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
@@ -1029,7 +1027,7 @@ void LIDAR_2D::a_loop()
             double min_dt = 999999;
             for(size_t p = 0; p < storage.size(); p++)
             {
-                double dt = std::abs(storage[p].t0 - frm0.t0);
+                double dt = std::abs(storage[p].t1 - frm0.t1);
                 if(dt < min_dt)
                 {
                     min_dt = dt;
@@ -1090,7 +1088,7 @@ void LIDAR_2D::a_loop()
                 mtx.unlock();
 
                 FRAME merge_frm;
-                merge_frm.t = frm0.t0;
+                merge_frm.t = frm0.mo.t;
                 merge_frm.mo = frm0.mo;
                 merge_frm.reflects = reflects;
                 merge_frm.pts = pts;
