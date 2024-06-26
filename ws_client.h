@@ -49,6 +49,8 @@ public:
 
     void init();
     void send_status();
+    void send_lidar();
+    void send_mapping();
 
 Q_SIGNALS:
     void recv_command_motorinit(double time);

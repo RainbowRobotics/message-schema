@@ -158,10 +158,50 @@ void WS_CLIENT::send_status()
     conditionObj["inlier_ratio"] = QString::number(ieir[1], 'f', 3);
     rootObj["condition"] = conditionObj;
 
+    // send
     QJsonDocument doc(rootObj);
     QString str(doc.toJson());
-
     client.sendTextMessage(str);
 
     printf("[WS_SEND] status, time: %f\n", time);
+}
+
+void WS_CLIENT::send_lidar()
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "lidar";
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // lidar raw
+    std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
+    QJsonArray pointArray;
+
+    for(size_t p = 0; p < pts.size(); p++)
+    {
+        QJsonArray array;
+        array.append(QString::number(pts[p][0], 'f', 3));
+        array.append(QString::number(pts[p][1], 'f', 3));
+        array.append(QString::number(pts[p][2], 'f', 3));
+        array.append("100");
+
+        pointArray.push_back(array);
+    }
+    rootObj["points"] = pointArray;
+
+    // send
+    QJsonDocument doc(rootObj);
+    QString str(doc.toJson());
+    client.sendTextMessage(str);
+
+    printf("[WS_SEND] lidar, time: %f\n", time);
+}
+
+void WS_CLIENT::send_mapping()
+{
+
 }
