@@ -187,8 +187,11 @@ private Q_SLOTS:
     void bt_AutoStop();
 
     // for ws
-    void ws_command_motorinit(double time);
-    void ws_command_move(double time, double vx, double vy, double wz);
+    void ws_motorinit(double time);
+    void ws_move(double time, double vx, double vy, double wz);
+    void ws_mapping_start(double time);
+    void ws_mapping_stop(double time);
+    void ws_mapping_save(double time, QString name);
 
     // for obsmap
     void bt_ObsClear();

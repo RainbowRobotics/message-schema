@@ -2,84 +2,122 @@
 
 WS_CLIENT::WS_CLIENT(QObject *parent)
     : QObject(parent)
+    , io(new sio::client())
     , reconnect_timer(this)
 {
-    connect(&client, &QWebSocket::connected, this, &WS_CLIENT::connected);
-    connect(&client, &QWebSocket::disconnected, this, &WS_CLIENT::disconnected);
+    using std::placeholders::_1;
+    using std::placeholders::_2;
+    using std::placeholders::_3;
+    using std::placeholders::_4;
+
+    sio::socket::ptr sock = io->socket();
+    BIND_EVENT(sock, "motorinit", std::bind(&WS_CLIENT::recv_motorinit, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "move", std::bind(&WS_CLIENT::recv_move, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapping", std::bind(&WS_CLIENT::recv_mapping, this, _1, _2, _3, _4));
+
+    io->set_open_listener(std::bind(&WS_CLIENT::sio_connected, this));
+    io->set_close_listener(std::bind(&WS_CLIENT::sio_disconnected, this, _1));
+    io->set_fail_listener(std::bind(&WS_CLIENT::sio_error, this));
+
+    // timer
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 }
 
 WS_CLIENT::~WS_CLIENT()
 {
-    client.close();
+    io->close();
+}
+
+QString WS_CLIENT::get_json(sio::message::ptr const& data, QString key)
+{
+    return QString::fromStdString(data->get_map()[key.toStdString()]->get_string());
 }
 
 void WS_CLIENT::init()
 {
-    client.open(QUrl(ws_addr));
-    reconnect_timer.start(1000);
+    reconnect_timer.start(3000);
 }
 
-void WS_CLIENT::connected()
+void WS_CLIENT::sio_connected()
 {
-    connect(&client, &QWebSocket::textMessageReceived, this, &WS_CLIENT::recv_message);
     is_connected = true;
-
-    printf("[WS] server connected\n");
+    printf("[WS] connected\n");
 }
 
-void WS_CLIENT::disconnected()
+void WS_CLIENT::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
+    printf("[WS] disconnected\n");
+}
 
-    // clear parameters
-    disconnect(&client, &QWebSocket::textMessageReceived, this, &WS_CLIENT::recv_message);
-
-    //printf("[WS] server disconnected\n");
+void WS_CLIENT::sio_error()
+{
+    printf("[WS] some error\n");
 }
 
 void WS_CLIENT::reconnect_loop()
 {
-    if(client.state() == QAbstractSocket::ConnectedState)
+    if(is_connected == false)
     {
-
-    }
-    else if(client.state() == QAbstractSocket::ConnectingState)
-    {
-
-    }
-    else
-    {
-        if(is_connected == false)
-        {
-            client.open(QUrl(ws_addr));
-        }
+        io->connect("ws://localhost:11337");
     }
 }
 
-void WS_CLIENT::recv_message(QString message)
+void WS_CLIENT::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-    QJsonObject json = QJsonDocument::fromJson(message.toUtf8()).object();
-
-    // move command parsing
-    if(json["command"] == "move")
+    if(data->get_flag() == sio::message::flag_object)
     {
-        double vx = json["vx"].toString().toDouble(); // mps
-        double vy = json["vy"].toString().toDouble();
-        double wz = json["wz"].toString().toDouble(); // dps
-        double time = json["time"].toString().toDouble()/1000; // UTC, msec -> sec
+        // parsing
+        QString command = get_json(data, "command");
+        double time = get_json(data, "time").toDouble()/1000;
 
-        Q_EMIT recv_command_move(time, vx, vy, wz);
-        printf("[WS_RECV] MOVE, time:%.3f, vx:%.3f, vy:%.3f, wz:%.3f\n", time, vx, vy, wz);
+        // action
+        Q_EMIT signal_motorinit(time);
+
+        printf("[WS_RECV] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
+}
 
-    // motorinit command parsing
-    if(json["command"] == "motorinit")
+void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
     {
-        double time = json["time"].toString().toDouble()/1000; // UTC, msec -> sec
+        // parsing
+        double vx = get_json(data, "vx").toDouble();
+        double vy = get_json(data, "vy").toDouble();
+        double wz = get_json(data, "wz").toDouble();
+        double time = get_json(data, "time").toDouble()/1000;
 
-        Q_EMIT recv_command_motorinit(time);
-        printf("[WS_RECV] motorinit, time:%.3f\n", time);
+        // action
+        Q_EMIT signal_move(time, vx, vy, wz);
+        printf("[WS_RECV] move, t: %.3f, vx: %.3f, vy: %.3f, wz: %.3f\n", time, vx, vy, wz);
+    }
+}
+
+void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        QString command = get_json(data, "command");
+        double time = get_json(data, "time").toDouble()/1000;
+
+        // action
+        if(command == "start")
+        {
+            Q_EMIT signal_mapping_start(time);
+        }
+        else if(command == "stop")
+        {
+            Q_EMIT signal_mapping_stop(time);
+        }
+        else if(command == "save")
+        {
+            QString name = get_json(data, "name");
+            Q_EMIT signal_mapping_save(time, name);
+        }
+
+        printf("[WS_RECV] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
@@ -159,9 +197,9 @@ void WS_CLIENT::send_status()
     rootObj["condition"] = conditionObj;
 
     // send
-    QJsonDocument doc(rootObj);
-    QString str(doc.toJson());
-    client.sendTextMessage(str);
+    QJsonDocument doc(rootObj);    
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("status", res);
 
     printf("[WS_SEND] status, time: %f\n", time);
 }
@@ -169,36 +207,24 @@ void WS_CLIENT::send_status()
 void WS_CLIENT::send_lidar()
 {
     double time = get_time();
-
-    // Creating the JSON object
-    QJsonObject rootObj;
-
-    // Adding the command and time
-    rootObj["command"] = "lidar";
-    rootObj["time"] = QString::number((int)(time*1000), 10);
-
-    // lidar raw
     std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
-    QJsonArray pointArray;
 
+    sio::array_message::ptr jsonArray = sio::array_message::create();
     for(size_t p = 0; p < pts.size(); p++)
     {
-        QJsonArray array;
-        array.append(QString::number(pts[p][0], 'f', 3));
-        array.append(QString::number(pts[p][1], 'f', 3));
-        array.append(QString::number(pts[p][2], 'f', 3));
-        array.append("100");
+        sio::array_message::ptr jsonObj = sio::array_message::create();
 
-        pointArray.push_back(array);
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+
+        jsonArray->get_vector().push_back(jsonObj);
     }
-    rootObj["points"] = pointArray;
 
     // send
-    QJsonDocument doc(rootObj);
-    QString str(doc.toJson());
-    client.sendTextMessage(str);
-
-    printf("[WS_SEND] lidar, time: %f\n", time);
+    io->socket()->emit("lidar_cloud", jsonArray);
+    printf("[WS_SEND] lidar_cloud, time: %f\n", time);
 }
 
 void WS_CLIENT::send_mapping()

@@ -1604,7 +1604,7 @@ void AUTOCONTROL::b_loop_pp()
             double th = err_th + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -90.0*D2R, 90.0*D2R);
 
-            double w = (v/config->ROBOT_WHEEL_BASE) * std::tan(th);            
+            double w = (v/config->ROBOT_WHEEL_BASE) * std::tan(th);                        
             if(std::abs(w) > params.LIMIT_W*D2R)
             {
                 double ratio = (params.LIMIT_W*D2R)/std::abs(w);

@@ -88,6 +88,8 @@
 #define S2N (1.0e9) // sec to nanosec
 #define U2S (1.0e-6) // microsec to sec
 #define S2U (1.0e6) // sec to microsec
+#define M2S (1.0e-3) // millisec to sec
+#define S2M (1.0e3) // sec to millisec
 #define D2R (M_PI/180.0)
 #define R2D (180.0/M_PI)
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))

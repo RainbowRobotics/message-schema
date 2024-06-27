@@ -115,8 +115,6 @@ void LIDAR_2D::grab_loop_f()
     comm_settings.e_interface_type = 4;
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
-    double pre_lidar_t = 0;
-
     // create instance
     auto safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
 
@@ -140,15 +138,7 @@ void LIDAR_2D::grab_loop_f()
 
             // time sync
             double pc_t = get_time();
-            double lidar_t = data.getDataHeaderPtr()->getTimestampTime() * 0.001;
-            if(pre_lidar_t == 0)
-            {
-                pre_lidar_t = lidar_t;
-
-                // drop
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
+            double lidar_t = data.getDataHeaderPtr()->getTimestampTime()*M2S;
 
             if(is_sync_f)
             {
@@ -168,9 +158,18 @@ void LIDAR_2D::grab_loop_f()
             }
 
             // lidar frame synced ref time
-            double t0 = pre_lidar_t + offset_t_f;
-            double t1 = lidar_t + offset_t_f;
-            pre_lidar_t = lidar_t;
+            std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
+            int num_scan_point = sp.size();
+            double scan_time = data.getDerivedValuesPtr()->getScanTime()*M2S;
+            //double time_increment = data.getDerivedValuesPtr()->getInterbeamPeriod()*U2S;
+            double time_increment = scan_time/num_scan_point;
+
+            double t0 = lidar_t + offset_t_f;
+            double t1 = t0 + scan_time;
+
+            //double t1 = lidar_t + offset_t_f;
+            //double t0 = t1 - scan_time;
+
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -194,16 +193,13 @@ void LIDAR_2D::grab_loop_f()
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;
 
-            // parsing
-            std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();            
+            // parsing            
             for(size_t p = 0; p < sp.size(); p++)
             {
+                double t = t0 + time_increment*p;
                 double deg = sp[p].getAngle();
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
-                double rssi = sp[p].getReflectivity();
-
-                double ratio = saturation((deg+47.5)/360.0, 0, 1.0);
-                double t = t0 + ratio*(t1-t0);
+                double rssi = sp[p].getReflectivity();                               
 
                 // dist filter
                 if(dist < 0.05 || dist > config->LIDAR_MAX_RANGE)
@@ -262,7 +258,8 @@ void LIDAR_2D::grab_loop_f()
             // precise deskewing
             Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
             Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
-            Eigen::Matrix4d dtf = tf0.inverse()*tf1;
+            //Eigen::Matrix4d dtf = tf0.inverse()*tf1;
+            Eigen::Matrix4d dtf = Eigen::Matrix4d::Identity();
 
             std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
             for(size_t p = 0; p < raw_pts.size(); p++)
@@ -270,14 +267,13 @@ void LIDAR_2D::grab_loop_f()
                 double t = times[p];
                 double alpha = (t-t0)/(t1-t0);
                 Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
                 dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = TF_to_se2(tf0);
-            printf("[LIDAR_F] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            //printf("[LIDAR_F] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -321,8 +317,6 @@ void LIDAR_2D::grab_loop_b()
     comm_settings.e_interface_type = 4;
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
-    double pre_lidar_t = 0;
-
     // create instance
     auto safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
 
@@ -346,15 +340,7 @@ void LIDAR_2D::grab_loop_b()
 
             // time sync
             double pc_t = get_time();
-            double lidar_t = data.getDataHeaderPtr()->getTimestampTime() * 0.001;
-            if(pre_lidar_t == 0)
-            {
-                pre_lidar_t = lidar_t;
-
-                // drop
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
+            double lidar_t = data.getDataHeaderPtr()->getTimestampTime()*M2S;
 
             if(is_sync_b)
             {
@@ -374,9 +360,17 @@ void LIDAR_2D::grab_loop_b()
             }
 
             // lidar frame synced ref time
-            double t0 = pre_lidar_t + offset_t_b;
-            double t1 = lidar_t + offset_t_b;
-            pre_lidar_t = lidar_t;
+            std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
+            int num_scan_point = sp.size();
+            double scan_time = data.getDerivedValuesPtr()->getScanTime()*M2S;
+            //double time_increment = data.getDerivedValuesPtr()->getInterbeamPeriod()*U2S;
+            double time_increment = scan_time/num_scan_point;
+
+            double t0 = lidar_t + offset_t_b;
+            double t1 = t0 + scan_time;
+
+            //double t1 = lidar_t + offset_t_b;
+            //double t0 = t1 - scan_time;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -400,16 +394,13 @@ void LIDAR_2D::grab_loop_b()
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;
 
-            // parsing
-            std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
+            // parsing            
             for(size_t p = 0; p < sp.size(); p++)
             {
+                double t = t0 + time_increment*p;
                 double deg = sp[p].getAngle();
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
                 double rssi = sp[p].getReflectivity();
-
-                double ratio = saturation((deg+47.5)/360.0, 0, 1.0);
-                double t = t0 + ratio*(t1-t0);
 
                 // dist filter
                 if(dist < 0.05 || dist > config->LIDAR_MAX_RANGE)
@@ -468,7 +459,8 @@ void LIDAR_2D::grab_loop_b()
             // precise deskewing
             Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
             Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
-            Eigen::Matrix4d dtf = tf0.inverse()*tf1;
+            //Eigen::Matrix4d dtf = tf0.inverse()*tf1;
+            Eigen::Matrix4d dtf = Eigen::Matrix4d::Identity();
 
             std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
             for(size_t p = 0; p < raw_pts.size(); p++)
@@ -476,14 +468,13 @@ void LIDAR_2D::grab_loop_b()
                 double t = times[p];
                 double alpha = (t-t0)/(t1-t0);
                 Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
                 dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = TF_to_se2(tf0);
-            printf("[LIDAR_B] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            //printf("[LIDAR_B] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -1033,8 +1024,8 @@ void LIDAR_2D::icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector
     int num_correspondence = 0;
 
     const double rmt_sigma = 0.01;
-    const double cost_threshold = 0.3*0.3;
-    const int num_feature = std::min<int>(idx_list.size(), 500);
+    const double cost_threshold = 0.05*0.05;
+    const int num_feature = std::min<int>(idx_list.size(), 1000);
 
     // for rmt
     double tm0 = 0;
@@ -1100,6 +1091,7 @@ void LIDAR_2D::icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector
             // additional weight
             double dist = pts1[i].norm();
             double weight = 1.0 + 0.1*dist;
+            //double weight = 1.0;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1146,7 +1138,7 @@ void LIDAR_2D::icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = 10;
+            double V0 = 30;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -1225,10 +1217,10 @@ void LIDAR_2D::icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector
         }
     }
 
-    printf("[LIDAR] icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    //printf("[LIDAR] icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     // check
-    if(last_err > 0.1)
+    if(last_err > 0.1 || last_err > first_err)
     {
         return;
     }
@@ -1315,10 +1307,10 @@ void LIDAR_2D::a_loop()
 
                 // icp for merge
                 Eigen::Matrix4d dG = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm1.mo.pose);
-                Eigen::Vector3d dxi = TF_to_se2(dG);
-                printf("dxi:%f, %f, %f\n", dxi[0], dxi[1], dxi[2]*R2D);
-
                 //icp(pts_f, pts_b, dG);
+
+                //Eigen::Vector3d dxi = TF_to_se2(dG);
+                //printf("dxi:%f, %f, %f\n", dxi[0], dxi[1], dxi[2]*R2D);
                 //align(pts_f, pts_b, dG);
 
                 // merge

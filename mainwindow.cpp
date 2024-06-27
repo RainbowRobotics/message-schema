@@ -102,8 +102,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
 
     // for ws
-    connect(&ws, SIGNAL(recv_command_motorinit(double)), this, SLOT(ws_command_motorinit(double)));
-    connect(&ws, SIGNAL(recv_command_move(double, double, double, double)), this, SLOT(ws_command_move(double, double, double, double)));
+    connect(&ws, SIGNAL(signal_motorinit(double)), this, SLOT(ws_motorinit(double)));
+    connect(&ws, SIGNAL(signal_move(double, double, double, double)), this, SLOT(ws_move(double, double, double, double)));
+    connect(&ws, SIGNAL(signal_mapping_start(double)), this, SLOT(ws_mapping_start(double)));
+    connect(&ws, SIGNAL(signal_mapping_stop(double)), this, SLOT(ws_mapping_stop(double)));
+    connect(&ws, SIGNAL(signal_mapping_save(double, QString)), this, SLOT(ws_mapping_save(double, QString)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -1675,15 +1678,32 @@ void MainWindow::bt_AutoStop()
 }
 
 // for ws
-void MainWindow::ws_command_motorinit(double time)
+void MainWindow::ws_motorinit(double time)
 {
     mobile.motor_on();
 }
 
-void MainWindow::ws_command_move(double time, double vx, double vy, double wz)
+void MainWindow::ws_move(double time, double vx, double vy, double wz)
 {
     mobile.move(vx, vy, wz*D2R);
 }
+
+void MainWindow::ws_mapping_start(double time)
+{
+    slam.mapping_start();
+}
+
+void MainWindow::ws_mapping_stop(double time)
+{
+    slam.mapping_stop();
+}
+
+void MainWindow::ws_mapping_save(double time, QString name)
+{
+    bt_MapSave();
+}
+
+
 
 // for obsmap
 void MainWindow::bt_ObsClear()
@@ -1700,6 +1720,7 @@ void MainWindow::watchdog_loop()
     if(ws.is_connected)
     {
         ws.send_status();
+        ws.send_lidar();
     }
 
     // for 1 sec loop

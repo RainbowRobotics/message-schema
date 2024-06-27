@@ -145,6 +145,12 @@ INCLUDEPATH += /usr/local/include/sophus
 LIBS += -L/usr/lib/x86_64-linux-gnu/
 LIBS += -ltbb
 
+# Socket.io
+INCLUDEPATH += /usr/local/include/
+LIBS += -L/usr/local/lib/
+LIBS += -lsioclient \
+        -lsioclient_tls
+
 # GTSAM
 INCLUDEPATH += /usr/local/include/gtsam/
 LIBS += -L/usr/local/lib/
