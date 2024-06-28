@@ -17,7 +17,6 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
-    , watchdog_timer(this)
     , qa_timer(this)
 {
     ui->setupUi(this);
@@ -29,7 +28,6 @@ MainWindow::MainWindow(QWidget *parent)
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
-    connect(&watchdog_timer, SIGNAL(timeout()), this, SLOT(watchdog_loop()));
     connect(&qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
 
     // config
@@ -121,7 +119,6 @@ MainWindow::MainWindow(QWidget *parent)
     // start plot loop
     plot_timer.start(50);
     plot_timer2.start(50);
-    watchdog_timer.start(100);
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -136,6 +133,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    if(watch_thread != NULL)
+    {
+        watch_flag = false;
+        watch_thread->join();
+        watch_thread = NULL;
+    }
+
     delete ui;
 }
 
@@ -315,6 +319,10 @@ void MainWindow::init_modules()
     sim.lidar = &lidar;
     sim.slam = &slam;
     sim.unimap = &unimap;
+
+    // start watchdog loop
+    watch_flag = true;
+    watch_thread = new std::thread(&MainWindow::watch_loop, this);
 }
 
 // for picking interface
@@ -1680,7 +1688,7 @@ void MainWindow::bt_AutoStop()
 // for ws
 void MainWindow::ws_motorinit(double time)
 {
-    mobile.motor_on();
+    bt_MotorInit();
 }
 
 void MainWindow::ws_move(double time, double vx, double vy, double wz)
@@ -1690,12 +1698,12 @@ void MainWindow::ws_move(double time, double vx, double vy, double wz)
 
 void MainWindow::ws_mapping_start(double time)
 {
-    slam.mapping_start();
+    bt_MapBuild();
 }
 
 void MainWindow::ws_mapping_stop(double time)
 {
-    slam.mapping_stop();
+    bt_MapSave();
 }
 
 void MainWindow::ws_mapping_save(double time, QString name)
@@ -1712,86 +1720,99 @@ void MainWindow::bt_ObsClear()
 }
 
 // watchdog
-void MainWindow::watchdog_loop()
+void MainWindow::watch_loop()
 {
-    watchdog_count++;
+    int cnt = 0;
+    int loc_fail_cnt = 0;
 
-    // for 100ms loop
-    if(ws.is_connected)
+    printf("[WATCHDOG] loop start\n");
+    while(watch_flag)
     {
-        ws.send_status();
-        ws.send_lidar();
-    }
+        cnt++;
 
-    // for 1 sec loop
-    if(watchdog_count % 10 == 0)
-    {
-        // check mobile
-        if(mobile.is_connected)
+        // for 300ms loop
+        if(cnt % 3 == 0)
         {
-            if(mobile.is_synced == false)
+            if(ws.is_connected)
             {
-                mobile.sync();
-                printf("[WATCH] try time sync, pc and mobile\n");
+                ws.send_status();
+                ws.send_lidar();
             }
+        }
 
-            MOBILE_STATUS ms = mobile.get_status();
-            if(ms.t != 0)
+        // for 1 sec loop
+        if(cnt % 10 == 0)
+        {
+            // check mobile
+            if(mobile.is_connected)
             {
-                // when motor status 0, emo released, no charging
-                if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
+                if(mobile.is_synced == false)
                 {
-                    mobile.motor_on();
+                    mobile.sync();
+                    printf("[WATCH] try time sync, pc and mobile\n");
+                }
+
+                MOBILE_STATUS ms = mobile.get_status();
+                if(ms.t != 0)
+                {
+                    // when motor status 0, emo released, no charging
+                    if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
+                    {
+                        mobile.motor_on();
+                    }
                 }
             }
-        }
 
-        // check lidar
-        if(lidar.is_connected_f)
-        {
-            if(lidar.is_synced_f == false)
+            // check lidar
+            if(lidar.is_connected_f)
             {
-                lidar.sync_f();
-                printf("[WATCH] try time sync, pc and front lidar\n");
-            }
-        }
-
-        if(lidar.is_connected_b)
-        {
-            if(lidar.is_synced_b == false)
-            {
-                lidar.sync_b();
-                printf("[WATCH] try time sync, pc and back lidar\n");
-            }
-        }
-
-        // check camera
-
-
-        // check loc
-        if(slam.is_loc == false)
-        {
-            loc_fail_cnt = 0;
-            slam.set_cur_loc_state("none");
-        }
-        else
-        {
-            Eigen::Vector2d ieir = slam.get_cur_ieir();
-            if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
-            {
-                loc_fail_cnt++;
-                if(loc_fail_cnt > 3)
+                if(lidar.is_synced_f == false)
                 {
-                    slam.set_cur_loc_state("fail");
+                    lidar.sync_f();
+                    printf("[WATCH] try time sync, pc and front lidar\n");
                 }
+            }
+
+            if(lidar.is_connected_b)
+            {
+                if(lidar.is_synced_b == false)
+                {
+                    lidar.sync_b();
+                    printf("[WATCH] try time sync, pc and back lidar\n");
+                }
+            }
+
+            // check camera
+
+
+            // check loc
+            if(slam.is_loc == false)
+            {
+                loc_fail_cnt = 0;
+                slam.set_cur_loc_state("none");
             }
             else
             {
-                loc_fail_cnt = 0;
-                slam.set_cur_loc_state("good");
+                Eigen::Vector2d ieir = slam.get_cur_ieir();
+                if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
+                {
+                    loc_fail_cnt++;
+                    if(loc_fail_cnt > 3)
+                    {
+                        slam.set_cur_loc_state("fail");
+                    }
+                }
+                else
+                {
+                    loc_fail_cnt = 0;
+                    slam.set_cur_loc_state("good");
+                }
             }
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    printf("[WATCHDOG] loop stop\n");
 }
 
 // plot

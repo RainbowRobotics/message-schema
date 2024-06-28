@@ -299,12 +299,6 @@ void SLAM_2D::map_a_loop()
                 Eigen::Matrix4d G = _cur_tf * delta_tf;
 
                 // check moving
-                //Eigen::Vector3d input = mobile->get_control_input();
-                //Eigen::Vector3d feedback = mobile->get_pose().vel;
-                //double diff = (feedback - input).norm();
-                //if((std::abs(input[0]) > 0 || std::abs(input[1]) > 0 || std::abs(input[2]) > 0) && diff < 0.05)
-                //if(std::abs(input[0]) > 0 || std::abs(input[1]) > 0 || std::abs(input[2]) > 0)
-
                 Eigen::Matrix4d dtf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
                 Eigen::Vector3d dxi = TF_to_se2(dtf);
                 if(std::abs(dxi[0]) > 0.05 || std::abs(dxi[1]) > 0.05 || std::abs(dxi[2]) > 3.0*D2R)
@@ -1090,25 +1084,26 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
             */
 
+            int pt_num = 5;
             int nn_idx = 0;
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                std::vector<unsigned int> ret_near_idxs(3);
-                std::vector<double> ret_near_sq_dists(3);
+                std::vector<unsigned int> ret_near_idxs(pt_num);
+                std::vector<double> ret_near_sq_dists(pt_num);
 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
-                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+                tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
                 nn_idx = ret_near_idxs[0];
                 V0 = Eigen::Vector3d(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
 
-                for(size_t q = 0; q < 3; q++)
+                for(size_t q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
                 }
-                P0 /= 3;
+                P0 /= pt_num;
             }
 
             // view filter

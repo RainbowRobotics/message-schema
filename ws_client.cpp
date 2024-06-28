@@ -35,6 +35,12 @@ QString WS_CLIENT::get_json(sio::message::ptr const& data, QString key)
 
 void WS_CLIENT::init()
 {
+    if(config->SIM_MODE == 1)
+    {
+        printf("[WS] simulation mode\n");
+        return;
+    }
+
     reconnect_timer.start(3000);
 }
 

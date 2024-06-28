@@ -33,8 +33,10 @@ AUTOCONTROL::~AUTOCONTROL()
 
 void AUTOCONTROL::init()
 {
+    /*
     a_flag = true;
     a_thread = new std::thread(&AUTOCONTROL::a_loop, this);
+    */
 }
 
 CTRL_PARAM AUTOCONTROL::load_preset(int preset)
@@ -795,6 +797,45 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::path_ccma(const std::vector<Eigen::Vec
 
 std::vector<double> AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, double st_v)
 {
+    std::vector<double> res(src.size(), params.LIMIT_V);
+
+    double last_v = 0;
+    for(size_t p = 0; p < src.size()-1; p++)
+    {
+        int idx0 = p;
+        Eigen::Vector3d P0 = src[idx0].block(0,3,3,1);
+
+        int idx1 = src.size()-1;
+        for(size_t q = idx0+1; q < src.size(); q++)
+        {
+            Eigen::Vector3d P1 = src[q].block(0,3,3,1);
+            double d = calc_dist_2d(P1-P0);
+            if(d >= params.MAX_LD)
+            {
+                idx1 = q;
+                break;
+            }
+        }
+
+        Eigen::Vector3d xi0 = TF_to_se2(src[idx0]);
+        Eigen::Vector3d xi1 = TF_to_se2(src[idx1]);
+
+        double err_d = calc_dist_2d(xi1-xi0);
+        double err_th = deltaRad(xi1[2], xi0[2]) * 2.0;
+
+        double t_v = err_d/params.LIMIT_V;
+        double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
+        double t = std::max<double>(t_v, t_w);
+        double v = err_d/t;
+        res[p] = v;
+
+        last_v = v;
+    }
+
+    res.back() = last_v;
+    res.front() = st_v;
+
+    /*
     std::vector<double> curvatures(src.size(), 0);
     for(size_t p = 0; p < src.size()-1; p++)
     {
@@ -823,6 +864,8 @@ std::vector<double> AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& 
     }
 
     res.front() = st_v;    
+    */
+
     return res;
 }
 
@@ -1457,7 +1500,17 @@ void AUTOCONTROL::b_loop_pp()
     double pre_loop_time = get_time();
     double extend_dt = 0;
 
+    // get global path
     PATH global_path = get_cur_global_path();    
+
+    // calc initial local path
+    PATH local_path = calc_local_path();
+    double last_local_path_t = get_time();
+
+    mtx.lock();
+    cur_local_path = local_path;
+    mtx.unlock();
+
     int fsm_state = AUTO_FSM_FIRST_ALIGN;
 
     printf("[AUTO] b_loop_pp start\n");
@@ -1473,19 +1526,26 @@ void AUTOCONTROL::b_loop_pp()
             break;
         }
 
-        // calc local path
-        PATH local_path = calc_local_path();
-
-        // update
-        mtx.lock();
-        cur_local_path = local_path;
-        mtx.unlock();
-
         // get current status
         Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        // goal error d
+        double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
+
+        // replanning local path
+        if(get_time() - last_local_path_t > 0.2 && goal_d > params.MAX_LD)
+        {
+            local_path = calc_local_path();
+            last_local_path_t = get_time();
+
+            // update
+            mtx.lock();
+            cur_local_path = local_path;
+            mtx.unlock();
+        }
 
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
@@ -1580,8 +1640,7 @@ void AUTOCONTROL::b_loop_pp()
                 printf("[AUTO] obstacle stucked\n");
             }
 
-            // calc ref_v
-            double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
+            // calc ref_v            
             double goal_v = 1.0 * goal_d;
             double path_v = local_path.ref_v[cur_idx];
             double ref_v = std::min<double>({path_v, obs_v, goal_v});
@@ -1597,14 +1656,20 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;
-            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, params.LIMIT_V);
+            double v1 = saturation(ref_v, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);;
 
-            double th = err_th + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+            double w0 = cur_vel[2];
+            double th = err_th + std::atan2(params.DRIVE_K * cte, v1 + params.DRIVE_EPS);
             th = saturation(th, -90.0*D2R, 90.0*D2R);
+            double w1 = (path_v/config->ROBOT_WHEEL_BASE) * std::tan(th);
 
-            double w = (v/config->ROBOT_WHEEL_BASE) * std::tan(th);                        
+            double v = saturation(v1, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+            double w = saturation(w1, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+
+            v = saturation(v, 0, params.LIMIT_V);
+            w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            /*
             if(std::abs(w) > params.LIMIT_W*D2R)
             {
                 double ratio = (params.LIMIT_W*D2R)/std::abs(w);
@@ -1615,6 +1680,7 @@ void AUTOCONTROL::b_loop_pp()
                     v = params.ED_V;
                 }
             }
+            */
 
             // goal check
             if(goal_d < config->DRIVE_GOAL_D)

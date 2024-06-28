@@ -72,10 +72,10 @@ private:
     QTimer plot_timer;
     QTimer plot_timer2;
 
-    // watchdog timer
-    int watchdog_count = 0;
-    int loc_fail_cnt = 0;
-    QTimer watchdog_timer;
+    // watchdog
+    std::atomic<bool> watch_flag = {false};
+    std::thread *watch_thread = NULL;
+    void watch_loop();
 
     // quick annotation timer
     QTimer qa_timer;
@@ -118,8 +118,7 @@ private Q_SLOTS:
 
     // timer loops
     void plot_loop();
-    void plot_loop2();
-    void watchdog_loop();
+    void plot_loop2();    
     void qa_loop();
 
     // config

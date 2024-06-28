@@ -40,7 +40,7 @@
     "ROBOT_SIZE_MIN_X": "-0.41",
     "ROBOT_SIZE_MIN_Y": "-0.285",
     "ROBOT_SIZE_MIN_Z": "0.0",
-    "ROBOT_WHEEL_BASE": "0.467",
+    "ROBOT_WHEEL_BASE": "0.511",
     "ROBOT_WHEEL_RADIUS": "0.075",
     "SIM_MODE": "0",
     "SLAM_ICP_COST_THRESHOLD": "0.5",
