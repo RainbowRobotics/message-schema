@@ -111,6 +111,7 @@ void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& d
         // action
         if(command == "start")
         {
+            last_send_kfrm_idx = 0;
             Q_EMIT signal_mapping_start(time);
         }
         else if(command == "stop")
@@ -233,7 +234,46 @@ void WS_CLIENT::send_lidar()
     printf("[WS_SEND] lidar_cloud, time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping()
+void WS_CLIENT::send_mapping_cloud()
+{
+    if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
+    {
+        // send kfrm
+        double time = get_time();
+
+        slam->mtx.lock();
+        KFRAME kfrm = slam->kfrm_storage[last_send_kfrm_idx];
+        slam->mtx.unlock();
+
+        sio::array_message::ptr jsonArray = sio::array_message::create();
+        for(size_t p = 0; p < kfrm.pts.size(); p++)
+        {
+            if(kfrm.pts[p].do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
+            {
+                continue;
+            }
+
+            Eigen::Vector3d P(kfrm.pts[p].x, kfrm.pts[p].y, kfrm.pts[p].z);
+            Eigen::Vector3d _P = kfrm.opt_G.block(0,0,3,3)*P + kfrm.opt_G.block(0,3,3,1);
+
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(_P[0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(_P[1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(_P[2], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(kfrm.pts[p].r, 'f', 3).toStdString()));
+
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+
+        // send
+        io->socket()->emit("mapping_cloud", jsonArray);
+        printf("[WS_SEND] mapping_cloud, time: %f\n", time);
+        last_send_kfrm_idx++;
+    }
+}
+
+void WS_CLIENT::send_mapping_response()
 {
 
 }

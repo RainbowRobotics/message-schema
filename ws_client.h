@@ -51,6 +51,7 @@ public:
     // vars
     std::unique_ptr<sio::client> io;
     QTimer reconnect_timer;
+    std::atomic<int> last_send_kfrm_idx = {0};
 
     // flags
     std::atomic<bool> is_connected = {false};
@@ -59,7 +60,8 @@ public:
     void init();
     void send_status();
     void send_lidar();
-    void send_mapping();
+    void send_mapping_cloud();
+    void send_mapping_response();
 
     // util func
     QString get_json(sio::message::ptr const& data, QString key);

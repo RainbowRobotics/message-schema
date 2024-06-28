@@ -56,7 +56,7 @@ void SLAM_2D::mapping_start()
     {
         printf("[SLAM] mapping start\n");
 
-        // clear object
+        // clear objects
         mtx.lock();
         kfrm_que.clear();
         kfrm_update_que.clear();
