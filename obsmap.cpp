@@ -242,6 +242,11 @@ bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs)
         {
             if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
             {
+                /*
+                cv::Mat merge;
+                cv::addWeighted(mask, 0.5, _obs_map, 0.5, 0, merge);
+                cv::imshow("merge", merge);
+                */
                 return true;
             }
         }
@@ -562,6 +567,69 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
 
     // idx0 or last index of pre local path
     return conflict_idx;
+}
+
+Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double max_r)
+{
+    // get obs map
+    cv::Mat _obs_map;
+    Eigen::Matrix4d _obs_tf;
+    get_obs_map(_obs_map, _obs_tf);
+
+    // global to local
+    Eigen::Matrix4d _obs_tf_inv = _obs_tf.inverse();
+    Eigen::Vector3d _center = _obs_tf_inv.block(0,0,3,3)*center + _obs_tf_inv.block(0,3,3,1);
+
+    // calc average force
+    int search_r = max_r/gs;
+    cv::Vec2i center_uv = xy_uv(_center[0], _center[1]);
+    std::vector<cv::Vec2i> circle = filled_circle_iterator(center_uv, search_r);
+
+    int num = 0;
+    Eigen::Vector3d sum_f(0, 0, 0);
+    for(size_t p = 0; p < circle.size(); p++)
+    {
+        int u = circle[p][0];
+        int v = circle[p][1];
+        if(u < 0 || u >= w || v < 0 || v >= h)
+        {
+            continue;
+        }
+
+        if(_obs_map.ptr<uchar>(v)[u] == 255)
+        {
+            // local to global
+            cv::Vec2d xy = uv_xy(circle[p][0], circle[p][1]);
+            Eigen::Vector3d P(xy[0], xy[1], 0);
+            Eigen::Vector3d obs_pos = _obs_tf.block(0,0,3,3)*P + _obs_tf.block(0,3,3,1);
+
+            double dx = center[0] - obs_pos[0];
+            double dy = center[1] - obs_pos[1];
+            double d = std::sqrt(dx*dx + dy*dy);
+            if(d > max_r)
+            {
+                continue;
+            }
+
+            Eigen::Vector3d dir(dx/d, dy/d, 0);
+
+            // repulsion force
+            //double mag = 1.0/d;
+            double mag = (max_r-d)/d;
+            Eigen::Vector3d f = mag*dir;
+            sum_f += f;
+            num++;
+        }
+    }
+
+    if(num > 0)
+    {
+        return sum_f/num;
+    }
+    else
+    {
+        return sum_f;
+    }
 }
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)

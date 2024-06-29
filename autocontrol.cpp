@@ -794,7 +794,7 @@ std::vector<double> AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& 
         {
             Eigen::Vector3d P1 = src[q].block(0,3,3,1);
             double d = calc_dist_2d(P1-P0);
-            if(d >= params.MIN_LD*2)
+            if(d >= 0.5)
             {
                 idx1 = q;
                 break;
@@ -979,14 +979,13 @@ PATH AUTOCONTROL::calc_local_path()
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
-    double cur_v = global_path.ref_v[std::min<int>(cur_idx+1, (int)global_path.pos.size()-1)];
 
     // get path segment
     std::vector<Eigen::Vector3d> _path_pos;
-    _path_pos.push_back(global_path.pos[cur_idx]);
+    _path_pos.push_back(cur_pos);
 
     std::vector<Eigen::Matrix4d> _path_pose;
-    _path_pose.push_back(global_path.pose[cur_idx]);
+    _path_pose.push_back(cur_tf);
 
     for(int p = cur_idx+1; p < (int)global_path.pos.size(); p++)
     {
@@ -1002,40 +1001,75 @@ PATH AUTOCONTROL::calc_local_path()
         }
     }
 
-    // check obstacle on path segment
-    bool is_obs = obsmap->is_collision(_path_pose);
-    is_obs = false;
-    if(is_obs)
+    // eb init
+    std::vector<BUBBLE> eb;
+    for(size_t p = 0; p < _path_pos.size(); p++)
     {
-        // elastic band
-        return PATH();
+        BUBBLE b;
+        b.ref = _path_pos[p];
+        b.pos = _path_pos[p];
+        eb.push_back(b);
     }
-    else
+
+    // eb iteration
+    const double k_r = 1.0;
+    const double k_i = 1.0;
+    const double k_e = 2.0;
+    const double dt = 0.1;
+    const int max_iter = 5;
+    for(int iter = 0; iter < max_iter; iter++)
     {
-        // global path resampling
-        std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
-        std::vector<Eigen::Matrix4d> path_pose;
-        for(size_t p = 0; p < path_pos.size()-1; p++)
+        // band deformation
+        for(size_t p = 1; p < eb.size()-1; p++)
         {
-            Eigen::Matrix4d tf = calc_tf(path_pos[p], path_pos[p+1]);
-            path_pose.push_back(tf);
+            BUBBLE &b = eb[p];
+
+            // calc forces
+            Eigen::Vector3d f_r = (b.ref - b.pos);
+            Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
+            Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, MAX_BUBBLE_R);
+
+            // integrate
+            Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
+            Eigen::Vector3d a = f;
+            b.vel = b.vel + a*dt;
+            b.pos = b.pos + b.vel*dt;
         }
-        path_pose.push_back(_path_pose.back());
 
-        // set ref_v
-        std::vector<double> ref_v = calc_ref_v(path_pose, cur_v);
+        // band refine
 
-        // smoothing ref_v
-        ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
-
-        // set result
-        PATH res;
-        res.pose = path_pose;
-        res.pos = path_pos;
-        res.ref_v = ref_v;
-        res.goal_tf = path_pose.back();
-        return res;
     }
+
+    // eb to path
+    std::vector<Eigen::Vector3d> _path_pos2;
+    for(size_t p = 0; p < eb.size(); p++)
+    {
+        _path_pos2.push_back(eb[p].pos);
+    }
+
+    // path resampling
+    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos2, GLOBAL_PATH_STEP*1.5, LOCAL_PATH_STEP);
+    std::vector<Eigen::Matrix4d> path_pose;
+    for(size_t p = 0; p < path_pos.size()-1; p++)
+    {
+        Eigen::Matrix4d tf = calc_tf(path_pos[p], path_pos[p+1]);
+        path_pose.push_back(tf);
+    }
+    path_pose.push_back(_path_pose.back());
+
+    // set ref_v
+    std::vector<double> ref_v = calc_ref_v(path_pose, params.LIMIT_V);
+
+    // smoothing ref_v
+    ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+    // set result
+    PATH res;
+    res.pose = path_pose;
+    res.pos = path_pos;
+    res.ref_v = ref_v;
+    res.goal_tf = path_pose.back();
+    return res;
 }
 
 PATH AUTOCONTROL::calc_avoid_path()
@@ -1297,7 +1331,7 @@ void AUTOCONTROL::b_loop_pp()
         double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
 
         // calc local path
-        if(get_time() - last_local_path_t > 0.2 && goal_d >= config->DRIVE_GOAL_D)
+        if(get_time() - last_local_path_t > 0.3 && goal_d >= config->DRIVE_GOAL_D)
         {
             local_path = calc_local_path();
             last_local_path_t = get_time();
@@ -1328,7 +1362,11 @@ void AUTOCONTROL::b_loop_pp()
         // update
         mtx.lock();
         cur_local_path = local_path;
+        last_local_goal = local_path.goal_tf.block(0,3,3,1);
         mtx.unlock();
+
+        // for debug
+        //fsm_state = AUTO_FSM_DEBUG;
 
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
@@ -1371,8 +1409,6 @@ void AUTOCONTROL::b_loop_pp()
                 mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
-                pre_loop_time = get_time();
-
                 printf("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%f\n", err_th*R2D);
                 continue;
             }
@@ -1428,8 +1464,6 @@ void AUTOCONTROL::b_loop_pp()
 
                 obs_state = 0;
                 fsm_state = AUTO_FSM_OBS;
-                pre_loop_time = get_time();
-
                 printf("[AUTO] DRIVING -> OBS\n");
                 continue;
             }
@@ -1482,8 +1516,6 @@ void AUTOCONTROL::b_loop_pp()
                     mobile->move(0, 0, 0);
 
                     fsm_state = AUTO_FSM_FINAL_ALIGN;
-                    pre_loop_time = get_time();
-
                     printf("[AUTO] DRIVING -> FINAL_ALIGN, goal_d:%f\n", goal_d);
                     continue;
                 }
@@ -1555,8 +1587,6 @@ void AUTOCONTROL::b_loop_pp()
                 if(avoid_path.pos.size() > 0)
                 {
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
-                    pre_loop_time = get_time();
-
                     printf("[AUTO] OBS -> FIRST_ALIGN\n");
                     continue;
                 }

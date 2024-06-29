@@ -2482,6 +2482,7 @@ void MainWindow::plot_loop()
         {
             if(local_path.pos.size()/10 >= 2)
             {
+                bool color_toggle = true;
                 int last_p = 0;
                 for(size_t p = 1; p < local_path.pos.size(); p++)
                 {
@@ -2496,8 +2497,18 @@ void MainWindow::plot_loop()
                         pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
                         pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
 
-                        viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, name.toStdString());
+                        if(color_toggle)
+                        {
+                            viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
+                            color_toggle = false;
+                        }
+                        else
+                        {
+                            viewer->addLine(pt0, pt1, 0.0, 0.5, 1.0, name.toStdString());
+                            color_toggle = true;
+                        }
+
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
                         viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
 
                         last_plot_local_path.push_back(name);

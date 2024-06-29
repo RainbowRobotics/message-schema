@@ -101,6 +101,7 @@
 
 #define GLOBAL_PATH_STEP 0.1
 #define LOCAL_PATH_STEP 0.01
+#define MAX_BUBBLE_R 1.0
 
 // enumulator
 enum AUTO_FSM_STATE
@@ -110,6 +111,7 @@ enum AUTO_FSM_STATE
     AUTO_FSM_FINAL_ALIGN,
     AUTO_FSM_OBS,
     AUTO_FSM_COMPLETE,
+    AUTO_FSM_DEBUG,
 };
 
 enum LOCAL_PATH_STATE
@@ -749,6 +751,39 @@ struct CODE_INFO
         x = p.x;
         y = p.y;
         z = p.z;
+        return *this;
+    }
+};
+
+struct BUBBLE
+{
+    Eigen::Vector3d ref;
+    Eigen::Vector3d pos;
+    Eigen::Vector3d vel;
+    double r;
+
+    BUBBLE()
+    {
+        ref.setZero();
+        pos.setZero();
+        vel.setZero();
+        r = MAX_BUBBLE_R;
+    }
+
+    BUBBLE(const BUBBLE& p)
+    {
+        ref = p.ref;
+        pos = p.pos;
+        vel = p.vel;
+        r = p.r;
+    }
+
+    BUBBLE& operator=(const BUBBLE& p)
+    {
+        ref = p.ref;
+        pos = p.pos;
+        vel = p.vel;
+        r = p.r;
         return *this;
     }
 };
