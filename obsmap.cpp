@@ -402,6 +402,45 @@ bool OBSMAP::is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf,
     return false;
 }
 
+bool OBSMAP::is_pivot_collision(const Eigen::Matrix4d& robot_tf)
+{
+    // get obs map
+    cv::Mat _obs_map;
+    Eigen::Matrix4d _obs_tf;
+    get_obs_map(_obs_map, _obs_tf);
+
+    // calc tf
+    Eigen::Matrix4d G = _obs_tf.inverse()*robot_tf;
+
+    // draw circle
+    const double robot_radius = config->ROBOT_RADIUS;
+    int r = std::ceil(robot_radius/gs);
+
+    cv::Vec2i uv = xy_uv(G(0,3), G(1,3));
+    if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+    {
+        return true;
+    }
+
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
+    cv::circle(mask, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
+
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                // collision
+                return true;
+            }
+        }
+    }
+
+    // non collision
+    return false;
+}
+
 bool OBSMAP::is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area)
 {
     // collision check for ompl

@@ -2334,6 +2334,22 @@ void MainWindow::plot_loop()
     }
     else
     {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+
         // get tf
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
@@ -2606,29 +2622,41 @@ void MainWindow::plot_loop()
             viewer->removeShape("local_goal");
         }
 
-        if(viewer->contains("replan_st"))
+        if(viewer->contains("vel_text"))
         {
-            viewer->removeShape("replan_st");
+            viewer->removeShape("vel_text");
         }
 
         // draw monitoring points
         {
             ctrl.mtx.lock();
             Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
-            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
-            Eigen::Vector3d replan_st = ctrl.last_replan_st;
+            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;            
             Eigen::Vector3d local_goal = ctrl.last_local_goal;
             ctrl.mtx.unlock();
 
             viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
-            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
-            viewer->addSphere(pcl::PointXYZ(replan_st[0], replan_st[1], replan_st[2]), 0.1, 0.0, 0.0, 1.0, "replan_st");
+            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");            
             viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
 
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "replan_st");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");            
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
+        }
+
+        // draw vw
+        {
+            // plot text
+            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+            pcl::PointXYZ position;
+            position.x = cur_tf(0,3);
+            position.y = cur_tf(1,3);
+            position.z = cur_tf(2,3) + 1.5;
+
+            QString text;
+            text.sprintf("%.2f/%.2f/%.2f", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D);
+            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 1.0, 1.0, "vel_text");
         }
     }
 

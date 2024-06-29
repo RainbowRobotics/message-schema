@@ -232,10 +232,11 @@ void CONFIG::load()
             params.push_back(std::make_pair<QString, QString>("LOC_FUSION_RATIO", obj["LOC_FUSION_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+
+
             ANNOT_QA_STEP = obj["ANNOT_QA_STEP"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ANNOT_QA_STEP", obj["ANNOT_QA_STEP"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
 
             SIM_MODE = obj["SIM_MODE"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SIM_MODE", obj["SIM_MODE"].toString()));
@@ -257,6 +258,14 @@ void CONFIG::load()
 
 
 
+            OBS_LOCAL_GOAL_D = obj["OBS_LOCAL_GOAL_D"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_LOCAL_GOAL_D", obj["OBS_LOCAL_GOAL_D"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            OBS_MAP_GRID_SIZE = obj["OBS_MAP_GRID_SIZE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("OBS_MAP_GRID_SIZE", obj["OBS_MAP_GRID_SIZE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
             OBS_MAP_RANGE = obj["OBS_MAP_RANGE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_RANGE", obj["OBS_MAP_RANGE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
@@ -267,30 +276,6 @@ void CONFIG::load()
 
             OBS_MAP_MAX_Z = obj["OBS_MAP_MAX_Z"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_MAX_Z", obj["OBS_MAP_MAX_Z"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_MAP_GRID_SIZE = obj["OBS_MAP_GRID_SIZE"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_MAP_GRID_SIZE", obj["OBS_MAP_GRID_SIZE"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_MAP_MARGIN = obj["OBS_MAP_MARGIN"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_MAP_MARGIN", obj["OBS_MAP_MARGIN"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_SIZE_THRESHOLD = obj["OBS_SIZE_THRESHOLD"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_SIZE_THRESHOLD", obj["OBS_SIZE_THRESHOLD"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_AVOID_DIST = obj["OBS_AVOID_DIST"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_AVOID_DIST", obj["OBS_AVOID_DIST"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_TARGET_DIST0 = obj["OBS_TARGET_DIST0"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_TARGET_DIST0", obj["OBS_TARGET_DIST0"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            OBS_TARGET_DIST1 = obj["OBS_TARGET_DIST1"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("OBS_TARGET_DIST1", obj["OBS_TARGET_DIST1"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
