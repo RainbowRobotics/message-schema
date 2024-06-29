@@ -1028,12 +1028,23 @@ PATH AUTOCONTROL::calc_local_path()
             Eigen::Vector3d f_r = (b.ref - b.pos);
             Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
             Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, MAX_BUBBLE_R);
-
-            // integrate
             Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
-            Eigen::Vector3d a = f;
-            b.vel = b.vel + a*dt;
-            b.pos = b.pos + b.vel*dt;
+
+            // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
+            Eigen::Vector3d k1_v = f * dt;
+            Eigen::Vector3d k1_p = b.vel * dt;
+
+            Eigen::Vector3d k2_v = f * dt;
+            Eigen::Vector3d k2_p = (b.vel + k1_v * 0.5) * dt;
+
+            Eigen::Vector3d k3_v = f * dt;
+            Eigen::Vector3d k3_p = (b.vel + k2_v * 0.5) * dt;
+
+            Eigen::Vector3d k4_v = f * dt;
+            Eigen::Vector3d k4_p = (b.vel + k3_v) * dt;
+
+            b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
+            b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
         }
 
         // band refine
