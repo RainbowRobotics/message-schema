@@ -185,9 +185,6 @@ void UNIMAP::save_map()
 
         cloud_csv_file.close();
         printf("[UNIMAP] %s saved\n", cloud_csv_path.toLocal8Bit().data());
-
-        // reload
-        load_map(path);
     }
 }
 

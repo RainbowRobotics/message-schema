@@ -958,6 +958,33 @@ bool AUTOCONTROL::is_state_valid(const ompl::base::State *state) const
     return true;
 }
 
+int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos)
+{
+    int min_idx = 0;
+    double min_d = 99999999;
+    for(size_t p = 0; p < path.size()-1; p++)
+    {
+        double d = calc_seg_dist(path[p], path[p+1], cur_pos);
+        if(d < min_d)
+        {
+            min_d = d;
+
+            double d0 = (path[p]-cur_pos).norm();
+            double d1 = (path[p+1]-cur_pos).norm();
+            if(d0 < d1)
+            {
+                min_idx = p;
+            }
+            else
+            {
+                min_idx = p+1;
+            }
+        }
+    }
+
+    return min_idx;
+}
+
 int AUTOCONTROL::get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx)
 {
     for(int p = st_idx; p < (int)path.size(); p++)
@@ -999,6 +1026,13 @@ PATH AUTOCONTROL::calc_local_path()
         {
             break;
         }
+    }
+
+    // fail case
+    if(_path_pos.size() < 3)
+    {
+        printf("[AUTO] eband failed\n");
+        return PATH();
     }
 
     // eb init
@@ -1091,7 +1125,6 @@ PATH AUTOCONTROL::calc_avoid_path()
     // get obs map
     obsmap->get_obs_map(obs_map, obs_tf);
     cv::dilate(obs_map, obs_map, cv::Mat());
-    //avoid_area = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(255));
 
     // set avoid area
     const int radius = std::ceil(config->ROBOT_RADIUS/obsmap->gs);
@@ -1264,33 +1297,6 @@ bool AUTOCONTROL::is_everything_fine()
     return true;
 }
 
-int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos)
-{
-    int min_idx = 0;
-    double min_d = 99999999;
-    for(size_t p = 0; p < path.size()-1; p++)
-    {
-        double d = calc_seg_dist(path[p], path[p+1], cur_pos);
-        if(d < min_d)
-        {
-            min_d = d;
-
-            double d0 = (path[p]-cur_pos).norm();
-            double d1 = (path[p+1]-cur_pos).norm();
-            if(d0 < d1)
-            {
-                min_idx = p;
-            }
-            else
-            {
-                min_idx = p+1;
-            }
-        }
-    }
-
-    return min_idx;
-}
-
 // loops
 void AUTOCONTROL::b_loop_pp()
 {
@@ -1303,11 +1309,28 @@ void AUTOCONTROL::b_loop_pp()
 
     // get global path
     PATH global_path = get_cur_global_path();    
+    if(global_path.pos.size() == 0)
+    {
+        mobile->move(0, 0, 0);
+        is_moving = false;
+
+        printf("[AUTO] global path init failed\n");
+        return;
+    }
 
     // calc initial local path
     PATH local_path = calc_local_path();
     double last_local_path_t = get_time();
+    if(local_path.pos.size() == 0)
+    {
+        mobile->move(0, 0, 0);
+        is_moving = false;
 
+        printf("[AUTO] local path init failed\n");
+        return;
+    }
+
+    // update local path
     mtx.lock();
     cur_local_path = local_path;
     mtx.unlock();
@@ -1342,10 +1365,14 @@ void AUTOCONTROL::b_loop_pp()
         double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
 
         // calc local path
-        if(get_time() - last_local_path_t > 0.3 && goal_d >= config->DRIVE_GOAL_D)
+        if(get_time() - last_local_path_t > 0.5 && goal_d >= config->DRIVE_GOAL_D)
         {
-            local_path = calc_local_path();
-            last_local_path_t = get_time();
+            PATH _local_path = calc_local_path();
+            if(_local_path.pos.size() > 0)
+            {
+                local_path = _local_path;
+                last_local_path_t = get_time();
+            }
         }
 
         // check avoid path
@@ -1370,7 +1397,7 @@ void AUTOCONTROL::b_loop_pp()
             }
         }
 
-        // update
+        // update local path
         mtx.lock();
         cur_local_path = local_path;
         last_local_goal = local_path.goal_tf.block(0,3,3,1);
@@ -1518,8 +1545,6 @@ void AUTOCONTROL::b_loop_pp()
             // goal check
             if(goal_d < config->DRIVE_GOAL_D)
             {
-                //printf("v:%f, w:%f\n", v, w*R2D);
-
                 extend_dt += dt;                
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {

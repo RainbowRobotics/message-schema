@@ -79,12 +79,10 @@ public:
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
     bool is_state_valid(const ompl::base::State *state) const;
+    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
     int get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx);
     PATH calc_local_path();
     PATH calc_avoid_path();
-
-    // eband local planner
-
 
     // local path loop
     std::atomic<bool> a_flag = {false};
@@ -92,8 +90,7 @@ public:
     void a_loop();
 
     // for control
-    bool is_everything_fine();    
-    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+    bool is_everything_fine();
 
     // control loop
     std::atomic<bool> b_flag = {false};
