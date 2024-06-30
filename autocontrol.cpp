@@ -998,6 +998,16 @@ int AUTOCONTROL::get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::
     return st_idx;
 }
 
+Eigen::Vector3d AUTOCONTROL::refine_force(Eigen::Vector3d f, Eigen::Vector3d P0, Eigen::Vector3d P1)
+{
+    Eigen::Vector3d dir = P1-P0;
+    double d2 = dir.squaredNorm();
+    double alpha = f.dot(dir)/d2;
+    Eigen::Vector3d _f = alpha*dir;
+    Eigen::Vector3d res_f = f - _f;
+    return res_f;
+}
+
 PATH AUTOCONTROL::calc_local_path()
 {
     // get params
@@ -1014,7 +1024,13 @@ PATH AUTOCONTROL::calc_local_path()
     std::vector<Eigen::Matrix4d> _path_pose;
     _path_pose.push_back(cur_tf);
 
-    for(int p = cur_idx+1; p < (int)global_path.pos.size(); p++)
+    int st_idx = cur_idx + (0.3/GLOBAL_PATH_STEP); // hyper parameter 0.3
+    if(st_idx > (int)global_path.pos.size()-1)
+    {
+        st_idx = global_path.pos.size()-1;
+    }
+
+    for(int p = cur_idx+3; p < (int)global_path.pos.size(); p++)
     {
         double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
         if(d <= config->OBS_LOCAL_GOAL_D)
@@ -1046,9 +1062,9 @@ PATH AUTOCONTROL::calc_local_path()
     }
 
     // eb iteration
-    const double k_r = 1.0;
-    const double k_i = 1.0;
-    const double k_e = 2.0;
+    const double k_r = 0.5;
+    const double k_i = 2.0;
+    const double k_e = 3.0;
     const double dt = 0.1;
     const int max_iter = 5;
     for(int iter = 0; iter < max_iter; iter++)
@@ -1063,6 +1079,7 @@ PATH AUTOCONTROL::calc_local_path()
             Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
             Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, MAX_BUBBLE_R);
             Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
+            f = refine_force(f, eb[p-1].pos, eb[p+1].pos);
 
             // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
             Eigen::Vector3d k1_v = f * dt;
