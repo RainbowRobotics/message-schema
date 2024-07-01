@@ -1740,7 +1740,7 @@ void MainWindow::watch_loop()
         }
 
         // for 500ms loop
-        if(cnt % 5 == 0)
+        if(cnt % 10 == 0)
         {
             if(ws.is_connected)
             {
@@ -2313,7 +2313,8 @@ void MainWindow::plot_loop()
                 last_plot_tactile.clear();
             }
 
-            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tpp.tf);
+            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tf);
             for(size_t p = 0; p < traj.size(); p++)
             {
                 QString name;

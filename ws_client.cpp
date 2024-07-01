@@ -214,24 +214,78 @@ void WS_CLIENT::send_status()
 void WS_CLIENT::send_lidar()
 {
     double time = get_time();
-    std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
 
-    sio::array_message::ptr jsonArray = sio::array_message::create();
-    for(size_t p = 0; p < pts.size(); p++)
+    TIME_POSE_PTS tpp = slam->get_cur_tpp();
+    if(slam->is_loc && tpp.pts.size() > 0)
     {
-        sio::array_message::ptr jsonObj = sio::array_message::create();
+        QJsonObject rootObj;
 
-        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
-        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
-        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
-        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+        // Adding the pose object
+        Eigen::Matrix4d cur_tf = tpp.tf;
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
 
-        jsonArray->get_vector().push_back(jsonObj);
+        sio::object_message::ptr rootObject = sio::object_message::create();
+        sio::object_message::ptr poseObject = sio::object_message::create();
+        poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
+        poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
+        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
+        rootObject->get_map()["pose"] = poseObject;
+
+        sio::array_message::ptr jsonArray = sio::array_message::create();
+        for(size_t p = 0; p < tpp.pts.size(); p++)
+        {
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(tpp.pts[p][0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(tpp.pts[p][1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(tpp.pts[p][2], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+
+        rootObject->get_map()["data"] = jsonArray;
+
+        // send
+        io->socket()->emit("lidar_cloud", rootObject);
+    }
+    else
+    {
+        std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
+
+        QJsonObject rootObj;
+
+        // Adding the pose object
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+
+        sio::object_message::ptr rootObject = sio::object_message::create();
+        sio::object_message::ptr poseObject = sio::object_message::create();
+        poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
+        poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
+        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
+        rootObject->get_map()["pose"] = poseObject;
+
+        sio::array_message::ptr jsonArray = sio::array_message::create();
+        for(size_t p = 0; p < pts.size(); p++)
+        {
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+
+        rootObject->get_map()["data"] = jsonArray;
+
+        // send
+        io->socket()->emit("lidar_cloud", rootObject);
     }
 
-    // send
-    io->socket()->emit("lidar_cloud", jsonArray);
-    printf("[WS_SEND] lidar_cloud, time: %f\n", time);
+    printf("[WS_SEND] lidar_cloud,  time: %f\n", time);
 }
 
 void WS_CLIENT::send_mapping_cloud()

@@ -717,46 +717,55 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
-                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, tpp.tf, _cur_tf); // 1.0 mean odometry 100%
-                _cur_tf = fused_tf;
+                double st_time = get_time();
 
-                /*
-                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
-                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+                Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
 
-                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
-                _cur_tf = fused_tf;                
-                */
-            }
+                // check first
+                if(is_first)
+                {
+                    is_first = false;
+                    pre_mo_tf = cur_mo_tf;
 
-            /*
-            TIME_POSE_PTS tpp;
-            if(tpp_que.try_pop(tpp))
-            {
-                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
-                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    continue;
+                }
 
-                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, icp_tf, _cur_tf); // 1.0 mean odometry 100%
-                _cur_tf = fused_tf;
-            }
-            else
-            {
-                // just add
+                mtx.lock();
+                Eigen::Matrix4d _cur_tf = cur_tf;
+                mtx.unlock();
+
                 Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
                 _cur_tf = _cur_tf*delta_tf;
+
+                TIME_POSE_PTS tpp;
+                if(tpp_que.try_pop(tpp))
+                {
+                    Eigen::Matrix4d dtf = tpp.tf.inverse()*_cur_tf;
+                    Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
+                    _cur_tf = tpp.tf*fused_tf;
+
+                    /*
+                    Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
+                    Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+
+                    Eigen::Matrix4d dtf = icp_tf.inverse()*_cur_tf;
+                    Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
+                    _cur_tf = icp_tf*fused_tf;
+                    */
+                }
+
+                // update
+                mtx.lock();
+                cur_tf = _cur_tf;
+                mtx.unlock();
+
+                // update pre mobile tf
+                pre_mo_tf = cur_mo_tf;
+
+                // update processing time
+                proc_time_loc_b = get_time() - st_time;
             }
-            */
-
-            // update
-            mtx.lock();
-            cur_tf = _cur_tf;            
-            mtx.unlock();
-
-            // update pre mobile tf
-            pre_mo_tf = cur_mo_tf;
-
-            // update processing time
-            proc_time_loc_b = get_time() - st_time;
         }
 
         // for real time loop
@@ -841,7 +850,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
-            // find nn            
+            // find nn
             std::vector<unsigned int> ret_near_idxs(1);
             std::vector<double> ret_near_sq_dists(1);
 
@@ -882,8 +891,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double dist = frm.pts[i].norm();
-            double weight = 1.0 + 0.1*dist;
+            //double dist = frm.pts[i].norm();
+            //double weight = 1.0 + 0.1*dist;
+            double weight = 1.0;
 
             // storing cost jacobian
             COST_JACOBIAN cj;

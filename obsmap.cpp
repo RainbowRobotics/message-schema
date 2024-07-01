@@ -614,7 +614,6 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
             Eigen::Vector3d dir(dx/d, dy/d, 0);
 
             // repulsion force
-            //double mag = 1.0/d;
             double mag = (max_r-d)/d;
             Eigen::Vector3d f = mag*dir;
             sum_f += f;
@@ -642,12 +641,14 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     {
         Eigen::Vector3d P = tpp.pts[p];
 
+        /*
         // range filtering
         double d = calc_dist_2d(P);
         if(d > config->OBS_MAP_RANGE)
         {
             continue;
         }
+        */
 
         Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
         cloud.push_back(_P[0], _P[1], 0);
@@ -655,7 +656,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     // update
     mtx.lock();
-    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)));
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)), config->OBS_MAP_RANGE);
 
     // obsmap boundary
     octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, -0.1);
