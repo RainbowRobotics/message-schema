@@ -50,249 +50,248 @@ void CONFIG::load()
             QJsonObject obj = doc.object();
 
             // param load
-            ROBOT_SIZE_X[0] = obj["ROBOT_SIZE_MIN_X"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_X", obj["ROBOT_SIZE_MIN_X"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_SIZE_X[1] = obj["ROBOT_SIZE_MAX_X"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_X", obj["ROBOT_SIZE_MAX_X"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_SIZE_Y[0] = obj["ROBOT_SIZE_MIN_Y"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Y", obj["ROBOT_SIZE_MIN_Y"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_SIZE_Y[1] = obj["ROBOT_SIZE_MAX_Y"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Y", obj["ROBOT_SIZE_MAX_Y"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_SIZE_Z[0] = obj["ROBOT_SIZE_MIN_Z"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Z", obj["ROBOT_SIZE_MIN_Z"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_SIZE_Z[1] = obj["ROBOT_SIZE_MAX_Z"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Z", obj["ROBOT_SIZE_MAX_Z"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_WHEEL_BASE = obj["ROBOT_WHEEL_BASE"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_BASE", obj["ROBOT_WHEEL_BASE"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            ROBOT_RADIUS = obj["ROBOT_RADIUS"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_RADIUS", obj["ROBOT_RADIUS"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-
-
-            MOTOR_ID_L = obj["MOTOR_ID_L"].toString().toInt();
+            QJsonObject obj_motor = obj["motor"].toObject();
+            MOTOR_ID_L = obj_motor["MOTOR_ID_L"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("MOTOR_ID_L", obj["MOTOR_ID_L"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_ID_R = obj["MOTOR_ID_R"].toString().toInt();
+            MOTOR_ID_R = obj_motor["MOTOR_ID_R"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("MOTOR_ID_R", obj["MOTOR_ID_R"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            MOTOR_DIR = obj["MOTOR_DIR"].toString().toDouble();
+            MOTOR_DIR = obj_motor["MOTOR_DIR"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_DIR", obj["MOTOR_DIR"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_GEAR_RATIO = obj["MOTOR_GEAR_RATIO"].toString().toDouble();
+            MOTOR_GEAR_RATIO = obj_motor["MOTOR_GEAR_RATIO"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_GEAR_RATIO", obj["MOTOR_GEAR_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            ROBOT_WHEEL_RADIUS = obj["ROBOT_WHEEL_RADIUS"].toString().toDouble();
-            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
-            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
-
-            MOTOR_LIMIT_V = obj["MOTOR_LIMIT_V"].toString().toDouble();
+            MOTOR_LIMIT_V = obj_motor["MOTOR_LIMIT_V"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_V", obj["MOTOR_LIMIT_V"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_LIMIT_V_ACC = obj["MOTOR_LIMIT_V_ACC"].toString().toDouble();
+            MOTOR_LIMIT_V_ACC = obj_motor["MOTOR_LIMIT_V_ACC"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_V_ACC", obj["MOTOR_LIMIT_V_ACC"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_LIMIT_W = obj["MOTOR_LIMIT_W"].toString().toDouble();
+            MOTOR_LIMIT_W = obj_motor["MOTOR_LIMIT_W"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_W", obj["MOTOR_LIMIT_W"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_LIMIT_W_ACC = obj["MOTOR_LIMIT_W_ACC"].toString().toDouble();
+            MOTOR_LIMIT_W_ACC = obj_motor["MOTOR_LIMIT_W_ACC"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_LIMIT_W_ACC", obj["MOTOR_LIMIT_W_ACC"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_GAIN_KP = obj["MOTOR_GAIN_KP"].toString().toDouble();
+            MOTOR_GAIN_KP = obj_motor["MOTOR_GAIN_KP"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KP", obj["MOTOR_GAIN_KP"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_GAIN_KI = obj["MOTOR_GAIN_KI"].toString().toDouble();
+            MOTOR_GAIN_KI = obj_motor["MOTOR_GAIN_KI"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KI", obj["MOTOR_GAIN_KI"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            MOTOR_GAIN_KD = obj["MOTOR_GAIN_KD"].toString().toDouble();
+            MOTOR_GAIN_KD = obj_motor["MOTOR_GAIN_KD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("MOTOR_GAIN_KD", obj["MOTOR_GAIN_KD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            LIDAR_MAX_RANGE = obj["LIDAR_MAX_RANGE"].toString().toDouble();
+            QJsonObject obj_default = obj["default"].toObject();
+            ROBOT_SIZE_X[0] = obj_default["ROBOT_SIZE_MIN_X"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_X", obj["ROBOT_SIZE_MIN_X"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_SIZE_X[1] = obj_default["ROBOT_SIZE_MAX_X"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_X", obj["ROBOT_SIZE_MAX_X"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_SIZE_Y[0] = obj_default["ROBOT_SIZE_MIN_Y"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Y", obj["ROBOT_SIZE_MIN_Y"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_SIZE_Y[1] = obj_default["ROBOT_SIZE_MAX_Y"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Y", obj["ROBOT_SIZE_MAX_Y"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_SIZE_Z[0] = obj_default["ROBOT_SIZE_MIN_Z"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MIN_Z", obj["ROBOT_SIZE_MIN_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_SIZE_Z[1] = obj_default["ROBOT_SIZE_MAX_Z"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_SIZE_MAX_Z", obj["ROBOT_SIZE_MAX_Z"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_RADIUS = obj_default["ROBOT_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_RADIUS", obj["ROBOT_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            LIDAR_MAX_RANGE = obj_default["LIDAR_MAX_RANGE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LIDAR_MAX_RANGE", obj["LIDAR_MAX_RANGE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LIDAR_TF_F = obj["LIDAR_TF_F"].toString();
+            LIDAR_TF_F = obj_default["LIDAR_TF_F"].toString();
             params.push_back(std::make_pair<QString, QString>("LIDAR_TF_F", obj["LIDAR_TF_F"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LIDAR_TF_B = obj["LIDAR_TF_B"].toString();
+            LIDAR_TF_B = obj_default["LIDAR_TF_B"].toString();
             params.push_back(std::make_pair<QString, QString>("LIDAR_TF_B", obj["LIDAR_TF_B"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
+            ROBOT_WHEEL_RADIUS = obj_default["ROBOT_WHEEL_RADIUS"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_RADIUS", obj["ROBOT_WHEEL_RADIUS"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
+
+            ROBOT_WHEEL_BASE = obj_default["ROBOT_WHEEL_BASE"].toString().toDouble();
+            params.push_back(std::make_pair<QString, QString>("ROBOT_WHEEL_BASE", obj["ROBOT_WHEEL_BASE"].toString()));
+            printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
-            SLAM_WINDOW_SIZE = obj["SLAM_WINDOW_SIZE"].toString().toInt();
+
+            QJsonObject obj_mapping = obj["mapping"].toObject();
+            SLAM_WINDOW_SIZE = obj_mapping["SLAM_WINDOW_SIZE"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SLAM_WINDOW_SIZE", obj["SLAM_WINDOW_SIZE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_VOXEL_SIZE = obj["SLAM_VOXEL_SIZE"].toString().toDouble();
+            SLAM_VOXEL_SIZE = obj_mapping["SLAM_VOXEL_SIZE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_VOXEL_SIZE", obj["SLAM_VOXEL_SIZE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_COST_THRESHOLD = obj["SLAM_ICP_COST_THRESHOLD"].toString().toDouble();
+            SLAM_ICP_COST_THRESHOLD = obj_mapping["SLAM_ICP_COST_THRESHOLD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_COST_THRESHOLD", obj["SLAM_ICP_COST_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_ERROR_THRESHOLD = obj["SLAM_ICP_ERROR_THRESHOLD"].toString().toDouble();
+            SLAM_ICP_ERROR_THRESHOLD = obj_mapping["SLAM_ICP_ERROR_THRESHOLD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_ERROR_THRESHOLD", obj["SLAM_ICP_ERROR_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_MAX_FEATURE_NUM = obj["SLAM_ICP_MAX_FEATURE_NUM"].toString().toInt();
+            SLAM_ICP_MAX_FEATURE_NUM = obj_mapping["SLAM_ICP_MAX_FEATURE_NUM"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_MAX_FEATURE_NUM", obj["SLAM_ICP_MAX_FEATURE_NUM"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_DO_ERASE_GAP = obj["SLAM_ICP_DO_ERASE_GAP"].toString().toInt();
+            SLAM_ICP_DO_ERASE_GAP = obj_mapping["SLAM_ICP_DO_ERASE_GAP"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_DO_ERASE_GAP", obj["SLAM_ICP_DO_ERASE_GAP"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_DO_ACCUM_NUM = obj["SLAM_ICP_DO_ACCUM_NUM"].toString().toInt();
+            SLAM_ICP_DO_ACCUM_NUM = obj_mapping["SLAM_ICP_DO_ACCUM_NUM"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_DO_ACCUM_NUM", obj["SLAM_ICP_DO_ACCUM_NUM"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_ICP_VIEW_THRESHOLD = obj["SLAM_ICP_VIEW_THRESHOLD"].toString().toDouble();
+            SLAM_ICP_VIEW_THRESHOLD = obj_mapping["SLAM_ICP_VIEW_THRESHOLD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_ICP_VIEW_THRESHOLD", obj["SLAM_ICP_VIEW_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-
-
-            SLAM_KFRM_UPDATE_NUM = obj["SLAM_KFRM_UPDATE_NUM"].toString().toInt();
+            SLAM_KFRM_UPDATE_NUM = obj_mapping["SLAM_KFRM_UPDATE_NUM"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SLAM_KFRM_UPDATE_NUM", obj["SLAM_KFRM_UPDATE_NUM"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_KFRM_LC_TRY_DIST = obj["SLAM_KFRM_LC_TRY_DIST"].toString().toDouble();
+            SLAM_KFRM_LC_TRY_DIST = obj_mapping["SLAM_KFRM_LC_TRY_DIST"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_KFRM_LC_TRY_DIST", obj["SLAM_KFRM_LC_TRY_DIST"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SLAM_KFRM_LC_TRY_OVERLAP = obj["SLAM_KFRM_LC_TRY_OVERLAP"].toString().toDouble();
+            SLAM_KFRM_LC_TRY_OVERLAP = obj_mapping["SLAM_KFRM_LC_TRY_OVERLAP"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("SLAM_KFRM_LC_TRY_OVERLAP", obj["SLAM_KFRM_LC_TRY_OVERLAP"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            LOC_ICP_COST_THRESHOLD = obj["LOC_ICP_COST_THRESHOLD"].toString().toDouble();
+            QJsonObject obj_loc = obj["loc"].toObject();
+            LOC_ICP_COST_THRESHOLD = obj_loc["LOC_ICP_COST_THRESHOLD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_ICP_COST_THRESHOLD", obj["LOC_ICP_COST_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_ICP_ERROR_THRESHOLD = obj["LOC_ICP_ERROR_THRESHOLD"].toString().toDouble();
+            LOC_ICP_ERROR_THRESHOLD = obj_loc["LOC_ICP_ERROR_THRESHOLD"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_ICP_ERROR_THRESHOLD", obj["LOC_ICP_ERROR_THRESHOLD"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_ICP_MAX_FEATURE_NUM = obj["LOC_ICP_MAX_FEATURE_NUM"].toString().toInt();
+            LOC_ICP_MAX_FEATURE_NUM = obj_loc["LOC_ICP_MAX_FEATURE_NUM"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("LOC_ICP_MAX_FEATURE_NUM", obj["LOC_ICP_MAX_FEATURE_NUM"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_CHECK_DIST = obj["LOC_CHECK_DIST"].toString().toDouble();
+            LOC_CHECK_DIST = obj_loc["LOC_CHECK_DIST"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_CHECK_DIST", obj["LOC_CHECK_DIST"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_CHECK_IE = obj["LOC_CHECK_IE"].toString().toDouble();
+            LOC_CHECK_IE = obj_loc["LOC_CHECK_IE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_CHECK_IE", obj["LOC_CHECK_IE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_CHECK_IR = obj["LOC_CHECK_IR"].toString().toDouble();
+            LOC_CHECK_IR = obj_loc["LOC_CHECK_IR"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_CHECK_IR", obj["LOC_CHECK_IR"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            LOC_FUSION_RATIO = obj["LOC_FUSION_RATIO"].toString().toDouble();
+            LOC_FUSION_RATIO = obj_loc["LOC_FUSION_RATIO"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("LOC_FUSION_RATIO", obj["LOC_FUSION_RATIO"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            ANNOT_QA_STEP = obj["ANNOT_QA_STEP"].toString().toDouble();
+            QJsonObject obj_annot = obj["annotation"].toObject();
+            ANNOT_QA_STEP = obj_annot["ANNOT_QA_STEP"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("ANNOT_QA_STEP", obj["ANNOT_QA_STEP"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            SIM_MODE = obj["SIM_MODE"].toString().toInt();
+
+
+            QJsonObject obj_debug = obj["debug"].toObject();
+            SIM_MODE = obj_debug["SIM_MODE"].toString().toInt();
             params.push_back(std::make_pair<QString, QString>("SIM_MODE", obj["SIM_MODE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            DRIVE_GOAL_D = obj["DRIVE_GOAL_D"].toString().toDouble();
+            QJsonObject obj_control = obj["control"].toObject();
+            DRIVE_GOAL_D = obj_control["DRIVE_GOAL_D"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("DRIVE_GOAL_D", obj["DRIVE_GOAL_D"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            DRIVE_GOAL_TH = obj["DRIVE_GOAL_TH"].toString().toDouble();
+            DRIVE_GOAL_TH = obj_control["DRIVE_GOAL_TH"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("DRIVE_GOAL_TH", obj["DRIVE_GOAL_TH"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            DRIVE_EXTENDED_CONTROL_TIME = obj["DRIVE_EXTENDED_CONTROL_TIME"].toString().toDouble();
+            DRIVE_EXTENDED_CONTROL_TIME = obj_control["DRIVE_EXTENDED_CONTROL_TIME"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("DRIVE_EXTENDED_CONTROL_TIME", obj["DRIVE_EXTENDED_CONTROL_TIME"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            OBS_LOCAL_GOAL_D = obj["OBS_LOCAL_GOAL_D"].toString().toDouble();
+            QJsonObject obj_obs = obj["obs"].toObject();
+            OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_LOCAL_GOAL_D", obj["OBS_LOCAL_GOAL_D"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            OBS_MAP_GRID_SIZE = obj["OBS_MAP_GRID_SIZE"].toString().toDouble();
+            OBS_MAP_GRID_SIZE = obj_obs["OBS_MAP_GRID_SIZE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_GRID_SIZE", obj["OBS_MAP_GRID_SIZE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            OBS_MAP_RANGE = obj["OBS_MAP_RANGE"].toString().toDouble();
+            OBS_MAP_RANGE = obj_obs["OBS_MAP_RANGE"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_RANGE", obj["OBS_MAP_RANGE"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            OBS_MAP_MIN_Z = obj["OBS_MAP_MIN_Z"].toString().toDouble();
+            OBS_MAP_MIN_Z = obj_obs["OBS_MAP_MIN_Z"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_MIN_Z", obj["OBS_MAP_MIN_Z"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            OBS_MAP_MAX_Z = obj["OBS_MAP_MAX_Z"].toString().toDouble();
+            OBS_MAP_MAX_Z = obj_obs["OBS_MAP_MAX_Z"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("OBS_MAP_MAX_Z", obj["OBS_MAP_MAX_Z"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
 
 
-            CAM_SERIAL_NUMBER = obj["CAM_SERIAL_NUMBER"].toString();
+            QJsonObject obj_cam = obj["cam"].toObject();
+            CAM_SERIAL_NUMBER = obj_cam["CAM_SERIAL_NUMBER"].toString();
             params.push_back(std::make_pair<QString, QString>("CAM_SERIAL_NUMBER", obj["CAM_SERIAL_NUMBER"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            CAM_TF = obj["CAM_TF"].toString();
+            CAM_TF = obj_cam["CAM_TF"].toString();
             params.push_back(std::make_pair<QString, QString>("CAM_TF", obj["CAM_TF"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            CAM_HEIGHT_MIN = obj["CAM_HEIGHT_MIN"].toString().toDouble();
+            CAM_HEIGHT_MIN = obj_cam["CAM_HEIGHT_MIN"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("CAM_HEIGHT_MIN", obj["CAM_HEIGHT_MIN"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
-            CAM_HEIGHT_MAX = obj["CAM_HEIGHT_MAX"].toString().toDouble();
+            CAM_HEIGHT_MAX = obj_cam["CAM_HEIGHT_MAX"].toString().toDouble();
             params.push_back(std::make_pair<QString, QString>("CAM_HEIGHT_MAX", obj["CAM_HEIGHT_MAX"].toString()));
             printf("[CONFIG] %s, %s\n", params.back().first.toLocal8Bit().data(), params.back().second.toLocal8Bit().data());
 
