@@ -123,7 +123,6 @@ private Q_SLOTS:
 
     // config
     void bt_ConfigLoad();
-    void bt_ConfigSave();
 
     // mobile
     void bt_MotorInit();

@@ -32,7 +32,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
-    connect(ui->bt_ConfigSave, SIGNAL(clicked()), this, SLOT(bt_ConfigSave()));
 
     // motor
     connect(ui->bt_MotorInit, SIGNAL(clicked()), this, SLOT(bt_MotorInit()));
@@ -912,15 +911,6 @@ void MainWindow::bt_SimInit()
 
 void MainWindow::bt_ConfigLoad()
 {
-    config.load();
-    config.config_to_ui();
-}
-
-void MainWindow::bt_ConfigSave()
-{
-    config.save();
-
-    // reload
     config.load();
     config.config_to_ui();
 }

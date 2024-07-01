@@ -1758,19 +1758,6 @@
          <string>Load</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="bt_ConfigSave">
-        <property name="geometry">
-         <rect>
-          <x>680</x>
-          <y>40</y>
-          <width>89</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Save</string>
-        </property>
-       </widget>
       </widget>
       <widget class="QWidget" name="page_fms">
        <attribute name="title">
