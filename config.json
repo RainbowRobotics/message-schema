@@ -4,7 +4,7 @@
 		"PLATFORM_TYPE": "AMR"
 	},
 	"debug": {
-		"SIM_MODE": "0"
+		"SIM_MODE": "1"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",
@@ -30,7 +30,7 @@
 		"ROBOT_SIZE_MIN_X": "-0.4",
 		"ROBOT_SIZE_MIN_Y": "-0.3",
 		"ROBOT_SIZE_MIN_Z": "0",
-		"ROBOT_RADIUS": "0.3",
+		"ROBOT_RADIUS": "0.5",
 		"ROBOT_WHEEL_BASE": "0.511",
 		"ROBOT_WHEEL_RADIUS": "0.075",
 		"LIDAR_MAX_RANGE": "24.0",

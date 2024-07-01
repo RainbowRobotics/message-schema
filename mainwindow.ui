@@ -359,6 +359,19 @@
                <string>OBS clear</string>
               </property>
              </widget>
+             <widget class="QPushButton" name="bt_ConfigLoad">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>100</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Config load</string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="tab_2">
              <attribute name="title">
@@ -1700,64 +1713,6 @@
          </layout>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="page_config">
-       <attribute name="title">
-        <string>CONFIG</string>
-       </attribute>
-       <widget class="QTableWidget" name="tw_Config">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>661</width>
-          <height>671</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="showGrid">
-         <bool>true</bool>
-        </property>
-        <attribute name="horizontalHeaderCascadingSectionResizes">
-         <bool>false</bool>
-        </attribute>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>100</number>
-        </attribute>
-        <attribute name="horizontalHeaderStretchLastSection">
-         <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderStretchLastSection">
-         <bool>false</bool>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Name</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Value</string>
-         </property>
-        </column>
-       </widget>
-       <widget class="QPushButton" name="bt_ConfigLoad">
-        <property name="geometry">
-         <rect>
-          <x>680</x>
-          <y>10</y>
-          <width>89</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Load</string>
-        </property>
-       </widget>
       </widget>
       <widget class="QWidget" name="page_fms">
        <attribute name="title">

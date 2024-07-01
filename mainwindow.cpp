@@ -224,10 +224,8 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // config module init
-    config.config_path = QCoreApplication::applicationDirPath() + "/config.json";
-    config.ui_table = ui->tw_Config;
+    config.config_path = QCoreApplication::applicationDirPath() + "/config.json";    
     config.load();
-    config.config_to_ui();
 
     if(config.SIM_MODE == 1)
     {
@@ -912,7 +910,6 @@ void MainWindow::bt_SimInit()
 void MainWindow::bt_ConfigLoad()
 {
     config.load();
-    config.config_to_ui();
 }
 
 void MainWindow::bt_MotorInit()

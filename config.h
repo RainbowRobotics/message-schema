@@ -79,18 +79,13 @@ public:
     double CAM_HEIGHT_MIN = 0.1;
     double CAM_HEIGHT_MAX = 1.0;
 
-    std::vector<std::pair<QString, QString>> params;
+    std::vector<QString> params;
 
 public:
     // interface
     void load();
-    void save();
-
-    void config_to_ui();
-
     QString config_path = "";
     std::atomic<bool> is_load = {false};
-    QTableWidget *ui_table = NULL;
 
 Q_SIGNALS:
 
