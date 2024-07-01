@@ -717,55 +717,30 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
-                double st_time = get_time();
+                /*
+                Eigen::Matrix4d dtf = tpp.tf.inverse()*_cur_tf;
+                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
+                _cur_tf = tpp.tf*fused_tf;
+                */
 
-                Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
+                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
+                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
 
-                // check first
-                if(is_first)
-                {
-                    is_first = false;
-                    pre_mo_tf = cur_mo_tf;
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    continue;
-                }
-
-                mtx.lock();
-                Eigen::Matrix4d _cur_tf = cur_tf;
-                mtx.unlock();
-
-                Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
-                _cur_tf = _cur_tf*delta_tf;
-
-                TIME_POSE_PTS tpp;
-                if(tpp_que.try_pop(tpp))
-                {
-                    Eigen::Matrix4d dtf = tpp.tf.inverse()*_cur_tf;
-                    Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
-                    _cur_tf = tpp.tf*fused_tf;
-
-                    /*
-                    Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
-                    Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
-
-                    Eigen::Matrix4d dtf = icp_tf.inverse()*_cur_tf;
-                    Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
-                    _cur_tf = icp_tf*fused_tf;
-                    */
-                }
-
-                // update
-                mtx.lock();
-                cur_tf = _cur_tf;
-                mtx.unlock();
-
-                // update pre mobile tf
-                pre_mo_tf = cur_mo_tf;
-
-                // update processing time
-                proc_time_loc_b = get_time() - st_time;
+                Eigen::Matrix4d dtf = icp_tf.inverse()*_cur_tf;
+                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
+                _cur_tf = icp_tf*fused_tf;
             }
+
+            // update
+            mtx.lock();
+            cur_tf = _cur_tf;
+            mtx.unlock();
+
+            // update pre mobile tf
+            pre_mo_tf = cur_mo_tf;
+
+            // update processing time
+            proc_time_loc_b = get_time() - st_time;
         }
 
         // for real time loop
@@ -891,9 +866,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            //double dist = frm.pts[i].norm();
-            //double weight = 1.0 + 0.1*dist;
-            double weight = 1.0;
+            double dist = frm.pts[i].norm();
+            double weight = 1.0 + 0.05*dist;
+            //double weight = 1.0;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
