@@ -101,7 +101,6 @@
 
 #define GLOBAL_PATH_STEP 0.1
 #define LOCAL_PATH_STEP 0.01
-#define MAX_BUBBLE_R 1.0
 
 // enumulator
 enum AUTO_FSM_STATE
@@ -767,7 +766,7 @@ struct BUBBLE
         ref.setZero();
         pos.setZero();
         vel.setZero();
-        r = MAX_BUBBLE_R;
+        r = 1.0;
     }
 
     BUBBLE(const BUBBLE& p)

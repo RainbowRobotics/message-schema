@@ -1024,13 +1024,14 @@ PATH AUTOCONTROL::calc_local_path()
     std::vector<Eigen::Matrix4d> _path_pose;
     _path_pose.push_back(cur_tf);
 
-    int st_idx = cur_idx + (0.3/GLOBAL_PATH_STEP); // hyper parameter 0.3
+    const int step = 2;
+    int st_idx = cur_idx + step;
     if(st_idx > (int)global_path.pos.size()-1)
     {
         st_idx = global_path.pos.size()-1;
     }
 
-    for(int p = cur_idx+3; p < (int)global_path.pos.size(); p++)
+    for(int p = st_idx; p < (int)global_path.pos.size(); p+=step)
     {
         double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
         if(d <= config->OBS_LOCAL_GOAL_D)
@@ -1044,73 +1045,94 @@ PATH AUTOCONTROL::calc_local_path()
         }
     }
 
-    // fail case
-    if(_path_pos.size() < 3)
+    // eband method
+    if(_path_pos.size() >= 3)
     {
-        printf("[AUTO] eband failed\n");
-        return PATH();
-    }
-
-    // eb init
-    std::vector<BUBBLE> eb;
-    for(size_t p = 0; p < _path_pos.size(); p++)
-    {
-        BUBBLE b;
-        b.ref = _path_pos[p];
-        b.pos = _path_pos[p];
-        eb.push_back(b);
-    }
-
-    // eb iteration
-    const double k_r = 0.5;
-    const double k_i = 2.0;
-    const double k_e = 3.0;
-    const double dt = 0.1;
-    const int max_iter = 5;
-    for(int iter = 0; iter < max_iter; iter++)
-    {
-        // band deformation
-        for(size_t p = 1; p < eb.size()-1; p++)
+        // eb init
+        std::vector<BUBBLE> eb;
+        for(size_t p = 0; p < _path_pos.size(); p++)
         {
-            BUBBLE &b = eb[p];
-
-            // calc forces
-            Eigen::Vector3d f_r = (b.ref - b.pos);
-            Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
-            Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, MAX_BUBBLE_R);
-            Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
-            f = refine_force(f, eb[p-1].pos, eb[p+1].pos);
-
-            // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
-            Eigen::Vector3d k1_v = f * dt;
-            Eigen::Vector3d k1_p = b.vel * dt;
-
-            Eigen::Vector3d k2_v = f * dt;
-            Eigen::Vector3d k2_p = (b.vel + k1_v * 0.5) * dt;
-
-            Eigen::Vector3d k3_v = f * dt;
-            Eigen::Vector3d k3_p = (b.vel + k2_v * 0.5) * dt;
-
-            Eigen::Vector3d k4_v = f * dt;
-            Eigen::Vector3d k4_p = (b.vel + k3_v) * dt;
-
-            b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
-            b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
+            BUBBLE b;
+            b.ref = _path_pos[p];
+            b.pos = _path_pos[p];
+            b.vel.setZero();
+            eb.push_back(b);
         }
 
-        // band refine
+        // eb iteration        
+        double k_r = 10.0;
+        double k_i = 20.0;
+        double k_e = 15.0;
+        double dt = 0.05;
+        int max_iter = 10;
+        for(int iter = 0; iter < max_iter; iter++)
+        {
+            // band deformation
+            std::vector<BUBBLE> _eb;
+            _eb.push_back(eb.front());
 
-    }
+            for(size_t p = 1; p < eb.size()-1; p++)
+            {
+                BUBBLE b = eb[p];
 
-    // eb to path
-    std::vector<Eigen::Vector3d> _path_pos2;
-    for(size_t p = 0; p < eb.size(); p++)
-    {
-        _path_pos2.push_back(eb[p].pos);
+                // calc forces
+                Eigen::Vector3d f_r = (b.ref - b.pos);
+                Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
+                Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, b.r);
+                //f_e = refine_force(f_e, eb[p-1].pos, eb[p+1].pos);
+
+                Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
+                //f_e = refine_force(f_e, eb[p-1].pos, eb[p+1].pos);
+
+                // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
+                Eigen::Vector3d k1_v = f * dt;
+                Eigen::Vector3d k1_p = b.vel * dt;
+
+                Eigen::Vector3d k2_v = f * dt;
+                Eigen::Vector3d k2_p = (b.vel + k1_v * 0.5) * dt;
+
+                Eigen::Vector3d k3_v = f * dt;
+                Eigen::Vector3d k3_p = (b.vel + k2_v * 0.5) * dt;
+
+                Eigen::Vector3d k4_v = f * dt;
+                Eigen::Vector3d k4_p = (b.vel + k3_v) * dt;
+
+                // velocity update
+                b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
+
+                // velocity saturation
+                b.vel[0] = saturation(b.vel[0], -1.2, 1.2);
+                b.vel[1] = saturation(b.vel[1], -1.2, 1.2);
+                b.vel[2] = saturation(b.vel[2], -1.2, 1.2);
+
+                // position update
+                b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
+
+                // check too close
+                if((_eb.back().pos - b.pos).norm() >= GLOBAL_PATH_STEP &&
+                   (eb.front().pos - b.pos).norm() >= GLOBAL_PATH_STEP &&
+                   (eb.back().pos - b.pos).norm() >= GLOBAL_PATH_STEP)
+                {
+                    _eb.push_back(b);
+                }
+            }
+
+            // set last bubble and update
+            _eb.push_back(eb.back());
+            eb = _eb;
+        }
+
+        // eb to path
+        std::vector<Eigen::Vector3d> _path_pos2;
+        for(size_t p = 0; p < eb.size(); p++)
+        {
+            _path_pos2.push_back(eb[p].pos);
+        }
+        _path_pos = _path_pos2;
     }
 
     // path resampling
-    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos2, GLOBAL_PATH_STEP*1.5, LOCAL_PATH_STEP);
+    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
     std::vector<Eigen::Matrix4d> path_pose;
     for(size_t p = 0; p < path_pos.size()-1; p++)
     {
@@ -1382,7 +1404,7 @@ void AUTOCONTROL::b_loop_pp()
         double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
 
         // calc local path
-        if(get_time() - last_local_path_t > 0.5 && goal_d >= config->DRIVE_GOAL_D)
+        if(get_time() - last_local_path_t > 1.0)
         {
             PATH _local_path = calc_local_path();
             if(_local_path.pos.size() > 0)
@@ -1499,7 +1521,7 @@ void AUTOCONTROL::b_loop_pp()
             for(double vv = 0.1; vv <= params.LIMIT_V; vv += 0.1)
             {
                 std::vector<Eigen::Matrix4d> traj0 = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, 1.0, cur_tf);
-                std::vector<Eigen::Matrix4d> traj1 = calc_trajectory(Eigen::Vector3d(vv, 0, cur_vel[2]), 0.2, 1.0, cur_tf);
+                std::vector<Eigen::Matrix4d> traj1 = calc_trajectory(Eigen::Vector3d(vv, 0, 0.2*cur_vel[2]), 0.2, 1.0, cur_tf);
 
                 std::vector<Eigen::Matrix4d> traj = traj0;
                 traj.insert(traj.end(), traj1.begin(), traj1.end());

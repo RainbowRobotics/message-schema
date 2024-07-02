@@ -41,7 +41,7 @@ public:
     bool is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
 
     int get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0);
-    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, const double max_r);
+    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, const double& max_r);
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;

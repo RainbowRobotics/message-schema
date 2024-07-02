@@ -569,7 +569,7 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
     return conflict_idx;
 }
 
-Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double max_r)
+Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double& max_r)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -581,11 +581,12 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
     Eigen::Vector3d _center = _obs_tf_inv.block(0,0,3,3)*center + _obs_tf_inv.block(0,3,3,1);
 
     // calc average force
-    int search_r = max_r/gs;
+    int search_r = max_r/gs + 1;
     cv::Vec2i center_uv = xy_uv(_center[0], _center[1]);
     std::vector<cv::Vec2i> circle = filled_circle_iterator(center_uv, search_r);
 
     int num = 0;
+    double min_d = 99999999;
     Eigen::Vector3d sum_f(0, 0, 0);
     for(size_t p = 0; p < circle.size(); p++)
     {
@@ -599,7 +600,7 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
         if(_obs_map.ptr<uchar>(v)[u] == 255)
         {
             // local to global
-            cv::Vec2d xy = uv_xy(circle[p][0], circle[p][1]);
+            cv::Vec2d xy = uv_xy(u, v);
             Eigen::Vector3d P(xy[0], xy[1], 0);
             Eigen::Vector3d obs_pos = _obs_tf.block(0,0,3,3)*P + _obs_tf.block(0,3,3,1);
 
@@ -611,12 +612,12 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
                 continue;
             }
 
-            Eigen::Vector3d dir(dx/d, dy/d, 0);
+            double mag = (max_r-d)/d;
+            Eigen::Vector3d dir(dx, dy, 0);
 
             // repulsion force
-            double mag = (max_r-d)/d;
-            Eigen::Vector3d f = mag*dir;
-            sum_f += f;
+            Eigen::Vector3d f = mag*dir.normalized();
+            sum_f += f;            
             num++;
         }
     }
