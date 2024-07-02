@@ -1019,19 +1019,8 @@ PATH AUTOCONTROL::calc_local_path()
 
     // get path segment
     std::vector<Eigen::Vector3d> _path_pos;
-    _path_pos.push_back(cur_pos);
-
     std::vector<Eigen::Matrix4d> _path_pose;
-    _path_pose.push_back(cur_tf);
-
-    const int step = 2;
-    int st_idx = cur_idx + step;
-    if(st_idx > (int)global_path.pos.size()-1)
-    {
-        st_idx = global_path.pos.size()-1;
-    }
-
-    for(int p = st_idx; p < (int)global_path.pos.size(); p+=step)
+    for(int p = std::max<int>(cur_idx-10, 0); p < (int)global_path.pos.size(); p++)
     {
         double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
         if(d <= config->OBS_LOCAL_GOAL_D)
@@ -1060,9 +1049,9 @@ PATH AUTOCONTROL::calc_local_path()
         }
 
         // eb iteration        
-        double k_r = 10.0;
-        double k_i = 20.0;
-        double k_e = 15.0;
+        double k_r = 2.0;
+        double k_i = 6.0;
+        double k_e = 7.0;
         double dt = 0.05;
         int max_iter = 10;
         for(int iter = 0; iter < max_iter; iter++)
@@ -1079,10 +1068,10 @@ PATH AUTOCONTROL::calc_local_path()
                 Eigen::Vector3d f_r = (b.ref - b.pos);
                 Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
                 Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, b.r);
-                //f_e = refine_force(f_e, eb[p-1].pos, eb[p+1].pos);
-
                 Eigen::Vector3d f = (k_r * f_r) + (k_i * f_i) + (k_e * f_e);
+
                 //f_e = refine_force(f_e, eb[p-1].pos, eb[p+1].pos);
+                //f = refine_force(f, eb[p-1].pos, eb[p+1].pos);
 
                 // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
                 Eigen::Vector3d k1_v = f * dt;
@@ -1101,9 +1090,9 @@ PATH AUTOCONTROL::calc_local_path()
                 b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
 
                 // velocity saturation
-                b.vel[0] = saturation(b.vel[0], -1.2, 1.2);
-                b.vel[1] = saturation(b.vel[1], -1.2, 1.2);
-                b.vel[2] = saturation(b.vel[2], -1.2, 1.2);
+                b.vel[0] = saturation(b.vel[0], -0.6, 0.6);
+                b.vel[1] = saturation(b.vel[1], -0.6, 0.6);
+                b.vel[2] = saturation(b.vel[2], -0.6, 0.6);
 
                 // position update
                 b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
@@ -1167,7 +1156,7 @@ PATH AUTOCONTROL::calc_avoid_path()
 
     // set avoid area
     const int radius = std::ceil(config->ROBOT_RADIUS/obsmap->gs);
-    const int diameter = 2*radius + 1;
+    const int diameter = 2*radius + 3;
     cv::Mat avoid_area0 = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
     Eigen::Matrix4d inv_obs_tf = obs_tf.inverse();
     for(size_t p = 0; p < global_path.pos.size()-1; p++)
@@ -1263,7 +1252,7 @@ PATH AUTOCONTROL::calc_avoid_path()
     ss.setPlanner(planner);
 
     // solve
-    ompl::base::PlannerStatus solved = ss.solve(1.0);
+    ompl::base::PlannerStatus solved = ss.solve(3.0);
     if(solved == ompl::base::PlannerStatus::EXACT_SOLUTION)
     {
         // solution interpolation
@@ -1404,7 +1393,7 @@ void AUTOCONTROL::b_loop_pp()
         double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
 
         // calc local path
-        if(get_time() - last_local_path_t > 1.0)
+        if(get_time() - last_local_path_t > 0.2)
         {
             PATH _local_path = calc_local_path();
             if(_local_path.pos.size() > 0)
