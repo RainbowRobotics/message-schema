@@ -102,7 +102,7 @@ void LIDAR_2D::grab_loop_f()
     printf("[LIDAR] start grab loop, front\n");
 
     // sensors
-    std::string ip_str = "192.168.2.10";
+    std::string ip_str = "192.168.2.11";
     sick::types::ip_address_t sensor_ip = boost::asio::ip::address_v4::from_string(ip_str);
     sick::types::port_t tcp_port{2122};
 
@@ -304,7 +304,7 @@ void LIDAR_2D::grab_loop_b()
     printf("[LIDAR] start grab loop, back\n");
 
     // sensors
-    std::string ip_str = "192.168.2.11";
+    std::string ip_str = "192.168.2.10";
     sick::types::ip_address_t sensor_ip = boost::asio::ip::address_v4::from_string(ip_str);
     sick::types::port_t tcp_port{2122};
 

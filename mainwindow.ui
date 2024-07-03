@@ -435,6 +435,164 @@
             </widget>
             <widget class="QWidget" name="tab_3">
              <attribute name="title">
+              <string>Task</string>
+             </attribute>
+             <widget class="QPushButton" name="bt_TaskDel">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>40</y>
+                <width>101</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Task Delete [I]</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskContinue">
+              <property name="geometry">
+               <rect>
+                <x>50</x>
+                <y>150</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Continue</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskPause">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>150</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Pause</string>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="ckb_Looping">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>220</y>
+                <width>71</width>
+                <height>23</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>looping</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskPlay">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>120</y>
+                <width>101</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Task Play [O]</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskAdd">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>10</y>
+                <width>101</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Task Add [U]</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskCancel">
+              <property name="geometry">
+               <rect>
+                <x>50</x>
+                <y>180</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Cancel</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskLoad">
+              <property name="geometry">
+               <rect>
+                <x>50</x>
+                <y>70</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Load</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskResume">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>180</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Resume</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TaskSave">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>70</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+             <widget class="QListWidget" name="lw_TaskList">
+              <property name="geometry">
+               <rect>
+                <x>110</x>
+                <y>30</y>
+                <width>201</width>
+                <height>211</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_7">
+              <property name="geometry">
+               <rect>
+                <x>110</x>
+                <y>10</y>
+                <width>141</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>node list</string>
+              </property>
+             </widget>
+            </widget>
+            <widget class="QWidget" name="tab_4">
+             <attribute name="title">
               <string>Test</string>
              </attribute>
              <widget class="QPushButton" name="bt_Sync">

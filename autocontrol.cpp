@@ -1415,7 +1415,7 @@ void AUTOCONTROL::b_loop_pp()
     // for avoid path
     PATH avoid_path;
 
-    int fsm_state = AUTO_FSM_FIRST_ALIGN;    
+    fsm_state = AUTO_FSM_FIRST_ALIGN;
     int obs_state = 0;
     double reverse_st_t = 0;
 

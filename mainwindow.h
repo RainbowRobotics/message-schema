@@ -16,6 +16,7 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "ws_client.h"
+#include "task.h"
 #include "sim.h"
 
 // qt
@@ -50,10 +51,12 @@ public:
     AUTOCONTROL ctrl;
     WS_CLIENT ws;
     SIM sim;
+    TASK task;
 
     // funcs
     void init_modules();
     void setup_vtk();
+    void ui_tasks_update();
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
 
@@ -193,6 +196,16 @@ private Q_SLOTS:
 
     // for obsmap
     void bt_ObsClear();
+
+    // for task
+    void bt_TaskAdd();
+    void bt_TaskDel();
+    void bt_TaskSave();
+    void bt_TaskLoad();
+    void bt_TaskPlay();
+    void bt_TaskPause();
+    void bt_TaskContinue();
+    void bt_TaskCancel();
 
 };
 #endif // MAINWINDOW_H

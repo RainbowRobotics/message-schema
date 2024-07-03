@@ -120,6 +120,18 @@ enum LOCAL_PATH_STATE
     LOCAL_PATH_BUSY,
 };
 
+enum TASK_FSM_STATE
+{
+    TASK_IDLE = 0,
+    TASK_MOVE,
+    TASK_CHECK_MOVE,
+    TASK_PROGRESS,
+    TASK_CHECK_PROGRESS,
+    TASK_WAIT,
+    TASK_PAUSED,
+    TASK_COMPLETE,
+};
+
 // structure
 struct PICKING
 {

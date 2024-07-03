@@ -31,6 +31,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
+    task.cpp \
     ws_client.cpp \
     obsmap.cpp \
     pgo.cpp \
@@ -53,6 +54,7 @@ HEADERS += \
     logger.h \
     mainwindow.h \
     mobile.h \
+    task.h \
     ws_client.h \
     nanoflann.hpp \
     obsmap.h \

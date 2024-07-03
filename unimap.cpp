@@ -669,7 +669,7 @@ NODE* UNIMAP::get_node_by_id(QString id)
     }
 
     NODE *node = NULL;
-    if(nodes.size() != 0)
+    if((int)nodes.size() != 0)
     {
         for(size_t p = 0; p < nodes.size(); p++)
         {

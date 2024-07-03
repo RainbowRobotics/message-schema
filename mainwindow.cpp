@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , obsmap(this)
     , ctrl(this)    
     , ws(this)
+    , task(this)
     , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -108,6 +109,16 @@ MainWindow::MainWindow(QWidget *parent)
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
     connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
+
+    // task interface
+    connect(ui->bt_TaskAdd, SIGNAL(clicked()), this, SLOT(bt_TaskAdd()));
+    connect(ui->bt_TaskDel, SIGNAL(clicked()), this, SLOT(bt_TaskDel()));
+    connect(ui->bt_TaskSave, SIGNAL(clicked()), this, SLOT(bt_TaskSave()));
+    connect(ui->bt_TaskLoad, SIGNAL(clicked()), this, SLOT(bt_TaskLoad()));
+    connect(ui->bt_TaskPlay, SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
+    connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));
+    connect(ui->bt_TaskContinue, SIGNAL(clicked()), this, SLOT(bt_TaskContinue()));
+    connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
     // set plot window
     setup_vtk();
@@ -316,6 +327,14 @@ void MainWindow::init_modules()
     sim.lidar = &lidar;
     sim.slam = &slam;
     sim.unimap = &unimap;
+
+    // task init
+    task.config = &config;
+    task.unimap = &unimap;
+    task.slam = &slam;
+    task.obsmap = &obsmap;
+    task.ctrl = &ctrl;
+    task.mobile = &mobile;
 
     // start watchdog loop
     watch_flag = true;
@@ -1698,13 +1717,197 @@ void MainWindow::ws_mapping_save(double time, QString name)
     bt_MapSave();
 }
 
-
-
 // for obsmap
 void MainWindow::bt_ObsClear()
 {
     obsmap.clear();
 }
+
+// for task
+void MainWindow::ui_tasks_update()
+{
+    ui->lw_TaskList->clear();
+    for(size_t i = 0; i < task.task_node_list.size(); i++)
+    {
+        ui->lw_TaskList->addItem(task.task_node_list[i]);
+    }
+
+    //gen task name
+    for(size_t i = 0; i < task.task_node_list.size(); i++)
+    {
+        NODE* node = unimap.get_node_by_id(task.task_node_list[i]);
+        QString res;
+        res.sprintf("T_%02d", i);
+        node->name = res;
+
+    }
+    is_topo_update = true;
+}
+
+void MainWindow::bt_TaskAdd()
+{
+    NODE* node = unimap.get_node_by_id(pick.cur_node);
+
+    if(pick.cur_node.isEmpty())
+    {
+        printf("No selected node\n");
+        return;
+    }
+    if(node->type == "GOAL" ||  node->type == "STAIR")
+    {
+        task.add_task(node);
+    }
+    else
+    {
+        printf("Unselectable node\n");
+        return;
+    }
+
+    ui_tasks_update();
+}
+
+void MainWindow::bt_TaskDel()
+{
+    if(!ui->lw_TaskList->selectedItems().isEmpty())
+    {
+        // list delete
+        QString id = ui->lw_TaskList->selectedItems().front()->text();
+        NODE* node = unimap.get_node_by_id(id);
+        task.del_task(node);
+    }
+    else
+    {
+        NODE* pick_node = unimap.get_node_by_id(pick.cur_node);
+
+        if(pick_node->type == "GOAL" ||  pick_node->type == "STAIR")
+        {
+            task.del_task(pick_node);
+
+        }
+        else
+        {
+            printf("Unselectable node\n");
+            return;
+        }
+    }
+
+    ui_tasks_update();
+}
+
+void MainWindow::bt_TaskSave()
+{
+    if(unimap.is_loaded == false || task.task_node_list.empty())
+    {
+        printf("no task list\n");
+        return;
+    }
+
+    task.save_task(unimap.map_dir);
+}
+
+void MainWindow::bt_TaskLoad()
+{
+    // pcd map load
+    if(unimap.is_loaded == false)
+    {
+        printf("no map\n");
+        return;
+    }
+
+    QString path = QFileDialog::getOpenFileName(this, "Select dir", unimap.map_dir);
+    QFileInfo file_info(path);
+
+    QString file_name = file_info.fileName();
+    if(!file_name.isNull() && unimap.map_dir == file_info.absolutePath()
+            && file_info.baseName().contains("task_", Qt::CaseInsensitive)
+            && file_info.suffix().compare("json", Qt::CaseInsensitive) == 0)
+    {
+        task.load_task(path);
+    }
+    else
+    {
+        printf("no task file\n");
+        return;
+    }
+
+    ui_tasks_update();
+
+}
+
+void MainWindow::bt_TaskPlay()
+{
+    MOBILE_STATUS ms = mobile.get_status();
+    if(ms.status_m0 == 0 && ms.status_m0 == 0)
+    {
+        bt_MotorInit();
+    }
+    // for sim
+    if(config.SIM_MODE == 1)
+    {
+        if(unimap.is_loaded == false || task.task_node_list.empty() || task.is_tasking)
+        {
+            printf("check again\n");
+            return;
+        }
+        task.start_signal = true;
+        if(ui->ckb_Looping->isChecked())
+        {
+            task.use_looping = true;
+        }
+        else
+        {
+            task.use_looping = false;
+        }
+        printf("[TASK] use looping: %d\n", (int)task.use_looping);
+        task.play();
+    }
+    else
+    {
+        if(unimap.is_loaded == false || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
+        {
+            printf("check again\n");
+            return;
+        }
+        task.start_signal = true;
+        if(ui->ckb_Looping->isChecked())
+        {
+            task.use_looping = true;
+
+        }
+        else
+        {
+            task.use_looping = false;
+
+        }
+        printf("[TASK] use looping: %d\n", (int)task.use_looping);
+        task.play();
+    }
+
+}
+
+void MainWindow::bt_TaskPause()
+{
+    task.pause();
+}
+
+void MainWindow::bt_TaskContinue()
+{
+    if(task.last_task_state == TASK_WAIT)
+    {
+        task.continue_signal = true;
+    }
+    else
+    {
+        task.continue_signal = false;
+    }
+
+}
+
+void MainWindow::bt_TaskCancel()
+{
+    task.cancel();
+}
+
 
 // watchdog
 void MainWindow::watch_loop()

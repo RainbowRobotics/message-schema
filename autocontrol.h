@@ -110,6 +110,7 @@ public:
 
     // flags    
     std::atomic<bool> is_moving = {false};
+    std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
 
     // for ompl    
     cv::Mat obs_map;
