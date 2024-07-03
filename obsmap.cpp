@@ -488,6 +488,45 @@ bool OBSMAP::is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& o
     return false;
 }
 
+bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, const double& r)
+{
+    // get obs map
+    cv::Mat _obs_map;
+    Eigen::Matrix4d _obs_tf;
+    get_obs_map(_obs_map, _obs_tf);
+
+    // calc tf
+    Eigen::Matrix4d G = _obs_tf.inverse();
+    Eigen::Vector3d P = G.block(0,0,3,3)*pos + G.block(0,3,3,1);
+
+    // draw circle
+    int _r = std::ceil(r/gs);
+
+    cv::Vec2i uv = xy_uv(P[0], P[1]);
+    if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+    {
+        return true;
+    }
+
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
+    cv::circle(mask, cv::Point(uv[0], uv[1]), _r, cv::Scalar(255), -1);
+
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                // collision
+                return true;
+            }
+        }
+    }
+
+    // non collision
+    return false;
+}
+
 int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0)
 {
     const double x_min = config->ROBOT_SIZE_X[0];
@@ -612,7 +651,7 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
                 continue;
             }
 
-            double mag = (max_r-d)/d;
+            double mag = (max_r-d)/(d+0.01);
             Eigen::Vector3d dir(dx, dy, 0);
 
             // repulsion force

@@ -1013,13 +1013,14 @@ PATH AUTOCONTROL::calc_local_path()
     // get params
     PATH global_path = get_cur_global_path();
 
+    // get cur params
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
     // get path segment
     std::vector<Eigen::Vector3d> _path_pos;
-    std::vector<Eigen::Matrix4d> _path_pose;
+    std::vector<Eigen::Matrix4d> _path_pose;    
     for(int p = std::max<int>(cur_idx-10, 0); p < (int)global_path.pos.size(); p++)
     {
         double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
@@ -1034,24 +1035,69 @@ PATH AUTOCONTROL::calc_local_path()
         }
     }
 
-    // eband method
-    if(_path_pos.size() >= 3)
+    // pre processing
+    for(size_t p = 0; p < _path_pose.size(); p++)
     {
-        // eb init
-        std::vector<BUBBLE> eb;
-        for(size_t p = 0; p < _path_pos.size(); p++)
+        Eigen::Vector3d modified_pos = _path_pos[p];
+
+        // right offset first
+        bool is_found = false;
+        for(double dy = 0; dy < 0.5; dy += 0.05)
         {
-            BUBBLE b;
-            b.ref = _path_pos[p];
-            b.pos = _path_pos[p];
-            b.vel.setZero();
-            eb.push_back(b);
+            Eigen::Vector3d offset(0, -dy, 0);
+            Eigen::Vector3d pos = _path_pose[p].block(0,0,3,3)*offset + _path_pose[p].block(0,3,3,1);
+
+            if(!obsmap->is_pos_collision(pos, 0.1))
+            {
+                modified_pos = pos;
+                is_found = true;
+                break;
+            }
         }
 
+        // check
+        if(is_found == false)
+        {
+            // left offset
+            for(double dy = 0; dy < 0.5; dy += 0.05)
+            {
+                Eigen::Vector3d offset(0, dy, 0);
+                Eigen::Vector3d pos = _path_pose[p].block(0,0,3,3)*offset + _path_pose[p].block(0,3,3,1);
+
+                if(!obsmap->is_pos_collision(pos, 0.1))
+                {
+                    modified_pos = pos;
+                    is_found = true;
+                    break;
+                }
+            }
+        }
+
+        // update path
+        if(is_found)
+        {
+            _path_pose[p].block(0,3,3,1) = modified_pos;
+            _path_pos[p] = modified_pos;
+        }
+    }
+
+    // eb init
+    std::vector<BUBBLE> eb;
+    for(size_t p = 0; p < _path_pos.size(); p++)
+    {
+        BUBBLE b;
+        b.ref = _path_pos[p];
+        b.pos = _path_pos[p];
+        eb.push_back(b);
+    }
+
+    // eband method
+    if(eb.size() >= 3)
+    {
         // eb iteration        
-        double k_r = 2.0;
-        double k_i = 6.0;
-        double k_e = 7.0;
+        double k_r = 0.0;
+        double k_i = 1.0;
+        double k_e = 2.0;
         double dt = 0.05;
         int max_iter = 10;
         for(int iter = 0; iter < max_iter; iter++)
@@ -1090,9 +1136,9 @@ PATH AUTOCONTROL::calc_local_path()
                 b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
 
                 // velocity saturation
-                b.vel[0] = saturation(b.vel[0], -0.6, 0.6);
-                b.vel[1] = saturation(b.vel[1], -0.6, 0.6);
-                b.vel[2] = saturation(b.vel[2], -0.6, 0.6);
+                double v_norm = b.vel.norm();
+                v_norm = saturation(v_norm, -0.5, 0.5);
+                b.vel = v_norm*b.vel.normalized();
 
                 // position update
                 b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
@@ -1118,10 +1164,13 @@ PATH AUTOCONTROL::calc_local_path()
             _path_pos2.push_back(eb[p].pos);
         }
         _path_pos = _path_pos2;
+
+        // post processing
+
     }
 
     // path resampling
-    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
+    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, 3*GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
     std::vector<Eigen::Matrix4d> path_pose;
     for(size_t p = 0; p < path_pos.size()-1; p++)
     {
@@ -1393,7 +1442,7 @@ void AUTOCONTROL::b_loop_pp()
         double goal_d = calc_dist_2d(global_path.goal_tf.block(0,3,3,1) - cur_pos);
 
         // calc local path
-        if(get_time() - last_local_path_t > 0.2)
+        if(get_time() - last_local_path_t > 0.5)
         {
             PATH _local_path = calc_local_path();
             if(_local_path.pos.size() > 0)
