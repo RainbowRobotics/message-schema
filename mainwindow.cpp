@@ -1737,7 +1737,7 @@ void MainWindow::ui_tasks_update()
     {
         NODE* node = unimap.get_node_by_id(task.task_node_list[i]);
         QString res;
-        res.sprintf("T_%02d", i);
+        res.sprintf("T_%02d", (int)i);
         node->name = res;
 
     }
@@ -1746,14 +1746,20 @@ void MainWindow::ui_tasks_update()
 
 void MainWindow::bt_TaskAdd()
 {
-    NODE* node = unimap.get_node_by_id(pick.cur_node);
-
     if(pick.cur_node.isEmpty())
     {
         printf("No selected node\n");
         return;
     }
-    if(node->type == "GOAL" ||  node->type == "STAIR")
+
+    NODE* node = unimap.get_node_by_id(pick.cur_node);
+    if(node == NULL)
+    {
+        printf("Node null\n");
+        return;
+    }
+
+    if(node->type == "GOAL")
     {
         task.add_task(node);
     }
@@ -1777,18 +1783,20 @@ void MainWindow::bt_TaskDel()
     }
     else
     {
-        NODE* pick_node = unimap.get_node_by_id(pick.cur_node);
-
-        if(pick_node->type == "GOAL" ||  pick_node->type == "STAIR")
+        if(pick.cur_node.isEmpty())
         {
-            task.del_task(pick_node);
-
-        }
-        else
-        {
-            printf("Unselectable node\n");
+            printf("No selected node\n");
             return;
         }
+
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node == NULL)
+        {
+            printf("Node null\n");
+            return;
+        }
+
+        task.del_task(node);
     }
 
     ui_tasks_update();
@@ -1836,53 +1844,25 @@ void MainWindow::bt_TaskLoad()
 
 void MainWindow::bt_TaskPlay()
 {
-    MOBILE_STATUS ms = mobile.get_status();
-    if(ms.status_m0 == 0 && ms.status_m0 == 0)
+    if(unimap.is_loaded == false || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
     {
-        bt_MotorInit();
+        printf("check again\n");
+        return;
     }
-    // for sim
-    if(config.SIM_MODE == 1)
+
+    task.start_signal = true;
+    if(ui->ckb_Looping->isChecked())
     {
-        if(unimap.is_loaded == false || task.task_node_list.empty() || task.is_tasking)
-        {
-            printf("check again\n");
-            return;
-        }
-        task.start_signal = true;
-        if(ui->ckb_Looping->isChecked())
-        {
-            task.use_looping = true;
-        }
-        else
-        {
-            task.use_looping = false;
-        }
-        printf("[TASK] use looping: %d\n", (int)task.use_looping);
-        task.play();
+        task.use_looping = true;
+
     }
     else
     {
-        if(unimap.is_loaded == false || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
-        {
-            printf("check again\n");
-            return;
-        }
-        task.start_signal = true;
-        if(ui->ckb_Looping->isChecked())
-        {
-            task.use_looping = true;
+        task.use_looping = false;
 
-        }
-        else
-        {
-            task.use_looping = false;
-
-        }
-        printf("[TASK] use looping: %d\n", (int)task.use_looping);
-        task.play();
     }
-
+    printf("[TASK] use looping: %d\n", (int)task.use_looping);
+    task.play();
 }
 
 void MainWindow::bt_TaskPause()
@@ -1900,7 +1880,6 @@ void MainWindow::bt_TaskContinue()
     {
         task.continue_signal = false;
     }
-
 }
 
 void MainWindow::bt_TaskCancel()

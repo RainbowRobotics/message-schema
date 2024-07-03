@@ -30,8 +30,6 @@ public:
     AUTOCONTROL *ctrl = NULL;
     MOBILE *mobile    = NULL;
 
-
-
     // interface funcs
     void play();
     void pause();
@@ -42,9 +40,8 @@ public:
     void save_task(QString path);
     void load_task(QString path);
 
-
+    // task list
     std::vector<QString> task_node_list;
-
 
     // task loop
     std::atomic<bool> a_flag = {false};
@@ -53,7 +50,6 @@ public:
 
     // path
     QString task_dir;
-
     std::vector<NODE> nodes;
 
     // flags
@@ -64,10 +60,6 @@ public:
     std::atomic<bool> use_looping = {false};
 
     std::atomic<int> last_task_state = {0};
-
-Q_SIGNALS:
-    void _startSocketMotion();
-    void _stopSocketMotion();
 
 };
 

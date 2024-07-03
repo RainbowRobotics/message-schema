@@ -34,7 +34,7 @@ public:
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
 
     bool is_collision(const Eigen::Matrix4d& robot_tf);
-    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs);
+    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0);
     bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
     bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);        
     bool is_pivot_collision(const Eigen::Matrix4d& robot_tf);

@@ -176,7 +176,7 @@ bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf)
     return false;
 }
 
-bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs)
+bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -194,7 +194,7 @@ bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs)
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = 0; p < robot_tfs.size(); p++)
+    for(size_t p = st_idx; p < robot_tfs.size(); p++)
     {
         Eigen::Matrix4d G = _obs_tf.inverse()*robot_tfs[p];
 
@@ -496,8 +496,8 @@ bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, const double& r)
     get_obs_map(_obs_map, _obs_tf);
 
     // calc tf
-    Eigen::Matrix4d G = _obs_tf.inverse();
-    Eigen::Vector3d P = G.block(0,0,3,3)*pos + G.block(0,3,3,1);
+    Eigen::Matrix4d _obs_tf_inv = _obs_tf.inverse();
+    Eigen::Vector3d P = _obs_tf_inv.block(0,0,3,3)*pos + _obs_tf_inv.block(0,3,3,1);
 
     // draw circle
     int _r = std::ceil(r/gs);
@@ -651,7 +651,8 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
                 continue;
             }
 
-            double mag = (max_r-d)/(d+0.01);
+            //double mag = (max_r-d)/(d+0.01);
+            double mag = (max_r-d);
             Eigen::Vector3d dir(dx, dy, 0);
 
             // repulsion force

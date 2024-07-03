@@ -82,6 +82,7 @@ public:
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
     int get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx);
     Eigen::Vector3d refine_force(Eigen::Vector3d f, Eigen::Vector3d P0, Eigen::Vector3d P1);
+    std::vector<Eigen::Vector3d> ramer_douglas_peucker(const std::vector<Eigen::Vector3d>& src, double epsilon);
     PATH calc_local_path();
     PATH calc_avoid_path();
 

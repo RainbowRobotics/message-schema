@@ -26,7 +26,6 @@ void TASK::play()
     }
     ctrl->stop();
 
-
     // task loop running
     if(a_thread == NULL)
     {
@@ -37,7 +36,7 @@ void TASK::play()
 
 void TASK::pause()
 {
-    ctrl->stop();
+
 }
 
 void TASK::cancel()
@@ -71,7 +70,6 @@ void TASK::del_task(NODE* node)
     {
         qDebug() << "[TASK] not found to be deleted";
     }
-
 }
 
 void TASK::save_task(QString path)
@@ -106,18 +104,15 @@ void TASK::load_task(QString path)
     // clear flag
     is_loaded = false;
 
-    // set load task dir
-//    task_dir = path;
-
     // load topology file
-    task_node_list.clear();
-//    QString topo_path = map_dir + "/topo.json";
     QFileInfo task_info(path);
     if(task_info.exists() && task_info.isFile())
     {
         QFile task_file(path);
         if(task_file.open(QIODevice::ReadOnly))
         {
+            task_node_list.clear();
+
             QByteArray data = task_file.readAll();
             QJsonDocument doc = QJsonDocument::fromJson(data);
 
@@ -139,8 +134,6 @@ void TASK::load_task(QString path)
 
     // set flag
     is_loaded = true;
-
-
 }
 
 
@@ -155,15 +148,12 @@ void TASK::a_loop()
     std::vector<QString> node_list = task_node_list;
     for(size_t p = 0; p < node_list.size(); p++)
     {
-        printf("[TASK] seq:%zu, node_id:%s\n", p, node_list[p].toLocal8Bit().data());
+        printf("[TASK] seq: %d, node_id: %s\n", (int)p, node_list[p].toLocal8Bit().data());
     }
 
     // init state
     int state = TASK_IDLE;
     last_task_state = state;
-
-    // for check stair
-    bool stair_st = false;
 
     // seq num
     int idx = 0;
@@ -186,25 +176,7 @@ void TASK::a_loop()
         else if(state == TASK_MOVE)
         {
             NODE* node = unimap->get_node_by_id(task_node_list[idx]);
-            if(node->type == "GOAL")
-            {
-                ctrl->move_pp(node->tf, 0);
-            }
-            else if(node->type == "STAIR")
-            {
-                if(!stair_st)
-                {
-                    ctrl->move_pp(node->tf, 0);
-                    stair_st = true;
-                    printf("[TASK] move_pp to first stair node\n");
-                }
-                else
-                {
-                    ctrl->move_hpp(node->tf, 0);
-                    stair_st = false;
-                    printf("[TASK] move_hpp to second stair node\n");
-                }
-            }
+            ctrl->move_pp(node->tf, 0);
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;
@@ -214,39 +186,12 @@ void TASK::a_loop()
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            NODE* node = unimap->get_node_by_id(task_node_list[idx]);
-            if(node->type == "GOAL")
+            if(ctrl->fsm_state == AUTO_FSM_COMPLETE)
             {
-                if(ctrl->fsm_state == AUTO_FSM_COMPLETE)
-                {
-                    printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
+                printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
 
-                    state = TASK_WAIT;
-                    last_task_state = state;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                    continue;
-                }
-            }
-        }
-        else if(state == TASK_PROGRESS)
-        {
-            // not use yet AMR
-            state = TASK_CHECK_PROGRESS;
-            last_task_state = state;
-
-            printf("[TASK] TASK_PROGRESS -> TASK_CHECK_PROGRESS\n");
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            continue;
-        }
-        else if(state == TASK_CHECK_PROGRESS)
-        {
-            // not use yet AMR
-//          std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-//          if(feedback)
-            {
                 state = TASK_WAIT;
                 last_task_state = state;
-                printf("[TASK] TASK_CHECK_POSE -> TASK_WAIT\n");
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
             }
@@ -256,14 +201,14 @@ void TASK::a_loop()
             if(!use_confirm)
             {
                 printf("[TASK] WAITING TEST(confirm X)\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue_signal = true;
             }
 
-//            printf("[TASK] TASK_WAIT : %s\n", node_list[idx].toLocal8Bit().data());
             if(continue_signal)
             {
-                mobile->move(0.0, 0.0, 0.0);
+                continue_signal = false;
+                mobile->move(0, 0, 0);
 
                 //obs clear
                 obsmap->clear();
@@ -271,43 +216,43 @@ void TASK::a_loop()
                 state = TASK_MOVE;
                 last_task_state = state;
                 idx++;
-                printf("idx:%d\n", idx);
+                printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
 
-                if(idx == node_list.size())
+                if(idx == (int)node_list.size())
                 {
                     if(use_looping)
                     {
-                        printf("[TASK] TASK RESTART -> TASK_MOVE\n");
-
                         idx = 0;
                         state = TASK_MOVE;
+                        last_task_state = state;
+
+                        printf("[TASK] TASK RESTART -> TASK_MOVE\n");
                         std::this_thread::sleep_for(std::chrono::milliseconds(500));
                         continue;
                     }
                     else
                     {
-                        state = TASK_IDLE;
-                        last_task_state = state;
-                        printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");
                         start_signal = false;
                         continue_signal = false;
+
+                        state = TASK_IDLE;
+                        last_task_state = state;
+                        printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");                        
                         break;
                     }
                 }
 
-                continue_signal = false;
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
             }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     printf("[TASK] task_loop stop\n");
 
     //clear
     start_signal = false;
-    is_tasking = false;
     continue_signal = false;
-    last_task_state = state;
+    is_tasking = false;
 }
