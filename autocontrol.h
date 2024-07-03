@@ -119,6 +119,8 @@ public:
     cv::Mat avoid_area;
 
 Q_SIGNALS:
+    void signal_global_path_updated();
+    void signal_local_path_updated();
 
 };
 

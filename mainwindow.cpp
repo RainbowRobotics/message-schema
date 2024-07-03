@@ -98,6 +98,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoMove2, SIGNAL(clicked()), this, SLOT(bt_AutoMove2()));
     connect(ui->bt_AutoMove3, SIGNAL(clicked()), this, SLOT(bt_AutoMove3()));
     connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
+    connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
+    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
 
     // for ws
     connect(&ws, SIGNAL(signal_motorinit(double)), this, SLOT(ws_motorinit(double)));
@@ -1597,9 +1599,6 @@ void MainWindow::bt_AutoMove()
 
     // pure pursuit
     ctrl.move_pp(goal_tf, 0);
-
-    // for path drawing
-    is_path_update = true;
 }
 
 void MainWindow::bt_AutoMove2()
@@ -1637,9 +1636,6 @@ void MainWindow::bt_AutoMove2()
 
     // holonomic pure pursuit
     ctrl.move_hpp(goal_tf, 0);
-
-    // for path drawing
-    is_path_update = true;
 }
 
 void MainWindow::bt_AutoMove3()
@@ -1677,18 +1673,22 @@ void MainWindow::bt_AutoMove3()
 
     // turn and go
     ctrl.move_tng(goal_tf, 0);
-
-    // for path drawing
-    is_path_update = true;
 }
 
 void MainWindow::bt_AutoStop()
 {
     // stop driving
     ctrl.stop();
+}
 
-    // for path drawing
-    is_path_update = true;
+void MainWindow::slot_local_path_updated()
+{
+    is_local_path_update = true;
+}
+
+void MainWindow::slot_global_path_updated()
+{
+    is_global_path_update = true;
 }
 
 // for ws
@@ -2588,11 +2588,10 @@ void MainWindow::plot_loop()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 
-    // plot global path
-    if(is_path_update)
+    // plot global path    
+    if(is_global_path_update)
     {
-        // clear flag
-        is_path_update = false;
+        is_global_path_update = false;
 
         // erase first
         if(last_plot_global_path.size() > 0)
@@ -2633,8 +2632,9 @@ void MainWindow::plot_loop()
     }
 
     // plot local path
+    if(is_local_path_update)
     {
-        PATH local_path = ctrl.get_cur_local_path();
+        is_local_path_update = false;
 
         // erase first
         for(size_t p = 0; p < last_plot_local_path.size(); p++)
@@ -2648,6 +2648,7 @@ void MainWindow::plot_loop()
         last_plot_local_path.clear();
 
         // draw local path
+        PATH local_path = ctrl.get_cur_local_path();
         if(local_path.pos.size() >= 2)
         {
             if(local_path.pos.size()/10 >= 2)

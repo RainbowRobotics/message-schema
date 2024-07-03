@@ -115,6 +115,9 @@ void AUTOCONTROL::clear_path()
     cur_global_path = PATH();
     cur_local_path = PATH();
     mtx.unlock();
+
+    Q_EMIT signal_global_path_updated();
+    Q_EMIT signal_local_path_updated();
 }
 
 void AUTOCONTROL::stop()
@@ -149,6 +152,8 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
         cur_global_path = _cur_global_path;
         mtx.unlock();
 
+        Q_EMIT signal_global_path_updated();
+
         // start control loop
         b_flag = true;
         b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
@@ -173,6 +178,8 @@ void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int preset)
     mtx.lock();
     cur_global_path = _cur_global_path;
     mtx.unlock();
+
+    Q_EMIT signal_global_path_updated();
 
     // control loop start
     if(b_thread != NULL)
@@ -200,6 +207,8 @@ void AUTOCONTROL::move_tng(Eigen::Matrix4d goal_tf, int preset)
     mtx.lock();
     cur_global_path = _cur_global_path;
     mtx.unlock();
+
+    Q_EMIT signal_global_path_updated();
 
     // control loop start
     if(b_thread != NULL)
@@ -1522,6 +1531,14 @@ void AUTOCONTROL::b_loop_pp()
             {
                 local_path = _local_path;
                 last_local_path_t = get_time();
+
+                // update local path
+                mtx.lock();
+                cur_local_path = local_path;
+                last_local_goal = local_path.goal_tf.block(0,3,3,1);
+                mtx.unlock();
+
+                Q_EMIT signal_local_path_updated();
             }
         }
 
@@ -1544,14 +1561,16 @@ void AUTOCONTROL::b_loop_pp()
             {
                 // set avoid path to local path
                 local_path = avoid_path;
+
+                // update local path
+                mtx.lock();
+                cur_local_path = local_path;
+                last_local_goal = local_path.goal_tf.block(0,3,3,1);
+                mtx.unlock();
+
+                Q_EMIT signal_local_path_updated();
             }
         }
-
-        // update local path
-        mtx.lock();
-        cur_local_path = local_path;
-        last_local_goal = local_path.goal_tf.block(0,3,3,1);
-        mtx.unlock();
 
         // for debug
         //fsm_state = AUTO_FSM_DEBUG;

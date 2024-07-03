@@ -88,8 +88,9 @@ private:
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
     std::atomic<bool> is_pick_update = {false};
-    std::atomic<bool> is_path_update = {false};
     std::atomic<bool> is_obs_update = {false};
+    std::atomic<bool> is_local_path_update = {false};
+    std::atomic<bool> is_global_path_update = {false};
 
     std::atomic<bool> is_map_update2 = {false};
     std::atomic<bool> is_topo_update2 = {false};
@@ -186,6 +187,8 @@ private Q_SLOTS:
     void bt_AutoMove2();
     void bt_AutoMove3();
     void bt_AutoStop();
+    void slot_local_path_updated();
+    void slot_global_path_updated();
 
     // for ws
     void ws_motorinit(double time);

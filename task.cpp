@@ -175,7 +175,7 @@ void TASK::a_loop()
         }
         else if(state == TASK_MOVE)
         {
-            NODE* node = unimap->get_node_by_id(task_node_list[idx]);
+            NODE* node = unimap->get_node_by_id(task_node_list[idx]);            
             ctrl->move_pp(node->tf, 0);
 
             state = TASK_CHECK_MOVE;
