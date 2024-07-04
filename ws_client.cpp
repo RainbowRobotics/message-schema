@@ -128,6 +128,54 @@ void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& d
     }
 }
 
+void WS_CLIENT::recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        QString name = get_json(data, "name");
+        double time = get_json(data, "time").toDouble()/1000;
+
+        Q_EMIT signal_mapload(time, name);
+
+        printf("[WS_RECV] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
+    }
+}
+
+void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        QString command = get_json(data, "command");
+        double time = get_json(data, "time").toDouble()/1000;
+
+        if(command == "autoinit")
+        {
+            Q_EMIT signal_localization_autoinit(time);
+        }
+        else if(command == "init")
+        {
+            double x = get_json(data, "x").toDouble();
+            double y = get_json(data, "y").toDouble();
+            double z = get_json(data, "z").toDouble();
+            double rz = get_json(data, "rz").toDouble();
+
+            Q_EMIT signal_localization_init(time, x, y, z, rz);
+        }
+        else if(command == "start")
+        {
+            Q_EMIT signal_localization_start(time);
+        }
+        else if(command == "stop")
+        {
+            Q_EMIT signal_localization_stop(time);
+        }
+
+        printf("[WS_RECV] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+    }
+}
+
 void WS_CLIENT::send_status()
 {
     double time = get_time();
@@ -201,6 +249,8 @@ void WS_CLIENT::send_status()
     QJsonObject conditionObj;
     conditionObj["inlier_error"] = QString::number(ieir[0], 'f', 3);
     conditionObj["inlier_ratio"] = QString::number(ieir[1], 'f', 3);
+    conditionObj["mapping_error"] = QString::number(ieir[0], 'f', 3);
+    conditionObj["mapping_ratio"] = QString::number(ieir[1], 'f', 3);
     rootObj["condition"] = conditionObj;
 
     // send
@@ -329,7 +379,6 @@ void WS_CLIENT::send_mapping_cloud()
 
 void WS_CLIENT::send_mapping_response_start(QString result)
 {
-    /*
     double time = get_time();
 
     // Creating the JSON object
@@ -337,7 +386,7 @@ void WS_CLIENT::send_mapping_response_start(QString result)
 
     // Adding the command and time
     rootObj["command"] = "start";
-    rootObj["result"] = str;
+    rootObj["result"] = result;
     rootObj["time"] = QString::number((int)(time*1000), 10);
 
     // send
@@ -346,15 +395,85 @@ void WS_CLIENT::send_mapping_response_start(QString result)
     io->socket()->emit("mapping", res);
 
     printf("[WS_SEND] mapping_response_start, %s, time: %f\n", time);
-    */
 }
 
 void WS_CLIENT::send_mapping_response_stop()
 {
+    double time = get_time();
 
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "stop";
+    rootObj["result"] = "success";
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("mapping", res);
+
+    printf("[WS_SEND] mapping_response_stop, success, time: %f\n", time);
 }
 
 void WS_CLIENT::send_mapping_response_save(QString name, QString result)
 {
+    double time = get_time();
 
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "save";
+    rootObj["name"] = name;
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("mapping", res);
+
+    printf("[WS_SEND] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_mapload_response(QString name, QString result)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["name"] = name;
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("mapload", res);
+
+    printf("[WS_SEND] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_localization_response(QString command, QString result)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = command;
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("localization", res);
+
+    printf("[WS_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }

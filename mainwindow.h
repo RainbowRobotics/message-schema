@@ -199,6 +199,11 @@ private Q_SLOTS:
     void ws_mapping_start(double time);
     void ws_mapping_stop(double time);
     void ws_mapping_save(double time, QString name);
+    void ws_mapload(double time, QString name);
+    void ws_localization_autoinit(double time);
+    void ws_localization_init(double time, double x, double y, double z, double rz);
+    void ws_localization_start(double time);
+    void ws_localization_stop(double time);
 
     // for obsmap
     void bt_ObsClear();

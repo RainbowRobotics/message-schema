@@ -64,6 +64,8 @@ public:
     void send_mapping_response_start(QString result);
     void send_mapping_response_stop();
     void send_mapping_response_save(QString name, QString result);
+    void send_mapload_response(QString name, QString result);
+    void send_localization_response(QString command, QString result);
 
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
@@ -74,6 +76,13 @@ Q_SIGNALS:
     void signal_mapping_start(double time);
     void signal_mapping_stop(double time);
     void signal_mapping_save(double time, QString name);
+    void signal_mapload(double time, QString name);
+
+    void signal_localization_autoinit(double time);
+    void signal_localization_init(double time, double x, double y, double z, double rz);
+    void signal_localization_start(double time);
+    void signal_localization_stop(double time);
+
 
 private Q_SLOTS:
     void reconnect_loop();
@@ -85,6 +94,8 @@ private Q_SLOTS:
     void recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 };
 
