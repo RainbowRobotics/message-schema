@@ -593,6 +593,51 @@
             </widget>
             <widget class="QWidget" name="tab_4">
              <attribute name="title">
+              <string>System</string>
+             </attribute>
+             <widget class="QLabel" name="lb_SystemInfo">
+              <property name="geometry">
+               <rect>
+                <x>8</x>
+                <y>30</y>
+                <width>311</width>
+                <height>91</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[SYSTEM_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="ckb_RecordSystemInfo">
+              <property name="geometry">
+               <rect>
+                <x>12</x>
+                <y>5</y>
+                <width>71</width>
+                <height>23</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>record</string>
+              </property>
+             </widget>
+            </widget>
+            <widget class="QWidget" name="tab_5">
+             <attribute name="title">
               <string>Test</string>
              </attribute>
              <widget class="QPushButton" name="bt_Sync">

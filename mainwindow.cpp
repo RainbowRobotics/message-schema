@@ -1981,6 +1981,8 @@ void MainWindow::watch_loop()
     int cnt = 0;
     int loc_fail_cnt = 0;
 
+    CPU_USAGE pre_cpu_usage;
+
     printf("[WATCHDOG] loop start\n");
     while(watch_flag)
     {
@@ -2079,6 +2081,156 @@ void MainWindow::watch_loop()
                 {
                     loc_fail_cnt = 0;
                     slam.set_cur_loc_state("good");
+                }
+            }
+        }
+
+        // check system info
+        {
+            MOBILE_STATUS ms = mobile.get_status();
+
+            QString temp_str;
+            QString power_str;
+            QString cpu_usage_str;
+
+            // check temperature
+            {
+                int cpu_temp_sum = 0;
+                int cnt = 0;
+
+                QDir dir_temp("/sys/class/thermal");
+                QStringList filters;
+                filters << "thermal_zone*";
+                dir_temp.setNameFilters(filters);
+                QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                for (const QFileInfo &info : list_temp)
+                {
+                    QString path = info.filePath() + "/temp";
+                    QFile file(path);
+                    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                    {
+                        QTextStream in(&file);
+                        QString line = in.readLine();
+                        file.close();
+
+                        bool ok = false;
+                        int temperature = line.toInt(&ok);
+                        if(ok)
+                        {
+                            if(temperature != 0)
+                            {
+                                cpu_temp_sum += temperature/1000;
+                                cnt++;
+                            }
+                        }
+                    }
+                }
+
+                if(cnt != 0)
+                {
+                    temp_str.sprintf("[TEMP] cpu:%f, m0:%f, m1:%f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                }
+                else
+                {
+                    temp_str.sprintf("[TEMP] cpu:0.0, m0:%f, m1:%f", ms.temp_m0, ms.temp_m1);
+                }
+            }
+
+            // check power
+            {
+                int cpu_power_sum = 0;
+                int cnt = 0;
+
+                QDir dir_temp("/sys/class/power_supply");
+                QStringList filters;
+                filters << "BAT*";
+                dir_temp.setNameFilters(filters);
+                QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                for (const QFileInfo &info : list_temp)
+                {
+                    QString path = info.filePath() + "/power_now";
+                    QFile file(path);
+
+                    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                    {
+                        QTextStream in(&file);
+                        QString line = in.readLine();
+                        file.close();
+
+                        bool ok = false;
+                        int power = line.toInt(&ok);
+                        if(ok)
+                        {
+                            if(power != 0)
+                            {
+                                cpu_power_sum += power/1000;
+                                cnt++;
+                            }
+                        }
+                    }
+                }
+
+                if(cnt != 0)
+                {
+                    power_str.sprintf("[POWER] cpu:%f, m0:%f, m1:%f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
+                }
+                else
+                {
+                    power_str.sprintf("[POWER] cpu:0.0, m0:%f, m1:%f", ms.cur_m0, ms.cur_m1);
+                }
+            }
+
+            // check cpu usage
+            {
+                QFile file("/proc/stat");
+                if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                {
+                    QTextStream in(&file);
+                    QString line = in.readLine();
+                    file.close();
+
+                    CPU_USAGE cur_cpu_usage;
+                    QStringList values = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                    if (values[0] == "cpu")
+                    {
+                        cur_cpu_usage.user = values[1].toLongLong();
+                        cur_cpu_usage.nice = values[2].toLongLong();
+                        cur_cpu_usage.system = values[3].toLongLong();
+                        cur_cpu_usage.idle = values[4].toLongLong();
+                        cur_cpu_usage.iowait = values[5].toLongLong();
+                        cur_cpu_usage.irq = values[6].toLongLong();
+                        cur_cpu_usage.softirq = values[7].toLongLong();
+                    }
+
+                    double cur_total_usage = cur_cpu_usage.user + cur_cpu_usage.nice + cur_cpu_usage.system + cur_cpu_usage.idle + cur_cpu_usage.iowait + cur_cpu_usage.irq + cur_cpu_usage.softirq;
+                    double pre_total_usage = pre_cpu_usage.user + pre_cpu_usage.nice + pre_cpu_usage.system + pre_cpu_usage.idle + pre_cpu_usage.iowait + pre_cpu_usage.irq + pre_cpu_usage.softirq;
+
+                    double cur_idle_usage = cur_cpu_usage.idle;
+                    double pre_idle_usage = pre_cpu_usage.idle;
+
+                    double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
+                    cpu_usage_str.sprintf("[CPU]: %f", cpu_usage);
+
+                    pre_cpu_usage = cur_cpu_usage;
+                }
+                else
+                {
+                    cpu_usage_str.sprintf("[CPU]: 0.0");
+                }
+            }
+
+            QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
+            ui->lb_SystemInfo->setText(system_info_str);
+
+            if(ui->ckb_RecordSystemInfo->isChecked())
+            {
+                log_cnt++;
+                if(log_cnt >= 10)
+                {
+                    log_cnt = 0;
+                    system_logger.PrintLog(system_info_str, "White", true, true);
                 }
             }
         }

@@ -53,6 +53,10 @@ public:
     SIM sim;
     TASK task;
 
+    // system logger
+    LOGGER system_logger;
+    std::atomic<int> log_cnt = {0};
+
     // funcs
     void init_modules();
     void setup_vtk();
