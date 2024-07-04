@@ -14,6 +14,8 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     BIND_EVENT(sock, "motorinit", std::bind(&WS_CLIENT::recv_motorinit, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "move", std::bind(&WS_CLIENT::recv_move, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "mapping", std::bind(&WS_CLIENT::recv_mapping, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapload", std::bind(&WS_CLIENT::recv_mapload, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "localization", std::bind(&WS_CLIENT::recv_localization, this, _1, _2, _3, _4));
 
     io->set_open_listener(std::bind(&WS_CLIENT::sio_connected, this));
     io->set_close_listener(std::bind(&WS_CLIENT::sio_disconnected, this, _1));
@@ -122,6 +124,10 @@ void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& d
         {
             QString name = get_json(data, "name");
             Q_EMIT signal_mapping_save(time, name);
+        }
+        else if(command == "reload")
+        {
+            Q_EMIT signal_mapping_reload(time);
         }
 
         printf("[WS_RECV] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
@@ -254,7 +260,7 @@ void WS_CLIENT::send_status()
     rootObj["condition"] = conditionObj;
 
     // send
-    QJsonDocument doc(rootObj);    
+    QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("status", res);
 

@@ -108,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ws, SIGNAL(signal_mapping_start(double)), this, SLOT(ws_mapping_start(double)));
     connect(&ws, SIGNAL(signal_mapping_stop(double)), this, SLOT(ws_mapping_stop(double)));
     connect(&ws, SIGNAL(signal_mapping_save(double, QString)), this, SLOT(ws_mapping_save(double, QString)));
+    connect(&ws, SIGNAL(signal_mapping_reload(double)), this, SLOT(ws_mapping_reload(double)));
     connect(&ws, SIGNAL(signal_mapload(double, QString)), this, SLOT(ws_mapload(double, QString)));
     connect(&ws, SIGNAL(signal_localization_autoinit(double)), this, SLOT(ws_localization_autoinit(double)));
     connect(&ws, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(ws_localization_init(double, double, double, double, double)));
@@ -1746,6 +1747,13 @@ void MainWindow::ws_mapping_save(double time, QString name)
         printf("[WS_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
     }
 }
+
+
+void MainWindow::ws_mapping_reload(double time)
+{
+
+}
+
 
 void MainWindow::ws_mapload(double time, QString name)
 {

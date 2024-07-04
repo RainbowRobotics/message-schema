@@ -73,9 +73,12 @@ public:
 Q_SIGNALS:
     void signal_motorinit(double time);
     void signal_move(double time, double vx, double vy, double wz);
+
     void signal_mapping_start(double time);
     void signal_mapping_stop(double time);
     void signal_mapping_save(double time, QString name);
+    void signal_mapping_reload(double time);
+
     void signal_mapload(double time, QString name);
 
     void signal_localization_autoinit(double time);

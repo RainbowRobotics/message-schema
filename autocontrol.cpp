@@ -1093,7 +1093,7 @@ PATH AUTOCONTROL::calc_local_path()
     {
         int st_idx = get_nn_idx(last_local_path.pos, cur_pos);
         double d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
-        if(!obsmap->is_collision(last_local_path.pose, st_idx) && d > config->OBS_LOCAL_GOAL_D*0.2)
+        if(!obsmap->is_collision(last_local_path.pose, st_idx) && d > config->OBS_LOCAL_GOAL_D * 0.3)
         {
             return last_local_path;
         }
@@ -1624,7 +1624,7 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
 
             // pivot control
-            double kp = 1.5;
+            double kp = 1.0;
             double kd = 0.1;
             double w0 = cur_vel[2];
             double w = kp*err_th + kd*w0;
@@ -1755,7 +1755,7 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
             // pivot control
-            double kp = 1.5;
+            double kp = 1.0;
             double kd = 0.1;
             double w0 = cur_vel[2];
             double w = kp*err_th + kd*w0;
