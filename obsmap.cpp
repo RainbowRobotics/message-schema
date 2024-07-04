@@ -104,7 +104,7 @@ void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
     cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_x[0], uv_x[1]), cv::Scalar(0,0,255), 1, cv::LINE_AA);
 }
 
-bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf)
+bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf, const double margin_x, const double margin_y)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -113,10 +113,10 @@ bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf)
     Eigen::Matrix4d G = _obs_tf.inverse()*robot_tf;
 
     // draw rect
-    const double x_min = config->ROBOT_SIZE_X[0];
-    const double x_max = config->ROBOT_SIZE_X[1];
-    const double y_min = config->ROBOT_SIZE_Y[0];
-    const double y_max = config->ROBOT_SIZE_Y[1];
+    const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
+    const double x_max = config->ROBOT_SIZE_X[1] + margin_x;
+    const double y_min = config->ROBOT_SIZE_Y[0] - margin_y;
+    const double y_max = config->ROBOT_SIZE_Y[1] + margin_y;
 
     Eigen::Vector3d P0(x_max, y_max, 0);
     Eigen::Vector3d P1(x_max, y_min, 0);
@@ -176,7 +176,7 @@ bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf)
     return false;
 }
 
-bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx)
+bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const int st_idx)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -488,7 +488,7 @@ bool OBSMAP::is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& o
     return false;
 }
 
-bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, const double& r)
+bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, const double r)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -608,7 +608,7 @@ int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_
     return conflict_idx;
 }
 
-Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double& max_r)
+Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double max_r)
 {
     // get obs map
     cv::Mat _obs_map;

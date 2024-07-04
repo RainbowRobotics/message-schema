@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_Sync, SIGNAL(clicked()), this, SLOT(bt_Sync()));
     connect(ui->bt_MoveLinear, SIGNAL(clicked()), this, SLOT(bt_MoveLinear()));
     connect(ui->bt_MoveRotate, SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));
+    connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
 
     // jog
     connect(ui->bt_JogF, SIGNAL(pressed()), this, SLOT(bt_JogF()));
@@ -1715,6 +1716,24 @@ void MainWindow::ws_mapping_stop(double time)
 void MainWindow::ws_mapping_save(double time, QString name)
 {
     bt_MapSave();
+
+    QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    std::string command = "cp -r " + map_dir.toStdString() + " " + save_dir.toStdString();
+    int result = std::system(command.c_str());
+    if(result == 0)
+    {
+        printf("[WS_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
+    }
+    else
+    {
+        printf("[WS_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
+    }
+}
+
+// for test
+void MainWindow::bt_Test()
+{
+    //ws_mapping_save(0, "test0001");
 }
 
 // for obsmap

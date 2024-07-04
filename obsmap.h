@@ -33,16 +33,16 @@ public:
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
 
-    bool is_collision(const Eigen::Matrix4d& robot_tf);
-    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0);
+    bool is_collision(const Eigen::Matrix4d& robot_tf, const double margin_x = 0, const double margin_y = 0);
+    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const int st_idx = 0);
     bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
     bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);        
     bool is_pivot_collision(const Eigen::Matrix4d& robot_tf);
     bool is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
-    bool is_pos_collision(const Eigen::Vector3d& pos, const double& r);
+    bool is_pos_collision(const Eigen::Vector3d& pos, const double r);
 
     int get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0);
-    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, const double& max_r);
+    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, const double max_r);
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;

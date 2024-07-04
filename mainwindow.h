@@ -182,6 +182,9 @@ private Q_SLOTS:
     // for simulation
     void bt_SimInit();
 
+    // for test
+    void bt_Test();
+
     // for autocontrol
     void bt_AutoMove();
     void bt_AutoMove2();

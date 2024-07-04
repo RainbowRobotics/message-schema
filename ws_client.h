@@ -61,7 +61,9 @@ public:
     void send_status();
     void send_lidar();
     void send_mapping_cloud();
-    void send_mapping_response();
+    void send_mapping_response_start(QString result);
+    void send_mapping_response_stop();
+    void send_mapping_response_save(QString name, QString result);
 
     // util func
     QString get_json(sio::message::ptr const& data, QString key);

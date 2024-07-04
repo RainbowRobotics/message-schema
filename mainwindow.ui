@@ -762,6 +762,19 @@
                <string>w:</string>
               </property>
              </widget>
+             <widget class="QPushButton" name="bt_Test">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>130</y>
+                <width>81</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Test</string>
+              </property>
+             </widget>
             </widget>
            </widget>
           </item>

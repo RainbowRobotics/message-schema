@@ -327,7 +327,34 @@ void WS_CLIENT::send_mapping_cloud()
     }
 }
 
-void WS_CLIENT::send_mapping_response()
+void WS_CLIENT::send_mapping_response_start(QString result)
+{
+    /*
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "start";
+    rootObj["result"] = str;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("mapping", res);
+
+    printf("[WS_SEND] mapping_response_start, %s, time: %f\n", time);
+    */
+}
+
+void WS_CLIENT::send_mapping_response_stop()
+{
+
+}
+
+void WS_CLIENT::send_mapping_response_save(QString name, QString result)
 {
 
 }

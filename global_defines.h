@@ -69,6 +69,7 @@
 
 // qt
 #include <QApplication>
+#include <QStandardPaths>
 #include <QDateTime>
 #include <QDir>
 #include <QFileDialog>

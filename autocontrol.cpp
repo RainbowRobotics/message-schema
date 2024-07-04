@@ -562,8 +562,8 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::sample_and_interpolation(const std::ve
         sampled.push_back(src.back());
     }
 
-    std::vector<Eigen::Vector3d> res = path_dividing(sampled, small_step);
-    res = path_ccma(res);
+    sampled = path_ccma(sampled);
+    std::vector<Eigen::Vector3d> res = path_dividing(sampled, small_step);    
     return res;
 }
 
@@ -1116,64 +1116,84 @@ PATH AUTOCONTROL::calc_local_path()
         }
     }
 
-    // pre processing    
-    bool is_good = true;
-    int offset_dir = -1;
-    std::vector<Eigen::Vector3d> modified_path_pos;
+    // left modified path
+    bool l_good = true;
+    std::vector<Eigen::Vector3d> modified_path_pos_l;
     for(size_t p = 0; p < _path_pose.size(); p++)
     {
-        if(obsmap->is_pos_collision(_path_pos[p], config->ROBOT_RADIUS))
+        Eigen::Vector3d modified_pos = _path_pos[p];
+
+        bool is_found_l = false;
+        for(double dy = 0; dy < 1.0; dy += 0.05)
         {
-            Eigen::Vector3d modified_pos = _path_pos[p];
+            Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+            offset_tf(1,3) = dy;
 
-            bool is_found = false;
-            for(double dy = 0; dy < 1.0; dy += 0.05)
+            Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
+            if(!obsmap->is_collision(modified_tf, 0.1, 0))
             {
-                if(offset_dir == -1 || offset_dir == 0)
-                {
-                    // right offset
-                    Eigen::Vector3d offset0(0, -dy, 0);
-                    Eigen::Vector3d pos0 = _path_pose[p].block(0,0,3,3)*offset0 + _path_pose[p].block(0,3,3,1);
-                    if(!obsmap->is_pos_collision(pos0, config->ROBOT_RADIUS))
-                    {
-                        modified_pos = pos0;
-                        is_found = true;
-                        break;
-                    }
-                }
-
-                if(offset_dir == -1 || offset_dir == 1)
-                {
-                    // left offset
-                    Eigen::Vector3d offset1(0, dy, 0);
-                    Eigen::Vector3d pos1 = _path_pose[p].block(0,0,3,3)*offset1 + _path_pose[p].block(0,3,3,1);
-                    if(!obsmap->is_pos_collision(pos1, config->ROBOT_RADIUS))
-                    {
-                        modified_pos = pos1;
-                        is_found = true;
-                        break;
-                    }
-                }
-            }
-
-            // update path
-            if(is_found)
-            {
-                modified_path_pos.push_back(modified_pos);
-            }
-            else
-            {
-                is_good = false;
+                modified_pos = modified_tf.block(0,3,3,1);
+                is_found_l = true;
                 break;
             }
         }
+
+        if(is_found_l)
+        {
+            modified_path_pos_l.push_back(modified_pos);
+        }
         else
         {
-            modified_path_pos.push_back(_path_pos[p]);            
+            l_good = false;
+            break;
         }
     }
 
-    if(is_good && modified_path_pos.size() >= 3)
+    // right modified path
+    bool r_good = true;
+    std::vector<Eigen::Vector3d> modified_path_pos_r;
+    for(size_t p = 0; p < _path_pose.size(); p++)
+    {
+        Eigen::Vector3d modified_pos = _path_pos[p];
+
+        bool is_found_r = false;
+        for(double dy = 0; dy < 1.0; dy += 0.05)
+        {
+            Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+            offset_tf(1,3) = -dy;
+
+            Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
+            if(!obsmap->is_collision(modified_tf, 0.1, 0))
+            {
+                modified_pos = modified_tf.block(0,3,3,1);
+                is_found_r = true;
+                break;
+            }
+        }
+
+        if(is_found_r)
+        {
+            modified_path_pos_r.push_back(modified_pos);
+        }
+        else
+        {
+            r_good = false;
+            break;
+        }
+    }
+
+    // select one
+    std::vector<Eigen::Vector3d> modified_path_pos;
+    if(r_good)
+    {
+        modified_path_pos = modified_path_pos_r;
+    }
+    else if(l_good)
+    {
+        modified_path_pos = modified_path_pos_l;
+    }
+
+    if(l_good || r_good)
     {
         // eb init
         std::vector<BUBBLE> eb;
@@ -1226,13 +1246,15 @@ PATH AUTOCONTROL::calc_local_path()
                     // velocity update
                     b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
 
+                    // position update
+                    b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;                    
+
                     // velocity saturation
                     double v_norm = b.vel.norm();
                     v_norm = saturation(v_norm, -vel_limit, vel_limit);
                     b.vel = v_norm*b.vel.normalized();
 
-                    // position update
-                    b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;                    
+                    // add
                     _eb.push_back(b);
                 }
 
@@ -1241,7 +1263,7 @@ PATH AUTOCONTROL::calc_local_path()
                 eb = _eb;
             }
 
-            // eb to path
+            // update eb to path_pos
             std::vector<Eigen::Vector3d> _path_pos2;            
             for(size_t p = 0; p < eb.size(); p++)
             {
@@ -1252,7 +1274,7 @@ PATH AUTOCONTROL::calc_local_path()
     }
 
     // path resampling
-    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, 2*GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
+    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
     std::vector<Eigen::Matrix4d> path_pose;
     for(size_t p = 0; p < path_pos.size()-1; p++)
     {
