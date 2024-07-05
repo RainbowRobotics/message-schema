@@ -80,7 +80,7 @@ public:
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
     bool is_state_valid(const ompl::base::State *state) const;
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
-    int get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx);
+    int get_valid_idx(std::vector<Eigen::Matrix4d>& path, int st_idx);
     Eigen::Vector3d refine_force(Eigen::Vector3d f, Eigen::Vector3d P0, Eigen::Vector3d P1);
     std::vector<Eigen::Vector3d> ramer_douglas_peucker(const std::vector<Eigen::Vector3d>& src, double epsilon);
     PATH calc_local_path();
@@ -112,11 +112,6 @@ public:
     // flags    
     std::atomic<bool> is_moving = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
-
-    // for ompl    
-    cv::Mat obs_map;
-    Eigen::Matrix4d obs_tf;
-    cv::Mat avoid_area;
 
 Q_SIGNALS:
     void signal_global_path_updated();

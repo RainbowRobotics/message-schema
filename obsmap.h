@@ -32,18 +32,13 @@ public:
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
-
-    bool is_collision(const Eigen::Matrix4d& robot_tf, const double margin_x = 0, const double margin_y = 0);
-    bool is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const int st_idx = 0, const int step = 1);
-    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
-    bool is_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area);        
+    bool is_pos_collision(const Eigen::Vector3d& pos, double radius);
     bool is_pivot_collision(const Eigen::Matrix4d& robot_tf);
-    bool is_pivot_collision(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const Eigen::Matrix4d& robot_tf, const cv::Mat& avoid_area);
-    bool is_pos_collision(const Eigen::Vector3d& pos, const double r);
+    bool is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
+    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1);
 
-    int get_collision_cnt(const Eigen::Matrix4d& robot_tf, const double margin_x = 0, const double margin_y = 0);
-    int get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0);
-    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, const double max_r);
+    int get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
+    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, double max_r);
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;
@@ -58,20 +53,8 @@ public:
     int cy = 150;
     double gs = 0.05;
 
-    const double P_hit = 0.7;
-    const double P_miss = 0.4;
-    const double P_min = 0.2;
-    const double P_max = 0.8;
-    const double P_wall = 0.6;
-    const double hidden_margin = 0.05;
-
     cv::Vec2i xy_uv(double x, double y);
     cv::Vec2d uv_xy(int u, int v);
-
-    double odds(double p);
-    double odds_inv(double odd);
-    double clamp(double p, double min, double max);
-    double prob(double m_old, double P);
 
 Q_SIGNALS:
     void obs_updated();

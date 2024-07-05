@@ -957,7 +957,7 @@ bool AUTOCONTROL::is_state_valid(const ompl::base::State *state) const
 
     // check collision
     Eigen::Matrix4d robot_tf = se2_to_TF(Eigen::Vector3d(x,y,th));
-    if(obsmap->is_collision(obs_map, obs_tf, robot_tf, avoid_area))
+    if(obsmap->is_tf_collision(robot_tf))
     {
         // is collision        
         return false;
@@ -994,11 +994,11 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
     return min_idx;
 }
 
-int AUTOCONTROL::get_valid_idx(cv::Mat& _obs_map, Eigen::Matrix4d& _obs_tf, cv::Mat& _avoid_area, std::vector<Eigen::Matrix4d>& path, int st_idx)
+int AUTOCONTROL::get_valid_idx(std::vector<Eigen::Matrix4d>& path, int st_idx)
 {
     for(int p = st_idx; p < (int)path.size(); p++)
     {
-        if(!obsmap->is_pivot_collision(_obs_map, _obs_tf, path[p], _avoid_area))
+        if(!obsmap->is_tf_collision(path[p], 0.2, 0.05))
         {
             return p;
         }
@@ -1093,7 +1093,7 @@ PATH AUTOCONTROL::calc_local_path()
     {
         int st_idx = get_nn_idx(last_local_path.pos, cur_pos);
         double d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
-        if(!obsmap->is_collision(last_local_path.pose, st_idx, 10) && d > config->OBS_LOCAL_GOAL_D * 0.3)
+        if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && d > config->OBS_LOCAL_GOAL_D * 0.3)
         {
             return last_local_path;
         }
@@ -1124,7 +1124,7 @@ PATH AUTOCONTROL::calc_local_path()
     std::vector<Eigen::Vector3d> modified_path_pos_l;
     for(size_t p = 0; p < _path_pose.size(); p++)
     {
-        if(!obsmap->is_collision(_path_pose[p], margin_x, margin_y))
+        if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
         {
             modified_path_pos_l.push_back(_path_pos[p]);
             continue;
@@ -1133,13 +1133,13 @@ PATH AUTOCONTROL::calc_local_path()
         Eigen::Vector3d modified_pos = _path_pos[p];
 
         int min_cnt = 9999;
-        for(double dy = 0; dy < 0.5; dy += 0.1)
+        for(double dy = 0; dy < 1.0; dy += 0.1)
         {
             Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
             offset_tf(1,3) = dy;
 
             Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
-            int cnt = obsmap->get_collision_cnt(modified_tf, margin_x, margin_y);
+            int cnt = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y);
             if(cnt < min_cnt)
             {
                 min_cnt = cnt;
@@ -1156,7 +1156,7 @@ PATH AUTOCONTROL::calc_local_path()
     std::vector<Eigen::Vector3d> modified_path_pos_r;
     for(size_t p = 0; p < _path_pose.size(); p++)
     {
-        if(!obsmap->is_collision(_path_pose[p], margin_x, margin_y))
+        if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
         {
             modified_path_pos_r.push_back(_path_pos[p]);
             continue;
@@ -1165,13 +1165,13 @@ PATH AUTOCONTROL::calc_local_path()
         Eigen::Vector3d modified_pos = _path_pos[p];
 
         int min_cnt = 9999;
-        for(double dy = 0; dy < 0.5; dy += 0.1)
+        for(double dy = 0; dy < 1.0; dy += 0.1)
         {
             Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
             offset_tf(1,3) = -dy;
 
             Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
-            int cnt = obsmap->get_collision_cnt(modified_tf, margin_x, margin_y);
+            int cnt = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y);
             if(cnt < min_cnt)
             {
                 min_cnt = cnt;
@@ -1184,29 +1184,60 @@ PATH AUTOCONTROL::calc_local_path()
     }
 
     // select one
+    int decision = last_local_path.decision;
     std::vector<Eigen::Vector3d> modified_path_pos;
     if(sum_cnt_l == 0 && sum_cnt_r == 0)
     {
-        double sum_d_r = calc_length(modified_path_pos_r);
-        double sum_d_l = calc_length(modified_path_pos_l);
-        if(sum_d_l < sum_d_r)
+        if(decision == -1)
+        {
+            double sum_d_r = calc_length(modified_path_pos_r);
+            double sum_d_l = calc_length(modified_path_pos_l);
+            if(sum_d_l < sum_d_r)
+            {
+                modified_path_pos = modified_path_pos_l;
+                decision = 0;
+            }
+            else
+            {
+                modified_path_pos = modified_path_pos_r;
+                decision = 1;
+            }
+        }
+        else if(decision == 0)
         {
             modified_path_pos = modified_path_pos_l;
+            decision = 0;
         }
-        else
+        else if(decision == 1)
         {
             modified_path_pos = modified_path_pos_r;
+            decision = 1;
         }
     }
     else
     {
-        if(sum_cnt_l < sum_cnt_r)
+        if(decision == -1)
+        {
+            if(sum_cnt_l < sum_cnt_r)
+            {
+                modified_path_pos = modified_path_pos_l;
+                decision = 0;
+            }
+            else
+            {
+                modified_path_pos = modified_path_pos_r;
+                decision = 1;
+            }
+        }
+        else if(decision == 0)
         {
             modified_path_pos = modified_path_pos_l;
+            decision = 0;
         }
-        else
+        else if(decision == 1)
         {
             modified_path_pos = modified_path_pos_r;
+            decision = 1;
         }
     }
 
@@ -1312,6 +1343,7 @@ PATH AUTOCONTROL::calc_local_path()
     res.pos = path_pos;
     res.ref_v = ref_v;
     res.goal_tf = path_pose.back();
+    res.decision = decision;
     return res;
 }
 
@@ -1319,52 +1351,6 @@ PATH AUTOCONTROL::calc_avoid_path()
 {
     // get global path
     PATH global_path = get_cur_global_path();
-
-    // get obs map
-    obsmap->get_obs_map(obs_map, obs_tf);
-    cv::dilate(obs_map, obs_map, cv::Mat());
-
-    // set avoid area
-    const int radius = std::ceil(config->ROBOT_RADIUS/obsmap->gs);
-    const int diameter = 2*radius + 3;
-    cv::Mat avoid_area0 = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
-    Eigen::Matrix4d inv_obs_tf = obs_tf.inverse();
-    for(size_t p = 0; p < global_path.pos.size()-1; p++)
-    {
-        Eigen::Vector3d P0 = global_path.pos[p];
-        Eigen::Vector3d P1 = global_path.pos[p+1];
-
-        Eigen::Vector3d _P0 = inv_obs_tf.block(0,0,3,3)*P0 + inv_obs_tf.block(0,3,3,1);
-        Eigen::Vector3d _P1 = inv_obs_tf.block(0,0,3,3)*P1 + inv_obs_tf.block(0,3,3,1);
-
-        cv::Vec2i uv0 = obsmap->xy_uv(_P0[0], _P0[1]);
-        cv::Vec2i uv1 = obsmap->xy_uv(_P1[0], _P1[1]);
-        cv::line(avoid_area0, cv::Point(uv0[0], uv0[1]), cv::Point(uv1[0], uv1[1]), cv::Scalar(255), diameter);
-
-        if(p == 0)
-        {
-            cv::circle(avoid_area0, cv::Point(uv0[0], uv0[1]), diameter, cv::Scalar(255), -1);
-        }
-
-        if(p == global_path.pos.size()-2)
-        {
-            cv::circle(avoid_area0, cv::Point(uv1[0], uv1[1]), diameter, cv::Scalar(255), -1);
-        }
-    }
-
-    cv::Mat avoid_area1 = cv::Mat(obsmap->h, obsmap->w, CV_8U, cv::Scalar(0));
-    for(int i = 0; i < obsmap->h; i++)
-    {
-        for(int j = 0; j < obsmap->w; j++)
-        {
-            if(obs_map.ptr<uchar>(i)[j] == 255 && avoid_area0.ptr<uchar>(i)[j] == 255)
-            {
-                cv::circle(avoid_area1, cv::Point(j,i), diameter, cv::Scalar(255), -1);
-            }
-        }
-    }
-    cv::bitwise_or(avoid_area0, avoid_area1, avoid_area);
-    cv::dilate(avoid_area, avoid_area, cv::Mat(), cv::Point(-1,-1), 3);
 
     // get cur params
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -1374,7 +1360,7 @@ PATH AUTOCONTROL::calc_avoid_path()
 
     // get local goal
     int _local_goal_idx = std::min<int>(cur_idx + config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP, (int)global_path.pose.size()-1);
-    int local_goal_idx = get_valid_idx(obs_map, obs_tf, avoid_area, global_path.pose, _local_goal_idx);
+    int local_goal_idx = get_valid_idx(global_path.pose, _local_goal_idx);
     Eigen::Matrix4d local_goal_tf = global_path.pose[local_goal_idx];
     Eigen::Vector3d local_goal_xi = TF_to_se2(local_goal_tf);
 
@@ -1400,7 +1386,7 @@ PATH AUTOCONTROL::calc_avoid_path()
 
     Eigen::Vector3d st_xi = cur_xi;
     Eigen::Matrix4d st_tf = se2_to_TF(st_xi);
-    if(obsmap->is_collision(obs_map, obs_tf, st_tf, avoid_area))
+    if(obsmap->is_tf_collision(st_tf))
     {
         for(double dy = 0; dy < 1.0; dy += 0.01)
         {
@@ -1410,7 +1396,7 @@ PATH AUTOCONTROL::calc_avoid_path()
                 offset_tf(1,3) = dy;
 
                 Eigen::Matrix4d modified_tf = st_tf*offset_tf;
-                if(!obsmap->is_collision(obs_map, obs_tf, modified_tf, avoid_area))
+                if(!obsmap->is_tf_collision(modified_tf))
                 {
                     st_xi = TF_to_se2(modified_tf);
                     break;
@@ -1423,7 +1409,7 @@ PATH AUTOCONTROL::calc_avoid_path()
                 offset_tf(1,3) = -dy;
 
                 Eigen::Matrix4d modified_tf = st_tf*offset_tf;
-                if(!obsmap->is_collision(obs_map, obs_tf, modified_tf, avoid_area))
+                if(!obsmap->is_tf_collision(modified_tf))
                 {
                     st_xi = TF_to_se2(modified_tf);
                     break;
@@ -1434,7 +1420,7 @@ PATH AUTOCONTROL::calc_avoid_path()
 
     Eigen::Vector3d ed_xi = local_goal_xi;
     Eigen::Matrix4d ed_tf = se2_to_TF(ed_xi);
-    if(obsmap->is_collision(obs_map, obs_tf, ed_tf, avoid_area))
+    if(obsmap->is_tf_collision(ed_tf))
     {
         for(double dy = 0; dy < 1.0; dy += 0.01)
         {
@@ -1444,7 +1430,7 @@ PATH AUTOCONTROL::calc_avoid_path()
                 offset_tf(1,3) = dy;
 
                 Eigen::Matrix4d modified_tf = ed_tf*offset_tf;
-                if(!obsmap->is_collision(obs_map, obs_tf, modified_tf, avoid_area))
+                if(!obsmap->is_tf_collision(modified_tf))
                 {
                     ed_xi = TF_to_se2(modified_tf);
                     break;
@@ -1457,7 +1443,7 @@ PATH AUTOCONTROL::calc_avoid_path()
                 offset_tf(1,3) = -dy;
 
                 Eigen::Matrix4d modified_tf = ed_tf*offset_tf;
-                if(!obsmap->is_collision(obs_map, obs_tf, modified_tf, avoid_area))
+                if(!obsmap->is_tf_collision(modified_tf))
                 {
                     ed_xi = TF_to_se2(modified_tf);
                     break;
@@ -1754,7 +1740,7 @@ void AUTOCONTROL::b_loop_pp()
 
                 std::vector<Eigen::Matrix4d> traj = traj0;
                 traj.insert(traj.end(), traj1.begin(), traj1.end());
-                if(!obsmap->is_collision(traj))
+                if(!obsmap->is_path_collision(traj))
                 {
                     obs_v = vv;
                 }
@@ -1879,7 +1865,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 // reverse moving
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(-params.ST_V, 0, 0), 0.2, 2.0, cur_tf);
-                if(obsmap->is_collision(traj) || get_time() - reverse_st_t > 2.0)
+                if(obsmap->is_path_collision(traj) || get_time() - reverse_st_t > 2.0)
                 {
                     mobile->move(0, 0, 0);
                     obs_state = 2;
