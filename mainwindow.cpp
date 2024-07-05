@@ -1751,9 +1751,9 @@ void MainWindow::ws_mapping_save(double time, QString name)
 
 void MainWindow::ws_mapping_reload(double time)
 {
-
+    ws.last_send_kfrm_idx = 0;
+    printf("[WS_RECV] mapping reload\n");
 }
-
 
 void MainWindow::ws_mapload(double time, QString name)
 {
@@ -2012,11 +2012,7 @@ void MainWindow::watch_loop()
             {
                 ws.send_lidar();
             }
-        }
 
-        // for 3000ms loop
-        if(cnt % 30 == 0)
-        {
             if(ws.is_connected)
             {
                 ws.send_mapping_cloud();
