@@ -39,6 +39,7 @@ double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
 double calc_dist_2d(Eigen::Vector3d P);
 double calc_length(std::vector<Eigen::Vector3d>& src);
+double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
 std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);

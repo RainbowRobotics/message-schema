@@ -514,6 +514,28 @@ double calc_length(std::vector<Eigen::Vector3d>& src)
     }
 }
 
+double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos)
+{
+    if(src.size() >= 2)
+    {
+        double min_dist = 99999999;
+        for(size_t p = 0; p < src.size()-1; p++)
+        {
+            double dist = calc_seg_dist(src[p], src[p+1], pos);
+            if(dist < min_dist)
+            {
+                min_dist = dist;
+            }
+        }
+        return min_dist;
+    }
+    else
+    {
+        double dist = calc_dist_2d(src.front()-pos);
+        return dist;
+    }
+}
+
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
 {
     std::vector<cv::Vec2i> res;

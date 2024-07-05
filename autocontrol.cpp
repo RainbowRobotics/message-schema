@@ -1093,7 +1093,7 @@ PATH AUTOCONTROL::calc_local_path()
     {
         int st_idx = get_nn_idx(last_local_path.pos, cur_pos);
         double d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
-        if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && d > config->OBS_LOCAL_GOAL_D * 0.3)
+        if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && d > config->OBS_LOCAL_GOAL_D * 0.5)
         {
             return last_local_path;
         }
@@ -1183,61 +1183,40 @@ PATH AUTOCONTROL::calc_local_path()
         sum_cnt_r += min_cnt;
     }
 
-    // select one
-    int decision = last_local_path.decision;
+    // select one    
     std::vector<Eigen::Vector3d> modified_path_pos;
     if(sum_cnt_l == 0 && sum_cnt_r == 0)
     {
-        if(decision == -1)
-        {
-            double sum_d_r = calc_length(modified_path_pos_r);
-            double sum_d_l = calc_length(modified_path_pos_l);
-            if(sum_d_l < sum_d_r)
-            {
-                modified_path_pos = modified_path_pos_l;
-                decision = 0;
-            }
-            else
-            {
-                modified_path_pos = modified_path_pos_r;
-                decision = 1;
-            }
-        }
-        else if(decision == 0)
+        double sum_d_l = calc_length(modified_path_pos_l);
+        double sum_d_r = calc_length(modified_path_pos_r);
+        if(sum_d_l < sum_d_r)
         {
             modified_path_pos = modified_path_pos_l;
-            decision = 0;
         }
-        else if(decision == 1)
+        else
         {
             modified_path_pos = modified_path_pos_r;
-            decision = 1;
         }
+    }
+    else if(sum_cnt_l == 0)
+    {
+        modified_path_pos = modified_path_pos_l;
+    }
+    else if(sum_cnt_r == 0)
+    {
+        modified_path_pos = modified_path_pos_r;
     }
     else
     {
-        if(decision == -1)
-        {
-            if(sum_cnt_l < sum_cnt_r)
-            {
-                modified_path_pos = modified_path_pos_l;
-                decision = 0;
-            }
-            else
-            {
-                modified_path_pos = modified_path_pos_r;
-                decision = 1;
-            }
-        }
-        else if(decision == 0)
+        double cur_dist_l = calc_min_dist(modified_path_pos_l, cur_pos);
+        double cur_dist_r = calc_min_dist(modified_path_pos_r, cur_pos);
+        if(cur_dist_l < cur_dist_r)
         {
             modified_path_pos = modified_path_pos_l;
-            decision = 0;
         }
-        else if(decision == 1)
+        else
         {
             modified_path_pos = modified_path_pos_r;
-            decision = 1;
         }
     }
 
@@ -1342,8 +1321,7 @@ PATH AUTOCONTROL::calc_local_path()
     res.pose = path_pose;
     res.pos = path_pos;
     res.ref_v = ref_v;
-    res.goal_tf = path_pose.back();
-    res.decision = decision;
+    res.goal_tf = path_pose.back();    
     return res;
 }
 
