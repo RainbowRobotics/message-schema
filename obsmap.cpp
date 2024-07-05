@@ -176,7 +176,7 @@ bool OBSMAP::is_collision(const Eigen::Matrix4d& robot_tf, const double margin_x
     return false;
 }
 
-bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const int st_idx)
+bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const int st_idx, const int step)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -194,7 +194,7 @@ bool OBSMAP::is_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, const i
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = st_idx; p < robot_tfs.size(); p++)
+    for(size_t p = st_idx; p < robot_tfs.size(); p+=step)
     {
         Eigen::Matrix4d G = _obs_tf.inverse()*robot_tfs[p];
 
@@ -527,6 +527,78 @@ bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, const double r)
     return false;
 }
 
+int OBSMAP::get_collision_cnt(const Eigen::Matrix4d& robot_tf, const double margin_x, const double margin_y)
+{
+    // get obs map
+    cv::Mat _obs_map;
+    Eigen::Matrix4d _obs_tf;
+    get_obs_map(_obs_map, _obs_tf);
+    Eigen::Matrix4d G = _obs_tf.inverse()*robot_tf;
+
+    // draw rect
+    const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
+    const double x_max = config->ROBOT_SIZE_X[1] + margin_x;
+    const double y_min = config->ROBOT_SIZE_Y[0] - margin_y;
+    const double y_max = config->ROBOT_SIZE_Y[1] + margin_y;
+
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
+
+    Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
+    Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
+    Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
+    Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
+
+    cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
+    if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+    {
+        return 99999999;
+    }
+
+    cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
+    if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+    {
+        return 99999999;
+    }
+
+    cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
+    if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
+    {
+        return 99999999;
+    }
+
+    cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
+    if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
+    {
+        return 99999999;
+    }
+
+    std::vector<std::vector<cv::Point>> pts(1);
+    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
+    cv::fillPoly(mask, pts, cv::Scalar(255));
+
+    // collision counting
+    int cnt = 0;
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                cnt++;
+            }
+        }
+    }
+    return cnt;
+}
+
 int OBSMAP::get_conflict_idx(const cv::Mat& obs_map, const Eigen::Matrix4d& obs_tf, const std::vector<Eigen::Matrix4d>& robot_tfs, const cv::Mat& avoid_area, const int idx0)
 {
     const double x_min = config->ROBOT_SIZE_X[0];
@@ -625,7 +697,6 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
     std::vector<cv::Vec2i> circle = filled_circle_iterator(center_uv, search_r);
 
     int num = 0;
-    double min_d = 99999999;
     Eigen::Vector3d sum_f(0, 0, 0);
     for(size_t p = 0; p < circle.size(); p++)
     {

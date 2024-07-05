@@ -497,6 +497,23 @@ double calc_dist_2d(Eigen::Vector3d P)
     return std::sqrt(P[0]*P[0] + P[1]*P[1]);
 }
 
+double calc_length(std::vector<Eigen::Vector3d>& src)
+{
+    if(src.size() >= 2)
+    {
+        double sum_d = 0;
+        for(size_t p = 0; p < src.size()-1; p++)
+        {
+            sum_d += calc_dist_2d(src[p+1]-src[p]);
+        }
+        return sum_d;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
 {
     std::vector<cv::Vec2i> res;
