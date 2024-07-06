@@ -1033,10 +1033,13 @@ PATH AUTOCONTROL::calc_local_path()
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
     // check last local path
+    double last_ref_v = params.LIMIT_V;
     PATH last_local_path = get_cur_local_path();
     if(last_local_path.pos.size() > 0)
     {
         int st_idx = get_nn_idx(last_local_path.pos, cur_pos);
+        last_ref_v = last_local_path.ref_v[st_idx];
+
         double local_goal_d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
         if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && local_goal_d > config->OBS_LOCAL_GOAL_D * 0.5)
         {
@@ -1168,10 +1171,26 @@ PATH AUTOCONTROL::calc_local_path()
             modified_path_pos = modified_path_pos_l;
             printf("l, %d, %d\n", sum_cnt_l, sum_cnt_r);
         }
-        else
+        else if(sum_cnt_r < sum_cnt_l)
         {
             modified_path_pos = modified_path_pos_r;
             printf("r, %d, %d\n", sum_cnt_l, sum_cnt_r);
+        }
+        else
+        {
+            // same
+            double length_l = calc_length(modified_path_pos_l);
+            double length_r = calc_length(modified_path_pos_r);
+            if(length_l < length_r)
+            {
+                modified_path_pos = modified_path_pos_l;
+                printf("l, %d, %d, %f, %f\n", sum_cnt_l, sum_cnt_r, length_l, length_r);
+            }
+            else
+            {
+                modified_path_pos = modified_path_pos_r;
+                printf("r, %d, %d, %f, %f\n", sum_cnt_l, sum_cnt_r, length_l, length_r);
+            }
         }
 
         if(modified_path_pos.size() >= 3)
@@ -1266,7 +1285,7 @@ PATH AUTOCONTROL::calc_local_path()
     path_pose.push_back(_path_pose.back());
 
     // set ref_v
-    std::vector<double> ref_v = calc_ref_v(path_pose, params.LIMIT_V);
+    std::vector<double> ref_v = calc_ref_v(path_pose, last_ref_v);
 
     // smoothing ref_v
     ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
