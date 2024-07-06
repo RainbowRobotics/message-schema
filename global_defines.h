@@ -696,12 +696,10 @@ struct PATH
     std::vector<Eigen::Vector3d> pos;
     std::vector<double> ref_v;
     Eigen::Matrix4d goal_tf;
-    int decision;
 
     PATH()
     {
-        goal_tf.setIdentity();
-        decision = -1;
+        goal_tf.setIdentity();        
     }
 
     PATH(const PATH& p)
@@ -710,7 +708,6 @@ struct PATH
         pos = p.pos;        
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
-        decision = p.decision;
     }
 
     PATH& operator=(const PATH& p)
@@ -719,7 +716,6 @@ struct PATH
         pos = p.pos;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
-        decision = p.decision;
         return *this;
     }
 };

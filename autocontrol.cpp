@@ -131,6 +131,8 @@ void AUTOCONTROL::stop()
     }
     mobile->move(0, 0, 0);
     is_moving = false;
+
+    clear_path();
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -955,9 +957,12 @@ bool AUTOCONTROL::is_state_valid(const ompl::base::State *state) const
     const double y = cur_state->getY();
     const double th = cur_state->getYaw();
 
+    const double margin_x = 0.1;
+    const double margin_y = 0.05;
+
     // check collision
     Eigen::Matrix4d robot_tf = se2_to_TF(Eigen::Vector3d(x,y,th));
-    if(obsmap->is_tf_collision(robot_tf))
+    if(obsmap->is_tf_collision(robot_tf, margin_x, margin_y))
     {
         // is collision        
         return false;
@@ -1017,66 +1022,6 @@ Eigen::Vector3d AUTOCONTROL::refine_force(Eigen::Vector3d f, Eigen::Vector3d P0,
     return res_f;
 }
 
-std::vector<Eigen::Vector3d> AUTOCONTROL::ramer_douglas_peucker(const std::vector<Eigen::Vector3d>& src, double epsilon)
-{
-    if(src.size() < 2)
-    {
-        printf("[AUTO] RDP, not enough points\n");
-        return std::vector<Eigen::Vector3d>();
-    }
-
-    auto perpendicular_distance = [](const Eigen::Vector3d &pt, const Eigen::Vector3d &line_start, const Eigen::Vector3d &line_end)
-    {
-        Eigen::Vector3d line = line_end - line_start;
-        Eigen::Vector3d pt_line = pt - line_start;
-        double area = line.cross(pt_line).norm();
-        double base = line.norm();
-        return area / base;
-    };
-
-    std::function<void(const std::vector<Eigen::Vector3d>&, double, std::vector<Eigen::Vector3d>&)> rdp;
-    rdp = [&rdp, &perpendicular_distance](const std::vector<Eigen::Vector3d> &point_list, double epsilon, std::vector<Eigen::Vector3d> &out)
-    {
-        double dmax = 0.0;
-        size_t index = 0;
-        size_t end = point_list.size() - 1;
-
-        for (size_t i = 1; i < end; ++i)
-        {
-            double d = perpendicular_distance(point_list[i], point_list[0], point_list[end]);
-            if (d > dmax)
-            {
-                index = i;
-                dmax = d;
-            }
-        }
-
-        if (dmax > epsilon)
-        {
-            std::vector<Eigen::Vector3d> rec_results1;
-            std::vector<Eigen::Vector3d> rec_results2;
-            std::vector<Eigen::Vector3d> first_line(point_list.begin(), point_list.begin() + index + 1);
-            std::vector<Eigen::Vector3d> last_line(point_list.begin() + index, point_list.end());
-
-            rdp(first_line, epsilon, rec_results1);
-            rdp(last_line, epsilon, rec_results2);
-
-            out.assign(rec_results1.begin(), rec_results1.end() - 1);
-            out.insert(out.end(), rec_results2.begin(), rec_results2.end());
-        }
-        else
-        {
-            out.clear();
-            out.push_back(point_list[0]);
-            out.push_back(point_list[end]);
-        }
-    };
-
-    std::vector<Eigen::Vector3d> simplified;
-    rdp(src, epsilon, simplified);
-    return simplified;
-}
-
 PATH AUTOCONTROL::calc_local_path()
 {
     // get params
@@ -1092,17 +1037,23 @@ PATH AUTOCONTROL::calc_local_path()
     if(last_local_path.pos.size() > 0)
     {
         int st_idx = get_nn_idx(last_local_path.pos, cur_pos);
-        double d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
-        if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && d > config->OBS_LOCAL_GOAL_D * 0.5)
+        double local_goal_d = calc_dist_2d(last_local_path.pos.back()-cur_pos);
+        if(!obsmap->is_path_collision(last_local_path.pose, st_idx, 10) && local_goal_d > config->OBS_LOCAL_GOAL_D * 0.5)
         {
             return last_local_path;
         }
     }
 
     // get path segment
-    std::vector<Eigen::Vector3d> _path_pos;
-    std::vector<Eigen::Matrix4d> _path_pose;    
-    for(int p = std::max<int>(cur_idx-10, 0); p < (int)global_path.pos.size(); p++)
+    std::vector<Eigen::Vector3d> _path_pos;    
+    std::vector<Eigen::Matrix4d> _path_pose;
+
+    _path_pos.push_back(cur_pos);
+    _path_pose.push_back(cur_tf);
+
+    //int st_idx = std::max<int>(cur_idx-10, 0);
+    int st_idx = std::min<int>(cur_idx+3, (int)global_path.pos.size()-1);
+    for(int p = st_idx; p < (int)global_path.pos.size(); p++)
     {
         double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
         if(d <= config->OBS_LOCAL_GOAL_D)
@@ -1116,187 +1067,191 @@ PATH AUTOCONTROL::calc_local_path()
         }
     }
 
-    const double margin_x = 0.2;
-    const double margin_y = 0.05;
-
-    // left modified path
-    int sum_cnt_l = 0;
-    std::vector<Eigen::Vector3d> modified_path_pos_l;
-    for(size_t p = 0; p < _path_pose.size(); p++)
+    // eband
+    double global_goal_d = calc_dist_2d(global_path.pos.back()-cur_pos);
+    if(global_goal_d > 1.0)
     {
-        if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
+        const double margin_x = 0.2;
+        const double margin_y = 0.05;
+        const double range = 2.0;
+
+        // left modified path
+        int sum_cnt_l = 0;
+        std::vector<Eigen::Vector3d> modified_path_pos_l;
+        for(size_t p = 0; p < _path_pose.size(); p++)
         {
-            modified_path_pos_l.push_back(_path_pos[p]);
-            continue;
-        }
-
-        Eigen::Vector3d modified_pos = _path_pos[p];
-
-        int min_cnt = 9999;
-        for(double dy = 0; dy < 1.0; dy += 0.1)
-        {
-            Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
-            offset_tf(1,3) = dy;
-
-            Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
-            int cnt = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y);
-            if(cnt < min_cnt)
+            if(p == 0)
             {
-                min_cnt = cnt;
-                modified_pos = modified_tf.block(0,3,3,1);
+                modified_path_pos_l.push_back(_path_pos[p]);
+                continue;
             }
-        }
 
-        modified_path_pos_l.push_back(modified_pos);
-        sum_cnt_l += min_cnt;
-    }
-
-    // right modified path
-    int sum_cnt_r = 0;
-    std::vector<Eigen::Vector3d> modified_path_pos_r;
-    for(size_t p = 0; p < _path_pose.size(); p++)
-    {
-        if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
-        {
-            modified_path_pos_r.push_back(_path_pos[p]);
-            continue;
-        }
-
-        Eigen::Vector3d modified_pos = _path_pos[p];
-
-        int min_cnt = 9999;
-        for(double dy = 0; dy < 1.0; dy += 0.1)
-        {
-            Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
-            offset_tf(1,3) = -dy;
-
-            Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
-            int cnt = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y);
-            if(cnt < min_cnt)
+            if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
             {
-                min_cnt = cnt;
-                modified_pos = modified_tf.block(0,3,3,1);
+                modified_path_pos_l.push_back(_path_pos[p]);
+                continue;
             }
-        }
 
-        modified_path_pos_r.push_back(modified_pos);
-        sum_cnt_r += min_cnt;
-    }
+            Eigen::Vector3d modified_pos = _path_pos[p];
 
-    // select one    
-    std::vector<Eigen::Vector3d> modified_path_pos;
-    if(sum_cnt_l == 0 && sum_cnt_r == 0)
-    {
-        double sum_d_l = calc_length(modified_path_pos_l);
-        double sum_d_r = calc_length(modified_path_pos_r);
-        if(sum_d_l < sum_d_r)
-        {
-            modified_path_pos = modified_path_pos_l;
-        }
-        else
-        {
-            modified_path_pos = modified_path_pos_r;
-        }
-    }
-    else if(sum_cnt_l == 0)
-    {
-        modified_path_pos = modified_path_pos_l;
-    }
-    else if(sum_cnt_r == 0)
-    {
-        modified_path_pos = modified_path_pos_r;
-    }
-    else
-    {
-        double cur_dist_l = calc_min_dist(modified_path_pos_l, cur_pos);
-        double cur_dist_r = calc_min_dist(modified_path_pos_r, cur_pos);
-        if(cur_dist_l < cur_dist_r)
-        {
-            modified_path_pos = modified_path_pos_l;
-        }
-        else
-        {
-            modified_path_pos = modified_path_pos_r;
-        }
-    }
-
-    if(modified_path_pos.size() >= 3)
-    {
-        // eb init
-        std::vector<BUBBLE> eb;
-        for(size_t p = 0; p < _path_pos.size(); p++)
-        {
-            BUBBLE b;
-            b.ref = _path_pos[p];
-            b.pos = modified_path_pos[p];
-            eb.push_back(b);
-        }
-
-        // eband method
-        if(eb.size() >= 3)
-        {
-            // eb iteration
-            double k_i = 20.0;
-            double k_e = 20.0;
-            double c = 2.0;
-            double dt = 0.05;
-            double vel_limit = 0.35;
-            int max_iter = 5;
-            for(int iter = 0; iter < max_iter; iter++)
+            int min_cnt0 = 99999999;
+            int min_cnt1 = 99999999;
+            for(double dy = -0.3; dy < 1.0; dy += 0.05)
             {
-                // band deformation
-                std::vector<BUBBLE> _eb;
-                _eb.push_back(eb.front());
+                Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+                offset_tf(1,3) = dy;
 
-                for(size_t p = 1; p < eb.size()-1; p++)
+                Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
+
+                int cnt0 = 0;
+                int cnt1 = 0;
+                bool is_ok = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y, range, cnt0, cnt1);
+                if(is_ok && cnt0 < min_cnt0)
                 {
-                    BUBBLE b = eb[p];
+                    min_cnt0 = cnt0;
+                    min_cnt1 = cnt1;
+                    modified_pos = modified_tf.block(0,3,3,1);
+                }
+            }
 
-                    // calc forces                    
-                    Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
-                    Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, b.r);
-                    Eigen::Vector3d f = (k_i * f_i) + (k_e * f_e) - (c * b.vel);
+            modified_path_pos_l.push_back(modified_pos);
+            sum_cnt_l += min_cnt1;
+        }
 
-                    // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
-                    Eigen::Vector3d k1_v = f * dt;
-                    Eigen::Vector3d k1_p = b.vel * dt;
+        // right modified path
+        int sum_cnt_r = 0;
+        std::vector<Eigen::Vector3d> modified_path_pos_r;
+        for(size_t p = 0; p < _path_pose.size(); p++)
+        {
+            if(p == 0)
+            {
+                modified_path_pos_r.push_back(_path_pos[p]);
+                continue;
+            }
 
-                    Eigen::Vector3d k2_v = f * dt;
-                    Eigen::Vector3d k2_p = (b.vel + k1_v * 0.5) * dt;
+            if(!obsmap->is_tf_collision(_path_pose[p], margin_x, margin_y))
+            {
+                modified_path_pos_r.push_back(_path_pos[p]);
+                continue;
+            }
 
-                    Eigen::Vector3d k3_v = f * dt;
-                    Eigen::Vector3d k3_p = (b.vel + k2_v * 0.5) * dt;
+            Eigen::Vector3d modified_pos = _path_pos[p];
 
-                    Eigen::Vector3d k4_v = f * dt;
-                    Eigen::Vector3d k4_p = (b.vel + k3_v) * dt;
+            int min_cnt0 = 99999999;
+            int min_cnt1 = 99999999;
+            for(double dy = -0.3; dy < 1.0; dy += 0.05)
+            {
+                Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+                offset_tf(1,3) = -dy;
 
-                    // velocity update
-                    b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
+                Eigen::Matrix4d modified_tf = _path_pose[p]*offset_tf;
 
-                    // position update
-                    b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;                    
+                int cnt0 = 0;
+                int cnt1 = 0;
+                bool is_ok = obsmap->get_tf_collision_cnt(modified_tf, margin_x, margin_y, range, cnt0, cnt1);
+                if(is_ok && cnt0 < min_cnt0)
+                {
+                    min_cnt0 = cnt0;
+                    min_cnt1 = cnt1;
+                    modified_pos = modified_tf.block(0,3,3,1);
+                }
+            }
 
-                    // velocity saturation
-                    double v_norm = b.vel.norm();
-                    v_norm = saturation(v_norm, -vel_limit, vel_limit);
-                    b.vel = v_norm*b.vel.normalized();
+            modified_path_pos_r.push_back(modified_pos);
+            sum_cnt_r += min_cnt1;
+        }
 
-                    // add
-                    _eb.push_back(b);
+        // select one
+        std::vector<Eigen::Vector3d> modified_path_pos;
+        if(sum_cnt_l < sum_cnt_r)
+        {
+            modified_path_pos = modified_path_pos_l;
+            printf("l, %d, %d\n", sum_cnt_l, sum_cnt_r);
+        }
+        else
+        {
+            modified_path_pos = modified_path_pos_r;
+            printf("r, %d, %d\n", sum_cnt_l, sum_cnt_r);
+        }
+
+        if(modified_path_pos.size() >= 3)
+        {
+            // eb init
+            std::vector<BUBBLE> eb;
+            for(size_t p = 0; p < _path_pos.size(); p++)
+            {
+                BUBBLE b;
+                b.ref = _path_pos[p];
+                b.pos = modified_path_pos[p];
+                eb.push_back(b);
+            }
+
+            // eband method
+            if(eb.size() >= 3)
+            {
+                // eb iteration
+                double k_i = 10.0;
+                double k_e = 10.0;
+                double c = 1.0;
+                double dt = 0.05;
+                double vel_limit = 0.35;
+                int max_iter = 5;
+                for(int iter = 0; iter < max_iter; iter++)
+                {
+                    // band deformation
+                    std::vector<BUBBLE> _eb;
+                    _eb.push_back(eb.front());
+
+                    for(size_t p = 1; p < eb.size()-1; p++)
+                    {
+                        BUBBLE b = eb[p];
+
+                        // calc forces
+                        Eigen::Vector3d f_i = (eb[p-1].pos - b.pos) + (eb[p+1].pos - b.pos);
+                        Eigen::Vector3d f_e = obsmap->get_obs_force(b.pos, b.r);
+                        Eigen::Vector3d f = (k_i * f_i) + (k_e * f_e) - (c * b.vel);
+
+                        // Runge-Kutta 4th (f = ma -> a = f/m, but m is 1 so f = a)
+                        Eigen::Vector3d k1_v = f * dt;
+                        Eigen::Vector3d k1_p = b.vel * dt;
+
+                        Eigen::Vector3d k2_v = f * dt;
+                        Eigen::Vector3d k2_p = (b.vel + k1_v * 0.5) * dt;
+
+                        Eigen::Vector3d k3_v = f * dt;
+                        Eigen::Vector3d k3_p = (b.vel + k2_v * 0.5) * dt;
+
+                        Eigen::Vector3d k4_v = f * dt;
+                        Eigen::Vector3d k4_p = (b.vel + k3_v) * dt;
+
+                        // velocity update
+                        b.vel = b.vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6.0;
+
+                        // position update
+                        b.pos = b.pos + (k1_p + 2 * k2_p + 2 * k3_p + k4_p) / 6.0;
+
+                        // velocity saturation
+                        double v_norm = b.vel.norm();
+                        v_norm = saturation(v_norm, -vel_limit, vel_limit);
+                        b.vel = v_norm*b.vel.normalized();
+
+                        // add
+                        _eb.push_back(b);
+                    }
+
+                    // set last bubble and update
+                    _eb.push_back(eb.back());
+                    eb = _eb;
                 }
 
-                // set last bubble and update
-                _eb.push_back(eb.back());
-                eb = _eb;
+                // update eb to path_pos
+                std::vector<Eigen::Vector3d> _path_pos2;
+                for(size_t p = 0; p < eb.size(); p++)
+                {
+                    _path_pos2.push_back(eb[p].pos);
+                }
+                _path_pos = _path_pos2;
             }
-
-            // update eb to path_pos
-            std::vector<Eigen::Vector3d> _path_pos2;            
-            for(size_t p = 0; p < eb.size(); p++)
-            {
-                _path_pos2.push_back(eb[p].pos);
-            }            
-            _path_pos = _path_pos2;
         }
     }
 
@@ -1713,11 +1668,7 @@ void AUTOCONTROL::b_loop_pp()
             double obs_v = 0;
             for(double vv = 0.1; vv <= params.LIMIT_V; vv += 0.1)
             {
-                std::vector<Eigen::Matrix4d> traj0 = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.1, 1.0, cur_tf);
-                std::vector<Eigen::Matrix4d> traj1 = calc_trajectory(Eigen::Vector3d(vv, 0, 0.2*cur_vel[2]), 0.1, 1.0, cur_tf);
-
-                std::vector<Eigen::Matrix4d> traj = traj0;
-                traj.insert(traj.end(), traj1.begin(), traj1.end());
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.1, 1.0, cur_tf);
                 if(!obsmap->is_path_collision(traj))
                 {
                     obs_v = vv;

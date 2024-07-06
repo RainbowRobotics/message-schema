@@ -400,7 +400,7 @@ void WS_CLIENT::send_mapping_response_start(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[WS_SEND] mapping_response_start, %s, time: %f\n", time);
+    printf("[WS_SEND] mapping_response_start, time: %f\n", time);
 }
 
 void WS_CLIENT::send_mapping_response_stop()

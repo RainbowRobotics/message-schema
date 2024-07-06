@@ -536,6 +536,30 @@ double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos)
     }
 }
 
+double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1)
+{
+    int n = src0.size();
+    int m = src1.size();
+
+    std::vector<std::vector<double>> dtw(n + 1, std::vector<double>(m + 1, std::numeric_limits<double>::infinity()));
+    dtw[0][0] = 0.0;
+
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= m; ++j)
+        {
+            double cost = (src0[i - 1] - src1[j - 1]).norm();
+            dtw[i][j] = cost + std::min({dtw[i - 1][j], dtw[i][j - 1], dtw[i - 1][j - 1]});
+        }
+    }
+
+    double dtw_distance = dtw[n][m];
+
+    double max_length = std::max(n, m);
+    double similarity = std::exp(-dtw_distance / max_length);
+    return similarity;
+}
+
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
 {
     std::vector<cv::Vec2i> res;
@@ -755,5 +779,22 @@ Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf)
     Eigen::Matrix4d ref = tf*reverse;
     return ref;
 }
+
+Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf)
+{
+    Eigen::Matrix3d rotation_matrix = tf.block<3, 3>(0, 0);
+    double yaw = std::atan2(rotation_matrix(1, 0), rotation_matrix(0, 0));
+
+    Eigen::Matrix3d yaw_matrix;
+    yaw_matrix << std::cos(yaw), -std::sin(yaw), 0.0,
+                  std::sin(yaw), std::cos(yaw), 0.0,
+                  0.0, 0.0, 1.0;
+
+    Eigen::Matrix4d new_tf = Eigen::Matrix4d::Identity();
+    new_tf.block<3, 3>(0, 0) = yaw_matrix;
+    new_tf.block<3, 1>(0, 3) = tf.block<3, 1>(0, 3);
+    return new_tf;
+}
+
 
 #endif // UTILS_CPP

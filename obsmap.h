@@ -35,9 +35,8 @@ public:
     bool is_pos_collision(const Eigen::Vector3d& pos, double radius);
     bool is_pivot_collision(const Eigen::Matrix4d& robot_tf);
     bool is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1);
-
-    int get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
+    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1);    
+    bool get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, double chk_range, int& cnt0, int& cnt1);
     Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, double max_r);
 
     // octree for obsmap
@@ -45,7 +44,8 @@ public:
 
     // grid map
     Eigen::Matrix4d tf;
-    cv::Mat map;
+    cv::Mat prob_map;
+    cv::Mat wall_map;
 
     int w = 300;
     int h = 300;

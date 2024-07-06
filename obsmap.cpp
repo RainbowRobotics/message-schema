@@ -22,8 +22,12 @@ void OBSMAP::init()
     cy = h/2;
     gs = config->OBS_MAP_GRID_SIZE;
 
-    map = cv::Mat(h, w, CV_64F, cv::Scalar(0)); // obstacle is 255
+    prob_map = cv::Mat(h, w, CV_64F, cv::Scalar(0));
+    wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+
     octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+    octree->setProbHit(0.8);
+    octree->setProbMiss(0.48);
 }
 
 void OBSMAP::clear()
@@ -35,19 +39,8 @@ void OBSMAP::clear()
 
 void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
 {
-    mtx.lock();
-    cv::Mat res(h, w, CV_8U, cv::Scalar(0));
-    for(int i = 0; i < h; i++)
-    {
-        for(int j = 0; j < w; j++)
-        {
-            if(map.ptr<double>(i)[j] >= 0.7)
-            {
-                res.ptr<uchar>(i)[j] = 255;
-            }
-        }
-    }
-    obs_map = res;
+    mtx.lock();    
+    obs_map = wall_map.clone();
     obs_tf = tf;
     mtx.unlock();
 }
@@ -322,7 +315,7 @@ bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, in
     return false;
 }
 
-int OBSMAP::get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y)
+bool OBSMAP::get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, double chk_range, int& cnt0, int& cnt1)
 {
     // get obs map
     cv::Mat _obs_map;
@@ -349,25 +342,25 @@ int OBSMAP::get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_
     cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
     if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
     {
-        return 99999999;
+        return false;
     }
 
     cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
     if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
     {
-        return 99999999;
+        return false;
     }
 
     cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
     if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
     {
-        return 99999999;
+        return false;
     }
 
     cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
     if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
     {
-        return 99999999;
+        return false;
     }
 
     std::vector<std::vector<cv::Point>> pts(1);
@@ -379,19 +372,35 @@ int OBSMAP::get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_
     cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
     cv::fillPoly(mask, pts, cv::Scalar(255));
 
+    // circle range
+    int r = chk_range/gs;
+    cv::Vec2i uv = xy_uv(G(0,3), G(1,3));
+    cv::Mat mask2(h, w, CV_8U, cv::Scalar(0));
+    cv::circle(mask2, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
+
     // collision counting
-    int cnt = 0;
+    int _cnt0 = 0;
+    int _cnt1 = 0;
     for(int i = 0; i < h; i++)
     {
         for(int j = 0; j < w; j++)
         {
             if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
             {
-                cnt++;
+                _cnt0++;
+            }
+
+            if(mask2.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                _cnt1++;
             }
         }
     }
-    return cnt;
+
+    cnt0 = _cnt0;
+    cnt1 = _cnt1;
+
+    return true;
 }
 
 Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const double max_r)
@@ -460,14 +469,16 @@ Eigen::Vector3d OBSMAP::get_obs_force(const Eigen::Vector3d& center, const doubl
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
     Eigen::Matrix4d cur_tf = tpp.tf;
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
     // update octomap
     octomap::Pointcloud cloud;
     for(size_t p = 0; p < tpp.pts.size(); p++)
     {
+        // local to global
         Eigen::Vector3d P = tpp.pts[p];
         Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
-        cloud.push_back(_P[0], _P[1], 0);
+        cloud.push_back(_P[0], _P[1], _P[2]);
     }
 
     // update
@@ -475,12 +486,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)), config->OBS_MAP_RANGE);
 
     // obsmap boundary
-    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, -0.1);
-    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, 0.1);
-
-    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-    Eigen::Matrix4d _cur_tf = se2_to_TF(cur_xi);
-    Eigen::Matrix4d _cur_tf_inv = _cur_tf.inverse();
+    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);
+    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MAX_Z);
 
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
     for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
@@ -490,8 +497,9 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         double z = it.getZ();
         double prob = it->getOccupancy();
 
+        // global to local
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = _cur_tf_inv.block(0,0,3,3)*P + _cur_tf_inv.block(0,3,3,1);
+        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
 
         cv::Vec2i uv = xy_uv(_P[0], _P[1]);
         int u = uv[0];
@@ -507,7 +515,54 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    map = _map;
+    // make wall map
+    cv::Mat wall(h, w, CV_8U, cv::Scalar(0));
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(_map.ptr<double>(i)[j] >= 0.7)
+            {
+                wall.ptr<uchar>(i)[j] = 255;
+            }
+        }
+    }
+
+    // add static map
+    double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
+    double sq_radius = config->OBS_MAP_RANGE*config->OBS_MAP_RANGE;
+    std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
+    nanoflann::SearchParameters params;
+    unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+
+    for(size_t p = 0; p < res_idxs.size(); p++)
+    {
+        int idx = res_idxs[p].first;
+        double x = unimap->kdtree_cloud.pts[idx].x;
+        double y = unimap->kdtree_cloud.pts[idx].y;
+        double z = unimap->kdtree_cloud.pts[idx].z;
+        if(z < cur_tf(2,3) + config->OBS_MAP_MIN_Z || z > cur_tf(2,3) + config->OBS_MAP_MAX_Z)
+        {
+            continue;
+        }
+
+        // global to local
+        Eigen::Vector3d P(x,y,z);
+        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+        int u = uv[0];
+        int v = uv[1];
+        if(u < 0 || u >= w || v < 0 || v >= h)
+        {
+            continue;
+        }
+
+        wall.ptr<uchar>(v)[u] = 255;
+    }
+
+    wall_map = wall;
+    prob_map = _map;
     tf = cur_tf;
     mtx.unlock();
 

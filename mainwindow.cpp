@@ -2006,16 +2006,20 @@ void MainWindow::watch_loop()
         }
 
         // for 500ms loop
+        if(cnt % 5 == 0)
+        {
+            if(ws.is_connected)
+            {
+                ws.send_mapping_cloud();
+            }
+        }
+
+        // for 1000ms loop
         if(cnt % 10 == 0)
         {
             if(ws.is_connected)
             {
                 ws.send_lidar();
-            }
-
-            if(ws.is_connected)
-            {
-                ws.send_mapping_cloud();
             }
         }
 

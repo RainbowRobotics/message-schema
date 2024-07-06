@@ -40,6 +40,7 @@ double calc_motion_time(double _s, double _v0, double _v1, double _acc);
 double calc_dist_2d(Eigen::Vector3d P);
 double calc_length(std::vector<Eigen::Vector3d>& src);
 double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
+double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1);
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
 std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);
@@ -52,5 +53,6 @@ double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y);
 
 Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf);
 
+Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
 
 #endif // UTILS_H
