@@ -754,6 +754,22 @@ Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1)
     return transformation_matrix;
 }
 
+std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos)
+{
+    std::vector<Eigen::Matrix4d> res;
+    for(size_t p = 0; p < pos.size()-1; p++)
+    {
+        Eigen::Matrix4d tf = calc_tf(pos[p], pos[p+1]);
+        res.push_back(tf);
+    }
+
+    Eigen::Matrix4d last_tf = res.back();
+    last_tf.block(0,3,3,1) = pos.back();
+
+    res.push_back(last_tf);
+    return res;
+}
+
 double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y)
 {
     double x1 = ref_x;

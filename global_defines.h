@@ -640,17 +640,18 @@ struct NODE
 struct CTRL_PARAM
 {
     double LIMIT_V = 1.0;
-    double LIMIT_W = 50.0;
+    double LIMIT_W = 75.0;
     double LIMIT_V_ACC = 0.5;
     double LIMIT_W_ACC = 360.0;
-    double LIMIT_PIVOT_W = 30.0;
+    double LIMIT_PIVOT_W = 75.0;
     double MIN_LD = 0.1;
     double MAX_LD = 1.0;    
     double ST_V = 0.1;
     double ED_V = 0.1;
-    double DRIVE_H = 40.0;
-    double DRIVE_K = 1.0;
-    double DRIVE_EPS = 0.2;
+    double DRIVE_H = 2.0;
+    double DRIVE_A = 4.0;
+    double DRIVE_K = 2.0;
+    double DRIVE_EPS = 0.1;
 };
 
 struct ASTAR_NODE

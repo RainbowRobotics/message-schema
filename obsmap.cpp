@@ -45,6 +45,42 @@ void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
     mtx.unlock();
 }
 
+cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path)
+{
+    mtx.lock();
+    cv::Mat obs_map = wall_map.clone();
+    Eigen::Matrix4d obs_tf = tf;
+    mtx.unlock();
+
+    cv::Mat avoid_area = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    int r = 2*(config->ROBOT_RADIUS/gs) + 1;
+
+    Eigen::Matrix4d obs_tf_inv = obs_tf.inverse();
+    for(size_t p = 0; p < path.size(); p++)
+    {
+        Eigen::Vector3d P(path[p](0,3), path[p](1,3), path[p](2,3));
+        Eigen::Vector3d _P = obs_tf_inv.block(0,0,3,3)*P + obs_tf_inv.block(0,3,3,1);
+
+        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+        cv::circle(avoid_area, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
+    }
+
+    cv::Mat avoid_area2 = avoid_area.clone();
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(avoid_area.ptr<uchar>(i)[j] == 255 && obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                cv::circle(avoid_area2, cv::Point(j, i), r, cv::Scalar(255), -1);
+            }
+        }
+    }
+
+    cv::dilate(avoid_area2, avoid_area2, cv::Mat(), cv::Point(-1,-1), 2);
+    return avoid_area2;
+}
+
 void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
 {
     mtx.lock();
@@ -231,6 +267,83 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, d
         for(int j = 0; j < w; j++)
         {
             if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                return true;
+            }
+        }
+    }
+
+    // non collision
+    return false;
+}
+
+bool OBSMAP::is_tf_collision_with_area(const Eigen::Matrix4d& robot_tf, const cv::Mat& area, double margin_x, double margin_y)
+{
+    // get obs map
+    cv::Mat _obs_map;
+    Eigen::Matrix4d _obs_tf;
+    get_obs_map(_obs_map, _obs_tf);
+    Eigen::Matrix4d G = _obs_tf.inverse()*robot_tf;
+
+    // draw rect
+    const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
+    const double x_max = config->ROBOT_SIZE_X[1] + margin_x;
+    const double y_min = config->ROBOT_SIZE_Y[0] - margin_y;
+    const double y_max = config->ROBOT_SIZE_Y[1] + margin_y;
+
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
+
+    Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
+    Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
+    Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
+    Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
+
+    cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
+    if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+    {
+        return true;
+    }
+
+    cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
+    if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+    {
+        return true;
+    }
+
+    cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
+    if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
+    {
+        return true;
+    }
+
+    cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
+    if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
+    {
+        return true;
+    }
+
+    std::vector<std::vector<cv::Point>> pts(1);
+    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
+    cv::fillPoly(mask, pts, cv::Scalar(255));
+
+    for(int i = 0; i < h; i++)
+    {
+        for(int j = 0; j < w; j++)
+        {
+            if(mask.ptr<uchar>(i)[j] == 255 && _obs_map.ptr<uchar>(i)[j] == 255)
+            {
+                return true;
+            }
+
+            if(mask.ptr<uchar>(i)[j] == 255 && area.ptr<uchar>(i)[j] == 0)
             {
                 return true;
             }

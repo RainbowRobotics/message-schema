@@ -2730,7 +2730,8 @@ void MainWindow::plot_loop()
             }
 
             Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tf);
+            //std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tf);
+            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.05, 0.3, cur_tf);
             for(size_t p = 0; p < traj.size(); p++)
             {
                 QString name;

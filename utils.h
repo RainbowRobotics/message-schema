@@ -48,6 +48,7 @@ std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r);
 
 pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a=1.0, int num_segments=30);
 Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1);
+std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos);
 
 double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y);
 

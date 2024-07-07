@@ -85,11 +85,6 @@ public:
     PATH calc_local_path();
     PATH calc_avoid_path();
 
-    // local path loop
-    std::atomic<bool> a_flag = {false};
-    std::thread *a_thread = NULL;
-    void a_loop();
-
     // for control
     bool is_everything_fine();
 
@@ -111,6 +106,9 @@ public:
     // flags    
     std::atomic<bool> is_moving = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
+
+    // for ompl
+    cv::Mat avoid_area;
 
 Q_SIGNALS:
     void signal_global_path_updated();

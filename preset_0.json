@@ -6,9 +6,10 @@
     "LIMIT_PIVOT_W": "75.0",
     "MIN_LD": "0.1",
     "MAX_LD": "1.0",      
-    "ST_V": "0.05",
-    "ED_V": "0.05",
-    "DRIVE_H": "4.0",
+    "ST_V": "0.1",
+    "ED_V": "0.1",
+    "DRIVE_H": "2.5",
+    "DRIVE_A": "4.0",
     "DRIVE_K": "2.0",
     "DRIVE_EPS": "0.1"
 }
