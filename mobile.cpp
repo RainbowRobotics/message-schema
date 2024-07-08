@@ -655,9 +655,10 @@ void MOBILE::recv_loop()
                 memcpy(&y, &_buf[index], dlc_f);     index=index+dlc_f;
                 memcpy(&th, &_buf[index], dlc_f);    index=index+dlc_f;
 
-                float local_v, local_w;
-                memcpy(&local_v, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&local_w, &_buf[index], dlc_f);     index=index+dlc_f;
+                float local_vx, local_vy, local_wz;
+                memcpy(&local_vx, &_buf[index], dlc_f);     index=index+dlc_f;
+                memcpy(&local_vy, &_buf[index], dlc_f);     index=index+dlc_f;
+                memcpy(&local_wz, &_buf[index], dlc_f);     index=index+dlc_f;
 
                 uint8_t stat_m0, stat_m1;
                 uint8_t stat_m2, stat_m3;
@@ -729,7 +730,7 @@ void MOBILE::recv_loop()
                 MOBILE_POSE mobile_pose;
                 mobile_pose.t = mobile_t + offset_t;
                 mobile_pose.pose = Eigen::Vector3d(x, y, toWrap(th));
-                mobile_pose.vel = Eigen::Vector3d(local_v, 0, local_w);
+                mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
 
                 // received mobile status update
                 MOBILE_STATUS mobile_status;
@@ -1034,8 +1035,9 @@ void MOBILE::move(double vx, double vy, double wz)
     wz0 = wz;
 
     // packet
-    float _v = vx;
-    float _w = wz;
+    float _vx = vx;
+    float _vy = vy;
+    float _wz = wz;
 
     std::vector<uchar> send_byte(25, 0);
     send_byte[0] = 0x24;
@@ -1049,8 +1051,16 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-    memcpy(&send_byte[8], &_v, 4); // param1 linear vel
-    memcpy(&send_byte[12], &_w, 4); // param2 angular vel
+#ifdef USE_DD
+    memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
+    memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
+#endif
+
+#ifdef USE_MECANUM
+    memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
+    memcpy(&send_byte[12], &_vy, 4); // param2 linear vel
+    memcpy(&send_byte[16], &_wz, 4); // param3 angular vel
+#endif
     send_byte[24] = 0x25;
 
     if(is_connected && config->SIM_MODE == 0)
