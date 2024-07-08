@@ -215,6 +215,20 @@ void SLAM_2D::set_cur_loc_state(QString str)
     mtx.unlock();
 }
 
+QString SLAM_2D::get_info_text()
+{
+    Eigen::Vector2d cur_ieir = get_cur_ieir();
+    QString loc_state = get_cur_loc_state();
+
+    QString str;
+    str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f, loc_state: %s",
+                          (double)proc_time_map_a, (double)proc_time_map_b,
+                          (double)proc_time_loc_a, (double)proc_time_loc_b,
+                          (int)kfrm_storage.size(),
+                          cur_ieir[0], cur_ieir[1], loc_state.toLocal8Bit().data());
+    return str;
+}
+
 void SLAM_2D::map_a_loop()
 {
     const int window_size = config->SLAM_WINDOW_SIZE;

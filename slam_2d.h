@@ -50,8 +50,9 @@ public:
     Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();
 
+    QString get_info_text();
     QString get_cur_loc_state();
-    void set_cur_loc_state(QString str);
+    void set_cur_loc_state(QString str);    
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);

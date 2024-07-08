@@ -2091,154 +2091,154 @@ void MainWindow::watch_loop()
                     slam.set_cur_loc_state("good");
                 }
             }
-        }
 
-        // check system info
-        {
-            MOBILE_STATUS ms = mobile.get_status();
-
-            QString temp_str;
-            QString power_str;
-            QString cpu_usage_str;
-
-            // check temperature
+            // check system info
             {
-                int cpu_temp_sum = 0;
-                int cnt = 0;
+                MOBILE_STATUS ms = mobile.get_status();
 
-                QDir dir_temp("/sys/class/thermal");
-                QStringList filters;
-                filters << "thermal_zone*";
-                dir_temp.setNameFilters(filters);
-                QFileInfoList list_temp = dir_temp.entryInfoList();
+                QString temp_str;
+                QString power_str;
+                QString cpu_usage_str;
 
-                for (const QFileInfo &info : list_temp)
+                // check temperature
                 {
-                    QString path = info.filePath() + "/temp";
-                    QFile file(path);
+                    int cpu_temp_sum = 0;
+                    int cnt = 0;
+
+                    QDir dir_temp("/sys/class/thermal");
+                    QStringList filters;
+                    filters << "thermal_zone*";
+                    dir_temp.setNameFilters(filters);
+                    QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                    for (const QFileInfo &info : list_temp)
+                    {
+                        QString path = info.filePath() + "/temp";
+                        QFile file(path);
+                        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                        {
+                            QTextStream in(&file);
+                            QString line = in.readLine();
+                            file.close();
+
+                            bool ok = false;
+                            int temperature = line.toInt(&ok);
+                            if(ok)
+                            {
+                                if(temperature != 0)
+                                {
+                                    cpu_temp_sum += temperature/1000;
+                                    cnt++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(cnt != 0)
+                    {
+                        temp_str.sprintf("[TEMP] cpu:%f, m0:%f, m1:%f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                    }
+                    else
+                    {
+                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%f, m1:%f", ms.temp_m0, ms.temp_m1);
+                    }
+                }
+
+                // check power
+                {
+                    int cpu_power_sum = 0;
+                    int cnt = 0;
+
+                    QDir dir_temp("/sys/class/power_supply");
+                    QStringList filters;
+                    filters << "BAT*";
+                    dir_temp.setNameFilters(filters);
+                    QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                    for (const QFileInfo &info : list_temp)
+                    {
+                        QString path = info.filePath() + "/power_now";
+                        QFile file(path);
+
+                        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                        {
+                            QTextStream in(&file);
+                            QString line = in.readLine();
+                            file.close();
+
+                            bool ok = false;
+                            int power = line.toInt(&ok);
+                            if(ok)
+                            {
+                                if(power != 0)
+                                {
+                                    cpu_power_sum += power/1000;
+                                    cnt++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(cnt != 0)
+                    {
+                        power_str.sprintf("[POWER] cpu:%f, m0:%f, m1:%f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
+                    }
+                    else
+                    {
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%f, m1:%f", ms.cur_m0, ms.cur_m1);
+                    }
+                }
+
+                // check cpu usage
+                {
+                    QFile file("/proc/stat");
                     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
                     {
                         QTextStream in(&file);
                         QString line = in.readLine();
                         file.close();
 
-                        bool ok = false;
-                        int temperature = line.toInt(&ok);
-                        if(ok)
+                        CPU_USAGE cur_cpu_usage;
+                        QStringList values = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                        if (values[0] == "cpu")
                         {
-                            if(temperature != 0)
-                            {
-                                cpu_temp_sum += temperature/1000;
-                                cnt++;
-                            }
+                            cur_cpu_usage.user = values[1].toLongLong();
+                            cur_cpu_usage.nice = values[2].toLongLong();
+                            cur_cpu_usage.system = values[3].toLongLong();
+                            cur_cpu_usage.idle = values[4].toLongLong();
+                            cur_cpu_usage.iowait = values[5].toLongLong();
+                            cur_cpu_usage.irq = values[6].toLongLong();
+                            cur_cpu_usage.softirq = values[7].toLongLong();
                         }
+
+                        double cur_total_usage = cur_cpu_usage.user + cur_cpu_usage.nice + cur_cpu_usage.system + cur_cpu_usage.idle + cur_cpu_usage.iowait + cur_cpu_usage.irq + cur_cpu_usage.softirq;
+                        double pre_total_usage = pre_cpu_usage.user + pre_cpu_usage.nice + pre_cpu_usage.system + pre_cpu_usage.idle + pre_cpu_usage.iowait + pre_cpu_usage.irq + pre_cpu_usage.softirq;
+
+                        double cur_idle_usage = cur_cpu_usage.idle;
+                        double pre_idle_usage = pre_cpu_usage.idle;
+
+                        double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
+                        cpu_usage_str.sprintf("[CPU]: %f", cpu_usage);
+
+                        pre_cpu_usage = cur_cpu_usage;
                     }
-                }
-
-                if(cnt != 0)
-                {
-                    temp_str.sprintf("[TEMP] cpu:%f, m0:%f, m1:%f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
-                }
-                else
-                {
-                    temp_str.sprintf("[TEMP] cpu:0.0, m0:%f, m1:%f", ms.temp_m0, ms.temp_m1);
-                }
-            }
-
-            // check power
-            {
-                int cpu_power_sum = 0;
-                int cnt = 0;
-
-                QDir dir_temp("/sys/class/power_supply");
-                QStringList filters;
-                filters << "BAT*";
-                dir_temp.setNameFilters(filters);
-                QFileInfoList list_temp = dir_temp.entryInfoList();
-
-                for (const QFileInfo &info : list_temp)
-                {
-                    QString path = info.filePath() + "/power_now";
-                    QFile file(path);
-
-                    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                    else
                     {
-                        QTextStream in(&file);
-                        QString line = in.readLine();
-                        file.close();
-
-                        bool ok = false;
-                        int power = line.toInt(&ok);
-                        if(ok)
-                        {
-                            if(power != 0)
-                            {
-                                cpu_power_sum += power/1000;
-                                cnt++;
-                            }
-                        }
+                        cpu_usage_str.sprintf("[CPU]: 0.0");
                     }
                 }
 
-                if(cnt != 0)
-                {
-                    power_str.sprintf("[POWER] cpu:%f, m0:%f, m1:%f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
-                }
-                else
-                {
-                    power_str.sprintf("[POWER] cpu:0.0, m0:%f, m1:%f", ms.cur_m0, ms.cur_m1);
-                }
-            }
+                QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
+                ui->lb_SystemInfo->setText(system_info_str);
 
-            // check cpu usage
-            {
-                QFile file("/proc/stat");
-                if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                if(ui->ckb_RecordSystemInfo->isChecked())
                 {
-                    QTextStream in(&file);
-                    QString line = in.readLine();
-                    file.close();
-
-                    CPU_USAGE cur_cpu_usage;
-                    QStringList values = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                    if (values[0] == "cpu")
+                    log_cnt++;
+                    if(log_cnt >= 10)
                     {
-                        cur_cpu_usage.user = values[1].toLongLong();
-                        cur_cpu_usage.nice = values[2].toLongLong();
-                        cur_cpu_usage.system = values[3].toLongLong();
-                        cur_cpu_usage.idle = values[4].toLongLong();
-                        cur_cpu_usage.iowait = values[5].toLongLong();
-                        cur_cpu_usage.irq = values[6].toLongLong();
-                        cur_cpu_usage.softirq = values[7].toLongLong();
+                        log_cnt = 0;
+                        system_logger.PrintLog(system_info_str, "White", true, true);
                     }
-
-                    double cur_total_usage = cur_cpu_usage.user + cur_cpu_usage.nice + cur_cpu_usage.system + cur_cpu_usage.idle + cur_cpu_usage.iowait + cur_cpu_usage.irq + cur_cpu_usage.softirq;
-                    double pre_total_usage = pre_cpu_usage.user + pre_cpu_usage.nice + pre_cpu_usage.system + pre_cpu_usage.idle + pre_cpu_usage.iowait + pre_cpu_usage.irq + pre_cpu_usage.softirq;
-
-                    double cur_idle_usage = cur_cpu_usage.idle;
-                    double pre_idle_usage = pre_cpu_usage.idle;
-
-                    double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
-                    cpu_usage_str.sprintf("[CPU]: %f", cpu_usage);
-
-                    pre_cpu_usage = cur_cpu_usage;
-                }
-                else
-                {
-                    cpu_usage_str.sprintf("[CPU]: 0.0");
-                }
-            }
-
-            QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
-            ui->lb_SystemInfo->setText(system_info_str);
-
-            if(ui->ckb_RecordSystemInfo->isChecked())
-            {
-                log_cnt++;
-                if(log_cnt >= 10)
-                {
-                    log_cnt = 0;
-                    system_logger.PrintLog(system_info_str, "White", true, true);
                 }
             }
         }
@@ -2254,48 +2254,25 @@ void MainWindow::plot_loop()
     // plot mobile info
     if(mobile.is_connected)
     {
-        MOBILE_POSE mobile_pose = mobile.get_pose();
-        QString mobile_pose_str;
-        mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f, msg_q:%d\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f",
-                                mobile_pose.t, (int)mobile.msg_que.unsafe_size(),
-                                mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D);
-        ui->lb_MobilePoseInfo->setText(mobile_pose_str);
+        // plot mobile pose
+        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
 
         // plot mobile status
-        MOBILE_STATUS mobile_status = mobile.get_status();
-        QString mobile_status_str;
-        mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
-                                  mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
-                                  (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                  mobile_status.charge_state, mobile_status.power_state, mobile_status.emo_state, mobile_status.remote_state,
-                                  mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
-                                  mobile_status.power, mobile_status.total_power,
-                                  mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                  mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z);
-        ui->lb_MobileStatusInfo->setText(mobile_status_str);
-
-        // plot imu rpy
-        Eigen::Vector3d mobile_rpy = mobile.get_imu();
-        QString mobile_rpy_str;
-        mobile_rpy_str.sprintf("[IMU_FILTERED]\nrx:%.3f, ry:%.3f, rz:%.3f\n", mobile_rpy[0]*R2D, mobile_rpy[1]*R2D, mobile_rpy[2]*R2D);
-        ui->lb_ImuInfo->setText(mobile_rpy_str);
+        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
     }
 
     // plot slam info
-    QString cur_loc_state = slam.get_cur_loc_state();
-    Eigen::Vector2d cur_ieir = slam.get_cur_ieir();
-    QString slam_info_str;
-    slam_info_str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f, loc_state: %s",
-                          (double)slam.proc_time_map_a, (double)slam.proc_time_map_b,
-                          (double)slam.proc_time_loc_a, (double)slam.proc_time_loc_b,
-                          (int)slam.kfrm_storage.size(),
-                          cur_ieir[0], cur_ieir[1], cur_loc_state.toLocal8Bit().data());
-    ui->lb_SlamInfo->setText(slam_info_str);
+    if(slam.is_slam || slam.is_loc)
+    {
+        ui->lb_SlamInfo->setText(slam.get_info_text());
+    }
 
     // plot que info
     QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d", (int)lidar.scan_que.unsafe_size(), (int)mobile.msg_que.unsafe_size());
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d",
+                         (int)lidar.scan_que.unsafe_size(),
+                         (int)mobile.msg_que.unsafe_size(),
+                         (int)slam.kfrm_que.unsafe_size());
     ui->lb_QueInfo->setText(que_info_str);
 
     // plot map & annotation

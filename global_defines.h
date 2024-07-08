@@ -208,6 +208,8 @@ struct PICKING
     }
 };
 
+
+#ifdef USE_DD
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -274,6 +276,58 @@ struct MOBILE_STATUS
     float imu_acc_y =0;
     float imu_acc_z =0;
 };
+#endif
+
+#ifdef USE_MECANUM
+struct MOBILE_STATUS
+{
+    double t = 0;
+
+    // motor status
+    uint8_t connection_m0 = 0;
+    uint8_t connection_m1 = 0;
+    uint8_t connection_m2 = 0;
+    uint8_t connection_m3 = 0;
+
+    uint8_t status_m0 = 0;
+    uint8_t status_m1 = 0;
+    uint8_t status_m2 = 0;
+    uint8_t status_m3 = 0;
+
+    uint8_t temp_m0 = 0;
+    uint8_t temp_m1 = 0;
+    uint8_t temp_m2 = 0;
+    uint8_t temp_m3 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+    uint8_t cur_m2 = 0;
+    uint8_t cur_m3 = 0;
+
+    uint8_t charge_state = 0;
+    uint8_t power_state = 0;
+    uint8_t emo_state = 0;
+    uint8_t remote_state = 0;
+
+    float bat_in = 0;
+    float bat_out = 0;
+    float bat_current = 0;
+    float power = 0;
+    float total_power = 0;
+
+    // for timesync
+    uint32_t recv_tick = 0;
+    float return_time = 0;
+
+    // imu status
+    float imu_gyr_x =0;
+    float imu_gyr_y =0;
+    float imu_gyr_z =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
+};
+#endif
 
 struct MOBILE_POSE
 {

@@ -154,6 +154,7 @@ void SIM::a_loop()
         pose.pose = cur_xi;
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
+        #ifdef USE_DD
         MOBILE_STATUS status;
         status.t = sim_t;
         status.connection_m0 = 1;
@@ -164,6 +165,24 @@ void SIM::a_loop()
         status.emo_state = 1;
         status.power_state = 1;
         status.remote_state = 1;
+        #endif
+
+        #ifdef USE_MECANUM
+        MOBILE_STATUS status;
+        status.t = sim_t;
+        status.connection_m0 = 1;
+        status.connection_m1 = 1;
+        status.connection_m2 = 1;
+        status.connection_m3 = 1;
+        status.status_m0 = 1;
+        status.status_m1 = 1;
+        status.status_m2 = 1;
+        status.status_m3 = 1;
+        status.charge_state = 0;
+        status.emo_state = 1;
+        status.power_state = 1;
+        status.remote_state = 1;
+        #endif
 
         // storing
         mobile->mtx.lock();

@@ -37,8 +37,10 @@ public:
     void open();
     void sync();
 
-    MOBILE_POSE get_pose();    
+    MOBILE_POSE get_pose();        
     MOBILE_STATUS get_status();
+    QString get_pose_text();
+    QString get_status_text();
     Eigen::Vector3d get_imu();
     Eigen::Vector3d get_control_input();
     std::vector<MOBILE_IMU> get_imu_storage();
