@@ -45,7 +45,7 @@ void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
     mtx.unlock();
 }
 
-cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path)
+cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf)
 {
     mtx.lock();
     cv::Mat obs_map = wall_map.clone();
@@ -56,6 +56,17 @@ cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path)
     int r = 2*(config->ROBOT_RADIUS/gs) + 1;
 
     Eigen::Matrix4d obs_tf_inv = obs_tf.inverse();
+
+    // draw robot boundary
+    {
+        Eigen::Vector3d P(robot_tf(0,3), robot_tf(1,3), robot_tf(2,3));
+        Eigen::Vector3d _P = obs_tf_inv.block(0,0,3,3)*P + obs_tf_inv.block(0,3,3,1);
+
+        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+        cv::circle(avoid_area, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
+    }
+
+    // draw path boundary
     for(size_t p = 0; p < path.size(); p++)
     {
         Eigen::Vector3d P(path[p](0,3), path[p](1,3), path[p](2,3));
@@ -65,6 +76,7 @@ cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path)
         cv::circle(avoid_area, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
     }
 
+    // draw obs boundary
     cv::Mat avoid_area2 = avoid_area.clone();
     for(int i = 0; i < h; i++)
     {

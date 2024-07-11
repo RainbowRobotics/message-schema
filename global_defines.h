@@ -694,17 +694,20 @@ struct NODE
 struct CTRL_PARAM
 {
     double LIMIT_V = 1.0;
-    double LIMIT_W = 75.0;
+    double LIMIT_W = 60.0;
     double LIMIT_V_ACC = 0.5;
+    double LIMIT_V_DCC = 0.25;
     double LIMIT_W_ACC = 360.0;
-    double LIMIT_PIVOT_W = 75.0;
+    double LIMIT_PIVOT_W = 60.0;
     double MIN_LD = 0.1;
     double MAX_LD = 1.0;    
     double ST_V = 0.1;
     double ED_V = 0.1;
-    double DRIVE_H = 2.0;
-    double DRIVE_A = 4.0;
-    double DRIVE_K = 2.0;
+    double DRIVE_H = 1.0;
+    double DRIVE_A = 1.0;
+    double DRIVE_B = 0.05;
+    double DRIVE_L = 0.18;
+    double DRIVE_K = 1.0;
     double DRIVE_EPS = 0.1;
 };
 
@@ -749,6 +752,7 @@ struct PATH
 {
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;
+    std::vector<double> ref_th;
     std::vector<double> ref_v;
     Eigen::Matrix4d goal_tf;
 
@@ -761,6 +765,7 @@ struct PATH
     {
         pose = p.pose;
         pos = p.pos;        
+        ref_th = p.ref_th;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
     }
@@ -769,6 +774,7 @@ struct PATH
     {
         pose = p.pose;
         pos = p.pos;
+        ref_th = p.ref_th;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
         return *this;

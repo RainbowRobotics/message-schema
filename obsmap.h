@@ -29,7 +29,7 @@ public:
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf);
-    cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path);
+    cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf);
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);

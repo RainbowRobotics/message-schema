@@ -37,7 +37,7 @@ void SIM::stop()
 
 void SIM::a_loop()
 {
-    const double dt = 0.02; // 50hz
+    const double dt = 0.01; // 50hz
     double pre_loop_time = get_time();
 
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();

@@ -69,10 +69,10 @@ public:
     // global path planning (using topo)
     PATH calc_global_path(Eigen::Matrix4d goal);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
-    std::vector<Eigen::Vector3d> path_dividing(const std::vector<Eigen::Vector3d>& src, double step);    
+    std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
     std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
-    std::vector<double> calc_ref_v(const std::vector<Eigen::Matrix4d>& src, double st_v);
+    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_th, std::vector<double>& ref_v, double st_v);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
     std::vector<double> gaussian_filter(const std::vector<double>& src, int mask, double sigma);
 
