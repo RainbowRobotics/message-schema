@@ -220,15 +220,27 @@ void WS_CLIENT::send_status()
     motorObj1["connection"] = (ms.connection_m0 == 1) ? "true" : "false";
     motorObj1["status"] = QString::number(ms.status_m0, 10);
     motorObj1["temp"] = QString::number(ms.temp_m0, 'f', 3);
+    motorObj1["current"] = QString::number((double)ms.cur_m0/10.0, 'f', 3);
     motorArray.append(motorObj1);
 
     QJsonObject motorObj2;
     motorObj2["connection"] = (ms.connection_m1 == 1) ? "true" : "false";
     motorObj2["status"] = QString::number(ms.status_m1, 10);
     motorObj2["temp"] = QString::number(ms.temp_m1, 'f', 3);
+    motorObj1["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
     motorArray.append(motorObj2);
 
     rootObj["motor"] = motorArray;
+
+    // Adding the imu object
+    QJsonObject imuObj;
+    imuObj["gyr_x"] = QString::number(ms.imu_gyr_x*R2D, 'f', 3);
+    imuObj["gyr_y"] = QString::number(ms.imu_gyr_y*R2D, 'f', 3);
+    imuObj["gyr_z"] = QString::number(ms.imu_gyr_z*R2D, 'f', 3);
+    imuObj["acc_x"] = QString::number(ms.imu_acc_x, 'f', 3);
+    imuObj["acc_y"] = QString::number(ms.imu_acc_y, 'f', 3);
+    imuObj["acc_z"] = QString::number(ms.imu_acc_z, 'f', 3);
+    rootObj["imu"] = imuObj;
 
     // Adding the power object
     QJsonObject powerObj;

@@ -1043,8 +1043,8 @@ PATH AUTOCONTROL::calc_local_path()
     double global_goal_d = calc_dist_2d(global_path.pos.back()-cur_pos);
     if(global_goal_d > 1.0)
     {
-        const double margin_x = 0.2;
-        const double margin_y = 0.1;
+        const double margin_x = 0.25;
+        const double margin_y = 0.15;
         const double range = 1.5;
 
         // left modified path
@@ -1682,8 +1682,9 @@ void AUTOCONTROL::b_loop_pp()
                 continue;
             }
 
-            // calc ref_v            
-            double goal_v = goal_err_d;
+            // calc ref_v
+            double goal_gain = 0.75; // for slow approach goal(0.1~1.0)
+            double goal_v = goal_gain * goal_err_d;
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc error theta
