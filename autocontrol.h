@@ -25,6 +25,7 @@
 #include <ompl/base/goals/GoalStates.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/geometric/planners/prm/PRMstar.h>
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/config.h>
 #include <ompl/util/Console.h>

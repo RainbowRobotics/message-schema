@@ -698,9 +698,7 @@ struct CTRL_PARAM
     double LIMIT_V_ACC = 0.5;
     double LIMIT_V_DCC = 0.25;
     double LIMIT_W_ACC = 360.0;
-    double LIMIT_PIVOT_W = 60.0;
-    double MIN_LD = 0.1;
-    double MAX_LD = 1.0;    
+    double LIMIT_PIVOT_W = 60.0; 
     double ST_V = 0.1;
     double ED_V = 0.1;
     double DRIVE_H = 1.0;
@@ -750,6 +748,7 @@ struct ASTAR_NODE
 
 struct PATH
 {
+    std::vector<QString> nodes;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;
     std::vector<double> ref_th;
@@ -763,6 +762,7 @@ struct PATH
 
     PATH(const PATH& p)
     {
+        nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;        
         ref_th = p.ref_th;
@@ -772,12 +772,28 @@ struct PATH
 
     PATH& operator=(const PATH& p)
     {
+        nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;
         ref_th = p.ref_th;
         ref_v = p.ref_v;
         goal_tf = p.goal_tf;
         return *this;
+    }
+
+    bool operator==(const PATH& p) const
+    {
+        return std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
+               pose == p.pose &&
+               pos == p.pos &&
+               ref_th == p.ref_th &&
+               ref_v == p.ref_v &&
+               goal_tf.isApprox(p.goal_tf);
+    }
+
+    bool operator!=(const PATH& p) const
+    {
+        return !(*this == p);
     }
 };
 

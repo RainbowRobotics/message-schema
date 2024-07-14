@@ -233,6 +233,8 @@ void WS_CLIENT::send_status()
     rootObj["motor"] = motorArray;
 
     // Adding the imu object
+    Eigen::Vector3d imu = mobile->get_imu();
+
     QJsonObject imuObj;
     imuObj["gyr_x"] = QString::number(ms.imu_gyr_x*R2D, 'f', 3);
     imuObj["gyr_y"] = QString::number(ms.imu_gyr_y*R2D, 'f', 3);
@@ -240,6 +242,9 @@ void WS_CLIENT::send_status()
     imuObj["acc_x"] = QString::number(ms.imu_acc_x, 'f', 3);
     imuObj["acc_y"] = QString::number(ms.imu_acc_y, 'f', 3);
     imuObj["acc_z"] = QString::number(ms.imu_acc_z, 'f', 3);
+    imuObj["imu_rx"] = QString::number(imu[0]*R2D, 'f', 3);
+    imuObj["imu_ry"] = QString::number(imu[1]*R2D, 'f', 3);
+    imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
     rootObj["imu"] = imuObj;
 
     // Adding the power object

@@ -184,6 +184,18 @@ void CONFIG::load()
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
 
+                OBS_EB_MARGIN_X = obj_obs["OBS_EB_MARGIN_X"].toString().toDouble();
+                printf("[CONFIG] OBS_EB_MARGIN_X, %s\n", obj_obs["OBS_EB_MARGIN_X"].toString().toLocal8Bit().data());
+
+                OBS_EB_MARGIN_Y = obj_obs["OBS_EB_MARGIN_Y"].toString().toDouble();
+                printf("[CONFIG] OBS_EB_MARGIN_Y, %s\n", obj_obs["OBS_EB_MARGIN_Y"].toString().toLocal8Bit().data());
+
+                OBS_OMPL_MARGIN_X = obj_obs["OBS_OMPL_MARGIN_X"].toString().toDouble();
+                printf("[CONFIG] OBS_OMPL_MARGIN_X, %s\n", obj_obs["OBS_OMPL_MARGIN_X"].toString().toLocal8Bit().data());
+
+                OBS_OMPL_MARGIN_Y = obj_obs["OBS_OMPL_MARGIN_Y"].toString().toDouble();
+                printf("[CONFIG] OBS_OMPL_MARGIN_Y, %s\n", obj_obs["OBS_OMPL_MARGIN_Y"].toString().toLocal8Bit().data());
+
                 OBS_MAP_GRID_SIZE = obj_obs["OBS_MAP_GRID_SIZE"].toString().toDouble();
                 printf("[CONFIG] OBS_MAP_GRID_SIZE, %s\n", obj_obs["OBS_MAP_GRID_SIZE"].toString().toLocal8Bit().data());
 

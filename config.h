@@ -68,6 +68,10 @@ public:
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 
     double OBS_LOCAL_GOAL_D = 3.0;
+    double OBS_EB_MARGIN_X = 0.3;
+    double OBS_EB_MARGIN_Y = 0.2;
+    double OBS_OMPL_MARGIN_X = 0.1;
+    double OBS_OMPL_MARGIN_Y = 0.1;
     double OBS_MAP_GRID_SIZE = 0.05;
     double OBS_MAP_RANGE = 5.0;
     double OBS_MAP_MIN_Z = -1.0;

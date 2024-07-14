@@ -540,6 +540,10 @@ double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vect
 {
     int n = src0.size();
     int m = src1.size();
+    if(n == 0 || m == 0)
+    {
+        return 0;
+    }
 
     std::vector<std::vector<double>> dtw(n + 1, std::vector<double>(m + 1, std::numeric_limits<double>::infinity()));
     dtw[0][0] = 0.0;

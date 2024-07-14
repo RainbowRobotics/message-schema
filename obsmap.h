@@ -29,7 +29,7 @@ public:
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf);
-    cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf);
+    cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf0, const Eigen::Matrix4d& robot_tf1, double margin_x = 0, double margin_y = 0);
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
@@ -39,7 +39,7 @@ public:
     bool is_pivot_collision(const Eigen::Matrix4d& robot_tf);
     bool is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
     bool is_tf_collision_with_area(const Eigen::Matrix4d& robot_tf, const cv::Mat& area, double margin_x = 0, double margin_y = 0);
-    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1);
+    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1, double margin_x = 0, double margin_y = 0);
     bool get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, double chk_range, int& cnt0, int& cnt1);
 
     // calc repulsive force

@@ -3420,7 +3420,7 @@ void MainWindow::plot_loop2()
                 }
             }
 
-            if(pick.last_btn == 1)
+            //if(pick.last_btn == 1)
             {
                 // draw pose
                 viewer2->addCoordinateSystem(1.0, "O_pick");
