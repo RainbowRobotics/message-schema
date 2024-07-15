@@ -1308,7 +1308,7 @@ PATH AUTOCONTROL::calc_avoid_path()
     Eigen::Vector3d local_goal_xi = TF_to_se2(local_goal_tf);
 
     // set state space
-    auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(0.001, false));
+    auto stateSpace(std::make_shared<ompl::base::DubinsStateSpace>(0.001, true));
 
     ompl::base::RealVectorBounds stateBounds(2);
     stateBounds.setLow(0, cur_pos[0] - config->OBS_MAP_RANGE); stateBounds.setHigh(0, cur_pos[0] + config->OBS_MAP_RANGE);
