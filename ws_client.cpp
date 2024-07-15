@@ -1,10 +1,14 @@
 #include "ws_client.h"
 
+#include "mainwindow.h"
+
 WS_CLIENT::WS_CLIENT(QObject *parent)
     : QObject(parent)
+    , main(parent)
     , io(new sio::client())
     , reconnect_timer(this)
 {
+    // set recv callbacks
     using std::placeholders::_1;
     using std::placeholders::_2;
     using std::placeholders::_3;
@@ -20,6 +24,28 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     io->set_open_listener(std::bind(&WS_CLIENT::sio_connected, this));
     io->set_close_listener(std::bind(&WS_CLIENT::sio_disconnected, this, _1));
     io->set_fail_listener(std::bind(&WS_CLIENT::sio_error, this));
+
+    // connect recv signals -> recv slots
+    connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
+
+    connect(this, SIGNAL(signal_move_jog(double, double, double, double)), this, SLOT(slot_move_jog(double, double, double, double)));
+    connect(this, SIGNAL(signal_move_target(double, double, double, double, int, QString)), this, SLOT(slot_move_target(double, double, double, double, int, QString)));
+    connect(this, SIGNAL(signal_move_goal(double, QString, int, QString)), this, SLOT(slot_move_goal(double, QString, int, QString)));
+    connect(this, SIGNAL(signal_move_pause(double)), this, SLOT(slot_move_pause(double)));
+    connect(this, SIGNAL(signal_move_resume(double)), this, SLOT(slot_move_resume(double)));
+    connect(this, SIGNAL(signal_move_stop(double)), this, SLOT(slot_move_stop(double)));
+
+    connect(this, SIGNAL(signal_mapping_start(double)), this, SLOT(slot_mapping_start(double)));
+    connect(this, SIGNAL(signal_mapping_stop(double)), this, SLOT(slot_mapping_stop(double)));
+    connect(this, SIGNAL(signal_mapping_save(double, QString)), this, SLOT(slot_mapping_save(double, QString)));
+    connect(this, SIGNAL(signal_mapping_reload(double)), this, SLOT(slot_mapping_reload(double)));
+
+    connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
+
+    connect(this, SIGNAL(signal_localization_autoinit(double)), this, SLOT(slot_localization_autoinit(double)));
+    connect(this, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(slot_localization_init(double, double, double, double, double)));
+    connect(this, SIGNAL(signal_localization_start(double)), this, SLOT(slot_localization_start(double)));
+    connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
 
     // timer
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
@@ -71,6 +97,8 @@ void WS_CLIENT::reconnect_loop()
     }
 }
 
+
+// recv parser -> emit recv signals
 void WS_CLIENT::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
@@ -91,14 +119,59 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double vx = get_json(data, "vx").toDouble();
-        double vy = get_json(data, "vy").toDouble();
-        double wz = get_json(data, "wz").toDouble();
-        double time = get_json(data, "time").toDouble()/1000;
+        QString command = get_json(data, "jog");
 
-        // action
-        Q_EMIT signal_move(time, vx, vy, wz);
-        printf("[WS_RECV] move, t: %.3f, vx: %.3f, vy: %.3f, wz: %.3f\n", time, vx, vy, wz);
+        if(command == "jog")
+        {
+            double vx = get_json(data, "vx").toDouble();
+            double vy = get_json(data, "vy").toDouble();
+            double wz = get_json(data, "wz").toDouble();
+            double time = get_json(data, "time").toDouble()/1000;
+
+            // action
+            Q_EMIT signal_move_jog(time, vx, vy, wz);
+            printf("[WS_RECV] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
+        }
+        else if(command == "target")
+        {
+            double x = get_json(data, "x").toDouble();
+            double y = get_json(data, "y").toDouble();
+            double z = get_json(data, "z").toDouble();
+            double rz = get_json(data, "rz").toDouble();
+            int preset = get_json(data, "preset").toInt();
+            QString method = get_json(data, "method");
+            double time = get_json(data, "time").toDouble()/1000;
+
+            // action
+            Q_EMIT signal_move_target(time, x, y, z, rz, preset, method);
+            printf("[WS_RECV] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
+        }
+        else if(command == "goal")
+        {
+            QString id = get_json(data, "id");
+            int preset = get_json(data, "preset").toInt();
+            QString method = get_json(data, "method");
+            double time = get_json(data, "time").toDouble()/1000;
+
+            // action
+            Q_EMIT signal_move_goal(time, id, preset, method);
+            printf("[WS_RECV] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
+        }
+        else if(command == "pause")
+        {
+            double time = get_json(data, "time").toDouble()/1000;
+            Q_EMIT signal_move_pause(time);
+        }
+        else if(command == "resume")
+        {
+            double time = get_json(data, "time").toDouble()/1000;
+            Q_EMIT signal_move_resume(time);
+        }
+        else if(command == "stop")
+        {
+            double time = get_json(data, "time").toDouble()/1000;
+            Q_EMIT signal_move_stop(time);
+        }
     }
 }
 
@@ -182,6 +255,8 @@ void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr con
     }
 }
 
+
+// send functions
 void WS_CLIENT::send_status()
 {
     double time = get_time();
@@ -400,7 +475,7 @@ void WS_CLIENT::send_mapping_cloud()
     }
 }
 
-void WS_CLIENT::send_mapping_response_start(QString result)
+void WS_CLIENT::send_mapping_start_response(QString result)
 {
     double time = get_time();
 
@@ -420,7 +495,7 @@ void WS_CLIENT::send_mapping_response_start(QString result)
     printf("[WS_SEND] mapping_response_start, time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping_response_stop()
+void WS_CLIENT::send_mapping_stop_response()
 {
     double time = get_time();
 
@@ -440,7 +515,7 @@ void WS_CLIENT::send_mapping_response_stop()
     printf("[WS_SEND] mapping_response_stop, success, time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping_response_save(QString name, QString result)
+void WS_CLIENT::send_mapping_save_response(QString name, QString result)
 {
     double time = get_time();
 
@@ -500,3 +575,256 @@ void WS_CLIENT::send_localization_response(QString command, QString result)
 
     printf("[WS_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
+
+void WS_CLIENT::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "target";
+    rootObj["x"] = QString::number(x, 'f', 3);
+    rootObj["y"] = QString::number(y, 'f', 3);
+    rootObj["z"] = QString::number(z, 'f', 3);
+    rootObj["rz"] = QString::number(rz, 'f', 3);
+    rootObj["preset"] = QString::number(preset, 10);
+    rootObj["method"] = method;
+    rootObj["result"] = result;
+    rootObj["message"] = message; // when result failed
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("move", res);
+
+    printf("[WS_SEND] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "goal";
+    rootObj["id"] = node_id;
+    rootObj["preset"] = QString::number(preset, 10);
+    rootObj["method"] = method;
+    rootObj["result"] = result;
+    rootObj["message"] = message; // when result failed
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("move", res);
+
+    printf("[WS_SEND] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_move_pause_response(QString result)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "pause";
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("move", res);
+
+    printf("[WS_SEND] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_move_resume_response(QString result)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "resume";
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("move", res);
+
+    printf("[WS_SEND] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+}
+
+void WS_CLIENT::send_move_stop_response(QString result)
+{
+    double time = get_time();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "stop";
+    rootObj["result"] = result;
+    rootObj["time"] = QString::number((int)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("move", res);
+
+    printf("[WS_SEND] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+}
+
+
+// recv slots
+void WS_CLIENT::slot_motorinit(double time)
+{
+    MainWindow* _main = (MainWindow*)main;
+    _main->bt_MotorInit();
+}
+
+void WS_CLIENT::slot_move_jog(double time, double vx, double vy, double wz)
+{
+    mobile->move(vx, vy, wz*D2R);
+}
+
+void WS_CLIENT::slot_move_target(double time, double vx, double vy, double wz, int preset, QString method)
+{
+
+}
+
+void WS_CLIENT::slot_move_goal(double time, QString node_id, int preset, QString method)
+{
+
+}
+
+void WS_CLIENT::slot_move_pause(double time)
+{
+
+}
+
+void WS_CLIENT::slot_move_resume(double time)
+{
+
+}
+
+void WS_CLIENT::slot_move_stop(double time)
+{
+
+}
+
+void WS_CLIENT::slot_mapping_start(double time)
+{
+    MainWindow* _main = (MainWindow*)main;
+    if(lidar->is_connected_f)
+    {
+        _main->bt_MapBuild();
+        send_mapping_start_response("success");
+    }
+    else
+    {
+        send_mapping_start_response("fail");
+    }
+}
+
+void WS_CLIENT::slot_mapping_stop(double time)
+{
+    MainWindow* _main = (MainWindow*)main;
+    _main->bt_MapSave();
+    send_mapping_stop_response();
+}
+
+void WS_CLIENT::slot_mapping_save(double time, QString name)
+{
+    MainWindow* _main = (MainWindow*)main;
+    _main->bt_MapSave();
+
+    QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    std::string command = "cp -r " + _main->map_dir.toStdString() + " " + save_dir.toStdString();
+    int result = std::system(command.c_str());
+    if(result == 0)
+    {
+        send_mapping_save_response(name, "success");
+        printf("[WS_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
+    }
+    else
+    {
+        send_mapping_save_response(name, "fail");
+        printf("[WS_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
+    }
+}
+
+void WS_CLIENT::slot_mapping_reload(double time)
+{
+    last_send_kfrm_idx = 0;
+    printf("[WS_RECV] mapping reload\n");
+}
+
+
+void WS_CLIENT::slot_mapload(double time, QString name)
+{
+    MainWindow* _main = (MainWindow*)main;
+
+    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    if(!load_dir.isNull())
+    {
+        _main->map_dir = load_dir;
+        unimap->load_map(load_dir);
+        _main->all_update();
+
+        if(unimap->is_loaded)
+        {
+            send_mapload_response(name, "success");
+        }
+        else
+        {
+            send_mapload_response(name, "fail");
+        }
+    }
+}
+
+
+void WS_CLIENT::slot_localization_autoinit(double time)
+{
+    send_localization_response("autoinit", "fail");
+}
+
+void WS_CLIENT::slot_localization_init(double time, double x, double y, double z, double rz)
+{
+    if(unimap->is_loaded == false || lidar->is_connected_f == false)
+    {
+        send_localization_response("init", "fail");
+        return;
+    }
+
+    // manual init
+    slam->mtx.lock();
+    slam->cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
+    slam->mtx.unlock();
+
+    send_localization_response("init", "success");
+}
+
+void WS_CLIENT::slot_localization_start(double time)
+{
+    slam->localization_start();
+}
+
+void WS_CLIENT::slot_localization_stop(double time)
+{
+    slam->localization_stop();
+}
+
+

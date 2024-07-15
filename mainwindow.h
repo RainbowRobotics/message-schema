@@ -64,7 +64,7 @@ public:
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
 
-private:
+public:
     Ui::MainWindow *ui;
     std::mutex mtx;
 
@@ -116,7 +116,7 @@ private:
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
-private Q_SLOTS:
+public Q_SLOTS:
     // replot
     void map_update();
     void obs_update();
@@ -196,19 +196,6 @@ private Q_SLOTS:
     void bt_AutoStop();
     void slot_local_path_updated();
     void slot_global_path_updated();
-
-    // for ws
-    void ws_motorinit(double time);
-    void ws_move(double time, double vx, double vy, double wz);
-    void ws_mapping_start(double time);
-    void ws_mapping_stop(double time);
-    void ws_mapping_save(double time, QString name);
-    void ws_mapping_reload(double time);
-    void ws_mapload(double time, QString name);
-    void ws_localization_autoinit(double time);
-    void ws_localization_init(double time, double x, double y, double z, double rz);
-    void ws_localization_start(double time);
-    void ws_localization_stop(double time);
 
     // for obsmap
     void bt_ObsClear();

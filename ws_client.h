@@ -37,6 +37,7 @@ public:
     ~WS_CLIENT();
 
     // other modules
+    QObject *main = NULL;
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
@@ -58,21 +59,36 @@ public:
 
     // interface func
     void init();
+
     void send_status();
     void send_lidar();
     void send_mapping_cloud();
-    void send_mapping_response_start(QString result);
-    void send_mapping_response_stop();
-    void send_mapping_response_save(QString name, QString result);
-    void send_mapload_response(QString name, QString result);
+
+    void send_mapping_start_response(QString result);
+    void send_mapping_stop_response();
+    void send_mapping_save_response(QString name, QString result);
+
+    void send_mapload_response(QString name, QString result);    
     void send_localization_response(QString command, QString result);
+
+    void send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message);
+    void send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message);
+    void send_move_pause_response(QString result);
+    void send_move_resume_response(QString result);
+    void send_move_stop_response(QString result);
 
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
 
 Q_SIGNALS:
     void signal_motorinit(double time);
-    void signal_move(double time, double vx, double vy, double wz);
+
+    void signal_move_jog(double time, double vx, double vy, double wz);
+    void signal_move_target(double time, double x, double y, double z, double rz, int preset, QString method);
+    void signal_move_goal(double time, QString node_id, int preset, QString method);
+    void signal_move_pause(double time);
+    void signal_move_resume(double time);
+    void signal_move_stop(double time);
 
     void signal_mapping_start(double time);
     void signal_mapping_stop(double time);
@@ -99,6 +115,28 @@ private Q_SLOTS:
     void recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+
+private Q_SLOTS:
+    void slot_motorinit(double time);
+
+    void slot_move_jog(double time, double vx, double vy, double wz);
+    void slot_move_target(double time, double vx, double vy, double wz, int preset, QString method);
+    void slot_move_goal(double time, QString node_id, int preset, QString method);
+    void slot_move_pause(double time);
+    void slot_move_resume(double time);
+    void slot_move_stop(double time);
+
+    void slot_mapping_start(double time);
+    void slot_mapping_stop(double time);
+    void slot_mapping_save(double time, QString name);
+    void slot_mapping_reload(double time);
+
+    void slot_mapload(double time, QString name);
+
+    void slot_localization_autoinit(double time);
+    void slot_localization_init(double time, double x, double y, double z, double rz);
+    void slot_localization_start(double time);
+    void slot_localization_stop(double time);
 
 };
 

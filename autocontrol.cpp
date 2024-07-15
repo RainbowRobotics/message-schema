@@ -1360,6 +1360,10 @@ PATH AUTOCONTROL::calc_avoid_path()
         {
             ed_xi = min_xi;
             ed_tf = se2_to_TF(ed_xi);
+
+            local_goal_tf = ed_tf;
+            local_goal_xi = ed_xi;
+            printf("[AUTO] ompl, ed_xi, shifted\n");
         }
         else
         {
@@ -1931,11 +1935,65 @@ void AUTOCONTROL::b_loop_tng()
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
 
+    // get global path
+    PATH global_path = get_cur_global_path();
+    if(global_path.pos.size() == 0)
+    {
+        mobile->move(0, 0, 0);
+        is_moving = false;
+
+        printf("[AUTO] global path init failed\n");
+        return;
+    }
+
+    Eigen::Vector3d goal_pos = global_path.goal_tf.block(0,3,3,1);
+    Eigen::Vector3d goal_xi = TF_to_se2(global_path.goal_tf);
+
+    fsm_state = AUTO_FSM_FIRST_ALIGN;
+
     printf("[AUTO] b_loop_tng start\n");
     while(b_flag)
     {
+        // check
+        if(is_everything_fine() == false)
+        {
+            mobile->move(0, 0, 0);
+            is_moving = false;
+
+            printf("[AUTO] something wrong\n");
+            break;
+        }
+
+        // get current status
+        Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        // get target node
 
 
+        // goal error d
+        double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
+        double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
+
+        // finite state machine
+        if(fsm_state == AUTO_FSM_FIRST_ALIGN)
+        {
+
+        }
+        else if(fsm_state == AUTO_FSM_DRIVING)
+        {
+
+        }
+        else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
+        {
+
+        }
+        else if(fsm_state == AUTO_FSM_OBS)
+        {
+
+        }
 
         // for real time loop
         double cur_loop_time = get_time();

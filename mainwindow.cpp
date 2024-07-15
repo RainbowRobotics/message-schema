@@ -102,19 +102,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
 
-    // for ws
-    connect(&ws, SIGNAL(signal_motorinit(double)), this, SLOT(ws_motorinit(double)));
-    connect(&ws, SIGNAL(signal_move(double, double, double, double)), this, SLOT(ws_move(double, double, double, double)));
-    connect(&ws, SIGNAL(signal_mapping_start(double)), this, SLOT(ws_mapping_start(double)));
-    connect(&ws, SIGNAL(signal_mapping_stop(double)), this, SLOT(ws_mapping_stop(double)));
-    connect(&ws, SIGNAL(signal_mapping_save(double, QString)), this, SLOT(ws_mapping_save(double, QString)));
-    connect(&ws, SIGNAL(signal_mapping_reload(double)), this, SLOT(ws_mapping_reload(double)));
-    connect(&ws, SIGNAL(signal_mapload(double, QString)), this, SLOT(ws_mapload(double, QString)));
-    connect(&ws, SIGNAL(signal_localization_autoinit(double)), this, SLOT(ws_localization_autoinit(double)));
-    connect(&ws, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(ws_localization_init(double, double, double, double, double)));
-    connect(&ws, SIGNAL(signal_localization_start(double)), this, SLOT(ws_localization_start(double)));
-    connect(&ws, SIGNAL(signal_localization_stop(double)), this, SLOT(ws_localization_stop(double)));
-
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
     connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
@@ -1696,114 +1683,6 @@ void MainWindow::slot_local_path_updated()
 void MainWindow::slot_global_path_updated()
 {
     is_global_path_update = true;
-}
-
-// for ws
-void MainWindow::ws_motorinit(double time)
-{
-    bt_MotorInit();
-}
-
-void MainWindow::ws_move(double time, double vx, double vy, double wz)
-{
-    mobile.move(vx, vy, wz*D2R);
-}
-
-void MainWindow::ws_mapping_start(double time)
-{
-    if(lidar.is_connected_f)
-    {
-        bt_MapBuild();
-        ws.send_mapping_response_start("success");
-    }
-    else
-    {
-        bt_MapBuild();
-        ws.send_mapping_response_start("fail");
-    }
-}
-
-void MainWindow::ws_mapping_stop(double time)
-{
-    bt_MapSave();
-    ws.send_mapping_response_stop();
-}
-
-void MainWindow::ws_mapping_save(double time, QString name)
-{
-    bt_MapSave();
-
-    QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
-    std::string command = "cp -r " + map_dir.toStdString() + " " + save_dir.toStdString();
-    int result = std::system(command.c_str());
-    if(result == 0)
-    {
-        ws.send_mapping_response_save(name, "success");
-        printf("[WS_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
-    }
-    else
-    {
-        ws.send_mapping_response_save(name, "fail");
-        printf("[WS_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
-    }
-}
-
-
-void MainWindow::ws_mapping_reload(double time)
-{
-    ws.last_send_kfrm_idx = 0;
-    printf("[WS_RECV] mapping reload\n");
-}
-
-void MainWindow::ws_mapload(double time, QString name)
-{
-    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
-    if(!load_dir.isNull())
-    {
-        map_dir = load_dir;
-        unimap.load_map(load_dir);
-        all_update();
-
-        if(unimap.is_loaded)
-        {
-            ws.send_mapload_response(name, "success");
-        }
-        else
-        {
-            ws.send_mapload_response(name, "fail");
-        }
-    }
-}
-
-void MainWindow::ws_localization_autoinit(double time)
-{
-    ws.send_localization_response("autoinit", "fail");
-}
-
-void MainWindow::ws_localization_init(double time, double x, double y, double z, double rz)
-{
-    if(unimap.is_loaded == false || lidar.is_connected_f == false)
-    {
-        ws.send_localization_response("init", "fail");
-        return;
-    }
-
-    // manual init
-    slam.mtx.lock();
-    slam.cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
-    slam.mtx.unlock();
-
-    ws.send_localization_response("init", "success");
-}
-
-void MainWindow::ws_localization_start(double time)
-{
-    slam.localization_start();
-}
-
-void MainWindow::ws_localization_stop(double time)
-{
-    slam.localization_stop();
 }
 
 // for test
