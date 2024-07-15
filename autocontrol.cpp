@@ -1152,21 +1152,23 @@ PATH AUTOCONTROL::calc_local_path()
         double cost_l = wa*sum_cnt_l + wb*similarity_l + wc*length_l;
         double cost_r = wa*sum_cnt_r + wb*similarity_r + wc*length_r;
 
+        /*
         printf("cost_l:%f, %f, %f, cost_r:%f, %f, %f\n",
                wa*sum_cnt_l, wb*similarity_l, wc*length_l,
                wa*sum_cnt_r, wb*similarity_r, wc*length_r);
+        */
 
         // select one
         std::vector<Eigen::Vector3d> modified_path_pos;
         if(cost_l < cost_r)
         {
             modified_path_pos = modified_path_pos_l;
-            printf("l, %f, %f\n", cost_l, cost_r);
+            //printf("l, %f, %f\n", cost_l, cost_r);
         }
         else
         {
             modified_path_pos = modified_path_pos_r;
-            printf("r, %f, %f\n", cost_l, cost_r);
+            //printf("r, %f, %f\n", cost_l, cost_r);
         }
 
         if(modified_path_pos.size() >= 3)
@@ -1486,6 +1488,7 @@ void AUTOCONTROL::b_loop_pp()
     {
         mobile->move(0, 0, 0);
         is_moving = false;
+        Q_EMIT signal_move_failed("no global path");
 
         printf("[AUTO] global path init failed\n");
         return;
@@ -1510,6 +1513,7 @@ void AUTOCONTROL::b_loop_pp()
         {
             mobile->move(0, 0, 0);
             is_moving = false;
+            Q_EMIT signal_move_failed("no local path");
 
             printf("[AUTO] local path init failed\n");
             return;
@@ -1539,6 +1543,7 @@ void AUTOCONTROL::b_loop_pp()
         {
             mobile->move(0, 0, 0);
             is_moving = false;
+            Q_EMIT signal_move_failed("something wrong");
 
             printf("[AUTO] something wrong\n");
             break;
@@ -1554,48 +1559,76 @@ void AUTOCONTROL::b_loop_pp()
         double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
         double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
-        // check avoid path
-        if(avoid_path.pos.size() > 0)
+        // pause & resume
+        if(is_pause)
         {
-            // check avoid path goal
-            if(calc_dist_2d(avoid_path.pos.back() - cur_pos) < config->DRIVE_GOAL_D)
+            // pause process
+            if(fsm_state != AUTO_FSM_PAUSE)
             {
-                // clear avoid path
+                printf("[AUTO] pause\n");
+
+                // stop
                 mobile->move(0, 0, 0);
+
+                // clear path
                 avoid_path = PATH();
-                printf("[AUTO] avoid_path complete\n");
+                local_path = PATH();
+
+                mtx.lock();
+                cur_local_path = local_path;
+                mtx.unlock();
+
+                // change state
+                fsm_state = AUTO_FSM_PAUSE;
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
-            }
-            else
-            {
-                // check
-                if(local_path != avoid_path)
-                {
-                    // set avoid path to local path
-                    local_path = avoid_path;
-
-                    // update local path
-                    mtx.lock();
-                    cur_local_path = local_path;
-                    last_local_goal = local_path.goal_tf.block(0,3,3,1);
-                    mtx.unlock();
-
-                    Q_EMIT signal_local_path_updated();
-                }
             }
         }
         else
         {
-            // calc local path using eband
-            if(get_time() - last_local_path_t > 0.2)
+            // resume process
+            if(fsm_state == AUTO_FSM_PAUSE)
             {
-                PATH _local_path = calc_local_path();
-                if(_local_path.pos.size() > 0)
+                printf("[AUTO] resume\n");
+
+                // clear path
+                avoid_path = PATH();
+                local_path = PATH();
+
+                mtx.lock();
+                cur_local_path = local_path;
+                mtx.unlock();
+
+                // recalc local path
+                local_path = calc_local_path();
+
+                // change state
+                fsm_state = AUTO_FSM_FIRST_ALIGN;
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
+            // check avoid path
+            if(avoid_path.pos.size() > 0)
+            {
+                // check avoid path goal
+                if(calc_dist_2d(avoid_path.pos.back() - cur_pos) < config->DRIVE_GOAL_D)
                 {
-                    if(local_path != _local_path)
+                    // clear avoid path
+                    mobile->move(0, 0, 0);
+                    avoid_path = PATH();
+
+                    printf("[AUTO] avoid_path complete\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
+                else
+                {
+                    // check
+                    if(local_path != avoid_path)
                     {
-                        local_path = _local_path;
+                        // set avoid path to local path
+                        local_path = avoid_path;
 
                         // update local path
                         mtx.lock();
@@ -1606,21 +1639,41 @@ void AUTOCONTROL::b_loop_pp()
                         Q_EMIT signal_local_path_updated();
                     }
                 }
-                else
+            }
+            else
+            {
+                // calc local path using eband
+                if(get_time() - last_local_path_t > 0.2)
                 {
-                    mobile->move(0, 0, 0);
+                    PATH _local_path = calc_local_path();
+                    if(_local_path.pos.size() > 0)
+                    {
+                        if(local_path != _local_path)
+                        {
+                            local_path = _local_path;
 
-                    obs_state = 0;
-                    fsm_state = AUTO_FSM_OBS;
-                    printf("[AUTO] DRIVING -> OBS\n");
+                            // update local path
+                            mtx.lock();
+                            cur_local_path = local_path;
+                            last_local_goal = local_path.goal_tf.block(0,3,3,1);
+                            mtx.unlock();
+
+                            Q_EMIT signal_local_path_updated();
+                        }
+                    }
+                    else
+                    {
+                        mobile->move(0, 0, 0);
+
+                        obs_state = 0;
+                        fsm_state = AUTO_FSM_OBS;
+                        printf("[AUTO] DRIVING -> OBS\n");
+                    }
+
+                    last_local_path_t = get_time();
                 }
-
-                last_local_path_t = get_time();
             }
         }
-
-        // for debug
-        //fsm_state = AUTO_FSM_DEBUG;
 
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
@@ -1798,6 +1851,7 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     mobile->move(0, 0, 0);
                     is_moving = false;
+                    Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
                     printf("[AUTO] FINAL ALIGN COMPLETE, goal_err_th: %.3f\n", goal_err_th*R2D);
@@ -1811,6 +1865,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 mobile->move(0, 0, 0);
                 is_moving = false;
+                Q_EMIT signal_move_succeed("early stopped");
 
                 fsm_state = AUTO_FSM_COMPLETE;
                 printf("[AUTO] FINAL ALIGN COMPLETE(OBS), goal_err_th: %.3f\n", goal_err_th*R2D);
@@ -1893,6 +1948,8 @@ void AUTOCONTROL::b_loop_pp()
 
     mobile->move(0, 0, 0);
     is_moving = false;
+    Q_EMIT signal_move_succeed("stopped");
+
     printf("[AUTO] b_loop_pp stop\n");
 }
 

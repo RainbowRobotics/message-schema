@@ -3,6 +3,16 @@
 
 #include "utils.h"
 
+QString AUTO_FSM_STATE_STR[6] =
+{
+    "AUTO_FSM_FIRST_ALIGN",
+    "AUTO_FSM_DRIVING",
+    "AUTO_FSM_FINAL_ALIGN",
+    "AUTO_FSM_OBS",
+    "AUTO_FSM_COMPLETE",
+    "AUTO_FSM_PAUSE"
+};
+
 double st_time_for_get_time = get_time();
 double get_time()
 {
@@ -814,6 +824,18 @@ Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf)
     new_tf.block<3, 3>(0, 0) = yaw_matrix;
     new_tf.block<3, 1>(0, 3) = tf.block<3, 1>(0, 3);
     return new_tf;
+}
+
+Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
+{
+    Eigen::Matrix3d R0 = G0.block(0, 0, 3, 3);
+    Eigen::Vector3d T0 = G0.block(0, 3, 3, 1);
+    Eigen::Matrix3d R1 = G1.block(0, 0, 3, 3);
+    Eigen::Vector3d T1 = G1.block(0, 3, 3, 1);
+
+    double dt = (T1 - T0).norm();
+    double dr = Eigen::Quaterniond(R1).angularDistance(Eigen::Quaterniond(R0));
+    return Eigen::Vector2d(dt, dr);
 }
 
 

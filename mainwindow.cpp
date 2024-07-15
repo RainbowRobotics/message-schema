@@ -99,6 +99,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoMove2, SIGNAL(clicked()), this, SLOT(bt_AutoMove2()));
     connect(ui->bt_AutoMove3, SIGNAL(clicked()), this, SLOT(bt_AutoMove3()));
     connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
+    connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
+    connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
 
@@ -1675,6 +1677,16 @@ void MainWindow::bt_AutoStop()
     ctrl.stop();
 }
 
+void MainWindow::bt_AutoPause()
+{
+    ctrl.is_pause = true;
+}
+
+void MainWindow::bt_AutoResume()
+{
+    ctrl.is_pause = false;
+}
+
 void MainWindow::slot_local_path_updated()
 {
     is_local_path_update = true;
@@ -2015,11 +2027,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        temp_str.sprintf("[TEMP] cpu:%f, m0:%f, m1:%f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
                     }
                     else
                     {
-                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%f, m1:%f", ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%.2f, m1:%.2f", ms.temp_m0, ms.temp_m1);
                     }
                 }
 
@@ -2060,11 +2072,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%f, m0:%f, m1:%f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
                     }
                     else
                     {
-                        power_str.sprintf("[POWER] cpu:0.0, m0:%f, m1:%f", ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", ms.cur_m0, ms.cur_m1);
                     }
                 }
 
@@ -2097,7 +2109,7 @@ void MainWindow::watch_loop()
                         double pre_idle_usage = pre_cpu_usage.idle;
 
                         double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
-                        cpu_usage_str.sprintf("[CPU]: %f", cpu_usage);
+                        cpu_usage_str.sprintf("[CPU]: %.2f", cpu_usage);
 
                         pre_cpu_usage = cur_cpu_usage;
                     }
@@ -2153,6 +2165,13 @@ void MainWindow::plot_loop()
                          (int)mobile.msg_que.unsafe_size(),
                          (int)slam.kfrm_que.unsafe_size());
     ui->lb_QueInfo->setText(que_info_str);
+
+    // plot auto info
+    QString auto_info_str;
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s",
+                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
+                          (bool)ctrl.is_moving ? "true" : "false");
+    ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot map & annotation
     if(unimap.is_loaded)

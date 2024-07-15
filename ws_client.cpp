@@ -29,11 +29,13 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
 
     connect(this, SIGNAL(signal_move_jog(double, double, double, double)), this, SLOT(slot_move_jog(double, double, double, double)));
-    connect(this, SIGNAL(signal_move_target(double, double, double, double, int, QString)), this, SLOT(slot_move_target(double, double, double, double, int, QString)));
+    connect(this, SIGNAL(signal_move_target(double, double, double, double, double, int, QString)), this, SLOT(slot_move_target(double, double, double, double, double, int, QString)));
     connect(this, SIGNAL(signal_move_goal(double, QString, int, QString)), this, SLOT(slot_move_goal(double, QString, int, QString)));
     connect(this, SIGNAL(signal_move_pause(double)), this, SLOT(slot_move_pause(double)));
     connect(this, SIGNAL(signal_move_resume(double)), this, SLOT(slot_move_resume(double)));
     connect(this, SIGNAL(signal_move_stop(double)), this, SLOT(slot_move_stop(double)));
+    connect(ctrl, SIGNAL(signal_move_succeed(QString)), this, SLOT(slot_move_succeed(QString)));
+    connect(ctrl, SIGNAL(signal_move_failed(QString)), this, SLOT(slot_move_failed(QString)));
 
     connect(this, SIGNAL(signal_mapping_start(double)), this, SLOT(slot_mapping_start(double)));
     connect(this, SIGNAL(signal_mapping_stop(double)), this, SLOT(slot_mapping_stop(double)));
@@ -142,6 +144,20 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
             QString method = get_json(data, "method");
             double time = get_json(data, "time").toDouble()/1000;
 
+            // for response
+            MOVE_INFO _last_move_info;
+            _last_move_info.command = command;
+            _last_move_info.x = x;
+            _last_move_info.y = y;
+            _last_move_info.z = z;
+            _last_move_info.rz = rz;
+            _last_move_info.preset = preset;
+            _last_move_info.method = method;
+
+            mtx.lock();
+            last_move_info = _last_move_info;
+            mtx.unlock();
+
             // action
             Q_EMIT signal_move_target(time, x, y, z, rz, preset, method);
             printf("[WS_RECV] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
@@ -152,6 +168,17 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
             int preset = get_json(data, "preset").toInt();
             QString method = get_json(data, "method");
             double time = get_json(data, "time").toDouble()/1000;
+
+            // for response
+            MOVE_INFO _last_move_info;
+            _last_move_info.command = command;
+            _last_move_info.node_id = id;
+            _last_move_info.preset = preset;
+            _last_move_info.method = method;
+
+            mtx.lock();
+            last_move_info = _last_move_info;
+            mtx.unlock();
 
             // action
             Q_EMIT signal_move_goal(time, id, preset, method);
@@ -259,7 +286,7 @@ void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr con
 // send functions
 void WS_CLIENT::send_status()
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -356,12 +383,12 @@ void WS_CLIENT::send_status()
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("status", res);
 
-    printf("[WS_SEND] status, time: %f\n", time);
+    //printf("[WS_SEND] status, time: %f\n", time);
 }
 
 void WS_CLIENT::send_lidar()
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     TIME_POSE_PTS tpp = slam->get_cur_tpp();
     if(slam->is_loc && tpp.pts.size() > 0)
@@ -433,7 +460,7 @@ void WS_CLIENT::send_lidar()
         io->socket()->emit("lidar_cloud", rootObject);
     }
 
-    printf("[WS_SEND] lidar_cloud,  time: %f\n", time);
+    //printf("[WS_SEND] lidar_cloud,  time: %f\n", time);
 }
 
 void WS_CLIENT::send_mapping_cloud()
@@ -441,7 +468,7 @@ void WS_CLIENT::send_mapping_cloud()
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
         // send kfrm
-        double time = get_time();
+        double time = get_time() + st_time_for_get_time;
 
         slam->mtx.lock();
         KFRAME kfrm = slam->kfrm_storage[last_send_kfrm_idx];
@@ -477,7 +504,7 @@ void WS_CLIENT::send_mapping_cloud()
 
 void WS_CLIENT::send_mapping_start_response(QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -497,7 +524,7 @@ void WS_CLIENT::send_mapping_start_response(QString result)
 
 void WS_CLIENT::send_mapping_stop_response()
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -517,7 +544,7 @@ void WS_CLIENT::send_mapping_stop_response()
 
 void WS_CLIENT::send_mapping_save_response(QString name, QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -538,7 +565,7 @@ void WS_CLIENT::send_mapping_save_response(QString name, QString result)
 
 void WS_CLIENT::send_mapload_response(QString name, QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -558,7 +585,7 @@ void WS_CLIENT::send_mapload_response(QString name, QString result)
 
 void WS_CLIENT::send_localization_response(QString command, QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -578,7 +605,7 @@ void WS_CLIENT::send_localization_response(QString command, QString result)
 
 void WS_CLIENT::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -605,7 +632,7 @@ void WS_CLIENT::send_move_target_response(double x, double y, double z, double r
 
 void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -629,7 +656,7 @@ void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString met
 
 void WS_CLIENT::send_move_pause_response(QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -649,7 +676,7 @@ void WS_CLIENT::send_move_pause_response(QString result)
 
 void WS_CLIENT::send_move_resume_response(QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -669,7 +696,7 @@ void WS_CLIENT::send_move_resume_response(QString result)
 
 void WS_CLIENT::send_move_stop_response(QString result)
 {
-    double time = get_time();
+    double time = get_time() + st_time_for_get_time;
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -700,29 +727,172 @@ void WS_CLIENT::slot_move_jog(double time, double vx, double vy, double wz)
     mobile->move(vx, vy, wz*D2R);
 }
 
-void WS_CLIENT::slot_move_target(double time, double vx, double vy, double wz, int preset, QString method)
+void WS_CLIENT::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
 {
+    if(method == "pp")
+    {
+        if(unimap->is_loaded == false)
+        {
+            QString result = "reject";
+            QString message = "map not loaded";
+            send_move_target_response(x, y, z, rz, preset, method, result, message);
+            return;
+        }
 
+        if(slam->is_loc == false)
+        {
+            QString result = "reject";
+            QString message = "no localization";
+            send_move_target_response(x, y, z, rz, preset, method, result, message);
+            return;
+        }
+
+        if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
+        {
+            QString result = "reject";
+            QString message = "invalid target location";
+            send_move_target_response(x, y, z, rz, preset, method, result, message);
+            return;
+        }
+
+        Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(x,y,rz));
+        goal_tf(2,3) = z;
+
+        // pure pursuit
+        ctrl->move_pp(goal_tf, preset);
+
+        QString result = "accept";
+        QString message = "";
+        send_move_target_response(x, y, z, rz, preset, method, result, message);
+    }
+    else if(method == "tng")
+    {
+        QString result = "reject";
+        QString message = "not supported";
+        send_move_target_response(x, y, z, rz, preset, method, result, message);
+    }
+    else
+    {
+        QString result = "reject";
+        QString message = "not supported";
+        send_move_target_response(x, y, z, rz, preset, method, result, message);
+    }
 }
 
 void WS_CLIENT::slot_move_goal(double time, QString node_id, int preset, QString method)
 {
+    if(method == "pp")
+    {
+        if(unimap->is_loaded == false)
+        {
+            QString result = "reject";
+            QString message = "map not loaded";
+            send_move_goal_response(node_id, preset, method, result, message);
+            return;
+        }
 
+        if(slam->is_loc == false)
+        {
+            QString result = "reject";
+            QString message = "no localization";
+            send_move_goal_response(node_id, preset, method, result, message);
+            return;
+        }
+
+        if(node_id == "")
+        {
+            QString result = "reject";
+            QString message = "empty node id";
+            send_move_goal_response(node_id, preset, method, result, message);
+            return;
+        }
+
+        NODE* node = unimap->get_node_by_id(node_id);
+        if(node_id == NULL)
+        {
+            QString result = "reject";
+            QString message = "null node";
+            send_move_goal_response(node_id, preset, method, result, message);
+            return;
+        }
+
+        Eigen::Matrix4d goal_tf = node->tf;
+
+        // pure pursuit
+        ctrl->move_pp(goal_tf, preset);
+
+        QString result = "accept";
+        QString message = "";
+        send_move_goal_response(node_id, preset, method, result, message);
+    }
+    else if(method == "tng")
+    {
+        QString result = "reject";
+        QString message = "not supported";
+        send_move_goal_response(node_id, preset, method, result, message);
+    }
+    else
+    {
+        QString result = "reject";
+        QString message = "not supported";
+        send_move_goal_response(node_id, preset, method, result, message);
+    }
 }
 
 void WS_CLIENT::slot_move_pause(double time)
 {
+    ctrl->is_pause = true;
 
+    QString result = "accept";
+    send_move_pause_response(result);
 }
 
 void WS_CLIENT::slot_move_resume(double time)
 {
+    ctrl->is_pause = false;
 
+    QString result = "accept";
+    send_move_resume_response(result);
 }
 
 void WS_CLIENT::slot_move_stop(double time)
 {
+    ctrl->stop();
 
+    QString result = "accept";
+    send_move_stop_response(result);
+}
+
+void WS_CLIENT::slot_move_succeed(QString message)
+{
+    mtx.lock();
+    MOVE_INFO _last_move_info = last_move_info;
+    mtx.unlock();
+
+    if(_last_move_info.command == "target")
+    {
+        send_move_target_response(_last_move_info.x, _last_move_info.y, _last_move_info.z, _last_move_info.rz, _last_move_info.preset, _last_move_info.method, "success", message);
+    }
+    else if(_last_move_info.command == "goal")
+    {
+        send_move_goal_response(_last_move_info.node_id, _last_move_info.preset, _last_move_info.method, "success", message);
+    }
+}
+
+void WS_CLIENT::slot_move_failed(QString message)
+{
+    mtx.lock();
+    MOVE_INFO _last_move_info = last_move_info;
+    mtx.unlock();
+
+    if(_last_move_info.command == "target")
+    {
+        send_move_target_response(_last_move_info.x, _last_move_info.y, _last_move_info.z, _last_move_info.rz, _last_move_info.preset, _last_move_info.method, "fail", message);
+    }
+    else if(_last_move_info.command == "goal")
+    {
+        send_move_goal_response(_last_move_info.node_id, _last_move_info.preset, _last_move_info.method, "fail", message);
+    }
 }
 
 void WS_CLIENT::slot_mapping_start(double time)

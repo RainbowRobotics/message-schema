@@ -106,6 +106,7 @@ public:
 
     // flags    
     std::atomic<bool> is_moving = {false};
+    std::atomic<bool> is_pause = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
 
     // for ompl
@@ -114,6 +115,8 @@ public:
 Q_SIGNALS:
     void signal_global_path_updated();
     void signal_local_path_updated();
+    void signal_move_succeed(QString message);
+    void signal_move_failed(QString message);
 
 };
 

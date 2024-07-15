@@ -188,7 +188,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1,1,1,1,1">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -200,6 +200,18 @@
           </property>
           <item>
            <widget class="QTabWidget" name="tabWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>330</width>
+              <height>250</height>
+             </size>
+            </property>
             <property name="font">
              <font>
               <pointsize>9</pointsize>
@@ -405,6 +417,32 @@
                <string>Stop</string>
               </property>
              </widget>
+             <widget class="QPushButton" name="bt_AutoPause">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>70</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Pause</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoResume">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>70</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Resume</string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="tab_3">
              <attribute name="title">
@@ -452,8 +490,8 @@
              <widget class="QCheckBox" name="ckb_Looping">
               <property name="geometry">
                <rect>
-                <x>60</x>
-                <y>210</y>
+                <x>150</x>
+                <y>180</y>
                 <width>71</width>
                 <height>23</height>
                </rect>
@@ -546,7 +584,7 @@
                 <x>150</x>
                 <y>20</y>
                 <width>161</width>
-                <height>201</height>
+                <height>161</height>
                </rect>
               </property>
              </widget>
@@ -797,11 +835,122 @@
            </widget>
           </item>
           <item>
-           <widget class="QFrame" name="frame">
+           <widget class="QLabel" name="lb_SlamInfo">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[SLAM_INFO]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_MobilePoseInfo">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[MOBILE_POSE]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_MobileStatusInfo">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[MOBILE_STATUS]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_QueInfo">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[QUE_STATUS]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_AutoInfo">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[AUTO_INFO]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="frame_3">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>330</width>
-              <height>500</height>
+              <width>0</width>
+              <height>100</height>
              </size>
             </property>
             <property name="frameShape">
@@ -813,8 +962,8 @@
             <widget class="QPushButton" name="bt_JogF">
              <property name="geometry">
               <rect>
-               <x>80</x>
-               <y>410</y>
+               <x>70</x>
+               <y>10</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -826,8 +975,8 @@
             <widget class="QPushButton" name="bt_JogB">
              <property name="geometry">
               <rect>
-               <x>80</x>
-               <y>450</y>
+               <x>70</x>
+               <y>50</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -839,8 +988,8 @@
             <widget class="QPushButton" name="bt_JogL">
              <property name="geometry">
               <rect>
-               <x>40</x>
-               <y>450</y>
+               <x>30</x>
+               <y>50</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -852,8 +1001,8 @@
             <widget class="QPushButton" name="bt_JogR">
              <property name="geometry">
               <rect>
-               <x>120</x>
-               <y>450</y>
+               <x>110</x>
+               <y>50</y>
                <width>41</width>
                <height>41</height>
               </rect>
@@ -865,8 +1014,8 @@
             <widget class="QDoubleSpinBox" name="spb_JogV">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>410</y>
+               <x>190</x>
+               <y>10</y>
                <width>101</width>
                <height>31</height>
               </rect>
@@ -887,8 +1036,8 @@
             <widget class="QDoubleSpinBox" name="spb_JogW">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>440</y>
+               <x>190</x>
+               <y>40</y>
                <width>101</width>
                <height>31</height>
               </rect>
@@ -906,122 +1055,14 @@
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>200</x>
-               <y>470</y>
+               <x>190</x>
+               <y>70</y>
                <width>101</width>
                <height>21</height>
               </rect>
              </property>
              <property name="text">
               <string>Init</string>
-             </property>
-            </widget>
-            <widget class="QLabel" name="lb_MobilePoseInfo">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>110</y>
-               <width>311</width>
-               <height>71</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Box</enum>
-             </property>
-             <property name="text">
-              <string>[MOBILE_POSE]</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
-            </widget>
-            <widget class="QLabel" name="lb_MobileStatusInfo">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>190</y>
-               <width>311</width>
-               <height>151</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Box</enum>
-             </property>
-             <property name="text">
-              <string>[MOBILE_STATUS]</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
-            </widget>
-            <widget class="QLabel" name="lb_QueInfo">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>350</y>
-               <width>311</width>
-               <height>51</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Box</enum>
-             </property>
-             <property name="text">
-              <string>[QUE_STATUS]</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
-            </widget>
-            <widget class="QLabel" name="lb_SlamInfo">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>311</width>
-               <height>91</height>
-              </rect>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Box</enum>
-             </property>
-             <property name="text">
-              <string>[SLAM_INFO]</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
             </widget>
            </widget>

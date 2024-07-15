@@ -60,7 +60,7 @@ cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const 
 
     Eigen::Matrix4d obs_tf_inv = obs_tf.inverse();
 
-    // draw robot boundary
+    // draw robot boundary, st
     {
         Eigen::Vector3d P(robot_tf0(0,3), robot_tf0(1,3), robot_tf0(2,3));
         Eigen::Vector3d _P = obs_tf_inv.block(0,0,3,3)*P + obs_tf_inv.block(0,3,3,1);
@@ -69,6 +69,7 @@ cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const 
         cv::circle(avoid_area, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
     }
 
+    // draw robot boundary, ed
     {
         Eigen::Vector3d P(robot_tf1(0,3), robot_tf1(1,3), robot_tf1(2,3));
         Eigen::Vector3d _P = obs_tf_inv.block(0,0,3,3)*P + obs_tf_inv.block(0,3,3,1);

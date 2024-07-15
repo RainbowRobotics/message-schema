@@ -699,7 +699,8 @@ void SLAM_2D::loc_b_loop()
     double pre_loop_time = get_time();
 
     bool is_first = true;
-    Eigen::Matrix4d pre_mo_tf;
+    Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d pre_tf = Eigen::Matrix4d::Identity();
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -745,10 +746,17 @@ void SLAM_2D::loc_b_loop()
                 _cur_tf = icp_tf*fused_tf;
             }
 
-            // update
-            mtx.lock();
-            cur_tf = _cur_tf;
-            mtx.unlock();
+            Eigen::Vector2d dtdr = dTdR(pre_tf, _cur_tf);
+            if(dtdr[0] < 0.3 || dtdr[1] < 10.0*D2R)
+            {
+                // update
+                mtx.lock();
+                cur_tf = _cur_tf;
+                mtx.unlock();
+
+                // update for check
+                pre_tf = _cur_tf;
+            }
 
             // update pre mobile tf
             pre_mo_tf = cur_mo_tf;

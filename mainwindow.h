@@ -194,6 +194,9 @@ public Q_SLOTS:
     void bt_AutoMove2();
     void bt_AutoMove3();
     void bt_AutoStop();
+    void bt_AutoPause();
+    void bt_AutoResume();
+
     void slot_local_path_updated();
     void slot_global_path_updated();
 

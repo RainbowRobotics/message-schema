@@ -111,7 +111,7 @@ enum AUTO_FSM_STATE
     AUTO_FSM_FINAL_ALIGN,
     AUTO_FSM_OBS,
     AUTO_FSM_COMPLETE,
-    AUTO_FSM_DEBUG,
+    AUTO_FSM_PAUSE,
 };
 
 enum LOCAL_PATH_STATE
@@ -918,6 +918,55 @@ struct CPU_USAGE
         iowait = p.iowait;
         irq = p.irq;
         softirq = p.softirq;
+        return *this;
+    }
+};
+
+struct MOVE_INFO
+{
+    QString command = "";
+    double x = 0;
+    double y = 0;
+    double z = 0;
+    double rz = 0;
+    QString node_id = "";
+    int preset = 0;
+    QString method = "";
+
+    MOVE_INFO()
+    {
+        command = "";
+        x = 0;
+        y = 0;
+        z = 0;
+        rz = 0;
+        node_id = "";
+        preset = 0;
+        method = "";
+    }
+
+    MOVE_INFO(const MOVE_INFO& p)
+    {
+        command = p.command;
+        x = p.x;
+        y = p.y;
+        z = p.z;
+        rz = p.rz;
+        node_id = p.node_id;
+        preset = p.preset;
+        method = p.method;
+    }
+
+    MOVE_INFO& operator=(const MOVE_INFO& p)
+    {
+        command = p.command;
+        x = p.x;
+        y = p.y;
+        z = p.z;
+        rz = p.rz;
+        node_id = p.node_id;
+        preset = p.preset;
+        method = p.method;
         return *this;
     }
 };

@@ -35,6 +35,7 @@ class WS_CLIENT : public QObject
 public:
     explicit WS_CLIENT(QObject *parent = nullptr);
     ~WS_CLIENT();
+    std::mutex mtx;
 
     // other modules
     QObject *main = NULL;
@@ -53,6 +54,7 @@ public:
     std::unique_ptr<sio::client> io;
     QTimer reconnect_timer;
     std::atomic<int> last_send_kfrm_idx = {0};
+    MOVE_INFO last_move_info;
 
     // flags
     std::atomic<bool> is_connected = {false};
@@ -120,11 +122,13 @@ private Q_SLOTS:
     void slot_motorinit(double time);
 
     void slot_move_jog(double time, double vx, double vy, double wz);
-    void slot_move_target(double time, double vx, double vy, double wz, int preset, QString method);
+    void slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method);
     void slot_move_goal(double time, QString node_id, int preset, QString method);
     void slot_move_pause(double time);
     void slot_move_resume(double time);
     void slot_move_stop(double time);
+    void slot_move_succeed(QString message);
+    void slot_move_failed(QString message);
 
     void slot_mapping_start(double time);
     void slot_mapping_stop(double time);
