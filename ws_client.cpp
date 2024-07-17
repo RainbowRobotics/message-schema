@@ -369,14 +369,14 @@ void WS_CLIENT::send_status()
     // Adding the condition object
     Eigen::Vector2d ieir = slam->get_cur_ieir();
 
-    QString auto_state = "stopped";
+    QString auto_state = "stop";
     if(ctrl->is_pause)
     {
-        auto_state = "paused";
+        auto_state = "pause";
     }
     else if(ctrl->is_moving)
     {
-        auto_state = "moving";
+        auto_state = "move";
     }
 
     QJsonObject conditionObj;
