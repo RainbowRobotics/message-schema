@@ -143,36 +143,18 @@ void AUTOCONTROL::stop()
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 {
-    // pure pursuit
+    // stop first
+    stop();
 
-    // obs clear first
+    // obs clear
     obsmap->clear();
 
-    // set preset
+    // load preset
     params = load_preset(preset);
 
-    // global path finding
-    PATH _cur_global_path = calc_global_path(goal_tf);
-    if(_cur_global_path.pos.size() > 0)
-    {
-        // stop first
-        stop();
-
-        // update global path
-        mtx.lock();
-        cur_global_path = _cur_global_path;
-        mtx.unlock();
-
-        Q_EMIT signal_global_path_updated();
-
-        // start control loop
-        b_flag = true;
-        b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
-    }
-    else
-    {
-        printf("[AUTO] no global path\n");
-    }
+    // start control loop
+    b_flag = true;
+    b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this, goal_tf);
 }
 
 void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int preset)
@@ -237,7 +219,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 {
     // check already goal reached
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    if((goal_tf.block(0,3,3,1) - cur_tf.block(0,3,3,1)).norm() < config->DRIVE_GOAL_D)
+    if(calc_dist_2d(goal_tf.block(0,3,3,1) - cur_tf.block(0,3,3,1)) < config->DRIVE_GOAL_D)
     {
         printf("[AUTO] near goal\n");
         return PATH();
@@ -313,6 +295,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
     // set result
     PATH res;
+    res.t = get_time();
     res.nodes = node_path;
     res.pose = path_pose;
     res.pos = path_pos;    
@@ -1277,6 +1260,7 @@ PATH AUTOCONTROL::calc_local_path()
 
         // set result
         PATH res;
+        res.t = get_time();
         res.pose = path_pose;
         res.pos = path_pos;
         res.ref_th = ref_th;
@@ -1450,6 +1434,7 @@ PATH AUTOCONTROL::calc_avoid_path()
 
         // set result
         PATH res;
+        res.t = get_time();
         res.pose = path_pose;
         res.pos = path_pos;
         res.ref_th = ref_th;
@@ -1473,71 +1458,120 @@ bool AUTOCONTROL::is_everything_fine()
 }
 
 // loops
-void AUTOCONTROL::b_loop_pp()
+void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 {
     // set params
     is_moving = true;
 
+    // global goal
+    Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
+    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
+
+    // path storage
+    PATH global_path;
+    PATH local_path;
+    PATH avoid_path;
+
+    // check goal
+    Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
+    if(dtdr[0] < config->DRIVE_GOAL_D)
+    {
+        if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*D2R)
+        {
+            // already goal
+            mobile->move(0, 0, 0);
+            is_moving = false;
+
+            Q_EMIT signal_move_failed("already goal");
+            printf("[AUTO] already goal\n");
+            return;
+        }
+        else
+        {
+            // do final align
+            fsm_state = AUTO_FSM_FINAL_ALIGN;
+            printf("[AUTO] FINAL_ALIGN\n");
+        }
+    }
+    else
+    {
+        // do first align
+        fsm_state = AUTO_FSM_FIRST_ALIGN;
+        printf("[AUTO] FIRST_ALIGN\n");
+
+        // calc global path
+        global_path = calc_global_path(goal_tf);
+        if(global_path.pos.size() > 0)
+        {
+            // update global path
+            mtx.lock();
+            cur_global_path = global_path;
+            mtx.unlock();
+
+            Q_EMIT signal_global_path_updated();
+            printf("[AUTO] global path found\n");
+        }
+        else
+        {
+            // no global path
+            mobile->move(0, 0, 0);
+            is_moving = false;
+
+            Q_EMIT signal_move_failed("no global path");
+            printf("[AUTO] global path init failed\n");
+            return;
+        }
+
+        // calc local path
+        local_path = calc_local_path();
+        if(local_path.pos.size() == 0)
+        {
+            avoid_path = calc_avoid_path();
+            if(avoid_path.pos.size() > 0)
+            {
+                local_path = avoid_path;
+            }
+            else
+            {
+                mobile->move(0, 0, 0);
+                is_moving = false;
+
+                Q_EMIT signal_move_failed("no local path");
+                printf("[AUTO] local path init failed\n");
+                return;
+            }
+        }
+
+        // update local path
+        mtx.lock();
+        cur_local_path = local_path;
+        last_local_goal = local_path.goal_tf.block(0,3,3,1);
+        mtx.unlock();
+
+        Q_EMIT signal_local_path_updated();
+    }
+
+    // for obstacle
+    int obs_state = 0;    
+    double reverse_st_t = 0;
+    double pre_err_th = 0;
+
+    // loop params
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
     double extend_dt = 0;
 
-    // get global path
-    PATH global_path = get_cur_global_path();    
-    if(global_path.pos.size() == 0)
-    {
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        Q_EMIT signal_move_failed("no global path");
-
-        printf("[AUTO] global path init failed\n");
-        return;
-    }
-
-    Eigen::Vector3d goal_pos = global_path.goal_tf.block(0,3,3,1);
-    Eigen::Vector3d goal_xi = TF_to_se2(global_path.goal_tf);
-
-    // for avoid path
-    PATH avoid_path;
-
-    // calc initial local path    
-    PATH local_path = calc_local_path();
-    if(local_path.pos.size() == 0)
-    {
-        avoid_path = calc_avoid_path();
-        if(avoid_path.pos.size() > 0)
-        {
-            local_path = avoid_path;
-        }
-        else
-        {
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            Q_EMIT signal_move_failed("no local path");
-
-            printf("[AUTO] local path init failed\n");
-            return;
-        }
-    }
-    double last_local_path_t = get_time();
-
-    // update local path
-    mtx.lock();
-    cur_local_path = local_path;
-    last_local_goal = local_path.goal_tf.block(0,3,3,1);
-    mtx.unlock();
-
-    Q_EMIT signal_local_path_updated();
-
-
-    fsm_state = AUTO_FSM_FIRST_ALIGN;
-    int obs_state = 0;
-    double reverse_st_t = 0;
-    double pre_err_th = 0;
-
     printf("[AUTO] b_loop_pp start\n");
     while(b_flag)
     {
+        // pause
+        if(is_pause)
+        {
+            mobile->move(0, 0, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
         // check
         if(is_everything_fine() == false)
         {
@@ -1559,55 +1593,9 @@ void AUTOCONTROL::b_loop_pp()
         double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
         double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
-        // pause & resume
-        if(is_pause)
+        // calc local path
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN)
         {
-            // pause process
-            if(fsm_state != AUTO_FSM_PAUSE)
-            {
-                printf("[AUTO] pause\n");
-
-                // stop
-                mobile->move(0, 0, 0);
-
-                // clear path
-                avoid_path = PATH();
-                local_path = PATH();
-
-                mtx.lock();
-                cur_local_path = local_path;
-                mtx.unlock();
-
-                // change state
-                fsm_state = AUTO_FSM_PAUSE;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                continue;
-            }
-        }
-        else
-        {
-            // resume process
-            if(fsm_state == AUTO_FSM_PAUSE)
-            {
-                printf("[AUTO] resume\n");
-
-                // clear path
-                avoid_path = PATH();
-                local_path = PATH();
-
-                mtx.lock();
-                cur_local_path = local_path;
-                mtx.unlock();
-
-                // recalc local path
-                local_path = calc_local_path();
-
-                // change state
-                fsm_state = AUTO_FSM_FIRST_ALIGN;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                continue;
-            }
-
             // check avoid path
             if(avoid_path.pos.size() > 0)
             {
@@ -1643,7 +1631,7 @@ void AUTOCONTROL::b_loop_pp()
             else
             {
                 // calc local path using eband
-                if(get_time() - last_local_path_t > 0.2)
+                if(get_time() - local_path.t > 0.2)
                 {
                     PATH _local_path = calc_local_path();
                     if(_local_path.pos.size() > 0)
@@ -1665,12 +1653,10 @@ void AUTOCONTROL::b_loop_pp()
                     {
                         mobile->move(0, 0, 0);
 
-                        obs_state = 0;
+                        obs_state = 2;
                         fsm_state = AUTO_FSM_OBS;
-                        printf("[AUTO] DRIVING -> OBS\n");
+                        printf("[AUTO] eband failed, try OMPL\n");
                     }
-
-                    last_local_path_t = get_time();
                 }
             }
         }
@@ -1855,7 +1841,7 @@ void AUTOCONTROL::b_loop_pp()
 
                     fsm_state = AUTO_FSM_COMPLETE;
                     printf("[AUTO] FINAL ALIGN COMPLETE, goal_err_th: %.3f\n", goal_err_th*R2D);
-                    break;
+                    return;
                 }
             }
 
@@ -1869,7 +1855,7 @@ void AUTOCONTROL::b_loop_pp()
 
                 fsm_state = AUTO_FSM_COMPLETE;
                 printf("[AUTO] FINAL ALIGN COMPLETE(OBS), goal_err_th: %.3f\n", goal_err_th*R2D);
-                continue;
+                return;
             }
 
             // send control
@@ -1886,13 +1872,13 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     reverse_st_t = get_time();
                     obs_state = 1;
-                    printf("[AUTO] OBS, RECOVERY\n");
+                    printf("[AUTO] is collision, try reverse moving\n");
                     continue;
                 }
                 else
                 {
                     obs_state = 2;
-                    printf("[AUTO] OBS, OMPL\n");
+                    printf("[AUTO] no collision, try OMPL\n");
                     continue;
                 }
             }
@@ -1902,8 +1888,7 @@ void AUTOCONTROL::b_loop_pp()
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(-params.ST_V, 0, 0), 0.1, 1.5, cur_tf);
                 if(obsmap->is_path_collision(traj) || get_time() - reverse_st_t > 1.5)
                 {
-                    printf("[AUTO] OBS, STOP RECOVERY -> OMPL\n");
-
+                    printf("[AUTO] stop reverse moving, try OMPL\n");
                     mobile->move(0, 0, 0);
                     obs_state = 2;
                     continue;
@@ -1919,13 +1904,7 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
-                    printf("[AUTO] OBS -> FIRST_ALIGN\n");
-                    continue;
-                }
-                else
-                {
-                    printf("[AUTO] OBS, OMPL failed\n");
-                    obs_state = 0;
+                    printf("[AUTO] avoid path found, OMPL -> FIRST_ALIGN\n");
                     continue;
                 }
             }

@@ -6,6 +6,7 @@
 extern QString AUTO_FSM_STATE_STR[6];
 
 extern double st_time_for_get_time;
+double get_time0();
 double get_time();
 QString get_time_str();
 

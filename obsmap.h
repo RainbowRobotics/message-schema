@@ -29,6 +29,7 @@ public:
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf);
+    std::vector<Eigen::Vector4d> get_obs_pts(); // x, y, z, prob
     cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf0, const Eigen::Matrix4d& robot_tf1, double margin_x = 0, double margin_y = 0);
 
     // for plot
@@ -47,6 +48,7 @@ public:
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;
+    std::vector<Eigen::Vector4d> obs_pts;
 
     // grid map
     Eigen::Matrix4d tf;

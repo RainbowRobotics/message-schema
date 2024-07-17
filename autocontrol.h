@@ -92,7 +92,7 @@ public:
     // control loop
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
-    void b_loop_pp();
+    void b_loop_pp(Eigen::Matrix4d goal_tf);
     void b_loop_hpp();
     void b_loop_tng();
 

@@ -34,8 +34,6 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     connect(this, SIGNAL(signal_move_pause(double)), this, SLOT(slot_move_pause(double)));
     connect(this, SIGNAL(signal_move_resume(double)), this, SLOT(slot_move_resume(double)));
     connect(this, SIGNAL(signal_move_stop(double)), this, SLOT(slot_move_stop(double)));
-    connect(ctrl, SIGNAL(signal_move_succeed(QString)), this, SLOT(slot_move_succeed(QString)));
-    connect(ctrl, SIGNAL(signal_move_failed(QString)), this, SLOT(slot_move_failed(QString)));
 
     connect(this, SIGNAL(signal_mapping_start(double)), this, SLOT(slot_mapping_start(double)));
     connect(this, SIGNAL(signal_mapping_stop(double)), this, SLOT(slot_mapping_stop(double)));
@@ -121,7 +119,7 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        QString command = get_json(data, "jog");
+        QString command = get_json(data, "command");
 
         if(command == "jog")
         {
@@ -286,7 +284,7 @@ void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr con
 // send functions
 void WS_CLIENT::send_status()
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -371,11 +369,22 @@ void WS_CLIENT::send_status()
     // Adding the condition object
     Eigen::Vector2d ieir = slam->get_cur_ieir();
 
+    QString auto_state = "stopped";
+    if(ctrl->is_pause)
+    {
+        auto_state = "paused";
+    }
+    else if(ctrl->is_moving)
+    {
+        auto_state = "moving";
+    }
+
     QJsonObject conditionObj;
     conditionObj["inlier_error"] = QString::number(ieir[0], 'f', 3);
     conditionObj["inlier_ratio"] = QString::number(ieir[1], 'f', 3);
     conditionObj["mapping_error"] = QString::number(ieir[0], 'f', 3);
     conditionObj["mapping_ratio"] = QString::number(ieir[1], 'f', 3);
+    conditionObj["auto_state"] = auto_state;
     rootObj["condition"] = conditionObj;
 
     // send
@@ -388,7 +397,7 @@ void WS_CLIENT::send_status()
 
 void WS_CLIENT::send_lidar()
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     TIME_POSE_PTS tpp = slam->get_cur_tpp();
     if(slam->is_loc && tpp.pts.size() > 0)
@@ -468,7 +477,7 @@ void WS_CLIENT::send_mapping_cloud()
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
         // send kfrm
-        double time = get_time() + st_time_for_get_time;
+        double time = get_time0();
 
         slam->mtx.lock();
         KFRAME kfrm = slam->kfrm_storage[last_send_kfrm_idx];
@@ -504,7 +513,7 @@ void WS_CLIENT::send_mapping_cloud()
 
 void WS_CLIENT::send_mapping_start_response(QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -524,7 +533,7 @@ void WS_CLIENT::send_mapping_start_response(QString result)
 
 void WS_CLIENT::send_mapping_stop_response()
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -544,7 +553,7 @@ void WS_CLIENT::send_mapping_stop_response()
 
 void WS_CLIENT::send_mapping_save_response(QString name, QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -565,7 +574,7 @@ void WS_CLIENT::send_mapping_save_response(QString name, QString result)
 
 void WS_CLIENT::send_mapload_response(QString name, QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -585,7 +594,7 @@ void WS_CLIENT::send_mapload_response(QString name, QString result)
 
 void WS_CLIENT::send_localization_response(QString command, QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -605,7 +614,7 @@ void WS_CLIENT::send_localization_response(QString command, QString result)
 
 void WS_CLIENT::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -632,7 +641,7 @@ void WS_CLIENT::send_move_target_response(double x, double y, double z, double r
 
 void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -656,7 +665,7 @@ void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString met
 
 void WS_CLIENT::send_move_pause_response(QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -676,7 +685,7 @@ void WS_CLIENT::send_move_pause_response(QString result)
 
 void WS_CLIENT::send_move_resume_response(QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -696,7 +705,7 @@ void WS_CLIENT::send_move_resume_response(QString result)
 
 void WS_CLIENT::send_move_stop_response(QString result)
 {
-    double time = get_time() + st_time_for_get_time;
+    double time = get_time0();
 
     // Creating the JSON object
     QJsonObject rootObj;

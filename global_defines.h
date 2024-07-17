@@ -748,6 +748,7 @@ struct ASTAR_NODE
 
 struct PATH
 {
+    double t;
     std::vector<QString> nodes;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;
@@ -757,11 +758,13 @@ struct PATH
 
     PATH()
     {
+        t = 0;
         goal_tf.setIdentity();        
     }
 
     PATH(const PATH& p)
     {
+        t = p.t;
         nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;        
@@ -772,6 +775,7 @@ struct PATH
 
     PATH& operator=(const PATH& p)
     {
+        t = p.t;
         nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;
@@ -783,7 +787,8 @@ struct PATH
 
     bool operator==(const PATH& p) const
     {
-        return std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
+        return t == p.t &&
+               std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
                pose == p.pose &&
                pos == p.pos &&
                ref_th == p.ref_th &&

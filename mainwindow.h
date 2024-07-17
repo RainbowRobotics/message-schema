@@ -50,8 +50,8 @@ public:
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
     WS_CLIENT ws;
-    SIM sim;
     TASK task;
+    SIM sim;
 
     // system logger
     LOGGER system_logger;
@@ -126,7 +126,7 @@ public Q_SLOTS:
 
     // timer loops
     void plot_loop();
-    void plot_loop2();    
+    void plot_loop2();
     void qa_loop();
 
     // config

@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     , sim(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
-    , plot_timer2(this)
+    , plot_timer2(this)        
     , qa_timer(this)
 {
     ui->setupUi(this);
@@ -102,7 +102,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
-    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
+    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));    
+    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &ws, SLOT(slot_move_succeed(QString)));
+    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &ws, SLOT(slot_move_failed(QString)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -348,6 +350,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         if(ev->type() == QEvent::KeyPress)
         {
             QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            if(ke->isAutoRepeat())
+            {
+                return false;
+            }
+
             switch(ke->key())
             {
                 case Qt::Key_Up:
@@ -370,6 +377,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         else if(ev->type() == QEvent::KeyRelease)
         {
             QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            if(ke->isAutoRepeat())
+            {
+                return false;
+            }
+
             switch(ke->key())
             {
                 case Qt::Key_Up:
@@ -489,7 +501,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             QMouseEvent* me = static_cast<QMouseEvent*>(ev);
             if(me->button() == Qt::LeftButton)
             {
-
                 pick_update();
                 return true;
             }
@@ -526,6 +537,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         if(ev->type() == QEvent::KeyPress)
         {
             QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            if(ke->isAutoRepeat())
+            {
+                return false;
+            }
+
             switch(ke->key())
             {
                 case Qt::Key_Up:
@@ -548,6 +564,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         else if(ev->type() == QEvent::KeyRelease)
         {
             QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+            if(ke->isAutoRepeat())
+            {
+                return false;
+            }
+
             switch(ke->key())
             {
                 case Qt::Key_Up:
@@ -2168,9 +2189,9 @@ void MainWindow::plot_loop()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_moving ? "true" : "false");
+                          (bool)ctrl.is_moving ? "true" : "false", (bool)ctrl.is_pause ? "true" : "false");
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot map & annotation
@@ -2218,65 +2239,56 @@ void MainWindow::plot_loop()
         {
             is_obs_update = false;
 
-            if(obsmap.octree != NULL)
+            cv::Mat obs_map;
+            Eigen::Matrix4d obs_tf;
+            obsmap.get_obs_map(obs_map, obs_tf);
+
+            std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
+
+            // plot grid map
             {
-                cv::Mat obs_map;
-                Eigen::Matrix4d obs_tf;
-                obsmap.get_obs_map(obs_map, obs_tf);
+                cv::Mat plot_obs_map;
+                cv::cvtColor(obs_map, plot_obs_map, cv::COLOR_GRAY2BGR);
+                obsmap.draw_robot(plot_obs_map, obs_tf);
 
-                // plot grid map
-                {
-                    cv::Mat plot_obs_map;
-                    cv::cvtColor(obs_map, plot_obs_map, cv::COLOR_GRAY2BGR);
-                    obsmap.draw_robot(plot_obs_map, obs_tf);
-
-                    ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
-                    ui->lb_Screen1->setScaledContents(true);
-                    ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-                }
-
-                // obsmap boundary
-                if(obsmap.mtx.try_lock())
-                {
-                    octomap::point3d bbx_min(obs_tf(0,3) - config.OBS_MAP_RANGE, obs_tf(1,3) - config.OBS_MAP_RANGE, -0.1);
-                    octomap::point3d bbx_max(obs_tf(0,3) + config.OBS_MAP_RANGE, obs_tf(1,3) + config.OBS_MAP_RANGE, 0.1);
-
-                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-                    for(octomap::OcTree::leaf_bbx_iterator it = obsmap.octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != obsmap.octree->end_leafs_bbx(); it++)
-                    {
-                        double x = it.getX();
-                        double y = it.getY();
-                        double z = it.getZ();
-                        double prob = it->getOccupancy();
-
-                        if(prob <= 0.5)
-                        {
-                            continue;
-                        }
-
-                        tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
-
-                        pcl::PointXYZRGB pt;
-                        pt.x = x;
-                        pt.y = y;
-                        pt.z = z;
-                        pt.r = c.r()*255;
-                        pt.g = c.g()*255;
-                        pt.b = c.b()*255;
-                        cloud->push_back(pt);
-                    }
-
-                    if(!viewer->updatePointCloud(cloud, "obs_pts"))
-                    {
-                        viewer->addPointCloud(cloud, "obs_pts");
-                    }
-
-                    // point size
-                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
-
-                    obsmap.mtx.unlock();
-                }
+                ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+                ui->lb_Screen1->setScaledContents(true);
+                ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
+
+            // plot obs pts
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < obs_pts.size(); p++)
+            {
+                double x = obs_pts[p][0];
+                double y = obs_pts[p][1];
+                double z = obs_pts[p][2];
+                double prob = obs_pts[p][3];
+
+                if(prob <= 0.5)
+                {
+                    continue;
+                }
+
+                tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+                pcl::PointXYZRGB pt;
+                pt.x = x;
+                pt.y = y;
+                pt.z = z;
+                pt.r = c.r()*255;
+                pt.g = c.g()*255;
+                pt.b = c.b()*255;
+                cloud->push_back(pt);
+            }
+
+            if(!viewer->updatePointCloud(cloud, "obs_pts"))
+            {
+                viewer->addPointCloud(cloud, "obs_pts");
+            }
+
+            // point size
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
         }
 
         // draw topo
@@ -2483,7 +2495,7 @@ void MainWindow::plot_loop()
                 }
             }
 
-            // plot ketframe pts            
+            // plot keyframe pts
             {
                 int kfrm_id;
                 if(slam.kfrm_update_que.try_pop(kfrm_id))

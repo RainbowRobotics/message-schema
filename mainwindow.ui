@@ -971,6 +971,12 @@
              <property name="text">
               <string>F</string>
              </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
             </widget>
             <widget class="QPushButton" name="bt_JogB">
              <property name="geometry">
@@ -983,6 +989,12 @@
              </property>
              <property name="text">
               <string>B</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_JogL">
@@ -997,6 +1009,12 @@
              <property name="text">
               <string>L</string>
              </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
             </widget>
             <widget class="QPushButton" name="bt_JogR">
              <property name="geometry">
@@ -1010,11 +1028,17 @@
              <property name="text">
               <string>R</string>
              </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
             </widget>
             <widget class="QDoubleSpinBox" name="spb_JogV">
              <property name="geometry">
               <rect>
-               <x>190</x>
+               <x>200</x>
                <y>10</y>
                <width>101</width>
                <height>31</height>
@@ -1036,7 +1060,7 @@
             <widget class="QDoubleSpinBox" name="spb_JogW">
              <property name="geometry">
               <rect>
-               <x>190</x>
+               <x>200</x>
                <y>40</y>
                <width>101</width>
                <height>31</height>
@@ -1055,7 +1079,7 @@
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>190</x>
+               <x>200</x>
                <y>70</y>
                <width>101</width>
                <height>21</height>

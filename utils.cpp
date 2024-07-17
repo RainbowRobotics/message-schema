@@ -13,6 +13,13 @@ QString AUTO_FSM_STATE_STR[6] =
     "AUTO_FSM_PAUSE"
 };
 
+double get_time0()
+{
+    std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
+    return (timestamp*1.0e-9);
+}
+
 double st_time_for_get_time = get_time();
 double get_time()
 {

@@ -45,6 +45,15 @@ void OBSMAP::get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf)
     mtx.unlock();
 }
 
+std::vector<Eigen::Vector4d> OBSMAP::get_obs_pts()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector4d> res = obs_pts;
+    mtx.unlock();
+
+    return res;
+}
+
 cv::Mat OBSMAP::calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf0, const Eigen::Matrix4d& robot_tf1, double margin_x, double margin_y)
 {
     mtx.lock();
@@ -626,6 +635,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);
     octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MAX_Z);
 
+    std::vector<Eigen::Vector4d> _obs_pts;
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
     for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
     {
@@ -633,6 +643,9 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         double y = it.getY();
         double z = it.getZ();
         double prob = it->getOccupancy();
+
+        // for plot
+        _obs_pts.push_back(Eigen::Vector4d(x, y, z, prob));
 
         // global to local
         Eigen::Vector3d P(x,y,z);
@@ -698,6 +711,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         wall.ptr<uchar>(v)[u] = 255;
     }
 
+    obs_pts = _obs_pts;
     wall_map = wall;
     prob_map = _map;
     tf = cur_tf;
