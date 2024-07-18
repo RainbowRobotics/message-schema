@@ -291,7 +291,7 @@ void WS_CLIENT::send_status()
 
     // Adding the command and time
     rootObj["command"] = "status";
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // Adding the pose object
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -522,7 +522,7 @@ void WS_CLIENT::send_mapping_start_response(QString result)
     // Adding the command and time
     rootObj["command"] = "start";
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -542,7 +542,7 @@ void WS_CLIENT::send_mapping_stop_response()
     // Adding the command and time
     rootObj["command"] = "stop";
     rootObj["result"] = "success";
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -563,7 +563,7 @@ void WS_CLIENT::send_mapping_save_response(QString name, QString result)
     rootObj["command"] = "save";
     rootObj["name"] = name;
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -583,7 +583,7 @@ void WS_CLIENT::send_mapload_response(QString name, QString result)
     // Adding the command and time
     rootObj["name"] = name;
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -603,7 +603,7 @@ void WS_CLIENT::send_localization_response(QString command, QString result)
     // Adding the command and time
     rootObj["command"] = command;
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -630,7 +630,7 @@ void WS_CLIENT::send_move_target_response(double x, double y, double z, double r
     rootObj["method"] = method;
     rootObj["result"] = result;
     rootObj["message"] = message; // when result failed
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -654,7 +654,7 @@ void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString met
     rootObj["method"] = method;
     rootObj["result"] = result;
     rootObj["message"] = message; // when result failed
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -674,7 +674,7 @@ void WS_CLIENT::send_move_pause_response(QString result)
     // Adding the command and time
     rootObj["command"] = "pause";
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -694,7 +694,7 @@ void WS_CLIENT::send_move_resume_response(QString result)
     // Adding the command and time
     rootObj["command"] = "resume";
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -714,7 +714,7 @@ void WS_CLIENT::send_move_stop_response(QString result)
     // Adding the command and time
     rootObj["command"] = "stop";
     rootObj["result"] = result;
-    rootObj["time"] = QString::number((int)(time*1000), 10);
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
@@ -760,13 +760,21 @@ void WS_CLIENT::slot_move_target(double time, double x, double y, double z, doub
         if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
         {
             QString result = "reject";
-            QString message = "invalid target location";
+            QString message = "target location out of range";
             send_move_target_response(x, y, z, rz, preset, method, result, message);
             return;
         }
 
-        Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(x,y,rz));
+        Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(x,y,rz*D2R));
         goal_tf(2,3) = z;
+
+        if(obsmap->is_tf_collision(goal_tf))
+        {
+            QString result = "reject";
+            QString message = "target location occupied";
+            send_move_target_response(x, y, z, rz, preset, method, result, message);
+            return;
+        }
 
         // pure pursuit
         ctrl->move_pp(goal_tf, preset);

@@ -727,39 +727,39 @@ void SLAM_2D::loc_b_loop()
             mtx.unlock();
 
             Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
-            _cur_tf = _cur_tf*delta_tf;
+            pre_mo_tf = cur_mo_tf;
+            Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
 
             TIME_POSE_PTS tpp;
             if(tpp_que.try_pop(tpp))
             {
-                /*
-                Eigen::Matrix4d dtf = tpp.tf.inverse()*_cur_tf;
-                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
-                _cur_tf = tpp.tf*fused_tf;
-                */
+                double alpha = config->LOC_FUSION_RATIO;
 
                 Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
                 Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
 
-                Eigen::Matrix4d dtf = icp_tf.inverse()*_cur_tf;
-                Eigen::Matrix4d fused_tf = intp_tf(config->LOC_FUSION_RATIO, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
-                _cur_tf = icp_tf*fused_tf;
-            }
+                Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                if(std::abs(dtdr[1]) > 3.0*D2R)
+                {
+                    alpha = 0;
+                }
 
-            Eigen::Vector2d dtdr = dTdR(pre_tf, _cur_tf);
-            if(dtdr[0] < 0.3 || dtdr[1] < 10.0*D2R)
+                Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
+
+                // update
+                _cur_tf = fused_tf;
+            }
+            else
             {
                 // update
-                mtx.lock();
-                cur_tf = _cur_tf;
-                mtx.unlock();
-
-                // update for check
-                pre_tf = _cur_tf;
+                _cur_tf = odo_tf;
             }
 
-            // update pre mobile tf
-            pre_mo_tf = cur_mo_tf;
+            // update
+            mtx.lock();
+            cur_tf = _cur_tf;
+            mtx.unlock();
 
             // update processing time
             proc_time_loc_b = get_time() - st_time;
@@ -1019,9 +1019,10 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    if(last_err > first_err+0.01 || first_err > config->LOC_ICP_ERROR_THRESHOLD || last_err > config->LOC_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->LOC_ICP_ERROR_THRESHOLD)
     {
         printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+        return 9999;
     }
 
     return last_err;

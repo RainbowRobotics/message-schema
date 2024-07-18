@@ -2189,9 +2189,11 @@ void MainWindow::plot_loop()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_moving ? "true" : "false", (bool)ctrl.is_pause ? "true" : "false");
+                          (bool)ctrl.is_moving ? "true" : "false",
+                          (bool)ctrl.is_pause ? "true" : "false",
+                          ctrl.get_obs_condition().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot map & annotation
@@ -2888,6 +2890,11 @@ void MainWindow::plot_loop()
             viewer->removeShape("pick_body");
         }
 
+        if(viewer->contains("pick_text"))
+        {
+            viewer->removeShape("pick_text");
+        }
+
         if(viewer->contains("sel_cur"))
         {
             viewer->removeShape("sel_cur");
@@ -2910,6 +2917,8 @@ void MainWindow::plot_loop()
 
         if(pick.last_btn == 1)
         {
+            Eigen::Matrix4d pick_tf = se2_to_TF(pick.r_pose);
+
             // draw pose
             viewer->addCoordinateSystem(1.0, "O_pick");
             viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
@@ -2917,8 +2926,18 @@ void MainWindow::plot_loop()
                             config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
 
-            viewer->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
-            viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+            viewer->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+            viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
+
+            // plot text
+            pcl::PointXYZ position;
+            position.x = pick_tf(0,3);
+            position.y = pick_tf(1,3);
+            position.z = pick_tf(2,3) + 1.0;
+
+            QString text;
+            text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
         }
     }
 
@@ -3271,6 +3290,11 @@ void MainWindow::plot_loop2()
             viewer2->removeShape("pick_body");
         }
 
+        if(viewer2->contains("pick_text"))
+        {
+            viewer2->removeShape("pick_text");
+        }
+
         if(viewer2->contains("sel_cur"))
         {
             viewer2->removeShape("sel_cur");
@@ -3332,13 +3356,15 @@ void MainWindow::plot_loop2()
 
             //if(pick.last_btn == 1)
             {
+                Eigen::Matrix4d pick_tf = se2_to_TF(pick.r_pose);
+
                 // draw pose
                 viewer2->addCoordinateSystem(1.0, "O_pick");
                 if(ui->cb_NodeType->currentText() == "ROUTE")
                 {
                     viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
                 else if(ui->cb_NodeType->currentText() == "GOAL")
                 {
@@ -3346,7 +3372,7 @@ void MainWindow::plot_loop2()
                                      config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                      config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
                 else if(ui->cb_NodeType->currentText() == "OBS")
                 {
@@ -3354,10 +3380,20 @@ void MainWindow::plot_loop2()
                                      -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
                                      0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
 
-                viewer2->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(se2_to_TF(pick.r_pose).cast<float>()));
+                viewer2->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
+
+                // plot text
+                pcl::PointXYZ position;
+                position.x = pick_tf(0,3);
+                position.y = pick_tf(1,3);
+                position.z = pick_tf(2,3) + 1.0;
+
+                QString text;
+                text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+                viewer2->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
             }
         }
     }

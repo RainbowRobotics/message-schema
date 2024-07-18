@@ -93,9 +93,9 @@ public:
     // control loop
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
-    void b_loop_pp(Eigen::Matrix4d goal_tf);
-    void b_loop_hpp();
-    void b_loop_tng();
+    void b_loop_pp(Eigen::Matrix4d goal_tf);    
+    void b_loop_hpp(Eigen::Matrix4d goal_tf);
+    void b_loop_tng(Eigen::Matrix4d goal_tf);
 
     // storage    
     PATH cur_global_path;
