@@ -385,6 +385,7 @@ void WS_CLIENT::send_status()
     conditionObj["mapping_error"] = QString::number(ieir[0], 'f', 3);
     conditionObj["mapping_ratio"] = QString::number(ieir[1], 'f', 3);
     conditionObj["auto_state"] = auto_state;
+    conditionObj["obs_state"] = ctrl->get_obs_condition();
     rootObj["condition"] = conditionObj;
 
     // send

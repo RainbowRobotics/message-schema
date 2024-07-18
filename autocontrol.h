@@ -58,8 +58,9 @@ public:
 
     // interface funcs
     PATH get_cur_global_path();
-    PATH get_cur_local_path();
+    PATH get_cur_local_path();    
     void clear_path();
+    QString get_obs_condition();
 
     void init();
     void stop();
@@ -108,6 +109,7 @@ public:
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
+    QString obs_condition = "none";
 
     // for ompl
     cv::Mat avoid_area;

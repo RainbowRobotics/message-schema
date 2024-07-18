@@ -126,6 +126,15 @@ void AUTOCONTROL::clear_path()
     Q_EMIT signal_local_path_updated();
 }
 
+QString AUTOCONTROL::get_obs_condition()
+{
+    mtx.lock();
+    QString res = obs_condition;
+    mtx.unlock();
+
+    return res;
+}
+
 void AUTOCONTROL::stop()
 {
     // control loop stop
@@ -1708,6 +1717,10 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
             if(obsmap->is_path_collision(traj))
             {
+                mtx.lock();
+                obs_condition = "near";
+                mtx.unlock();
+
                 mobile->move(0, 0, 0);
 
                 obs_state = 0;
@@ -1731,6 +1744,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             // obs decel
             double obs_v = 0.1;
+            QString _obs_condition = "none";
             for(double vv = 0.1; vv <= params.LIMIT_V+0.01; vv += 0.1)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, 1.5, cur_tf);
@@ -1740,6 +1754,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 }
                 else
                 {
+                    _obs_condition = "far";
                     break;
                 }
             }
@@ -1750,8 +1765,14 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 if(obsmap->is_path_collision(traj))
                 {
                     obs_v = 0;
+                    _obs_condition = "near";
                 }
             }
+
+            // for mobile server
+            mtx.lock();
+            obs_condition = _obs_condition;
+            mtx.unlock();
 
             if(obs_v == 0)
             {
@@ -1849,6 +1870,10 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
             if(obsmap->is_path_collision(traj))
             {
+                mtx.lock();
+                obs_condition = "near";
+                mtx.unlock();
+
                 mobile->move(0, 0, 0);
                 is_moving = false;
                 Q_EMIT signal_move_succeed("early stopped");
