@@ -138,11 +138,14 @@ int MOBILE::get_imu_storage_size()
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
+    Eigen::Vector3d imu = get_imu();
+
     QString str;
-    str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f",
+    str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
                 mobile_pose.t,
                 mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D);
+                mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                imu[0]*R2D, imu[1]*R2D, imu[2]*R2D);
     return str;
 }
 
@@ -165,9 +168,6 @@ QString MOBILE::get_status_text()
 // recv loop
 void MOBILE::recv_loop()
 {
-    // for imu
-    imu_tools::ComplementaryFilter imu_filter;
-
     // pdu connection info
     const QString pdu_ip = "192.168.2.100";
     const int pdu_port = 1977;
@@ -232,7 +232,7 @@ void MOBILE::recv_loop()
     logger->PrintLog("[MOBILE] connected", "Green", true, false);
 
     // var init
-    const int packet_size = 134;
+    const int packet_size = 150;
     std::vector<uchar> buf;
     int drop_cnt = 10;
 
@@ -322,28 +322,34 @@ void MOBILE::recv_loop()
                 float return_time;
                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                uint8_t rolloer_controller_state;
-                memcpy(&rolloer_controller_state, &_buf[index], dlc);      index=index+dlc;
+                float q0, q1, q2, q3;
+                memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                uint8_t rolloer_sensor0, rolloer_sensor1, rolloer_sensor2, rolloer_sensor3;
-                memcpy(&rolloer_sensor0, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_sensor1, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_sensor2, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_sensor3, &_buf[index], dlc);      index=index+dlc;
+                uint8_t roller_controller_state;
+                memcpy(&roller_controller_state, &_buf[index], dlc);      index=index+dlc;
 
-                uint8_t rolloer_manual_sw0, rolloer_manual_sw1;
-                memcpy(&rolloer_manual_sw0, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_manual_sw1, &_buf[index], dlc);      index=index+dlc;
+                uint8_t roller_sensor0, roller_sensor1, roller_sensor2, roller_sensor3;
+                memcpy(&roller_sensor0, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_sensor1, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_sensor2, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_sensor3, &_buf[index], dlc);      index=index+dlc;
 
-                uint8_t rolloer_blocking_state0, rolloer_blocking_state1;
-                memcpy(&rolloer_blocking_state0, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_blocking_state1, &_buf[index], dlc);      index=index+dlc;
+                uint8_t roller_manual_sw0, roller_manual_sw1;
+                memcpy(&roller_manual_sw0, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_manual_sw1, &_buf[index], dlc);      index=index+dlc;
 
-                uint8_t rolloer_blocking_manual_sw0, rolloer_blocking_manual_sw1, rolloer_blocking_manual_sw2, rolloer_blocking_manual_sw3;
-                memcpy(&rolloer_blocking_manual_sw0, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_blocking_manual_sw1, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_blocking_manual_sw2, &_buf[index], dlc);      index=index+dlc;
-                memcpy(&rolloer_blocking_manual_sw3, &_buf[index], dlc);      index=index+dlc;
+                uint8_t roller_blocking_state0, roller_blocking_state1;
+                memcpy(&roller_blocking_state0, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_blocking_state1, &_buf[index], dlc);      index=index+dlc;
+
+                uint8_t roller_blocking_manual_sw0, roller_blocking_manual_sw1, roller_blocking_manual_sw2, roller_blocking_manual_sw3;
+                memcpy(&roller_blocking_manual_sw0, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_blocking_manual_sw1, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_blocking_manual_sw2, &_buf[index], dlc);      index=index+dlc;
+                memcpy(&roller_blocking_manual_sw3, &_buf[index], dlc);      index=index+dlc;
 
                 uint8_t orgo_on_init;
                 memcpy(&orgo_on_init, &_buf[index], dlc);      index=index+dlc;
@@ -421,19 +427,19 @@ void MOBILE::recv_loop()
                 mobile_status.return_time = return_time;
 
                 // roller
-                mobile_status.roller_controller_state = rolloer_controller_state;
-                mobile_status.roller_sensor0 = rolloer_sensor0;
-                mobile_status.roller_sensor1 = rolloer_sensor1;
-                mobile_status.roller_sensor2 = rolloer_sensor2;
-                mobile_status.roller_sensor3 = rolloer_sensor3;
-                mobile_status.roller_manual_sw0 = rolloer_manual_sw0;
-                mobile_status.roller_manual_sw1 = rolloer_manual_sw1;
-                mobile_status.roller_blocking_state0 = rolloer_blocking_state0;
-                mobile_status.roller_blocking_state1 = rolloer_blocking_state1;
-                mobile_status.roller_blocking_manual_sw0 = rolloer_blocking_manual_sw0;
-                mobile_status.roller_blocking_manual_sw1 = rolloer_blocking_manual_sw1;
-                mobile_status.roller_blocking_manual_sw2 = rolloer_blocking_manual_sw2;
-                mobile_status.roller_blocking_manual_sw3 = rolloer_blocking_manual_sw3;
+                mobile_status.roller_controller_state = roller_controller_state;
+                mobile_status.roller_sensor0 = roller_sensor0;
+                mobile_status.roller_sensor1 = roller_sensor1;
+                mobile_status.roller_sensor2 = roller_sensor2;
+                mobile_status.roller_sensor3 = roller_sensor3;
+                mobile_status.roller_manual_sw0 = roller_manual_sw0;
+                mobile_status.roller_manual_sw1 = roller_manual_sw1;
+                mobile_status.roller_blocking_state0 = roller_blocking_state0;
+                mobile_status.roller_blocking_state1 = roller_blocking_state1;
+                mobile_status.roller_blocking_manual_sw0 = roller_blocking_manual_sw0;
+                mobile_status.roller_blocking_manual_sw1 = roller_blocking_manual_sw1;
+                mobile_status.roller_blocking_manual_sw2 = roller_blocking_manual_sw2;
+                mobile_status.roller_blocking_manual_sw3 = roller_blocking_manual_sw3;
                 mobile_status.orgo_on_init = orgo_on_init;
                 mobile_status.orgo_on_run = orgo_on_run;
                 mobile_status.orgo_pos_state0 = orgo_pos_state0;
@@ -451,18 +457,9 @@ void MOBILE::recv_loop()
                 mobile_status.imu_acc_y = imu_acc_y * ACC_G;
                 mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
-                // get orientation using complementary filter
-                Eigen::Vector3d r(0, 0, 0);
-                if(std::abs(imu_gyr_x) > 0 || std::abs(imu_gyr_y) > 0 || std::abs(imu_gyr_z) > 0 ||
-                   std::abs(imu_acc_x) > 0 || std::abs(imu_acc_y) > 0 || std::abs(imu_acc_z) > 0)
-                {
-                    double q0, q1, q2, q3;
-                    imu_filter.update(mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                      mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z, 0.05);
-                    imu_filter.getOrientation(q0, q1, q2, q3);
-                    Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                    r = Sophus::SO3d(R).log();
-                }
+                // get orientation
+                Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
+                Eigen::Vector3d r = Sophus::SO3d(R).log();
 
                 MOBILE_IMU imu;
                 imu.t = mobile_status.t;
@@ -530,9 +527,6 @@ QString MOBILE::get_status_text()
 // recv loop
 void MOBILE::recv_loop()
 {
-    // for imu
-    imu_tools::ComplementaryFilter imu_filter;
-
     // pdu connection info
     const QString pdu_ip = "192.168.2.100";
     const int pdu_port = 1977;
@@ -597,7 +591,7 @@ void MOBILE::recv_loop()
     logger->PrintLog("[MOBILE] connected", "Green", true, false);
 
     // var init
-    const int packet_size = 115;
+    const int packet_size = 131;
     std::vector<uchar> buf;
     int drop_cnt = 10;
 
@@ -700,6 +694,12 @@ void MOBILE::recv_loop()
                 float return_time;
                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
 
+                float q0, q1, q2, q3;
+                memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;
+
                 float imu_gyr_x, imu_gyr_y, imu_gyr_z;
                 memcpy(&imu_gyr_x, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_gyr_y, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -773,18 +773,9 @@ void MOBILE::recv_loop()
                 mobile_status.imu_acc_y = imu_acc_y * ACC_G;
                 mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
-                // get orientation using complementary filter
-                Eigen::Vector3d r(0, 0, 0);
-                if(std::abs(imu_gyr_x) > 0 || std::abs(imu_gyr_y) > 0 || std::abs(imu_gyr_z) > 0 ||
-                   std::abs(imu_acc_x) > 0 || std::abs(imu_acc_y) > 0 || std::abs(imu_acc_z) > 0)
-                {
-                    double q0, q1, q2, q3;
-                    imu_filter.update(mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                      mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z, 0.05);
-                    imu_filter.getOrientation(q0, q1, q2, q3);
-                    Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                    r = Sophus::SO3d(R).log();
-                }
+                // get orientation
+                Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
+                Eigen::Vector3d r = Sophus::SO3d(R).log();
 
                 MOBILE_IMU imu;
                 imu.t = mobile_status.t;
