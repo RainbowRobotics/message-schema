@@ -170,7 +170,6 @@ void LIDAR_2D::grab_loop_f()
             //double t1 = lidar_t + offset_t_f;
             //double t0 = t1 - scan_time;
 
-
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
             {
@@ -1345,7 +1344,7 @@ void LIDAR_2D::a_loop()
                 {
                     Eigen::Vector3d P = pts[p];
                     Eigen::Vector3d _P = tf_imu.block(0,0,3,3)*P + tf_imu.block(0,3,3,1);
-                    if(_P[2] < 0.1)
+                    if(_P[2] < -0.05)
                     {
                         continue;
                     }
