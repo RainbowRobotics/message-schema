@@ -96,6 +96,7 @@
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
+#define SIGMA_EPS 0.001
 #define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3

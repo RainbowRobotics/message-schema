@@ -459,7 +459,7 @@ void MOBILE::recv_loop()
 
                 // get orientation
                 Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                Eigen::Vector3d r = Sophus::SO3d(R).log();
+                Eigen::Vector3d r = Sophus::SO3d::fitToSO3(R).log();
 
                 MOBILE_IMU imu;
                 imu.t = mobile_status.t;
@@ -775,7 +775,7 @@ void MOBILE::recv_loop()
 
                 // get orientation
                 Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                Eigen::Vector3d r = Sophus::SO3d(R).log();
+                Eigen::Vector3d r = Sophus::SO3d::fitToSO3(R).log();
 
                 MOBILE_IMU imu;
                 imu.t = mobile_status.t;

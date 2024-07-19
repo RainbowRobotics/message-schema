@@ -61,4 +61,6 @@ Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
 
 Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 
+Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
+
 #endif // UTILS_H

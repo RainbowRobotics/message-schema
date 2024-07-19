@@ -4,7 +4,7 @@
 		"PLATFORM_TYPE": "AMR"
 	},
 	"debug": {
-		"SIM_MODE": "1"
+		"SIM_MODE": "0"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",
@@ -17,7 +17,8 @@
 	},
 	"control": {
 		"DRIVE_EXTENDED_CONTROL_TIME": "2.0",
-		"DRIVE_GOAL_D": "0.15",
+		"DRIVE_GOAL_D": "0.1",
+		"DRIVE_GOAL_NEAR_D": "0.5",
 		"DRIVE_GOAL_TH": "3.0"
 	},
 	"annotation": {
@@ -42,7 +43,7 @@
 		"MOTOR_ID_R": "0",
 		"MOTOR_DIR": "1",
 		"MOTOR_GEAR_RATIO": "11",
-		"MOTOR_LIMIT_V": "2",
+		"MOTOR_LIMIT_V": "2.0",
 		"MOTOR_LIMIT_V_ACC": "2.0",
 		"MOTOR_LIMIT_W": "720",
 		"MOTOR_LIMIT_W_ACC": "720",

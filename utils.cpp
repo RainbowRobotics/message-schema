@@ -165,7 +165,7 @@ Eigen::Matrix4d se3_to_TF(Sophus::Vector6d xi)
 
 Sophus::Vector6d TF_to_se3(Eigen::Matrix4d tf)
 {
-    return Sophus::SE3d(tf).log();
+    return Sophus::SE3d::fitToSE3(tf).log();
 }
 
 Eigen::Matrix4d string_to_TF(QString str)
@@ -223,7 +223,7 @@ QString TF_to_string(Eigen::Matrix4d TF)
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 {
     alpha = saturation(alpha, 0, 1.0);
-    return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d(tf0), Sophus::SE3d(tf1), alpha).matrix();
+    return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d::fitToSE3(tf0), Sophus::SE3d::fitToSE3(tf1), alpha).matrix();
 }
 
 void refine_pose(Eigen::Matrix4d& G)
@@ -843,6 +843,24 @@ Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
     double dt = (T1 - T0).norm();
     double dr = Eigen::Quaterniond(R1).angularDistance(Eigen::Quaterniond(R0));
     return Eigen::Vector2d(dt, dr);
+}
+
+Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix)
+{
+    Eigen::Matrix3d result = rotation_matrix;
+
+    // Yaw 요소 제거 (z축 회전 요소를 제거)
+    result(0, 0) = std::sqrt(rotation_matrix(0, 0) * rotation_matrix(0, 0) + rotation_matrix(1, 0) * rotation_matrix(1, 0));
+    result(0, 1) = 0;
+    result(0, 2) = rotation_matrix(0, 2);
+    result(1, 0) = 0;
+    result(1, 1) = std::sqrt(rotation_matrix(0, 0) * rotation_matrix(0, 0) + rotation_matrix(1, 0) * rotation_matrix(1, 0));
+    result(1, 2) = rotation_matrix(1, 2);
+    result(2, 0) = rotation_matrix(2, 0);
+    result(2, 1) = rotation_matrix(2, 1);
+    result(2, 2) = rotation_matrix(2, 2);
+
+    return result;
 }
 
 

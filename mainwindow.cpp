@@ -2660,7 +2660,6 @@ void MainWindow::plot_loop()
         // get tf
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
-        /*
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
 
@@ -2678,8 +2677,27 @@ void MainWindow::plot_loop()
 
             cloud->push_back(pt);
         }
-        */
 
+        lidar.mtx.lock();
+        std::vector<Eigen::Vector3d> cur_scan_outlier = lidar.cur_scan_outlier;
+        lidar.mtx.unlock();
+
+        for(size_t p = 0; p < cur_scan_outlier.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan_outlier[p][0];
+            pt.y = cur_scan_outlier[p][1];
+            pt.z = cur_scan_outlier[p][2];
+            pt.r = 0;
+            pt.g = 0;
+            pt.b = 255;
+
+            cloud->push_back(pt);
+        }
+
+
+        /*
         // raw data
         std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
         std::vector<Eigen::Vector3d> cur_scan_b = lidar.get_cur_scan_b();
@@ -2714,11 +2732,13 @@ void MainWindow::plot_loop()
 
             cloud->push_back(pt);
         }
+        */
 
         if(!viewer->updatePointCloud(cloud, "raw_pts"))
         {
             viewer->addPointCloud(cloud, "raw_pts");
         }
+
 
         // pose update
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tf.cast<float>()));

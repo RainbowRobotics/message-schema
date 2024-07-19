@@ -172,6 +172,9 @@ void CONFIG::load()
                 DRIVE_GOAL_D = obj_control["DRIVE_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] DRIVE_GOAL_D, %s\n", obj_control["DRIVE_GOAL_D"].toString().toLocal8Bit().data());
 
+                DRIVE_GOAL_NEAR_D = obj_control["DRIVE_GOAL_NEAR_D"].toString().toDouble();
+                printf("[CONFIG] DRIVE_GOAL_NEAR_D, %s\n", obj_control["DRIVE_GOAL_NEAR_D"].toString().toLocal8Bit().data());
+
                 DRIVE_GOAL_TH = obj_control["DRIVE_GOAL_TH"].toString().toDouble();
                 printf("[CONFIG] DRIVE_GOAL_TH, %s\n", obj_control["DRIVE_GOAL_TH"].toString().toLocal8Bit().data());
 

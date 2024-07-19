@@ -64,6 +64,7 @@ public:
     int SIM_MODE = 0;
 
     double DRIVE_GOAL_D = 0.05;
+    double DRIVE_GOAL_NEAR_D = 0.5;
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 

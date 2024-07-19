@@ -25,8 +25,7 @@ SOURCES += \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
     cam.cpp \
-    code_reader.cpp \
-    complementary_filter.cpp \
+    code_reader.cpp \    
     config.cpp \
     cv_to_qt.cpp \
     lidar_2d.cpp \
@@ -48,8 +47,7 @@ HEADERS += \
     LakiBeamUDP.h \
     autocontrol.h \
     cam.h \
-    code_reader.h \
-    complementary_filter.h \
+    code_reader.h \    
     config.h \
     cv_to_qt.h \
     global_defines.h \

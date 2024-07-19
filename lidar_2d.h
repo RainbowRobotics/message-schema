@@ -75,6 +75,7 @@ public:
     std::vector<Eigen::Vector3d> cur_scan_f;
     std::vector<Eigen::Vector3d> cur_scan_b;
     std::vector<Eigen::Vector3d> cur_scan;
+    std::vector<Eigen::Vector3d> cur_scan_outlier;
 
     // loops
     std::atomic<bool> grab_flag_f;

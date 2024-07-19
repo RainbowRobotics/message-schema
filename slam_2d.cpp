@@ -928,9 +928,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < 0.001)
+        if(sigma < SIGMA_EPS)
         {
-            sigma = 0.001;
+            sigma = SIGMA_EPS;
         }
 
         // calc weight
@@ -1196,9 +1196,9 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < 0.001)
+        if(sigma < SIGMA_EPS)
         {
-            sigma = 0.001;
+            sigma = SIGMA_EPS;
         }
 
         // calc weight
@@ -1468,9 +1468,9 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < 0.001)
+        if(sigma < SIGMA_EPS)
         {
-            sigma = 0.001;
+            sigma = SIGMA_EPS;
         }
 
         // calc weight

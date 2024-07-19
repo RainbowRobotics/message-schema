@@ -1327,37 +1327,36 @@ void LIDAR_2D::a_loop()
 
                 // roll pitch compensation
                 Eigen::Vector3d imu = mobile->get_imu();
+                Eigen::Matrix3d rot = Sophus::SO3d::exp(imu).matrix();
+                rot = remove_rz(rot);
 
-                Sophus::Vector6d xi;
-                xi[0] = 0;
-                xi[1] = 0;
-                xi[2] = 0;
-                xi[3] = imu[0];
-                xi[4] = imu[1];
-                xi[5] = 0;
-
-                Eigen::Matrix4d tf_imu = se3_to_TF(xi);
-
-                std::vector<Eigen::Vector3d> _pts;
-                std::vector<double> _reflects;
+                std::vector<Eigen::Vector3d> pts_outlier;
+                std::vector<Eigen::Vector3d> pts_inlier;
+                std::vector<double> reflects_inlier;
                 for(size_t p = 0; p < pts.size(); p++)
                 {
                     Eigen::Vector3d P = pts[p];
-                    Eigen::Vector3d _P = tf_imu.block(0,0,3,3)*P + tf_imu.block(0,3,3,1);
-                    if(_P[2] < -0.05)
+                    Eigen::Vector3d _P = rot*P;
+                    if(_P[2] < -0.15)
                     {
-                        continue;
+                        //pts_outlier.push_back(Eigen::Vector3d(_P[0], _P[1], 0));
+                        pts_outlier.push_back(Eigen::Vector3d(P[0], P[1], 0));
                     }
-
-                    _pts.push_back(Eigen::Vector3d(_P[0], _P[1], 0));
-                    _reflects.push_back(reflects[p]);
+                    else
+                    {
+                        //pts_inlier.push_back(Eigen::Vector3d(_P[0], _P[1], 0));
+                        pts_inlier.push_back(Eigen::Vector3d(P[0], P[1], 0));
+                        reflects_inlier.push_back(reflects[p]);
+                    }
                 }
 
-                pts = _pts;
-                reflects = _reflects;
+                // update result
+                pts = pts_inlier;
+                reflects = reflects_inlier;
 
                 // update
                 mtx.lock();
+                cur_scan_outlier = pts_outlier;
                 cur_scan = pts;
                 cur_scan_f = pts_f;
                 cur_scan_b = pts_b;

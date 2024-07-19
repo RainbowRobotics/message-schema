@@ -8,9 +8,6 @@
 #include "config.h"
 #include "logger.h"
 
-// third party
-#include "complementary_filter.h"
-
 // socket
 #include <arpa/inet.h>
 #include <sys/socket.h>
