@@ -1326,6 +1326,37 @@ void LIDAR_2D::a_loop()
                     pts_b[p] = _P;
                 }
 
+                // roll pitch compensation
+                Eigen::Vector3d imu = mobile->get_imu();
+
+                Sophus::Vector6d xi;
+                xi[0] = 0;
+                xi[1] = 0;
+                xi[2] = 0;
+                xi[3] = imu[0];
+                xi[4] = imu[1];
+                xi[5] = 0;
+
+                Eigen::Matrix4d tf_imu = se3_to_TF(xi);
+
+                std::vector<Eigen::Vector3d> _pts;
+                std::vector<double> _reflects;
+                for(size_t p = 0; p < pts.size(); p++)
+                {
+                    Eigen::Vector3d P = pts[p];
+                    Eigen::Vector3d _P = tf_imu.block(0,0,3,3)*P + tf_imu.block(0,3,3,1);
+                    if(_P[2] < 0.1)
+                    {
+                        continue;
+                    }
+
+                    _pts.push_back(Eigen::Vector3d(_P[0], _P[1], 0));
+                    _reflects.push_back(reflects[p]);
+                }
+
+                pts = _pts;
+                reflects = _reflects;
+
                 // update
                 mtx.lock();
                 cur_scan = pts;
