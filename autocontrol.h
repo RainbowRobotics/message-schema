@@ -77,7 +77,7 @@ public:
     void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_th, std::vector<double>& ref_v, double st_v);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
     std::vector<double> gaussian_filter(const std::vector<double>& src, int mask, double sigma);
-    Eigen::Vector3d get_tgt_node(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+    int get_tgt_idx(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos);
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    

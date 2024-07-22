@@ -849,11 +849,18 @@ std::vector<double> AUTOCONTROL::gaussian_filter(const std::vector<double>& src,
     return res;
 }
 
-Eigen::Vector3d AUTOCONTROL::get_tgt_node(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos)
+int AUTOCONTROL::get_tgt_idx(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos)
 {
+    if(path.size() == 1)
+    {
+        return 0;
+    }
+
     double min_d = 99999999;
     Eigen::Vector3d min_pos0;
     Eigen::Vector3d min_pos1;
+    int min_idx0 = 0;
+    int min_idx1 = 0;
     for(size_t p = 0; p < path.size()-1; p++)
     {
         Eigen::Vector3d P0 = path[p];
@@ -865,23 +872,32 @@ Eigen::Vector3d AUTOCONTROL::get_tgt_node(const std::vector<Eigen::Vector3d>& pa
             min_d = d;
             min_pos0 = P0;
             min_pos1 = P1;
+
+            min_idx0 = p;
+            min_idx1 = p+1;
         }
     }
 
-    Eigen::Vector3d min_pos;
-    double d0 = (min_pos0 - pos).norm();
-    double d1 = (min_pos1 - pos).norm();
-    if(d0 < d1)
+    int idx = 0;
+    if(!check_point_on_segment(min_pos0, min_pos1, pos))
     {
-        min_pos = min_pos0;
+        double d0 = (min_pos0 - pos).norm();
+        double d1 = (min_pos1 - pos).norm();
+        if(d0 < d1)
+        {
+            idx = min_idx0;
+        }
+        else
+        {
+            idx = min_idx1;
+        }
     }
     else
     {
-        min_pos = min_pos1;
+        idx = min_idx1;
     }
 
-    Eigen::Vector3d res;
-    return res;
+    return idx;
 }
 
 // for local path planning
@@ -1741,7 +1757,8 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // goal check
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
-                pre_err_th = 0;
+                extend_dt = 0;
+                pre_err_th = 0;                
                 mobile->move(0, 0, 0);                
 
                 fsm_state = AUTO_FSM_DRIVING;
@@ -1821,7 +1838,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             }
 
             // calc ref_v            
-            double goal_v = 0.75 * goal_err_d;
+            double goal_v = saturation(0.75 * goal_err_d, params.ED_V, params.LIMIT_V);
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc error theta
@@ -1854,21 +1871,14 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             w *= scale_w;
 
             // goal check
-            bool is_goal = false;
-            if(goal_err_d < config->DRIVE_GOAL_NEAR_D)
+            if(goal_err_d < config->DRIVE_GOAL_D)
             {
+                // check local sign
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
-                if(_goal_pos[0] < 0)
-                {
-                    is_goal = true;
-                }
-            }
 
-            if(goal_err_d < config->DRIVE_GOAL_D || is_goal)
-            {
                 extend_dt += dt;                
-                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || is_goal)
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || _goal_pos[0] < 0)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -1881,6 +1891,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
                 // decel only
                 v = saturation(v, 0, v0);
+                w = saturation(w, -5.0*D2R, 5.0*D2R);
             }
 
             // send control
@@ -2045,7 +2056,6 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
     is_moving = true;
 
     // global goal
-    Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
     // path storage
@@ -2102,11 +2112,36 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
         }
     }
 
+    // get metric node path
+    std::vector<Eigen::Vector3d> path;
+    for(size_t p = 0; p < global_path.nodes.size(); p++)
+    {
+        NODE* node = unimap->get_node_by_id(global_path.nodes[p]);
+        if(node == NULL)
+        {
+            // no global path
+            mobile->move(0, 0, 0);
+            is_moving = false;
+
+            Q_EMIT signal_move_failed("topology wrong\n");
+            printf("[AUTO] global path init failed\n");
+            return;
+        }
+        path.push_back(node->tf.block(0,3,3,1));
+    }
+
     // loop params
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
+    double pre_err_d = 0;
     double pre_err_th = 0;
     double extend_dt = 0;
+
+    // for obs
+    double obs_st_time = 0;
+
+    // get first tgt idx
+    int tgt_idx = get_tgt_idx(path, slam->get_cur_tf().block(0,3,3,1));
 
     printf("[AUTO] b_loop_tng start\n");
     while(b_flag)
@@ -2128,28 +2163,256 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
         // get target node
+        Eigen::Vector3d tgt_pos = path[tgt_idx];
 
-
-        // goal error d
-        double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
-        double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
+        // for plot
+        mtx.lock();
+        last_cur_pos = cur_pos;
+        last_tgt_pos = tgt_pos;
+        mtx.unlock();
 
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
         {
+            // calc error
+            double dx = tgt_pos[0] - cur_pos[0];
+            double dy = tgt_pos[1] - cur_pos[1];
+            double err_th = deltaRad(std::atan2(dy, dx), cur_xi[2]);
 
+            // pivot control
+            double kp = 1.0;
+            double kd = 0.05;
+            double w0 = cur_vel[2];
+            double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
+            pre_err_th = err_th;
+
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            // goal check
+            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
+            {
+                extend_dt += dt;
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                {
+                    extend_dt = 0;
+                    pre_err_d = 0;
+                    pre_err_th = 0;
+                    mobile->move(0, 0, 0);
+
+                    fsm_state = AUTO_FSM_DRIVING;
+                    printf("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%f\n", err_th*R2D);
+                    continue;
+                }
+            }
+
+            // obs check
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
+            if(obsmap->is_path_collision(traj))
+            {
+                mtx.lock();
+                obs_condition = "near";
+                mtx.unlock();
+
+                pre_err_d = 0;
+                pre_err_th = 0;
+                mobile->move(0, 0, 0);
+
+                obs_st_time = get_time();
+                fsm_state = AUTO_FSM_OBS;
+                printf("[AUTO] FIRST_ALIGN -> OBS, err_th:%f\n", err_th*R2D);
+                continue;
+            }
+
+            // send control
+            mobile->move(0, 0, w);
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
+            // obs decel
+            double obs_v = 0.1;
+            QString _obs_condition = "none";
+            for(double vv = 0.1; vv <= params.LIMIT_V+0.01; vv += 0.1)
+            {
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, 1.5, cur_tf);
+                if(!obsmap->is_path_collision(traj))
+                {
+                    obs_v = vv;
+                }
+                else
+                {
+                    _obs_condition = "far";
+                    break;
+                }
+            }
 
+            // obs stop
+            {
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
+                if(obsmap->is_path_collision(traj))
+                {
+                    obs_v = 0;
+                    _obs_condition = "near";
+                }
+            }
+
+            // for mobile server
+            mtx.lock();
+            obs_condition = _obs_condition;
+            mtx.unlock();
+
+            if(obs_v == 0)
+            {
+                pre_err_d = 0;
+                pre_err_th = 0;
+                mobile->move(0, 0, 0);
+
+                obs_st_time = get_time();
+                fsm_state = AUTO_FSM_OBS;
+                printf("[AUTO] DRIVING -> OBS\n");
+                continue;
+            }
+
+            // calc error distance
+            double dx = tgt_pos[0] - cur_pos[0];
+            double dy = tgt_pos[1] - cur_pos[1];
+            double err_d = std::sqrt(dx*dx + dy*dy);
+            double err_th = deltaRad(std::atan2(dy, dx), cur_xi[2]);
+
+            // calc control input
+            double kp_v = 0.75;
+            double kd_v = 0.05;
+
+            double kp_w = 1.0;
+            double kd_w = 0.05;
+
+            double v0 = cur_vel[0];
+            double w0 = cur_vel[2];
+
+            double v = saturation(kp_v*err_d + kd_v*(err_d - pre_err_d)/dt, params.ED_V, params.LIMIT_V);
+            pre_err_d = err_d;
+
+            double w = kp_w*err_th + kd_w*(err_th - pre_err_th)/dt;
+            pre_err_th = err_th;
+
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, 0, obs_v);
+
+            w = saturation(w, w0 - (params.LIMIT_W_ACC*D2R)*dt, w0 + (params.LIMIT_W_ACC*D2R)*dt);
+            w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
+
+            double scale_v = 1.0 - 0.3*std::abs(w/(params.LIMIT_W*D2R));
+            double scale_w = 1.0 - 0.3*std::abs(v/params.LIMIT_V);
+
+            v *= scale_v;
+            w *= scale_w;
+
+            // goal check
+            if(std::abs(err_d) < config->DRIVE_GOAL_D)
+            {
+                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+                Eigen::Vector3d _tgt_pos = cur_tf_inv.block(0,0,3,3)*tgt_pos + cur_tf_inv.block(0,3,3,1);
+
+                extend_dt += dt;
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || _tgt_pos[0] < 0)
+                {
+                    extend_dt = 0;
+
+                    if(tgt_idx == (int)path.size()-1)
+                    {
+                        pre_err_d = 0;
+                        pre_err_th = 0;
+                        mobile->move(0, 0, 0);
+
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;
+                        printf("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%f\n", err_d);
+                        continue;
+                    }
+                    else
+                    {
+                        pre_err_d = 0;
+                        pre_err_th = 0;
+                        mobile->move(0, 0, 0);
+
+                        tgt_idx++;
+
+                        fsm_state = AUTO_FSM_FIRST_ALIGN;
+                        printf("[AUTO] DRIVING -> FIRST_ALIGN, tgt_idx: %d->%d, err_d:%f\n", tgt_idx-1, tgt_idx, err_d);
+                        continue;
+                    }
+
+                    // decel only
+                    v = saturation(v, 0, v0);
+                    w = saturation(w, -5.0*D2R, 5.0*D2R);
+                }
+            }
+
+            // send control
+            mobile->move(v, 0, w);
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
+            // calc goal error theta
+            double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
+            // pivot control
+            double kp = 1.0;
+            double kd = 0.05;
+            double w0 = cur_vel[2];
+            double w = kp*goal_err_th + kd*(goal_err_th - pre_err_th)/dt;
+            pre_err_th = goal_err_th;
+
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            // goal check
+            if(std::abs(goal_err_th) < config->DRIVE_GOAL_TH*D2R)
+            {
+                extend_dt += dt;
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                {
+                    mobile->move(0, 0, 0);
+                    is_moving = false;
+                    Q_EMIT signal_move_succeed("very good");
+
+                    fsm_state = AUTO_FSM_COMPLETE;
+                    printf("[AUTO] FINAL ALIGN COMPLETE, goal_err_th: %.3f\n", goal_err_th*R2D);
+                    return;
+                }
+            }
+
+            // obs check
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
+            if(obsmap->is_path_collision(traj))
+            {
+                mtx.lock();
+                obs_condition = "near";
+                mtx.unlock();
+
+                mobile->move(0, 0, 0);
+                is_moving = false;
+                Q_EMIT signal_move_succeed("early stopped");
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                printf("[AUTO] FINAL ALIGN COMPLETE(OBS), goal_err_th: %.3f\n", goal_err_th*R2D);
+                return;
+            }
+
+            // send control
+            mobile->move(0, 0, w);
         }
         else if(fsm_state == AUTO_FSM_OBS)
         {
+            if(get_time() - obs_st_time > 3.0)
+            {
+                extend_dt = 0;
+                pre_err_d = 0;
+                pre_err_th = 0;
 
+                fsm_state = AUTO_FSM_FIRST_ALIGN;
+                printf("[AUTO] OBS -> FIRST_ALIGN\n");
+                continue;
+            }
         }
 
         // for real time loop
@@ -2168,6 +2431,8 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
     }
 
     is_moving = false;
+    Q_EMIT signal_move_succeed("stopped");
+
     printf("[AUTO] b_loop_tng stop\n");
 }
 
