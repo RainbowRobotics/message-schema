@@ -56,11 +56,9 @@ std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos);
 double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y);
 
 Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf);
-
 Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
-
 Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
-
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
+
 
 #endif // UTILS_H

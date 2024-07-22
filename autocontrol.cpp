@@ -849,6 +849,41 @@ std::vector<double> AUTOCONTROL::gaussian_filter(const std::vector<double>& src,
     return res;
 }
 
+Eigen::Vector3d AUTOCONTROL::get_tgt_node(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos)
+{
+    double min_d = 99999999;
+    Eigen::Vector3d min_pos0;
+    Eigen::Vector3d min_pos1;
+    for(size_t p = 0; p < path.size()-1; p++)
+    {
+        Eigen::Vector3d P0 = path[p];
+        Eigen::Vector3d P1 = path[p+1];
+
+        double d = calc_seg_dist(P0, P1, pos);
+        if(d < min_d)
+        {
+            min_d = d;
+            min_pos0 = P0;
+            min_pos1 = P1;
+        }
+    }
+
+    Eigen::Vector3d min_pos;
+    double d0 = (min_pos0 - pos).norm();
+    double d1 = (min_pos1 - pos).norm();
+    if(d0 < d1)
+    {
+        min_pos = min_pos0;
+    }
+    else
+    {
+        min_pos = min_pos1;
+    }
+
+    Eigen::Vector3d res;
+    return res;
+}
+
 // for local path planning
 std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0)
 {
@@ -1819,10 +1854,21 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             w *= scale_w;
 
             // goal check
-            if(goal_err_d < config->DRIVE_GOAL_D)
+            bool is_goal = false;
+            if(goal_err_d < config->DRIVE_GOAL_NEAR_D)
+            {
+                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                if(_goal_pos[0] < 0)
+                {
+                    is_goal = true;
+                }
+            }
+
+            if(goal_err_d < config->DRIVE_GOAL_D || is_goal)
             {
                 extend_dt += dt;                
-                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || is_goal)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
