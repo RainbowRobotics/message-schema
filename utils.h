@@ -35,6 +35,8 @@ double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection);
 bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
+bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
+
 
 double sgn(double val);
 double saturation(double val, double min, double max);
@@ -59,6 +61,5 @@ Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf);
 Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
 Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
-
 
 #endif // UTILS_H

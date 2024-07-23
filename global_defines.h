@@ -702,6 +702,7 @@ struct CTRL_PARAM
     double LIMIT_PIVOT_W = 60.0; 
     double ST_V = 0.1;
     double ED_V = 0.1;
+    double DRIVE_T = 0.15;
     double DRIVE_H = 1.0;
     double DRIVE_A = 1.0;
     double DRIVE_B = 0.05;
