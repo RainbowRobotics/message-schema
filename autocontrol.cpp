@@ -1890,18 +1890,21 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // calc control input
             double v0 = cur_vel[0];
             double v = saturation(ref_v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, obs_v);
             v = saturation(v, 0, goal_v);
+            v = saturation(v, 0, obs_v);
 
             double th = (params.DRIVE_A * err_th) + (params.DRIVE_B * (err_th-pre_err_th)/dt) + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
             double w = (v * std::tan(th)) / params.DRIVE_L;
+            w = saturation(w, cur_vel[2] - (params.LIMIT_W_ACC*D2R)*dt, cur_vel[2] + (params.LIMIT_W_ACC*D2R)*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
+            // scaling
             double scale_v = 1.0 - params.DRIVE_T*std::abs(w/(params.LIMIT_W*D2R));
             double scale_w = 1.0 - params.DRIVE_T*std::abs(v/params.LIMIT_V);
+
             v *= scale_v;
             w *= scale_w;
 
@@ -2194,55 +2197,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
         // finite state machine
         if(fsm_state == AUTO_FSM_DRIVING)
         {
-            // get target info
-
-
-
-
-
-
-
-            // obs decel
-            double obs_v = params.LIMIT_V;
-            QString _obs_condition = "none";
-
-            /*
-            // obs stop
-            {
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
-                if(obsmap->is_path_collision(traj))
-                {
-                    obs_v = 0;
-                    _obs_condition = "near";
-                }
-            }
-            */
-
-            // for mobile server
-            mtx.lock();
-            obs_condition = _obs_condition;
-            mtx.unlock();
-
-            /*
-            // stop due to obstacle
-            if(obs_v == 0)
-            {
-                pre_err_x = 0;
-                pre_err_y = 0;
-                pre_err_th = 0;
-                mobile->move(0, 0, 0);
-
-                obs_st_time = get_time();
-                fsm_state = AUTO_FSM_OBS;
-                printf("[AUTO] DRIVING -> OBS\n");
-                continue;
-            }
-            */
-
-            // calc translation error
-            double kp_w = 2.0;
-            double kd_w = 0.1;
-
+            // calc error and ref vel
             Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
             Eigen::Vector3d tgt_pos = path_pos[tgt_idx];
             Eigen::Vector3d _tgt_pos = cur_tf_inv.block(0,0,3,3)*tgt_pos + cur_tf_inv.block(0,3,3,1);
@@ -2261,40 +2216,74 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             double goal_err_th = deltaRad(path_th.back(), cur_xi[2]);
             double goal_v = 0.75*goal_err_d;
 
+            // obs decel
+            double obs_v = params.LIMIT_V;
+            QString _obs_condition = "none";
+            for(double vv = 0.1; vv <= params.LIMIT_V+0.01; vv += 0.1)
+            {
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(dir_x*vv, dir_y*vv, 0), 0.2, 1.5, cur_tf);
+                if(obsmap->is_path_collision(traj))
+                {
+                    _obs_condition = "far";
+                    break;
+                }
+
+                obs_v = vv;
+            }
+
+            // obs stop
+            {
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
+                if(obsmap->is_path_collision(traj))
+                {
+                    obs_v = 0;
+                    _obs_condition = "near";
+                }
+            }
+
+            // for mobile server
+            mtx.lock();
+            obs_condition = _obs_condition;
+            mtx.unlock();
+
+            // stop due to obstacle
+            if(obs_v == 0)
+            {
+                pre_err_th = 0;
+                mobile->move(0, 0, 0);
+
+                obs_wait_st_time = get_time();
+                fsm_state = AUTO_FSM_OBS;
+                printf("[AUTO] DRIVING -> OBS\n");
+                continue;
+            }
+
+            // calc control input
             double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
             ref_v = saturation(ref_v, ref_v0 - params.LIMIT_V_ACC*dt, ref_v0 + params.LIMIT_V_ACC*dt);
             ref_v = saturation(ref_v, 0, goal_v);
             ref_v = saturation(ref_v, 0, obs_v);
+
+            double kp_w = 2.0;
+            double kd_w = 0.1;
 
             double vx = dir_x*ref_v;
             double vy = dir_y*ref_v;
             double wz = kp_w*err_th + kd_w*(err_th - pre_err_th)/dt;
             pre_err_th = err_th;
 
-            wz = saturation(wz, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
-
-            /*
-            // pivot first
-            if(std::abs(err_th) > 5.0*D2R)
-            {
-                vx = 0;
-                vy = 0;
-            }
-            */
-
-            /*
-            // set limitation
-            vx = saturation(vx, cur_vel[0] - params.LIMIT_V_ACC*dt, cur_vel[0] + params.LIMIT_V_ACC*dt);
-            vy = saturation(vy, cur_vel[1] - params.LIMIT_V_ACC*dt, cur_vel[1] + params.LIMIT_V_ACC*dt);
             wz = saturation(wz, cur_vel[2] - (params.LIMIT_W_ACC*D2R)*dt, cur_vel[2] + (params.LIMIT_W_ACC*D2R)*dt);
-
-            vx = saturation(vx, -params.LIMIT_V, params.LIMIT_V);
-            vy = saturation(vy, -params.LIMIT_V, params.LIMIT_V);
             wz = saturation(wz, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
-            */
 
-            // tgt check
-            //if(calc_dist_2d(tgt_pos - cur_pos) < config->DRIVE_GOAL_D && std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
+            // scaling
+            double scale_v = 1.0 - params.DRIVE_T*std::abs(wz/(params.LIMIT_W*D2R));
+            double scale_w = 1.0 - params.DRIVE_T*std::abs(ref_v/params.LIMIT_V);
+
+            vx *= scale_v;
+            vy *= scale_v;
+            wz *= scale_w;
+
+            // tgt check            
             if(calc_dist_2d(tgt_pos - cur_pos) < config->DRIVE_GOAL_D)
             {
                 tgt_idx++;
@@ -2302,17 +2291,15 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
                 {
                     tgt_idx = path_pos.size()-1;
                 }
-                printf("[AUTO] tgt_idx: %d\n", tgt_idx);
-                continue;
             }
 
             // goal check            
             if(std::abs(goal_err_d) < config->DRIVE_GOAL_D && std::abs(goal_err_th) < config->DRIVE_GOAL_TH*D2R)
             {
-                //extend_dt += dt;
-                //if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                extend_dt += dt;
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    //extend_dt = 0;
+                    extend_dt = 0;
 
                     mobile->move(0, 0, 0);
                     is_moving = false;
