@@ -167,6 +167,12 @@ void LIDAR_2D::grab_loop_f()
             double t0 = lidar_t + offset_t_f;
             double t1 = t0 + scan_time;
 
+            if(num_scan_point < 50)
+            {
+                logger->PrintLog("[LIDAR] lidar pts below standard.", "Orange", true, false);
+                continue;
+            }
+
             //double t1 = lidar_t + offset_t_f;
             //double t0 = t1 - scan_time;
 

@@ -357,6 +357,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
             switch(ke->key())
             {
+            #ifdef USE_DD
                 case Qt::Key_Up:
                     mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
                     break;
@@ -369,8 +370,56 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 case Qt::Key_Right:
                     mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
                     break;
+                case Qt::Key_W:
+                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_A:
+                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                    break;
+                case Qt::Key_S:
+                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
+                    break;
+                case Qt::Key_D:
+                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                    break;
                 default:
                     return false;
+            #endif
+
+            #ifdef USE_MECANUM
+            case Qt::Key_Up:
+                mobile.move(ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                mobile.move(mobile.vx0, ui->spb_JogV->value(), mobile.wz0);
+                break;
+            case Qt::Key_Down:
+                mobile.move(-ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                mobile.move(mobile.vx0, -ui->spb_JogV->value(), mobile.wz0);
+                break;
+            case Qt::Key_W:
+                mobile.move(ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_A:
+                mobile.move(mobile.vx0, ui->spb_JogV->value(), mobile.wz0);
+                break;
+            case Qt::Key_S:
+                mobile.move(-ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_D:
+                mobile.move(mobile.vx0, -ui->spb_JogV->value(), mobile.wz0);
+                break;
+            case Qt::Key_Q:
+                mobile.move(mobile.vx0, mobile.vy0, ui->spb_JogW->value()*D2R);
+                break;
+            case Qt::Key_E:
+                mobile.move(mobile.vx0, mobile.vy0, -ui->spb_JogW->value()*D2R);
+                break;
+            default:
+                return false;
+            #endif
             }
             return true;
         }
@@ -384,6 +433,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
             switch(ke->key())
             {
+            #ifdef USE_DD
                 case Qt::Key_Up:
                     mobile.move(0, 0, mobile.wz0);
                     break;
@@ -396,8 +446,56 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 case Qt::Key_Right:
                     mobile.move(mobile.vx0, 0, 0);
                     break;
+                case Qt::Key_W:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_A:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
+                case Qt::Key_S:
+                    mobile.move(0, 0, mobile.wz0);
+                    break;
+                case Qt::Key_D:
+                    mobile.move(mobile.vx0, 0, 0);
+                    break;
                 default:
                     return false;
+            #endif
+
+            #ifdef USE_MECANUM
+            case Qt::Key_Up:
+                mobile.move(0, mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                mobile.move(mobile.vx0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Down:
+                mobile.move(0, mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                mobile.move(mobile.vx0, 0, mobile.wz0);
+                break;
+            case Qt::Key_W:
+                mobile.move(0, mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_A:
+                mobile.move(mobile.vx0, 0, mobile.wz0);
+                break;
+            case Qt::Key_S:
+                mobile.move(0, mobile.vy0, mobile.wz0);
+                break;
+            case Qt::Key_D:
+                mobile.move(mobile.vx0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Q:
+                mobile.move(mobile.vx0, mobile.vy0, 0);
+                break;
+            case Qt::Key_E:
+                mobile.move(mobile.vx0, mobile.vy0, 0);
+                break;
+            default:
+                return false;
+            #endif
             }
             return true;
         }
@@ -1155,6 +1253,7 @@ void MainWindow::bt_LocInit2()
 
 void MainWindow::bt_LocStart()
 {
+    is_save_bb = false;
     slam.localization_start();
 }
 
@@ -1996,6 +2095,26 @@ void MainWindow::watch_loop()
                     if(loc_fail_cnt > 3)
                     {
                         slam.set_cur_loc_state("fail");
+                        slam.localization_stop();
+
+                        /*if(is_save_bb == false)
+                        {
+                            is_save_bb = true;
+
+                            int cnt=0;
+                            cv::Mat bb;
+                            while(bb_que.try_pop(bb))
+                            {
+                                QString date_and_time = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+                                QString bb_time_str = QDateTime::currentDateTime().toString("hh:mm:ss");
+                                QString path = QCoreApplication::applicationDirPath() + "/snlog/" + date_and_time + "-" + bb_time_str + QString::number(cnt) + ".png";
+
+                                mtx.lock();
+                                cv::imwrite(path.toStdString(), bb);
+                                mtx.unlock();
+                                cnt += 1;
+                            }
+                        }*/
                     }
                 }
                 else
@@ -2049,11 +2168,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%d, m1:%d", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
                     }
                     else
                     {
-                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%.2f, m1:%.2f", ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%d, m1:%d", ms.temp_m0, ms.temp_m1);
                     }
                 }
 
@@ -2094,11 +2213,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                     else
                     {
-                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                 }
 
@@ -3027,8 +3146,43 @@ void MainWindow::plot_loop()
 
     }
 
-    // rendering
-    ui->qvtkWidget->renderWindow()->Render();
+    /*if(bb_cnt > 20)
+    {
+        bb_cnt = 0;
+
+        if(is_save_bb == false)
+        {
+            // rendering
+            ui->qvtkWidget->renderWindow()->Render();
+
+            // black box
+            vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+            windowToImageFilter->SetInput(ui->qvtkWidget->renderWindow());
+            windowToImageFilter->SetInputBufferTypeToRGBA();
+            windowToImageFilter->ReadFrontBufferOff();
+            windowToImageFilter->Update();
+
+            vtkSmartPointer<vtkImageData> imageData = windowToImageFilter->GetOutput();
+
+            int* dims = imageData->GetDimensions();
+            int w = dims[0];
+            int h = dims[1];
+            cv::Mat _bb(h, w, CV_8UC4, imageData->GetScalarPointer());
+
+            cv::Mat bb;
+            cv::cvtColor(_bb, bb, cv::COLOR_RGBA2BGR);
+            cv::flip(bb, bb, 0);
+
+            bb_que.push(bb);
+            if(bb_que.unsafe_size() > 5)
+            {
+                cv::Mat dummy;
+                bb_que.try_pop(dummy);
+            }
+
+            bb_cnt++;
+        }
+    }*/
 }
 
 void MainWindow::plot_loop2()

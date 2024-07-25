@@ -100,6 +100,8 @@ public:
     std::atomic<bool> is_topo_update2 = {false};
     std::atomic<bool> is_pick_update2 = {false};
 
+    std::atomic<bool> is_save_bb = {false};
+
     // plot object names
     std::vector<QString> last_plot_kfrms;
 
@@ -112,6 +114,9 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+
+    tbb::concurrent_queue<cv::Mat> bb_que;
+    int bb_cnt = 0;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);

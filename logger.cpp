@@ -137,7 +137,7 @@ void LOGGER::writeLogFile(QString log)
 
 QString LOGGER::logWithTime(QString msg)
 {
-    QString time = QTime::currentTime().toString("hh:mm:ss");;
+    QString time = QTime::currentTime().toString("hh:mm:ss");
     QString log = "[" + time + "] " + msg;
 
     return log;

@@ -1550,6 +1550,12 @@ PATH AUTOCONTROL::calc_avoid_path()
 // check condition
 bool AUTOCONTROL::is_everything_fine()
 {
+    QString loc_state = slam->get_cur_loc_state();
+    if(loc_state == "none" || loc_state == "fail")
+    {
+        return false;
+    }
+
     return true;
 }
 
