@@ -68,6 +68,7 @@ public:
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 
+    int OBS_AVOID = 1;
     double OBS_LOCAL_GOAL_D = 3.0;
     double OBS_EB_MARGIN_X = 0.3;
     double OBS_EB_MARGIN_Y = 0.2;

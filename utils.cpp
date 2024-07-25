@@ -414,7 +414,8 @@ bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
     Eigen::Vector3d V1 = P - P0;
 
     Eigen::Vector3d cross_product = V0.cross(V1);
-    return cross_product.norm() < 0.01;
+    double norm = cross_product.norm();
+    return norm < 0.03;
 }
 
 double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2)

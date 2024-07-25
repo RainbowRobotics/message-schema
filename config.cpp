@@ -184,6 +184,9 @@ void CONFIG::load()
 
             QJsonObject obj_obs = obj["obs"].toObject();
             {
+                OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
+                printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
+
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
 

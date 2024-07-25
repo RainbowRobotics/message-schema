@@ -74,7 +74,7 @@ public:
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
     std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
-    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_th, std::vector<double>& ref_v, double st_v);
+    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_th, std::vector<double>& ref_v, double st_v, double step);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
     std::vector<double> gaussian_filter(const std::vector<double>& src, int mask, double sigma);
     int get_tgt_idx(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos);
