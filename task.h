@@ -31,7 +31,7 @@ public:
     MOBILE *mobile    = NULL;
 
     // interface funcs
-    void play();
+    void play(QString _mode);
     void pause();
     void cancel();
 
@@ -51,6 +51,9 @@ public:
     // path
     QString task_dir;
     std::vector<NODE> nodes;
+
+    // driving mode
+    QString mode = "basic";
 
     // flags
     std::atomic<bool> start_signal = {false};

@@ -15,7 +15,7 @@ TASK::~TASK()
     }
 }
 
-void TASK::play()
+void TASK::play(QString _mode)
 {
     // stop first
     if(a_thread != NULL)
@@ -25,6 +25,8 @@ void TASK::play()
         a_thread = NULL;
     }
     ctrl->stop();
+
+    mode = _mode;
 
     // task loop running
     if(a_thread == NULL)
@@ -175,8 +177,24 @@ void TASK::a_loop()
         }
         else if(state == TASK_MOVE)
         {
-            NODE* node = unimap->get_node_by_id(task_node_list[idx]);            
-            ctrl->move_pp(node->tf, 0);
+            NODE* node = unimap->get_node_by_id(task_node_list[idx]);
+
+            if(mode == "basic")
+            {
+                ctrl->move_pp(node->tf, 0);
+            }
+            else if(mode == "holonomic")
+            {
+                ctrl->move_hpp(node->tf, 0);
+            }
+            else if(mode == "turn & go")
+            {
+                ctrl->move_tng(node->tf, 0);
+            }
+            else
+            {
+                ctrl->move_pp(node->tf, 0);
+            }
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;

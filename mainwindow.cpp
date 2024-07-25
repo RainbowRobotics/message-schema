@@ -1861,7 +1861,6 @@ void MainWindow::bt_TaskPlay()
     if(ui->ckb_Looping->isChecked())
     {
         task.use_looping = true;
-
     }
     else
     {
@@ -1869,7 +1868,9 @@ void MainWindow::bt_TaskPlay()
 
     }
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
-    task.play();
+
+    QString mode = ui->cb_TaskDrivingMode->currentText();
+    task.play(mode);
 }
 
 void MainWindow::bt_TaskPause()
