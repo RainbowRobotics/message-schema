@@ -115,6 +115,14 @@ enum AUTO_FSM_STATE
     AUTO_FSM_PAUSE,
 };
 
+enum DOCKING_FSM_STATE
+{
+    DOCKING_FSM_DRIVING = 0,
+    DOCKING_FSM_OBS,
+    DOCKING_FSM_COMPLETE,
+    DOCKING_FSM_PAUSE,
+};
+
 enum AUTO_OBS_STATE
 {
     AUTO_OBS_CHECK = 0,
@@ -814,47 +822,35 @@ struct PATH
 
 struct CODE_INFO
 {
-    QString id;
-    double xmcl;
-    double ymcl;
-    double tilt;
-    int timestamp;
-    int x;
-    int y;
-    int z;
+    QString id = "";
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    double deg = 0;
 
     CODE_INFO()
     {
         id = "";
-        xmcl = 0;
-        ymcl = 0;
-        tilt = 0;
-        timestamp = 0;
         x = 0;
         y = 0;
         z = 0;
+        deg = 0;
     }
     CODE_INFO(const CODE_INFO& p)
     {
         id = p.id;
-        xmcl = p.xmcl;
-        ymcl = p.ymcl;
-        tilt = p.tilt;
-        timestamp = p.timestamp;
         x = p.x;
         y = p.y;
         z = p.z;
+        deg = p.deg;
     }
     CODE_INFO& operator=(const CODE_INFO& p)
     {
         id = p.id;
-        xmcl = p.xmcl;
-        ymcl = p.ymcl;
-        tilt = p.tilt;
-        timestamp = p.timestamp;
         x = p.x;
         y = p.y;
         z = p.z;
+        deg = p.deg;
         return *this;
     }
 };

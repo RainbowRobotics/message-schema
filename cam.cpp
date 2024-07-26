@@ -23,14 +23,12 @@ void CAM::init()
         return;
     }
 
-    /*
     // start grab loop
     if (grab_thread == NULL)
     {
         grab_flag = true;
         grab_thread = new std::thread(&CAM::grab_loop, this);
     }
-    */
 }
 
 void CAM::grab_loop()

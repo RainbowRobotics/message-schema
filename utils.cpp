@@ -13,6 +13,14 @@ QString AUTO_FSM_STATE_STR[6] =
     "AUTO_FSM_PAUSE"
 };
 
+QString DOCKING_FSM_STATE_STR[4] =
+{
+    "DOCKING_FSM_DRIVING",
+    "DOCKING_FSM_OBS",
+    "DOCKING_FSM_COMPLETE",
+    "DOCKING_FSM_PAUSE",
+};
+
 double get_time0()
 {
     std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();

@@ -15,6 +15,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
+#include "dockingcontrol.h"
 #include "ws_client.h"
 #include "task.h"
 #include "sim.h"
@@ -49,6 +50,7 @@ public:
     UNIMAP unimap;
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
+    DOCKINGCONTROL dctrl;
     WS_CLIENT ws;
     TASK task;
     SIM sim;
@@ -201,6 +203,12 @@ public Q_SLOTS:
     void bt_AutoStop();
     void bt_AutoPause();
     void bt_AutoResume();
+
+    // for dockingcontrol
+    void bt_DockingMove();
+    void bt_DockingStop();
+    void bt_DockingPause();
+    void bt_DockingResume();
 
     void slot_local_path_updated();
     void slot_global_path_updated();

@@ -106,6 +106,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &ws, SLOT(slot_move_succeed(QString)));
     connect(&ctrl, SIGNAL(signal_move_failed(QString)), &ws, SLOT(slot_move_failed(QString)));
 
+    connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
+    connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
+    connect(ui->bt_DockingPause, SIGNAL(clicked()), this, SLOT(bt_DockingPause()));
+    connect(ui->bt_DockingResume, SIGNAL(clicked()), this, SLOT(bt_DockingResume()));
+
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
     connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
@@ -127,8 +132,8 @@ MainWindow::MainWindow(QWidget *parent)
     init_modules();
 
     // start plot loop
-    plot_timer.start(50);
-    plot_timer2.start(50);
+    plot_timer.start(100);
+    plot_timer2.start(100);
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -306,6 +311,18 @@ void MainWindow::init_modules()
     ctrl.unimap = &unimap;
     ctrl.obsmap = &obsmap;
     ctrl.init();
+
+    // docking control module init
+    dctrl.config = &config;
+    dctrl.logger = &logger;
+    dctrl.mobile = &mobile;
+    dctrl.lidar = &lidar;
+    dctrl.cam = &cam;
+    dctrl.code = &code;
+    dctrl.slam = &slam;
+    dctrl.unimap = &unimap;
+    dctrl.obsmap = &obsmap;
+    dctrl.init();
 
     // websocket client init
     ws.config = &config;
@@ -1807,6 +1824,46 @@ void MainWindow::bt_AutoResume()
     ctrl.is_pause = false;
 }
 
+void MainWindow::bt_DockingMove()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+
+    // get goal
+    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
+    if(pick.cur_node != "")
+    {
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node != NULL)
+        {
+            goal_tf = node->tf;
+            printf("[MAIN] docking, %s\n", pick.cur_node.toLocal8Bit().data());
+        }
+    }
+
+    // docking
+    dctrl.move(goal_tf);
+}
+
+void MainWindow::bt_DockingStop()
+{
+    // stop docking
+    dctrl.stop();
+}
+
+void MainWindow::bt_DockingPause()
+{
+    dctrl.is_pause = true;
+}
+
+void MainWindow::bt_DockingResume()
+{
+    dctrl.is_pause = false;
+}
+
 void MainWindow::slot_local_path_updated()
 {
     is_local_path_update = true;
@@ -2314,6 +2371,14 @@ void MainWindow::plot_loop()
                           (bool)ctrl.is_moving ? "true" : "false",
                           (bool)ctrl.is_pause ? "true" : "false",
                           ctrl.get_obs_condition().toLocal8Bit().data());
+
+    QString docking_info_str;
+    docking_info_str.sprintf("\n\n[DOCKING_INFO]\n fsm_state: %s\nis_moving: %s, is_pause: %s",
+                             DOCKING_FSM_STATE_STR[(int)dctrl.fsm_state].toLocal8Bit().data(),
+                             (bool)dctrl.is_moving ? "true" : "false",
+                             (bool)dctrl.is_pause ? "true" : "false");
+
+    auto_info_str += docking_info_str;
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot map & annotation

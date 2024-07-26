@@ -218,7 +218,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -441,6 +441,62 @@
               </property>
               <property name="text">
                <string>Resume</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockingMove">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>160</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Docking
+run</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockingResume">
+              <property name="geometry">
+               <rect>
+                <x>160</x>
+                <y>160</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Docking
+Resume</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockingPause">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>160</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Docking
+Pause</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockingStop">
+              <property name="geometry">
+               <rect>
+                <x>230</x>
+                <y>160</y>
+                <width>61</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Docking
+Stop</string>
               </property>
              </widget>
             </widget>

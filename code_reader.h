@@ -23,7 +23,6 @@ public:
     void init();
     void save_codes();
 
-    CODE_INFO get_code_info();
     cv::Mat get_plot_img();
 
     // other modules
@@ -33,28 +32,29 @@ public:
 
     QTcpSocket client;
     QTimer reconnect_timer;
+    QTimer check_recv_timer;
 
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_update_enough = {false};
     std::atomic<bool> is_record = {false};
+    std::atomic<bool> is_recv_data = {false};
 
     std::atomic<double> err_x = {0};
     std::atomic<double> err_y = {0};
-    std::atomic<double> tilt = {0};
+    std::atomic<double> err_th = {0};
 
     cv::Mat plot_img;
-    CODE_INFO code_info;
-
-    std::map<QString, cv::Vec3d> ref_info;
-    std::atomic<bool> is_saved = {true};
+    std::map<QString, cv::Vec3d> record_codes;
+    std::map<QString, cv::Vec2d> ref_codes;
+    std::atomic<bool> is_saved = {false};
 
 private Q_SLOTS:
     void connected();
     void disconnected();
-    void reconnect_loop();
-
     void readyread();
 
+    void reconnect_loop();
+    void check_recv_loop();
 private:
 };
 

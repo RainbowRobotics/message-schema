@@ -2054,7 +2054,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             }
             else if(obs_state == AUTO_OBS_OMPL)
             {
-                // calc avoid path                
+                // calc avoid path
                 avoid_path = calc_avoid_path();
                 if(avoid_path.pos.size() > 0)
                 {

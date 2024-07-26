@@ -11,8 +11,8 @@ CONFIG += resources_big
 DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
-DEFINES += USE_DD
-#DEFINES += USE_MECANUM
+#DEFINES += USE_DD
+DEFINES += USE_MECANUM
 
 #DEFINES += USE_LIDAR_LAKI
 DEFINES += USE_LIDAR_SICK
@@ -25,7 +25,8 @@ SOURCES += \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
     cam.cpp \
-    code_reader.cpp \    
+    code_reader.cpp \
+    dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
     lidar_2d.cpp \
@@ -47,7 +48,8 @@ HEADERS += \
     LakiBeamUDP.h \
     autocontrol.h \
     cam.h \
-    code_reader.h \    
+    code_reader.h \
+    dockingcontrol.h \
     config.h \
     cv_to_qt.h \
     global_defines.h \

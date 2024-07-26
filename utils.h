@@ -4,6 +4,7 @@
 #include "global_defines.h"
 
 extern QString AUTO_FSM_STATE_STR[6];
+extern QString DOCKING_FSM_STATE_STR[4];
 
 extern double st_time_for_get_time;
 double get_time0();
