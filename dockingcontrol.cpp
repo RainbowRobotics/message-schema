@@ -86,24 +86,21 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
     // control params
     double extend_dt = 0;
-    double pre_err_th = 0;
 
     // for obs
     double obs_wait_st_time = 0;
 
-    double docking_limit_v = 0.05;
-    double docking_limit_w = 5*D2R;
-
     double docking_goal_d = 0.01;
-    double docking_goal_th = 0.5*D2R;
+    double docking_goal_th = 0.5;
 
-    double kp_v = 1.0;
-    double kd_v = 0.1;
+    double docking_limit_w_acc = 0.5;
 
-    double kp_w = 1.0;
-    double kd_w = 0.1;
+    double docking_limit_v = 0.05;
+    double docking_limit_w = 0.5;
 
-    double alpha = 0.9;
+    double drive_t = 0.15;
+
+    double pre_err_th = 0;
 
     printf("[DOCKING] a_loop start\n");
     while(a_flag)
@@ -128,65 +125,102 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
         Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-        double goal_err_x = goal_pos[0] - cur_pos[0];
-        double goal_err_y = goal_pos[1] - cur_pos[1];
-        double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
-
-        // code reader err
+        // code reader error
         double code_err_x = code->err_x;
         double code_err_y = code->err_y;
-        double code_err_th = code->err_th;
 
         if(fsm_state == DOCKING_FSM_DRIVING)
         {
             extend_dt += dt;
 
+            // calc error and ref vel
+            Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+            Eigen::Vector3d tgt_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+            double tgt_th = goal_xi[2];
+
+            double err_x = tgt_pos[0];
+            double err_y = tgt_pos[1];
+            double err_th = deltaRad(tgt_th, cur_xi[2]);
+
+            double err_d = std::sqrt(err_x*err_x + err_y*err_y);
+            double dir_x = err_x/err_d;
+            double dir_y = err_y/err_d;
+            double ref_v = 0.05;
+
+            //double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
+            //double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
+            double goal_err_d = std::sqrt(code_err_x*code_err_x + code_err_y*code_err_y);
+            double goal_err_th = code->err_th;
+            double goal_v = 0.05;
+
             double obs_v = 0.1;
-            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
-            if(obsmap->is_path_collision(traj))
+            QString _obs_condition = "none";
+            // obs stop
             {
-                obs_v = 0;
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
+                if(obsmap->is_path_collision(traj))
+                {
+                    obs_v = 0;
+                    _obs_condition = "near";
+                }
             }
+
+            // for mobile server
+            mtx.lock();
+            obs_condition = _obs_condition;
+            mtx.unlock();
 
             // stop due to obstacle
             if(obs_v == 0)
             {
+                pre_err_th = 0;
                 mobile->move(0, 0, 0);
 
+                obs_wait_st_time = get_time();
                 fsm_state = AUTO_FSM_OBS;
-                printf("[DOCKING] DRIVING -> OBS\n");
+                printf("[AUTO] DRIVING -> OBS\n");
                 continue;
             }
 
-            double smooth_pose_x = alpha*code_err_x + (1-alpha)*goal_err_x;
-            double smooth_pose_y = alpha*code_err_y + (1-alpha)*goal_err_y;
-            double smooth_pose_th = alpha*code_err_th + (1-alpha)*goal_err_th;
+            // calc control input
+            double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
+            ref_v = saturation(ref_v, ref_v0 - 0.05*dt, ref_v0 + 0.05*dt);
+            ref_v = saturation(ref_v, 0, goal_v);
+            ref_v = saturation(ref_v, 0, obs_v);
 
-            // pd control
-            double vx = kp_v*smooth_pose_x + kd_v*cur_vel[0];
-            double vy = kp_v*smooth_pose_y + kd_v*cur_vel[1];
-            double wz = kp_w*smooth_pose_th + kd_w*cur_vel[2];
+            double kp_w = 2.0;
+            double kd_w = 0.1;
 
-            vx = saturation(vx, -docking_limit_v, docking_limit_v);
-            vy = saturation(vy, -docking_limit_v, docking_limit_v);
-            wz = saturation(wz, -docking_limit_w, docking_limit_w);
+            double vx = dir_x*ref_v;
+            double vy = dir_y*ref_v;
+            double wz = kp_w*err_th + kd_w*(err_th - pre_err_th)/dt;
+            pre_err_th = err_th;
 
-            double smooth_err_d = std::sqrt(smooth_pose_x*smooth_pose_x + smooth_pose_y*smooth_pose_y);
+            wz = saturation(wz, cur_vel[2] - (docking_limit_w_acc*D2R)*dt, cur_vel[2] + (docking_limit_w_acc*D2R)*dt);
+            wz = saturation(wz, -docking_limit_w*D2R, docking_limit_w*D2R);
+
+            // scaling
+            double scale_v = 1.0 - drive_t*std::abs(wz/(docking_limit_w*D2R));
+            double scale_w = 1.0 - drive_t*std::abs(ref_v/docking_limit_v);
+
+            vx *= scale_v;
+            vy *= scale_v;
+            wz *= scale_w;
 
             // goal check
-            if((std::abs(smooth_err_d) < docking_goal_d && std::abs(goal_err_th) < docking_goal_th)
+            if((std::abs(goal_err_d) < docking_goal_d && std::abs(goal_err_th) < docking_goal_th*D2R)
                     || extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
             {
                 mobile->move(0, 0, 0);
                 is_moving = false;
 
                 fsm_state = DOCKING_FSM_COMPLETE;
-                printf("[DOCKING] DOCKING COMPLETE, goal_err: %.3f, %.3f\n", smooth_err_d, smooth_pose_th*R2D);
+                printf("[DOCKING] DOCKING COMPLETE, goal_err: %.3f, %.3f\n", goal_err_d, goal_err_th*R2D);
                 return;
             }
         }
+
         else if(fsm_state == DOCKING_FSM_OBS)
         {
             mobile->move(0,0,0);
