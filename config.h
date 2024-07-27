@@ -85,6 +85,9 @@ public:
     double CAM_HEIGHT_MIN = 0.1;
     double CAM_HEIGHT_MAX = 1.0;
 
+    // docking
+    double DOCKING_EXTENDED_CONTROL_TIME = 3.0;
+
     std::vector<QString> params;
 
 public:

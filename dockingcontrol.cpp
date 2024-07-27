@@ -96,7 +96,7 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
     double docking_limit_w_acc = 0.5;
 
     double docking_limit_v = 0.05;
-    double docking_limit_w = 0.5;
+    double docking_limit_w = 1.0;
 
     double drive_t = 0.15;
 
@@ -132,7 +132,14 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
         if(fsm_state == DOCKING_FSM_DRIVING)
         {
-            extend_dt += dt;
+            if(obsmap->is_tf_collision(cur_tf, 0.1, 0.1))
+            {
+                mobile->move(0,0,0);
+                fsm_state = DOCKING_FSM_OBS;
+
+                printf("[DOCKING] OBS_WAIT -> DRIVING\n");
+                continue;
+            }
 
             // calc error and ref vel
             Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
@@ -152,42 +159,12 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
             //double goal_err_th = deltaRad(goal_xi[2], cur_xi[2]);
             double goal_err_d = std::sqrt(code_err_x*code_err_x + code_err_y*code_err_y);
             double goal_err_th = code->err_th;
-            double goal_v = 0.05;
-
-            double obs_v = 0.1;
-            QString _obs_condition = "none";
-            // obs stop
-            {
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(cur_vel[0], cur_vel[1], cur_vel[2]), 0.1, 0.3, cur_tf);
-                if(obsmap->is_path_collision(traj))
-                {
-                    obs_v = 0;
-                    _obs_condition = "near";
-                }
-            }
-
-            // for mobile server
-            mtx.lock();
-            obs_condition = _obs_condition;
-            mtx.unlock();
-
-            // stop due to obstacle
-            if(obs_v == 0)
-            {
-                pre_err_th = 0;
-                mobile->move(0, 0, 0);
-
-                obs_wait_st_time = get_time();
-                fsm_state = AUTO_FSM_OBS;
-                printf("[AUTO] DRIVING -> OBS\n");
-                continue;
-            }
+            double goal_v = goal_err_d*0.3;
 
             // calc control input
             double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
             ref_v = saturation(ref_v, ref_v0 - 0.05*dt, ref_v0 + 0.05*dt);
             ref_v = saturation(ref_v, 0, goal_v);
-            ref_v = saturation(ref_v, 0, obs_v);
 
             double kp_w = 2.0;
             double kd_w = 0.1;
@@ -209,15 +186,18 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
             wz *= scale_w;
 
             // goal check
-            if((std::abs(goal_err_d) < docking_goal_d && std::abs(goal_err_th) < docking_goal_th*D2R)
-                    || extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+            if(std::abs(goal_err_d) < docking_goal_d && std::abs(goal_err_th) < docking_goal_th*D2R)
             {
-                mobile->move(0, 0, 0);
-                is_moving = false;
+                extend_dt += dt;
+                if(extend_dt > config->DOCKING_EXTENDED_CONTROL_TIME)
+                {
+                    mobile->move(0, 0, 0);
+                    is_moving = false;
 
-                fsm_state = DOCKING_FSM_COMPLETE;
-                printf("[DOCKING] DOCKING COMPLETE, goal_err: %.3f, %.3f\n", goal_err_d, goal_err_th*R2D);
-                return;
+                    fsm_state = DOCKING_FSM_COMPLETE;
+                    printf("[DOCKING] DOCKING COMPLETE, goal_err: %.3f, %.3f\n", goal_err_d, goal_err_th*R2D);
+                    return;
+                }
             }
         }
 
@@ -228,7 +208,7 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
             {
                 pre_err_th = 0;
                 fsm_state = DOCKING_FSM_DRIVING;
-                printf("[DOCKING] OBS_WAIT -> CHECK_CODE\n");
+                printf("[DOCKING] OBS_WAIT -> DRIVING\n");
                 continue;
             }
         }

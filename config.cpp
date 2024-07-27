@@ -230,6 +230,12 @@ void CONFIG::load()
                 printf("[CONFIG] CAM_HEIGHT_MAX, %s\n", obj_cam["CAM_HEIGHT_MAX"].toString().toLocal8Bit().data());
             }
 
+            QJsonObject obj_docking = obj["docking"].toObject();
+            {
+                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toDouble();
+                printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
+            }
+
             // complete
             is_load = true;
             config_file.close();

@@ -80,5 +80,8 @@
     		"CAM_TF": "0,0,0,0,0,0",
     		"CAM_HEIGHT_MIN": "0.1",
     		"CAM_HEIGHT_MAX": "1.0"
-         	}
+         	},
+        "docking": {
+        	"DOCKING_EXTENDED_CONTROL_TIME": "3.0"
+        }
 }
