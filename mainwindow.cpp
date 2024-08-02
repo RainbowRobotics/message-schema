@@ -157,6 +157,15 @@ MainWindow::MainWindow(QWidget *parent)
             ui->main_tab->setCurrentIndex(0);
         });
     });
+
+    QTimer::singleShot(3000, [&]()
+    {
+        if(mobile.is_connected)
+        {
+            mobile.motor_on();
+            printf("[MAIN] first time motor on\n");
+        }
+    });
 }
 
 MainWindow::~MainWindow()
