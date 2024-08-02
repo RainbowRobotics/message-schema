@@ -992,7 +992,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_LAKI)
+#if defined(USE_AMR_400_LAKI)
 void LIDAR_2D::grab_loop_f()
 {
     printf("[LIDAR] start grab loop, front\n");

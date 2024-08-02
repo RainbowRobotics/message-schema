@@ -99,14 +99,28 @@
              <widget class="QComboBox" name="cb_ViewType">
               <item>
                <property name="text">
-                <string>FREE</string>
+                <string>VIEW_2D</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>FOLLOW</string>
+                <string>VIEW_3D</string>
                </property>
               </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_ViewReset">
+              <property name="text">
+               <string>View reset</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_SetTopView">
+              <property name="text">
+               <string>Set top view</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -255,7 +269,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">

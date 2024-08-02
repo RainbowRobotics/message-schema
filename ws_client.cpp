@@ -66,7 +66,7 @@ void WS_CLIENT::init()
     if(config->SIM_MODE == 1)
     {
         printf("[WS] simulation mode\n");
-        //return;
+        return;
     }
 
     reconnect_timer.start(3000);

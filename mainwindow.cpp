@@ -26,6 +26,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->main_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
     connect(ui->annot_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
 
+    // for 3d viewer
+    connect(ui->bt_ViewReset, SIGNAL(clicked()), this, SLOT(bt_ViewReset()));
+    connect(ui->bt_SetTopView, SIGNAL(clicked()), this, SLOT(bt_SetTopView()));
+    connect(ui->ckb_PlotLive, SIGNAL(stateChanged(int)), this, SLOT(map_update()));
+    connect(ui->ckb_PlotNodes, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+    connect(ui->ckb_PlotEdges, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+    connect(ui->ckb_PlotNames, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+    connect(ui->ckb_PlotNodes2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+    connect(ui->ckb_PlotEdges2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+    connect(ui->ckb_PlotNames2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
+
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
@@ -122,10 +133,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
-    ui->bt_AutoMove2->setDisabled(true);
-    #endif
-
     // init vars
     pre_tf.setIdentity();
     pre_tf2.setIdentity();
@@ -140,7 +147,7 @@ MainWindow::MainWindow(QWidget *parent)
     if(config.SIM_MODE == 1)
     {
         plot_timer.start(50);
-        plot_timer2.start(50);
+        plot_timer2.start(50);        
     }
     else
     {
@@ -189,6 +196,16 @@ void MainWindow::bt_Emergency()
 }
 
 // for replot
+void MainWindow::bt_ViewReset()
+{
+    is_view_reset = true;
+}
+
+void MainWindow::bt_SetTopView()
+{
+    is_set_top_view = true;
+}
+
 void MainWindow::map_update()
 {
     is_map_update = true;
@@ -265,36 +282,6 @@ void MainWindow::setup_vtk()
         ui->qvtkWidget2->installEventFilter(this);
         ui->qvtkWidget2->setMouseTracking(true);
     }
-
-
-    /*
-    {
-        // Cone의 중심점
-        pcl::ModelCoefficients cone_coeff;
-        cone_coeff.values.resize(7); // 중심점 (x, y, z), 방향 벡터 (dx, dy, dz), 반지름
-
-        cone_coeff.values[0] = 0.0;  // x 좌표
-        cone_coeff.values[1] = 0.0;  // y 좌표
-        cone_coeff.values[2] = 0.1;  // z 좌표
-        cone_coeff.values[3] = 0.0;  // 방향 벡터 x 성분
-        cone_coeff.values[4] = 0.0;  // 방향 벡터 y 성분
-        cone_coeff.values[5] = -0.1;  // 방향 벡터 z 성분
-        cone_coeff.values[6] = 50.0;  // 반지름
-
-        // Cone 추가
-        std::string cone_id = "cone";
-        viewer->addCone(cone_coeff, cone_id); // "cone"은 Cone의 식별자
-
-        // Cone의 색상 설정 (빨강)
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 0.0, 0.0, cone_id);
-
-        // Cone의 투명도 설정 (0.5로 설정하여 반투명)
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, cone_id);
-        ui->qvtkWidget->renderWindow()->Render();
-
-        printf("draw cone\n");
-    }
-    */
 }
 
 void MainWindow::init_modules()
@@ -442,6 +429,12 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
     if(object == ui->qvtkWidget)
     {
+        // cam control
+        if(ui->cb_ViewType->currentText() == "VIEW_3D")
+        {
+            return false;
+        }
+
         // keyboard event
         if(ev->type() == QEvent::KeyPress)
         {
@@ -562,7 +555,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             QMouseEvent* me = static_cast<QMouseEvent*>(ev);            
             if(pick.l_drag)
             {
-
                 pick_update();
                 return true;
             }
@@ -629,6 +621,12 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
     }
     else if(object == ui->qvtkWidget2)
     {
+        // cam control
+        if(ui->cb_ViewType->currentText() == "VIEW_3D")
+        {
+            return false;
+        }
+
         // keyboard event
         if(ev->type() == QEvent::KeyPress)
         {
@@ -1748,7 +1746,20 @@ void MainWindow::bt_AutoMove2()
     }
 
     // holonomic pure pursuit
-    ctrl.move_hpp(goal_tf, 0);
+    if(config.SIM_MODE == 1)
+    {
+        ctrl.move_hpp(goal_tf, 0);
+    }
+    else
+    {
+        #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+        ctrl.move_pp(goal_tf, 0);
+        #endif
+
+        #if defined (USE_AMR_KAI)
+        ctrl.move_hpp(goal_tf, 0);
+        #endif
+    }
 }
 
 void MainWindow::bt_AutoMove3()
@@ -2446,12 +2457,6 @@ void MainWindow::plot_loop()
                     {
                         viewer->removeCoordinateSystem(axis_id.toStdString());
                     }
-
-                    QString text_id = id + "_text";
-                    if(viewer->contains(text_id.toStdString()))
-                    {
-                        viewer->removeShape(text_id.toStdString());
-                    }
                 }
                 last_plot_nodes.clear();
             }
@@ -2470,6 +2475,20 @@ void MainWindow::plot_loop()
                 last_plot_edges.clear();
             }
 
+            // remove names
+            if(last_plot_names.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_names.size(); p++)
+                {
+                    QString id = last_plot_names[p];
+                    if(viewer->contains(id.toStdString()))
+                    {
+                        viewer->removeShape(id.toStdString());
+                    }
+                }
+                last_plot_names.clear();
+            }
+
             // draw
             if(unimap.nodes.size() > 0)
             {
@@ -2484,19 +2503,22 @@ void MainWindow::plot_loop()
                             viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
                             viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                            QString axis_id = id + "_axis";
+                            viewer->addCoordinateSystem(0.2, axis_id.toStdString());
+                            viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         }
                         else if(unimap.nodes[p].type == "GOAL")
                         {
                             viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                                              config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                              0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
                             QString axis_id = id + "_axis";
                             viewer->addCoordinateSystem(1.0, axis_id.toStdString());
                             viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-
-                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
                         }
                         else if(unimap.nodes[p].type == "OBS")
                         {
@@ -2548,7 +2570,7 @@ void MainWindow::plot_loop()
 
                 if(ui->ckb_PlotNames->isChecked())
                 {
-                    // draw nodes
+                    // draw names
                     for(size_t p = 0; p < unimap.nodes.size(); p++)
                     {
                         QString id = unimap.nodes[p].id;
@@ -2561,6 +2583,8 @@ void MainWindow::plot_loop()
                             position.y = unimap.nodes[p].tf(1,3);
                             position.z = unimap.nodes[p].tf(2,3) + 1.0;
                             viewer->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
+
+                            last_plot_names.push_back(text_id);
                         }
                     }
                 }
@@ -3004,46 +3028,11 @@ void MainWindow::plot_loop()
         PATH local_path = ctrl.get_cur_local_path();
         if(local_path.pos.size() >= 2)
         {
-            if(local_path.pos.size()/10 >= 2)
+            bool color_toggle = true;
+            int last_p = 0;
+            for(size_t p = 1; p < local_path.pos.size(); p++)
             {
-                bool color_toggle = true;
-                int last_p = 0;
-                for(size_t p = 1; p < local_path.pos.size(); p++)
-                {
-                    if(p == local_path.pos.size()-1 || p % 10 == 0)
-                    {
-                        QString name;
-                        name.sprintf("local_path_%d_%d", last_p, (int)p);
-
-                        Eigen::Vector3d P0 = local_path.pos[last_p];
-                        Eigen::Vector3d P1 = local_path.pos[p];
-
-                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
-                        pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
-
-                        if(color_toggle)
-                        {
-                            viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
-                            color_toggle = false;
-                        }
-                        else
-                        {
-                            viewer->addLine(pt0, pt1, 0.0, 0.5, 1.0, name.toStdString());
-                            color_toggle = true;
-                        }
-
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
-
-                        last_plot_local_path.push_back(name);
-                        last_p = p;
-                    }
-                }
-            }
-            else
-            {
-                int last_p = 0;
-                for(size_t p = 1; p < local_path.pos.size(); p++)
+                if(p == 1 || p == local_path.pos.size()-1 || p%10 == 0)
                 {
                     QString name;
                     name.sprintf("local_path_%d_%d", last_p, (int)p);
@@ -3054,8 +3043,18 @@ void MainWindow::plot_loop()
                     pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
                     pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
 
-                    viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, name.toStdString());
+                    if(color_toggle)
+                    {
+                        viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
+                        color_toggle = false;
+                    }
+                    else
+                    {
+                        viewer->addLine(pt0, pt1, 0.0, 0.5, 1.0, name.toStdString());
+                        color_toggle = true;
+                    }
+
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
                     viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
 
                     last_plot_local_path.push_back(name);
@@ -3226,14 +3225,23 @@ void MainWindow::plot_loop()
         pre_tf = cur_tf;
     }
 
-    // cam control
-    if(ui->cb_ViewType->currentText() == "FREE")
+    // camera reset
+    if(is_set_top_view)
     {
+        is_set_top_view = false;
 
+        double x = cur_tf(0,3);
+        double y = cur_tf(1,3);
+        viewer->setCameraPosition(x, y, 30, x, y, 0, 0, 1, 0);
+        printf("[MAIN] set top view camera\n");
     }
-    else if(ui->cb_ViewType->currentText() == "FOLLOW")
-    {
 
+    if(is_view_reset)
+    {
+        is_view_reset = false;
+
+        viewer->resetCamera();
+        printf("[MAIN] reset view camera\n");
     }
 
     // rendering
@@ -3309,12 +3317,6 @@ void MainWindow::plot_loop2()
                     {
                         viewer2->removeCoordinateSystem(axis_id.toStdString());
                     }
-
-                    QString text_id = id + "_text";
-                    if(viewer2->contains(text_id.toStdString()))
-                    {
-                        viewer2->removeShape(text_id.toStdString());
-                    }
                 }
                 last_plot_nodes2.clear();
             }
@@ -3333,6 +3335,20 @@ void MainWindow::plot_loop2()
                 last_plot_edges2.clear();
             }
 
+            // remove names
+            if(last_plot_names2.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_names2.size(); p++)
+                {
+                    QString id = last_plot_names2[p];
+                    if(viewer2->contains(id.toStdString()))
+                    {
+                        viewer2->removeShape(id.toStdString());
+                    }
+                }
+                last_plot_names2.clear();
+            }
+
             // draw
             if(unimap.nodes.size() > 0)
             {
@@ -3347,20 +3363,22 @@ void MainWindow::plot_loop2()
                             viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
                             viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                            QString axis_id = id + "_axis";
+                            viewer2->addCoordinateSystem(0.2, axis_id.toStdString());
+                            viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         }
                         else if(unimap.nodes[p].type == "GOAL")
                         {
                             viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                                              config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                             0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
-
+                                             0, 0.1, 0.5, 1.0, 0.0, id.toStdString());                            
+                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
                             QString axis_id = id + "_axis";
                             viewer2->addCoordinateSystem(1.0, axis_id.toStdString());
                             viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-
-                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
                         }
                         else if(unimap.nodes[p].type == "OBS")
                         {
@@ -3425,6 +3443,8 @@ void MainWindow::plot_loop2()
                             position.y = unimap.nodes[p].tf(1,3);
                             position.z = unimap.nodes[p].tf(2,3) + 1.0;
                             viewer2->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
+
+                            last_plot_names2.push_back(text_id);
                         }
                     }
                 }

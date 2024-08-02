@@ -28,7 +28,7 @@ void OBSMAP::init()
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
 
     octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
-    octree->setProbHit(0.7);
+    octree->setProbHit(0.8);
     octree->setProbMiss(0.45);
 }
 
@@ -770,7 +770,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     {
         for(int j = 0; j < w; j++)
         {
-            if(_map.ptr<double>(i)[j] >= 0.8)
+            if(_map.ptr<double>(i)[j] >= 0.7)
             {
                 _wall_map.ptr<uchar>(i)[j] = 255;
             }

@@ -149,7 +149,7 @@ QString MOBILE::get_pose_text()
     return str;
 }
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
 QString MOBILE::get_status_text()
 {
     MOBILE_STATUS mobile_status = get_status();
@@ -1384,7 +1384,7 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
     memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
     memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
 #endif
