@@ -187,6 +187,9 @@ void CONFIG::load()
                 OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
                 printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
 
+                OBS_DEADZONE = obj_obs["OBS_DEADZONE"].toString().toDouble();
+                printf("[CONFIG] OBS_DEADZONE, %s\n", obj_obs["OBS_DEADZONE"].toString().toLocal8Bit().data());
+
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
 
@@ -213,15 +216,24 @@ void CONFIG::load()
 
                 OBS_MAP_MAX_Z = obj_obs["OBS_MAP_MAX_Z"].toString().toDouble();
                 printf("[CONFIG] OBS_MAP_MAX_Z, %s\n", obj_obs["OBS_MAP_MAX_Z"].toString().toLocal8Bit().data());
+
+                OBS_PREDICT_TIME = obj_obs["OBS_PREDICT_TIME"].toString().toDouble();
+                printf("[CONFIG] OBS_PREDICT_TIME, %s\n", obj_obs["OBS_PREDICT_TIME"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_cam = obj["cam"].toObject();
             {
-                CAM_SERIAL_NUMBER = obj_cam["CAM_SERIAL_NUMBER"].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER, %s\n", obj_cam["CAM_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+                CAM_SERIAL_NUMBER_0 = obj_cam["CAM_SERIAL_NUMBER_0"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_0, %s\n", obj_cam["CAM_SERIAL_NUMBER_0"].toString().toLocal8Bit().data());
 
-                CAM_TF = obj_cam["CAM_TF"].toString();
-                printf("[CONFIG] CAM_TF, %s\n", obj_cam["CAM_TF"].toString().toLocal8Bit().data());
+                CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
+
+                CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
+                printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
+
+                CAM_TF_1 = obj_cam["CAM_TF_1"].toString();
+                printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
 
                 CAM_HEIGHT_MIN = obj_cam["CAM_HEIGHT_MIN"].toString().toDouble();
                 printf("[CONFIG] CAM_HEIGHT_MIN, %s\n", obj_cam["CAM_HEIGHT_MIN"].toString().toLocal8Bit().data());
@@ -232,7 +244,31 @@ void CONFIG::load()
 
             QJsonObject obj_docking = obj["docking"].toObject();
             {
-                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toDouble();
+                DOCKING_GOAL_D = obj_docking["DOCKING_GOAL_D"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GOAL_D, %s\n", obj_docking["DOCKING_GOAL_D"].toString().toLocal8Bit().data());
+
+                DOCKING_GOAL_TH = obj_docking["DOCKING_GOAL_TH"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GOAL_TH, %s\n", obj_docking["DOCKING_GOAL_TH"].toString().toLocal8Bit().data());
+
+                DOCKING_LIMIT_W_ACC = obj_docking["DOCKING_LIMIT_W_ACC"].toString().toDouble();
+                printf("[CONFIG] DOCKING_LIMIT_W_ACC, %s\n", obj_docking["DOCKING_LIMIT_W_ACC"].toString().toLocal8Bit().data());
+
+                DOCKING_LIMIT_V = obj_docking["DOCKING_LIMIT_V"].toString().toDouble();
+                printf("[CONFIG] DOCKING_LIMIT_V, %s\n", obj_docking["DOCKING_LIMIT_V"].toString().toLocal8Bit().data());
+
+                DOCKING_LIMIT_W = obj_docking["DOCKING_LIMIT_W"].toString().toDouble();
+                printf("[CONFIG] DOCKING_LIMIT_W, %s\n", obj_docking["DOCKING_LIMIT_W"].toString().toLocal8Bit().data());
+
+                DOCKING_DRIVE_T = obj_docking["DOCKING_DRIVE_T"].toString().toDouble();
+                printf("[CONFIG] DOCKING_DRIVE_T, %s\n", obj_docking["DOCKING_DRIVE_T"].toString().toLocal8Bit().data());
+
+                DOCKING_GAIN_KP = obj_docking["DOCKING_GAIN_KP"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GAIN_KP, %s\n", obj_docking["DOCKING_GAIN_KP"].toString().toLocal8Bit().data());
+
+                DOCKING_GAIN_KD = obj_docking["DOCKING_GAIN_KD"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GAIN_KD, %s\n", obj_docking["DOCKING_GAIN_KD"].toString().toLocal8Bit().data());
+
+                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toDouble();
                 printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
             }
 

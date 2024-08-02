@@ -181,6 +181,40 @@ Eigen::Matrix4d SLAM_2D::get_cur_tf()
     return res;
 }
 
+Eigen::Matrix4d SLAM_2D::get_best_tf(double t)
+{
+    mtx.lock();
+    std::vector<TIME_POSE> _tp_storage = tp_storage;
+    Eigen::Matrix4d _cur_tf = cur_tf;
+    mtx.unlock();
+
+    if(_tp_storage.size() == 0)
+    {
+        return _cur_tf;
+    }
+
+    int min_idx = 0;
+    double min_dt = 99999999;
+    for(size_t p = 0; p < _tp_storage.size(); p++)
+    {
+        double dt = std::abs(_tp_storage[p].t - t);
+        if(dt < min_dt)
+        {
+            min_dt = dt;
+            min_idx = p;
+        }
+    }
+
+    if(min_dt > 1.0)
+    {
+        return _cur_tf;
+    }
+    else
+    {
+        return _tp_storage[min_idx].tf;
+    }
+}
+
 TIME_POSE_PTS SLAM_2D::get_cur_tpp()
 {
     mtx.lock();
@@ -264,6 +298,16 @@ void SLAM_2D::map_a_loop()
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Vector3d _P = frm.pts[p];
+
+                    #ifdef USE_SRV
+                    double dx = 1.0;
+                    if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
+                       _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                    {
+                        continue;
+                    }
+                    #endif
+
                     Eigen::Vector3d P = _cur_tf.block(0,0,3,3)*_P + _cur_tf.block(0,3,3,1);
                     Eigen::Vector3d V = (P - _cur_tf.block(0,3,3,1)).normalized();
 
@@ -313,9 +357,9 @@ void SLAM_2D::map_a_loop()
                 Eigen::Matrix4d G = _cur_tf * delta_tf;
 
                 // check moving
-                Eigen::Matrix4d dtf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
-                Eigen::Vector3d dxi = TF_to_se2(dtf);
-                if(std::abs(dxi[0]) > 0.05 || std::abs(dxi[1]) > 0.05 || std::abs(dxi[2]) > 3.0*D2R)
+                double moving_d = calc_dist_2d(delta_tf.block(0,3,3,1));
+                double moving_th = std::abs(TF_to_se2(delta_tf)[2]);
+                if(moving_d > 0.05 || moving_th > 2.5*D2R)
                 {
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
@@ -327,6 +371,16 @@ void SLAM_2D::map_a_loop()
                         for(size_t p = 0; p < frm.pts.size(); p++)
                         {
                             Eigen::Vector3d _P = frm.pts[p];
+
+                            #ifdef USE_SRV
+                            double dx = 1.0;
+                            if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
+                               _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                            {
+                                continue;
+                            }
+                            #endif
+
                             Eigen::Vector3d P = G.block(0,0,3,3)*_P + G.block(0,3,3,1);
                             Eigen::Vector3d V = (P - G.block(0,3,3,1)).normalized();
 
@@ -654,28 +708,31 @@ void SLAM_2D::loc_a_loop()
             mtx.unlock();
 
             // pose estimation
-            map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-
-            // check inlier error, inlier ratio
-            Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-            if(ieir[0] < config->LOC_CHECK_IE && ieir[1] > config->LOC_CHECK_IR)
+            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+            if(err < config->SLAM_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
+                TIME_POSE tp;
+                tp.t = frm.t;
+                tp.tf = _cur_tf;
+                tp.tf2 = se2_to_TF(frm.mo.pose);
+                tp_que.push(tp);
+
+                // for obs loop
                 TIME_POSE_PTS tpp;
                 tpp.t = frm.t;
                 tpp.tf = _cur_tf;
-                tpp.tf2 = se2_to_TF(frm.mo.pose);
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
-
-                // for obs loop
-                tpp_que2.push(tpp);
 
                 // update
                 mtx.lock();
                 cur_tpp = tpp;
                 mtx.unlock();
             }
+
+            // check inlier error, inlier ratio
+            Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
 
             // update ieir
             mtx.lock();
@@ -700,7 +757,10 @@ void SLAM_2D::loc_b_loop()
 
     bool is_first = true;
     Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
-    Eigen::Matrix4d pre_tf = Eigen::Matrix4d::Identity();
+
+    mtx.lock();
+    tp_storage.clear();
+    mtx.unlock();
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -730,20 +790,24 @@ void SLAM_2D::loc_b_loop()
             pre_mo_tf = cur_mo_tf;
             Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
 
-            TIME_POSE_PTS tpp;
-            if(tpp_que.try_pop(tpp))
+            TIME_POSE tp;
+            if(tp_que.try_pop(tp))
             {
                 double alpha = config->LOC_FUSION_RATIO;
 
-                Eigen::Matrix4d delta_tf = tpp.tf2.inverse()*cur_mo_tf;
-                Eigen::Matrix4d icp_tf = tpp.tf*delta_tf;
+                //Eigen::Matrix4d delta_tf = tp.tf2.inverse()*cur_mo_tf;
+                //Eigen::Matrix4d icp_tf = tp.tf*delta_tf;
+                Eigen::Matrix4d icp_tf = tp.tf;
 
+                // for odometry slip
                 Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                if(std::abs(dtdr[1]) > 3.0*D2R)
+                if(std::abs(dtdr[1]) > 1.5*D2R)
                 {
                     alpha = 0;
+                    printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
                 }
 
+                // interpolation
                 Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
                 Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
 
@@ -759,6 +823,16 @@ void SLAM_2D::loc_b_loop()
             // update
             mtx.lock();
             cur_tf = _cur_tf;
+
+            TIME_POSE fused_tp;
+            fused_tp.t = mo.t;
+            fused_tp.tf = _cur_tf;
+            tp_storage.push_back(fused_tp);
+            if(tp_storage.size() > 300)
+            {
+                tp_storage.erase(tp_storage.begin());
+            }
+
             mtx.unlock();
 
             // update processing time
@@ -788,10 +862,30 @@ void SLAM_2D::obs_loop()
     while(obs_flag)
     {
         TIME_POSE_PTS tpp;
-        if(tpp_que2.try_pop(tpp))
-        {
+        if(tpp_que.try_pop(tpp))
+        {            
+            // add cam pts
+            TIME_PTS cam_scan0 = cam->get_scan0();
+            Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(cam_scan0.t);
+
+            for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
+            {
+                Eigen::Vector3d P = cam_scan0.pts[p];
+                Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+                tpp.pts.push_back(_P);
+            }
+
+            TIME_PTS cam_scan1 = cam->get_scan1();
+            Eigen::Matrix4d tf1 = tpp.tf.inverse()*get_best_tf(cam_scan1.t);
+            for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
+            {
+                Eigen::Vector3d P = cam_scan1.pts[p];
+                Eigen::Vector3d _P = tf1.block(0,0,3,3)*P + tf1.block(0,3,3,1);
+                tpp.pts.push_back(_P);
+            }
+
             obsmap->update_obs_map(tpp);
-            tpp_que2.clear();
+            tpp_que.clear();
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -837,7 +931,9 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     for(iter = 0; iter < max_iter; iter++)
     {
         std::vector<double> costs;
-        std::vector<COST_JACOBIAN> cj_set;        
+        std::vector<COST_JACOBIAN> cj_set;
+
+        Eigen::Matrix4d cur_G = _G*G;
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index
@@ -888,7 +984,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double dist = frm.pts[i].norm();
+            double dist = calc_dist_2d(pts[i] - cur_G.block(0,3,3,1));
             double weight = 1.0 + 0.01*dist;
 
             // storing cost jacobian
@@ -1037,9 +1133,19 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     std::vector<Eigen::Vector3d> pts;
     for(size_t p = 0; p < frm.pts.size(); p++)
     {
-        idx_list.push_back(p);
+        Eigen::Vector3d _P = frm.pts[p];
 
-        Eigen::Vector3d P = G.block(0,0,3,3)*frm.pts[p] + G.block(0,3,3,1);
+        #ifdef USE_SRV
+        double dx = 1.0;
+        if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
+           _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+        {
+            continue;
+        }
+        #endif
+
+        idx_list.push_back(p);
+        Eigen::Vector3d P = G.block(0,0,3,3)*_P + G.block(0,3,3,1);
         pts.push_back(P);
     }
 
@@ -1093,7 +1199,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
                 nn_idx = ret_near_idxs[0];
                 V0 = Eigen::Vector3d(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
 
-                for(size_t q = 0; q < pt_num; q++)
+                for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
@@ -1144,7 +1250,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double dist = frm.pts[i].norm();
+            double dist = calc_dist_2d(pts[i] - cur_G.block(0,3,3,1));
             double weight = 1.0 + 0.01*dist;
 
             // storing cost jacobian
@@ -1274,10 +1380,12 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    if(last_err > first_err+0.01 || first_err > config->SLAM_ICP_ERROR_THRESHOLD || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     {
         printf("[frm_icp0] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
+
+        return 9999;
     }
 
     return last_err;

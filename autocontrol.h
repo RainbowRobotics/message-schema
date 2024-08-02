@@ -15,6 +15,7 @@
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "dockingcontrol.h"
 
 // ompl
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
@@ -51,6 +52,7 @@ public:
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
+    DOCKINGCONTROL *dctrl = NULL;
 
     // params
     CTRL_PARAM params;
@@ -59,8 +61,8 @@ public:
     // interface funcs
     PATH get_cur_global_path();
     PATH get_cur_local_path();    
-    void clear_path();
     QString get_obs_condition();
+    void clear_path();
 
     void init();
     void stop();
@@ -69,22 +71,21 @@ public:
     void move_tng(Eigen::Matrix4d goal_tf, int preset);
 
     // global path planning (using topo)
-    PATH calc_global_path(Eigen::Matrix4d goal);
+    PATH calc_global_path(Eigen::Matrix4d goal, bool is_hpp = false);
+    std::vector<cv::Vec2i> path_finding(const cv::Mat& map, cv::Vec2i st, cv::Vec2i ed);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
     std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
-    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_th, std::vector<double>& ref_v, double st_v, double step);
+
+    void calc_ref_v0(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v);
+    void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
-    std::vector<double> gaussian_filter(const std::vector<double>& src, int mask, double sigma);
-    int get_tgt_idx(const std::vector<Eigen::Vector3d>& path, Eigen::Vector3d pos);
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
     bool is_state_valid(const ompl::base::State *state) const;
-    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
-    int get_valid_idx(std::vector<Eigen::Matrix4d>& path, int st_idx);
-    Eigen::Vector3d refine_force(Eigen::Vector3d f, Eigen::Vector3d P0, Eigen::Vector3d P1);
+    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);        
     PATH calc_local_path();
     PATH calc_avoid_path();
 

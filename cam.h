@@ -21,20 +21,19 @@ public:
     explicit CAM(QObject *parent = nullptr);
     ~CAM();
 
+    // other modules
+    CONFIG *config = NULL;
+    LOGGER *logger = NULL;
+    MOBILE *mobile = NULL;
+
     // interface func
     void init();
 
-    //void sync();
+    cv::Mat get_img0();
+    cv::Mat get_img1();
 
-    QString get_sn();
-
-    cv::Mat get_cur_img();
-    cv::Mat get_cur_img_color();
-
-    std::vector<Eigen::Vector3d> get_cur_scan();
-
-    // util func
-    Eigen::Matrix4d zyx_tranformation(double x, double y, double z, double rx, double ry, double rz);
+    TIME_PTS get_scan0();
+    TIME_PTS get_scan1();
 
     // loop
     std::atomic<bool> grab_flag;
@@ -42,26 +41,18 @@ public:
     void grab_loop();
 
     // value
-    std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_synced_d = {false};
-    std::atomic<bool> is_sync_d = {false};
-    std::atomic<bool> is_synced_c = {false};
-    std::atomic<bool> is_sync_c = {false};
-
-    std::atomic<double> offset_t_d;
-    std::atomic<double> offset_t_c;
+    std::atomic<bool> is_connected0 = {false};
+    std::atomic<bool> is_connected1 = {false};
 
     // storage    
     std::mutex mtx;
-    QString serial_number;
-    cv::Mat cur_img;
-    cv::Mat cur_img_color;
-    double cur_time = 0;
-    std::vector<Eigen::Vector3d> cur_scan;
 
-    CONFIG *config = NULL;
-    LOGGER *logger = NULL;
-    MOBILE *mobile = NULL;
+    cv::Mat cur_img0;
+    cv::Mat cur_img1;
+
+    TIME_PTS cur_scan0;
+    TIME_PTS cur_scan1;
+
 private:
 
 

@@ -4,7 +4,6 @@
 #include "global_defines.h"
 
 extern QString AUTO_FSM_STATE_STR[6];
-extern QString DOCKING_FSM_STATE_STR[4];
 
 extern double st_time_for_get_time;
 double get_time0();
@@ -45,8 +44,10 @@ double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
 double calc_dist_2d(Eigen::Vector3d P);
 double calc_length(std::vector<Eigen::Vector3d>& src);
+double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos);
 double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
 double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1);
+
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
 std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);
@@ -62,5 +63,7 @@ Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf);
 Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
 Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
+
+std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size);
 
 #endif // UTILS_H

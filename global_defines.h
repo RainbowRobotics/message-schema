@@ -112,6 +112,7 @@ enum AUTO_FSM_STATE
     AUTO_FSM_FINAL_ALIGN,
     AUTO_FSM_OBS,
     AUTO_FSM_COMPLETE,
+    AUTO_FSM_DOCKING,
     AUTO_FSM_PAUSE,
 };
 
@@ -120,7 +121,7 @@ enum DOCKING_FSM_STATE
     DOCKING_FSM_DRIVING = 0,
     DOCKING_FSM_OBS,
     DOCKING_FSM_COMPLETE,
-    DOCKING_FSM_PAUSE,
+    DOCKING_FSM_FAILED
 };
 
 enum AUTO_OBS_STATE
@@ -225,8 +226,7 @@ struct PICKING
     }
 };
 
-
-#ifdef USE_DD
+#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -295,7 +295,7 @@ struct MOBILE_STATUS
 };
 #endif
 
-#ifdef USE_MECANUM
+#if defined(USE_AMR_KAI)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -414,54 +414,6 @@ struct PT_SURFEL
     double nz = 0;
     double r = 0;
     int lb = 0; // 0:none, 1:travel
-};
-
-struct CAM_DEPTH_FRAME
-{
-    double t = 0;
-    std::vector<Eigen::Vector3d> pts;
-    MOBILE_POSE mo; // mobile pose at t
-
-    CAM_DEPTH_FRAME()
-    {
-    }
-    CAM_DEPTH_FRAME(const CAM_DEPTH_FRAME& p)
-    {
-        t = p.t;
-        pts = p.pts;
-        mo = p.mo;
-    }
-    CAM_DEPTH_FRAME& operator=(const CAM_DEPTH_FRAME& p)
-    {
-        t = p.t;
-        pts = p.pts;
-        mo = p.mo;
-        return *this;
-    }
-};
-
-struct CAM_IMG_FRAME
-{
-    double t = 0;
-    cv::Mat img;
-    MOBILE_POSE mo; // mobile pose at t0
-
-    CAM_IMG_FRAME()
-    {
-    }
-    CAM_IMG_FRAME(const CAM_IMG_FRAME& p)
-    {
-        t = p.t;
-        img = p.img.clone();
-        mo = p.mo;
-    }
-    CAM_IMG_FRAME& operator=(const CAM_IMG_FRAME& p)
-    {
-        t = p.t;
-        img = p.img.clone();
-        mo = p.mo;
-        return *this;
-    }
 };
 
 struct RAW_FRAME
@@ -604,23 +556,51 @@ struct TIME_POSE
 {
     double t = 0;
     Eigen::Matrix4d tf;
+    Eigen::Matrix4d tf2; // optional tf
 
     TIME_POSE()
     {
         t = 0;
         tf.setIdentity();
+        tf2.setIdentity();
     }
 
     TIME_POSE(const TIME_POSE& p)
     {
         t = p.t;
         tf = p.tf;
+        tf2 = p.tf2;
     }
 
     TIME_POSE& operator=(const TIME_POSE& p)
     {
         t = p.t;
         tf = p.tf;
+        tf2 = p.tf2;
+        return *this;
+    }
+};
+
+struct TIME_PTS
+{
+    double t = 0;
+    std::vector<Eigen::Vector3d> pts;
+
+    TIME_PTS()
+    {
+        t = 0;
+    }
+
+    TIME_PTS(const TIME_PTS& p)
+    {
+        t = p.t;
+        pts = p.pts;
+    }
+
+    TIME_PTS& operator=(const TIME_PTS& p)
+    {
+        t = p.t;
+        pts = p.pts;
         return *this;
     }
 };
@@ -628,8 +608,7 @@ struct TIME_POSE
 struct TIME_POSE_PTS
 {
     double t = 0;
-    Eigen::Matrix4d tf;
-    Eigen::Matrix4d tf2; // optional tf
+    Eigen::Matrix4d tf;    
     std::vector<Eigen::Vector3d> pts;
 
     TIME_POSE_PTS()
@@ -641,18 +620,63 @@ struct TIME_POSE_PTS
     TIME_POSE_PTS(const TIME_POSE_PTS& p)
     {
         t = p.t;
-        tf = p.tf;
-        tf2 = p.tf2;
+        tf = p.tf;        
         pts = p.pts;
     }
 
     TIME_POSE_PTS& operator=(const TIME_POSE_PTS& p)
     {
         t = p.t;
-        tf = p.tf;
-        tf2 = p.tf2;
+        tf = p.tf;        
         pts = p.pts;
         return *this;
+    }
+};
+
+// totem
+struct TOTEM
+{
+    QString id; // unique id
+    QString type; // ZONE, SLOW, GATE, SIGNAL
+    Eigen::Matrix4d tf; // tf
+    std::vector<QString> linked; // linked other totem
+    double radius; // radius totem
+
+    TOTEM()
+    {
+        id = "";
+        type = "";
+        tf.setIdentity();
+        linked.clear();
+        radius = 1.0;
+    }
+
+    TOTEM(const TOTEM& p)
+    {
+        id = p.id;
+        type = p.type;
+        tf = p.tf;
+        linked = p.linked;
+        radius = p.radius;
+    }
+
+    TOTEM& operator=(const TOTEM& p)
+    {
+        id = p.id;
+        type = p.type;
+        tf = p.tf;
+        linked = p.linked;
+        radius = p.radius;
+        return *this;
+    }
+
+    bool operator==(const TOTEM& p)
+    {
+        if(id == p.id)
+        {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -731,6 +755,7 @@ struct ASTAR_NODE
 {
     ASTAR_NODE* parent = NULL;
     NODE* node = NULL;
+    cv::Vec2i pos;
     double g = 0;
     double h = 0;
     double f = 0;
@@ -739,6 +764,7 @@ struct ASTAR_NODE
     {
         parent = NULL;
         node = NULL;
+        pos = cv::Vec2i(0,0);
         g = 0;
         h = 0;
         f = 0;
@@ -748,6 +774,7 @@ struct ASTAR_NODE
     {
         parent = p.parent;
         node = p.node;
+        pos = p.pos;
         g = p.g;
         h = p.h;
         f = p.f;
@@ -757,6 +784,7 @@ struct ASTAR_NODE
     {
         parent = p.parent;
         node = p.node;
+        pos = p.pos;
         g = p.g;
         h = p.h;
         f = p.f;
@@ -769,9 +797,8 @@ struct PATH
     double t;
     std::vector<QString> nodes;
     std::vector<Eigen::Matrix4d> pose;
-    std::vector<Eigen::Vector3d> pos;
-    std::vector<double> ref_th;
-    std::vector<double> ref_v;
+    std::vector<Eigen::Vector3d> pos;    
+    std::vector<double> ref_v;    
     Eigen::Matrix4d goal_tf;
 
     PATH()
@@ -785,9 +812,8 @@ struct PATH
         t = p.t;
         nodes = p.nodes;
         pose = p.pose;
-        pos = p.pos;        
-        ref_th = p.ref_th;
-        ref_v = p.ref_v;
+        pos = p.pos;                
+        ref_v = p.ref_v;        
         goal_tf = p.goal_tf;
     }
 
@@ -796,9 +822,8 @@ struct PATH
         t = p.t;
         nodes = p.nodes;
         pose = p.pose;
-        pos = p.pos;
-        ref_th = p.ref_th;
-        ref_v = p.ref_v;
+        pos = p.pos;        
+        ref_v = p.ref_v;        
         goal_tf = p.goal_tf;
         return *this;
     }
@@ -809,8 +834,7 @@ struct PATH
                std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
                pose == p.pose &&
                pos == p.pos &&
-               ref_th == p.ref_th &&
-               ref_v == p.ref_v &&
+               ref_v == p.ref_v &&               
                goal_tf.isApprox(p.goal_tf);
     }
 
@@ -823,34 +847,38 @@ struct PATH
 struct CODE_INFO
 {
     QString id = "";
+    int t = 0;
     int x = 0;
     int y = 0;
     int z = 0;
-    double deg = 0;
+    double th = 0;
 
     CODE_INFO()
     {
         id = "";
+        t = 0;
         x = 0;
         y = 0;
         z = 0;
-        deg = 0;
+        th = 0;
     }
     CODE_INFO(const CODE_INFO& p)
     {
         id = p.id;
+        t = p.t;
         x = p.x;
         y = p.y;
         z = p.z;
-        deg = p.deg;
+        th = p.th;
     }
     CODE_INFO& operator=(const CODE_INFO& p)
     {
         id = p.id;
+        t = p.t;
         x = p.x;
         y = p.y;
         z = p.z;
-        deg = p.deg;
+        th = p.th;
         return *this;
     }
 };

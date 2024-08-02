@@ -54,7 +54,7 @@ public:
     // flags
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};
-    std::atomic<int> fsm_state = {DOCKING_FSM_DRIVING};
+    std::atomic<int> fsm_state = {DOCKING_FSM_COMPLETE};
     QString obs_condition = "none";
 
 Q_SIGNALS:

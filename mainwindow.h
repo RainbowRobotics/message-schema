@@ -72,6 +72,9 @@ public:
 
     // vars
     QString map_dir = "";
+    std::atomic<double> plot_proc_t = {0};
+    Eigen::Matrix4d pre_tf;
+    Eigen::Matrix4d pre_tf2;
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -102,8 +105,6 @@ public:
     std::atomic<bool> is_topo_update2 = {false};
     std::atomic<bool> is_pick_update2 = {false};
 
-    std::atomic<bool> is_save_bb = {false};
-
     // plot object names
     std::vector<QString> last_plot_kfrms;
 
@@ -117,13 +118,11 @@ public:
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
 
-    tbb::concurrent_queue<cv::Mat> bb_que;
-    int bb_cnt = 0;
-
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 public Q_SLOTS:
+
     // replot
     void map_update();
     void obs_update();
@@ -141,6 +140,7 @@ public Q_SLOTS:
 
     // mobile
     void bt_MotorInit();
+    void bt_Emergency();
 
     void bt_Sync();
     void bt_MoveLinear();
@@ -204,12 +204,6 @@ public Q_SLOTS:
     void bt_AutoPause();
     void bt_AutoResume();
 
-    // for dockingcontrol
-    void bt_DockingMove();
-    void bt_DockingStop();
-    void bt_DockingPause();
-    void bt_DockingResume();
-
     void slot_local_path_updated();
     void slot_global_path_updated();
 
@@ -222,8 +216,7 @@ public Q_SLOTS:
     void bt_TaskSave();
     void bt_TaskLoad();
     void bt_TaskPlay();
-    void bt_TaskPause();
-    void bt_TaskContinue();
+    void bt_TaskPause();    
     void bt_TaskCancel();
 
 };

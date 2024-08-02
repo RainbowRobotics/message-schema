@@ -19,11 +19,15 @@ class CODE_READER : public QObject
 public:
     explicit CODE_READER(QObject *parent = nullptr);
     ~CODE_READER();
+    std::mutex mtx;
 
     void init();
-    void save_codes();
+    void load_codes();
 
     cv::Mat get_plot_img();
+    QString get_code_info();
+
+    CODE_INFO get_cur_code();
 
     // other modules
     CONFIG *config = NULL;
@@ -35,18 +39,23 @@ public:
     QTimer check_recv_timer;
 
     std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_update_enough = {false};
-    std::atomic<bool> is_record = {false};
     std::atomic<bool> is_recv_data = {false};
+    std::atomic<bool> is_init = {true};
+
+    double pre_err_x = 0;
+    double pre_err_y = 0;
+    double pre_err_th = 0;
 
     std::atomic<double> err_x = {0};
     std::atomic<double> err_y = {0};
     std::atomic<double> err_th = {0};
 
+    cv::Matx22d R;
+
+    CODE_INFO cur_code;
+
     cv::Mat plot_img;
-    std::map<QString, cv::Vec3d> record_codes;
     std::map<QString, cv::Vec2d> ref_codes;
-    std::atomic<bool> is_saved = {false};
 
 private Q_SLOTS:
     void connected();

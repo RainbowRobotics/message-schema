@@ -61,14 +61,15 @@ public:
     double LOC_FUSION_RATIO = 0.5;
 
     double ANNOT_QA_STEP = 0.3;
-    int SIM_MODE = 0;
+    int SIM_MODE = 0; // 0: real mode, 1: simulation mode
 
     double DRIVE_GOAL_D = 0.05;
     double DRIVE_GOAL_NEAR_D = 0.5;
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 
-    int OBS_AVOID = 1;
+    int OBS_AVOID = 1; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
+    double OBS_DEADZONE = 0.3;
     double OBS_LOCAL_GOAL_D = 3.0;
     double OBS_EB_MARGIN_X = 0.3;
     double OBS_EB_MARGIN_Y = 0.2;
@@ -77,15 +78,26 @@ public:
     double OBS_MAP_GRID_SIZE = 0.05;
     double OBS_MAP_RANGE = 5.0;
     double OBS_MAP_MIN_Z = -1.0;
-    double OBS_MAP_MAX_Z = 1.0;    
+    double OBS_MAP_MAX_Z = 1.0;
+    double OBS_PREDICT_TIME = 1.5;
 
     // cam
-    QString CAM_SERIAL_NUMBER = "";
-    QString CAM_TF = "";
+    QString CAM_SERIAL_NUMBER_0 = "";
+    QString CAM_SERIAL_NUMBER_1 = "";
+    QString CAM_TF_0 = "";
+    QString CAM_TF_1 = "";
     double CAM_HEIGHT_MIN = 0.1;
     double CAM_HEIGHT_MAX = 1.0;
 
     // docking
+    double DOCKING_GOAL_D = 0.03;
+    double DOCKING_GOAL_TH = 3.0;
+    double DOCKING_LIMIT_W_ACC = 5.0;
+    double DOCKING_LIMIT_V = 0.05;
+    double DOCKING_LIMIT_W = 5.0;
+    double DOCKING_DRIVE_T = 0.15;
+    double DOCKING_GAIN_KP = 0.5;
+    double DOCKING_GAIN_KD = 0.025;
     double DOCKING_EXTENDED_CONTROL_TIME = 3.0;
 
     std::vector<QString> params;

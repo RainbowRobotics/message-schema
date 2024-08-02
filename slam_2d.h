@@ -49,6 +49,7 @@ public:
     Eigen::Matrix4d get_cur_tf();
     Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();
+    Eigen::Matrix4d get_best_tf(double t);
 
     QString get_info_text();
     QString get_cur_loc_state();
@@ -81,8 +82,9 @@ public:
     std::vector<KFRAME> kfrm_storage;
 
     // for loc
+    std::vector<TIME_POSE> tp_storage;
+    tbb::concurrent_queue<TIME_POSE> tp_que;
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
-    tbb::concurrent_queue<TIME_POSE_PTS> tpp_que2;
 
     // for plot
     std::atomic<double> proc_time_map_a = {0};

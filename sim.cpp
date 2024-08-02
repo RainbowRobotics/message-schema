@@ -154,8 +154,9 @@ void SIM::a_loop()
         pose.pose = cur_xi;
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
-        #ifdef USE_DD
         MOBILE_STATUS status;
+
+        #ifdef USE_SRV
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;
@@ -167,8 +168,19 @@ void SIM::a_loop()
         status.remote_state = 1;
         #endif
 
-        #ifdef USE_MECANUM
-        MOBILE_STATUS status;
+        #if defined (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+        status.t = sim_t;
+        status.connection_m0 = 1;
+        status.connection_m1 = 1;
+        status.status_m0 = 1;
+        status.status_m1 = 1;
+        status.charge_state = 0;
+        status.emo_state = 1;
+        status.power_state = 1;
+        status.remote_state = 1;
+        #endif
+
+        #ifdef USE_AMR_KAI
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;

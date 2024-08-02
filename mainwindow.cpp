@@ -34,6 +34,9 @@ MainWindow::MainWindow(QWidget *parent)
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
 
+    // emergency stop
+    connect(ui->bt_Emergency, SIGNAL(clicked()), this, SLOT(bt_Emergency()));
+
     // motor
     connect(ui->bt_MotorInit, SIGNAL(clicked()), this, SLOT(bt_MotorInit()));
 
@@ -106,11 +109,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &ws, SLOT(slot_move_succeed(QString)));
     connect(&ctrl, SIGNAL(signal_move_failed(QString)), &ws, SLOT(slot_move_failed(QString)));
 
-    connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
-    connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
-    connect(ui->bt_DockingPause, SIGNAL(clicked()), this, SLOT(bt_DockingPause()));
-    connect(ui->bt_DockingResume, SIGNAL(clicked()), this, SLOT(bt_DockingResume()));
-
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
     connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
@@ -121,9 +119,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskSave, SIGNAL(clicked()), this, SLOT(bt_TaskSave()));
     connect(ui->bt_TaskLoad, SIGNAL(clicked()), this, SLOT(bt_TaskLoad()));
     connect(ui->bt_TaskPlay, SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
-    connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));
-    connect(ui->bt_TaskContinue, SIGNAL(clicked()), this, SLOT(bt_TaskContinue()));
+    connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
+
+    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+    ui->bt_AutoMove2->setDisabled(true);
+    #endif
+
+    // init vars
+    pre_tf.setIdentity();
+    pre_tf2.setIdentity();
 
     // set plot window
     setup_vtk();
@@ -132,8 +137,16 @@ MainWindow::MainWindow(QWidget *parent)
     init_modules();
 
     // start plot loop
-    plot_timer.start(100);
-    plot_timer2.start(100);
+    if(config.SIM_MODE == 1)
+    {
+        plot_timer.start(50);
+        plot_timer2.start(50);
+    }
+    else
+    {
+        plot_timer.start(100);
+        plot_timer2.start(100);
+    }
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -156,6 +169,14 @@ MainWindow::~MainWindow()
     }
 
     delete ui;
+}
+
+// for emergency stop
+void MainWindow::bt_Emergency()
+{
+    task.cancel();
+    ctrl.stop();
+    mobile.move(0,0,0);
 }
 
 // for replot
@@ -235,12 +256,61 @@ void MainWindow::setup_vtk()
         ui->qvtkWidget2->installEventFilter(this);
         ui->qvtkWidget2->setMouseTracking(true);
     }
+
+
+    /*
+    {
+        // Cone의 중심점
+        pcl::ModelCoefficients cone_coeff;
+        cone_coeff.values.resize(7); // 중심점 (x, y, z), 방향 벡터 (dx, dy, dz), 반지름
+
+        cone_coeff.values[0] = 0.0;  // x 좌표
+        cone_coeff.values[1] = 0.0;  // y 좌표
+        cone_coeff.values[2] = 0.1;  // z 좌표
+        cone_coeff.values[3] = 0.0;  // 방향 벡터 x 성분
+        cone_coeff.values[4] = 0.0;  // 방향 벡터 y 성분
+        cone_coeff.values[5] = -0.1;  // 방향 벡터 z 성분
+        cone_coeff.values[6] = 50.0;  // 반지름
+
+        // Cone 추가
+        std::string cone_id = "cone";
+        viewer->addCone(cone_coeff, cone_id); // "cone"은 Cone의 식별자
+
+        // Cone의 색상 설정 (빨강)
+        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 0.0, 0.0, cone_id);
+
+        // Cone의 투명도 설정 (0.5로 설정하여 반투명)
+        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, cone_id);
+        ui->qvtkWidget->renderWindow()->Render();
+
+        printf("draw cone\n");
+    }
+    */
 }
 
 void MainWindow::init_modules()
-{
+{            
     // config module init
-    config.config_path = QCoreApplication::applicationDirPath() + "/config.json";    
+    #ifdef USE_SRV
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/SRV/config.json";
+    #endif
+
+    #ifdef USE_AMR_400
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config.json";
+    #endif
+
+    #ifdef USE_AMR_400_PROTO
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_PROTO/config.json";
+    #endif
+
+    #ifdef USE_AMR_400_LAKI
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
+    #endif
+
+    #ifdef USE_AMR_KAI
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config.json";
+    #endif
+
     config.load();
 
     if(config.SIM_MODE == 1)
@@ -300,18 +370,6 @@ void MainWindow::init_modules()
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
 
-    // autocontrol module init
-    ctrl.config = &config;
-    ctrl.logger = &logger;
-    ctrl.mobile = &mobile;
-    ctrl.lidar = &lidar;
-    ctrl.cam = &cam;
-    ctrl.code = &code;
-    ctrl.slam = &slam;
-    ctrl.unimap = &unimap;
-    ctrl.obsmap = &obsmap;
-    ctrl.init();
-
     // docking control module init
     dctrl.config = &config;
     dctrl.logger = &logger;
@@ -323,6 +381,18 @@ void MainWindow::init_modules()
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
     dctrl.init();
+
+    // autocontrol module init
+    ctrl.config = &config;
+    ctrl.logger = &logger;
+    ctrl.mobile = &mobile;
+    ctrl.lidar = &lidar;
+    ctrl.cam = &cam;
+    ctrl.code = &code;
+    ctrl.slam = &slam;
+    ctrl.unimap = &unimap;
+    ctrl.obsmap = &obsmap;
+    ctrl.init();
 
     // websocket client init
     ws.config = &config;
@@ -374,7 +444,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
             switch(ke->key())
             {
-            #ifdef USE_DD
                 case Qt::Key_Up:
                     mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
                     break;
@@ -387,56 +456,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 case Qt::Key_Right:
                     mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
                     break;
-                case Qt::Key_W:
-                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_A:
-                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-                    break;
-                case Qt::Key_S:
-                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_D:
-                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                    break;
                 default:
                     return false;
-            #endif
-
-            #ifdef USE_MECANUM
-            case Qt::Key_Up:
-                mobile.move(ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_Left:
-                mobile.move(mobile.vx0, ui->spb_JogV->value(), mobile.wz0);
-                break;
-            case Qt::Key_Down:
-                mobile.move(-ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_Right:
-                mobile.move(mobile.vx0, -ui->spb_JogV->value(), mobile.wz0);
-                break;
-            case Qt::Key_W:
-                mobile.move(ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_A:
-                mobile.move(mobile.vx0, ui->spb_JogV->value(), mobile.wz0);
-                break;
-            case Qt::Key_S:
-                mobile.move(-ui->spb_JogV->value(), mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_D:
-                mobile.move(mobile.vx0, -ui->spb_JogV->value(), mobile.wz0);
-                break;
-            case Qt::Key_Q:
-                mobile.move(mobile.vx0, mobile.vy0, ui->spb_JogW->value()*D2R);
-                break;
-            case Qt::Key_E:
-                mobile.move(mobile.vx0, mobile.vy0, -ui->spb_JogW->value()*D2R);
-                break;
-            default:
-                return false;
-            #endif
             }
             return true;
         }
@@ -450,7 +471,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
             switch(ke->key())
             {
-            #ifdef USE_DD
                 case Qt::Key_Up:
                     mobile.move(0, 0, mobile.wz0);
                     break;
@@ -463,56 +483,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 case Qt::Key_Right:
                     mobile.move(mobile.vx0, 0, 0);
                     break;
-                case Qt::Key_W:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_A:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                case Qt::Key_S:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_D:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
                 default:
                     return false;
-            #endif
-
-            #ifdef USE_MECANUM
-            case Qt::Key_Up:
-                mobile.move(0, mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_Left:
-                mobile.move(mobile.vx0, 0, mobile.wz0);
-                break;
-            case Qt::Key_Down:
-                mobile.move(0, mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_Right:
-                mobile.move(mobile.vx0, 0, mobile.wz0);
-                break;
-            case Qt::Key_W:
-                mobile.move(0, mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_A:
-                mobile.move(mobile.vx0, 0, mobile.wz0);
-                break;
-            case Qt::Key_S:
-                mobile.move(0, mobile.vy0, mobile.wz0);
-                break;
-            case Qt::Key_D:
-                mobile.move(mobile.vx0, 0, mobile.wz0);
-                break;
-            case Qt::Key_Q:
-                mobile.move(mobile.vx0, mobile.vy0, 0);
-                break;
-            case Qt::Key_E:
-                mobile.move(mobile.vx0, mobile.vy0, 0);
-                break;
-            default:
-                return false;
-            #endif
             }
             return true;
         }
@@ -1270,7 +1242,6 @@ void MainWindow::bt_LocInit2()
 
 void MainWindow::bt_LocStart()
 {
-    is_save_bb = false;
     slam.localization_start();
 }
 
@@ -1824,46 +1795,6 @@ void MainWindow::bt_AutoResume()
     ctrl.is_pause = false;
 }
 
-void MainWindow::bt_DockingMove()
-{
-    if(unimap.is_loaded == false)
-    {
-        printf("[MAIN] check map load\n");
-        return;
-    }
-
-    // get goal
-    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(pick.cur_node != "")
-    {
-        NODE* node = unimap.get_node_by_id(pick.cur_node);
-        if(node != NULL)
-        {
-            goal_tf = node->tf;
-            printf("[MAIN] docking, %s\n", pick.cur_node.toLocal8Bit().data());
-        }
-    }
-
-    // docking
-    dctrl.move(goal_tf);
-}
-
-void MainWindow::bt_DockingStop()
-{
-    // stop docking
-    dctrl.stop();
-}
-
-void MainWindow::bt_DockingPause()
-{
-    dctrl.is_pause = true;
-}
-
-void MainWindow::bt_DockingResume()
-{
-    dctrl.is_pause = false;
-}
-
 void MainWindow::slot_local_path_updated()
 {
     is_local_path_update = true;
@@ -2013,37 +1944,23 @@ void MainWindow::bt_TaskPlay()
         return;
     }
 
-    task.start_signal = true;
-    if(ui->ckb_Looping->isChecked())
-    {
-        task.use_looping = true;
-    }
-    else
-    {
-        task.use_looping = false;
-
-    }
+    task.is_start = true;
+    task.use_looping = ui->ckb_Looping->isChecked();
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
+    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+    if(mode == "holonomic")
+    {
+        mode = "basic";
+    }
+    #endif
     task.play(mode);
 }
 
 void MainWindow::bt_TaskPause()
 {
     task.pause();
-}
-
-void MainWindow::bt_TaskContinue()
-{
-    if(task.last_task_state == TASK_WAIT)
-    {
-        task.continue_signal = true;
-    }
-    else
-    {
-        task.continue_signal = false;
-    }
 }
 
 void MainWindow::bt_TaskCancel()
@@ -2057,6 +1974,7 @@ void MainWindow::watch_loop()
 {
     int cnt = 0;
     int loc_fail_cnt = 0;
+    int resync_cnt = 0;
 
     CPU_USAGE pre_cpu_usage;
 
@@ -2095,10 +2013,12 @@ void MainWindow::watch_loop()
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
+            resync_cnt++;
+
             // check mobile
             if(mobile.is_connected)
             {
-                if(mobile.is_synced == false)
+                if(mobile.is_synced == false || resync_cnt%1000 == 0)
                 {
                     mobile.sync();
                     printf("[WATCH] try time sync, pc and mobile\n");
@@ -2118,7 +2038,7 @@ void MainWindow::watch_loop()
             // check lidar
             if(lidar.is_connected_f)
             {
-                if(lidar.is_synced_f == false)
+                if(lidar.is_synced_f == false || resync_cnt%1000 == 0)
                 {
                     lidar.sync_f();
                     printf("[WATCH] try time sync, pc and front lidar\n");
@@ -2127,7 +2047,7 @@ void MainWindow::watch_loop()
 
             if(lidar.is_connected_b)
             {
-                if(lidar.is_synced_b == false)
+                if(lidar.is_synced_b == false || resync_cnt%1000 == 0)
                 {
                     lidar.sync_b();
                     printf("[WATCH] try time sync, pc and back lidar\n");
@@ -2152,26 +2072,6 @@ void MainWindow::watch_loop()
                     if(loc_fail_cnt > 3)
                     {
                         slam.set_cur_loc_state("fail");
-                        slam.localization_stop();
-
-                        /*if(is_save_bb == false)
-                        {
-                            is_save_bb = true;
-
-                            int cnt=0;
-                            cv::Mat bb;
-                            while(bb_que.try_pop(bb))
-                            {
-                                QString date_and_time = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-                                QString bb_time_str = QDateTime::currentDateTime().toString("hh:mm:ss");
-                                QString path = QCoreApplication::applicationDirPath() + "/snlog/" + date_and_time + "-" + bb_time_str + QString::number(cnt) + ".png";
-
-                                mtx.lock();
-                                cv::imwrite(path.toStdString(), bb);
-                                mtx.unlock();
-                                cnt += 1;
-                            }
-                        }*/
                     }
                 }
                 else
@@ -2225,11 +2125,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%d, m1:%d", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
                     }
                     else
                     {
-                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%d, m1:%d", ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%.2f, m1:%.2f", ms.temp_m0, ms.temp_m1);
                     }
                 }
 
@@ -2270,11 +2170,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
                     }
                     else
                     {
-                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", ms.cur_m0, ms.cur_m1);
                     }
                 }
 
@@ -2340,6 +2240,11 @@ void MainWindow::watch_loop()
 // plot
 void MainWindow::plot_loop()
 {
+    double st_time = get_time();
+
+    // cur tf
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
     // plot mobile info
     if(mobile.is_connected)
     {
@@ -2358,10 +2263,11 @@ void MainWindow::plot_loop()
 
     // plot que info
     QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d",
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%f",
                          (int)lidar.scan_que.unsafe_size(),
                          (int)mobile.msg_que.unsafe_size(),
-                         (int)slam.kfrm_que.unsafe_size());
+                         (int)slam.kfrm_que.unsafe_size(),
+                         (double)plot_proc_t);
     ui->lb_QueInfo->setText(que_info_str);
 
     // plot auto info
@@ -2371,15 +2277,30 @@ void MainWindow::plot_loop()
                           (bool)ctrl.is_moving ? "true" : "false",
                           (bool)ctrl.is_pause ? "true" : "false",
                           ctrl.get_obs_condition().toLocal8Bit().data());
-
-    QString docking_info_str;
-    docking_info_str.sprintf("\n\n[DOCKING_INFO]\n fsm_state: %s\nis_moving: %s, is_pause: %s",
-                             DOCKING_FSM_STATE_STR[(int)dctrl.fsm_state].toLocal8Bit().data(),
-                             (bool)dctrl.is_moving ? "true" : "false",
-                             (bool)dctrl.is_pause ? "true" : "false");
-
-    auto_info_str += docking_info_str;
     ui->lb_AutoInfo->setText(auto_info_str);
+
+    // plot cam
+    if(cam.is_connected0)
+    {
+        cv::Mat plot = cam.get_img0();
+        if(!plot.empty())
+        {
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    if(cam.is_connected1)
+    {
+        cv::Mat plot = cam.get_img1();
+        if(!plot.empty())
+        {
+            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen3->setScaledContents(true);
+            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
 
     // plot map & annotation
     if(unimap.is_loaded)
@@ -2427,16 +2348,33 @@ void MainWindow::plot_loop()
             is_obs_update = false;
 
             cv::Mat obs_map;
+            cv::Mat dyn_map;
             Eigen::Matrix4d obs_tf;
             obsmap.get_obs_map(obs_map, obs_tf);
+            obsmap.get_dyn_map(dyn_map, obs_tf);
 
             std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
 
             // plot grid map
             {
-                cv::Mat plot_obs_map;
-                cv::cvtColor(obs_map, plot_obs_map, cv::COLOR_GRAY2BGR);
+                cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
                 obsmap.draw_robot(plot_obs_map, obs_tf);
+
+                for(int i = 0; i < obs_map.rows; i++)
+                {
+                    for(int j = 0; j < obs_map.cols; j++)
+                    {
+                        if(obs_map.ptr<uchar>(i)[j] == 255)
+                        {
+                            plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
+                        }
+
+                        if(dyn_map.ptr<uchar>(i)[j] == 255)
+                        {
+                            plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                        }
+                    }
+                }
 
                 ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
                 ui->lb_Screen1->setScaledContents(true);
@@ -2619,7 +2557,6 @@ void MainWindow::plot_loop()
                 }
             }
         }
-
     }
 
     // plot cloud data
@@ -2778,6 +2715,44 @@ void MainWindow::plot_loop()
             cloud->push_back(pt);
         }
 
+        // add cam pts
+        TIME_PTS cam_scan0 = cam.get_scan0();
+        Eigen::Matrix4d tf0 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan0.t);
+
+        for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
+        {
+            Eigen::Vector3d P = cam_scan0.pts[p];
+            Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = _P[0];
+            pt.y = _P[1];
+            pt.z = _P[2];
+            pt.r = 128;
+            pt.g = 128;
+            pt.b = 0;
+            cloud->push_back(pt);
+        }
+
+        TIME_PTS cam_scan1 = cam.get_scan1();
+        Eigen::Matrix4d tf1 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan1.t);
+        for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
+        {
+            Eigen::Vector3d P = cam_scan1.pts[p];
+            Eigen::Vector3d _P = tf1.block(0,0,3,3)*P + tf1.block(0,3,3,1);
+
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = P[0];
+            pt.y = P[1];
+            pt.z = P[2];
+            pt.r = 0;
+            pt.g = 128;
+            pt.b = 128;
+            cloud->push_back(pt);
+        }
+
         if(!viewer->updatePointCloud(cloud, "raw_pts"))
         {
             viewer->addPointCloud(cloud, "raw_pts");
@@ -2803,13 +2778,13 @@ void MainWindow::plot_loop()
                 last_plot_tactile.clear();
             }
 
-            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-            //std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.2, 3.0, cur_tf);
-            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(Eigen::Vector3d(mobile.vx0, mobile.vy0, mobile.wz0), 0.05, 0.3, cur_tf);
+            //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
+            Eigen::Vector3d vel = mobile.get_pose().vel;
+            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
             for(size_t p = 0; p < traj.size(); p++)
             {
                 QString name;
-                name.sprintf("traj_%d", p);
+                name.sprintf("traj_%d", (int)p);
 
                 viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                                 config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
@@ -2842,11 +2817,10 @@ void MainWindow::plot_loop()
             viewer->removePointCloud("live_tree_pts");
         }
 
-        // get tf
-        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
+        std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
+        std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(size_t p = 0; p < cur_scan.size(); p++)
@@ -2859,6 +2833,34 @@ void MainWindow::plot_loop()
             pt.r = 255;
             pt.g = 0;
             pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cam_scan0.size(); p+=4)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cam_scan0[p][0];
+            pt.y = cam_scan0[p][1];
+            pt.z = cam_scan0[p][2];
+            pt.r = 128;
+            pt.g = 128;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cam_scan1.size(); p+=4)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cam_scan1[p][0];
+            pt.y = cam_scan1[p][1];
+            pt.z = cam_scan1[p][2];
+            pt.r = 0;
+            pt.g = 128;
+            pt.b = 128;
 
             cloud->push_back(pt);
         }
@@ -2926,7 +2928,7 @@ void MainWindow::plot_loop()
 
 
         // pose update
-        viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer->updatePointCloudPose("raw_pts", Eigen::Affine3f(cur_tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 
@@ -3054,31 +3056,6 @@ void MainWindow::plot_loop()
         }
     }
 
-
-    // draw robot    
-    {
-        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-        // draw axis
-        if(viewer->contains("robot_axis"))
-        {
-            viewer->removeCoordinateSystem("robot_axis");
-        }
-        viewer->addCoordinateSystem(1.0, "robot_axis");
-        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
-
-        // draw body
-        if(viewer->contains("robot_body"))
-        {
-            viewer->removeShape("robot_body");
-        }
-        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
-        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-    }
-
     // draw cursors
     if(is_pick_update)
     {
@@ -3147,7 +3124,9 @@ void MainWindow::plot_loop()
     }
 
     // draw control points
+    if(ctrl.is_moving)
     {
+        // erase first
         if(viewer->contains("cur_pos"))
         {
             viewer->removeShape("cur_pos");
@@ -3161,11 +3140,6 @@ void MainWindow::plot_loop()
         if(viewer->contains("local_goal"))
         {
             viewer->removeShape("local_goal");
-        }
-
-        if(viewer->contains("vel_text"))
-        {
-            viewer->removeShape("vel_text");
         }
 
         // draw monitoring points
@@ -3184,21 +3158,63 @@ void MainWindow::plot_loop()
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");            
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
         }
-
-        // draw vw
+    }
+    else
+    {
+        if(viewer->contains("cur_pos"))
         {
-            // plot text
-            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-            pcl::PointXYZ position;
-            position.x = cur_tf(0,3);
-            position.y = cur_tf(1,3);
-            position.z = cur_tf(2,3) + 1.5;
-
-            QString text;
-            text.sprintf("%.2f/%.2f/%.2f", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D);
-            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 1.0, 1.0, "vel_text");
+            viewer->removeShape("cur_pos");
         }
+
+        if(viewer->contains("tgt_pos"))
+        {
+            viewer->removeShape("tgt_pos");
+        }
+
+        if(viewer->contains("local_goal"))
+        {
+            viewer->removeShape("local_goal");
+        }
+    }
+
+    // draw robot
+    if(pre_tf.isIdentity() || !pre_tf.isApprox(cur_tf))
+    {
+        // draw axis
+        if(viewer->contains("robot_axis"))
+        {
+            viewer->removeCoordinateSystem("robot_axis");
+        }
+        viewer->addCoordinateSystem(1.0, "robot_axis");
+        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(viewer->contains("robot_body"))
+        {
+            viewer->removeShape("robot_body");
+        }
+        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+
+        // draw vel
+        if(viewer->contains("vel_text"))
+        {
+            viewer->removeShape("vel_text");
+        }
+
+        pcl::PointXYZ position;
+        position.x = cur_tf(0,3);
+        position.y = cur_tf(1,3);
+        position.z = cur_tf(2,3) + 1.5;
+
+        QString text;
+        text.sprintf("%.2f/%.2f/%.2f", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D);
+        viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 1.0, 1.0, "vel_text");
+
+        pre_tf = cur_tf;
     }
 
     // cam control
@@ -3211,47 +3227,16 @@ void MainWindow::plot_loop()
 
     }
 
-    /*if(bb_cnt > 20)
-    {
-        bb_cnt = 0;
-
-        if(is_save_bb == false)
-        {
-            // rendering
-            ui->qvtkWidget->renderWindow()->Render();
-
-            // black box
-            vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-            windowToImageFilter->SetInput(ui->qvtkWidget->renderWindow());
-            windowToImageFilter->SetInputBufferTypeToRGBA();
-            windowToImageFilter->ReadFrontBufferOff();
-            windowToImageFilter->Update();
-
-            vtkSmartPointer<vtkImageData> imageData = windowToImageFilter->GetOutput();
-
-            int* dims = imageData->GetDimensions();
-            int w = dims[0];
-            int h = dims[1];
-            cv::Mat _bb(h, w, CV_8UC4, imageData->GetScalarPointer());
-
-            cv::Mat bb;
-            cv::cvtColor(_bb, bb, cv::COLOR_RGBA2BGR);
-            cv::flip(bb, bb, 0);
-
-            bb_que.push(bb);
-            if(bb_que.unsafe_size() > 5)
-            {
-                cv::Mat dummy;
-                bb_que.try_pop(dummy);
-            }
-
-            bb_cnt++;
-        }
-    }*/
+    // rendering
+    ui->qvtkWidget->renderWindow()->Render();    
+    plot_proc_t = get_time() - st_time;
 }
 
 void MainWindow::plot_loop2()
 {
+    // get cur tf
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
     // plot map & annotation
     if(unimap.is_loaded)
     {
@@ -3438,30 +3423,6 @@ void MainWindow::plot_loop2()
         }
     }
 
-    // draw robot    
-    {
-        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-        // draw axis
-        if(viewer2->contains("robot_axis"))
-        {
-            viewer2->removeCoordinateSystem("robot_axis");
-        }
-        viewer2->addCoordinateSystem(1.0, "robot_axis");
-        viewer2->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
-
-        // draw body
-        if(viewer2->contains("robot_body"))
-        {
-            viewer2->removeShape("robot_body");
-        }
-        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
-        viewer2->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
-        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-    }
-
     // draw cursors
     if(is_pick_update2)
     {
@@ -3638,6 +3599,32 @@ void MainWindow::plot_loop2()
         }
     }
 
+    // draw robot
+    if(pre_tf2.isIdentity() || !pre_tf2.isApprox(cur_tf))
+    {
+        // draw axis
+        if(viewer2->contains("robot_axis"))
+        {
+            viewer2->removeCoordinateSystem("robot_axis");
+        }
+        viewer2->addCoordinateSystem(1.0, "robot_axis");
+        viewer2->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(viewer2->contains("robot_body"))
+        {
+            viewer2->removeShape("robot_body");
+        }
+        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+        viewer2->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+
+        // update last pose
+        pre_tf2 = cur_tf;
+    }
+
     // rendering
-    ui->qvtkWidget2->renderWindow()->Render();
+    ui->qvtkWidget2->renderWindow()->Render();    
 }

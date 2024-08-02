@@ -63,6 +63,7 @@ public:
 
     // annotation
     std::vector<NODE> nodes;
+    std::vector<TOTEM> totems;
 
     // code ref
     std::map<QString, cv::Vec2d> ref_codes;

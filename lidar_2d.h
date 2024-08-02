@@ -5,6 +5,13 @@
 #include "global_defines.h"
 #include "utils.h"
 
+// S1 Lidar
+#include "sl_lidar.h"
+#include "sl_lidar_driver.h"
+#ifndef _countof
+    #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
+#endif
+
 // LakiBeam
 #include "LakiBeamHTTP.h"
 #include "LakiBeamUDP.h"
@@ -44,10 +51,6 @@ public:
     std::vector<Eigen::Vector3d> get_cur_scan_f();
     std::vector<Eigen::Vector3d> get_cur_scan_b();
     std::vector<Eigen::Vector3d> get_cur_scan();
-
-    // algorithm
-    void icp(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1, Eigen::Matrix4d& dG);
-    void align(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1, Eigen::Matrix4d& dG);
 
     // flags
     std::atomic<bool> is_connected_f = {false};

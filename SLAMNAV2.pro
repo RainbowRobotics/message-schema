@@ -11,11 +11,12 @@ CONFIG += resources_big
 DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
-#DEFINES += USE_DD
-DEFINES += USE_MECANUM
-
-#DEFINES += USE_LIDAR_LAKI
-DEFINES += USE_LIDAR_SICK
+# select mobile platform type
+DEFINES += USE_SRV
+#DEFINES += USE_AMR_400
+#DEFINES += USE_AMR_400_LAKI
+#DEFINES += USE_AMR_400_PROTO
+#DEFINES += USE_AMR_KAI
 
 HOME = $$system(echo $HOME)
 message($$HOME)
@@ -190,3 +191,8 @@ LIBS += -lsick_safetyscanners_base
 INCLUDEPATH += $$HOME/OrbbecSDK/include/
 LIBS += -L$$HOME/OrbbecSDK/lib/linux_x64/
 LIBS += -lOrbbecSDK
+
+# rplidar sdk
+INCLUDEPATH += $$HOME/rplidar_sdk/sdk/include/
+LIBS += -L$$HOME/rplidar_sdk/output/Linux/Release/
+LIBS += -lsl_lidar_sdk

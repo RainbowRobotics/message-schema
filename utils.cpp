@@ -13,14 +13,6 @@ QString AUTO_FSM_STATE_STR[6] =
     "AUTO_FSM_PAUSE"
 };
 
-QString DOCKING_FSM_STATE_STR[4] =
-{
-    "DOCKING_FSM_DRIVING",
-    "DOCKING_FSM_OBS",
-    "DOCKING_FSM_COMPLETE",
-    "DOCKING_FSM_PAUSE",
-};
-
 double get_time0()
 {
     std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
@@ -236,8 +228,7 @@ Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 
 void refine_pose(Eigen::Matrix4d& G)
 {
-    Eigen::Matrix3d R = G.block(0,0,3,3);
-    G.block(0,0,3,3) = Eigen::Quaterniond(R).normalized().toRotationMatrix();
+    G = Sophus::SE3d::fitToSE3(G).matrix();
 }
 
 void refine_zero(Eigen::Matrix4d& G)
@@ -547,6 +538,25 @@ double calc_length(std::vector<Eigen::Vector3d>& src)
     {
         return 0;
     }
+}
+
+double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos)
+{
+    int min_idx = 0;
+    double min_d = 99999999;
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        double d = calc_dist_2d(src[p].block(0,3,3,1) - pos);
+        if(d < min_d)
+        {
+            min_d = d;
+            min_idx = p;
+        }
+    }
+
+    Eigen::Matrix4d G = src[min_idx].inverse();
+    Eigen::Vector3d P = G.block(0,0,3,3)*pos + G.block(0,3,3,1);
+    return -P[1];
 }
 
 double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos)
@@ -881,5 +891,32 @@ Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix)
     return result;
 }
 
+std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size)
+{
+    // get all points and sampling
+    const uint64_t p1 = 73856093;
+    const uint64_t p2 = 19349669;
+    const uint64_t p3 = 83492791;
+
+    std::unordered_map<uint64_t, uint8_t> hash_map;
+
+    std::vector<Eigen::Vector3d> res;
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        Eigen::Vector3d P = src[p];
+
+        uint64_t x = P[0]/voxel_size;
+        uint64_t y = P[1]/voxel_size;
+        uint64_t z = P[2]/voxel_size;
+        uint64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+        if(hash_map.find(key) == hash_map.end())
+        {
+            hash_map[key] = 1;
+            res.push_back(P);
+        }
+    }
+
+    return res;
+}
 
 #endif // UTILS_CPP

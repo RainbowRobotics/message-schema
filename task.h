@@ -31,7 +31,7 @@ public:
     MOBILE *mobile    = NULL;
 
     // interface funcs
-    void play(QString _mode);
+    void play(QString _driving_mode);
     void pause();
     void cancel();
 
@@ -42,6 +42,7 @@ public:
 
     // task list
     std::vector<QString> task_node_list;
+    QString driving_mode;
 
     // task loop
     std::atomic<bool> a_flag = {false};
@@ -52,12 +53,8 @@ public:
     QString task_dir;
     std::vector<NODE> nodes;
 
-    // driving mode
-    QString mode = "basic";
-
     // flags
-    std::atomic<bool> start_signal = {false};
-    std::atomic<bool> continue_signal = {false};
+    std::atomic<bool> is_start = {false};
     std::atomic<bool> is_loaded = {false};
     std::atomic<bool> is_tasking = {false};
     std::atomic<bool> use_looping = {false};

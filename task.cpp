@@ -15,7 +15,7 @@ TASK::~TASK()
     }
 }
 
-void TASK::play(QString _mode)
+void TASK::play(QString _driving_mode)
 {
     // stop first
     if(a_thread != NULL)
@@ -26,7 +26,7 @@ void TASK::play(QString _mode)
     }
     ctrl->stop();
 
-    mode = _mode;
+    driving_mode = _driving_mode;
 
     // task loop running
     if(a_thread == NULL)
@@ -50,14 +50,13 @@ void TASK::cancel()
         a_thread->join();
         a_thread = NULL;
     }
+
     ctrl->stop();
 }
-
 
 void TASK::add_task(NODE* node)
 {
     task_node_list.push_back(node->id);
-
 }
 
 void TASK::del_task(NODE* node)
@@ -144,8 +143,6 @@ void TASK::a_loop()
 {
     is_tasking = true;
 
-    bool use_confirm = false;
-
     //get task list
     std::vector<QString> node_list = task_node_list;
     for(size_t p = 0; p < node_list.size(); p++)
@@ -165,13 +162,13 @@ void TASK::a_loop()
     {
         if(state == TASK_IDLE)
         {
-            if(start_signal)
+            if(is_start)
             {
                 idx = 0;
                 state = TASK_MOVE;
                 last_task_state = state;
                 printf("[TASK] TASK_IDLE -> TASK_MOVE\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 continue;
             }
         }
@@ -179,15 +176,15 @@ void TASK::a_loop()
         {
             NODE* node = unimap->get_node_by_id(task_node_list[idx]);
 
-            if(mode == "basic")
+            if(driving_mode == "basic")
             {
                 ctrl->move_pp(node->tf, 0);
             }
-            else if(mode == "holonomic")
+            else if(driving_mode == "holonomic")
             {
                 ctrl->move_hpp(node->tf, 0);
             }
-            else if(mode == "turn & go")
+            else if(driving_mode == "tng")
             {
                 ctrl->move_tng(node->tf, 0);
             }
@@ -199,7 +196,7 @@ void TASK::a_loop()
             state = TASK_CHECK_MOVE;
             last_task_state = state;
             printf("[TASK] TASK_MOVE -> TASK_CHECK_MOVE(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
         }
         else if(state == TASK_CHECK_MOVE)
@@ -210,67 +207,54 @@ void TASK::a_loop()
 
                 state = TASK_WAIT;
                 last_task_state = state;
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
                 continue;
             }
         }
         else if(state == TASK_WAIT)
         {
-            if(!use_confirm)
+            // obs clear
+            obsmap->clear();
+
+            // increase idx
+            state = TASK_MOVE;
+            last_task_state = state;
+            idx++;
+
+            // check last
+            if(idx == (int)node_list.size())
             {
-                printf("[TASK] WAITING TEST(confirm X)\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                continue_signal = true;
-            }
-
-            if(continue_signal)
-            {
-                continue_signal = false;
-                mobile->move(0, 0, 0);
-
-                //obs clear
-                obsmap->clear();
-
-                state = TASK_MOVE;
-                last_task_state = state;
-                idx++;
-                printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
-
-                if(idx == (int)node_list.size())
+                if(use_looping)
                 {
-                    if(use_looping)
-                    {
-                        idx = 0;
-                        state = TASK_MOVE;
-                        last_task_state = state;
+                    idx = 0;
+                    state = TASK_MOVE;
+                    last_task_state = state;
 
-                        printf("[TASK] TASK RESTART -> TASK_MOVE\n");
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                        continue;
-                    }
-                    else
-                    {
-                        start_signal = false;
-                        continue_signal = false;
-
-                        state = TASK_IDLE;
-                        last_task_state = state;
-                        printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");                        
-                        break;
-                    }
+                    printf("[TASK] TASK RESTART -> TASK_MOVE\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    continue;
                 }
+                else
+                {
+                    is_start = false;
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                continue;
+                    state = TASK_IDLE;
+                    last_task_state = state;
+                    printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");
+                    break;
+                }
             }
-        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
+
     printf("[TASK] task_loop stop\n");
 
     //clear
-    start_signal = false;
-    continue_signal = false;
+    is_start = false;
     is_tasking = false;
 }
