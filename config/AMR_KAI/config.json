@@ -85,16 +85,5 @@
     		"CAM_TF_1": "0,0,0,0,0,0",
     		"CAM_HEIGHT_MIN": "0.1",
     		"CAM_HEIGHT_MAX": "1.0"
- 	},
- 	"docking": {
-        	"DOCKING_EXTENDED_CONTROL_TIME": "3.0",
-        	"DOCKING_GOAL_D": "0.03",
-        	"DOCKING_GOAL_TH": "3.0",
-        	"DOCKING_LIMIT_W_ACC": "5.0",
-        	"DOCKING_LIMIT_V": "0.05",
-        	"DOCKING_LIMIT_W": "5.0",
-        	"DOCKING_DRIVE_T": "0.15",
-        	"DOCKING_GAIN_KP": "0.5",
-        	"DOCKING_GAIN_KD": "0.025"
-        }
+ 	}
 }

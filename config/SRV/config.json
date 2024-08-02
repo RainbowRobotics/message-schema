@@ -4,13 +4,13 @@
 		"PLATFORM_TYPE": "SRV"
 	},
 	"debug": {
-		"SIM_MODE": "1"
+		"SIM_MODE": "0"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",
 		"LOC_CHECK_IE": "0.2",
 		"LOC_CHECK_IR": "0.5",
-		"LOC_FUSION_RATIO": "0.8",
+		"LOC_FUSION_RATIO": "0.5",
 		"LOC_ICP_COST_THRESHOLD": "0.5",
 		"LOC_ICP_ERROR_THRESHOLD": "0.2",
 		"LOC_ICP_MAX_FEATURE_NUM": "2000"
@@ -25,13 +25,13 @@
 		"ANNOT_QA_STEP": "0.3"
 	},
 	"default": {
-		"ROBOT_SIZE_MAX_X": "0.26",
-		"ROBOT_SIZE_MAX_Y": "0.26",
+		"ROBOT_SIZE_MAX_X": "0.35",
+		"ROBOT_SIZE_MAX_Y": "0.35",
 		"ROBOT_SIZE_MAX_Z": "0.22",
-		"ROBOT_SIZE_MIN_X": "-0.26",
-		"ROBOT_SIZE_MIN_Y": "-0.26",
+		"ROBOT_SIZE_MIN_X": "-0.35",
+		"ROBOT_SIZE_MIN_Y": "-0.35",
 		"ROBOT_SIZE_MIN_Z": "0",
-		"ROBOT_RADIUS": "0.3",
+		"ROBOT_RADIUS": "0.5",
 		"ROBOT_WHEEL_BASE": "0.3542",
 		"ROBOT_WHEEL_RADIUS": "0.0635",
 		"LIDAR_MAX_RANGE": "40.0",
@@ -53,7 +53,7 @@
 	},
 	"mapping": {
 		"SLAM_ICP_COST_THRESHOLD": "1.0",
-		"SLAM_ICP_DO_ACCUM_NUM": "3",
+		"SLAM_ICP_DO_ACCUM_NUM": "2",
 		"SLAM_ICP_DO_ERASE_GAP": "10",
 		"SLAM_ICP_ERROR_THRESHOLD": "0.2",
 		"SLAM_ICP_MAX_FEATURE_NUM": "2000",
@@ -65,8 +65,8 @@
 		"SLAM_WINDOW_SIZE": "100"
 	},
 	"obs": {
-		"OBS_AVOID": "2",
-		"OBS_DEADZONE": "0.3",
+		"OBS_AVOID": "0",
+		"OBS_DEADZONE": "0.4",
 		"OBS_LOCAL_GOAL_D": "3.0",
 		"OBS_EB_MARGIN_X": "0.3",
 		"OBS_EB_MARGIN_Y": "0.1",
@@ -79,8 +79,8 @@
     		"OBS_PREDICT_TIME": "3.0"
 	},
 	"cam": {
-	    	"CAM_SERIAL_NUMBER_0": "AY4J53100FF",
-	    	"CAM_SERIAL_NUMBER_1": "AY4J531002J",
+	    	"CAM_SERIAL_NUMBER_0": "AY4W633001A",
+	    	"CAM_SERIAL_NUMBER_1": "AY4W633000L",
    		"CAM_TF_0": "0.223,0.0831,0.2,64.0,0.0,115.0",
     		"CAM_TF_1": "0.235,-0.0881,0.2,-62.0,0.0,-115.0",
     		"CAM_HEIGHT_MIN": "0.1",
