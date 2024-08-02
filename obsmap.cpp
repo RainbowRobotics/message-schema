@@ -488,46 +488,49 @@ bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, in
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = st_idx; p < robot_tfs.size(); p += idx_step)
+    for(int p = st_idx; p < (int)robot_tfs.size(); p++)
     {
-        Eigen::Matrix4d G = _obs_tf.inverse()*robot_tfs[p];
-
-        Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
-        Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
-        Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
-        Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
-
-        cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
-        if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+        if(p == st_idx || p == (int)robot_tfs.size()-1 || p%idx_step == 0)
         {
-            return true;
+            Eigen::Matrix4d G = _obs_tf.inverse()*robot_tfs[p];
+
+            Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
+            Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
+            Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
+            Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
+
+            cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
+            if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+            {
+                return true;
+            }
+
+            cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
+            if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+            {
+                return true;
+            }
+
+            cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
+            if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
+            {
+                return true;
+            }
+
+            cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
+            if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
+            {
+                return true;
+            }
+
+            std::vector<std::vector<cv::Point>> pts(1);
+            pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+            pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+            pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+            pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+            cv::fillPoly(mask, pts, cv::Scalar(255));
         }
-
-        cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
-        if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
-        {
-            return true;
-        }
-
-        cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
-        if(uv2[0] < 0 || uv2[0] >= w || uv2[1] < 0 || uv2[1] >= h)
-        {
-            return true;
-        }
-
-        cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
-        if(uv3[0] < 0 || uv3[0] >= w || uv3[1] < 0 || uv3[1] >= h)
-        {
-            return true;
-        }
-
-        std::vector<std::vector<cv::Point>> pts(1);
-        pts[0].push_back(cv::Point(uv0[0], uv0[1]));
-        pts[0].push_back(cv::Point(uv1[0], uv1[1]));
-        pts[0].push_back(cv::Point(uv2[0], uv2[1]));
-        pts[0].push_back(cv::Point(uv3[0], uv3[1]));
-
-        cv::fillPoly(mask, pts, cv::Scalar(255));
     }
 
     /*

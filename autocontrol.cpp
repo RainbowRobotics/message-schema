@@ -1586,7 +1586,8 @@ PATH AUTOCONTROL::calc_avoid_path()
     ss.getProblemDefinition()->setOptimizationObjective(objective);
 
     // set planner
-    auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
+    //auto planner = std::make_shared<ompl::geometric::RRTstar>(ss.getSpaceInformation());
+    auto planner = std::make_shared<ompl::geometric::PRMstar>(ss.getSpaceInformation());
     ss.setPlanner(planner);
 
     // solve
@@ -1643,12 +1644,12 @@ PATH AUTOCONTROL::calc_avoid_path()
         res.ref_v = ref_v;
         res.goal_tf = local_goal_tf;
 
-        printf("[AUTO] ompl lpp, exact solution\n");
+        printf("[AUTO] ompl lpp, exact solution found\n");
         return res;
     }
     else
     {
-        printf("[AUTO] ompl lpp, no exact solution\n");
+        printf("[AUTO] ompl lpp, solution failed\n");
         return PATH();
     }
 }
@@ -2040,9 +2041,10 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = saturation(ref_v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, goal_v);
+            double v = ref_v;
             v = saturation(v, 0, obs_v);
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, 0, goal_v);
 
             double th = (params.DRIVE_A * err_th) + (params.DRIVE_B * (err_th-pre_err_th)/dt) + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -45.0*D2R, 45.0*D2R);
@@ -2421,9 +2423,9 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
 
             // calc control input
             double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
+            ref_v = saturation(ref_v, 0, obs_v);
             ref_v = saturation(ref_v, ref_v0 - params.LIMIT_V_ACC*dt, ref_v0 + params.LIMIT_V_ACC*dt);
             ref_v = saturation(ref_v, 0, goal_v);
-            ref_v = saturation(ref_v, 0, obs_v);
 
             double kp_w = 1.0;
             double kd_w = 0.1;
@@ -2796,8 +2798,8 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
             double v = saturation(kp_v*err_d + kd_v*(err_d - pre_err_d)/dt, params.ED_V, params.LIMIT_V);
             pre_err_d = err_d;
 
-            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0, obs_v);
+            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
 
             double kp_w = 1.0;
             double kd_w = 0.05;
