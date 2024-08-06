@@ -43,14 +43,13 @@ public:
     NODE* get_node_nn(Eigen::Vector3d pose);
     NODE* get_edge_nn(Eigen::Vector3d pose);
 
-    QString add_node(Eigen::Matrix4d tf, QString type, QString info = "");
-    void add_node(PICKING pick, QString type, QString info = "");
+    QString add_node(Eigen::Matrix4d tf, QString type, QString info = "", double radius = 1.0);
+    void add_node(PICKING pick, QString type, QString info = "", double radius = 1.0);
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
     void edit_node_info(PICKING pick, QString info);
-    void save_node_pos(PICKING pick);
-    void save_node_pos(QString cur_node);
+    void edit_node_radius(PICKING pick, double radius);
     void clear_nodes();
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
@@ -63,7 +62,6 @@ public:
 
     // annotation
     std::vector<NODE> nodes;
-    std::vector<TOTEM> totems;
 
     // code ref
     std::map<QString, cv::Vec2d> ref_codes;

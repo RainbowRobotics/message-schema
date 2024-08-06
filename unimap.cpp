@@ -135,9 +135,10 @@ void UNIMAP::load_map(QString path)
                     node.id = obj["id"].toString();
                     node.name = obj["name"].toString();
                     node.type = obj["type"].toString();
+                    node.info = obj["info"].toString();
                     node.tf = string_to_TF(obj["pose"].toString());
                     node.linked = array_to_links(obj["links"].toArray());
-                    node.info = obj["info"].toString();
+                    node.radius = obj["radius"].toDouble();
 
                     nodes.push_back(node);
                 }
@@ -205,9 +206,10 @@ void UNIMAP::save_annotation()
             obj["id"] = nodes[p].id;
             obj["name"] = nodes[p].name;
             obj["type"] = nodes[p].type;
+            obj["info"] = nodes[p].info;
             obj["pose"] = TF_to_string(nodes[p].tf);
             obj["links"] = links_to_array(nodes[p].linked);
-            obj["info"] = nodes[p].info;
+            obj["radius"] = nodes[p].radius;
 
             arr.append(obj);
         }
@@ -269,15 +271,16 @@ bool UNIMAP::is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius)
     return true;
 }
 
-void UNIMAP::add_node(PICKING pick, QString type, QString info)
+void UNIMAP::add_node(PICKING pick, QString type, QString info, double radius)
 {
     if(pick.cur_node == "")
     {
         NODE node;
         node.id = gen_node_id();
         node.type = type;
-        node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);
         node.info = info;
+        node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);
+        node.radius = radius;
         nodes.push_back(node);
 
         printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
@@ -311,13 +314,14 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
     }
 }
 
-QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString info)
+QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString info, double radius)
 {
     NODE node;
     node.id = gen_node_id();
     node.type = type;
-    node.tf = tf;
     node.info = info;
+    node.tf = tf;
+    node.radius = radius;
     nodes.push_back(node);
 
     printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
@@ -386,22 +390,18 @@ void UNIMAP::edit_node_info(PICKING pick, QString info)
     }
 }
 
-void UNIMAP::save_node_pos(PICKING pick)
+void UNIMAP::edit_node_radius(PICKING pick, double radius)
 {
-    if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))
+    if(pick.cur_node == "")
     {
-        printf("cur_node or picking tf empty\n");
+        printf("cur_node empty\n");
         return;
     }
 
     NODE* node = get_node_by_id(pick.cur_node);
     if(node != NULL)
     {
-        double x = pick.r_pose[0];
-        double y = pick.r_pose[1];
-        double th = pick.r_pose[2];
-
-        node->tf = ZYX_to_TF(x, y, 0, 0, 0, th);
+        node->radius = radius;
     }
 }
 
@@ -800,5 +800,3 @@ std::vector<QString> UNIMAP::array_to_links(QJsonArray arr)
     }
     return res;
 }
-
-

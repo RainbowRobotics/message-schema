@@ -1994,7 +1994,7 @@ void MainWindow::watch_loop()
 {
     int cnt = 0;
     int loc_fail_cnt = 0;
-    int resync_cnt = 0;
+    double last_sync_time = 0;
 
     CPU_USAGE pre_cpu_usage;
 
@@ -2033,14 +2033,13 @@ void MainWindow::watch_loop()
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
-            resync_cnt++;
-
             // check mobile
             if(mobile.is_connected)
             {
-                if(mobile.is_synced == false || resync_cnt%1000 == 0)
+                if(mobile.is_synced == false)
                 {
                     mobile.sync();
+                    last_sync_time = get_time();
                     printf("[WATCH] try time sync, pc and mobile\n");
                 }
 
@@ -2058,7 +2057,7 @@ void MainWindow::watch_loop()
             // check lidar
             if(lidar.is_connected_f)
             {
-                if(lidar.is_synced_f == false || resync_cnt%1000 == 0)
+                if(lidar.is_synced_f == false)
                 {
                     lidar.sync_f();
                     printf("[WATCH] try time sync, pc and front lidar\n");
@@ -2067,15 +2066,33 @@ void MainWindow::watch_loop()
 
             if(lidar.is_connected_b)
             {
-                if(lidar.is_synced_b == false || resync_cnt%1000 == 0)
+                if(lidar.is_synced_b == false)
                 {
                     lidar.sync_b();
                     printf("[WATCH] try time sync, pc and back lidar\n");
                 }
             }
 
-            // check camera
+            // resync for time skew
+            if(get_time() - last_sync_time > 1000.0 && ctrl.is_moving == false)
+            {
+                if(mobile.is_connected)
+                {
+                    mobile.sync();
+                }
 
+                if(lidar.is_connected_f)
+                {
+                    lidar.sync_f();
+                }
+
+                if(lidar.is_connected_b)
+                {
+                    lidar.sync_b();
+                }
+
+                last_sync_time = get_time();
+            }
 
             // check loc
             if(slam.is_loc == false)

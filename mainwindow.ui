@@ -1570,25 +1570,22 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>310</x>
-                <y>100</y>
+                <y>70</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
-               <string>Edit info[F]</string>
-              </property>
-              <property name="shortcut">
-               <string>F</string>
+               <string>Edit info</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_AddLink2">
               <property name="geometry">
                <rect>
                 <x>190</x>
-                <y>60</y>
+                <y>70</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1602,9 +1599,9 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>310</x>
-                <y>20</y>
+                <y>10</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1618,9 +1615,9 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>190</x>
-                <y>20</y>
+                <y>10</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1634,9 +1631,9 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>190</x>
-                <y>100</y>
+                <y>40</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1649,10 +1646,10 @@ stop</string>
              <widget class="QComboBox" name="cb_NodeType">
               <property name="geometry">
                <rect>
-                <x>50</x>
-                <y>20</y>
-                <width>131</width>
-                <height>31</height>
+                <x>60</x>
+                <y>10</y>
+                <width>111</width>
+                <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
@@ -1671,6 +1668,21 @@ stop</string>
               <item>
                <property name="text">
                 <string>OBS</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>ZONE</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>GATE</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>SIGNAL</string>
                </property>
               </item>
              </widget>
@@ -1870,7 +1882,7 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>25</y>
+                <y>10</y>
                 <width>41</width>
                 <height>21</height>
                </rect>
@@ -2001,7 +2013,7 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>60</y>
+                <y>40</y>
                 <width>31</width>
                 <height>21</height>
                </rect>
@@ -2043,10 +2055,10 @@ stop</string>
              <widget class="QTextEdit" name="te_NodeInfo">
               <property name="geometry">
                <rect>
-                <x>50</x>
-                <y>60</y>
-                <width>131</width>
-                <height>71</height>
+                <x>60</x>
+                <y>40</y>
+                <width>111</width>
+                <height>21</height>
                </rect>
               </property>
              </widget>
@@ -2054,16 +2066,13 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>310</x>
-                <y>60</y>
+                <y>40</y>
                 <width>111</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
-               <string>Edit type[T]</string>
-              </property>
-              <property name="shortcut">
-               <string>T</string>
+               <string>Edit type</string>
               </property>
              </widget>
              <widget class="QLabel" name="lb_PreNodeInfo">
@@ -2112,6 +2121,56 @@ stop</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+             <widget class="QDoubleSpinBox" name="spb_NodeRadius">
+              <property name="geometry">
+               <rect>
+                <x>60</x>
+                <y>70</y>
+                <width>111</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="suffix">
+               <string> m</string>
+              </property>
+              <property name="maximum">
+               <double>1000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_24">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>70</y>
+                <width>51</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Radius:</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_EditNodeRadius">
+              <property name="geometry">
+               <rect>
+                <x>310</x>
+                <y>100</y>
+                <width>111</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Edit radius</string>
               </property>
              </widget>
             </widget>

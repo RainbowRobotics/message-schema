@@ -633,62 +633,16 @@ struct TIME_POSE_PTS
     }
 };
 
-// totem
-struct TOTEM
-{
-    QString id; // unique id
-    QString type; // ZONE, SLOW, GATE, SIGNAL
-    Eigen::Matrix4d tf; // tf
-    std::vector<QString> linked; // linked other totem
-    double radius; // radius totem
-
-    TOTEM()
-    {
-        id = "";
-        type = "";
-        tf.setIdentity();
-        linked.clear();
-        radius = 1.0;
-    }
-
-    TOTEM(const TOTEM& p)
-    {
-        id = p.id;
-        type = p.type;
-        tf = p.tf;
-        linked = p.linked;
-        radius = p.radius;
-    }
-
-    TOTEM& operator=(const TOTEM& p)
-    {
-        id = p.id;
-        type = p.type;
-        tf = p.tf;
-        linked = p.linked;
-        radius = p.radius;
-        return *this;
-    }
-
-    bool operator==(const TOTEM& p)
-    {
-        if(id == p.id)
-        {
-            return true;
-        }
-        return false;
-    }
-};
-
 // topomap node
 struct NODE
 {
     QString id;
     QString name;
-    QString type; // ROUTE, GOAL
+    QString type; // ROUTE, GOAL, OBS, ZONE, GATE, SIGNAL
     QString info; // Attribute
     Eigen::Matrix4d tf; // node tf
     std::vector<QString> linked;
+    double radius;
 
     NODE()
     {
@@ -698,6 +652,7 @@ struct NODE
         info = "";
         tf.setIdentity();
         linked.clear();
+        radius = 0;
     }
 
     NODE(const NODE& p)
@@ -708,6 +663,7 @@ struct NODE
         info = p.info;
         tf = p.tf;
         linked = p.linked;
+        radius = p.radius;
     }
 
     NODE& operator=(const NODE& p)
@@ -718,6 +674,7 @@ struct NODE
         info = p.info;
         tf = p.tf;
         linked = p.linked;
+        radius = p.radius;
         return *this;
     }
 
