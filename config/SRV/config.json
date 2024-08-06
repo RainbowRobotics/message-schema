@@ -4,7 +4,7 @@
 		"PLATFORM_TYPE": "SRV"
 	},
 	"debug": {
-		"SIM_MODE": "0"
+		"SIM_MODE": "1"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",
@@ -65,7 +65,7 @@
 		"SLAM_WINDOW_SIZE": "100"
 	},
 	"obs": {
-		"OBS_AVOID": "0",
+		"OBS_AVOID": "1",
 		"OBS_DEADZONE": "0.4",
 		"OBS_LOCAL_GOAL_D": "3.0",
 		"OBS_EB_MARGIN_X": "0.3",

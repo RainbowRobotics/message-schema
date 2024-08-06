@@ -2395,7 +2395,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
 
             // obs stop
             {
-                double stop_t = config->OBS_DEADZONE/0.1;
+                double stop_t = std::min<double>(config->OBS_DEADZONE, goal_err_d)/0.1;
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(dir_x*0.1, dir_y*0.1, 0), 0.5, stop_t, cur_tf);
                 if(obsmap->is_path_collision(traj))
                 {
@@ -2728,6 +2728,16 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
+            // calc errors
+            double dx = tgt_pos[0] - cur_pos[0];
+            double dy = tgt_pos[1] - cur_pos[1];
+            double err_d = std::sqrt(dx*dx + dy*dy);
+            double err_th = deltaRad(std::atan2(dy, dx), cur_xi[2]);
+            if(std::abs(err_th) > 5.0*D2R)
+            {
+                err_th = sgn(err_th)*(5.0*D2R);
+            }
+
             // obs decel
             QString _obs_condition = "none";
             double obs_v = 0.1;
@@ -2756,7 +2766,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
 
             // obs stop
             {
-                double stop_t = config->OBS_DEADZONE/0.1;
+                double stop_t = std::min<double>(config->OBS_DEADZONE, err_d)/0.1;
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0.1, 0, 0), 0.5, stop_t, cur_tf);
                 if(obsmap->is_path_collision(traj))
                 {
@@ -2781,16 +2791,6 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
                 continue;
             }
 
-            // calc errors
-            double dx = tgt_pos[0] - cur_pos[0];
-            double dy = tgt_pos[1] - cur_pos[1];
-            double err_d = std::sqrt(dx*dx + dy*dy);
-            double err_th = deltaRad(std::atan2(dy, dx), cur_xi[2]);
-            if(std::abs(err_th) > 5.0*D2R)
-            {
-                err_th = sgn(err_th)*(5.0*D2R);
-            }
-
             // calc control input
             double kp_v = 0.75;
             double kd_v = 0.05;
@@ -2800,6 +2800,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
 
             v = saturation(v, 0, obs_v);
             v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, 0, params.LIMIT_V);
 
             double kp_w = 1.0;
             double kd_w = 0.05;

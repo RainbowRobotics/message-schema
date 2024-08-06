@@ -39,6 +39,8 @@
 #include <pcl/geometry/mesh_base.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/surface/convex_hull.h>
+#include <pcl/surface/concave_hull.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/obj_io.h>
 
@@ -639,10 +641,9 @@ struct NODE
     QString id;
     QString name;
     QString type; // ROUTE, GOAL, OBS, ZONE, GATE, SIGNAL
-    QString info; // Attribute
+    QString info; // additional info
     Eigen::Matrix4d tf; // node tf
     std::vector<QString> linked;
-    double radius;
 
     NODE()
     {
@@ -651,8 +652,7 @@ struct NODE
         type = "";
         info = "";
         tf.setIdentity();
-        linked.clear();
-        radius = 0;
+        linked.clear();        
     }
 
     NODE(const NODE& p)
@@ -662,8 +662,7 @@ struct NODE
         type = p.type;
         info = p.info;
         tf = p.tf;
-        linked = p.linked;
-        radius = p.radius;
+        linked = p.linked;        
     }
 
     NODE& operator=(const NODE& p)
@@ -674,7 +673,6 @@ struct NODE
         info = p.info;
         tf = p.tf;
         linked = p.linked;
-        radius = p.radius;
         return *this;
     }
 

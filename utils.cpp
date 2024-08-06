@@ -3,6 +3,20 @@
 
 #include "utils.h"
 
+cv::Vec3b colors[10] =
+{
+    cv::Vec3b(255,173,173),
+    cv::Vec3b(255,214,165),
+    cv::Vec3b(253,255,182),
+    cv::Vec3b(202,255,191),
+    cv::Vec3b(155,246,255),
+    cv::Vec3b(160,196,255),
+    cv::Vec3b(255,198,255),
+    cv::Vec3b(255,102,99),
+    cv::Vec3b(254,177,68),
+    cv::Vec3b(158,193,207)
+};
+
 QString AUTO_FSM_STATE_STR[6] =
 {
     "AUTO_FSM_FIRST_ALIGN",

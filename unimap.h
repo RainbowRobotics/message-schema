@@ -33,23 +33,19 @@ public:
     bool is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius);
 
     // topology
+    std::vector<QString> get_linked_nodes(QString id);
     std::vector<QString> get_nodes(QString type);
     QString gen_node_id();
     QString get_node_id(Eigen::Vector3d pos);
     QString get_node_id_nn(Eigen::Vector3d pos);
-    QString get_node_id_edge_nn(Eigen::Vector3d pos);
-    QString get_node_id_los(Eigen::Vector3d pos);
-    NODE* get_node_by_id(QString name);
-    NODE* get_node_nn(Eigen::Vector3d pose);
-    NODE* get_edge_nn(Eigen::Vector3d pose);
+    NODE* get_node_by_id(QString id);
 
-    QString add_node(Eigen::Matrix4d tf, QString type, QString info = "", double radius = 1.0);
-    void add_node(PICKING pick, QString type, QString info = "", double radius = 1.0);
+    QString add_node(Eigen::Matrix4d tf, QString type);
+    void add_node(PICKING pick, QString type);
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
-    void edit_node_info(PICKING pick, QString info);
-    void edit_node_radius(PICKING pick, double radius);
+    void edit_node_info(PICKING pick, QString info);    
     void clear_nodes();
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
@@ -62,6 +58,7 @@ public:
 
     // annotation
     std::vector<NODE> nodes;
+    std::vector<std::vector<QString>> zones;
 
     // code ref
     std::map<QString, cv::Vec2d> ref_codes;

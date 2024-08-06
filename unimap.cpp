@@ -2,7 +2,7 @@
 
 UNIMAP::UNIMAP(QObject *parent) : QObject(parent)
 {
-    is_loaded = false;
+    zones.resize(10);
 }
 
 UNIMAP::~UNIMAP()
@@ -137,9 +137,7 @@ void UNIMAP::load_map(QString path)
                     node.type = obj["type"].toString();
                     node.info = obj["info"].toString();
                     node.tf = string_to_TF(obj["pose"].toString());
-                    node.linked = array_to_links(obj["links"].toArray());
-                    node.radius = obj["radius"].toDouble();
-
+                    node.linked = array_to_links(obj["links"].toArray());                    
                     nodes.push_back(node);
                 }
                 topo_file.close();
@@ -208,9 +206,7 @@ void UNIMAP::save_annotation()
             obj["type"] = nodes[p].type;
             obj["info"] = nodes[p].info;
             obj["pose"] = TF_to_string(nodes[p].tf);
-            obj["links"] = links_to_array(nodes[p].linked);
-            obj["radius"] = nodes[p].radius;
-
+            obj["links"] = links_to_array(nodes[p].linked);            
             arr.append(obj);
         }
 
@@ -271,16 +267,15 @@ bool UNIMAP::is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius)
     return true;
 }
 
-void UNIMAP::add_node(PICKING pick, QString type, QString info, double radius)
+void UNIMAP::add_node(PICKING pick, QString type)
 {
     if(pick.cur_node == "")
     {
         NODE node;
         node.id = gen_node_id();
         node.type = type;
-        node.info = info;
-        node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);
-        node.radius = radius;
+        node.info = "";
+        node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);        
         nodes.push_back(node);
 
         printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
@@ -314,14 +309,13 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info, double radius)
     }
 }
 
-QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString info, double radius)
+QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
 {
     NODE node;
     node.id = gen_node_id();
     node.type = type;
-    node.info = info;
+    node.info = "";
     node.tf = tf;
-    node.radius = radius;
     nodes.push_back(node);
 
     printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
@@ -387,21 +381,6 @@ void UNIMAP::edit_node_info(PICKING pick, QString info)
     if(node != NULL)
     {
         node->info = info;
-    }
-}
-
-void UNIMAP::edit_node_radius(PICKING pick, double radius)
-{
-    if(pick.cur_node == "")
-    {
-        printf("cur_node empty\n");
-        return;
-    }
-
-    NODE* node = get_node_by_id(pick.cur_node);
-    if(node != NULL)
-    {
-        node->radius = radius;
     }
 }
 
@@ -484,6 +463,37 @@ void UNIMAP::clear_nodes()
     mtx.unlock();
 
     printf("[UNIMAP] topology cleared\n");
+}
+
+std::vector<QString> UNIMAP::get_linked_nodes(QString id)
+{
+    std::set<QString> visited;
+    std::vector<QString> result;
+
+    std::function<void(const QString&)> dfs = [&](const QString& node_id)
+    {
+        auto it = std::find_if(nodes.begin(), nodes.end(), [&](const NODE& node) { return node.id == node_id; });
+        if (it == nodes.end())
+        {
+            return;
+        }
+
+        visited.insert(node_id);
+        result.push_back(node_id);
+
+        const NODE& node = *it;
+        for (const auto& linked_id : node.linked)
+        {
+            if (visited.find(linked_id) == visited.end())
+            {
+                dfs(linked_id);
+            }
+        }
+    };
+
+    dfs(id);
+
+    return result;
 }
 
 std::vector<QString> UNIMAP::get_nodes(QString type)
@@ -580,87 +590,6 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     return "";
 }
 
-QString UNIMAP::get_node_id_edge_nn(Eigen::Vector3d pos)
-{
-    double min_d = 99999999;
-    NODE* min_node0 = NULL;
-    NODE* min_node1 = NULL;
-    Eigen::Vector3d min_pos0;
-    Eigen::Vector3d min_pos1;
-    for(auto& it: nodes)
-    {
-        if(it.type == "ROUTE" || it.type == "GOAL")
-        {
-            for(size_t p = 0; p < it.linked.size(); p++)
-            {
-                QString id0 = it.id;
-                QString id1 = it.linked[p];
-
-                NODE* node0 = get_node_by_id(id0);
-                NODE* node1 = get_node_by_id(id1);
-
-                Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
-                Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
-
-                double d = calc_seg_dist(P0, P1, pos);
-                if(d < min_d)
-                {
-                    min_d = d;
-                    min_node0 = node0;
-                    min_node1 = node1;
-                    min_pos0 = P0;
-                    min_pos1 = P1;
-                }
-            }
-        }
-    }
-
-    double d0 = (min_pos0 - pos).norm();
-    double d1 = (min_pos1 - pos).norm();
-
-    if(d0 < d1)
-    {
-        return min_node0->id;
-    }
-    else
-    {
-        return min_node1->id;
-    }
-}
-
-QString UNIMAP::get_node_id_los(Eigen::Vector3d pos)
-{
-    if(nodes.size() == 0)
-    {
-        return "";
-    }
-
-    // find node
-    int min_idx = -1;
-    double min_d = 99999999;
-    for(size_t p = 0; p < nodes.size(); p++)
-    {
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
-        {
-            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-            if(d < min_d)
-            {
-                if(is_los(nodes[p].tf.block(0,3,3,1), pos, config->ROBOT_SIZE_Y[1]))
-                {
-                    min_d = d;
-                    min_idx = p;
-                }
-            }
-        }
-    }
-
-    if(min_idx != -1)
-    {
-        return nodes[min_idx].id;
-    }
-    return "";
-}
-
 NODE* UNIMAP::get_node_by_id(QString id)
 {
     if(id == "")
@@ -682,85 +611,6 @@ NODE* UNIMAP::get_node_by_id(QString id)
     }
 
     return node;
-}
-
-NODE* UNIMAP::get_node_nn(Eigen::Vector3d pos)
-{
-    if(nodes.size() == 0)
-    {
-        return NULL;
-    }
-
-    // find node
-    int min_idx = -1;
-    double min_d = 99999999;
-    for(size_t p = 0; p < nodes.size(); p++)
-    {
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
-        {
-            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-            if(d < min_d)
-            {
-                min_d = d;
-                min_idx = p;
-            }
-        }
-    }
-
-    if(min_idx != -1)
-    {
-        return &nodes[min_idx];
-    }
-
-    return NULL;
-}
-
-NODE* UNIMAP::get_edge_nn(Eigen::Vector3d pos)
-{
-    double min_d = 99999999;
-    NODE* min_node0 = NULL;
-    NODE* min_node1 = NULL;
-    Eigen::Vector3d min_pos0;
-    Eigen::Vector3d min_pos1;
-    for(auto& it: nodes)
-    {
-        if(it.type == "ROUTE" || it.type == "GOAL")
-        {
-            for(size_t p = 0; p < it.linked.size(); p++)
-            {
-                QString id0 = it.id;
-                QString id1 = it.linked[p];
-
-                NODE* node0 = get_node_by_id(id0);
-                NODE* node1 = get_node_by_id(id1);
-
-                Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
-                Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
-
-                double d = calc_seg_dist(P0, P1, pos);
-                if(d < min_d)
-                {
-                    min_d = d;
-                    min_node0 = node0;
-                    min_node1 = node1;
-                    min_pos0 = P0;
-                    min_pos1 = P1;
-                }
-            }
-        }
-    }
-
-    double d0 = (min_pos0 - pos).norm();
-    double d1 = (min_pos1 - pos).norm();
-
-    if(d0 < d1)
-    {
-        return min_node0;
-    }
-    else
-    {
-        return min_node1;
-    }
 }
 
 QJsonArray UNIMAP::pose_to_array(Eigen::Vector3d pose)

@@ -3,6 +3,7 @@
 
 #include "global_defines.h"
 
+extern cv::Vec3b colors[10];
 extern QString AUTO_FSM_STATE_STR[6];
 
 extern double st_time_for_get_time;

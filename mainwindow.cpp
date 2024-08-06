@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
-    connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));
+    connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));    
     connect(ui->bt_MinGapNodeX, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeX()));
     connect(ui->bt_MinGapNodeY, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeY()));
     connect(ui->bt_AlignNodeX, SIGNAL(clicked()), this, SLOT(bt_AlignNodeX()));
@@ -95,15 +95,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AlignNodeTh, SIGNAL(clicked()), this, SLOT(bt_AlignNodeTh()));
     connect(ui->bt_ClearTopo, SIGNAL(clicked()), this, SLOT(bt_ClearTopo()));
 
-    connect(ui->bt_NodePoseXUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseXUp()));
-    connect(ui->bt_NodePoseYUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseYUp()));
-    connect(ui->bt_NodePoseThUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseThUp()));
-    connect(ui->bt_NodePoseXDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseXDown()));
-    connect(ui->bt_NodePoseYDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseYDown()));
-    connect(ui->bt_NodePoseThDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseThDown()));
-
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+
+    // for zone
+    connect(ui->bt_SetZone, SIGNAL(clicked()), this, SLOT(bt_SetZone()));
+    connect(ui->bt_ClearZone, SIGNAL(clicked()), this, SLOT(bt_ClearZone()));
 
     // for simulation
     connect(ui->bt_SimInit, SIGNAL(clicked()), this, SLOT(bt_SimInit()));
@@ -132,10 +129,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskPlay, SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
     connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
-
-    // init vars
-    pre_tf.setIdentity();
-    pre_tf2.setIdentity();
 
     // set plot window
     setup_vtk();
@@ -621,12 +614,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
     }
     else if(object == ui->qvtkWidget2)
     {
-        // cam control
-        if(ui->cb_ViewType->currentText() == "VIEW_3D")
-        {
-            return false;
-        }
-
         // keyboard event
         if(ev->type() == QEvent::KeyPress)
         {
@@ -1323,116 +1310,6 @@ void MainWindow::bt_ClearTopo()
     topo_update();
 }
 
-void MainWindow::bt_NodePoseXUp()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    double dx = ui->spb_NodeMovementXY->value();
-    NODE* node = unimap.get_node_by_id(id);
-    node->tf(0,3) += dx;
-
-    ui->le_CurNodeX->setText(QString::number(node->tf(0,3)));
-    topo_update();
-}
-
-void MainWindow::bt_NodePoseYUp()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    double dy = ui->spb_NodeMovementXY->value();
-    NODE* node = unimap.get_node_by_id(id);
-    node->tf(1,3) += dy;
-
-    ui->le_CurNodeY->setText(QString::number(node->tf(1,3)));
-    topo_update();
-}
-
-void MainWindow::bt_NodePoseThUp()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    NODE* node = unimap.get_node_by_id(id);
-    Eigen::Matrix4d tf0 = node->tf;
-
-    double dth = ui->spb_NodeMovementTh->value()*D2R;
-    Eigen::Matrix4d tf = ZYX_to_TF(0, 0, 0, 0, 0, dth);
-
-    node->tf = tf0 * tf;
-
-    Eigen::Matrix3d R = node->tf.block(0,0,3,3);
-    Eigen::Vector3d euler = R.eulerAngles(2,1,0);
-    double th = euler[0];
-    ui->le_CurNodeTh->setText(QString::number(th*R2D));
-    topo_update();
-}
-
-void MainWindow::bt_NodePoseXDown()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    double dx = ui->spb_NodeMovementXY->value();
-    NODE* node = unimap.get_node_by_id(id);
-    node->tf(0,3) -= dx;
-
-    ui->le_CurNodeX->setText(QString::number(node->tf(0,3)));
-    topo_update();
-}
-
-void MainWindow::bt_NodePoseYDown()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    double dy = ui->spb_NodeMovementXY->value();
-    NODE* node = unimap.get_node_by_id(id);
-    node->tf(1,3) -= dy;
-
-    ui->le_CurNodeY->setText(QString::number(node->tf(1,3)));
-    topo_update();
-}
-
-void MainWindow::bt_NodePoseThDown()
-{
-    QString id = pick.cur_node;
-    if(id == "")
-    {
-        return;
-    }
-
-    NODE* node = unimap.get_node_by_id(id);
-    Eigen::Matrix4d tf0 = node->tf;
-
-    double dth = -ui->spb_NodeMovementTh->value();
-    Eigen::Matrix4d tf = ZYX_to_TF(0, 0, 0, 0, 0, dth*D2R);
-
-    node->tf = tf0 * tf;
-
-    Eigen::Matrix3d R = node->tf.block(0,0,3,3);
-    Eigen::Vector3d euler = R.eulerAngles(2,1,0);
-    double th = euler[0];
-    ui->le_CurNodeTh->setText(QString::number(th*R2D));
-    topo_update();
-}
-
 void MainWindow::bt_MinGapNodeX()
 {
     double gap = ui->spb_NodeGap->value();
@@ -1487,33 +1364,6 @@ void MainWindow::bt_MinGapNodeY()
     topo_update();
 }
 
-void MainWindow::bt_MinGapNodeZ()
-{
-    double gap = ui->spb_NodeGap->value();
-
-    QString id0 = pick.pre_node;
-    QString id1 = pick.cur_node;
-    if(id0 == "" || id1 == "")
-    {
-        return;
-    }
-
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
-
-    if(tf0(2,3) > tf1(2,3))
-    {
-        tf1(2,3) = tf0(2,3) + gap;
-    }
-    else
-    {
-        tf1(2,3) = tf0(2,3) - gap;
-    }
-
-    unimap.edit_node_pos(id1, tf1);
-    topo_update();
-}
-
 void MainWindow::bt_AlignNodeX()
 {
     QString id0 = pick.pre_node;
@@ -1546,24 +1396,6 @@ void MainWindow::bt_AlignNodeY()
 
     // align x
     tf1(1,3) = tf0(1,3);
-    unimap.edit_node_pos(id1, tf1);
-    topo_update();
-}
-
-void MainWindow::bt_AlignNodeZ()
-{
-    QString id0 = pick.pre_node;
-    QString id1 = pick.cur_node;
-    if(id0 == "" || id1 == "")
-    {
-        return;
-    }
-
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
-
-    // align x
-    tf1(2,3) = tf0(2,3);
     unimap.edit_node_pos(id1, tf1);
     topo_update();
 }
@@ -1672,6 +1504,21 @@ void MainWindow::qa_loop()
 
         topo_update();
     }
+}
+
+// for zone
+void MainWindow::bt_SetZone()
+{
+    std::vector<QString> linked_nodes = unimap.get_linked_nodes(pick.cur_node);
+
+    int idx = ui->cb_Zones->currentIndex();
+    unimap.zones[idx] = linked_nodes;
+}
+
+void MainWindow::bt_ClearZone()
+{
+    int idx = ui->cb_Zones->currentIndex();
+    unimap.zones[idx].clear();
 }
 
 // for autocontrol
@@ -2274,342 +2121,393 @@ void MainWindow::watch_loop()
     printf("[WATCHDOG] loop stop\n");
 }
 
-// plot
-void MainWindow::plot_loop()
+// for plot loop
+void MainWindow::map_plot()
 {
-    double st_time = get_time();
-
-    // cur tf
-    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-    // plot mobile info
-    if(mobile.is_connected)
+    if(unimap.is_loaded == false)
     {
-        // plot mobile pose
-        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
-
-        // plot mobile status
-        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+        return;
     }
 
-    // plot slam info
-    if(slam.is_slam || slam.is_loc)
+    if(is_map_update)
     {
-        ui->lb_SlamInfo->setText(slam.get_info_text());
+        is_map_update = false;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+        {
+            if(unimap.kdtree_mask[p] == 0)
+            {
+                continue;
+            }
+
+            pcl::PointXYZRGB pt;
+            pt.x = unimap.kdtree_cloud.pts[p].x;
+            pt.y = unimap.kdtree_cloud.pts[p].y;
+            pt.z = unimap.kdtree_cloud.pts[p].z;
+
+            double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
+            tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
+
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "map_pts"))
+        {
+            viewer->addPointCloud(cloud, "map_pts");
+        }
+
+        // point size
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+    }
+}
+void MainWindow::obs_plot()
+{
+    if(unimap.is_loaded == false)
+    {
+        return;
     }
 
-    // plot que info
-    QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%f",
-                         (int)lidar.scan_que.unsafe_size(),
-                         (int)mobile.msg_que.unsafe_size(),
-                         (int)slam.kfrm_que.unsafe_size(),
-                         (double)plot_proc_t);
-    ui->lb_QueInfo->setText(que_info_str);
-
-    // plot auto info
-    QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s",
-                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_moving ? "true" : "false",
-                          (bool)ctrl.is_pause ? "true" : "false",
-                          ctrl.get_obs_condition().toLocal8Bit().data());
-    ui->lb_AutoInfo->setText(auto_info_str);
-
-    // plot cam
-    if(cam.is_connected0)
+    if(is_obs_update)
     {
-        cv::Mat plot = cam.get_img0();
-        if(!plot.empty())
+        is_obs_update = false;
+
+        cv::Mat obs_map;
+        cv::Mat dyn_map;
+        Eigen::Matrix4d obs_tf;
+        obsmap.get_obs_map(obs_map, obs_tf);
+        obsmap.get_dyn_map(dyn_map, obs_tf);
+
+        std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
+
+        // plot grid map
         {
-            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen2->setScaledContents(true);
-            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
+            obsmap.draw_robot(plot_obs_map, obs_tf);
+
+            for(int i = 0; i < obs_map.rows; i++)
+            {
+                for(int j = 0; j < obs_map.cols; j++)
+                {
+                    if(obs_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
+                    }
+
+                    if(dyn_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                    }
+                }
+            }
+
+            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+            ui->lb_Screen1->setScaledContents(true);
+            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
+
+        // plot obs pts
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < obs_pts.size(); p++)
+        {
+            double x = obs_pts[p][0];
+            double y = obs_pts[p][1];
+            double z = obs_pts[p][2];
+            double prob = obs_pts[p][3];
+
+            if(prob <= 0.5)
+            {
+                continue;
+            }
+
+            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+            pcl::PointXYZRGB pt;
+            pt.x = x;
+            pt.y = y;
+            pt.z = z;
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "obs_pts"))
+        {
+            viewer->addPointCloud(cloud, "obs_pts");
+        }
+
+        // point size
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+    }
+}
+void MainWindow::topo_plot()
+{
+    if(unimap.is_loaded == false)
+    {
+        return;
     }
 
-    if(cam.is_connected1)
+    // draw topo
+    if(is_topo_update)
     {
-        cv::Mat plot = cam.get_img1();
-        if(!plot.empty())
-        {
-            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen3->setScaledContents(true);
-            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-    }
+        is_topo_update = false;
 
-    // plot map & annotation
-    if(unimap.is_loaded)
-    {
-        // draw map
-        if(is_map_update)
+        // erase first
+        if(last_plot_nodes.size() > 0)
         {
-            is_map_update = false;
-
-            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+            for(size_t p = 0; p < last_plot_nodes.size(); p++)
             {
-                if(unimap.kdtree_mask[p] == 0)
+                QString id = last_plot_nodes[p];
+                if(viewer->contains(id.toStdString()))
                 {
-                    continue;
+                    viewer->removeShape(id.toStdString());
                 }
 
-                pcl::PointXYZRGB pt;
-                pt.x = unimap.kdtree_cloud.pts[p].x;
-                pt.y = unimap.kdtree_cloud.pts[p].y;
-                pt.z = unimap.kdtree_cloud.pts[p].z;
-
-                double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
-                tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
-
-                pt.r = c.r()*255;
-                pt.g = c.g()*255;
-                pt.b = c.b()*255;
-
-                cloud->push_back(pt);
+                QString axis_id = id + "_axis";
+                if(viewer->contains(axis_id.toStdString()))
+                {
+                    viewer->removeCoordinateSystem(axis_id.toStdString());
+                }
             }
-
-            if(!viewer->updatePointCloud(cloud, "map_pts"))
-            {
-                viewer->addPointCloud(cloud, "map_pts");
-            }
-
-            // point size
-            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+            last_plot_nodes.clear();
         }
 
-        // obsmap update
-        if(is_obs_update)
+        // remove edges
+        if(last_plot_edges.size() > 0)
         {
-            is_obs_update = false;
-
-            cv::Mat obs_map;
-            cv::Mat dyn_map;
-            Eigen::Matrix4d obs_tf;
-            obsmap.get_obs_map(obs_map, obs_tf);
-            obsmap.get_dyn_map(dyn_map, obs_tf);
-
-            std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
-
-            // plot grid map
+            for(size_t p = 0; p < last_plot_edges.size(); p++)
             {
-                cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
-                obsmap.draw_robot(plot_obs_map, obs_tf);
-
-                for(int i = 0; i < obs_map.rows; i++)
+                QString id = last_plot_edges[p];
+                if(viewer->contains(id.toStdString()))
                 {
-                    for(int j = 0; j < obs_map.cols; j++)
-                    {
-                        if(obs_map.ptr<uchar>(i)[j] == 255)
-                        {
-                            plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
-                        }
-
-                        if(dyn_map.ptr<uchar>(i)[j] == 255)
-                        {
-                            plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
-                        }
-                    }
+                    viewer->removeShape(id.toStdString());
                 }
-
-                ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
-                ui->lb_Screen1->setScaledContents(true);
-                ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
-
-            // plot obs pts
-            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-            for(size_t p = 0; p < obs_pts.size(); p++)
-            {
-                double x = obs_pts[p][0];
-                double y = obs_pts[p][1];
-                double z = obs_pts[p][2];
-                double prob = obs_pts[p][3];
-
-                if(prob <= 0.5)
-                {
-                    continue;
-                }
-
-                tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
-
-                pcl::PointXYZRGB pt;
-                pt.x = x;
-                pt.y = y;
-                pt.z = z;
-                pt.r = c.r()*255;
-                pt.g = c.g()*255;
-                pt.b = c.b()*255;
-                cloud->push_back(pt);
-            }
-
-            if(!viewer->updatePointCloud(cloud, "obs_pts"))
-            {
-                viewer->addPointCloud(cloud, "obs_pts");
-            }
-
-            // point size
-            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+            last_plot_edges.clear();
         }
 
-        // draw topo
-        if(is_topo_update)
+        // remove names
+        if(last_plot_names.size() > 0)
         {
-            is_topo_update = false;
-
-            // erase first
-            if(last_plot_nodes.size() > 0)
+            for(size_t p = 0; p < last_plot_names.size(); p++)
             {
-                for(size_t p = 0; p < last_plot_nodes.size(); p++)
+                QString id = last_plot_names[p];
+                if(viewer->contains(id.toStdString()))
                 {
-                    QString id = last_plot_nodes[p];
-                    if(viewer->contains(id.toStdString()))
+                    viewer->removeShape(id.toStdString());
+                }
+            }
+            last_plot_names.clear();
+        }
+
+        // draw
+        if(unimap.nodes.size() > 0)
+        {
+            if(ui->ckb_PlotNodes->isChecked())
+            {
+                // draw nodes
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
+                {
+                    QString id = unimap.nodes[p].id;
+                    if(unimap.nodes[p].type == "ROUTE")
                     {
-                        viewer->removeShape(id.toStdString());
+                        viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        QString axis_id = id + "_axis";
+                        viewer->addCoordinateSystem(0.2, axis_id.toStdString());
+                        viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
+                    else if(unimap.nodes[p].type == "GOAL")
+                    {
+                        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        QString axis_id = id + "_axis";
+                        viewer->addCoordinateSystem(1.0, axis_id.toStdString());
+                        viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
+                    else if(unimap.nodes[p].type == "OBS")
+                    {
+                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
+
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "ZONE")
+                    {
+                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 1.0, id.toStdString());
+
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "GATE")
+                    {
+                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 1.0, 0.0, id.toStdString());
+
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "SIGNAL")
+                    {
+                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 0.0, id.toStdString());
+
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
                     }
 
-                    QString axis_id = id + "_axis";
-                    if(viewer->contains(axis_id.toStdString()))
-                    {
-                        viewer->removeCoordinateSystem(axis_id.toStdString());
-                    }
+                    // for erase
+                    last_plot_nodes.push_back(id);
                 }
-                last_plot_nodes.clear();
             }
 
-            // remove edges
-            if(last_plot_edges.size() > 0)
+            if(ui->ckb_PlotEdges->isChecked())
             {
-                for(size_t p = 0; p < last_plot_edges.size(); p++)
+                // draw edges
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = last_plot_edges[p];
-                    if(viewer->contains(id.toStdString()))
+                    Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
+                    for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
-                        viewer->removeShape(id.toStdString());
+                        NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
+                        Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
+                        Eigen::Vector3d P_mid = (P0+P1)/2;
+
+                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
+                        pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
+                        pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+
+                        QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
+                        QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
+
+                        viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
+                        viewer->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
+
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
+
+                        last_plot_edges.push_back(id0);
+                        last_plot_edges.push_back(id1);
                     }
                 }
-                last_plot_edges.clear();
             }
 
-            // remove names
-            if(last_plot_names.size() > 0)
+            if(ui->ckb_PlotNames->isChecked())
             {
-                for(size_t p = 0; p < last_plot_names.size(); p++)
+                // draw names
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = last_plot_names[p];
-                    if(viewer->contains(id.toStdString()))
+                    QString id = unimap.nodes[p].id;
+                    if(unimap.nodes[p].type == "GOAL" ||
+                       unimap.nodes[p].type == "ZONE" ||
+                       unimap.nodes[p].type == "GATE" ||
+                       unimap.nodes[p].type == "SIGNAL")
                     {
-                        viewer->removeShape(id.toStdString());
-                    }
-                }
-                last_plot_names.clear();
-            }
+                        // plot text
+                        QString text_id = id + "_text";
+                        pcl::PointXYZ position;
+                        position.x = unimap.nodes[p].tf(0,3);
+                        position.y = unimap.nodes[p].tf(1,3);
+                        position.z = unimap.nodes[p].tf(2,3) + 1.0;
+                        viewer->addText3D(id.toStdString(), position, 0.15, 0.0, 0.0, 0.0, text_id.toStdString());
 
-            // draw
-            if(unimap.nodes.size() > 0)
-            {
-                if(ui->ckb_PlotNodes->isChecked())
-                {
-                    // draw nodes
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
-                    {
-                        QString id = unimap.nodes[p].id;
-                        if(unimap.nodes[p].type == "ROUTE")
-                        {
-                            viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
-                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-
-                            QString axis_id = id + "_axis";
-                            viewer->addCoordinateSystem(0.2, axis_id.toStdString());
-                            viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        }
-                        else if(unimap.nodes[p].type == "GOAL")
-                        {
-                            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                             config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                             0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
-                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-
-                            QString axis_id = id + "_axis";
-                            viewer->addCoordinateSystem(1.0, axis_id.toStdString());
-                            viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        }
-                        else if(unimap.nodes[p].type == "OBS")
-                        {
-                            viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                            -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                            0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
-
-                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-                        }
-
-                        // for erase
-                        last_plot_nodes.push_back(id);
-                    }
-                }
-
-                if(ui->ckb_PlotEdges->isChecked())
-                {
-                    // draw edges
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
-                    {
-                        Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
-                        for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
-                        {
-                            NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
-                            Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
-                            Eigen::Vector3d P_mid = (P0+P1)/2;
-
-                            pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
-                            pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
-                            pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
-
-                            QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
-                            QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
-
-                            viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
-                            viewer->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
-
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
-                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
-
-                            last_plot_edges.push_back(id0);
-                            last_plot_edges.push_back(id1);
-                        }
-                    }
-                }
-
-                if(ui->ckb_PlotNames->isChecked())
-                {
-                    // draw names
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
-                    {
-                        QString id = unimap.nodes[p].id;
-                        if(unimap.nodes[p].type == "GOAL")
-                        {
-                            // plot text
-                            QString text_id = id + "_text";
-                            pcl::PointXYZ position;
-                            position.x = unimap.nodes[p].tf(0,3);
-                            position.y = unimap.nodes[p].tf(1,3);
-                            position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                            viewer->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
-
-                            last_plot_names.push_back(text_id);
-                        }
+                        last_plot_names.push_back(text_id);
                     }
                 }
             }
         }
     }
+}
+void MainWindow::pick_plot()
+{
+    // draw cursors
+    if(is_pick_update)
+    {
+        is_pick_update = false;
 
-    // plot cloud data
+        // erase first
+        if(viewer->contains("O_pick"))
+        {
+            viewer->removeCoordinateSystem("O_pick");
+        }
+
+        if(viewer->contains("pick_body"))
+        {
+            viewer->removeShape("pick_body");
+        }
+
+        if(viewer->contains("pick_text"))
+        {
+            viewer->removeShape("pick_text");
+        }
+
+        if(viewer->contains("sel_cur"))
+        {
+            viewer->removeShape("sel_cur");
+        }
+
+        if(viewer->contains("sel_pre"))
+        {
+            viewer->removeShape("sel_pre");
+        }
+
+        if(pick.cur_node != "")
+        {
+            NODE *node = unimap.get_node_by_id(pick.cur_node);
+            if(node != NULL)
+            {
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "sel_cur");
+            }
+        }
+
+        if(pick.last_btn == 1)
+        {
+            Eigen::Matrix4d pick_tf = se2_to_TF(pick.r_pose);
+
+            // draw pose
+            viewer->addCoordinateSystem(1.0, "O_pick");
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+
+            viewer->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+            viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
+
+            // plot text
+            pcl::PointXYZ position;
+            position.x = pick_tf(0,3);
+            position.y = pick_tf(1,3);
+            position.z = pick_tf(2,3) + 1.0;
+
+            QString text;
+            text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
+        }
+    }
+}
+void MainWindow::slam_plot()
+{
     if(slam.is_slam)
     {
         // mapping
@@ -2729,7 +2627,10 @@ void MainWindow::plot_loop()
             slam.mtx.unlock();
         }
     }
-    else if(slam.is_loc)
+}
+void MainWindow::loc_plot()
+{
+    if(slam.is_loc)
     {
         // remove first
         for(size_t p = 0; p < last_plot_kfrms.size(); p++)
@@ -2794,9 +2695,9 @@ void MainWindow::plot_loop()
 
             // set pos
             pcl::PointXYZRGB pt;
-            pt.x = P[0];
-            pt.y = P[1];
-            pt.z = P[2];
+            pt.x = _P[0];
+            pt.y = _P[1];
+            pt.z = _P[2];
             pt.r = 0;
             pt.g = 128;
             pt.b = 128;
@@ -2810,46 +2711,69 @@ void MainWindow::plot_loop()
 
         // pose update
         viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tpp.tf.cast<float>()));
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");        
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
+    }
+}
+void MainWindow::live_plot()
+{
+    // plot mobile info
+    if(mobile.is_connected)
+    {
+        // plot mobile pose
+        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
 
-        // plot tactile
+        // plot mobile status
+        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+    }
+
+    // plot slam info
+    if(slam.is_slam || slam.is_loc)
+    {
+        ui->lb_SlamInfo->setText(slam.get_info_text());
+    }
+
+    // plot que info
+    QString que_info_str;
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%f",
+                         (int)lidar.scan_que.unsafe_size(),
+                         (int)mobile.msg_que.unsafe_size(),
+                         (int)slam.kfrm_que.unsafe_size(),
+                         (double)plot_proc_t);
+    ui->lb_QueInfo->setText(que_info_str);
+
+    // plot auto info
+    QString auto_info_str;
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s",
+                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
+                          (bool)ctrl.is_moving ? "true" : "false",
+                          (bool)ctrl.is_pause ? "true" : "false",
+                          ctrl.get_obs_condition().toLocal8Bit().data());
+    ui->lb_AutoInfo->setText(auto_info_str);
+
+    // plot cam
+    if(cam.is_connected0)
+    {
+        cv::Mat plot = cam.get_img0();
+        if(!plot.empty())
         {
-            // erase first
-            if(last_plot_tactile.size() > 0)
-            {
-                for(size_t p = 0; p < last_plot_tactile.size(); p++)
-                {
-                    QString name = last_plot_tactile[p];
-                    if(viewer->contains(name.toStdString()))
-                    {
-                        viewer->removeShape(name.toStdString());
-                    }
-                }
-                last_plot_tactile.clear();
-            }
-
-            //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
-            Eigen::Vector3d vel = mobile.get_pose().vel;
-            std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
-            for(size_t p = 0; p < traj.size(); p++)
-            {
-                QString name;
-                name.sprintf("traj_%d", (int)p);
-
-                viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
-
-                viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
-
-                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
-                                                    pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
-                                                    name.toStdString());
-                last_plot_tactile.push_back(name);
-            }
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
-    else
+
+    if(cam.is_connected1)
+    {
+        cv::Mat plot = cam.get_img1();
+        if(!plot.empty())
+        {
+            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen3->setScaledContents(true);
+            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    if(!slam.is_slam && !slam.is_loc)
     {
         // remove first
         for(size_t p = 0; p < last_plot_kfrms.size(); p++)
@@ -2933,7 +2857,6 @@ void MainWindow::plot_loop()
             cloud->push_back(pt);
         }
 
-
         /*
         // raw data
         std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
@@ -2976,13 +2899,13 @@ void MainWindow::plot_loop()
             viewer->addPointCloud(cloud, "raw_pts");
         }
 
-
         // pose update
-        viewer->updatePointCloudPose("raw_pts", Eigen::Affine3f(cur_tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
-
-    // plot global path    
+}
+void MainWindow::drive_plot()
+{
+    // plot global path
     if(is_global_path_update)
     {
         is_global_path_update = false;
@@ -3081,73 +3004,6 @@ void MainWindow::plot_loop()
         }
     }
 
-    // draw cursors
-    if(is_pick_update)
-    {
-        is_pick_update = false;
-
-        // erase first
-        if(viewer->contains("O_pick"))
-        {
-            viewer->removeCoordinateSystem("O_pick");
-        }
-
-        if(viewer->contains("pick_body"))
-        {
-            viewer->removeShape("pick_body");
-        }
-
-        if(viewer->contains("pick_text"))
-        {
-            viewer->removeShape("pick_text");
-        }
-
-        if(viewer->contains("sel_cur"))
-        {
-            viewer->removeShape("sel_cur");
-        }
-
-        if(viewer->contains("sel_pre"))
-        {
-            viewer->removeShape("sel_pre");
-        }
-
-        if(pick.cur_node != "")
-        {
-            NODE *node = unimap.get_node_by_id(pick.cur_node);
-            if(node != NULL)
-            {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 1.0, 1.0);
-                viewer->addPolygonMesh(donut, "sel_cur");
-            }
-        }
-
-        if(pick.last_btn == 1)
-        {
-            Eigen::Matrix4d pick_tf = se2_to_TF(pick.r_pose);
-
-            // draw pose
-            viewer->addCoordinateSystem(1.0, "O_pick");
-            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
-
-            viewer->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
-            viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
-
-            // plot text
-            pcl::PointXYZ position;
-            position.x = pick_tf(0,3);
-            position.y = pick_tf(1,3);
-            position.z = pick_tf(2,3) + 1.0;
-
-            QString text;
-            text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
-        }
-    }
-
     // draw control points
     if(ctrl.is_moving)
     {
@@ -3171,16 +3027,16 @@ void MainWindow::plot_loop()
         {
             ctrl.mtx.lock();
             Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
-            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;            
+            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
             Eigen::Vector3d local_goal = ctrl.last_local_goal;
             ctrl.mtx.unlock();
 
             viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
-            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");            
+            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
             viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
 
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");            
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
         }
     }
@@ -3202,8 +3058,10 @@ void MainWindow::plot_loop()
         }
     }
 
+    // cur tf
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
     // draw robot
-    if(pre_tf.isIdentity() || !pre_tf.isApprox(cur_tf))
     {
         // draw axis
         if(viewer->contains("robot_axis"))
@@ -3238,25 +3096,71 @@ void MainWindow::plot_loop()
         QString text;
         text.sprintf("%.2f/%.2f/%.2f", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D);
         viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 1.0, 1.0, "vel_text");
-
-        pre_tf = cur_tf;
     }
+
+    // plot tactile
+    {
+        // erase first
+        if(last_plot_tactile.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_tactile.size(); p++)
+            {
+                QString name = last_plot_tactile[p];
+                if(viewer->contains(name.toStdString()))
+                {
+                    viewer->removeShape(name.toStdString());
+                }
+            }
+            last_plot_tactile.clear();
+        }
+
+        //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
+        Eigen::Vector3d vel = mobile.get_pose().vel;
+        std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
+        for(size_t p = 0; p < traj.size(); p++)
+        {
+            QString name;
+            name.sprintf("traj_%d", (int)p);
+
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
+
+            viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                name.toStdString());
+            last_plot_tactile.push_back(name);
+        }
+    }
+}
+void MainWindow::plot_loop()
+{
+    double st_time = get_time();
+
+    map_plot();
+    obs_plot();
+    topo_plot();
+    pick_plot();
+
+    slam_plot();
+    loc_plot();
+    live_plot();
+
+    drive_plot();
 
     // camera reset
     if(is_set_top_view)
     {
         is_set_top_view = false;
-
-        double x = cur_tf(0,3);
-        double y = cur_tf(1,3);
-        viewer->setCameraPosition(x, y, 30, x, y, 0, 0, 1, 0);
+        viewer->setCameraPosition(0, 0, 30, 0, 0, 0, 0, 1, 0);
         printf("[MAIN] set top view camera\n");
     }
 
     if(is_view_reset)
     {
         is_view_reset = false;
-
         viewer->resetCamera();
         printf("[MAIN] reset view camera\n");
     }
@@ -3264,211 +3168,283 @@ void MainWindow::plot_loop()
     // rendering
     ui->qvtkWidget->renderWindow()->Render();    
     plot_proc_t = get_time() - st_time;
+    if(plot_proc_t > 0.1)
+    {
+        printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
+    }
 }
 
-void MainWindow::plot_loop2()
+
+// for plot loop2
+void MainWindow::map_plot2()
 {
-    // get cur tf
-    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-    // plot map & annotation
-    if(unimap.is_loaded)
+    if(unimap.is_loaded == false)
     {
-        // draw map
-        if(is_map_update2)
+        return;
+    }
+
+    // draw map
+    if(is_map_update2)
+    {
+        is_map_update2 = false;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
         {
-            is_map_update2 = false;
+            pcl::PointXYZRGB pt;
+            pt.x = unimap.kdtree_cloud.pts[p].x;
+            pt.y = unimap.kdtree_cloud.pts[p].y;
+            pt.z = unimap.kdtree_cloud.pts[p].z;
 
-            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+            double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
+            tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
+
+            if(unimap.kdtree_mask[p] == 0)
             {
-                pcl::PointXYZRGB pt;
-                pt.x = unimap.kdtree_cloud.pts[p].x;
-                pt.y = unimap.kdtree_cloud.pts[p].y;
-                pt.z = unimap.kdtree_cloud.pts[p].z;
-
-                double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
-                tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
-
-                pt.r = c.r()*255;
-                pt.g = c.g()*255;
-                pt.b = c.b()*255;
-
-                if(unimap.kdtree_mask[p] == 0)
-                {
-                    pt.r = 255;
-                    pt.g = 0;
-                    pt.b = 0;
-                }
-
-                cloud->push_back(pt);
+                pt.r = 255;
+                pt.g = 0;
+                pt.b = 0;
             }
 
-            if(!viewer2->updatePointCloud(cloud, "map_pts"))
-            {
-                viewer2->addPointCloud(cloud, "map_pts");
-            }
-
-            // point size
-            viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+            cloud->push_back(pt);
         }
 
-        // draw topo
-        if(is_topo_update2)
+        if(!viewer2->updatePointCloud(cloud, "map_pts"))
         {
-            is_topo_update2 = false;
+            viewer2->addPointCloud(cloud, "map_pts");
+        }
 
-            // erase first
-            if(last_plot_nodes2.size() > 0)
+        // point size
+        viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+    }
+}
+void MainWindow::topo_plot2()
+{
+    if(unimap.is_loaded == false)
+    {
+        return;
+    }
+
+    // draw topo
+    if(is_topo_update2)
+    {
+        is_topo_update2 = false;
+
+        // erase first
+        if(last_plot_nodes2.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_nodes2.size(); p++)
             {
-                for(size_t p = 0; p < last_plot_nodes2.size(); p++)
+                QString id = last_plot_nodes2[p];
+                if(viewer2->contains(id.toStdString()))
                 {
-                    QString id = last_plot_nodes2[p];
-                    if(viewer2->contains(id.toStdString()))
+                    viewer2->removeShape(id.toStdString());
+                }
+
+                QString axis_id = id + "_axis";
+                if(viewer2->contains(axis_id.toStdString()))
+                {
+                    viewer2->removeCoordinateSystem(axis_id.toStdString());
+                }
+            }
+            last_plot_nodes2.clear();
+        }
+
+        // remove edges
+        if(last_plot_edges2.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_edges2.size(); p++)
+            {
+                QString id = last_plot_edges2[p];
+                if(viewer2->contains(id.toStdString()))
+                {
+                    viewer2->removeShape(id.toStdString());
+                }
+            }
+            last_plot_edges2.clear();
+        }
+
+        // remove names
+        if(last_plot_names2.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_names2.size(); p++)
+            {
+                QString id = last_plot_names2[p];
+                if(viewer2->contains(id.toStdString()))
+                {
+                    viewer2->removeShape(id.toStdString());
+                }
+            }
+            last_plot_names2.clear();
+        }
+
+        // draw
+        if(unimap.nodes.size() > 0)
+        {
+            if(ui->ckb_PlotNodes2->isChecked())
+            {
+                // draw nodes
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
+                {
+                    QString id = unimap.nodes[p].id;
+                    if(unimap.nodes[p].type == "ROUTE")
                     {
-                        viewer2->removeShape(id.toStdString());
+                        viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        QString axis_id = id + "_axis";
+                        viewer2->addCoordinateSystem(0.2, axis_id.toStdString());
+                        viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
+                    else if(unimap.nodes[p].type == "GOAL")
+                    {
+                        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        QString axis_id = id + "_axis";
+                        viewer2->addCoordinateSystem(1.0, axis_id.toStdString());
+                        viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
+                    else if(unimap.nodes[p].type == "OBS")
+                    {
+                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
+
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "ZONE")
+                    {
+                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 1.0, id.toStdString());
+
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "GATE")
+                    {
+                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 1.0, 0.0, id.toStdString());
+
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                    }
+                    else if(unimap.nodes[p].type == "SIGNAL")
+                    {
+                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
+                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 0.0, id.toStdString());
+
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
                     }
 
-                    QString axis_id = id + "_axis";
-                    if(viewer2->contains(axis_id.toStdString()))
-                    {
-                        viewer2->removeCoordinateSystem(axis_id.toStdString());
-                    }
+                    // for erase
+                    last_plot_nodes2.push_back(id);
                 }
-                last_plot_nodes2.clear();
             }
 
-            // remove edges
-            if(last_plot_edges2.size() > 0)
+            if(ui->ckb_PlotEdges2->isChecked())
             {
-                for(size_t p = 0; p < last_plot_edges2.size(); p++)
+                // draw edges
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = last_plot_edges2[p];
-                    if(viewer2->contains(id.toStdString()))
+                    Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
+                    for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
-                        viewer2->removeShape(id.toStdString());
+                        NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
+                        Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
+                        Eigen::Vector3d P_mid = (P0+P1)/2;
+
+                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
+                        pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
+                        pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+
+                        QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
+                        QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
+
+                        viewer2->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
+                        viewer2->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
+
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
+
+                        last_plot_edges2.push_back(id0);
+                        last_plot_edges2.push_back(id1);
                     }
                 }
-                last_plot_edges2.clear();
             }
 
-            // remove names
-            if(last_plot_names2.size() > 0)
+            if(ui->ckb_PlotNames2->isChecked())
             {
-                for(size_t p = 0; p < last_plot_names2.size(); p++)
+                // draw nodes
+                for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = last_plot_names2[p];
-                    if(viewer2->contains(id.toStdString()))
+                    QString id = unimap.nodes[p].id;
+                    if(unimap.nodes[p].type == "GOAL" ||
+                       unimap.nodes[p].type == "ZONE" ||
+                       unimap.nodes[p].type == "GATE" ||
+                       unimap.nodes[p].type == "SIGNAL")
                     {
-                        viewer2->removeShape(id.toStdString());
+                        // plot text
+                        QString text_id = id + "_text";
+                        pcl::PointXYZ position;
+                        position.x = unimap.nodes[p].tf(0,3);
+                        position.y = unimap.nodes[p].tf(1,3);
+                        position.z = unimap.nodes[p].tf(2,3) + 1.0;
+                        viewer2->addText3D(id.toStdString(), position, 0.15, 0.0, 0.0, 0.0, text_id.toStdString());
+
+                        last_plot_names2.push_back(text_id);
                     }
                 }
-                last_plot_names2.clear();
             }
+        }
 
-            // draw
-            if(unimap.nodes.size() > 0)
+        // draw zone
+        for(size_t p = 0; p < unimap.zones.size(); p++)
+        {
+            if(unimap.zones[p].size() >= 3)
             {
-                if(ui->ckb_PlotNodes2->isChecked())
+                pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+                for(size_t q = 0; q < unimap.zones[p].size(); q++)
                 {
-                    // draw nodes
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
+                    NODE *node = unimap.get_node_by_id(unimap.zones[p][q]);
+                    if(node != NULL)
                     {
-                        QString id = unimap.nodes[p].id;
-                        if(unimap.nodes[p].type == "ROUTE")
-                        {
-                            viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
-                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-
-                            QString axis_id = id + "_axis";
-                            viewer2->addCoordinateSystem(0.2, axis_id.toStdString());
-                            viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        }
-                        else if(unimap.nodes[p].type == "GOAL")
-                        {
-                            viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                             config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                             0, 0.1, 0.5, 1.0, 0.0, id.toStdString());                            
-                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-
-                            QString axis_id = id + "_axis";
-                            viewer2->addCoordinateSystem(1.0, axis_id.toStdString());
-                            viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        }
-                        else if(unimap.nodes[p].type == "OBS")
-                        {
-                            viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                            -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                            0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
-
-                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
-                        }
-
-                        // for erase
-                        last_plot_nodes2.push_back(id);
+                        pcl::PointXYZ pt;
+                        pt.x = node->tf(0,3);
+                        pt.y = node->tf(1,3);
+                        pt.z = node->tf(2,3);
+                        cloud->push_back(pt);
                     }
                 }
 
-                if(ui->ckb_PlotEdges2->isChecked())
-                {
-                    // draw edges
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
-                    {
-                        Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
-                        for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
-                        {
-                            NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
-                            Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
-                            Eigen::Vector3d P_mid = (P0+P1)/2;
+                pcl::ConvexHull<pcl::PointXYZ> hull;
+                hull.setInputCloud(cloud);
 
-                            pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
-                            pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
-                            pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+                pcl::PolygonMesh mesh;
+                hull.reconstruct(mesh);
 
-                            QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
-                            QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
-
-                            viewer2->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
-                            viewer2->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
-
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
-                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
-
-                            last_plot_edges2.push_back(id0);
-                            last_plot_edges2.push_back(id1);
-                        }
-                    }
-                }
-
-                if(ui->ckb_PlotNames2->isChecked())
-                {
-                    // draw nodes
-                    for(size_t p = 0; p < unimap.nodes.size(); p++)
-                    {
-                        QString id = unimap.nodes[p].id;
-                        if(unimap.nodes[p].type == "GOAL")
-                        {
-                            // plot text
-                            QString text_id = id + "_text";
-                            pcl::PointXYZ position;
-                            position.x = unimap.nodes[p].tf(0,3);
-                            position.y = unimap.nodes[p].tf(1,3);
-                            position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                            viewer2->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
-
-                            last_plot_names2.push_back(text_id);
-                        }
-                    }
-                }
+                viewer2->addPolygonMesh(mesh, "polygon");
             }
         }
     }
-
+}
+void MainWindow::pick_plot2()
+{
     // draw cursors
     if(is_pick_update2)
     {
@@ -3621,11 +3597,14 @@ void MainWindow::plot_loop2()
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
-                else if(ui->cb_NodeType->currentText() == "OBS")
+                else if(ui->cb_NodeType->currentText() == "OBS" ||
+                        ui->cb_NodeType->currentText() == "ZONE" ||
+                        ui->cb_NodeType->currentText() == "GATE" ||
+                        ui->cb_NodeType->currentText() == "SIGNAL")
                 {
                     viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
                                      -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                     0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, "pick_body");
+                                     0.0, VIRTUAL_OBS_SIZE, 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
@@ -3644,9 +3623,13 @@ void MainWindow::plot_loop2()
             }
         }
     }
+}
+void MainWindow::loc_plot2()
+{
+    // get cur tf
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
 
     // draw robot
-    if(pre_tf2.isIdentity() || !pre_tf2.isApprox(cur_tf))
     {
         // draw axis
         if(viewer2->contains("robot_axis"))
@@ -3666,10 +3649,14 @@ void MainWindow::plot_loop2()
                         config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
         viewer2->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
         viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-
-        // update last pose
-        pre_tf2 = cur_tf;
     }
+}
+void MainWindow::plot_loop2()
+{
+    map_plot2();
+    topo_plot2();
+    pick_plot2();
+    loc_plot2();
 
     // rendering
     ui->qvtkWidget2->renderWindow()->Render();    

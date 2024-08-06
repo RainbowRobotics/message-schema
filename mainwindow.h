@@ -73,8 +73,6 @@ public:
     // vars
     QString map_dir = "";
     std::atomic<double> plot_proc_t = {0};
-    Eigen::Matrix4d pre_tf;
-    Eigen::Matrix4d pre_tf2;
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -122,6 +120,21 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+
+    // 3d plot funcs
+    void map_plot();
+    void obs_plot();
+    void topo_plot();
+    void pick_plot();
+    void slam_plot();
+    void loc_plot();
+    void live_plot();
+    void drive_plot();
+
+    void map_plot2();
+    void topo_plot2();
+    void pick_plot2();
+    void loc_plot2();
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
@@ -171,23 +184,18 @@ public Q_SLOTS:
     void bt_EditNodeType();
     void bt_EditNodeInfo();
     void bt_MinGapNodeX();
-    void bt_MinGapNodeY();
-    void bt_MinGapNodeZ();
+    void bt_MinGapNodeY();    
     void bt_AlignNodeX();
-    void bt_AlignNodeY();
-    void bt_AlignNodeZ();
+    void bt_AlignNodeY();    
     void bt_AlignNodeTh();
     void bt_ClearTopo();
 
-    void bt_NodePoseXUp();
-    void bt_NodePoseYUp();
-    void bt_NodePoseThUp();
-    void bt_NodePoseXDown();
-    void bt_NodePoseYDown();
-    void bt_NodePoseThDown();
-
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
+
+    // zone
+    void bt_SetZone();
+    void bt_ClearZone();
 
     // mapping & localization
     void bt_MapBuild();    
