@@ -501,7 +501,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 picking_ray(x, y, w, h, ray_center, ray_direction, viewer);
 
                 Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                pick.cur_node = unimap.get_node_id(pt);
+                //pick.cur_node = unimap.get_node_id(pt);
+                pick.cur_node = unimap.get_goal_id(pt);
 
                 // update last mouse button
                 pick.last_btn = 0;
@@ -2406,20 +2407,33 @@ void MainWindow::topo_plot()
             {
                 // draw names
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {
-                    QString id = unimap.nodes[p].id;
-                    if(unimap.nodes[p].type == "GOAL" ||
-                       unimap.nodes[p].type == "ZONE" ||
-                       unimap.nodes[p].type == "GATE" ||
-                       unimap.nodes[p].type == "SIGNAL")
+                {                    
+                    if(unimap.nodes[p].type == "GOAL")
                     {
                         // plot text
+                        QString id = unimap.nodes[p].id;
+
                         QString text_id = id + "_text";
                         pcl::PointXYZ position;
                         position.x = unimap.nodes[p].tf(0,3);
                         position.y = unimap.nodes[p].tf(1,3);
                         position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                        viewer->addText3D(id.toStdString(), position, 0.15, 0.0, 0.0, 0.0, text_id.toStdString());
+                        viewer->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
+
+                        last_plot_names.push_back(text_id);
+                    }
+                    else if(unimap.nodes[p].type == "ZONE")
+                    {
+                        // plot text
+                        QString id = unimap.nodes[p].id;
+                        QString name = unimap.nodes[p].name;
+
+                        QString text_id = id + "_text";
+                        pcl::PointXYZ position;
+                        position.x = unimap.nodes[p].tf(0,3);
+                        position.y = unimap.nodes[p].tf(1,3);
+                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
+                        viewer->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
 
                         last_plot_names.push_back(text_id);
                     }
@@ -3084,9 +3098,41 @@ void MainWindow::ctrl_plot()
         position.y = cur_tf(1,3);
         position.z = cur_tf(2,3) + 1.5;
 
+        // check zone
+        QString zone = "";
+        std::vector<QString> zones = unimap.get_nodes("ZONE");
+        for(size_t p = 0; p < zones.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(zones[p]);
+            if(node != NULL)
+            {
+                QString name = node->name;
+                QString info = node->info;
+
+                NODE_INFO res;
+                if(parse_info(info, "SIZE", res))
+                {
+                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
+
+                    double x = tf(0,3);
+                    double y = tf(1,3);
+                    double z = tf(2,3);
+
+                    if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
+                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
+                       z > -res.sz[2]/2 && z < res.sz[2]/2)
+                    {
+                        // current zone
+                        zone = name;
+                        break;
+                    }
+                }
+            }
+        }
+
         QString text;
-        text.sprintf("%.2f/%.2f/%.2f", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D);
-        viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 1.0, 1.0, "vel_text");
+        text.sprintf("%.2f/%.2f/%.2f\n%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
+        viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 1.0, 1.0, "vel_text");
     }
 
     // plot tactile
@@ -3125,6 +3171,9 @@ void MainWindow::ctrl_plot()
             last_plot_tactile.push_back(name);
         }
     }
+
+
+
 }
 void MainWindow::plot_loop()
 {
@@ -3390,19 +3439,32 @@ void MainWindow::topo_plot2()
                 // draw nodes
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = unimap.nodes[p].id;
-                    if(unimap.nodes[p].type == "GOAL" ||
-                       unimap.nodes[p].type == "ZONE" ||
-                       unimap.nodes[p].type == "GATE" ||
-                       unimap.nodes[p].type == "SIGNAL")
+                    if(unimap.nodes[p].type == "GOAL")
                     {
                         // plot text
+                        QString id = unimap.nodes[p].id;
+
                         QString text_id = id + "_text";
                         pcl::PointXYZ position;
                         position.x = unimap.nodes[p].tf(0,3);
                         position.y = unimap.nodes[p].tf(1,3);
                         position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                        viewer2->addText3D(id.toStdString(), position, 0.15, 0.0, 0.0, 0.0, text_id.toStdString());
+                        viewer2->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
+
+                        last_plot_names2.push_back(text_id);
+                    }
+                    else if(unimap.nodes[p].type == "ZONE")
+                    {
+                        // plot text
+                        QString id = unimap.nodes[p].id;
+                        QString name = unimap.nodes[p].name;
+
+                        QString text_id = id + "_text";
+                        pcl::PointXYZ position;
+                        position.x = unimap.nodes[p].tf(0,3);
+                        position.y = unimap.nodes[p].tf(1,3);
+                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
+                        viewer2->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
 
                         last_plot_names2.push_back(text_id);
                     }
@@ -3530,8 +3592,21 @@ void MainWindow::pick_plot2()
                 NODE *node = unimap.get_node_by_id(pick.pre_node);
                 if(node != NULL)
                 {
-                    pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
-                    viewer2->addPolygonMesh(donut, "sel_pre");
+                    if(node->type == "ZONE")
+                    {
+                        NODE_INFO res;
+                        if(parse_info(node->info, "SIZE", res))
+                        {
+                            double r = std::min<double>(res.sz[0], res.sz[1])/2;
+                            pcl::PolygonMesh donut = make_donut(r, 0.05, node->tf, 1.0, 0.0, 0.0);
+                            viewer2->addPolygonMesh(donut, "sel_pre");
+                        }
+                    }
+                    else
+                    {
+                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
+                        viewer2->addPolygonMesh(donut, "sel_pre");
+                    }
                 }
             }
 
@@ -3540,8 +3615,21 @@ void MainWindow::pick_plot2()
                 NODE *node = unimap.get_node_by_id(pick.cur_node);
                 if(node != NULL)
                 {
-                    pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
-                    viewer2->addPolygonMesh(donut, "sel_cur");
+                    if(node->type == "ZONE")
+                    {
+                        NODE_INFO res;
+                        if(parse_info(node->info, "SIZE", res))
+                        {
+                            double r = std::min<double>(res.sz[0], res.sz[1])/2;
+                            pcl::PolygonMesh donut = make_donut(r, 0.05, node->tf, 0.0, 1.0, 0.0);
+                            viewer2->addPolygonMesh(donut, "sel_cur");
+                        }
+                    }
+                    else
+                    {
+                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
+                        viewer2->addPolygonMesh(donut, "sel_cur");
+                    }
                 }
             }
 

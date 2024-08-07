@@ -270,8 +270,15 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
 {
     if(pick.cur_node == "")
     {
+        QString name = "";
+        if(type == "ZONE")
+        {
+            name = QInputDialog::getText(nullptr, "INPUT", "name:");
+        }
+
         NODE node;
         node.id = gen_node_id();
+        node.name = name;
         node.type = type;
         node.info = info;
         node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);        
@@ -550,6 +557,36 @@ QString UNIMAP::get_node_id(Eigen::Vector3d pos)
         {
             min_d = d;
             min_idx = p;
+        }
+    }
+
+    if(min_idx != -1)
+    {
+        return nodes[min_idx].id;
+    }
+    return "";
+}
+
+QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
+{
+    if(nodes.size() == 0)
+    {
+        return "";
+    }
+
+    // find node
+    int min_idx = -1;
+    double min_d = 99999999;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        if(nodes[p].type == "GOAL")
+        {
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+            if(d < config->ROBOT_RADIUS*2 && d < min_d)
+            {
+                min_d = d;
+                min_idx = p;
+            }
         }
     }
 

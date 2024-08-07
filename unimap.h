@@ -35,8 +35,9 @@ public:
     // topology
     std::vector<QString> get_linked_nodes(QString id);
     std::vector<QString> get_nodes(QString type);
-    QString gen_node_id();
+    QString gen_node_id();    
     QString get_node_id(Eigen::Vector3d pos);
+    QString get_goal_id(Eigen::Vector3d pos);
     QString get_node_id_nn(Eigen::Vector3d pos);
     NODE* get_node_by_id(QString id);
 

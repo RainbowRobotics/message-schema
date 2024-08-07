@@ -1569,9 +1569,9 @@ stop</string>
              <widget class="QPushButton" name="bt_EditNodeInfo">
               <property name="geometry">
                <rect>
-                <x>310</x>
+                <x>330</x>
                 <y>70</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1582,9 +1582,9 @@ stop</string>
              <widget class="QPushButton" name="bt_AddLink2">
               <property name="geometry">
                <rect>
-                <x>190</x>
+                <x>230</x>
                 <y>70</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1598,9 +1598,9 @@ stop</string>
              <widget class="QPushButton" name="bt_EditNodePos">
               <property name="geometry">
                <rect>
-                <x>310</x>
+                <x>330</x>
                 <y>10</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1614,9 +1614,9 @@ stop</string>
              <widget class="QPushButton" name="bt_AddNode">
               <property name="geometry">
                <rect>
-                <x>190</x>
+                <x>230</x>
                 <y>10</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1630,9 +1630,9 @@ stop</string>
              <widget class="QPushButton" name="bt_AddLink1">
               <property name="geometry">
                <rect>
-                <x>190</x>
+                <x>230</x>
                 <y>40</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1648,7 +1648,7 @@ stop</string>
                <rect>
                 <x>60</x>
                 <y>10</y>
-                <width>111</width>
+                <width>101</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1827,7 +1827,7 @@ stop</string>
                <rect>
                 <x>60</x>
                 <y>40</y>
-                <width>111</width>
+                <width>161</width>
                 <height>51</height>
                </rect>
               </property>
@@ -1835,9 +1835,9 @@ stop</string>
              <widget class="QPushButton" name="bt_EditNodeType">
               <property name="geometry">
                <rect>
-                <x>310</x>
+                <x>330</x>
                 <y>40</y>
-                <width>111</width>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1848,8 +1848,8 @@ stop</string>
              <widget class="QLabel" name="lb_PreNodeInfo">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>180</y>
+                <x>220</x>
+                <y>150</y>
                 <width>201</width>
                 <height>101</height>
                </rect>
@@ -1872,8 +1872,8 @@ stop</string>
              <widget class="QLabel" name="lb_CurNodeInfo">
               <property name="geometry">
                <rect>
-                <x>220</x>
-                <y>180</y>
+                <x>10</x>
+                <y>150</y>
                 <width>201</width>
                 <height>101</height>
                </rect>
