@@ -98,9 +98,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
 
-    // for zone
-    connect(ui->bt_SetZone, SIGNAL(clicked()), this, SLOT(bt_SetZone()));
-    connect(ui->bt_ClearZone, SIGNAL(clicked()), this, SLOT(bt_ClearZone()));
+    connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
+    connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
+    connect(ui->spb_NodeSizeZ, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
 
     // for simulation
     connect(ui->bt_SimInit, SIGNAL(clicked()), this, SLOT(bt_SimInit()));
@@ -1265,7 +1265,7 @@ void MainWindow::bt_MapReload()
 
 void MainWindow::bt_AddNode()
 {
-    unimap.add_node(pick, ui->cb_NodeType->currentText());    
+    unimap.add_node(pick, ui->cb_NodeType->currentText(), ui->te_NodeInfo->toPlainText());
     topo_update();
 }
 
@@ -1504,21 +1504,6 @@ void MainWindow::qa_loop()
 
         topo_update();
     }
-}
-
-// for zone
-void MainWindow::bt_SetZone()
-{
-    std::vector<QString> linked_nodes = unimap.get_linked_nodes(pick.cur_node);
-
-    int idx = ui->cb_Zones->currentIndex();
-    unimap.zones[idx] = linked_nodes;
-}
-
-void MainWindow::bt_ClearZone()
-{
-    int idx = ui->cb_Zones->currentIndex();
-    unimap.zones[idx].clear();
 }
 
 // for autocontrol
@@ -2347,12 +2332,18 @@ void MainWindow::topo_plot()
                     }
                     else if(unimap.nodes[p].type == "ZONE")
                     {
-                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 1.0, id.toStdString());
+                        QString info = unimap.nodes[p].info;
 
-                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        NODE_INFO res;
+                        if(parse_info(info, "SIZE", res))
+                        {
+                            viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
+                                            -res.sz[1]/2, res.sz[1]/2,
+                                            -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 0.0, id.toStdString());
+
+                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        }
                     }
                     else if(unimap.nodes[p].type == "GATE")
                     {
@@ -2714,7 +2705,7 @@ void MainWindow::loc_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
-void MainWindow::live_plot()
+void MainWindow::raw_plot()
 {
     // plot mobile info
     if(mobile.is_connected)
@@ -2903,7 +2894,7 @@ void MainWindow::live_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
-void MainWindow::drive_plot()
+void MainWindow::ctrl_plot()
 {
     // plot global path
     if(is_global_path_update)
@@ -3146,9 +3137,9 @@ void MainWindow::plot_loop()
 
     slam_plot();
     loc_plot();
-    live_plot();
+    raw_plot();
 
-    drive_plot();
+    ctrl_plot();
 
     // camera reset
     if(is_set_top_view)
@@ -3324,12 +3315,18 @@ void MainWindow::topo_plot2()
                     }
                     else if(unimap.nodes[p].type == "ZONE")
                     {
-                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        0.0, VIRTUAL_OBS_SIZE, 1.0, 0.0, 1.0, id.toStdString());
+                        QString info = unimap.nodes[p].info;
 
-                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        NODE_INFO res;
+                        if(parse_info(info, "SIZE", res))
+                        {
+                            viewer2->addCube(-res.sz[0]/2, res.sz[0]/2,
+                                             -res.sz[1]/2, res.sz[1]/2,
+                                             -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 0.0, id.toStdString());
+
+                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        }
                     }
                     else if(unimap.nodes[p].type == "GATE")
                     {
@@ -3410,35 +3407,6 @@ void MainWindow::topo_plot2()
                         last_plot_names2.push_back(text_id);
                     }
                 }
-            }
-        }
-
-        // draw zone
-        for(size_t p = 0; p < unimap.zones.size(); p++)
-        {
-            if(unimap.zones[p].size() >= 3)
-            {
-                pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-                for(size_t q = 0; q < unimap.zones[p].size(); q++)
-                {
-                    NODE *node = unimap.get_node_by_id(unimap.zones[p][q]);
-                    if(node != NULL)
-                    {
-                        pcl::PointXYZ pt;
-                        pt.x = node->tf(0,3);
-                        pt.y = node->tf(1,3);
-                        pt.z = node->tf(2,3);
-                        cloud->push_back(pt);
-                    }
-                }
-
-                pcl::ConvexHull<pcl::PointXYZ> hull;
-                hull.setInputCloud(cloud);
-
-                pcl::PolygonMesh mesh;
-                hull.reconstruct(mesh);
-
-                viewer2->addPolygonMesh(mesh, "polygon");
             }
         }
     }
@@ -3597,15 +3565,30 @@ void MainWindow::pick_plot2()
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
-                else if(ui->cb_NodeType->currentText() == "OBS" ||
-                        ui->cb_NodeType->currentText() == "ZONE" ||
-                        ui->cb_NodeType->currentText() == "GATE" ||
-                        ui->cb_NodeType->currentText() == "SIGNAL")
+                else if(ui->cb_NodeType->currentText() == "OBS")
                 {
                     viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
                                      -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
                                      0.0, VIRTUAL_OBS_SIZE, 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+                }
+                else if(ui->cb_NodeType->currentText() == "ZONE" ||
+                        ui->cb_NodeType->currentText() == "GATE" ||
+                        ui->cb_NodeType->currentText() == "SIGNAL")
+                {
+                    double size_x = ui->spb_NodeSizeX->value();
+                    double size_y = ui->spb_NodeSizeY->value();
+                    double size_z = ui->spb_NodeSizeZ->value();
+
+                    QString info;
+                    info.sprintf("SIZE,%.2f,%.2f,%.2f\n", size_x, size_y, size_z);
+                    ui->te_NodeInfo->setText(info);
+
+                    viewer2->addCube(-size_x/2, size_x/2,
+                                     -size_y/2, size_y/2,
+                                     -size_z/2, size_z/2, 0.9, 0.9, 0.9, "pick_body");
+                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.2, "pick_body");
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
 

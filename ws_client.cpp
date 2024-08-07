@@ -332,6 +332,21 @@ void WS_CLIENT::send_status()
 
     rootObj["motor"] = motorArray;
 
+    // Adding the lidar array
+    QJsonArray lidarArray;
+    QJsonObject lidarObj1;
+    lidarObj1["connection"] = lidar->is_connected_f ? "true" : "false";
+    lidarObj1["port"] = "LAN";
+    lidarObj1["serialnumber"] = "not yet";
+    lidarArray.append(lidarObj1);
+
+    QJsonObject lidarObj2;
+    lidarObj2["connection"] = lidar->is_connected_b ? "true" : "false";
+    lidarObj2["port"] = "LAN";
+    lidarObj2["serialnumber"] = "not yet";
+    lidarArray.append(lidarObj2);
+    rootObj["lidar"] = lidarArray;
+
     // Adding the imu object
     Eigen::Vector3d imu = mobile->get_imu();
 
@@ -364,6 +379,7 @@ void WS_CLIENT::send_status()
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
+    stateObj["map"] = unimap->map_dir;
     rootObj["state"] = stateObj;
 
     // Adding the condition object

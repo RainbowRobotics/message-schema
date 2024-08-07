@@ -105,6 +105,7 @@ LIBS += -lvtkCommonColor-$${VTK_VERSION} \
         -lvtkCommonMath-$${VTK_VERSION} \       # Para PCL
         -lvtkFiltersCore-$${VTK_VERSION} \
         -lvtkFiltersSources-$${VTK_VERSION} \
+        -lvtkFiltersGeometry-$${VTK_VERSION} \
         -lvtkInfovisCore-$${VTK_VERSION} \
         -lvtkInteractionStyle-$${VTK_VERSION} \
         -lvtkRenderingContextOpenGL2-$${VTK_VERSION} \

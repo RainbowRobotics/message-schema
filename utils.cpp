@@ -933,4 +933,38 @@ std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, 
     return res;
 }
 
+bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
+{
+    QStringList lines = info.split("\n");
+    for(int i = 0; i < lines.size(); i++)
+    {
+        QStringList info_parts = lines[i].split(",");
+        if(info_parts.size() > 0 && info_parts[0] == info_key)
+        {
+            if(info_key == "PTZ" && info_parts.size() == 4)
+            {
+                result.ptz[0] = info_parts[1].toDouble(); // pan
+                result.ptz[1] = info_parts[2].toDouble(); // tilt
+                result.ptz[2] = info_parts[3].toDouble(); // zoom
+                return true;
+            }
+            else if(info_key == "POSE" && info_parts.size() == 4)
+            {
+                result.rpy[0] = info_parts[1].toDouble(); // roll
+                result.rpy[1] = info_parts[2].toDouble(); // pitch
+                result.rpy[2] = info_parts[3].toDouble(); // yaw
+                return true;
+            }
+            else if(info_key == "SIZE" && info_parts.size() == 4)
+            {
+                result.sz[0] = info_parts[1].toDouble(); // size x
+                result.sz[1] = info_parts[2].toDouble(); // size y
+                result.sz[2] = info_parts[3].toDouble(); // size z
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 #endif // UTILS_CPP

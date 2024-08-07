@@ -67,4 +67,6 @@ Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
 
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size);
 
+bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
+
 #endif // UTILS_H

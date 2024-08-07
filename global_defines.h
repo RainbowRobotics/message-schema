@@ -39,8 +39,7 @@
 #include <pcl/geometry/mesh_base.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/surface/convex_hull.h>
-#include <pcl/surface/concave_hull.h>
+#include <pcl/features/moment_of_inertia_estimation.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/obj_io.h>
 
@@ -961,6 +960,40 @@ struct MOVE_INFO
         node_id = p.node_id;
         preset = p.preset;
         method = p.method;
+        return *this;
+    }
+};
+
+struct NODE_INFO
+{
+    // pose
+    Eigen::Vector3d rpy;
+
+    // pan tilt zoom
+    Eigen::Vector3d ptz;
+
+    // size
+    Eigen::Vector3d sz;
+
+    NODE_INFO()
+    {
+        rpy.setZero();
+        ptz.setZero();
+        sz.setZero();
+    }
+
+    NODE_INFO(const NODE_INFO& p)
+    {
+        rpy = p.rpy;
+        ptz = p.ptz;
+        sz = p.sz;
+    }
+
+    NODE_INFO& operator=(const NODE_INFO& p)
+    {
+        rpy = p.rpy;
+        ptz = p.ptz;
+        sz = p.sz;
         return *this;
     }
 };

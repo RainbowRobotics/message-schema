@@ -1,8 +1,7 @@
 #include "unimap.h"
 
 UNIMAP::UNIMAP(QObject *parent) : QObject(parent)
-{
-    zones.resize(10);
+{    
 }
 
 UNIMAP::~UNIMAP()
@@ -267,14 +266,14 @@ bool UNIMAP::is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius)
     return true;
 }
 
-void UNIMAP::add_node(PICKING pick, QString type)
+void UNIMAP::add_node(PICKING pick, QString type, QString info)
 {
     if(pick.cur_node == "")
     {
         NODE node;
         node.id = gen_node_id();
         node.type = type;
-        node.info = "";
+        node.info = info;
         node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);        
         nodes.push_back(node);
 
@@ -311,6 +310,7 @@ void UNIMAP::add_node(PICKING pick, QString type)
 
 QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
 {
+    // for quick annotation
     NODE node;
     node.id = gen_node_id();
     node.type = type;

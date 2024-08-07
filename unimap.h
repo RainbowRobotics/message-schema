@@ -41,7 +41,7 @@ public:
     NODE* get_node_by_id(QString id);
 
     QString add_node(Eigen::Matrix4d tf, QString type);
-    void add_node(PICKING pick, QString type);
+    void add_node(PICKING pick, QString type, QString info="");
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
@@ -58,7 +58,6 @@ public:
 
     // annotation
     std::vector<NODE> nodes;
-    std::vector<std::vector<QString>> zones;
 
     // code ref
     std::map<QString, cv::Vec2d> ref_codes;

@@ -128,8 +128,8 @@ public:
     void pick_plot();
     void slam_plot();
     void loc_plot();
-    void live_plot();
-    void drive_plot();
+    void raw_plot();
+    void ctrl_plot();
 
     void map_plot2();
     void topo_plot2();
@@ -192,10 +192,6 @@ public Q_SLOTS:
 
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
-
-    // zone
-    void bt_SetZone();
-    void bt_ClearZone();
 
     // mapping & localization
     void bt_MapBuild();    
