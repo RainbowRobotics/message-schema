@@ -716,20 +716,56 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
-    // update octomap
-    octomap::Pointcloud cloud;
+    // raw data to range data
+    double step = 0.5*D2R;
+    std::vector<double> range_data((2*M_PI)/step, config->LIDAR_MAX_RANGE);
     for(size_t p = 0; p < tpp.pts.size(); p++)
     {
+        double x = tpp.pts[p][0];
+        double y = tpp.pts[p][1];
+        double z = tpp.pts[p][2];
+        if(z < config->OBS_MAP_MIN_Z || z > config->OBS_MAP_MAX_Z)
+        {
+            continue;
+        }
+
+        double th = std::atan2(y, x) + M_PI;
+
+        int idx = th/step;
+        if(idx > (int)range_data.size()-1)
+        {
+            continue;
+        }
+
+        double d = std::sqrt(x*x + y*y);
+        if(d < range_data[idx])
+        {
+            range_data[idx] = d;
+        }
+    }
+
+    std::vector<Eigen::Vector3d> pts;
+    for(size_t p = 0; p < range_data.size(); p++)
+    {
+        double d = range_data[p];
+        double th = p*step - M_PI;
+        double x = d*std::cos(th);
+        double y = d*std::sin(th);
+        pts.push_back(Eigen::Vector3d(x,y,0));
+    }
+
+    // update octomap
+    octomap::Pointcloud cloud;
+    for(size_t p = 0; p < pts.size(); p++)
+    {
         // local to global
-        Eigen::Vector3d P = tpp.pts[p];
+        Eigen::Vector3d P = pts[p];
         Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
-        //cloud.push_back(_P[0], _P[1], _P[2]);
         cloud.push_back(_P[0], _P[1], 0);
     }
 
     mtx.lock();
-    //octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)), config->OBS_MAP_RANGE, false, true);
-    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), config->OBS_MAP_RANGE, false, true);
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)), config->OBS_MAP_RANGE, false, true);
 
     // calc grid map
     octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);

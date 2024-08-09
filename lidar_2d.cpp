@@ -957,8 +957,8 @@ void LIDAR_2D::a_loop()
                 }
 
                 // update result
-                pts = pts_inlier;
-                reflects = reflects_inlier;
+                //pts = pts_inlier;
+                //reflects = reflects_inlier;
 
                 // update
                 mtx.lock();

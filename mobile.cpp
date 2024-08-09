@@ -401,10 +401,14 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _offset_t = return_time - recv_tick*0.002;
+                    double pre_offset_t = offset_t;
                     offset_t = _offset_t;
 
                     mtx.lock();
-                    pose_storage.clear();
+                    for(size_t p = 0; p < pose_storage.size(); p++)
+                    {
+                        pose_storage[p].t = (pose_storage[p].t - pre_offset_t) + offset_t;
+                    }
                     mtx.unlock();
 
                     is_synced = true;
@@ -745,10 +749,14 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _offset_t = return_time - recv_tick*0.002;
+                    double pre_offset_t = offset_t;
                     offset_t = _offset_t;
 
                     mtx.lock();
-                    pose_storage.clear();
+                    for(size_t p = 0; p < pose_storage.size(); p++)
+                    {
+                        pose_storage[p].t = (pose_storage[p].t - pre_offset_t) + offset_t;
+                    }
                     mtx.unlock();
 
                     is_synced = true;
@@ -1059,10 +1067,14 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _offset_t = return_time - recv_tick*0.002;
+                    double pre_offset_t = offset_t;
                     offset_t = _offset_t;
 
                     mtx.lock();
-                    pose_storage.clear();
+                    for(size_t p = 0; p < pose_storage.size(); p++)
+                    {
+                        pose_storage[p].t = (pose_storage[p].t - pre_offset_t) + offset_t;
+                    }
                     mtx.unlock();
 
                     is_synced = true;
