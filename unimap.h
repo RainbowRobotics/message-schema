@@ -30,7 +30,6 @@ public:
     void save_map();
     void save_annotation();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
-    bool is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius);
 
     // topology
     std::vector<QString> get_linked_nodes(QString id);
@@ -51,11 +50,6 @@ public:
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
     void add_link2(QString id0, QString id1);
-
-    QJsonArray pose_to_array(Eigen::Vector3d pose);
-    Eigen::Vector3d array_to_pose(QJsonArray arr);
-    QJsonArray links_to_array(std::vector<QString> links);
-    std::vector<QString> array_to_links(QJsonArray arr);
 
     // annotation
     std::vector<NODE> nodes;

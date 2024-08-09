@@ -955,7 +955,7 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
                 result.rpy[2] = info_parts[3].toDouble(); // yaw
                 return true;
             }
-            else if(info_key == "SIZE" && info_parts.size() == 4)
+            else if(info_key == "ZONE" && info_parts.size() == 4)
             {
                 result.sz[0] = info_parts[1].toDouble(); // size x
                 result.sz[1] = info_parts[2].toDouble(); // size y
@@ -965,6 +965,44 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
         }
     }
     return false;
+}
+
+QJsonArray pose_to_array(Eigen::Vector3d pose)
+{
+    QJsonArray res;
+    res.append(pose[0]);
+    res.append(pose[1]);
+    res.append(pose[2]);
+    return res;
+}
+
+Eigen::Vector3d array_to_pose(QJsonArray arr)
+{
+    Eigen::Vector3d res;
+    res[0] = arr[0].toDouble();
+    res[1] = arr[1].toDouble();
+    res[2] = arr[2].toDouble();
+    return res;
+}
+
+QJsonArray links_to_array(std::vector<QString> links)
+{
+    QJsonArray res;
+    for(size_t p = 0; p < links.size(); p++)
+    {
+        res.append(links[p]);
+    }
+    return res;
+}
+
+std::vector<QString> array_to_links(QJsonArray arr)
+{
+    std::vector<QString> res;
+    for(int p = 0; p < arr.size(); p++)
+    {
+        res.push_back(arr[p].toString());
+    }
+    return res;
 }
 
 #endif // UTILS_CPP

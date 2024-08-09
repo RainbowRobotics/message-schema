@@ -237,35 +237,6 @@ void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
     }
 }
 
-bool UNIMAP::is_los(Eigen::Vector3d P0, Eigen::Vector3d P1, double radius)
-{
-    if(is_loaded == false)
-    {
-        return true;
-    }
-
-    double sq_radius = radius*radius;
-    double length = (P1-P0).norm();
-    Eigen::Vector3d dir = (P1-P0).normalized();
-
-    for(double l = 0; l < length; l += radius)
-    {
-        Eigen::Vector3d P = P0 + l*dir;
-
-        // radius search
-        double query_pt[3] = {P[0], P[1], P[2]};
-
-        std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
-        nanoflann::SearchParameters params;
-        kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
-        if(res_idxs.size() > 0)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void UNIMAP::add_node(PICKING pick, QString type, QString info)
 {
     if(pick.cur_node == "")
@@ -648,42 +619,4 @@ NODE* UNIMAP::get_node_by_id(QString id)
     }
 
     return node;
-}
-
-QJsonArray UNIMAP::pose_to_array(Eigen::Vector3d pose)
-{
-    QJsonArray res;
-    res.append(pose[0]);
-    res.append(pose[1]);
-    res.append(pose[2]);
-    return res;
-}
-
-Eigen::Vector3d UNIMAP::array_to_pose(QJsonArray arr)
-{
-    Eigen::Vector3d res;
-    res[0] = arr[0].toDouble();
-    res[1] = arr[1].toDouble();
-    res[2] = arr[2].toDouble();
-    return res;
-}
-
-QJsonArray UNIMAP::links_to_array(std::vector<QString> links)
-{
-    QJsonArray res;
-    for(size_t p = 0; p < links.size(); p++)
-    {
-        res.append(links[p]);
-    }
-    return res;
-}
-
-std::vector<QString> UNIMAP::array_to_links(QJsonArray arr)
-{
-    std::vector<QString> res;
-    for(int p = 0; p < arr.size(); p++)
-    {
-        res.push_back(arr[p].toString());
-    }
-    return res;
 }

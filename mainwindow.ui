@@ -1675,16 +1675,6 @@ stop</string>
                 <string>ZONE</string>
                </property>
               </item>
-              <item>
-               <property name="text">
-                <string>GATE</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>SIGNAL</string>
-               </property>
-              </item>
              </widget>
              <widget class="QPushButton" name="bt_AlignNodeX">
               <property name="geometry">
@@ -2010,11 +2000,6 @@ stop</string>
          </layout>
         </item>
        </layout>
-      </widget>
-      <widget class="QWidget" name="page_fms">
-       <attribute name="title">
-        <string>FMS</string>
-       </attribute>
       </widget>
      </widget>
     </item>

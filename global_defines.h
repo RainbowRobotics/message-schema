@@ -227,7 +227,7 @@ struct PICKING
     }
 };
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -639,7 +639,7 @@ struct NODE
 {
     QString id;
     QString name;
-    QString type; // ROUTE, GOAL, OBS, ZONE, GATE, SIGNAL
+    QString type; // ROUTE, GOAL, OBS, ZONE
     QString info; // additional info
     Eigen::Matrix4d tf; // node tf
     std::vector<QString> linked;

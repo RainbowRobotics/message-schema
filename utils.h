@@ -69,4 +69,9 @@ std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, 
 
 bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
 
+QJsonArray pose_to_array(Eigen::Vector3d pose);
+Eigen::Vector3d array_to_pose(QJsonArray arr);
+QJsonArray links_to_array(std::vector<QString> links);
+std::vector<QString> array_to_links(QJsonArray arr);
+
 #endif // UTILS_H
