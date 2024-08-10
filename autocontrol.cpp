@@ -1951,7 +1951,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision_dynamic(traj[p]))
+                    if(obsmap->is_tf_collision_dynamic(traj[p], 0.3, 0.3))
                     {
                         is_collision = true;
                         break;
@@ -2041,10 +2041,10 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;
-            v = saturation(v, 0, obs_v);
+            double v = ref_v;            
             v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0, goal_v);
+            v = saturation(v, 0, obs_v);
 
             double th = (params.DRIVE_A * err_th) + (params.DRIVE_B * (err_th-pre_err_th)/dt) + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -45.0*D2R, 45.0*D2R);
@@ -2377,7 +2377,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision_dynamic(traj[p]))
+                    if(obsmap->is_tf_collision_dynamic(traj[p], 0.3, 0.3))
                     {
                         is_collision = true;
                         break;
@@ -2422,10 +2422,10 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             }
 
             // calc control input
-            double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
-            ref_v = saturation(ref_v, 0, obs_v);
+            double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);            
             ref_v = saturation(ref_v, ref_v0 - params.LIMIT_V_ACC*dt, ref_v0 + params.LIMIT_V_ACC*dt);
             ref_v = saturation(ref_v, 0, goal_v);
+            ref_v = saturation(ref_v, 0, obs_v);
 
             double kp_w = 1.0;
             double kd_w = 0.1;
@@ -2748,7 +2748,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision_dynamic(traj[p]))
+                    if(obsmap->is_tf_collision_dynamic(traj[p], 0.3, 0.3))
                     {
                         is_collision = true;
                         break;
@@ -2798,9 +2798,9 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
             double v = saturation(kp_v*err_d + kd_v*(err_d - pre_err_d)/dt, params.ED_V, params.LIMIT_V);
             pre_err_d = err_d;
 
-            v = saturation(v, 0, obs_v);
             v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0, params.LIMIT_V);
+            v = saturation(v, 0, obs_v);
 
             double kp_w = 1.0;
             double kd_w = 0.05;
