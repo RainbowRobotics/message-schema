@@ -379,7 +379,7 @@ void WS_CLIENT::send_status()
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
-    stateObj["map"] = unimap->map_dir;
+    stateObj["map"] = unimap->map_dir.split("/").last();
     rootObj["state"] = stateObj;
 
     // Adding the condition object
