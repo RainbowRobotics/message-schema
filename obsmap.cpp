@@ -28,8 +28,8 @@ void OBSMAP::init()
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
 
     octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
-    octree->setProbHit(0.8);
-    octree->setProbMiss(0.45);
+    octree->setProbHit(P_HIT);
+    octree->setProbMiss(P_MISS);
 }
 
 void OBSMAP::clear()
@@ -717,7 +717,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
     // raw data to range data
-    double step = 0.5*D2R;
+    double step = 0.25*D2R;
     std::vector<double> range_data((2*M_PI)/step, config->LIDAR_MAX_RANGE);
     for(size_t p = 0; p < tpp.pts.size(); p++)
     {
@@ -765,7 +765,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
 
     mtx.lock();
-    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)), config->OBS_MAP_RANGE, false, true);
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), config->OBS_MAP_RANGE, false, true);
 
     // calc grid map
     octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, cur_tf(2,3) + config->OBS_MAP_MIN_Z);
@@ -809,7 +809,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     {
         for(int j = 0; j < w; j++)
         {
-            if(_map.ptr<double>(i)[j] >= 0.7)
+            if(_map.ptr<double>(i)[j] >= P_HIT)
             {
                 _wall_map.ptr<uchar>(i)[j] = 255;
             }
@@ -867,7 +867,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     cv::Mat _dynamic_map2(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < contours.size(); p++)
     {
-        if (contours[p].size() >= 3)
+        if (contours[p].size() >= 2)
         {
             cv::drawContours(_dynamic_map2, contours, p, cv::Scalar(255), cv::FILLED, 8);
         }

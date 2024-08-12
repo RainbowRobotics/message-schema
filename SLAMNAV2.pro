@@ -30,13 +30,14 @@ SOURCES += \
     dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
+    fms.cpp \
     lidar_2d.cpp \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
+    sio.cpp \
     task.cpp \
-    ws_client.cpp \
     obsmap.cpp \
     pgo.cpp \
     sim.cpp \
@@ -53,13 +54,14 @@ HEADERS += \
     dockingcontrol.h \
     config.h \
     cv_to_qt.h \
+    fms.h \
     global_defines.h \
     lidar_2d.h \
     logger.h \
     mainwindow.h \
     mobile.h \
+    sio.h \
     task.h \
-    ws_client.h \
     nanoflann.hpp \
     obsmap.h \
     pgo.h \

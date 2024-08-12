@@ -81,6 +81,7 @@ public:
     void calc_ref_v0(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v);
     void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
+    std::vector<double> expect_drive_time();
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    

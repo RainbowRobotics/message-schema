@@ -11,8 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
     , slam(this)
     , unimap(this)
     , obsmap(this)
-    , ctrl(this)    
-    , ws(this)
+    , ctrl(this)
+    , fms(this)
+    , sio(this)
     , task(this)
     , sim(this)
     , ui(new Ui::MainWindow)
@@ -114,8 +115,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));    
-    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &ws, SLOT(slot_move_succeed(QString)));
-    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &ws, SLOT(slot_move_failed(QString)));
+    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &sio, SLOT(slot_move_succeed(QString)));
+    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &sio, SLOT(slot_move_failed(QString)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -234,49 +235,6 @@ void MainWindow::all_update()
 }
 
 // for init
-void MainWindow::setup_vtk()
-{
-    // Set up the QVTK window
-    {
-        vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
-        vtkNew<vtkRenderer> renderer;
-        renderWindow->AddRenderer(renderer);
-        viewer.reset(new pcl::visualization::PCLVisualizer(renderer, renderWindow, "viewer", false));
-        ui->qvtkWidget->setRenderWindow(viewer->getRenderWindow());
-        viewer->setupInteractor(ui->qvtkWidget->interactor(), ui->qvtkWidget->renderWindow());
-        viewer->setBackgroundColor(1.0, 1.0, 1.0);
-        viewer->resetCamera();
-
-        // init drawing
-        viewer->addCoordinateSystem(1.0, "O_global");
-        ui->qvtkWidget->renderWindow()->Render();
-
-        // install event filter
-        ui->qvtkWidget->installEventFilter(this);
-        ui->qvtkWidget->setMouseTracking(true);
-    }
-
-    // Set up the QVTK window 2
-    {
-        vtkNew<vtkGenericOpenGLRenderWindow> renderWindow2;
-        vtkNew<vtkRenderer> renderer2;
-        renderWindow2->AddRenderer(renderer2);
-        viewer2.reset(new pcl::visualization::PCLVisualizer(renderer2, renderWindow2, "viewer2", false));
-        ui->qvtkWidget2->setRenderWindow(viewer2->getRenderWindow());
-        viewer2->setupInteractor(ui->qvtkWidget2->interactor(), ui->qvtkWidget2->renderWindow());
-        viewer2->setBackgroundColor(1.0, 1.0, 1.0);
-        viewer2->resetCamera();
-
-        // init drawing
-        viewer2->addCoordinateSystem(1.0, "O_global");
-        ui->qvtkWidget2->renderWindow()->Render();
-
-        // install event filter
-        ui->qvtkWidget2->installEventFilter(this);
-        ui->qvtkWidget2->setMouseTracking(true);
-    }
-}
-
 void MainWindow::init_modules()
 {            
     // config module init
@@ -383,18 +341,27 @@ void MainWindow::init_modules()
     ctrl.obsmap = &obsmap;
     ctrl.init();
 
+    // fms client module init
+    fms.config = &config;
+    fms.logger = &logger;
+    fms.slam = &slam;
+    fms.unimap = &unimap;
+    fms.obsmap = &obsmap;
+    fms.ctrl = &ctrl;
+    fms.init();
+
     // websocket client init
-    ws.config = &config;
-    ws.logger = &logger;
-    ws.mobile = &mobile;
-    ws.lidar = &lidar;
-    ws.cam = &cam;
-    ws.code = &code;
-    ws.slam = &slam;
-    ws.unimap = &unimap;
-    ws.obsmap = &obsmap;
-    ws.ctrl = &ctrl;
-    ws.init();
+    sio.config = &config;
+    sio.logger = &logger;
+    sio.mobile = &mobile;
+    sio.lidar = &lidar;
+    sio.cam = &cam;
+    sio.code = &code;
+    sio.slam = &slam;
+    sio.unimap = &unimap;
+    sio.obsmap = &obsmap;
+    sio.ctrl = &ctrl;
+    sio.init();
 
     // simulation module init
     sim.config = &config;
@@ -415,6 +382,49 @@ void MainWindow::init_modules()
     // start watchdog loop
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
+}
+
+void MainWindow::setup_vtk()
+{
+    // Set up the QVTK window
+    {
+        vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
+        vtkNew<vtkRenderer> renderer;
+        renderWindow->AddRenderer(renderer);
+        viewer.reset(new pcl::visualization::PCLVisualizer(renderer, renderWindow, "viewer", false));
+        ui->qvtkWidget->setRenderWindow(viewer->getRenderWindow());
+        viewer->setupInteractor(ui->qvtkWidget->interactor(), ui->qvtkWidget->renderWindow());
+        viewer->setBackgroundColor(1.0, 1.0, 1.0);
+        viewer->resetCamera();
+
+        // init drawing
+        viewer->addCoordinateSystem(1.0, "O_global");
+        ui->qvtkWidget->renderWindow()->Render();
+
+        // install event filter
+        ui->qvtkWidget->installEventFilter(this);
+        ui->qvtkWidget->setMouseTracking(true);
+    }
+
+    // Set up the QVTK window 2
+    {
+        vtkNew<vtkGenericOpenGLRenderWindow> renderWindow2;
+        vtkNew<vtkRenderer> renderer2;
+        renderWindow2->AddRenderer(renderer2);
+        viewer2.reset(new pcl::visualization::PCLVisualizer(renderer2, renderWindow2, "viewer2", false));
+        ui->qvtkWidget2->setRenderWindow(viewer2->getRenderWindow());
+        viewer2->setupInteractor(ui->qvtkWidget2->interactor(), ui->qvtkWidget2->renderWindow());
+        viewer2->setBackgroundColor(1.0, 1.0, 1.0);
+        viewer2->resetCamera();
+
+        // init drawing
+        viewer2->addCoordinateSystem(1.0, "O_global");
+        ui->qvtkWidget2->renderWindow()->Render();
+
+        // install event filter
+        ui->qvtkWidget2->installEventFilter(this);
+        ui->qvtkWidget2->setMouseTracking(true);
+    }
 }
 
 // for picking interface
@@ -1839,27 +1849,27 @@ void MainWindow::watch_loop()
         // for 100ms loop
         if(cnt % 1 == 0)
         {
-            if(ws.is_connected)
+            if(sio.is_connected)
             {
-                ws.send_status();
+                sio.send_status();
             }
         }
 
         // for 500ms loop
         if(cnt % 5 == 0)
         {
-            if(ws.is_connected)
+            if(sio.is_connected)
             {
-                ws.send_mapping_cloud();
+                sio.send_mapping_cloud();
             }
         }
 
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
-            if(ws.is_connected)
+            if(sio.is_connected)
             {
-                ws.send_lidar();
+                sio.send_lidar();
             }
         }
 

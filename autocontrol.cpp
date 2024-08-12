@@ -1654,6 +1654,19 @@ PATH AUTOCONTROL::calc_avoid_path()
     }
 }
 
+std::vector<double> AUTOCONTROL::expect_drive_time()
+{
+    PATH global_path = get_cur_global_path();
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+
+
+
+
+    std::vector<double> res;
+    return res;
+}
+
 // check condition
 bool AUTOCONTROL::is_everything_fine()
 {
@@ -1811,7 +1824,6 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 if(calc_dist_2d(avoid_path.pos.back() - cur_pos) < config->DRIVE_GOAL_D)
                 {
                     // clear avoid path
-                    //mobile->move(0, 0, 0);
                     avoid_path = PATH();
 
                     printf("[AUTO] avoid_path complete\n");
@@ -2062,7 +2074,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             w *= scale_w;            
 
             // goal check
-            if(goal_err_d < config->DRIVE_GOAL_D)
+            if(goal_err_d < config->DRIVE_GOAL_D || cur_idx == (int)local_path.pos.size()-1)
             {
                 // check local sign
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();

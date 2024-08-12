@@ -64,6 +64,9 @@ public:
     int cy = 150;
     double gs = 0.05;
 
+    const double P_HIT = 0.7;
+    const double P_MISS = 0.45;
+
     cv::Vec2i xy_uv(double x, double y);
     cv::Vec2d uv_xy(int u, int v);
 

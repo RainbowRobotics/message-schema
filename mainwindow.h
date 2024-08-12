@@ -16,7 +16,8 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "dockingcontrol.h"
-#include "ws_client.h"
+#include "fms.h"
+#include "sio.h"
 #include "task.h"
 #include "sim.h"
 
@@ -51,9 +52,10 @@ public:
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
-    WS_CLIENT ws;
-    TASK task;
-    SIM sim;
+    FMS fms;
+    SIO sio;
+    TASK task;    
+    SIM sim;    
 
     // system logger
     LOGGER system_logger;

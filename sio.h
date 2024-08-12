@@ -1,5 +1,5 @@
-#ifndef WS_CLIENT_H
-#define WS_CLIENT_H
+#ifndef SIO_H
+#define SIO_H
 
 // global defines
 #include "global_defines.h"
@@ -29,12 +29,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class WS_CLIENT : public QObject
+class SIO : public QObject
 {
     Q_OBJECT
 public:
-    explicit WS_CLIENT(QObject *parent = nullptr);
-    ~WS_CLIENT();
+    explicit SIO(QObject *parent = nullptr);
+    ~SIO();
     std::mutex mtx;
 
     // other modules
@@ -144,4 +144,4 @@ private Q_SLOTS:
 
 };
 
-#endif // WS_CLIENT_H
+#endif // SIO_H

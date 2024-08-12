@@ -1,8 +1,8 @@
-#include "ws_client.h"
+#include "sio.h"
 
 #include "mainwindow.h"
 
-WS_CLIENT::WS_CLIENT(QObject *parent)
+SIO::SIO(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
@@ -15,15 +15,15 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     using std::placeholders::_4;
 
     sio::socket::ptr sock = io->socket();
-    BIND_EVENT(sock, "motorinit", std::bind(&WS_CLIENT::recv_motorinit, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "move", std::bind(&WS_CLIENT::recv_move, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "mapping", std::bind(&WS_CLIENT::recv_mapping, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "mapload", std::bind(&WS_CLIENT::recv_mapload, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "localization", std::bind(&WS_CLIENT::recv_localization, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "motorinit", std::bind(&SIO::recv_motorinit, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "move", std::bind(&SIO::recv_move, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapping", std::bind(&SIO::recv_mapping, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapload", std::bind(&SIO::recv_mapload, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "localization", std::bind(&SIO::recv_localization, this, _1, _2, _3, _4));
 
-    io->set_open_listener(std::bind(&WS_CLIENT::sio_connected, this));
-    io->set_close_listener(std::bind(&WS_CLIENT::sio_disconnected, this, _1));
-    io->set_fail_listener(std::bind(&WS_CLIENT::sio_error, this));
+    io->set_open_listener(std::bind(&SIO::sio_connected, this));
+    io->set_close_listener(std::bind(&SIO::sio_disconnected, this, _1));
+    io->set_fail_listener(std::bind(&SIO::sio_error, this));
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
@@ -51,45 +51,46 @@ WS_CLIENT::WS_CLIENT(QObject *parent)
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 }
 
-WS_CLIENT::~WS_CLIENT()
+SIO::~SIO()
 {
+    reconnect_timer.stop();
     io->close();
 }
 
-QString WS_CLIENT::get_json(sio::message::ptr const& data, QString key)
+QString SIO::get_json(sio::message::ptr const& data, QString key)
 {
     return QString::fromStdString(data->get_map()[key.toStdString()]->get_string());
 }
 
-void WS_CLIENT::init()
+void SIO::init()
 {
     if(config->SIM_MODE == 1)
     {
-        printf("[WS] simulation mode\n");
+        printf("[SIO] simulation mode\n");
         return;
     }
 
     reconnect_timer.start(3000);
 }
 
-void WS_CLIENT::sio_connected()
+void SIO::sio_connected()
 {
     is_connected = true;
-    printf("[WS] connected\n");
+    printf("[SIO] connected\n");
 }
 
-void WS_CLIENT::sio_disconnected(sio::client::close_reason const& reason)
+void SIO::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
-    printf("[WS] disconnected\n");
+    printf("[SIO] disconnected\n");
 }
 
-void WS_CLIENT::sio_error()
+void SIO::sio_error()
 {
-    printf("[WS] some error\n");
+    printf("[SIO] some error\n");
 }
 
-void WS_CLIENT::reconnect_loop()
+void SIO::reconnect_loop()
 {
     if(is_connected == false)
     {
@@ -99,7 +100,7 @@ void WS_CLIENT::reconnect_loop()
 
 
 // recv parser -> emit recv signals
-void WS_CLIENT::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void SIO::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -110,11 +111,11 @@ void WS_CLIENT::recv_motorinit(std::string const& name, sio::message::ptr const&
         // action
         Q_EMIT signal_motorinit(time);
 
-        printf("[WS_RECV] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[SIO_RECV] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
-void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -130,7 +131,7 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
 
             // action
             Q_EMIT signal_move_jog(time, vx, vy, wz);
-            printf("[WS_RECV] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
+            printf("[SIO_RECV] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
         }
         else if(command == "target")
         {
@@ -158,7 +159,7 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
 
             // action
             Q_EMIT signal_move_target(time, x, y, z, rz, preset, method);
-            printf("[WS_RECV] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
+            printf("[SIO_RECV] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
         }
         else if(command == "goal")
         {
@@ -180,7 +181,7 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
 
             // action
             Q_EMIT signal_move_goal(time, id, preset, method);
-            printf("[WS_RECV] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
+            printf("[SIO_RECV] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
         }
         else if(command == "pause")
         {
@@ -200,7 +201,7 @@ void WS_CLIENT::recv_move(std::string const& name, sio::message::ptr const& data
     }
 }
 
-void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void SIO::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -228,11 +229,11 @@ void WS_CLIENT::recv_mapping(std::string const& name, sio::message::ptr const& d
             Q_EMIT signal_mapping_reload(time);
         }
 
-        printf("[WS_RECV] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[SIO_RECV] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
-void WS_CLIENT::recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void SIO::recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -242,11 +243,11 @@ void WS_CLIENT::recv_mapload(std::string const& name, sio::message::ptr const& d
 
         Q_EMIT signal_mapload(time, name);
 
-        printf("[WS_RECV] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
+        printf("[SIO_RECV] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
     }
 }
 
-void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void SIO::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -276,13 +277,13 @@ void WS_CLIENT::recv_localization(std::string const& name, sio::message::ptr con
             Q_EMIT signal_localization_stop(time);
         }
 
-        printf("[WS_RECV] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[SIO_RECV] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
 
 // send functions
-void WS_CLIENT::send_status()
+void SIO::send_status()
 {
     double time = get_time0();
 
@@ -409,10 +410,10 @@ void WS_CLIENT::send_status()
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("status", res);
 
-    //printf("[WS_SEND] status, time: %f\n", time);
+    //printf("[SIO_SEND] status, time: %f\n", time);
 }
 
-void WS_CLIENT::send_lidar()
+void SIO::send_lidar()
 {
     double time = get_time0();
 
@@ -486,10 +487,10 @@ void WS_CLIENT::send_lidar()
         io->socket()->emit("lidar_cloud", rootObject);
     }
 
-    //printf("[WS_SEND] lidar_cloud,  time: %f\n", time);
+    //printf("[SIO_SEND] lidar_cloud,  time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping_cloud()
+void SIO::send_mapping_cloud()
 {
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
@@ -523,12 +524,12 @@ void WS_CLIENT::send_mapping_cloud()
 
         // send
         io->socket()->emit("mapping_cloud", jsonArray);
-        printf("[WS_SEND] mapping_cloud, time: %f\n", time);
+        printf("[SIO_SEND] mapping_cloud, time: %f\n", time);
         last_send_kfrm_idx++;
     }
 }
 
-void WS_CLIENT::send_mapping_start_response(QString result)
+void SIO::send_mapping_start_response(QString result)
 {
     double time = get_time0();
 
@@ -545,10 +546,10 @@ void WS_CLIENT::send_mapping_start_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[WS_SEND] mapping_response_start, time: %f\n", time);
+    printf("[SIO_SEND] mapping_response_start, time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping_stop_response()
+void SIO::send_mapping_stop_response()
 {
     double time = get_time0();
 
@@ -565,10 +566,10 @@ void WS_CLIENT::send_mapping_stop_response()
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[WS_SEND] mapping_response_stop, success, time: %f\n", time);
+    printf("[SIO_SEND] mapping_response_stop, success, time: %f\n", time);
 }
 
-void WS_CLIENT::send_mapping_save_response(QString name, QString result)
+void SIO::send_mapping_save_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -586,10 +587,10 @@ void WS_CLIENT::send_mapping_save_response(QString name, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[WS_SEND] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_mapload_response(QString name, QString result)
+void SIO::send_mapload_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -606,10 +607,10 @@ void WS_CLIENT::send_mapload_response(QString name, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapload", res);
 
-    printf("[WS_SEND] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_localization_response(QString command, QString result)
+void SIO::send_localization_response(QString command, QString result)
 {
     double time = get_time0();
 
@@ -626,10 +627,10 @@ void WS_CLIENT::send_localization_response(QString command, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("localization", res);
 
-    printf("[WS_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
+void SIO::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -653,10 +654,10 @@ void WS_CLIENT::send_move_target_response(double x, double y, double z, double r
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[WS_SEND] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
+void SIO::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -677,10 +678,10 @@ void WS_CLIENT::send_move_goal_response(QString node_id, int preset, QString met
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[WS_SEND] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_move_pause_response(QString result)
+void SIO::send_move_pause_response(QString result)
 {
     double time = get_time0();
 
@@ -697,10 +698,10 @@ void WS_CLIENT::send_move_pause_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[WS_SEND] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_move_resume_response(QString result)
+void SIO::send_move_resume_response(QString result)
 {
     double time = get_time0();
 
@@ -717,10 +718,10 @@ void WS_CLIENT::send_move_resume_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[WS_SEND] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void WS_CLIENT::send_move_stop_response(QString result)
+void SIO::send_move_stop_response(QString result)
 {
     double time = get_time0();
 
@@ -737,23 +738,23 @@ void WS_CLIENT::send_move_stop_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[WS_SEND] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[SIO_SEND] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
 
 // recv slots
-void WS_CLIENT::slot_motorinit(double time)
+void SIO::slot_motorinit(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MotorInit();
 }
 
-void WS_CLIENT::slot_move_jog(double time, double vx, double vy, double wz)
+void SIO::slot_move_jog(double time, double vx, double vy, double wz)
 {
     mobile->move(vx, vy, wz*D2R);
 }
 
-void WS_CLIENT::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
+void SIO::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -813,7 +814,7 @@ void WS_CLIENT::slot_move_target(double time, double x, double y, double z, doub
     }
 }
 
-void WS_CLIENT::slot_move_goal(double time, QString node_id, int preset, QString method)
+void SIO::slot_move_goal(double time, QString node_id, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -873,7 +874,7 @@ void WS_CLIENT::slot_move_goal(double time, QString node_id, int preset, QString
     }
 }
 
-void WS_CLIENT::slot_move_pause(double time)
+void SIO::slot_move_pause(double time)
 {
     ctrl->is_pause = true;
 
@@ -881,7 +882,7 @@ void WS_CLIENT::slot_move_pause(double time)
     send_move_pause_response(result);
 }
 
-void WS_CLIENT::slot_move_resume(double time)
+void SIO::slot_move_resume(double time)
 {
     ctrl->is_pause = false;
 
@@ -889,7 +890,7 @@ void WS_CLIENT::slot_move_resume(double time)
     send_move_resume_response(result);
 }
 
-void WS_CLIENT::slot_move_stop(double time)
+void SIO::slot_move_stop(double time)
 {
     ctrl->stop();
 
@@ -897,7 +898,7 @@ void WS_CLIENT::slot_move_stop(double time)
     send_move_stop_response(result);
 }
 
-void WS_CLIENT::slot_move_succeed(QString message)
+void SIO::slot_move_succeed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -913,7 +914,7 @@ void WS_CLIENT::slot_move_succeed(QString message)
     }
 }
 
-void WS_CLIENT::slot_move_failed(QString message)
+void SIO::slot_move_failed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -929,7 +930,7 @@ void WS_CLIENT::slot_move_failed(QString message)
     }
 }
 
-void WS_CLIENT::slot_mapping_start(double time)
+void SIO::slot_mapping_start(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     if(lidar->is_connected_f)
@@ -943,14 +944,14 @@ void WS_CLIENT::slot_mapping_start(double time)
     }
 }
 
-void WS_CLIENT::slot_mapping_stop(double time)
+void SIO::slot_mapping_stop(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
     send_mapping_stop_response();
 }
 
-void WS_CLIENT::slot_mapping_save(double time, QString name)
+void SIO::slot_mapping_save(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
@@ -961,23 +962,23 @@ void WS_CLIENT::slot_mapping_save(double time, QString name)
     if(result == 0)
     {
         send_mapping_save_response(name, "success");
-        printf("[WS_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[SIO_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
     }
     else
     {
         send_mapping_save_response(name, "fail");
-        printf("[WS_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[SIO_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
     }
 }
 
-void WS_CLIENT::slot_mapping_reload(double time)
+void SIO::slot_mapping_reload(double time)
 {
     last_send_kfrm_idx = 0;
-    printf("[WS_RECV] mapping reload\n");
+    printf("[SIO_RECV] mapping reload\n");
 }
 
 
-void WS_CLIENT::slot_mapload(double time, QString name)
+void SIO::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
@@ -1000,12 +1001,12 @@ void WS_CLIENT::slot_mapload(double time, QString name)
 }
 
 
-void WS_CLIENT::slot_localization_autoinit(double time)
+void SIO::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
 }
 
-void WS_CLIENT::slot_localization_init(double time, double x, double y, double z, double rz)
+void SIO::slot_localization_init(double time, double x, double y, double z, double rz)
 {
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
     {
@@ -1021,12 +1022,12 @@ void WS_CLIENT::slot_localization_init(double time, double x, double y, double z
     send_localization_response("init", "success");
 }
 
-void WS_CLIENT::slot_localization_start(double time)
+void SIO::slot_localization_start(double time)
 {
     slam->localization_start();
 }
 
-void WS_CLIENT::slot_localization_stop(double time)
+void SIO::slot_localization_stop(double time)
 {
     slam->localization_stop();
 }
