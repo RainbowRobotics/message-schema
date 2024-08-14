@@ -85,6 +85,7 @@
 #include <QJsonObject>
 #include <QTableWidget>
 #include <QHeaderView>
+#include <QtConcurrent/QtConcurrent>
 
 // defines
 #define ACC_G 9.80665

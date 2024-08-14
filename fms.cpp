@@ -11,7 +11,12 @@ FMS::FMS(QObject *parent)
 
 FMS::~FMS()
 {
-    client.close();
+    reconnect_timer.stop();
+
+    if(is_connected)
+    {
+        client.close();
+    }
 }
 
 void FMS::init()

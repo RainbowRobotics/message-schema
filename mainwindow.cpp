@@ -393,7 +393,7 @@ void MainWindow::setup_vtk()
         renderWindow->AddRenderer(renderer);
         viewer.reset(new pcl::visualization::PCLVisualizer(renderer, renderWindow, "viewer", false));
         ui->qvtkWidget->setRenderWindow(viewer->getRenderWindow());
-        viewer->setupInteractor(ui->qvtkWidget->interactor(), ui->qvtkWidget->renderWindow());
+        viewer->setupInteractor(ui->qvtkWidget->interactor(), ui->qvtkWidget->renderWindow());        
         viewer->setBackgroundColor(1.0, 1.0, 1.0);
         viewer->resetCamera();
 
@@ -2267,7 +2267,7 @@ void MainWindow::topo_plot()
                 QString axis_id = id + "_axis";
                 if(viewer->contains(axis_id.toStdString()))
                 {
-                    viewer->removeCoordinateSystem(axis_id.toStdString());
+                    viewer->removeShape(axis_id.toStdString());
                 }
             }
             last_plot_nodes.clear();
@@ -2306,31 +2306,36 @@ void MainWindow::topo_plot()
         {
             if(ui->ckb_PlotNodes->isChecked())
             {
-                // draw nodes
+                // draw nodes                
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;
                     if(unimap.nodes[p].type == "ROUTE")
                     {
-                        viewer->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
+                        const double size = 0.15;
+                        viewer->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
                         QString axis_id = id + "_axis";
-                        viewer->addCoordinateSystem(0.2, axis_id.toStdString());
-                        viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
                         viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+                                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                        0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
+                        const double size2 = 0.05;
+                        const double offset = config.ROBOT_SIZE_X[1] - size2;
                         QString axis_id = id + "_axis";
-                        viewer->addCoordinateSystem(1.0, axis_id.toStdString());
-                        viewer->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
@@ -2405,22 +2410,8 @@ void MainWindow::topo_plot()
             {
                 // draw names
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {                    
-                    if(unimap.nodes[p].type == "GOAL")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                        viewer->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
-
-                        last_plot_names.push_back(text_id);
-                    }
-                    else if(unimap.nodes[p].type == "ZONE")
+                {
+                    if(unimap.nodes[p].type == "ZONE")
                     {
                         // plot text
                         QString id = unimap.nodes[p].id;
@@ -2471,6 +2462,16 @@ void MainWindow::pick_plot()
         if(viewer->contains("sel_pre"))
         {
             viewer->removeShape("sel_pre");
+        }        
+
+        if(viewer->contains("text_cur"))
+        {
+            viewer->removeShape("text_cur");
+        }
+
+        if(viewer->contains("text_pre"))
+        {
+            viewer->removeShape("text_pre");
         }
 
         if(pick.cur_node != "")
@@ -2480,6 +2481,16 @@ void MainWindow::pick_plot()
             {
                 pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 1.0, 1.0);
                 viewer->addPolygonMesh(donut, "sel_cur");
+
+                // plot text
+                QString id = node->id;
+                QString text = id;
+
+                pcl::PointXYZ position;
+                position.x = node->tf(0,3);
+                position.y = node->tf(1,3);
+                position.z = node->tf(2,3) + 1.0;
+                viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
             }
         }
 
@@ -3206,14 +3217,15 @@ void MainWindow::plot_loop()
     }
 
     // rendering
-    ui->qvtkWidget->renderWindow()->Render();    
+    ui->qvtkWidget->renderWindow()->Render();
+
+    // check plot drift
     plot_proc_t = get_time() - st_time;
     if(plot_proc_t > 0.1)
     {
         printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
     }
 }
-
 
 // for plot loop2
 void MainWindow::map_plot2()
@@ -3288,7 +3300,7 @@ void MainWindow::topo_plot2()
                 QString axis_id = id + "_axis";
                 if(viewer2->contains(axis_id.toStdString()))
                 {
-                    viewer2->removeCoordinateSystem(axis_id.toStdString());
+                    viewer2->removeShape(axis_id.toStdString());
                 }
             }
             last_plot_nodes2.clear();
@@ -3333,25 +3345,30 @@ void MainWindow::topo_plot2()
                     QString id = unimap.nodes[p].id;
                     if(unimap.nodes[p].type == "ROUTE")
                     {
-                        viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 1.0, 1.0, 1.0, id.toStdString());
+                        const double size = 0.15;
+                        viewer2->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
                         QString axis_id = id + "_axis";
-                        viewer2->addCoordinateSystem(0.2, axis_id.toStdString());
-                        viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
                         viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
+                                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                        0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
+                        const double size2 = 0.05;
+                        const double offset = config.ROBOT_SIZE_X[1] - size2;
                         QString axis_id = id + "_axis";
-                        viewer2->addCoordinateSystem(1.0, axis_id.toStdString());
-                        viewer2->updateCoordinateSystemPose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
@@ -3427,21 +3444,7 @@ void MainWindow::topo_plot2()
                 // draw nodes
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    if(unimap.nodes[p].type == "GOAL")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.0;
-                        viewer2->addText3D(id.toStdString(), position, 0.2, 0.0, 1.0, 0.0, text_id.toStdString());
-
-                        last_plot_names2.push_back(text_id);
-                    }
-                    else if(unimap.nodes[p].type == "ZONE")
+                    if(unimap.nodes[p].type == "ZONE")
                     {
                         // plot text
                         QString id = unimap.nodes[p].id;
@@ -3479,9 +3482,12 @@ void MainWindow::pick_plot2()
                     Eigen::Vector3d pose = TF_to_se2(pre_node->tf);
 
                     QString str;
-                    str.sprintf("[pre_node]\nid: %s\ntype: %s\npos: %.3f, %.3f, %.2f\ninfo: %s",
-                                pre_node->id.toLocal8Bit().data(), pre_node->type.toLocal8Bit().data(),
-                                pose[0], pose[1], pose[2]*R2D, pre_node->info.toLocal8Bit().data());
+                    str.sprintf("[pre_node]\nid: %s\nname: %s\ntype: %s\npos: %.3f, %.3f, %.2f\ninfo: %s",
+                                pre_node->id.toLocal8Bit().data(),
+                                pre_node->name.toLocal8Bit().data(),
+                                pre_node->type.toLocal8Bit().data(),
+                                pose[0], pose[1], pose[2]*R2D,
+                                pre_node->info.toLocal8Bit().data());
 
                     ui->lb_PreNodeInfo->setText(str);
                 }
@@ -3503,9 +3509,12 @@ void MainWindow::pick_plot2()
                     Eigen::Vector3d pose = TF_to_se2(cur_node->tf);
 
                     QString str;
-                    str.sprintf("[cur_node]\nid: %s\ntype: %s\npos: %.3f, %.3f, %.2f\ninfo: %s",
-                                cur_node->id.toLocal8Bit().data(), cur_node->type.toLocal8Bit().data(),
-                                pose[0], pose[1], pose[2]*R2D, cur_node->info.toLocal8Bit().data());
+                    str.sprintf("[cur_node]\nid: %s\nname: %s\ntype: %s\npos: %.3f, %.3f, %.2f\ninfo: %s",
+                                cur_node->id.toLocal8Bit().data(),
+                                cur_node->name.toLocal8Bit().data(),
+                                cur_node->type.toLocal8Bit().data(),
+                                pose[0], pose[1], pose[2]*R2D,
+                                cur_node->info.toLocal8Bit().data());
 
                     ui->lb_CurNodeInfo->setText(str);
                 }
@@ -3545,6 +3554,17 @@ void MainWindow::pick_plot2()
         {
             viewer2->removeShape("sel_pre");
         }
+
+        if(viewer2->contains("text_cur"))
+        {
+            viewer2->removeShape("text_cur");
+        }
+
+        if(viewer2->contains("text_pre"))
+        {
+            viewer2->removeShape("text_pre");
+        }
+
 
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
@@ -3595,6 +3615,16 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_pre");
                     }
+
+                    // plot text
+                    QString id = node->id;
+                    QString text = id;
+
+                    pcl::PointXYZ position;
+                    position.x = node->tf(0,3);
+                    position.y = node->tf(1,3);
+                    position.z = node->tf(2,3) + 1.0;
+                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_pre");
                 }
             }
 
@@ -3618,6 +3648,16 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_cur");
                     }
+
+                    // plot text
+                    QString id = node->id;
+                    QString text = id;
+
+                    pcl::PointXYZ position;
+                    position.x = node->tf(0,3);
+                    position.y = node->tf(1,3);
+                    position.z = node->tf(2,3) + 1.0;
+                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
                 }
             }
 

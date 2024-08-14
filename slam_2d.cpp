@@ -943,15 +943,23 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d P1 = pts[i];
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
-            // find nn
-            std::vector<unsigned int> ret_near_idxs(1);
-            std::vector<double> ret_near_sq_dists(1);
+            // knn points
+            Eigen::Vector3d P0(0, 0, 0);
+            {
+                const int pt_num = 5;
+                std::vector<unsigned int> ret_near_idxs(pt_num);
+                std::vector<double> ret_near_sq_dists(pt_num);
 
-            double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
-            tree.knnSearch(&near_query_pt[0], 1, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
+                tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
-            int nn_idx = ret_near_idxs[0];            
-            Eigen::Vector3d P0(cloud.pts[nn_idx].x, cloud.pts[nn_idx].y, cloud.pts[nn_idx].z);
+                for(int q = 0; q < pt_num; q++)
+                {
+                    int idx = ret_near_idxs[q];
+                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                }
+                P0 /= pt_num;
+            }
 
             // rmt
             double rmt = 1.0;
@@ -1184,12 +1192,12 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
             Eigen::Vector3d V1 = (_P1 - cur_G.block(0,3,3,1)).normalized();
 
-            // knn points
-            int pt_num = 5;
+            // knn points            
             int nn_idx = 0;
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
+                const int pt_num = 5;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1462,19 +1470,20 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = 0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                std::vector<unsigned int> ret_near_idxs(3);
-                std::vector<double> ret_near_sq_dists(3);
+                const int pt_num = 5;
+                std::vector<unsigned int> ret_near_idxs(pt_num);
+                std::vector<double> ret_near_sq_dists(pt_num);
 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
-                tree.knnSearch(&near_query_pt[0], 3, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+                tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
                 nn_idx = ret_near_idxs[0];
-                for(size_t q = 0; q < 3; q++)
+                for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
                 }
-                P0 /= 3;
+                P0 /= pt_num;
             }
 
             // rmt

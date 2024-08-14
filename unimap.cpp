@@ -490,24 +490,7 @@ std::vector<QString> UNIMAP::get_nodes(QString type)
 QString UNIMAP::gen_node_id()
 {
     QString res;
-    if(nodes.size() == 0)
-    {
-        res.sprintf("N_%04d", 0);
-    }
-    else
-    {
-        int max_num = 0;
-        for(size_t p = 0; p < nodes.size(); p++)
-        {
-            QStringList list = nodes[p].id.split("_");
-            int num = list[1].toInt();
-            if(num > max_num)
-            {
-                max_num = num;
-            }
-        }
-        res.sprintf("N_%04d", max_num+1);
-    }
+    res.sprintf("N_%lld", (long long)(get_time0()*1000));
     return res;
 }
 

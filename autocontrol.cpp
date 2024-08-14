@@ -204,13 +204,7 @@ void AUTOCONTROL::move_tng(Eigen::Matrix4d goal_tf, int preset)
 
 PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf, bool is_hpp)
 {
-    // check already goal reached
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    if(calc_dist_2d(goal_tf.block(0,3,3,1) - cur_tf.block(0,3,3,1)) < config->DRIVE_GOAL_D)
-    {
-        printf("[AUTO] near goal\n");
-        return PATH();
-    }
 
     // get st node id    
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
