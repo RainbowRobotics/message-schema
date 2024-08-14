@@ -216,34 +216,6 @@ void SIM::a_loop()
                 reflects.push_back(r);
             }
 
-            // add virtual obs
-            std::vector<Eigen::Vector3d> local_obs_pts;
-            for(double obs_x = -VIRTUAL_OBS_SIZE/2; obs_x <= VIRTUAL_OBS_SIZE/2+0.001; obs_x += 0.05)
-            {
-                for(double obs_y = -VIRTUAL_OBS_SIZE/2; obs_y <= VIRTUAL_OBS_SIZE/2+0.001; obs_y += 0.05)
-                {
-                    local_obs_pts.push_back(Eigen::Vector3d(obs_x, obs_y, 0));
-                }
-            }
-
-            for(size_t p = 0; p < unimap->nodes.size(); p++)
-            {
-                QString id = unimap->nodes[p].id;
-                if(unimap->nodes[p].type == "OBS")
-                {
-                    Eigen::Matrix4d obs_tf = unimap->nodes[p].tf;
-                    Eigen::Matrix4d tf = cur_tf_inv*obs_tf;
-                    for(size_t q = 0; q < local_obs_pts.size(); q++)
-                    {
-                        Eigen::Vector3d P = local_obs_pts[q];
-                        Eigen::Vector3d _P = tf.block(0,0,3,3)*P + tf.block(0,3,3,1);
-
-                        pts.push_back(_P);
-                        reflects.push_back(100);
-                    }
-                }
-            }
-
             // update
             FRAME frm;
             frm.t = sim_t;

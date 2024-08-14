@@ -23,6 +23,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // console hooking
+    hook_buf = new CONSOLE_HOOK(ui->te_Console, ui->ckb_ConsoleAutoScroll);
+    old_buf = std::cout.rdbuf(hook_buf);
+    printf("[MAIN] Console hooking\n");
+
     // for tab
     connect(ui->main_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
     connect(ui->annot_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
@@ -177,6 +182,9 @@ MainWindow::~MainWindow()
         watch_thread->join();
         watch_thread = NULL;
     }
+
+    std::cout.rdbuf(old_buf);
+    delete hook_buf;
 
     delete ui;
 }
@@ -2334,23 +2342,29 @@ void MainWindow::topo_plot()
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
-                        viewer->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
+                        QString info = unimap.nodes[p].info;
 
-                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        NODE_INFO res;
+                        if(parse_info(info, "SIZE", res))
+                        {
+                            viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
+                                            -res.sz[1]/2, res.sz[1]/2,
+                                            -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
+
+                            viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        }
                     }
                     else if(unimap.nodes[p].type == "ZONE")
                     {
                         QString info = unimap.nodes[p].info;
 
                         NODE_INFO res;
-                        if(parse_info(info, "ZONE", res))
+                        if(parse_info(info, "SIZE", res))
                         {
                             viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
                                             -res.sz[1]/2, res.sz[1]/2,
-                                            -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 0.0, id.toStdString());
+                                            -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
 
                             viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
@@ -3349,23 +3363,29 @@ void MainWindow::topo_plot2()
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
-                        viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                        0.0, VIRTUAL_OBS_SIZE, 0.0, 1.0, 1.0, id.toStdString());
+                        QString info = unimap.nodes[p].info;
 
-                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        NODE_INFO res;
+                        if(parse_info(info, "SIZE", res))
+                        {
+                            viewer2->addCube(-res.sz[0]/2, res.sz[0]/2,
+                                             -res.sz[1]/2, res.sz[1]/2,
+                                             -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
+
+                            viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                            viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        }
                     }
                     else if(unimap.nodes[p].type == "ZONE")
                     {
                         QString info = unimap.nodes[p].info;
 
                         NODE_INFO res;
-                        if(parse_info(info, "ZONE", res))
+                        if(parse_info(info, "SIZE", res))
                         {
                             viewer2->addCube(-res.sz[0]/2, res.sz[0]/2,
                                              -res.sz[1]/2, res.sz[1]/2,
-                                             -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 0.0, id.toStdString());
+                                             -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
 
                             viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
@@ -3571,7 +3591,7 @@ void MainWindow::pick_plot2()
                     if(node->type == "ZONE")
                     {
                         NODE_INFO res;
-                        if(parse_info(node->info, "ZONE", res))
+                        if(parse_info(node->info, "SIZE", res))
                         {
                             double r = std::min<double>(res.sz[0], res.sz[1])/2;
                             pcl::PolygonMesh donut = make_donut(r, 0.05, node->tf, 1.0, 0.0, 0.0);
@@ -3594,7 +3614,7 @@ void MainWindow::pick_plot2()
                     if(node->type == "ZONE")
                     {
                         NODE_INFO res;
-                        if(parse_info(node->info, "ZONE", res))
+                        if(parse_info(node->info, "SIZE", res))
                         {
                             double r = std::min<double>(res.sz[0], res.sz[1])/2;
                             pcl::PolygonMesh donut = make_donut(r, 0.05, node->tf, 0.0, 1.0, 0.0);
@@ -3631,10 +3651,18 @@ void MainWindow::pick_plot2()
                 }
                 else if(ui->cb_NodeType->currentText() == "OBS")
                 {
-                    viewer2->addCube(-VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                     -VIRTUAL_OBS_SIZE/2, VIRTUAL_OBS_SIZE/2,
-                                     0.0, VIRTUAL_OBS_SIZE, 0.5, 0.5, 0.5, "pick_body");
-                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                    double size_x = ui->spb_NodeSizeX->value();
+                    double size_y = ui->spb_NodeSizeY->value();
+                    double size_z = ui->spb_NodeSizeZ->value();
+
+                    QString info;
+                    info.sprintf("SIZE,%.2f,%.2f,%.2f\n", size_x, size_y, size_z);
+                    ui->te_NodeInfo->setText(info);
+
+                    viewer2->addCube(-size_x/2, size_x/2,
+                                     -size_y/2, size_y/2,
+                                     -size_z/2, size_z/2, 0.9, 0.9, 0.9, "pick_body");
+                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.2, "pick_body");
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
                 else if(ui->cb_NodeType->currentText() == "ZONE")
@@ -3644,7 +3672,7 @@ void MainWindow::pick_plot2()
                     double size_z = ui->spb_NodeSizeZ->value();
 
                     QString info;
-                    info.sprintf("ZONE,%.2f,%.2f,%.2f\n", size_x, size_y, size_z);
+                    info.sprintf("SIZE,%.2f,%.2f,%.2f\n", size_x, size_y, size_z);
                     ui->te_NodeInfo->setText(info);
 
                     viewer2->addCube(-size_x/2, size_x/2,

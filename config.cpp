@@ -242,6 +242,18 @@ void CONFIG::load()
                 printf("[CONFIG] CAM_HEIGHT_MAX, %s\n", obj_cam["CAM_HEIGHT_MAX"].toString().toLocal8Bit().data());
             }
 
+            QJsonObject obj_fms = obj["fms"].toObject();
+            {
+                SERVER_IP = obj_fms["SERVER_IP"].toString();
+                printf("[CONFIG] SERVER_IP, %s\n", obj_cam["SERVER_IP"].toString().toLocal8Bit().data());
+
+                SERVER_ID = obj_fms["SERVER_ID"].toString();
+                printf("[CONFIG] SERVER_ID, %s\n", obj_cam["SERVER_ID"].toString().toLocal8Bit().data());
+
+                SERVER_PW = obj_fms["SERVER_PW"].toString();
+                printf("[CONFIG] SERVER_PW, %s\n", obj_cam["SERVER_PW"].toString().toLocal8Bit().data());
+            }
+
             QJsonObject obj_docking = obj["docking"].toObject();
             {
                 DOCKING_GOAL_D = obj_docking["DOCKING_GOAL_D"].toString().toDouble();

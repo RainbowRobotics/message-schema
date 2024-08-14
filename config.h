@@ -89,6 +89,11 @@ public:
     double CAM_HEIGHT_MIN = 0.1;
     double CAM_HEIGHT_MAX = 1.0;
 
+    // fms
+    QString SERVER_IP = "127.0.0.1";
+    QString SERVER_ID = "rainbow";
+    QString SERVER_PW = "rainbow";
+
     // docking
     double DOCKING_GOAL_D = 0.03;
     double DOCKING_GOAL_TH = 3.0;

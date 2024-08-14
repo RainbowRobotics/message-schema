@@ -73,7 +73,7 @@
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -235,6 +235,42 @@
              </property>
             </widget>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_ConsoleAutoScroll">
+              <property name="text">
+               <string>Auto scroll</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="te_Console"/>
           </item>
          </layout>
         </item>
@@ -1896,10 +1932,13 @@ stop</string>
                <string> m</string>
               </property>
               <property name="minimum">
-               <double>1.000000000000000</double>
+               <double>0.100000000000000</double>
               </property>
               <property name="maximum">
                <double>100.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
               </property>
              </widget>
              <widget class="QDoubleSpinBox" name="spb_NodeSizeY">
@@ -1915,10 +1954,13 @@ stop</string>
                <string> m</string>
               </property>
               <property name="minimum">
-               <double>1.000000000000000</double>
+               <double>0.100000000000000</double>
               </property>
               <property name="maximum">
                <double>100.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
               </property>
              </widget>
              <widget class="QDoubleSpinBox" name="spb_NodeSizeZ">
@@ -1938,6 +1980,9 @@ stop</string>
               </property>
               <property name="maximum">
                <double>10.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
               </property>
              </widget>
              <widget class="QLabel" name="label_24">

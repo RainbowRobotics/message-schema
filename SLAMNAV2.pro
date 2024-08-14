@@ -27,6 +27,7 @@ SOURCES += \
     autocontrol.cpp \
     cam.cpp \
     code_reader.cpp \
+    console_hook.cpp \
     dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     autocontrol.h \
     cam.h \
     code_reader.h \
+    console_hook.h \
     dockingcontrol.h \
     config.h \
     cv_to_qt.h \

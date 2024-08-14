@@ -9,17 +9,6 @@ CODE_READER::CODE_READER(QObject *parent)
 
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
     connect(&check_recv_timer, SIGNAL(timeout()), this, SLOT(check_recv_loop()));
-
-    check_recv_timer.setInterval(100);
-    check_recv_timer.start();
-
-    load_codes();
-
-    double th = 90*D2R;
-    R(0,0) = std::cos(th);
-    R(0,1) = -std::sin(th);
-    R(1,0) = std::sin(th);
-    R(1,1) = std::cos(th);
 }
 
 CODE_READER::~CODE_READER()
@@ -40,9 +29,19 @@ QString CODE_READER::get_code_info()
 
 void CODE_READER::init()
 {
+    check_recv_timer.setInterval(100);
+    check_recv_timer.start();
+
+    load_codes();
+
+    double th = 90*D2R;
+    R(0,0) = std::cos(th);
+    R(0,1) = -std::sin(th);
+    R(1,0) = std::sin(th);
+    R(1,1) = std::cos(th);
+
     client.connectToHost(QHostAddress("192.168.2.12"), 2112);
     reconnect_timer.start(1000);
-
 }
 
 void CODE_READER::readyread()

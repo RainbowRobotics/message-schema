@@ -85,5 +85,10 @@
     		"CAM_TF_1": "0.235,-0.0881,0.2,-62.0,0.0,-115.0",
     		"CAM_HEIGHT_MIN": "0.1",
     		"CAM_HEIGHT_MAX": "1.0"
+	},
+	"fms": {
+	    	"SERVER_IP": "127.0.0.1",
+	    	"SERVER_ID": "rainbow",
+		"SERVER_PW": "rainbow"
 	}
 }

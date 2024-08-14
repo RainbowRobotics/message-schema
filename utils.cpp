@@ -955,7 +955,7 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
                 result.rpy[2] = info_parts[3].toDouble(); // yaw
                 return true;
             }
-            else if(info_key == "ZONE" && info_parts.size() == 4)
+            else if(info_key == "SIZE" && info_parts.size() == 4)
             {
                 result.sz[0] = info_parts[1].toDouble(); // size x
                 result.sz[1] = info_parts[2].toDouble(); // size y

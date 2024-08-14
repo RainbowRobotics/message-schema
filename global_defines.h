@@ -11,6 +11,8 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <iostream>
+#include <streambuf>
 
 // tbb
 #include <tbb/concurrent_queue.h>
@@ -83,6 +85,8 @@
 #include <QJsonObject>
 #include <QTableWidget>
 #include <QHeaderView>
+
+#include "console_hook.h"
 
 // defines
 #define ACC_G 9.80665

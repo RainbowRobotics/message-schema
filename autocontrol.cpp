@@ -1654,19 +1654,6 @@ PATH AUTOCONTROL::calc_avoid_path()
     }
 }
 
-std::vector<double> AUTOCONTROL::expect_drive_time()
-{
-    PATH global_path = get_cur_global_path();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-
-
-
-
-    std::vector<double> res;
-    return res;
-}
-
 // check condition
 bool AUTOCONTROL::is_everything_fine()
 {

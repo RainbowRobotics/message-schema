@@ -15,6 +15,11 @@
 
 // qt
 #include <QObject>
+#include <QTimer>
+#include <QWebSocket>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 class FMS : public QObject
 {
@@ -23,6 +28,8 @@ public:
     explicit FMS(QObject *parent = nullptr);
     ~FMS();
     std::mutex mtx;
+    QWebSocket client;
+    QTimer reconnect_timer;
 
     // other modules
     CONFIG *config = NULL;
@@ -33,7 +40,8 @@ public:
     AUTOCONTROL *ctrl = NULL;
 
     // vars
-    QString id;
+    QString id = "";
+    std::atomic<bool> is_connected = {false};
 
     // funcs
     void init();
@@ -41,6 +49,11 @@ public:
 Q_SIGNALS:
 
 private Q_SLOTS:
+    void reconnect_loop();
+
+    void connected();
+    void disconnected();
+    void recv_message(QString message);
 
 };
 
