@@ -23,9 +23,6 @@
 
 // qt
 #include <QMainWindow>
-#include <QProcess>
-#include <QWindow>
-#include <QVBoxLayout>
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QTimer>
@@ -41,10 +38,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
-    // console hooking
-    CONSOLE_HOOK* hook_buf = NULL;
-    std::streambuf* old_buf = NULL;
 
     // modules
     PICKING pick;

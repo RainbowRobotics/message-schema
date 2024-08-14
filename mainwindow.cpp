@@ -23,11 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // console hooking
-    hook_buf = new CONSOLE_HOOK(ui->te_Console, ui->ckb_ConsoleAutoScroll);
-    old_buf = std::cout.rdbuf(hook_buf);
-    printf("[MAIN] Console hooking\n");
-
     // for tab
     connect(ui->main_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
     connect(ui->annot_tab, SIGNAL(currentChanged(int)), this, SLOT(all_update()));
@@ -182,9 +177,6 @@ MainWindow::~MainWindow()
         watch_thread->join();
         watch_thread = NULL;
     }
-
-    std::cout.rdbuf(old_buf);
-    delete hook_buf;
 
     delete ui;
 }

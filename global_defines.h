@@ -86,8 +86,6 @@
 #include <QTableWidget>
 #include <QHeaderView>
 
-#include "console_hook.h"
-
 // defines
 #define ACC_G 9.80665
 #define N2S (1.0e-9) // nanosec to sec
