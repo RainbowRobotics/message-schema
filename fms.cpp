@@ -27,7 +27,7 @@ void FMS::init()
     id = _id;
     printf("[FMS] ID: %s\n", _id.toLocal8Bit().data());
 
-    reconnect_timer.start(1000);
+    reconnect_timer.start(3000);
     printf("[FMS] start reconnect timer\n", _id.toLocal8Bit().data());
 }
 
@@ -43,18 +43,24 @@ void FMS::reconnect_loop()
 
 void FMS::connected()
 {
-    connect(&client, &QWebSocket::textMessageReceived, this, &FMS::recv_message);
-    is_connected = true;
+    if(!is_connected)
+    {
+        connect(&client, &QWebSocket::textMessageReceived, this, &FMS::recv_message);
+        is_connected = true;
 
-    printf("[FMS] connected\n");
+        printf("[FMS] connected\n");
+    }
 }
 
 void FMS::disconnected()
 {
-    is_connected = false;
-    disconnect(&client, &QWebSocket::textMessageReceived, this, &FMS::recv_message);
+    if(is_connected)
+    {
+        is_connected = false;
+        disconnect(&client, &QWebSocket::textMessageReceived, this, &FMS::recv_message);
 
-    printf("[FMS] disconnected\n");
+        printf("[FMS] disconnected\n");
+    }
 }
 
 void FMS::recv_message(QString message)

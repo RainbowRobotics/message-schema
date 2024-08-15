@@ -15,6 +15,8 @@ SIO::SIO(QObject *parent)
     using std::placeholders::_4;
 
     sio::socket::ptr sock = io->socket();
+    io->set_logs_quiet();
+
     BIND_EVENT(sock, "motorinit", std::bind(&SIO::recv_motorinit, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "move", std::bind(&SIO::recv_move, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "mapping", std::bind(&SIO::recv_mapping, this, _1, _2, _3, _4));
@@ -64,12 +66,6 @@ QString SIO::get_json(sio::message::ptr const& data, QString key)
 
 void SIO::init()
 {
-    if(config->SIM_MODE == 1)
-    {
-        printf("[SIO] simulation mode\n");
-        return;
-    }
-
     reconnect_timer.start(3000);
 }
 
