@@ -16,6 +16,7 @@
 
 // tbb
 #include <tbb/concurrent_queue.h>
+#include <tbb/concurrent_vector.h>
 
 // vtk
 #include <QVTKOpenGLNativeWidget.h>

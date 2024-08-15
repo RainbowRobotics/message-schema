@@ -66,7 +66,7 @@ QString SIO::get_json(sio::message::ptr const& data, QString key)
 
 void SIO::init()
 {
-    reconnect_timer.start(3000);
+    reconnect_timer.start(10000);
 }
 
 void SIO::sio_connected()

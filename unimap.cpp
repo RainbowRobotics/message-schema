@@ -115,6 +115,7 @@ void UNIMAP::load_map(QString path)
     // load topology file
     {
         nodes.clear();
+
         QString topo_path = map_dir + "/topo.json";
         QFileInfo topo_info(topo_path);
         if(topo_info.exists() && topo_info.isFile())
@@ -280,7 +281,7 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
                 }
 
                 // erase node
-                nodes.erase(it);
+                nodes.erase(it);                
             }
         }
     }
@@ -436,9 +437,7 @@ void UNIMAP::add_link2(QString id0, QString id1)
 
 void UNIMAP::clear_nodes()
 {
-    mtx.lock();
     nodes.clear();
-    mtx.unlock();
 
     printf("[UNIMAP] topology cleared\n");
 }

@@ -851,6 +851,61 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         _static_map.ptr<uchar>(v)[u] = 255;
     }
 
+    // add obs nodes
+    std::vector<QString> obs_nodes = unimap->get_nodes("OBS");
+    if(obs_nodes.size() > 0)
+    {
+        for(size_t p = 0; p < obs_nodes.size(); p++)
+        {
+            QString id = obs_nodes[p];
+            NODE* node = unimap->get_node_by_id(id);
+            if(node != NULL)
+            {
+                QString info = node->info;
+                Eigen::Matrix4d tf = node->tf;
+
+                NODE_INFO res;
+                if(parse_info(info, "SIZE", res))
+                {
+                    Eigen::Vector3d P0( res.sz[0]/2,  res.sz[1]/2, -res.sz[2]/2);
+                    Eigen::Vector3d P1( res.sz[0]/2, -res.sz[1]/2,  res.sz[2]/2); // for z range check
+                    Eigen::Vector3d P2(-res.sz[0]/2, -res.sz[1]/2, -res.sz[2]/2);
+                    Eigen::Vector3d P3(-res.sz[0]/2,  res.sz[1]/2, -res.sz[2]/2);
+
+                    Eigen::Vector3d _P0 = tf.block(0,0,3,3)*P0 + tf.block(0,3,3,1);
+                    Eigen::Vector3d _P1 = tf.block(0,0,3,3)*P1 + tf.block(0,3,3,1);
+                    Eigen::Vector3d _P2 = tf.block(0,0,3,3)*P2 + tf.block(0,3,3,1);
+                    Eigen::Vector3d _P3 = tf.block(0,0,3,3)*P3 + tf.block(0,3,3,1);
+
+                    Eigen::Vector3d l_P0 = cur_tf_inv.block(0,0,3,3)*_P0 + cur_tf_inv.block(0,3,3,1);
+                    Eigen::Vector3d l_P1 = cur_tf_inv.block(0,0,3,3)*_P1 + cur_tf_inv.block(0,3,3,1);
+                    Eigen::Vector3d l_P2 = cur_tf_inv.block(0,0,3,3)*_P2 + cur_tf_inv.block(0,3,3,1);
+                    Eigen::Vector3d l_P3 = cur_tf_inv.block(0,0,3,3)*_P3 + cur_tf_inv.block(0,3,3,1);
+
+                    // check z overlap
+                    if(l_P1[2] < config->OBS_MAP_MIN_Z || l_P0[2] > config->OBS_MAP_MAX_Z)
+                    {
+                        // no overlap
+                        continue;
+                    }
+
+                    cv::Vec2i uv0 = xy_uv(l_P0[0], l_P0[1]);
+                    cv::Vec2i uv1 = xy_uv(l_P1[0], l_P1[1]);
+                    cv::Vec2i uv2 = xy_uv(l_P2[0], l_P2[1]);
+                    cv::Vec2i uv3 = xy_uv(l_P3[0], l_P3[1]);
+
+                    std::vector<std::vector<cv::Point>> pts(1);
+                    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+                    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+                    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+                    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+                    cv::fillPoly(_wall_map, pts, cv::Scalar(255));
+                    cv::fillPoly(_static_map, pts, cv::Scalar(255));
+                }
+            }
+        }
+    }
 
     // subtract static map for dynamic obstacle
     cv::Mat _static_map2;
