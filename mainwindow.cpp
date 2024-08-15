@@ -3188,6 +3188,8 @@ void MainWindow::ctrl_plot()
 }
 void MainWindow::plot_loop()
 {
+    plot_timer.stop();
+
     double st_time = get_time();
 
     map_plot();
@@ -3225,6 +3227,8 @@ void MainWindow::plot_loop()
     {
         printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
     }
+
+    plot_timer.start();
 }
 
 // for plot loop2
@@ -3758,6 +3762,8 @@ void MainWindow::loc_plot2()
 }
 void MainWindow::plot_loop2()
 {
+    plot_timer2.stop();
+
     map_plot2();
     topo_plot2();
     pick_plot2();
@@ -3765,4 +3771,6 @@ void MainWindow::plot_loop2()
 
     // rendering
     ui->qvtkWidget2->renderWindow()->Render();    
+
+    plot_timer2.start();
 }
