@@ -132,6 +132,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
+    // for websocket ui
+    connect(this, SIGNAL(signal_send_status()), &wsui, SLOT(send_status()));
+
     // set plot window
     setup_vtk();
 
@@ -1872,7 +1875,8 @@ void MainWindow::watch_loop()
 
             if(wsui.is_connected)
             {
-                wsui.send_status();
+                //wsui.send_status();
+                Q_EMIT signal_send_status();
             }
         }
 

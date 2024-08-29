@@ -143,6 +143,9 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
+Q_SIGNALS:
+    void signal_send_status();
+
 public Q_SLOTS:
 
     // replot

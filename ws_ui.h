@@ -58,22 +58,6 @@ public:
     void init();
     QString get_json(QJsonObject& json, QString key);
 
-    // send funcs
-    void send_status();
-
-    void send_mapping_start_response(QString result);
-    void send_mapping_stop_response();
-    void send_mapping_save_response(QString name, QString result);
-
-    void send_mapload_response(QString name, QString result);
-    void send_localization_response(QString command, QString result);
-
-    void send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message);
-    void send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message);
-    void send_move_pause_response(QString result);
-    void send_move_resume_response(QString result);
-    void send_move_stop_response(QString result);
-
 public Q_SLOTS:
     void reconnect_loop();
 
@@ -103,7 +87,8 @@ Q_SIGNALS:
     void signal_localization_start(double time);
     void signal_localization_stop(double time);
 
-private Q_SLOTS:
+public Q_SLOTS:
+    // recv slots
     void slot_motorinit(double time);
 
     void slot_move_jog(double time, double vx, double vy, double wz);
@@ -126,6 +111,22 @@ private Q_SLOTS:
     void slot_localization_init(double time, double x, double y, double z, double rz);
     void slot_localization_start(double time);
     void slot_localization_stop(double time);
+
+    // send slots
+    void send_status();
+
+    void send_mapping_start_response(QString result);
+    void send_mapping_stop_response();
+    void send_mapping_save_response(QString name, QString result);
+
+    void send_mapload_response(QString name, QString result);
+    void send_localization_response(QString command, QString result);
+
+    void send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message);
+    void send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message);
+    void send_move_pause_response(QString result);
+    void send_move_resume_response(QString result);
+    void send_move_stop_response(QString result);
 };
 
 #endif // WS_UI_H
