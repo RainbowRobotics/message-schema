@@ -1,5 +1,5 @@
-#ifndef FMS_H
-#define FMS_H
+#ifndef COMM_FMS_H
+#define COMM_FMS_H
 
 // global defines
 #include "global_defines.h"
@@ -22,16 +22,15 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class FMS : public QObject
+class COMM_FMS : public QObject
 {
     Q_OBJECT
 public:
-    explicit FMS(QObject *parent = nullptr);
-    ~FMS();
+    explicit COMM_FMS(QObject *parent = nullptr);
+    ~COMM_FMS();
     std::mutex mtx;
     QWebSocket client;
     QTimer reconnect_timer;
-    QTimer send_timer;
 
     // other modules
     CONFIG *config = NULL;
@@ -50,15 +49,29 @@ public:
     void init();
 
 Q_SIGNALS:
+    void signal_recv_path(std::vector<QString> node_path);
+    void signal_recv_pause();
+    void signal_recv_resume();
+    void signal_recv_stop();
 
 private Q_SLOTS:
     void reconnect_loop();
-    void send_loop();
 
     void connected();
     void disconnected();
     void recv_message(QString message);
 
+private Q_SLOTS:
+    // recv slots
+    void recv_path(std::vector<QString> node_path);
+    void recv_pause();
+    void recv_resume();
+    void recv_stop();
+
+    // send slots
+    void send_goal(QString goal);
+    void send_pose(QString pose);
+
 };
 
-#endif // FMS_H
+#endif // COMM_FMS_H

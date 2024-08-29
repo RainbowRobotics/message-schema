@@ -12,11 +12,11 @@ MainWindow::MainWindow(QWidget *parent)
     , unimap(this)
     , obsmap(this)
     , ctrl(this)
-    , fms(this)
-    , sio(this)
     , task(this)
     , sim(this)
-    , wsui(this)
+    , cfms(this)
+    , cms(this)
+    , cui(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)        
@@ -116,8 +116,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));    
-    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &sio, SLOT(slot_move_succeed(QString)));
-    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &sio, SLOT(slot_move_failed(QString)));
+    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &cms, SLOT(slot_move_succeed(QString)));
+    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &cms, SLOT(slot_move_failed(QString)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -133,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
     // for websocket ui
-    connect(this, SIGNAL(signal_send_status()), &wsui, SLOT(send_status()));
+    connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // set plot window
     setup_vtk();
@@ -345,29 +345,6 @@ void MainWindow::init_modules()
     ctrl.obsmap = &obsmap;    
     ctrl.init();
 
-    // fms client module init
-    fms.config = &config;
-    fms.logger = &logger;
-    fms.mobile = &mobile;
-    fms.slam = &slam;
-    fms.unimap = &unimap;
-    fms.obsmap = &obsmap;
-    fms.ctrl = &ctrl;
-    fms.init();
-
-    // socket.io client init
-    sio.config = &config;
-    sio.logger = &logger;
-    sio.mobile = &mobile;
-    sio.lidar = &lidar;
-    sio.cam = &cam;
-    sio.code = &code;
-    sio.slam = &slam;
-    sio.unimap = &unimap;
-    sio.obsmap = &obsmap;
-    sio.ctrl = &ctrl;
-    sio.init();
-
     // simulation module init
     sim.config = &config;
     sim.logger = &logger;
@@ -384,18 +361,41 @@ void MainWindow::init_modules()
     task.ctrl = &ctrl;
     task.mobile = &mobile;
 
+    // fms client module init
+    cfms.config = &config;
+    cfms.logger = &logger;
+    cfms.mobile = &mobile;
+    cfms.slam = &slam;
+    cfms.unimap = &unimap;
+    cfms.obsmap = &obsmap;
+    cfms.ctrl = &ctrl;
+    cfms.init();
+
+    // socket.io client init
+    cms.config = &config;
+    cms.logger = &logger;
+    cms.mobile = &mobile;
+    cms.lidar = &lidar;
+    cms.cam = &cam;
+    cms.code = &code;
+    cms.slam = &slam;
+    cms.unimap = &unimap;
+    cms.obsmap = &obsmap;
+    cms.ctrl = &ctrl;
+    cms.init();
+
     // websocket ui init
-    wsui.config = &config;
-    wsui.logger = &logger;
-    wsui.mobile = &mobile;
-    wsui.lidar = &lidar;
-    wsui.cam = &cam;
-    wsui.code = &code;
-    wsui.slam = &slam;
-    wsui.unimap = &unimap;
-    wsui.obsmap = &obsmap;
-    wsui.ctrl = &ctrl;
-    wsui.init();
+    cui.config = &config;
+    cui.logger = &logger;
+    cui.mobile = &mobile;
+    cui.lidar = &lidar;
+    cui.cam = &cam;
+    cui.code = &code;
+    cui.slam = &slam;
+    cui.unimap = &unimap;
+    cui.obsmap = &obsmap;
+    cui.ctrl = &ctrl;
+    cui.init();
 
     // start watchdog loop
     watch_flag = true;
@@ -1868,12 +1868,12 @@ void MainWindow::watch_loop()
         // for 100ms loop
         if(cnt % 1 == 0)
         {
-            if(sio.is_connected)
+            if(cms.is_connected)
             {
-                sio.send_status();
+                cms.send_status();
             }
 
-            if(wsui.is_connected)
+            if(cui.is_connected)
             {
                 //wsui.send_status();
                 Q_EMIT signal_send_status();
@@ -1883,18 +1883,18 @@ void MainWindow::watch_loop()
         // for 500ms loop
         if(cnt % 5 == 0)
         {
-            if(sio.is_connected)
+            if(cms.is_connected)
             {
-                sio.send_mapping_cloud();
+                cms.send_mapping_cloud();
             }
         }
 
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
-            if(sio.is_connected)
+            if(cms.is_connected)
             {
-                sio.send_lidar();
+                cms.send_lidar();
             }
         }
 
@@ -1998,11 +1998,11 @@ void MainWindow::watch_loop()
             }
 
             // check multi
-            if(last_fms_connection == true && fms.is_connected == false)
+            if(last_fms_connection == true && cfms.is_connected == false)
             {
                 printf("[WATCH] fms disconnect dectected\n");
             }
-            last_fms_connection = fms.is_connected;
+            last_fms_connection = cfms.is_connected;
 
             // check system info
             {

@@ -1,8 +1,8 @@
-#include "sio.h"
+#include "comm_ms.h"
 
 #include "mainwindow.h"
 
-SIO::SIO(QObject *parent)
+COMM_MS::COMM_MS(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
@@ -17,15 +17,15 @@ SIO::SIO(QObject *parent)
     sio::socket::ptr sock = io->socket();
     io->set_logs_quiet();
 
-    BIND_EVENT(sock, "motorinit", std::bind(&SIO::recv_motorinit, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "move", std::bind(&SIO::recv_move, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "mapping", std::bind(&SIO::recv_mapping, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "mapload", std::bind(&SIO::recv_mapload, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "localization", std::bind(&SIO::recv_localization, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "motorinit", std::bind(&COMM_MS::recv_motorinit, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "move", std::bind(&COMM_MS::recv_move, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapping", std::bind(&COMM_MS::recv_mapping, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapload", std::bind(&COMM_MS::recv_mapload, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "localization", std::bind(&COMM_MS::recv_localization, this, _1, _2, _3, _4));
 
-    io->set_open_listener(std::bind(&SIO::sio_connected, this));
-    io->set_close_listener(std::bind(&SIO::sio_disconnected, this, _1));
-    io->set_fail_listener(std::bind(&SIO::sio_error, this));
+    io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
+    io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
+    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
@@ -53,40 +53,40 @@ SIO::SIO(QObject *parent)
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 }
 
-SIO::~SIO()
+COMM_MS::~COMM_MS()
 {
     reconnect_timer.stop();
     io->close();
 }
 
-QString SIO::get_json(sio::message::ptr const& data, QString key)
+QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
 {
     return QString::fromStdString(data->get_map()[key.toStdString()]->get_string());
 }
 
-void SIO::init()
+void COMM_MS::init()
 {
     reconnect_timer.start(10000);
 }
 
-void SIO::sio_connected()
+void COMM_MS::sio_connected()
 {
     is_connected = true;
-    printf("[SIO] connected\n");
+    printf("[COMM_MS] connected\n");
 }
 
-void SIO::sio_disconnected(sio::client::close_reason const& reason)
+void COMM_MS::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
-    printf("[SIO] disconnected\n");
+    printf("[COMM_MS] disconnected\n");
 }
 
-void SIO::sio_error()
+void COMM_MS::sio_error()
 {
-    printf("[SIO] some error\n");
+    printf("[COMM_MS] some error\n");
 }
 
-void SIO::reconnect_loop()
+void COMM_MS::reconnect_loop()
 {
     if(is_connected == false)
     {
@@ -95,14 +95,14 @@ void SIO::reconnect_loop()
         if(reconnect_cnt > 10)
         {
             reconnect_timer.stop();
-            printf("[SIO] server not opened, give up reconnect\n");
+            printf("[COMM_MS] server not opened, give up reconnect\n");
         }
     }
 }
 
 
 // recv parser -> emit recv signals
-void SIO::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_MS::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -113,11 +113,11 @@ void SIO::recv_motorinit(std::string const& name, sio::message::ptr const& data,
         // action
         Q_EMIT signal_motorinit(time);
 
-        printf("[SIO_RECV] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_MS] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
-void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_MS::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -133,7 +133,7 @@ void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool
 
             // action
             Q_EMIT signal_move_jog(time, vx, vy, wz);
-            printf("[SIO_RECV] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
+            printf("[COMM_MS] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
         }
         else if(command == "target")
         {
@@ -161,7 +161,7 @@ void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool
 
             // action
             Q_EMIT signal_move_target(time, x, y, z, rz, preset, method);
-            printf("[SIO_RECV] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
+            printf("[COMM_MS] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
         }
         else if(command == "goal")
         {
@@ -183,7 +183,7 @@ void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool
 
             // action
             Q_EMIT signal_move_goal(time, id, preset, method);
-            printf("[SIO_RECV] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
+            printf("[COMM_MS] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
         }
         else if(command == "pause")
         {
@@ -203,7 +203,7 @@ void SIO::recv_move(std::string const& name, sio::message::ptr const& data, bool
     }
 }
 
-void SIO::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_MS::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -231,11 +231,11 @@ void SIO::recv_mapping(std::string const& name, sio::message::ptr const& data, b
             Q_EMIT signal_mapping_reload(time);
         }
 
-        printf("[SIO_RECV] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_MS] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
-void SIO::recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_MS::recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -245,11 +245,11 @@ void SIO::recv_mapload(std::string const& name, sio::message::ptr const& data, b
 
         Q_EMIT signal_mapload(time, name);
 
-        printf("[SIO_RECV] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
+        printf("[COMM_MS] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
     }
 }
 
-void SIO::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -279,13 +279,13 @@ void SIO::recv_localization(std::string const& name, sio::message::ptr const& da
             Q_EMIT signal_localization_stop(time);
         }
 
-        printf("[SIO_RECV] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_MS] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
 
 // send functions
-void SIO::send_status()
+void COMM_MS::send_status()
 {
     double time = get_time0();
 
@@ -412,10 +412,10 @@ void SIO::send_status()
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("status", res);
 
-    //printf("[SIO_SEND] status, time: %f\n", time);
+    //printf("[COMM_MS] status, time: %f\n", time);
 }
 
-void SIO::send_lidar()
+void COMM_MS::send_lidar()
 {
     double time = get_time0();
 
@@ -489,10 +489,10 @@ void SIO::send_lidar()
         io->socket()->emit("lidar_cloud", rootObject);
     }
 
-    //printf("[SIO_SEND] lidar_cloud,  time: %f\n", time);
+    //printf("[COMM_MS] lidar_cloud,  time: %f\n", time);
 }
 
-void SIO::send_mapping_cloud()
+void COMM_MS::send_mapping_cloud()
 {
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
@@ -526,12 +526,12 @@ void SIO::send_mapping_cloud()
 
         // send
         io->socket()->emit("mapping_cloud", jsonArray);
-        printf("[SIO_SEND] mapping_cloud, time: %f\n", time);
+        printf("[COMM_MS] mapping_cloud, time: %f\n", time);
         last_send_kfrm_idx++;
     }
 }
 
-void SIO::send_mapping_start_response(QString result)
+void COMM_MS::send_mapping_start_response(QString result)
 {
     double time = get_time0();
 
@@ -548,10 +548,10 @@ void SIO::send_mapping_start_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[SIO_SEND] mapping_response_start, time: %f\n", time);
+    printf("[COMM_MS] mapping_response_start, time: %f\n", time);
 }
 
-void SIO::send_mapping_stop_response()
+void COMM_MS::send_mapping_stop_response()
 {
     double time = get_time0();
 
@@ -568,10 +568,10 @@ void SIO::send_mapping_stop_response()
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[SIO_SEND] mapping_response_stop, success, time: %f\n", time);
+    printf("[COMM_MS] mapping_response_stop, success, time: %f\n", time);
 }
 
-void SIO::send_mapping_save_response(QString name, QString result)
+void COMM_MS::send_mapping_save_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -589,10 +589,10 @@ void SIO::send_mapping_save_response(QString name, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapping", res);
 
-    printf("[SIO_SEND] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void SIO::send_mapload_response(QString name, QString result)
+void COMM_MS::send_mapload_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -609,10 +609,10 @@ void SIO::send_mapload_response(QString name, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mapload", res);
 
-    printf("[SIO_SEND] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void SIO::send_localization_response(QString command, QString result)
+void COMM_MS::send_localization_response(QString command, QString result)
 {
     double time = get_time0();
 
@@ -629,10 +629,10 @@ void SIO::send_localization_response(QString command, QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("localization", res);
 
-    printf("[SIO_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void SIO::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
+void COMM_MS::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -656,10 +656,10 @@ void SIO::send_move_target_response(double x, double y, double z, double rz, int
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[SIO_SEND] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[COMM_MS] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void SIO::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
+void COMM_MS::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -680,10 +680,10 @@ void SIO::send_move_goal_response(QString node_id, int preset, QString method, Q
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[SIO_SEND] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[COMM_MS] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void SIO::send_move_pause_response(QString result)
+void COMM_MS::send_move_pause_response(QString result)
 {
     double time = get_time0();
 
@@ -700,10 +700,10 @@ void SIO::send_move_pause_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[SIO_SEND] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void SIO::send_move_resume_response(QString result)
+void COMM_MS::send_move_resume_response(QString result)
 {
     double time = get_time0();
 
@@ -720,10 +720,10 @@ void SIO::send_move_resume_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[SIO_SEND] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void SIO::send_move_stop_response(QString result)
+void COMM_MS::send_move_stop_response(QString result)
 {
     double time = get_time0();
 
@@ -740,23 +740,23 @@ void SIO::send_move_stop_response(QString result)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("move", res);
 
-    printf("[SIO_SEND] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_MS] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
 
 // recv slots
-void SIO::slot_motorinit(double time)
+void COMM_MS::slot_motorinit(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MotorInit();
 }
 
-void SIO::slot_move_jog(double time, double vx, double vy, double wz)
+void COMM_MS::slot_move_jog(double time, double vx, double vy, double wz)
 {
     mobile->move(vx, vy, wz*D2R);
 }
 
-void SIO::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
+void COMM_MS::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -816,7 +816,7 @@ void SIO::slot_move_target(double time, double x, double y, double z, double rz,
     }
 }
 
-void SIO::slot_move_goal(double time, QString node_id, int preset, QString method)
+void COMM_MS::slot_move_goal(double time, QString node_id, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -876,7 +876,7 @@ void SIO::slot_move_goal(double time, QString node_id, int preset, QString metho
     }
 }
 
-void SIO::slot_move_pause(double time)
+void COMM_MS::slot_move_pause(double time)
 {
     ctrl->is_pause = true;
 
@@ -884,7 +884,7 @@ void SIO::slot_move_pause(double time)
     send_move_pause_response(result);
 }
 
-void SIO::slot_move_resume(double time)
+void COMM_MS::slot_move_resume(double time)
 {
     ctrl->is_pause = false;
 
@@ -892,7 +892,7 @@ void SIO::slot_move_resume(double time)
     send_move_resume_response(result);
 }
 
-void SIO::slot_move_stop(double time)
+void COMM_MS::slot_move_stop(double time)
 {
     ctrl->stop();
 
@@ -900,7 +900,7 @@ void SIO::slot_move_stop(double time)
     send_move_stop_response(result);
 }
 
-void SIO::slot_move_succeed(QString message)
+void COMM_MS::slot_move_succeed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -916,7 +916,7 @@ void SIO::slot_move_succeed(QString message)
     }
 }
 
-void SIO::slot_move_failed(QString message)
+void COMM_MS::slot_move_failed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -932,7 +932,7 @@ void SIO::slot_move_failed(QString message)
     }
 }
 
-void SIO::slot_mapping_start(double time)
+void COMM_MS::slot_mapping_start(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     if(lidar->is_connected_f)
@@ -946,14 +946,14 @@ void SIO::slot_mapping_start(double time)
     }
 }
 
-void SIO::slot_mapping_stop(double time)
+void COMM_MS::slot_mapping_stop(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
     send_mapping_stop_response();
 }
 
-void SIO::slot_mapping_save(double time, QString name)
+void COMM_MS::slot_mapping_save(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
@@ -964,23 +964,23 @@ void SIO::slot_mapping_save(double time, QString name)
     if(result == 0)
     {
         send_mapping_save_response(name, "success");
-        printf("[SIO_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[COMM_MS] map save succeed, %s\n", save_dir.toLocal8Bit().data());
     }
     else
     {
         send_mapping_save_response(name, "fail");
-        printf("[SIO_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[COMM_MS] map save failed, %s\n", save_dir.toLocal8Bit().data());
     }
 }
 
-void SIO::slot_mapping_reload(double time)
+void COMM_MS::slot_mapping_reload(double time)
 {
     last_send_kfrm_idx = 0;
-    printf("[SIO_RECV] mapping reload\n");
+    printf("[COMM_MS] mapping reload\n");
 }
 
 
-void SIO::slot_mapload(double time, QString name)
+void COMM_MS::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
@@ -1003,12 +1003,12 @@ void SIO::slot_mapload(double time, QString name)
 }
 
 
-void SIO::slot_localization_autoinit(double time)
+void COMM_MS::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
 }
 
-void SIO::slot_localization_init(double time, double x, double y, double z, double rz)
+void COMM_MS::slot_localization_init(double time, double x, double y, double z, double rz)
 {
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
     {
@@ -1024,12 +1024,12 @@ void SIO::slot_localization_init(double time, double x, double y, double z, doub
     send_localization_response("init", "success");
 }
 
-void SIO::slot_localization_start(double time)
+void COMM_MS::slot_localization_start(double time)
 {
     slam->localization_start();
 }
 
-void SIO::slot_localization_stop(double time)
+void COMM_MS::slot_localization_stop(double time)
 {
     slam->localization_stop();
 }

@@ -1,5 +1,5 @@
-#ifndef WS_UI_H
-#define WS_UI_H
+#ifndef COMM_UI_H
+#define COMM_UI_H
 
 // global defines
 #include "global_defines.h"
@@ -25,12 +25,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class WS_UI : public QObject
+class COMM_UI : public QObject
 {
     Q_OBJECT
 public:
-    explicit WS_UI(QObject *parent = nullptr);
-    ~WS_UI();
+    explicit COMM_UI(QObject *parent = nullptr);
+    ~COMM_UI();
     std::mutex mtx;
 
     // other modules
@@ -129,4 +129,4 @@ public Q_SLOTS:
     void send_move_stop_response(QString result);
 };
 
-#endif // WS_UI_H
+#endif // COMM_UI_H

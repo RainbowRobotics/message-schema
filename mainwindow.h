@@ -16,11 +16,11 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "dockingcontrol.h"
-#include "fms.h"
-#include "sio.h"
 #include "task.h"
 #include "sim.h"
-#include "ws_ui.h"
+#include "comm_fms.h"
+#include "comm_ms.h"
+#include "comm_ui.h"
 
 // qt
 #include <QMainWindow>
@@ -53,11 +53,11 @@ public:
     OBSMAP obsmap;
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
-    FMS fms;
-    SIO sio;    
     TASK task;    
     SIM sim;
-    WS_UI wsui;
+    COMM_FMS cfms;
+    COMM_MS cms;
+    COMM_UI cui;
 
     // system logger
     LOGGER system_logger;

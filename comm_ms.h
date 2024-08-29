@@ -1,5 +1,5 @@
-#ifndef SIO_H
-#define SIO_H
+#ifndef COMM_MS_H
+#define COMM_MS_H
 
 // global defines
 #include "global_defines.h"
@@ -29,12 +29,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class SIO : public QObject
+class COMM_MS : public QObject
 {
     Q_OBJECT
 public:
-    explicit SIO(QObject *parent = nullptr);
-    ~SIO();
+    explicit COMM_MS(QObject *parent = nullptr);
+    ~COMM_MS();
     std::mutex mtx;
 
     // other modules
@@ -145,4 +145,4 @@ private Q_SLOTS:
 
 };
 
-#endif // SIO_H
+#endif // COMM_MS_H

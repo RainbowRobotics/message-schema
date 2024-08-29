@@ -27,17 +27,17 @@ SOURCES += \
     autocontrol.cpp \
     cam.cpp \
     code_reader.cpp \
-    ws_ui.cpp \
+    comm_fms.cpp \
+    comm_ms.cpp \
+    comm_ui.cpp \
     dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
-    fms.cpp \
     lidar_2d.cpp \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
-    sio.cpp \
     task.cpp \
     obsmap.cpp \
     pgo.cpp \
@@ -52,17 +52,17 @@ HEADERS += \
     autocontrol.h \
     cam.h \
     code_reader.h \
-    ws_ui.h \
+    comm_fms.h \
+    comm_ms.h \
+    comm_ui.h \
     dockingcontrol.h \
     config.h \
     cv_to_qt.h \
-    fms.h \
     global_defines.h \
     lidar_2d.h \
     logger.h \
     mainwindow.h \
     mobile.h \
-    sio.h \
     task.h \
     nanoflann.hpp \
     obsmap.h \

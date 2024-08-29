@@ -1,14 +1,14 @@
-#include "ws_ui.h"
+#include "comm_ui.h"
 #include "mainwindow.h"
 
-WS_UI::WS_UI(QObject *parent)
+COMM_UI::COMM_UI(QObject *parent)
     : QObject{parent}
     , main(parent)
     , reconnect_timer(this)
 {
     // for websocket
-    connect(&client, &QWebSocket::connected, this, &WS_UI::connected);
-    connect(&client, &QWebSocket::disconnected, this, &WS_UI::disconnected);
+    connect(&client, &QWebSocket::connected, this, &COMM_UI::connected);
+    connect(&client, &QWebSocket::disconnected, this, &COMM_UI::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     // connect recv signals -> recv slots
@@ -34,7 +34,7 @@ WS_UI::WS_UI(QObject *parent)
     connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
 }
 
-WS_UI::~WS_UI()
+COMM_UI::~COMM_UI()
 {
     reconnect_timer.stop();
 
@@ -44,18 +44,18 @@ WS_UI::~WS_UI()
     }
 }
 
-QString WS_UI::get_json(QJsonObject& json, QString key)
+QString COMM_UI::get_json(QJsonObject& json, QString key)
 {
     return json[key].toString();
 }
 
-void WS_UI::init()
+void COMM_UI::init()
 {
     reconnect_timer.start(3000);
-    printf("[WS_UI] start reconnect timer\n");
+    printf("[COMM_UI] start reconnect timer\n");
 }
 
-void WS_UI::reconnect_loop()
+void COMM_UI::reconnect_loop()
 {
     if(is_connected == false)
     {
@@ -64,29 +64,29 @@ void WS_UI::reconnect_loop()
     }
 }
 
-void WS_UI::connected()
+void COMM_UI::connected()
 {
     if(!is_connected)
     {
         is_connected = true;
-        connect(&client, &QWebSocket::textMessageReceived, this, &WS_UI::recv_message);
-        printf("[WS_UI] connected\n");
+        connect(&client, &QWebSocket::textMessageReceived, this, &COMM_UI::recv_message);
+        printf("[COMM_UI] connected\n");
     }
 }
 
-void WS_UI::disconnected()
+void COMM_UI::disconnected()
 {
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::textMessageReceived, this, &WS_UI::recv_message);
-        printf("[WS_UI] disconnected\n");
+        disconnect(&client, &QWebSocket::textMessageReceived, this, &COMM_UI::recv_message);
+        printf("[COMM_UI] disconnected\n");
     }
 }
 
-void WS_UI::recv_message(QString message)
+void COMM_UI::recv_message(QString message)
 {
-    std::cout << "[WS_UI] recv:\n" << message.toStdString() << std::endl;
+    std::cout << "[COMM_UI] recv:\n" << message.toStdString() << std::endl;
 
     QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
 
@@ -100,7 +100,7 @@ void WS_UI::recv_message(QString message)
         // action
         Q_EMIT signal_motorinit(time);
 
-        printf("[WS_UI] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_UI] motorinit(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 
     // recv move
@@ -118,7 +118,7 @@ void WS_UI::recv_message(QString message)
 
             // action
             Q_EMIT signal_move_jog(time, vx, vy, wz);
-            printf("[WS_UI] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
+            printf("[COMM_UI] move, jog, t: %.3f, vel: %.3f, %.3f, %.3f\n", time, vx, vy, wz);
         }
         else if(command == "target")
         {
@@ -146,7 +146,7 @@ void WS_UI::recv_message(QString message)
 
             // action
             Q_EMIT signal_move_target(time, x, y, z, rz, preset, method);
-            printf("[WS_UI] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
+            printf("[COMM_UI] move, target, t: %.3f, tgt: %.3f, %.3f, %.3f, %.3f, preset:%d, method:%s\n", time, x, y, z, rz, preset, method.toLocal8Bit().data());
         }
         else if(command == "goal")
         {
@@ -168,7 +168,7 @@ void WS_UI::recv_message(QString message)
 
             // action
             Q_EMIT signal_move_goal(time, id, preset, method);
-            printf("[WS_UI] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
+            printf("[COMM_UI] move, goal, t: %.3f, tgt: %s, preset:%d, method:%s\n", time, id.toLocal8Bit().data(), preset, method.toLocal8Bit().data());
         }
         else if(command == "pause")
         {
@@ -214,7 +214,7 @@ void WS_UI::recv_message(QString message)
             Q_EMIT signal_mapping_reload(time);
         }
 
-        printf("[WS_UI] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_UI] mapping(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 
     // recv mapload
@@ -226,7 +226,7 @@ void WS_UI::recv_message(QString message)
 
         Q_EMIT signal_mapload(time, name);
 
-        printf("[WS_UI] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
+        printf("[COMM_UI] mapload(%s), t: %.3f\n", name.toLocal8Bit().data(), time);
     }
 
     // recv localization
@@ -258,23 +258,23 @@ void WS_UI::recv_message(QString message)
             Q_EMIT signal_localization_stop(time);
         }
 
-        printf("[WS_UI] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
+        printf("[COMM_UI] localization(%s), t: %.3f\n", command.toLocal8Bit().data(), time);
     }
 }
 
 // recv slots
-void WS_UI::slot_motorinit(double time)
+void COMM_UI::slot_motorinit(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MotorInit();
 }
 
-void WS_UI::slot_move_jog(double time, double vx, double vy, double wz)
+void COMM_UI::slot_move_jog(double time, double vx, double vy, double wz)
 {
     mobile->move(vx, vy, wz*D2R);
 }
 
-void WS_UI::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
+void COMM_UI::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -334,7 +334,7 @@ void WS_UI::slot_move_target(double time, double x, double y, double z, double r
     }
 }
 
-void WS_UI::slot_move_goal(double time, QString node_id, int preset, QString method)
+void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -394,7 +394,7 @@ void WS_UI::slot_move_goal(double time, QString node_id, int preset, QString met
     }
 }
 
-void WS_UI::slot_move_pause(double time)
+void COMM_UI::slot_move_pause(double time)
 {
     ctrl->is_pause = true;
 
@@ -402,7 +402,7 @@ void WS_UI::slot_move_pause(double time)
     send_move_pause_response(result);
 }
 
-void WS_UI::slot_move_resume(double time)
+void COMM_UI::slot_move_resume(double time)
 {
     ctrl->is_pause = false;
 
@@ -410,7 +410,7 @@ void WS_UI::slot_move_resume(double time)
     send_move_resume_response(result);
 }
 
-void WS_UI::slot_move_stop(double time)
+void COMM_UI::slot_move_stop(double time)
 {
     ctrl->stop();
 
@@ -418,7 +418,7 @@ void WS_UI::slot_move_stop(double time)
     send_move_stop_response(result);
 }
 
-void WS_UI::slot_move_succeed(QString message)
+void COMM_UI::slot_move_succeed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -434,7 +434,7 @@ void WS_UI::slot_move_succeed(QString message)
     }
 }
 
-void WS_UI::slot_move_failed(QString message)
+void COMM_UI::slot_move_failed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -450,7 +450,7 @@ void WS_UI::slot_move_failed(QString message)
     }
 }
 
-void WS_UI::slot_mapping_start(double time)
+void COMM_UI::slot_mapping_start(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     if(lidar->is_connected_f)
@@ -464,14 +464,14 @@ void WS_UI::slot_mapping_start(double time)
     }
 }
 
-void WS_UI::slot_mapping_stop(double time)
+void COMM_UI::slot_mapping_stop(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
     send_mapping_stop_response();
 }
 
-void WS_UI::slot_mapping_save(double time, QString name)
+void COMM_UI::slot_mapping_save(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
@@ -482,23 +482,23 @@ void WS_UI::slot_mapping_save(double time, QString name)
     if(result == 0)
     {
         send_mapping_save_response(name, "success");
-        printf("[SIO_RECV] map save succeed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[COMM_UI] map save succeed, %s\n", save_dir.toLocal8Bit().data());
     }
     else
     {
         send_mapping_save_response(name, "fail");
-        printf("[SIO_RECV] map save failed, %s\n", save_dir.toLocal8Bit().data());
+        printf("[COMM_UI] map save failed, %s\n", save_dir.toLocal8Bit().data());
     }
 }
 
-void WS_UI::slot_mapping_reload(double time)
+void COMM_UI::slot_mapping_reload(double time)
 {
     last_send_kfrm_idx = 0;
-    printf("[SIO_RECV] mapping reload\n");
+    printf("[COMM_UI] mapping reload\n");
 }
 
 
-void WS_UI::slot_mapload(double time, QString name)
+void COMM_UI::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
@@ -521,12 +521,12 @@ void WS_UI::slot_mapload(double time, QString name)
 }
 
 
-void WS_UI::slot_localization_autoinit(double time)
+void COMM_UI::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
 }
 
-void WS_UI::slot_localization_init(double time, double x, double y, double z, double rz)
+void COMM_UI::slot_localization_init(double time, double x, double y, double z, double rz)
 {
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
     {
@@ -542,18 +542,18 @@ void WS_UI::slot_localization_init(double time, double x, double y, double z, do
     send_localization_response("init", "success");
 }
 
-void WS_UI::slot_localization_start(double time)
+void COMM_UI::slot_localization_start(double time)
 {
     slam->localization_start();
 }
 
-void WS_UI::slot_localization_stop(double time)
+void COMM_UI::slot_localization_stop(double time)
 {
     slam->localization_stop();
 }
 
 // send functions
-void WS_UI::send_status()
+void COMM_UI::send_status()
 {
     double time = get_time0();
 
@@ -681,10 +681,10 @@ void WS_UI::send_status()
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    //printf("[SIO_SEND] status, time: %f\n", time);
+    //printf("[COMM_UI] status, time: %f\n", time);
 }
 
-void WS_UI::send_mapping_start_response(QString result)
+void COMM_UI::send_mapping_start_response(QString result)
 {
     double time = get_time0();
 
@@ -702,10 +702,10 @@ void WS_UI::send_mapping_start_response(QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] mapping_response_start, time: %f\n", time);
+    printf("[COMM_UI] mapping_response_start, time: %f\n", time);
 }
 
-void WS_UI::send_mapping_stop_response()
+void COMM_UI::send_mapping_stop_response()
 {
     double time = get_time0();
 
@@ -723,10 +723,10 @@ void WS_UI::send_mapping_stop_response()
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] mapping_response_stop, success, time: %f\n", time);
+    printf("[COMM_UI] mapping_response_stop, success, time: %f\n", time);
 }
 
-void WS_UI::send_mapping_save_response(QString name, QString result)
+void COMM_UI::send_mapping_save_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -745,10 +745,10 @@ void WS_UI::send_mapping_save_response(QString name, QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_mapload_response(QString name, QString result)
+void COMM_UI::send_mapload_response(QString name, QString result)
 {
     double time = get_time0();
 
@@ -766,10 +766,10 @@ void WS_UI::send_mapload_response(QString name, QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_localization_response(QString command, QString result)
+void COMM_UI::send_localization_response(QString command, QString result)
 {
     double time = get_time0();
 
@@ -787,10 +787,10 @@ void WS_UI::send_localization_response(QString command, QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
+void COMM_UI::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -815,10 +815,10 @@ void WS_UI::send_move_target_response(double x, double y, double z, double rz, i
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[COMM_UI] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
+void COMM_UI::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
     double time = get_time0();
 
@@ -840,10 +840,10 @@ void WS_UI::send_move_goal_response(QString node_id, int preset, QString method,
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
+    printf("[COMM_UI] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_move_pause_response(QString result)
+void COMM_UI::send_move_pause_response(QString result)
 {
     double time = get_time0();
 
@@ -861,10 +861,10 @@ void WS_UI::send_move_pause_response(QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_move_resume_response(QString result)
+void COMM_UI::send_move_resume_response(QString result)
 {
     double time = get_time0();
 
@@ -882,10 +882,10 @@ void WS_UI::send_move_resume_response(QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void WS_UI::send_move_stop_response(QString result)
+void COMM_UI::send_move_stop_response(QString result)
 {
     double time = get_time0();
 
@@ -903,7 +903,7 @@ void WS_UI::send_move_stop_response(QString result)
     QString str(doc.toJson());
     client.sendTextMessage(str);
 
-    printf("[SIO_SEND] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+    printf("[COMM_UI] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
 
