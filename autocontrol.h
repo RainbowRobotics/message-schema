@@ -59,8 +59,10 @@ public:
     CTRL_PARAM load_preset(int preset);
 
     // interface funcs
+    int get_cur_preset_idx();
+    Eigen::Matrix4d get_cur_goal_tf();
     PATH get_cur_global_path();
-    PATH get_cur_local_path();    
+    PATH get_cur_local_path();
     QString get_obs_condition();
     void clear_path();
 
@@ -100,6 +102,9 @@ public:
     void b_loop_tng(Eigen::Matrix4d goal_tf);
 
     // storage    
+    int cur_preset_idx;
+    Eigen::Matrix4d cur_goal_tf;
+
     PATH cur_global_path;
     PATH cur_local_path;
 
@@ -108,6 +113,7 @@ public:
     Eigen::Vector3d last_local_goal;
 
     // flags    
+    std::atomic<bool> is_multi = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};

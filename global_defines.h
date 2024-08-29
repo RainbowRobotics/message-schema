@@ -116,9 +116,9 @@ enum AUTO_FSM_STATE
     AUTO_FSM_DRIVING,
     AUTO_FSM_FINAL_ALIGN,
     AUTO_FSM_OBS,
-    AUTO_FSM_COMPLETE,
+    AUTO_FSM_COMPLETE,    
     AUTO_FSM_DOCKING,
-    AUTO_FSM_PAUSE,
+    AUTO_FSM_PAUSE,    
 };
 
 enum DOCKING_FSM_STATE
@@ -998,6 +998,47 @@ struct NODE_INFO
         rpy = p.rpy;
         ptz = p.ptz;
         sz = p.sz;
+        return *this;
+    }
+};
+
+struct FMS_INFO
+{
+    QString id;
+    QString cur_tf;
+    QString goal_tf;
+    QString loc_state; // none, fail, good
+    QString pdu_state; // none, fail, good
+    QString req_state; // none, req
+
+    FMS_INFO()
+    {
+        id = "R_0";
+        cur_tf = "0,0,0,0,0,0";
+        goal_tf = "0,0,0,0,0,0";
+        loc_state = "none";
+        pdu_state = "none";
+        req_state = "none";
+    }
+
+    FMS_INFO(const FMS_INFO& p)
+    {
+        id = p.id;
+        cur_tf = p.cur_tf;
+        goal_tf = p.goal_tf;
+        loc_state = p.loc_state;
+        pdu_state = p.pdu_state;
+        req_state = p.req_state;
+    }
+
+    FMS_INFO& operator=(const FMS_INFO& p)
+    {
+        id = p.id;
+        cur_tf = p.cur_tf;
+        goal_tf = p.goal_tf;
+        loc_state = p.loc_state;
+        pdu_state = p.pdu_state;
+        req_state = p.req_state;
         return *this;
     }
 };

@@ -91,6 +91,12 @@ void SIO::reconnect_loop()
     if(is_connected == false)
     {
         io->connect("ws://localhost:11337");
+        reconnect_cnt++;
+        if(reconnect_cnt > 10)
+        {
+            reconnect_timer.stop();
+            printf("[SIO] server not opened, give up reconnect\n");
+        }
     }
 }
 

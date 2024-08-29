@@ -3,7 +3,7 @@
 MOBILE::MOBILE(QObject *parent)
     : QObject{parent}
 {
-
+    cur_imu = Eigen::Vector3d(0,0,0);
 }
 
 MOBILE::~MOBILE()
@@ -60,6 +60,22 @@ void MOBILE::sync()
     QString str;
     str.sprintf("[MOBILE] time sync, sync_st_time:%f\n", (double)sync_st_time);
     logger->PrintLog(str, "DeepSkyBlue", true, false);
+}
+
+QString MOBILE::get_cur_pdu_state()
+{
+    mtx.lock();
+    QString res = cur_pdu_state; // none, fail, good
+    mtx.unlock();
+
+    return res;
+}
+
+void MOBILE::set_cur_pdu_state(QString str)
+{
+    mtx.lock();
+    cur_pdu_state = str; // none, fail, good
+    mtx.unlock();
 }
 
 MOBILE_POSE MOBILE::get_pose()

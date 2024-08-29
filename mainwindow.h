@@ -20,6 +20,7 @@
 #include "sio.h"
 #include "task.h"
 #include "sim.h"
+#include "ws_ui.h"
 
 // qt
 #include <QMainWindow>
@@ -53,9 +54,10 @@ public:
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
     FMS fms;
-    SIO sio;
+    SIO sio;    
     TASK task;    
-    SIM sim;    
+    SIM sim;
+    WS_UI wsui;
 
     // system logger
     LOGGER system_logger;

@@ -1,5 +1,5 @@
-#ifndef SIO_H
-#define SIO_H
+#ifndef WS_UI_H
+#define WS_UI_H
 
 // global defines
 #include "global_defines.h"
@@ -17,10 +17,6 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 
-// sio
-#include <sio_client.h>
-#define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
-
 // qt
 #include <QObject>
 #include <QTimer>
@@ -29,12 +25,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class SIO : public QObject
+class WS_UI : public QObject
 {
     Q_OBJECT
 public:
-    explicit SIO(QObject *parent = nullptr);
-    ~SIO();
+    explicit WS_UI(QObject *parent = nullptr);
+    ~WS_UI();
     std::mutex mtx;
 
     // other modules
@@ -50,28 +46,26 @@ public:
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
 
-    // vars
-    std::unique_ptr<sio::client> io;
-    int reconnect_cnt = 0;
+    QWebSocket client;
     QTimer reconnect_timer;
+
+    // vars
+    std::atomic<bool> is_connected = {false};
     std::atomic<int> last_send_kfrm_idx = {0};
     MOVE_INFO last_move_info;
 
-    // flags
-    std::atomic<bool> is_connected = {false};
-
-    // interface func
+    // funcs
     void init();
+    QString get_json(QJsonObject& json, QString key);
 
+    // send funcs
     void send_status();
-    void send_lidar();
-    void send_mapping_cloud();
 
     void send_mapping_start_response(QString result);
     void send_mapping_stop_response();
     void send_mapping_save_response(QString name, QString result);
 
-    void send_mapload_response(QString name, QString result);    
+    void send_mapload_response(QString name, QString result);
     void send_localization_response(QString command, QString result);
 
     void send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message);
@@ -80,8 +74,12 @@ public:
     void send_move_resume_response(QString result);
     void send_move_stop_response(QString result);
 
-    // util func
-    QString get_json(sio::message::ptr const& data, QString key);
+public Q_SLOTS:
+    void reconnect_loop();
+
+    void connected();
+    void disconnected();
+    void recv_message(QString message);
 
 Q_SIGNALS:
     void signal_motorinit(double time);
@@ -104,20 +102,6 @@ Q_SIGNALS:
     void signal_localization_init(double time, double x, double y, double z, double rz);
     void signal_localization_start(double time);
     void signal_localization_stop(double time);
-
-
-private Q_SLOTS:
-    void reconnect_loop();
-
-    void sio_connected();
-    void sio_disconnected(sio::client::close_reason const& reason);
-    void sio_error();
-
-    void recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 private Q_SLOTS:
     void slot_motorinit(double time);
@@ -142,7 +126,6 @@ private Q_SLOTS:
     void slot_localization_init(double time, double x, double y, double z, double rz);
     void slot_localization_start(double time);
     void slot_localization_stop(double time);
-
 };
 
-#endif // SIO_H
+#endif // WS_UI_H

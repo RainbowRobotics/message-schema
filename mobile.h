@@ -33,6 +33,8 @@ public:
     // interface func
     void open();
     void sync();
+    QString get_cur_pdu_state();
+    void set_cur_pdu_state(QString str);
 
     MOBILE_POSE get_pose();        
     MOBILE_STATUS get_status();
@@ -73,6 +75,7 @@ public:
     MOBILE_POSE cur_pose;
     MOBILE_STATUS cur_status;
     Eigen::Vector3d cur_imu;
+    QString cur_pdu_state = "none";
 
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};

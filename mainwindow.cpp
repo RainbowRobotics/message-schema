@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     , sio(this)
     , task(this)
     , sim(this)
+    , wsui(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)        
@@ -338,19 +339,20 @@ void MainWindow::init_modules()
     ctrl.code = &code;
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
-    ctrl.obsmap = &obsmap;
+    ctrl.obsmap = &obsmap;    
     ctrl.init();
 
     // fms client module init
     fms.config = &config;
     fms.logger = &logger;
+    fms.mobile = &mobile;
     fms.slam = &slam;
     fms.unimap = &unimap;
     fms.obsmap = &obsmap;
     fms.ctrl = &ctrl;
     fms.init();
 
-    // websocket client init
+    // socket.io client init
     sio.config = &config;
     sio.logger = &logger;
     sio.mobile = &mobile;
@@ -378,6 +380,19 @@ void MainWindow::init_modules()
     task.obsmap = &obsmap;
     task.ctrl = &ctrl;
     task.mobile = &mobile;
+
+    // websocket ui init
+    wsui.config = &config;
+    wsui.logger = &logger;
+    wsui.mobile = &mobile;
+    wsui.lidar = &lidar;
+    wsui.cam = &cam;
+    wsui.code = &code;
+    wsui.slam = &slam;
+    wsui.unimap = &unimap;
+    wsui.obsmap = &obsmap;
+    wsui.ctrl = &ctrl;
+    wsui.init();
 
     // start watchdog loop
     watch_flag = true;
@@ -1838,6 +1853,7 @@ void MainWindow::watch_loop()
     int cnt = 0;
     int loc_fail_cnt = 0;
     double last_sync_time = 0;
+    bool last_fms_connection = false;
 
     CPU_USAGE pre_cpu_usage;
 
@@ -1852,6 +1868,11 @@ void MainWindow::watch_loop()
             if(sio.is_connected)
             {
                 sio.send_status();
+            }
+
+            if(wsui.is_connected)
+            {
+                wsui.send_status();
             }
         }
 
@@ -1893,6 +1914,17 @@ void MainWindow::watch_loop()
                     if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
                     {
                         mobile.motor_on();
+                    }
+
+                    if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
+                       ms.status_m0 == 1 && ms.status_m1 == 1 &&
+                       ms.emo_state == 1 && ms.charge_state == 0)
+                    {
+                        mobile.set_cur_pdu_state("good");
+                    }
+                    else
+                    {
+                        mobile.set_cur_pdu_state("fail");
                     }
                 }
             }
@@ -1960,6 +1992,13 @@ void MainWindow::watch_loop()
                     slam.set_cur_loc_state("good");
                 }
             }
+
+            // check multi
+            if(last_fms_connection == true && fms.is_connected == false)
+            {
+                printf("[WATCH] fms disconnect dectected\n");
+            }
+            last_fms_connection = fms.is_connected;
 
             // check system info
             {

@@ -6,6 +6,9 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent)
     last_cur_pos.setZero();
     last_tgt_pos.setZero();    
     last_local_goal.setZero();
+
+    cur_preset_idx = 0;
+    cur_goal_tf.setIdentity();
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -109,6 +112,24 @@ PATH AUTOCONTROL::get_cur_global_path()
     return res;
 }
 
+int AUTOCONTROL::get_cur_preset_idx()
+{
+    mtx.lock();
+    int res = cur_preset_idx;
+    mtx.unlock();
+
+    return res;
+}
+
+Eigen::Matrix4d AUTOCONTROL::get_cur_goal_tf()
+{
+    mtx.lock();
+    Eigen::Matrix4d res = cur_goal_tf;
+    mtx.unlock();
+
+    return res;
+}
+
 PATH AUTOCONTROL::get_cur_local_path()
 {
     mtx.lock();
@@ -156,7 +177,13 @@ void AUTOCONTROL::stop()
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 {
-    // stop first
+    // set new goal
+    mtx.lock();
+    cur_preset_idx = preset;
+    cur_goal_tf = goal_tf;
+    mtx.unlock();
+
+    // stop
     stop();
 
     // obs clear
@@ -172,7 +199,13 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int preset)
 {
-    // stop first
+    // set new goal
+    mtx.lock();
+    cur_preset_idx = preset;
+    cur_goal_tf = goal_tf;
+    mtx.unlock();
+
+    // stop
     stop();
 
     // obs clear
@@ -188,7 +221,13 @@ void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_tng(Eigen::Matrix4d goal_tf, int preset)
 {
-    // stop first
+    // set new goal
+    mtx.lock();
+    cur_preset_idx = preset;
+    cur_goal_tf = goal_tf;
+    mtx.unlock();
+
+    // stop
     stop();
 
     // obs clear
@@ -1651,9 +1690,11 @@ PATH AUTOCONTROL::calc_avoid_path()
 // check condition
 bool AUTOCONTROL::is_everything_fine()
 {
+    // check localization
     QString loc_state = slam->get_cur_loc_state();
     if(loc_state == "none" || loc_state == "fail")
     {
+        printf("[AUTO] localization fail, autodrive stop\n");
         return false;
     }
 

@@ -236,7 +236,7 @@ Eigen::Vector2d SLAM_2D::get_cur_ieir()
 QString SLAM_2D::get_cur_loc_state()
 {
     mtx.lock();
-    QString res = cur_loc_state;
+    QString res = cur_loc_state; // none, fail, good
     mtx.unlock();
 
     return res;
@@ -245,7 +245,7 @@ QString SLAM_2D::get_cur_loc_state()
 void SLAM_2D::set_cur_loc_state(QString str)
 {
     mtx.lock();
-    cur_loc_state = str;
+    cur_loc_state = str; // none, fail, good
     mtx.unlock();
 }
 
@@ -521,12 +521,18 @@ void SLAM_2D::map_a_loop()
                             kfrm_que.push(kfrm);
                             printf("keyframe created, id:%d\n", kfrm.id);
                         }
-                    }
 
-                    // update ieir
-                    mtx.lock();
-                    cur_ieir = ieir;
-                    mtx.unlock();
+                        // update ieir
+                        mtx.lock();
+                        cur_ieir = ieir;
+                        mtx.unlock();
+                    }
+                    else
+                    {
+                        mtx.lock();
+                        cur_ieir[0] = err;
+                        mtx.unlock();
+                    }
                 }
             }
 
@@ -729,15 +735,22 @@ void SLAM_2D::loc_a_loop()
                 mtx.lock();
                 cur_tpp = tpp;
                 mtx.unlock();
+
+                // check inlier error, inlier ratio
+                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+
+                // update ieir
+                mtx.lock();
+                cur_ieir = ieir;
+                mtx.unlock();
             }
-
-            // check inlier error, inlier ratio
-            Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-
-            // update ieir
-            mtx.lock();
-            cur_ieir = ieir;            
-            mtx.unlock();
+            else
+            {
+                // update ieir
+                mtx.lock();
+                cur_ieir[0] = err;
+                mtx.unlock();
+            }
 
             lidar->scan_que.clear();
 
@@ -755,48 +768,38 @@ void SLAM_2D::loc_b_loop()
     const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
-    bool is_first = true;
-    Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
-
     mtx.lock();
     tp_storage.clear();
     mtx.unlock();
+
+    MOBILE_POSE mo0 = mobile->get_pose();
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
     {
         MOBILE_POSE mo = mobile->get_pose();
-        if(mo.t > 0)
+        if(mo.t > mo0.t)
         {
             double st_time = get_time();
 
+            Eigen::Matrix4d pre_mo_tf = se2_to_TF(mo0.pose);
             Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
 
-            // check first
-            if(is_first)
-            {
-                is_first = false;
-                pre_mo_tf = cur_mo_tf;
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-
+            // get current tf
             mtx.lock();
             Eigen::Matrix4d _cur_tf = cur_tf;
             mtx.unlock();
 
+            // update odo_tf
             Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
             pre_mo_tf = cur_mo_tf;
             Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
 
+            // icp-odometry fusion
             TIME_POSE tp;
             if(tp_que.try_pop(tp))
             {
                 double alpha = config->LOC_FUSION_RATIO;
-
-                //Eigen::Matrix4d delta_tf = tp.tf2.inverse()*cur_mo_tf;
-                //Eigen::Matrix4d icp_tf = tp.tf*delta_tf;
                 Eigen::Matrix4d icp_tf = tp.tf;
 
                 // for odometry slip
@@ -832,8 +835,10 @@ void SLAM_2D::loc_b_loop()
             {
                 tp_storage.erase(tp_storage.begin());
             }
-
             mtx.unlock();
+
+            // for next operation
+            mo0 = mo;
 
             // update processing time
             proc_time_loc_b = get_time() - st_time;

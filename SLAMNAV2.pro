@@ -26,7 +26,8 @@ SOURCES += \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
     cam.cpp \
-    code_reader.cpp \    
+    code_reader.cpp \
+    ws_ui.cpp \
     dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
@@ -50,7 +51,8 @@ HEADERS += \
     LakiBeamUDP.h \
     autocontrol.h \
     cam.h \
-    code_reader.h \    
+    code_reader.h \
+    ws_ui.h \
     dockingcontrol.h \
     config.h \
     cv_to_qt.h \
