@@ -2684,6 +2684,24 @@ void MainWindow::slam_plot()
             slam.mtx.unlock();
         }
     }
+    else
+    {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+    }
 }
 void MainWindow::loc_plot()
 {

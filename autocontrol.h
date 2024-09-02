@@ -31,6 +31,9 @@
 #include <ompl/config.h>
 #include <ompl/util/Console.h>
 
+// vfh
+#include "vfh.h"
+
 // qt
 #include <QObject>
 
