@@ -173,6 +173,8 @@ void AUTOCONTROL::stop()
     is_pause = false;
 
     clear_path();
+
+    Q_EMIT signal_stop();
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -182,6 +184,9 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     cur_preset_idx = preset;
     cur_goal_tf = goal_tf;
     mtx.unlock();
+
+    // for fms
+    Q_EMIT signal_new_goal(goal_tf, preset);
 
     // stop
     stop();

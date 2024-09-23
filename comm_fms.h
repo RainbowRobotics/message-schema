@@ -69,8 +69,8 @@ private Q_SLOTS:
     void recv_stop();
 
     // send slots
-    void send_goal(QString goal);
-    void send_pose(QString pose);
+    void slot_new_goal(Eigen::Matrix4d goal_tf, int preset);
+    void slot_stop();
 
 };
 

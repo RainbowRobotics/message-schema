@@ -131,6 +131,9 @@ Q_SIGNALS:
     void signal_move_succeed(QString message);
     void signal_move_failed(QString message);
 
+    void signal_new_goal(Eigen::Matrix4d goal_tf, int preset);
+    void signal_stop();
+
 };
 
 #endif // AUTOCONTROL_H

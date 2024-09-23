@@ -96,14 +96,51 @@ void COMM_FMS::recv_stop()
 }
 
 // send slots
-void COMM_FMS::send_goal(QString goal)
+void COMM_FMS::slot_new_goal(Eigen::Matrix4d goal_tf, int preset)
 {
+    double time = get_time0();
+    QString node_id = unimap->get_node_id_nn(goal_tf.block(0,3,3,1));
 
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["type"] = "new_goal";
+    rootObj["node_id"] = node_id;
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    QString str(doc.toJson());
+    client.sendTextMessage(str);
+
+    printf("[COMM_FMS] new_goal, node_id: %s, preset: %d, time: %f\n", node_id.toLocal8Bit().data(), preset, time);
 }
 
-void COMM_FMS::send_pose(QString pose)
+void COMM_FMS::slot_stop()
 {
+    double time = get_time0();
 
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["type"] = "stop";
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
+
+    // send
+    QJsonDocument doc(rootObj);
+    QString str(doc.toJson());
+    client.sendTextMessage(str);
+
+    printf("[COMM_FMS] stop, time: %f\n", time);
 }
+
+
+
+
+
+
+
 
 

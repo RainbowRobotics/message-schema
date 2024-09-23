@@ -115,6 +115,9 @@ public Q_SLOTS:
     // send slots
     void send_status();
 
+    void send_global_path();
+    void send_local_path();
+
     void send_mapping_start_response(QString result);
     void send_mapping_stop_response();
     void send_mapping_save_response(QString name, QString result);
@@ -127,6 +130,8 @@ public Q_SLOTS:
     void send_move_pause_response(QString result);
     void send_move_resume_response(QString result);
     void send_move_stop_response(QString result);
+
+
 };
 
 #endif // COMM_UI_H

@@ -135,6 +135,10 @@ MainWindow::MainWindow(QWidget *parent)
     // for websocket ui
     connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
+    // for fms
+    connect(&ctrl, SIGNAL(signal_new_goal(Eigen::Matrix4d, int)), &cfms, SLOT(slot_new_goal(Eigen::Matrix4d, int)));
+    connect(&ctrl, SIGNAL(signal_stop()), &cfms, SLOT(slot_stop()));
+
     // set plot window
     setup_vtk();
 
@@ -1885,7 +1889,9 @@ void MainWindow::watch_loop()
         {
             if(cms.is_connected)
             {
-                cms.send_mapping_cloud();
+                cms.send_mapping_cloud();                
+                cms.send_global_path();
+                cms.send_local_path();
             }
         }
 

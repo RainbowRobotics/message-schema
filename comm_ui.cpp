@@ -684,6 +684,16 @@ void COMM_UI::send_status()
     //printf("[COMM_UI] status, time: %f\n", time);
 }
 
+void COMM_UI::send_global_path()
+{
+
+}
+
+void COMM_UI::send_local_path()
+{
+
+}
+
 void COMM_UI::send_mapping_start_response(QString result)
 {
     double time = get_time0();

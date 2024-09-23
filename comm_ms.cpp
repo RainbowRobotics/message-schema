@@ -66,7 +66,7 @@ QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
 
 void COMM_MS::init()
 {
-    reconnect_timer.start(10000);
+    //reconnect_timer.start(10000);
 }
 
 void COMM_MS::sio_connected()
@@ -413,6 +413,51 @@ void COMM_MS::send_status()
     io->socket()->emit("status", res);
 
     //printf("[COMM_MS] status, time: %f\n", time);
+}
+
+void COMM_MS::send_global_path()
+{
+    PATH path = ctrl->get_cur_global_path();
+
+    sio::array_message::ptr jsonArray = sio::array_message::create();
+    for(size_t p = 0; p < path.pos.size(); p++)
+    {
+        Eigen::Vector3d P = path.pos[p];
+
+        sio::array_message::ptr jsonObj = sio::array_message::create();
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[0], 'f', 3).toStdString()));
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[1], 'f', 3).toStdString()));
+        jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[2], 'f', 3).toStdString()));
+        jsonArray->get_vector().push_back(jsonObj);
+    }
+
+    // send
+    io->socket()->emit("global_path", jsonArray);
+    printf("[COMM_MS] global_path, num: %d\n", (int)path.pos.size());
+}
+
+void COMM_MS::send_local_path()
+{
+    PATH path = ctrl->get_cur_local_path();
+
+    sio::array_message::ptr jsonArray = sio::array_message::create();
+    for(int p = 0; p < (int)path.pos.size(); p++)
+    {
+        if(p == 0 || p == (int)path.pos.size()-1 || p%10 == 0)
+        {
+            Eigen::Vector3d P = path.pos[p];
+
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(P[2], 'f', 3).toStdString()));
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+    }
+
+    // send
+    io->socket()->emit("local_path", jsonArray);
+    printf("[COMM_MS] local_path, num: %d\n", (int)path.pos.size());
 }
 
 void COMM_MS::send_lidar()
