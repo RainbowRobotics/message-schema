@@ -106,6 +106,8 @@ public:
     std::atomic<bool> is_map_update2 = {false};
     std::atomic<bool> is_topo_update2 = {false};
     std::atomic<bool> is_pick_update2 = {false};
+    std::atomic<bool> is_local_path_update2 = {false};
+    std::atomic<bool> is_global_path_update2 = {false};
 
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};

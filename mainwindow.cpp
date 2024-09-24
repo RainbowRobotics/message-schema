@@ -1683,11 +1683,13 @@ void MainWindow::bt_AutoResume()
 void MainWindow::slot_local_path_updated()
 {
     is_local_path_update = true;
+    is_local_path_update2 = true;
 }
 
 void MainWindow::slot_global_path_updated()
 {
     is_global_path_update = true;
+    is_global_path_update2 = true;
 }
 
 // for test
@@ -1875,6 +1877,18 @@ void MainWindow::watch_loop()
             if(cms.is_connected)
             {
                 cms.send_status();
+
+                if(is_global_path_update2)
+                {
+                    is_global_path_update2 = false;
+                    cms.send_global_path();
+                }
+
+                if(is_local_path_update2)
+                {
+                    is_local_path_update2 = false;
+                    cms.send_local_path();
+                }
             }
 
             if(cui.is_connected)
@@ -1889,9 +1903,7 @@ void MainWindow::watch_loop()
         {
             if(cms.is_connected)
             {
-                cms.send_mapping_cloud();                
-                cms.send_global_path();
-                cms.send_local_path();
+                cms.send_mapping_cloud();
             }
         }
 

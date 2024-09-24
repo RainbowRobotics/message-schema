@@ -21,7 +21,8 @@ AUTOCONTROL::~AUTOCONTROL()
         b_thread = NULL;
     }
     mobile->move(0, 0, 0);
-    is_moving = false;    
+    is_moving = false;
+    clear_path();
 }
 
 void AUTOCONTROL::init()
@@ -171,7 +172,6 @@ void AUTOCONTROL::stop()
     mobile->move(0, 0, 0);
     is_moving = false;
     is_pause = false;
-
     clear_path();
 
     Q_EMIT signal_stop();
@@ -474,12 +474,12 @@ std::vector<cv::Vec2i> AUTOCONTROL::path_finding(const cv::Mat& map, cv::Vec2i s
             // check open set
             bool is_open_set = false;
             ASTAR_NODE* open_node = NULL;
-            for(size_t p = 0; p < open_set.size(); p++)
+            for(size_t q = 0; q < open_set.size(); q++)
             {
-                if(open_set[p]->pos == child_pos)
+                if(open_set[q]->pos == child_pos)
                 {
                     is_open_set = true;
-                    open_node = open_set[p];
+                    open_node = open_set[q];
                     break;
                 }
             }
@@ -621,12 +621,12 @@ std::vector<QString> AUTOCONTROL::topo_path_finding(QString st_node_id, QString 
             // check open set
             bool is_open_set = false;
             ASTAR_NODE* open_node = NULL;
-            for(size_t p = 0; p < open_set.size(); p++)
+            for(size_t q = 0; q < open_set.size(); q++)
             {
-                if(open_set[p]->node->id == node->id)
+                if(open_set[q]->node->id == node->id)
                 {
                     is_open_set = true;
-                    open_node = open_set[p];
+                    open_node = open_set[q];
                     break;
                 }
             }
@@ -1730,6 +1730,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // already goal
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             Q_EMIT signal_move_failed("already goal");
             printf("[AUTO] already goal\n");
@@ -1755,6 +1756,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // no global path
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             Q_EMIT signal_move_failed("no global path");
             printf("[AUTO] global path init failed\n");
@@ -1784,6 +1786,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             {
                 mobile->move(0, 0, 0);
                 is_moving = false;
+                clear_path();
 
                 Q_EMIT signal_move_failed("no local path");
                 printf("[AUTO] local path init failed\n");
@@ -1829,6 +1832,8 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
         {
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
+
             Q_EMIT signal_move_failed("something wrong");
 
             printf("[AUTO] something wrong\n");
@@ -2147,8 +2152,9 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 {
                     pre_err_th = 0;
                     mobile->move(0, 0, 0);
-
                     is_moving = false;
+                    clear_path();
+
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2162,8 +2168,9 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             if(obsmap->is_path_collision(traj))
             {
                 mobile->move(0, 0, 0);
-
                 is_moving = false;
+                clear_path();
+
                 Q_EMIT signal_move_succeed("early stopped");
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2282,6 +2289,8 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
     mobile->move(0, 0, 0);
     is_moving = false;
+    clear_path();
+
     Q_EMIT signal_move_succeed("stopped");
 
     printf("[AUTO] b_loop_pp stop\n");
@@ -2299,6 +2308,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
         // no global path
         mobile->move(0, 0, 0);
         is_moving = false;
+        clear_path();
 
         Q_EMIT signal_move_failed("no global path");
         printf("[AUTO] global path init failed\n");
@@ -2326,6 +2336,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             // no global path
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             Q_EMIT signal_move_failed("topology wrong\n");
             printf("[AUTO] global path init failed\n");
@@ -2371,6 +2382,7 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
         {
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             printf("[AUTO] something wrong\n");
             break;
@@ -2515,6 +2527,8 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
 
                     mobile->move(0, 0, 0);
                     is_moving = false;
+                    clear_path();
+
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2532,6 +2546,8 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             {
                 mobile->move(0, 0, 0);
                 is_moving = false;
+                clear_path();
+
                 Q_EMIT signal_move_succeed("very good");
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2543,6 +2559,8 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             {
                 mobile->move(0, 0, 0);
                 is_moving = false;
+                clear_path();
+
                 Q_EMIT signal_move_succeed("very good");
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2579,6 +2597,8 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
     }
 
     is_moving = false;
+    clear_path();
+
     Q_EMIT signal_move_succeed("stopped");
 
     printf("[AUTO] b_loop_hpp stop\n");
@@ -2596,6 +2616,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
         // no global path
         mobile->move(0, 0, 0);
         is_moving = false;
+        clear_path();
 
         Q_EMIT signal_move_failed("no global path");
         printf("[AUTO] global path init failed\n");
@@ -2623,6 +2644,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
             // no global path
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             Q_EMIT signal_move_failed("topology wrong\n");
             printf("[AUTO] global path init failed\n");
@@ -2691,6 +2713,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
         {
             mobile->move(0, 0, 0);
             is_moving = false;
+            clear_path();
 
             printf("[AUTO] something wrong\n");
             break;
@@ -2934,6 +2957,8 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
                 {
                     mobile->move(0, 0, 0);
                     is_moving = false;
+                    clear_path();
+
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2952,6 +2977,8 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
 
                 mobile->move(0, 0, 0);
                 is_moving = false;
+                clear_path();
+
                 Q_EMIT signal_move_succeed("early stopped");
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2992,6 +3019,8 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
     }
 
     is_moving = false;
+    clear_path();
+
     Q_EMIT signal_move_succeed("stopped");
 
     printf("[AUTO] b_loop_tng stop\n");
