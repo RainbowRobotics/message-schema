@@ -28,32 +28,30 @@ public:
     void init();    
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
-    void get_obs_map(cv::Mat& obs_map, Eigen::Matrix4d& obs_tf);
-    void get_dyn_map(cv::Mat& dyn_map, Eigen::Matrix4d& obs_tf);    
+
+    void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
+    void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
     std::vector<Eigen::Vector4d> get_obs_pts(); // x, y, z, prob
-    cv::Mat calc_avoid_area(const std::vector<Eigen::Matrix4d>& path, const Eigen::Matrix4d& robot_tf0, const Eigen::Matrix4d& robot_tf1, double margin_x = 0, double margin_y = 0);
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
 
     // check collision
-    bool is_pos_collision(const Eigen::Vector3d& pos, double radius);
-    bool is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    bool is_tf_collision_with_area(const Eigen::Matrix4d& robot_tf, const cv::Mat& area, double margin_x = 0, double margin_y = 0);
-    bool is_tf_collision_dynamic(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, int st_idx = 0, int idx_step = 1, double margin_x = 0, double margin_y = 0);
-    bool get_tf_collision_cnt(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, double chk_range, int& cnt0, int& cnt1);
+    bool is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is_dyn = false);
+    bool is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0, bool is_dyn = false);
+    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1, bool is_dyn = false);
 
-    // calc repulsive force
-    Eigen::Vector3d get_obs_force(const Eigen::Vector3d& center, double max_r);
+    // for avoid path
+    double calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_tf, double radius);
+    bool is_collision(const cv::Mat& map, const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x = 0, double margin_y = 0);
+    std::vector<Eigen::Matrix4d> calc_path(Eigen::Matrix4d st_tf, Eigen::Matrix4d ed_tf);
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;
     std::vector<Eigen::Vector4d> obs_pts;
 
     // grid map
-    Eigen::Matrix4d tf;
-    cv::Mat prob_map;
+    Eigen::Matrix4d map_tf;
     cv::Mat wall_map;
     cv::Mat static_map;
     cv::Mat dynamic_map;
@@ -64,7 +62,8 @@ public:
     int cy = 150;
     double gs = 0.05;
 
-    const double P_HIT = 0.7;
+    const double P_OBS = 0.6;
+    const double P_HIT = 0.9;
     const double P_MISS = 0.45;
 
     cv::Vec2i xy_uv(double x, double y);

@@ -76,11 +76,11 @@ public:
     void move_tng(Eigen::Matrix4d goal_tf, int preset);
 
     // global path planning (using topo)
-    PATH calc_global_path(Eigen::Matrix4d goal, bool is_hpp = false);
-    std::vector<cv::Vec2i> path_finding(const cv::Mat& map, cv::Vec2i st, cv::Vec2i ed);
+    PATH calc_global_path(Eigen::Matrix4d goal, bool is_hpp = false);    
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
-    std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step);
+    std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);
+    std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step, bool use_ccma = true);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
 
     void calc_ref_v0(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v);
@@ -88,8 +88,7 @@ public:
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
     // for local path planning (using obs_map)
-    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);    
-    bool is_state_valid(const ompl::base::State *state) const;
+    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);        
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);        
     PATH calc_local_path();
     PATH calc_avoid_path();
@@ -121,9 +120,6 @@ public:
     std::atomic<bool> is_pause = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
     QString obs_condition = "none";
-
-    // for ompl
-    cv::Mat avoid_area;
 
 Q_SIGNALS:
     void signal_global_path_updated();

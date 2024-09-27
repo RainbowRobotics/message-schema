@@ -18,7 +18,6 @@
 	"control": {
 		"DRIVE_EXTENDED_CONTROL_TIME": "2.0",
 		"DRIVE_GOAL_D": "0.1",
-		"DRIVE_GOAL_NEAR_D": "0.5",
 		"DRIVE_GOAL_TH": "3.0"
 	},
 	"annotation": {
@@ -45,7 +44,7 @@
 		"MOTOR_GEAR_RATIO": "1",
 		"MOTOR_LIMIT_V": "2.0",
 		"MOTOR_LIMIT_V_ACC": "2.0",
-		"MOTOR_LIMIT_W": "360",
+		"MOTOR_LIMIT_W": "180",
 		"MOTOR_LIMIT_W_ACC": "360",
 		"MOTOR_GAIN_KP": "4400",
 		"MOTOR_GAIN_KI": "0",
@@ -66,12 +65,12 @@
 	},
 	"obs": {
 		"OBS_AVOID": "1",
-		"OBS_DEADZONE": "0.4",
-		"OBS_LOCAL_GOAL_D": "3.0",
-		"OBS_EB_MARGIN_X": "0.3",
-		"OBS_EB_MARGIN_Y": "0.1",
-		"OBS_OMPL_MARGIN_X": "0.2",
-		"OBS_OMPL_MARGIN_Y": "0.1",
+		"OBS_DEADZONE": "1.0",
+		"OBS_LOCAL_GOAL_D": "4.0",
+		"OBS_SAFE_MARGIN_X": "0.3",
+		"OBS_SAFE_MARGIN_Y": "0.3",
+		"OBS_PATH_MARGIN_X": "0.1",
+		"OBS_PATH_MARGIN_Y": "0.1",
     		"OBS_MAP_GRID_SIZE": "0.05",
     		"OBS_MAP_RANGE": "5.0",
     		"OBS_MAP_MIN_Z": "-1.0",

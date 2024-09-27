@@ -59,6 +59,7 @@
 
 // opencv
 #include <opencv2/opencv.hpp>
+#include <opencv2/ximgproc.hpp>
 #include "cv_to_qt.h"
 
 // nanoflann
@@ -133,7 +134,7 @@ enum AUTO_OBS_STATE
 {
     AUTO_OBS_CHECK = 0,
     AUTO_OBS_RECOVERY,
-    AUTO_OBS_OMPL,
+    AUTO_OBS_AVOID,
     AUTO_OBS_WAIT,
 };
 
@@ -713,7 +714,7 @@ struct ASTAR_NODE
 {
     ASTAR_NODE* parent = NULL;
     NODE* node = NULL;
-    cv::Vec2i pos;
+    Eigen::Matrix4d tf;
     double g = 0;
     double h = 0;
     double f = 0;
@@ -722,7 +723,7 @@ struct ASTAR_NODE
     {
         parent = NULL;
         node = NULL;
-        pos = cv::Vec2i(0,0);
+        tf.setIdentity();
         g = 0;
         h = 0;
         f = 0;
@@ -732,7 +733,7 @@ struct ASTAR_NODE
     {
         parent = p.parent;
         node = p.node;
-        pos = p.pos;
+        tf = p.tf;
         g = p.g;
         h = p.h;
         f = p.f;
@@ -742,7 +743,7 @@ struct ASTAR_NODE
     {
         parent = p.parent;
         node = p.node;
-        pos = p.pos;
+        tf = p.tf;
         g = p.g;
         h = p.h;
         f = p.f;
