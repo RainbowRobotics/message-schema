@@ -76,7 +76,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
-    connect(ui->bt_LocInit2, SIGNAL(clicked()), this, SLOT(bt_LocInit2()));
+    connect(ui->bt_LocInitSemiAuto, SIGNAL(clicked()), this, SLOT(bt_LocInitSemiAuto()));
+    connect(ui->bt_LocInitAuto, SIGNAL(clicked()), this, SLOT(bt_LocInitAuto()));
     connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
     connect(ui->bt_LocStop, SIGNAL(clicked()), this, SLOT(bt_LocStop()));
 
@@ -1262,7 +1263,28 @@ void MainWindow::bt_LocInit()
     slam.mtx.unlock();
 }
 
-void MainWindow::bt_LocInit2()
+void MainWindow::bt_LocInitSemiAuto()
+{
+    logger.PrintLog("[AUTO_INIT] try semi-auto init", "Green", true, false);
+    slam.localization_stop();
+
+    // semi auto init
+    if(semi_auto_init_thread != NULL)
+    {
+        logger.PrintLog("[AUTO_INIT] thread already running.", "Orange", true, false);
+        semi_auto_init_thread->join();
+        semi_auto_init_thread = NULL;
+    }
+    semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, &slam);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while(!slam.is_busy)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+void MainWindow::bt_LocInitAuto()
 {
     // auto init
 }
@@ -2384,6 +2406,19 @@ void MainWindow::topo_plot()
                         viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
                         viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
+                    else if(unimap.nodes[p].type == "INIT")
+                    {
+                        const double size = 0.15;
+                        viewer->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 0.5, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
                         viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
@@ -3439,6 +3474,19 @@ void MainWindow::topo_plot2()
                         viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
                         viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
+                    else if(unimap.nodes[p].type == "INIT")
+                    {
+                        const double size = 0.15;
+                        viewer2->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 0.5, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
                         viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
@@ -3648,7 +3696,6 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("text_pre");
         }
 
-
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
         {
@@ -3656,22 +3703,24 @@ void MainWindow::pick_plot2()
             {
                 Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(pick.l_pt0[0], pick.l_pt0[1], 0));
 
-                pcl::PolygonMesh donut = make_donut(0.15, 0.01, tf, 1.0, 0.0, 0.0, 0.5);
+                double val = ui->dsb_MapEraseSize->value();
+                pcl::PolygonMesh donut = make_donut(val, 0.01, tf, 1.0, 0.0, 0.0, 0.5);
                 viewer2->addPolygonMesh(donut, "pick_body");
 
                 // erase
-                unimap.set_cloud_mask(pick.l_pt0, 0.15, 0);
+                unimap.set_cloud_mask(pick.l_pt0, val, 0);
                 map_update();
             }
             else if(pick.r_drag)
             {
                 Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(pick.r_pt0[0], pick.r_pt0[1], 0));
 
-                pcl::PolygonMesh donut = make_donut(0.15, 0.01, tf, 0.0, 1.0, 0.0, 0.5);
+                double val = ui->dsb_MapEraseSize->value();
+                pcl::PolygonMesh donut = make_donut(val, 0.01, tf, 0.0, 1.0, 0.0, 0.5);
                 viewer2->addPolygonMesh(donut, "pick_body");
 
                 // restore
-                unimap.set_cloud_mask(pick.r_pt0, 0.15, 1);
+                unimap.set_cloud_mask(pick.r_pt0, val, 1);
                 map_update();
             }
         }
@@ -3751,6 +3800,12 @@ void MainWindow::pick_plot2()
                 // draw pose
                 viewer2->addCoordinateSystem(1.0, "O_pick");
                 if(ui->cb_NodeType->currentText() == "ROUTE")
+                {
+                    viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
+                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+                }
+                else if(ui->cb_NodeType->currentText() == "INIT")
                 {
                     viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");

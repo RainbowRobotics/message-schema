@@ -37,7 +37,7 @@ void DOCKINGCONTROL::stop()
     is_pause = false;
 }
 
-void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf)
+void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf, double p_gain, double d_gain, double off_x, double off_y, double off_t)
 {
     // stop first
     stop();
@@ -46,6 +46,31 @@ void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf)
     obsmap->clear();
 
     fsm_state = DOCKING_FSM_DRIVING;
+
+    if(p_gain > 2.0)
+    {
+        p_gain = 2.0;
+    }
+    else if(p_gain < 0)
+    {
+        p_gain = 0;
+    }
+
+    if(d_gain > 2.0)
+    {
+        d_gain = 2.0;
+    }
+    else if(d_gain < 0)
+    {
+        d_gain = 0;
+    }
+
+    ox = off_x;
+    oy = off_y;
+    ot = off_t;
+
+    p_gain_ratio = p_gain;
+    d_gain_ratio = d_gain;
 
     // start control loop
     a_flag = true;
@@ -56,30 +81,20 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 {
     // set flag
     is_moving = true;
-
-    // check goal
-    Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
-    if(dtdr[0] > config->DRIVE_GOAL_D)
-    {
-        if(std::abs(dtdr[1]) > config->DRIVE_GOAL_TH*D2R)
-        {
-            // robot is not in goal
-            mobile->move(0, 0, 0);
-            is_moving = false;
-
-            logger->PrintLog("[DOCKING] not in goal.", "Red", true, false);
-            return;
-        }
-    }
-
     if(code->is_connected == false)
     {
         logger->PrintLog("[DOCKING] code reader not connected.", "Red", true, false);
         return;
     }
 
+    if(code->is_recv_data == false)
+    {
+        logger->PrintLog("[DOCKING] code not detected.", "Red", true, false);
+        return;
+    }
+
     // loop params
-    const double dt = 0.05; // 20hz
+    const double dt = 0.01; // 100hz
     double pre_loop_time = get_time();
 
     // control params
@@ -118,8 +133,8 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
 
         // code reader error
-        double code_err_x = code->err_x;
-        double code_err_y = code->err_y;
+        double code_err_x = code->err_x - ox * 0.001;
+        double code_err_y = code->err_y - oy * 0.001;
 
         if(fsm_state == DOCKING_FSM_DRIVING)
         {
@@ -135,14 +150,17 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
             // calc error and ref vel
             double goal_err_d = std::sqrt(code_err_x*code_err_x + code_err_y*code_err_y);
-            double goal_err_th = code->err_th;
+            double goal_err_th = code->err_th - ot * D2R;
 
             double dir_x = code_err_x/goal_err_d;
             double dir_y = code_err_y/goal_err_d;
-            double ref_v = config->DOCKING_GAIN_KP*goal_err_d + config->DOCKING_GAIN_KD*(goal_err_d- pre_goal_err_d)/dt;
+            double ref_v = p_gain_ratio*config->DOCKING_GAIN_KP*goal_err_d + d_gain_ratio*config->DOCKING_GAIN_KD*(goal_err_d- pre_goal_err_d)/dt;
 
             double kp_w = 2.0;
             double kd_w = 0.5;
+
+            kp_w *= p_gain_ratio;
+            kd_w *= d_gain_ratio;
 
             double vx = dir_x*ref_v;
             double vy = dir_y*ref_v;
@@ -182,8 +200,8 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
             pre_goal_err_d = goal_err_d;
 
-            std::cout << "v: " << vx << ", w:" << wz*R2D <<
-                         ", goal_err_d: " << goal_err_d << ", goal_err_th:" << goal_err_th*R2D << std::endl;
+            //std::cout << "v: " << vx << ", w:" << wz*R2D <<
+            //            ", goal_err_d: " << goal_err_d << ", goal_err_th:" << goal_err_th*R2D << std::endl;
         }
 
         else if(fsm_state == DOCKING_FSM_OBS)
@@ -257,10 +275,10 @@ bool DOCKINGCONTROL::is_everything_fine()
     {
         return false;
     }
-    if(slam->get_cur_loc_state() == "none" || slam->get_cur_loc_state() == "fail")
-    {
-        return false;
-    }
+    //if(slam->get_cur_loc_state() == "none" || slam->get_cur_loc_state() == "fail")
+    //{
+    //    return false;
+    //}
 
     return true;
 }

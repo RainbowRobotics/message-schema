@@ -10,8 +10,8 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
-#include "cam.h"
 #include "code_reader.h"
+#include "cam.h"
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
@@ -39,7 +39,7 @@ public:
 
     void init();
     void stop();
-    void move(Eigen::Matrix4d goal_tf);
+    void move(Eigen::Matrix4d goal_tf, double p_gain=1.0, double d_gain=1.0, double off_x=0.0, double off_y=0.0, double off_t=0.0);
 
     // control loop
     std::atomic<bool> a_flag = {false};
@@ -50,6 +50,13 @@ public:
     bool is_everything_fine();
 
     Eigen::Vector3d last_cur_pos;
+
+    double p_gain_ratio = 1.0;
+    double d_gain_ratio = 1.0;
+
+    double ox = 0.;
+    double oy = 0.;
+    double ot = 0.;
 
     // flags
     std::atomic<bool> is_moving = {false};

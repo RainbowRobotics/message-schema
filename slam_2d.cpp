@@ -1666,6 +1666,67 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     return last_err;
 }
 
+void SLAM_2D::semi_auto_init_start()
+{
+    is_busy = true;
+
+    FRAME frm;
+    frm.pts = lidar->get_cur_scan();
+
+    // find best match
+    Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+    double min_cost = std::numeric_limits<double>::max();
+
+    std::vector<QString> ids = unimap->get_nodes("INIT");
+    for(size_t p=0; p<ids.size(); p++)
+    {
+        NODE* node = unimap->get_node_by_id(ids[p]);
+        Eigen::Matrix4d tf = node->tf;
+
+        for(double th_offset = -180.0; th_offset <= 180.0; th_offset += 10.0)
+        {
+            Eigen::Matrix4d tf_bound = ZYX_to_TF(0, 0, 0, 0, 0, th_offset*D2R);
+            Eigen::Matrix4d _cur_tf = tf*tf_bound;
+
+            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+            if(err < config->LOC_ICP_ERROR_THRESHOLD)
+            {
+                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                double cost = (ieir[0]/config->LOC_ICP_ERROR_THRESHOLD) + (1.0 - ieir[1]);
+                if(cost < min_cost)
+                {
+                    min_cost = cost;
+                    min_tf = tf;
+
+                    //Eigen::Vector3d min_pose = TF_to_se2(min_tf);
+                    //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
+                }
+            }
+        }
+    }
+
+    is_init = false;
+    if(min_cost != std::numeric_limits<double>::max())
+    {
+        is_init = true;
+        Eigen::Vector3d min_pose = TF_to_se2(min_tf);
+        printf("[AUTOINIT] success auto init. x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, min_cost);
+
+        mtx.lock();
+        cur_tf = min_tf;
+        mtx.unlock();
+
+        localization_start();
+    }
+    else
+    {
+        printf("[AUTOINIT] failed auto init.\n");
+    }
+
+    is_busy = false;
+    return;
+}
+
 double SLAM_2D::calc_overlap_ratio(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1)
 {
     // Lambda to compute AABB from points

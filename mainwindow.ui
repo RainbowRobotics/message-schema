@@ -327,10 +327,10 @@
                <string>Init</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_LocInit2">
+             <widget class="QPushButton" name="bt_LocInitAuto">
               <property name="geometry">
                <rect>
-                <x>90</x>
+                <x>160</x>
                 <y>60</y>
                 <width>71</width>
                 <height>31</height>
@@ -343,8 +343,8 @@
              <widget class="QPushButton" name="bt_LocStart">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>60</y>
+                <x>20</x>
+                <y>100</y>
                 <width>71</width>
                 <height>31</height>
                </rect>
@@ -356,8 +356,8 @@
              <widget class="QPushButton" name="bt_LocStop">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>60</y>
+                <x>90</x>
+                <y>100</y>
                 <width>71</width>
                 <height>31</height>
                </rect>
@@ -385,7 +385,7 @@
              <widget class="QPushButton" name="bt_ObsClear">
               <property name="geometry">
                <rect>
-                <x>20</x>
+                <x>160</x>
                 <y>100</y>
                 <width>71</width>
                 <height>31</height>
@@ -398,7 +398,7 @@
              <widget class="QPushButton" name="bt_ConfigLoad">
               <property name="geometry">
                <rect>
-                <x>90</x>
+                <x>230</x>
                 <y>100</y>
                 <width>71</width>
                 <height>31</height>
@@ -406,6 +406,20 @@
               </property>
               <property name="text">
                <string>Config load</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_LocInitSemiAuto">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>60</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Semi
+Auto init</string>
               </property>
              </widget>
             </widget>
@@ -1561,6 +1575,38 @@ stop</string>
                <double>180.000000000000000</double>
               </property>
              </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MapEraseSize">
+              <property name="geometry">
+               <rect>
+                <x>248</x>
+                <y>31</y>
+                <width>65</width>
+                <height>26</height>
+               </rect>
+              </property>
+              <property name="suffix">
+               <string>m</string>
+              </property>
+              <property name="minimum">
+               <double>0.150000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_22">
+              <property name="geometry">
+               <rect>
+                <x>180</x>
+                <y>30</y>
+                <width>61</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>erase size : </string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="page_edit_topo">
              <attribute name="title">
@@ -1663,6 +1709,11 @@ stop</string>
               <item>
                <property name="text">
                 <string>ROUTE</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>INIT</string>
                </property>
               </item>
               <item>

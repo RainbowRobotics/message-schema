@@ -60,6 +60,11 @@ public:
     // flags
     std::atomic<bool> is_connected = {false};
 
+    // semi auto init
+    std::atomic<bool> semi_auto_init_flag = {false};
+    std::thread *semi_auto_init_thread = NULL;
+    void semi_auto_init_loop();
+
     // interface func
     void init();
 
@@ -105,6 +110,7 @@ Q_SIGNALS:
     void signal_mapload(double time, QString name);
 
     void signal_localization_autoinit(double time);
+    void signal_localization_semiautoinit(double time);
     void signal_localization_init(double time, double x, double y, double z, double rz);
     void signal_localization_start(double time);
     void signal_localization_stop(double time);
@@ -143,6 +149,7 @@ private Q_SLOTS:
     void slot_mapload(double time, QString name);
 
     void slot_localization_autoinit(double time);
+    void slot_localization_semiautoinit(double time);
     void slot_localization_init(double time, double x, double y, double z, double rz);
     void slot_localization_start(double time);
     void slot_localization_stop(double time);

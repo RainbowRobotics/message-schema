@@ -38,7 +38,7 @@ public:
     QTimer reconnect_timer;
     QTimer check_recv_timer;
 
-    std::atomic<bool> is_connected = {false};
+    std::atomic<bool> is_connected = {true};
     std::atomic<bool> is_recv_data = {false};
     std::atomic<bool> is_init = {true};
 
@@ -46,9 +46,17 @@ public:
     double pre_err_y = 0;
     double pre_err_th = 0;
 
+    double cum_err_x = 0;
+    double cum_err_y = 0;
+    double cum_err_th = 0;
+
     std::atomic<double> err_x = {0};
     std::atomic<double> err_y = {0};
     std::atomic<double> err_th = {0};
+
+    std::vector<double> storage_err_x;
+    std::vector<double> storage_err_y;
+    std::vector<double> storage_err_th;
 
     cv::Matx22d R;
 

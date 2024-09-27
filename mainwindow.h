@@ -86,6 +86,16 @@ public:
     QTimer plot_timer;
     QTimer plot_timer2;
 
+    // semi auto init
+    std::atomic<bool> semi_auto_init_flag = {false};
+    std::thread *semi_auto_init_thread = NULL;
+    void semi_auto_init_loop();
+
+    // auto init
+    std::atomic<bool> auto_init_flag = {false};
+    std::thread *auto_init_thread = NULL;
+    void auto_init_loop();
+
     // watchdog
     std::atomic<bool> watch_flag = {false};
     std::thread *watch_thread = NULL;
@@ -208,7 +218,8 @@ public Q_SLOTS:
     void bt_MapLoad();
 
     void bt_LocInit();
-    void bt_LocInit2();
+    void bt_LocInitSemiAuto();
+    void bt_LocInitAuto();
     void bt_LocStart();
     void bt_LocStop();
 
