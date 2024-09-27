@@ -240,6 +240,41 @@ Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
     return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d::fitToSE3(tf0), Sophus::SE3d::fitToSE3(tf1), alpha).matrix();
 }
 
+std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, double dist_step, double th_step)
+{
+    Eigen::Quaterniond q0(tf0.block<3,3>(0,0));
+    Eigen::Quaterniond q1(tf1.block<3,3>(0,0));
+
+    Eigen::Vector3d t0 = tf0.block<3,1>(0,3);
+    Eigen::Vector3d t1 = tf1.block<3,1>(0,3);
+
+    double distance = (t1 - t0).norm();
+    double theta = q0.angularDistance(q1);
+
+    int dist_steps = std::max(1, static_cast<int>(distance / dist_step));
+    int rot_steps = std::max(1, static_cast<int>(theta / th_step));
+    int steps = std::max(dist_steps, rot_steps);
+
+    std::vector<Eigen::Matrix4d> res;
+    res.push_back(tf0);
+    for(int i = 0; i < steps; ++i)
+    {
+        double alpha = static_cast<double>(i) / steps;
+
+        Eigen::Vector3d t_interpolated = (1.0 - alpha) * t0 + alpha * t1;
+        Eigen::Quaterniond q_interpolated = q0.slerp(alpha, q1);
+
+        Eigen::Matrix4d tf_interpolated = Eigen::Matrix4d::Identity();
+        tf_interpolated.block<3,3>(0,0) = q_interpolated.toRotationMatrix();
+        tf_interpolated.block<3,1>(0,3) = t_interpolated;
+
+        res.push_back(tf_interpolated);
+    }
+    res.push_back(tf1);
+
+    return res;
+}
+
 void refine_pose(Eigen::Matrix4d& G)
 {
     G = Sophus::SE3d::fitToSE3(G).matrix();

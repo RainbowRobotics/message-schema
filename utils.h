@@ -26,6 +26,8 @@ Eigen::Matrix4d string_to_TF(QString str);
 QString TF_to_string(Eigen::Matrix4d TF);
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1);
+std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, double dist_step, double th_step);
+
 void refine_pose(Eigen::Matrix4d& G);
 void refine_zero(Eigen::Matrix4d& G);
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold);

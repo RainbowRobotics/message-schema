@@ -34,8 +34,8 @@ public:
     double MOTOR_GAIN_KD = 100.0;
 
     double LIDAR_MAX_RANGE = 40.0;
-    QString LIDAR_TF_F = "";
-    QString LIDAR_TF_B = "";
+    QString LIDAR_TF_F = "0,0,0,0,0,0";
+    QString LIDAR_TF_B = "0,0,0,0,0,0";
 
     int SLAM_WINDOW_SIZE = 100;
     double SLAM_VOXEL_SIZE = 0.05;
@@ -61,31 +61,30 @@ public:
     double LOC_FUSION_RATIO = 0.5;
 
     double ANNOT_QA_STEP = 0.3;
-    int SIM_MODE = 0; // 0: real mode, 1: simulation mode
+    int SIM_MODE = 1; // 0: real mode, 1: simulation mode
 
-    double DRIVE_GOAL_D = 0.05;
-    double DRIVE_GOAL_NEAR_D = 0.5;
+    double DRIVE_GOAL_D = 0.05;    
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
 
     int OBS_AVOID = 1; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
-    double OBS_DEADZONE = 0.3;
+    double OBS_DEADZONE = 1.0;
     double OBS_LOCAL_GOAL_D = 3.0;
-    double OBS_EB_MARGIN_X = 0.3;
-    double OBS_EB_MARGIN_Y = 0.2;
-    double OBS_OMPL_MARGIN_X = 0.1;
-    double OBS_OMPL_MARGIN_Y = 0.1;
+    double OBS_SAFE_MARGIN_X = 0.3;
+    double OBS_SAFE_MARGIN_Y = 0.3;
+    double OBS_PATH_MARGIN_X = 0.1;
+    double OBS_PATH_MARGIN_Y = 0.1;
     double OBS_MAP_GRID_SIZE = 0.05;
     double OBS_MAP_RANGE = 5.0;
     double OBS_MAP_MIN_Z = -1.0;
     double OBS_MAP_MAX_Z = 1.0;
-    double OBS_PREDICT_TIME = 1.5;
+    double OBS_PREDICT_TIME = 3.0;
 
     // cam
     QString CAM_SERIAL_NUMBER_0 = "";
     QString CAM_SERIAL_NUMBER_1 = "";
-    QString CAM_TF_0 = "";
-    QString CAM_TF_1 = "";
+    QString CAM_TF_0 = "0,0,0,0,0,0";
+    QString CAM_TF_1 = "0,0,0,0,0,0";
     double CAM_HEIGHT_MIN = 0.1;
     double CAM_HEIGHT_MAX = 1.0;
 
