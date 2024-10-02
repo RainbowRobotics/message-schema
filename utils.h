@@ -50,7 +50,7 @@ double calc_length(std::vector<Eigen::Vector3d>& src);
 double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos);
 double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
 double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1);
-
+double calc_dth(const Eigen::Matrix4d& G0, const Eigen::Matrix4d& G1);
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
 std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);

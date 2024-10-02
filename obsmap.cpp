@@ -3,7 +3,7 @@
 OBSMAP::OBSMAP(QObject *parent)
     : QObject{parent}
 {
-    map_tf.setIdentity();
+    map_tf.setIdentity();        
 }
 
 OBSMAP::~OBSMAP()
@@ -98,7 +98,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, -config->OBS_MAP_RANGE);
     octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, config->OBS_MAP_RANGE);
 
-    std::vector<Eigen::Vector4d> _obs_pts;
+    std::vector<Eigen::Vector4d> global_obs_pts;
+    std::vector<Eigen::Vector2d> local_obs_pts;
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
     for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
     {
@@ -112,7 +113,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
 
         // for plot
-        _obs_pts.push_back(Eigen::Vector4d(x, y, cur_tf(2,3), prob));
+        global_obs_pts.push_back(Eigen::Vector4d(x, y, cur_tf(2,3), prob));
+        local_obs_pts.push_back(Eigen::Vector2d(_P[0], _P[1]));
 
         cv::Vec2i uv = xy_uv(_P[0], _P[1]);
         int u = uv[0];
@@ -256,19 +258,21 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     cv::erode(_static_map2, _static_map2, cv::Mat(), cv::Point(-1,-1), 1);
 
     // area filtering
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(_dynamic_map, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE, cv::Point());
-
-    cv::Mat _dynamic_map2(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = 0; p < contours.size(); p++)
     {
-        if (contours[p].size() >= 3)
+        std::vector<std::vector<cv::Point>> contours;
+        std::vector<cv::Vec4i> hierarchy;
+        cv::findContours(_dynamic_map, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE, cv::Point());
+
+        cv::Mat _dynamic_map2(h, w, CV_8U, cv::Scalar(0));
+        for(size_t p = 0; p < contours.size(); p++)
         {
-            cv::drawContours(_dynamic_map2, contours, p, cv::Scalar(255), cv::FILLED, 8);
+            if (contours[p].size() >= 3)
+            {
+                cv::drawContours(_dynamic_map2, contours, p, cv::Scalar(255), cv::FILLED, 8);
+            }
         }
+        _dynamic_map = _dynamic_map2;
     }
-    _dynamic_map = _dynamic_map2;
 
     // single point filtering
     for(int i = 1; i < h-1; i++)
@@ -319,13 +323,36 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
+    // set denoised obs_pts
+    std::vector<Eigen::Vector3d> _obs_pts;
+    std::vector<Eigen::Vector3d> _dyn_pts;
+    std::vector<Eigen::Vector4d> _plot_pts;
+    for(size_t p = 0; p < local_obs_pts.size(); p++)
+    {
+        double x = local_obs_pts[p][0];
+        double y = local_obs_pts[p][1];
+        cv::Vec2i uv = xy_uv(x,y);
+        if(_wall_map.ptr<uchar>(uv[1])[uv[0]] == 255)
+        {
+            _plot_pts.push_back(global_obs_pts[p]);
+            _obs_pts.push_back(Eigen::Vector3d(global_obs_pts[p][0], global_obs_pts[p][1], global_obs_pts[p][2]));
+        }
+
+        if(_dynamic_map.ptr<uchar>(uv[1])[uv[0]] == 255)
+        {
+            _dyn_pts.push_back(Eigen::Vector3d(global_obs_pts[p][0], global_obs_pts[p][1], global_obs_pts[p][2]));
+        }
+    }
+
     // update
     mtx.lock();
     obs_pts = _obs_pts;
+    dyn_pts = _dyn_pts;
+    plot_pts = _plot_pts;
     map_tf = cur_tf;
     wall_map = _wall_map;
     static_map = _static_map;
-    dynamic_map = _dynamic_map2;
+    dynamic_map = _dynamic_map;    
     mtx.unlock();
 
     // signal for redrawing
@@ -348,10 +375,28 @@ void OBSMAP::get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf)
     mtx.unlock();
 }
 
-std::vector<Eigen::Vector4d> OBSMAP::get_obs_pts()
+std::vector<Eigen::Vector3d> OBSMAP::get_obs_pts()
 {
     mtx.lock();
-    std::vector<Eigen::Vector4d> res = obs_pts;
+    std::vector<Eigen::Vector3d> res = obs_pts;
+    mtx.unlock();
+
+    return res;
+}
+
+std::vector<Eigen::Vector3d> OBSMAP::get_dyn_pts()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector3d> res = dyn_pts;
+    mtx.unlock();
+
+    return res;
+}
+
+std::vector<Eigen::Vector4d> OBSMAP::get_plot_pts()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector4d> res = plot_pts;
     mtx.unlock();
 
     return res;
@@ -411,68 +456,49 @@ void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
 
 bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is_dyn)
 {
-    // get map
-    cv::Mat _map;
-    Eigen::Matrix4d _map_tf;
-
+    // get
+    mtx.lock();
+    std::vector<Eigen::Vector3d> pts;
     if(is_dyn)
     {
-        // dynamic map
-        get_dyn_map(_map, _map_tf);
+        pts = dyn_pts;
     }
     else
     {
-        // static + dynamic map
-        get_obs_map(_map, _map_tf);
+        pts = obs_pts;
     }
+    mtx.unlock();
 
-    Eigen::Matrix4d _map_tf_inv = _map_tf.inverse();
-
-    // global to local
-    Eigen::Vector3d P = _map_tf_inv.block(0,0,3,3)*pos + _map_tf_inv.block(0,3,3,1);
-    cv::Vec2i uv = xy_uv(P[0], P[1]);
-
-    // draw radius
-    int r = std::ceil(radius/gs);
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    cv::circle(mask, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
-
-    for(int i = 0; i < h; i++)
+    for(size_t p = 0; p < pts.size(); p++)
     {
-        for(int j = 0; j < w; j++)
+        double d = calc_dist_2d(pts[p] - pos);
+        if(d < radius)
         {
-            if(mask.ptr<uchar>(i)[j] == 255 && _map.ptr<uchar>(i)[j] == 255)
-            {
-                // collision
-                return true;
-            }
+            // collision
+            return true;
         }
     }
 
-    // non collision
+    // no collision
     return false;
 }
 
 bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, bool is_dyn)
 {
-    // get map
-    cv::Mat _map;
-    Eigen::Matrix4d _map_tf;
-
+    // get
+    mtx.lock();
+    std::vector<Eigen::Vector3d> pts;
     if(is_dyn)
     {
-        // dynamic map
-        get_dyn_map(_map, _map_tf);
+        pts = dyn_pts;
     }
     else
     {
-        // static + dynamic map
-        get_obs_map(_map, _map_tf);
+        pts = obs_pts;
     }
+    mtx.unlock();
 
-    Eigen::Matrix4d _map_tf_inv = _map_tf.inverse();
-
-    // draw rect
+    // robot pts
     const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
     const double x_max = config->ROBOT_SIZE_X[1] + margin_x;
     const double y_min = config->ROBOT_SIZE_Y[0] - margin_y;
@@ -483,58 +509,54 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, d
     Eigen::Vector3d P2(x_min, y_min, 0);
     Eigen::Vector3d P3(x_min, y_max, 0);
 
-    Eigen::Vector3d _P0 = _map_tf_inv.block(0,0,3,3)*P0 + _map_tf_inv.block(0,3,3,1);
-    Eigen::Vector3d _P1 = _map_tf_inv.block(0,0,3,3)*P1 + _map_tf_inv.block(0,3,3,1);
-    Eigen::Vector3d _P2 = _map_tf_inv.block(0,0,3,3)*P2 + _map_tf_inv.block(0,3,3,1);
-    Eigen::Vector3d _P3 = _map_tf_inv.block(0,0,3,3)*P3 + _map_tf_inv.block(0,3,3,1);
+    std::vector<Eigen::Vector3d> robot_pts;
+    robot_pts.push_back(P0);
+    robot_pts.push_back(P1);
+    robot_pts.push_back(P2);
+    robot_pts.push_back(P3);
 
-    cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
-    cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);    
-    cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
-    cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
-
-    std::vector<std::vector<cv::Point>> pts(1);
-    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
-    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
-    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
-    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
-
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    cv::fillPoly(mask, pts, cv::Scalar(255));
-
-    for(int i = 0; i < h; i++)
+    // check collision
+    for(size_t p = 0; p < pts.size(); p++)
     {
-        for(int j = 0; j < w; j++)
+        bool is_collision = false;
+        for(size_t q = 0; q < robot_pts.size(); q++)
         {
-            if(mask.ptr<uchar>(i)[j] == 255 && _map.ptr<uchar>(i)[j] == 255)
+            Eigen::Vector3d pt = pts[p];
+            Eigen::Vector3d pt0 = robot_pts[q];
+            Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
+
+            if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+                 (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
             {
-                return true;
+                is_collision = !is_collision;
             }
+        }
+
+        if(is_collision)
+        {
+            // collision
+            return true;
         }
     }
 
-    // non collision
+    // no collision
     return false;
 }
 
 bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step, bool is_dyn)
 {
-    // get map
-    cv::Mat _map;
-    Eigen::Matrix4d _map_tf;
-
+    // get
+    mtx.lock();
+    std::vector<Eigen::Vector3d> pts;
     if(is_dyn)
     {
-        // dynamic map
-        get_dyn_map(_map, _map_tf);
+        pts = dyn_pts;
     }
     else
     {
-        // static + dynamic map
-        get_obs_map(_map, _map_tf);
+        pts = obs_pts;
     }
-
-    Eigen::Matrix4d _map_tf_inv = _map_tf.inverse();
+    mtx.unlock();
 
     // draw trajectory
     const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
@@ -547,57 +569,45 @@ bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, do
     Eigen::Vector3d P2(x_min, y_min, 0);
     Eigen::Vector3d P3(x_min, y_max, 0);
 
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-    for(int p = st_idx; p < (int)robot_tfs.size(); p++)
+    // check collision
+    for(int i = st_idx; i < (int)robot_tfs.size(); i++)
     {
-        if(p == st_idx || p == (int)robot_tfs.size()-1 || p%idx_step == 0)
+        if(i == st_idx || i == (int)robot_tfs.size()-1 || i%idx_step == 0)
         {
-            Eigen::Matrix4d G = _map_tf_inv*robot_tfs[p];
+            Eigen::Matrix4d G = robot_tfs[i];
 
-            Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
-            Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
-            Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
-            Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
+            std::vector<Eigen::Vector3d> robot_pts;
+            robot_pts.push_back(G.block(0,0,3,3)*P0 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P1 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P2 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P3 + G.block(0,3,3,1));
 
-            cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
-            cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
-            cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
-            cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
-
-            std::vector<std::vector<cv::Point>> pts(1);
-            pts[0].push_back(cv::Point(uv0[0], uv0[1]));
-            pts[0].push_back(cv::Point(uv1[0], uv1[1]));
-            pts[0].push_back(cv::Point(uv2[0], uv2[1]));
-            pts[0].push_back(cv::Point(uv3[0], uv3[1]));
-
-            cv::fillPoly(mask, pts, cv::Scalar(255));
-        }
-    }
-
-    /*
-    cv::Mat debug_img(h, w, CV_8UC3, cv::Scalar(0));
-    for(int i = 0; i < h; i++)
-    {
-        for(int j = 0; j < w; j++)
-        {
-            debug_img.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(_obs_map.ptr<uchar>(i)[j], mask.ptr<uchar>(i)[j], 0);
-        }
-    }
-    */
-
-    for(int i = 0; i < h; i++)
-    {
-        for(int j = 0; j < w; j++)
-        {
-            if(mask.ptr<uchar>(i)[j] == 255 && _map.ptr<uchar>(i)[j] == 255)
+            for(size_t p = 0; p < pts.size(); p++)
             {
-                //debug_img.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0, 0, 255);
-                //cv::imshow("debug_img", debug_img);
-                return true;
+                bool is_collision = false;
+                for(size_t q = 0; q < robot_pts.size(); q++)
+                {
+                    Eigen::Vector3d pt = pts[p];
+                    Eigen::Vector3d pt0 = robot_pts[q];
+                    Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
+
+                    if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+                         (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
+                    {
+                        is_collision = !is_collision;
+                    }
+                }
+
+                if(is_collision)
+                {
+                    // collision
+                    return true;
+                }
             }
         }
     }
 
+    // no collision
     return false;
 }
 
@@ -621,37 +631,38 @@ double OBSMAP::calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_t
     Eigen::Vector3d _P = robot_tf.block(0,0,3,3)*P + robot_tf.block(0,3,3,1);
 
     cv::Vec2i uv = xy_uv(_P[0], _P[1]);
-
-    cv::Mat mask(h, w, CV_8U, cv::Scalar(0));
-
     int r = std::ceil(radius/gs);
-    cv::circle(mask, cv::Point(uv[0], uv[1]), r, cv::Scalar(255), -1);
+
+    std::vector<cv::Vec2i> circle = circle_iterator(uv, r);
 
     double min_d = radius;
-    for(int i = 0; i < h; i++)
+    for(size_t p = 0; p < circle.size(); p++)
     {
-        for(int j = 0; j < w; j++)
+        int u = circle[p][0];
+        int v = circle[p][1];
+        if(u < 0 || u >= w || v < 0 || v >= h)
         {
-            if(mask.ptr<uchar>(i)[j] == 255 && map.ptr<uchar>(i)[j] == 255)
+            continue;
+        }
+
+        if(map.ptr<uchar>(v)[u] == 255)
+        {
+            double dx = (u - uv[0])*gs;
+            double dy = (v - uv[1])*gs;
+            double d = std::sqrt(dx*dx + dy*dy);
+            if(d < min_d)
             {
-                double dx = (j - uv[0])*gs;
-                double dy = (i - uv[1])*gs;
-                double d = std::sqrt(dx*dx + dy*dy);
-                if(d < min_d)
-                {
-                    min_d = d;
-                }
+                min_d = d;
             }
         }
     }
 
-    return saturation(min_d, 0.1, radius);
+    return saturation(min_d, 0.2, radius);
 }
 
 bool OBSMAP::is_collision(const cv::Mat& map, const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y)
 {
     // in this function, robot_tfs should be local trajctory referenced by map_tf
-
     const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
     const double x_max = config->ROBOT_SIZE_X[1] + margin_x;
     const double y_min = config->ROBOT_SIZE_Y[0] - margin_y;
@@ -700,55 +711,91 @@ bool OBSMAP::is_collision(const cv::Mat& map, const std::vector<Eigen::Matrix4d>
     return false;
 }
 
+cv::Mat OBSMAP::calc_flowfield(const cv::Mat& map, cv::Vec2i ed)
+{
+    cv::Mat res(h, w, CV_32F, cv::Scalar(-1));
+
+    std::vector<cv::Vec2i> directions = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
+
+    std::queue<cv::Vec2i> q;
+    q.push(ed);
+    res.ptr<float>(ed[1])[ed[0]] = 0;
+
+    while(!q.empty())
+    {
+        cv::Vec2i current = q.front();
+        q.pop();
+
+        float current_cost = res.ptr<float>(current[1])[current[0]];
+
+        for(const auto& dir : directions)
+        {
+            cv::Vec2i neighbor = current + dir;
+            if (neighbor[0] < 0 || neighbor[0] >= w || neighbor[1] < 0 || neighbor[1] >= h)
+            {
+                continue;
+            }
+
+            if (map.ptr<uchar>(neighbor[1])[neighbor[0]] == 255)
+            {
+                continue;
+            }
+
+            if (res.ptr<float>(neighbor[1])[neighbor[0]] == -1)
+            {
+                res.ptr<float>(neighbor[1])[neighbor[0]] = current_cost + 1;
+                q.push(neighbor);
+            }
+        }
+    }
+
+    return res;
+}
+
 std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Matrix4d ed_tf)
 {
     // params
     const double margin_x = config->OBS_PATH_MARGIN_X;
     const double margin_y = config->OBS_PATH_MARGIN_Y;
 
-    const double chk_dt = 0.05;
-    const double chk_dr = 5.0*D2R;
+    const double chk_dt = 0.03;
+    const double chk_dr = 3.0*D2R;
 
-    const double sampling_dt = 0.2;
+    const double sampling_dt = 0.1;
     const double sampling_dr = 10.0*D2R;
 
-    // get obs map
-    cv::Mat _obs_map;
-    Eigen::Matrix4d _obs_tf;
-    get_obs_map(_obs_map, _obs_tf);
-
-    // for additional costing
-    cv::Mat thin_map;
-    //cv::ximgproc::thinning(~_obs_map, thin_map, cv::ximgproc::THINNING_GUOHALL);
-    cv::ximgproc::thinning(~_obs_map, thin_map, cv::ximgproc::THINNING_ZHANGSUEN);
+    // get maps
+    mtx.lock();
+    Eigen::Matrix4d obs_tf = map_tf;
+    Eigen::Matrix4d _obs_tf_inv = obs_tf.inverse();
+    cv::Mat obs_map = wall_map.clone();
+    mtx.unlock();
 
     // for debug
-    cv::Mat debug_map;
+    cv::Mat debug_img;
     if(config->SIM_MODE == 1)
     {
-        cv::cvtColor(_obs_map, debug_map, cv::COLOR_GRAY2BGR);
-
-        for(int i = 0; i < h; i++)
-        {
-            for(int j = 0; j < w; j++)
-            {
-                if(_obs_map.ptr<uchar>(i)[j] == 0 && thin_map.ptr<uchar>(i)[j] == 255)
-                {
-                    debug_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(196, 196, 196);
-                }
-            }
-        }
+        cv::cvtColor(obs_map, debug_img, cv::COLOR_GRAY2BGR);
     }
 
     // st, ed global to local
-    Eigen::Matrix4d _obs_tf_inv = _obs_tf.inverse();
     Eigen::Matrix4d _st_tf = _obs_tf_inv*st_tf;
     Eigen::Matrix4d _ed_tf = _obs_tf_inv*ed_tf;
-    Eigen::Vector2d dtdr0 = dTdR(_st_tf, _ed_tf);
+
+    cv::Vec2i st_uv = xy_uv(_st_tf(0,3), _st_tf(1,3));
+    cv::Vec2i ed_uv = xy_uv(_ed_tf(0,3), _ed_tf(1,3));
+
+    // calc flowfield
+    cv::Mat obs_map2;
+    int robot_head_r = std::ceil((config->ROBOT_SIZE_Y[1]+margin_y)/gs);
+    cv::dilate(obs_map, obs_map2, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2*robot_head_r+1, 2*robot_head_r+1)));
+
+    cv::Mat flow_field = calc_flowfield(obs_map2, ed_uv);
+    double cost0 = flow_field.ptr<float>(st_uv[1])[st_uv[0]];
 
     // search algorithm
     std::vector<ASTAR_NODE*> open_set;
-    std::vector<ASTAR_NODE*> close_set;
+    std::vector<std::vector<ASTAR_NODE*>> close_set(w*h); // close set maybe too big
 
     // set st, ed
     ASTAR_NODE *ed = new ASTAR_NODE();
@@ -756,15 +803,14 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 
     ASTAR_NODE *st = new ASTAR_NODE();
     st->tf = _st_tf;
-    st->g = 0;
-    st->h = dtdr0[0] + std::abs(dtdr0[1]);
-    st->f = st->g + st->h;
+    st->g = 1.0/calc_clearance(obs_map, st->tf, 2.0) * 0.1;
+    st->h = cost0*gs;
+    st->f = st->g + 5*st->h;
     open_set.push_back(st);
 
-    // set first flag
-    bool is_first = true;
-
     // search loop
+    bool is_first = true;
+    int iter = 0;
     double st_time = get_time();
     while(open_set.size() > 0)
     {
@@ -782,23 +828,20 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 
         // pop open_set, push close_set
         open_set.erase(open_set.begin()+cur_idx);
-        close_set.push_back(cur);
+        cv::Vec2i uv0 = xy_uv(cur->tf(0,3), cur->tf(1,3));
+        close_set[uv0[1]*w + uv0[0]].push_back(cur);
 
         // for debug
         if(config->SIM_MODE == 1)
         {
-            cv::Vec2i uv = xy_uv(cur->tf(0,3), cur->tf(1,3));
-            debug_map.ptr<cv::Vec3b>(uv[1])[uv[0]] = cv::Vec3b(0,255,0);
+            debug_img.ptr<cv::Vec3b>(uv0[1])[uv0[0]] = cv::Vec3b(0,255,0);
 
-            cv::Vec2i uv_st = xy_uv(st->tf(0,3), st->tf(1,3));
-            cv::Vec2i uv_ed = xy_uv(ed->tf(0,3), ed->tf(1,3));
+            cv::circle(debug_img, cv::Point(st_uv[0], st_uv[1]), 3, cv::Scalar(0,0,255), 2);
+            cv::circle(debug_img, cv::Point(ed_uv[0], ed_uv[1]), 3, cv::Scalar(0,255,255), 2);
 
-            cv::circle(debug_map, cv::Point(uv_st[0], uv_st[1]), 3, cv::Scalar(0,0,255), 2);
-            cv::circle(debug_map, cv::Point(uv_ed[0], uv_ed[1]), 3, cv::Scalar(0,255,255), 2);
-
-            cv::Mat resized_debug_map;
-            cv::resize(debug_map, resized_debug_map, cv::Size(debug_map.cols*2, debug_map.rows*2));
-            cv::imshow("resized_debug_map", resized_debug_map);
+            cv::Mat debug_map2;
+            cv::resize(debug_img, debug_map2, cv::Size(debug_img.cols*2, debug_img.rows*2));
+            cv::imshow("calc_path_debug", debug_map2);
         }
 
         // found goal
@@ -813,14 +856,14 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         std::vector<Eigen::Matrix4d> traj_goal = traj_goal0;
         traj_goal.insert(traj_goal.end(), traj_goal1.begin(), traj_goal1.end());
 
-        if(!is_collision(_obs_map, traj_goal, margin_x, margin_y))
+        if(!is_collision(obs_map, traj_goal, margin_x, margin_y))
         {
             std::vector<Eigen::Matrix4d> res;
 
             ASTAR_NODE* _cur = cur;
             while(_cur != NULL)
             {
-                res.push_back(_obs_tf*_cur->tf);
+                res.push_back(obs_tf*_cur->tf);
                 _cur = _cur->parent;
             }
 
@@ -829,19 +872,19 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
             // set final pose
             for(size_t p = 0; p < traj_goal.size(); p++)
             {
-                res.push_back(_obs_tf*traj_goal[p]);
+                res.push_back(obs_tf*traj_goal[p]);
             }
 
-            printf("[OBSMAP] path_finding complete, num:%d\n", (int)res.size());
+            printf("[OBSMAP] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
             return res;
         }
 
-        // expand nodes for differential drive
-        double step = 0.2;
+        // expand nodes for differential drive        
+        double step = 0.05;
         std::vector<Eigen::Matrix4d> around;
-        for(int i = -1; i <= 1; i++)
+        for(int i = -2; i <= 2; i++)
         {
-            for(int j = -1; j <= 1; j++)
+            for(int j = -2; j <= 2; j++)
             {
                 if(j == 0 && i == 0)
                 {
@@ -868,12 +911,19 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     continue;
                 }
 
+                // check collision
+                cv::Vec2i uv1 = xy_uv(tf1(0,3), tf1(1,3));
+                if(flow_field.ptr<float>(uv1[1])[uv1[0]] < 0)
+                {
+                    continue;
+                }
+
                 // check close set
                 bool is_close_set = false;
-                for(size_t p = 0; p < close_set.size(); p++)
+                for(size_t p = 0; p < close_set[uv1[1]*w + uv1[0]].size(); p++)
                 {
-                    Eigen::Vector2d dtdr = dTdR(close_set[p]->tf, tf1);
-                    if(dtdr[0] < chk_dt && std::abs(dtdr[1]) < chk_dr)
+                    double dth = calc_dth(close_set[uv1[1]*w + uv1[0]][p]->tf, tf1);
+                    if(dth < chk_dr)
                     {
                         is_close_set = true;
                         break;
@@ -884,8 +934,9 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     continue;
                 }
 
+                // check collision
                 std::vector<Eigen::Matrix4d> traj;
-                if(is_first && std::abs(i) <= 1 && std::abs(j) <= 1)
+                if(is_first)
                 {
                     traj.push_back(tf1);
                 }
@@ -894,8 +945,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
                 }
 
-                // check collision
-                if(is_collision(_obs_map, traj, margin_x, margin_y))
+                if(is_collision(obs_map, traj, margin_x, margin_y))
                 {
                     continue;
                 }
@@ -907,18 +957,21 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         // calc child node        
         for(size_t p = 0; p < around.size(); p++)
         {
+            cv::Vec2i uv = xy_uv(around[p](0,3), around[p](1,3));            
+            double cost1 = flow_field.ptr<float>(uv[1])[uv[0]];
+            if(cost1 < 0)
+            {
+                continue;
+            }
+
             // calc heuristics
-            double w = calc_clearance(thin_map, around[p], 1.5);
-
             Eigen::Vector2d dtdr1 = dTdR(cur->tf, around[p]);
-            Eigen::Vector2d dtdr2 = dTdR(around[p], ed->tf);
             double g = cur->g + dtdr1[0]
-                              + std::abs(dtdr1[1]) * 1.0/M_PI
-                              + 1.0/calc_clearance(_obs_map, around[p], 1.5) * 0.1
-                              + w;
+                              + dtdr1[1] * 0.1
+                              + 1.0/calc_clearance(obs_map, around[p], 2.0) * 0.1;
 
-            double h = dtdr2[0] + std::abs(dtdr2[0]) + w;
-            double f = g + 10*h;
+            double h = cost1*gs;
+            double f = g + 5*h;
 
             // check open set
             bool is_open_set = false;
@@ -926,7 +979,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
             for(size_t q = 0; q < open_set.size(); q++)
             {
                 Eigen::Vector2d dtdr = dTdR(open_set[q]->tf, around[p]);
-                if(dtdr[0] < chk_dt && std::abs(dtdr[1]) < chk_dr)
+                if(dtdr[0] < chk_dt && dtdr[1] < chk_dr)
                 {
                     is_open_set = true;
                     open_node = open_set[q];
@@ -957,13 +1010,13 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         double timeout = get_time() - st_time;
-        if(timeout > 20.0)
+        if(timeout > 5.0)
         {
-            printf("[OBSMAP] timeout\n");
+            printf("[OBSMAP] timeout, iter:%d\n", iter);
             break;
         }
 
-        // clear first flag
+        iter++;
         is_first = false;
     }
 

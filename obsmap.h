@@ -31,10 +31,12 @@ public:
 
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
-    std::vector<Eigen::Vector4d> get_obs_pts(); // x, y, z, prob
+    std::vector<Eigen::Vector3d> get_obs_pts();
+    std::vector<Eigen::Vector3d> get_dyn_pts();
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
+    std::vector<Eigen::Vector4d> get_plot_pts(); // x, y, z, prob
 
     // check collision
     bool is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is_dyn = false);
@@ -44,11 +46,14 @@ public:
     // for avoid path
     double calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_tf, double radius);
     bool is_collision(const cv::Mat& map, const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x = 0, double margin_y = 0);
+    cv::Mat calc_flowfield(const cv::Mat& map, cv::Vec2i ed);
     std::vector<Eigen::Matrix4d> calc_path(Eigen::Matrix4d st_tf, Eigen::Matrix4d ed_tf);
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;
-    std::vector<Eigen::Vector4d> obs_pts;
+    std::vector<Eigen::Vector3d> obs_pts;
+    std::vector<Eigen::Vector3d> dyn_pts;
+    std::vector<Eigen::Vector4d> plot_pts;
 
     // grid map
     Eigen::Matrix4d map_tf;

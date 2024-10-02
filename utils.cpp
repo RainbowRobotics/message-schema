@@ -658,6 +658,11 @@ double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vect
     return similarity;
 }
 
+double calc_dth(const Eigen::Matrix4d& G0, const Eigen::Matrix4d& G1)
+{
+    return Eigen::Quaterniond(Eigen::Matrix3d(G1.block(0,0,3,3))).angularDistance(Eigen::Quaterniond(Eigen::Matrix3d(G0.block(0,0,3,3))));
+}
+
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1)
 {
     std::vector<cv::Vec2i> res;
