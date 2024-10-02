@@ -2239,7 +2239,7 @@ void MainWindow::obs_plot()
         obsmap.get_obs_map(obs_map, obs_tf);
         obsmap.get_dyn_map(dyn_map, obs_tf);
 
-        std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
+        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
 
         // plot grid map
         {
@@ -2269,12 +2269,12 @@ void MainWindow::obs_plot()
 
         // plot obs pts
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < obs_pts.size(); p++)
+        for(size_t p = 0; p < plot_pts.size(); p++)
         {
-            double x = obs_pts[p][0];
-            double y = obs_pts[p][1];
-            double z = obs_pts[p][2];
-            double prob = obs_pts[p][3];
+            double x = plot_pts[p][0];
+            double y = plot_pts[p][1];
+            double z = plot_pts[p][2];
+            double prob = plot_pts[p][3];
 
             if(prob <= 0.5)
             {
@@ -2293,13 +2293,13 @@ void MainWindow::obs_plot()
             cloud->push_back(pt);
         }
 
-        if(!viewer->updatePointCloud(cloud, "obs_pts"))
+        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
         {
-            viewer->addPointCloud(cloud, "obs_pts");
+            viewer->addPointCloud(cloud, "obs_plot_pts");
         }
 
         // point size
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
     }
 }
 void MainWindow::topo_plot()
@@ -3061,39 +3061,27 @@ void MainWindow::ctrl_plot()
 
         // draw local path
         PATH local_path = ctrl.get_cur_local_path();
+
+        // draw local path
         if(local_path.pos.size() >= 2)
         {
-            bool color_toggle = true;
-            int last_p = 0;
-            for(size_t p = 1; p < local_path.pos.size(); p++)
+            for(size_t p = 0; p < local_path.pose.size(); p++)
             {
-                if(p == 1 || p == local_path.pos.size()-1 || p%10 == 0)
+                if(p == local_path.pose.size()-1 || p % 25 == 0)
                 {
                     QString name;
-                    name.sprintf("local_path_%d_%d", last_p, (int)p);
+                    name.sprintf("local_path_%d", (int)p);
 
-                    Eigen::Vector3d P0 = local_path.pos[last_p];
-                    Eigen::Vector3d P1 = local_path.pos[p];
+                    Eigen::Matrix4d tf = local_path.pose[p];
+                    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0, 1, 0, name.toStdString());
 
-                    pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
-                    pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
-
-                    if(color_toggle)
-                    {
-                        viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
-                        color_toggle = false;
-                    }
-                    else
-                    {
-                        viewer->addLine(pt0, pt1, 0.0, 0.5, 1.0, name.toStdString());
-                        color_toggle = true;
-                    }
-
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
-
+                    viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                        name.toStdString());
                     last_plot_local_path.push_back(name);
-                    last_p = p;
                 }
             }
         }

@@ -1509,12 +1509,9 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                     }
                 }
 
-                std::vector<Eigen::Matrix4d> traj2 = calc_trajectory(cur_vel, 0.2, 1.0, cur_tf);
-                traj.insert(traj.end(), traj2.begin(), traj2.end());
-
                 if(obsmap->is_path_collision(traj))
                 {
-                    printf("[AUTO] obs deadzone reached\n");
+                    printf("[AUTO] DRIVING -> OBS\n");
                     obs_v = 0;
                 }
             }
