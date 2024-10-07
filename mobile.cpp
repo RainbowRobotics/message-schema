@@ -638,6 +638,7 @@ void MOBILE::recv_loop()
         // storing packet
         buf.insert(buf.end(), recv_buf.begin(), recv_buf.begin()+num);
 
+
         // parsing
         while((int)buf.size() >= packet_size && recv_flag)
         {
