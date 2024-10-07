@@ -230,7 +230,11 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
                     pts[0].push_back(cv::Point(uv3[0], uv3[1]));
 
                     cv::fillPoly(_wall_map, pts, cv::Scalar(255));
-                    cv::fillPoly(_static_map, pts, cv::Scalar(255));
+
+                    if(config->SIM_MODE == 0)
+                    {
+                        cv::fillPoly(_static_map, pts, cv::Scalar(255));
+                    }
                 }
             }
         }
@@ -331,7 +335,13 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     {
         double x = local_obs_pts[p][0];
         double y = local_obs_pts[p][1];
+
         cv::Vec2i uv = xy_uv(x,y);
+        if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+        {
+            continue;
+        }
+
         if(_wall_map.ptr<uchar>(uv[1])[uv[0]] == 255)
         {
             _plot_pts.push_back(global_obs_pts[p]);
@@ -510,10 +520,10 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, d
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     std::vector<Eigen::Vector3d> robot_pts;
-    robot_pts.push_back(P0);
-    robot_pts.push_back(P1);
-    robot_pts.push_back(P2);
-    robot_pts.push_back(P3);
+    robot_pts.push_back(robot_tf.block(0,0,3,3)*P0 + robot_tf.block(0,3,3,1));
+    robot_pts.push_back(robot_tf.block(0,0,3,3)*P1 + robot_tf.block(0,3,3,1));
+    robot_pts.push_back(robot_tf.block(0,0,3,3)*P2 + robot_tf.block(0,3,3,1));
+    robot_pts.push_back(robot_tf.block(0,0,3,3)*P3 + robot_tf.block(0,3,3,1));
 
     // check collision
     for(size_t p = 0; p < pts.size(); p++)
@@ -631,6 +641,7 @@ double OBSMAP::calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_t
     Eigen::Vector3d _P = robot_tf.block(0,0,3,3)*P + robot_tf.block(0,3,3,1);
 
     cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+
     int r = std::ceil(radius/gs);
 
     std::vector<cv::Vec2i> circle = circle_iterator(uv, r);
@@ -713,6 +724,9 @@ bool OBSMAP::is_collision(const cv::Mat& map, const std::vector<Eigen::Matrix4d>
 
 cv::Mat OBSMAP::calc_flowfield(const cv::Mat& map, cv::Vec2i ed)
 {
+    ed[0] = saturation(ed[0], 0, w-1);
+    ed[1] = saturation(ed[1], 0, h-1);
+
     cv::Mat res(h, w, CV_32F, cv::Scalar(-1));
 
     std::vector<cv::Vec2i> directions = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
@@ -829,6 +843,11 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         // pop open_set, push close_set
         open_set.erase(open_set.begin()+cur_idx);
         cv::Vec2i uv0 = xy_uv(cur->tf(0,3), cur->tf(1,3));
+        if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+        {
+            continue;
+        }
+
         close_set[uv0[1]*w + uv0[0]].push_back(cur);
 
         // for debug
@@ -913,6 +932,11 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 
                 // check collision
                 cv::Vec2i uv1 = xy_uv(tf1(0,3), tf1(1,3));
+                if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+                {
+                    continue;
+                }
+
                 if(flow_field.ptr<float>(uv1[1])[uv1[0]] < 0)
                 {
                     continue;
@@ -957,7 +981,12 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         // calc child node        
         for(size_t p = 0; p < around.size(); p++)
         {
-            cv::Vec2i uv = xy_uv(around[p](0,3), around[p](1,3));            
+            cv::Vec2i uv = xy_uv(around[p](0,3), around[p](1,3));
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+
             double cost1 = flow_field.ptr<float>(uv[1])[uv[0]];
             if(cost1 < 0)
             {
@@ -1010,7 +1039,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         double timeout = get_time() - st_time;
-        if(timeout > 5.0)
+        if(timeout > 1.0)
         {
             printf("[OBSMAP] timeout, iter:%d\n", iter);
             break;

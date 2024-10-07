@@ -42,6 +42,7 @@ bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 
 
 double sgn(double val);
+int saturation(int val, int min, int max);
 double saturation(double val, double min, double max);
 double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2);
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);

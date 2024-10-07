@@ -4,7 +4,6 @@ MOBILE::MOBILE(QObject *parent)
     : QObject{parent}
 {
     cur_imu = Eigen::Vector3d(0,0,0);    
-    connect(this, SIGNAL(signal_send(int, std::vector<uchar>)), this, SLOT(slot_send(int, std::vector<uchar>)));
 }
 
 MOBILE::~MOBILE()
@@ -1557,16 +1556,10 @@ void MOBILE::send_loop()
             std::vector<uchar> msg;
             if(msg_que.try_pop(msg))
             {
-                //::send(fd, msg.data(), msg.size(), 0);
-                Q_EMIT signal_send(fd, msg);
+                ::send(fd, msg.data(), msg.size(), 0);
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("[MOBILE] send loop stop\n");
-}
-
-void MOBILE::slot_send(int _fd, std::vector<uchar> msg)
-{
-    ::send(_fd, msg.data(), msg.size(), 0);
 }
