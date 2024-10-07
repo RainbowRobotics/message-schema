@@ -236,7 +236,7 @@ QString TF_to_string(Eigen::Matrix4d TF)
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 {
-    alpha = saturation(alpha, 0, 1.0);
+    alpha = saturation(alpha, 0.0, 1.0);
     return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d::fitToSE3(tf0), Sophus::SE3d::fitToSE3(tf1), alpha).matrix();
 }
 
@@ -325,6 +325,20 @@ double sgn(double val)
     {
         return -1;
     }
+}
+
+int saturation(int val, int min, int max)
+{
+    if(val < min)
+    {
+        val = min;
+    }
+    else if(val > max)
+    {
+        val = max;
+    }
+
+    return val;
 }
 
 double saturation(double val, double min, double max)

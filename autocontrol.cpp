@@ -307,6 +307,14 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf, bool is_hpp)
             node_pos.insert(node_pos.begin(), cur_pos);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
+        else
+        {
+            node_pos.erase(node_pos.begin());
+            node_pose.erase(node_pose.begin());
+
+            node_pos.insert(node_pos.begin(), cur_pos);
+            node_pose.insert(node_pose.begin(), cur_tf);
+        }
     }
 
     // add goal pos
@@ -318,7 +326,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf, bool is_hpp)
 
     // divide and smooth metric path    
     std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    //path_pos = path_ccma(path_pos);
+    path_pos = path_ccma(path_pos);
 
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
@@ -854,7 +862,7 @@ void AUTOCONTROL::calc_ref_v0(const std::vector<Eigen::Matrix4d>& src, std::vect
         double t_v = err_d/params.LIMIT_V;
         double t_w = err_th/(params.LIMIT_W*D2R);
         double t = std::max<double>(t_v, t_w);
-        double v = saturation(err_d/t, 0, params.LIMIT_V);
+        double v = saturation(err_d/t, 0.0, params.LIMIT_V);
 
         ref_v[p] = v;
     }
@@ -869,22 +877,31 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
         return;
     }
 
-    const int ld = std::ceil(params.DRIVE_L/step);
-
+    const int ld = params.DRIVE_L/step;
     std::vector<double> _ref_v(src.size(), params.LIMIT_V);
-    for(size_t p = 0; p < src.size()-1; p++)
+    for(size_t p = 0; p < src.size(); p++)
     {
-        int cur_idx = p;
+        int cur_idx = p-ld;
+        if(cur_idx < 0)
+        {
+            cur_idx = 0;
+        }
+
         int tgt_idx = p+ld;
         if(tgt_idx > (int)src.size()-1)
         {
             tgt_idx = src.size()-1;
         }
 
+        if(cur_idx == tgt_idx)
+        {
+            continue;
+        }
+
         Eigen::Vector3d xi0 = TF_to_se2(src[cur_idx]);
         Eigen::Vector3d xi1 = TF_to_se2(src[tgt_idx]);
 
-        double err_d = calc_dist_2d(xi1 - xi0);
+        double err_d = calc_dist_2d(xi1-xi0);
         double err_th = deltaRad(xi1[2], xi0[2]) * params.DRIVE_H;
 
         double t_v = err_d/params.LIMIT_V;
@@ -893,8 +910,6 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
         double v = err_d/t;
         _ref_v[p] = v;
     }
-
-    _ref_v[_ref_v.size()-1] = _ref_v[_ref_v.size()-2];
     _ref_v[0] = st_v;
 
     // update result
@@ -992,7 +1007,6 @@ std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_ve
         res.push_back(predict_G);
     }
 
-    res.erase(res.begin());
     return res;
 }
 
@@ -1033,38 +1047,34 @@ PATH AUTOCONTROL::calc_local_path()
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
-    // get global path segment
+    // get global path segment    
     std::vector<Eigen::Vector3d> _path_pos;
-    int st_idx = std::min<int>(cur_idx, (int)global_path.pos.size()-2);
-    for(int p = st_idx; p < (int)global_path.pos.size(); p++)
+    int range = config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
+    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
+    int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
+    for(int p = st_idx; p <= ed_idx; p++)
     {
-        double d = calc_dist_2d(global_path.pos[p] - global_path.pos[cur_idx]);
-        if(d <= config->OBS_LOCAL_GOAL_D)
-        {
-            _path_pos.push_back(global_path.pos[p]);
-        }
-        else
-        {
-            break;
-        }
+        _path_pos.push_back(global_path.pos[p]);
     }
 
     std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP);
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
 
-    // calc ref_v
-    double ref_v0 = params.ST_V;
+    // calc ref_v        
+    std::vector<double> ref_v;
+    calc_ref_v(path_pose, ref_v, params.ST_V, LOCAL_PATH_STEP);
+
     PATH last_local_path = get_cur_local_path();
     if(last_local_path.pos.size() > 0)
     {
-        Eigen::Matrix4d _cur_tf = slam->get_cur_tf();
-        Eigen::Vector3d _cur_pos = _cur_tf.block(0,3,3,1);
-        int _cur_idx = get_nn_idx(last_local_path.pos, _cur_pos);
-        ref_v0 = last_local_path.ref_v[_cur_idx];
-    }
+        int idx0 = get_nn_idx(last_local_path.pos, cur_pos);
+        int idx1 = get_nn_idx(path_pos, cur_pos);
 
-    std::vector<double> ref_v;
-    calc_ref_v(path_pose, ref_v, ref_v0, LOCAL_PATH_STEP);
+        for(int p = 0; p <= idx1; p++)
+        {
+            ref_v[p] = last_local_path.ref_v[idx0];
+        }
+    }
 
     bool is_goal = global_path.goal_tf.block(0,3,3,1).isApprox(path_pos.back());
     if(is_goal)
@@ -1093,6 +1103,7 @@ PATH AUTOCONTROL::calc_avoid_path()
     PATH global_path = get_cur_global_path();
 
     // get cur params
+    Eigen::Vector3d cur_vel = mobile->get_pose().vel;
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
@@ -1254,35 +1265,6 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             Q_EMIT signal_global_path_updated();
             printf("[AUTO] global path found\n");
         }
-
-        // calc local path
-        local_path = calc_local_path();
-        if(local_path.pos.size() == 0)
-        {
-            avoid_path = calc_avoid_path();
-            if(avoid_path.pos.size() > 0)
-            {
-                local_path = avoid_path;
-            }
-            else
-            {
-                mobile->move(0, 0, 0);
-                is_moving = false;
-                clear_path();
-
-                Q_EMIT signal_move_failed("no local path");
-                printf("[AUTO] local path init failed\n");
-                return;
-            }
-        }
-
-        // update local path
-        mtx.lock();
-        cur_local_path = local_path;
-        last_local_goal = local_path.goal_tf.block(0,3,3,1);
-        mtx.unlock();
-
-        Q_EMIT signal_local_path_updated();
     }
 
     // loop params
@@ -1333,14 +1315,12 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // check avoid path
             if(avoid_path.pos.size() > 0)
             {
-                // check avoid path goal
-                if(calc_dist_2d(avoid_path.pos.back() - cur_pos) < config->DRIVE_GOAL_D)
+                int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
+                if(avoid_idx > avoid_path.pos.size()*0.9)
                 {
-                    // clear avoid path
+                    // clear avoid path                    
                     avoid_path = PATH();
-
                     printf("[AUTO] avoid_path complete\n");
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
                 else
@@ -1367,31 +1347,17 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 if(get_time() - local_path.t > 0.2)
                 {
                     PATH _local_path = calc_local_path();
-                    if(_local_path.pos.size() > 0)
+                    if(local_path != _local_path)
                     {
-                        if(local_path != _local_path)
-                        {
-                            local_path = _local_path;
+                        local_path = _local_path;
 
-                            // update local path
-                            mtx.lock();
-                            cur_local_path = local_path;
-                            last_local_goal = local_path.goal_tf.block(0,3,3,1);
-                            mtx.unlock();
+                        // update local path
+                        mtx.lock();
+                        cur_local_path = local_path;
+                        last_local_goal = local_path.goal_tf.block(0,3,3,1);
+                        mtx.unlock();
 
-                            Q_EMIT signal_local_path_updated();
-                        }
-                    }
-                    else
-                    {
-                        if(fsm_state != AUTO_FSM_OBS)
-                        {
-                            mobile->move(0, 0, 0);
-
-                            obs_state = AUTO_OBS_CHECK;
-                            fsm_state = AUTO_FSM_OBS;
-                            printf("[AUTO] calc local path failed, OBS\n");
-                        }
+                        Q_EMIT signal_local_path_updated();
                     }
                 }
             }
@@ -1402,7 +1368,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
         {
             // find tgt
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-            int tgt_idx = cur_idx + 10;
+            int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
             if(tgt_idx > (int)local_path.pos.size()-1)
             {
                 tgt_idx = local_path.pos.size()-1;
@@ -1410,7 +1376,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];
             Eigen::Vector3d tgt_xi = TF_to_se2(tgt_tf);
-            Eigen::Vector3d tgt_pos = tgt_tf.block(0,3,3,1);            
+            Eigen::Vector3d tgt_pos = tgt_tf.block(0,3,3,1);
 
             mtx.lock();
             last_cur_pos = cur_pos;
@@ -1427,7 +1393,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
             pre_err_th = err_th;
 
-            //w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
             // goal check
@@ -1445,7 +1411,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, tgt_tf, 0.2, 10.0*D2R);
             if(obsmap->is_path_collision(traj))
-            {                
+            {
                 mobile->move(0, 0, 0);
 
                 obs_state = AUTO_OBS_CHECK;
@@ -1461,22 +1427,18 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
         {
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-            int tgt_idx = cur_idx;
-
-            Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];            
-            Eigen::Vector3d tgt_pos = tgt_tf.block(0,3,3,1);
 
             // obs decel
             QString _obs_condition = "none";
-            double obs_v = 0.1;
-            for(double vv = 0.1; vv <= params.LIMIT_V+0.01; vv += 0.1)
+            double obs_v = config->OBS_MAP_MIN_V;
+            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.05)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->OBS_PREDICT_TIME, cur_tf);
 
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision(traj[p], 0.3, 0.3, true))
+                    if(obsmap->is_tf_collision(traj[p], config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y, true))
                     {
                         is_collision = true;
                         break;
@@ -1503,15 +1465,11 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
                 std::vector<Eigen::Matrix4d> traj;
                 for(int p = cur_idx; p <= chk_idx; p++)
                 {
-                    if(p == cur_idx || p == chk_idx || p%10 == 0)
-                    {
-                        traj.push_back(local_path.pose[p]);
-                    }
+                    traj.push_back(local_path.pose[p]);
                 }
 
-                if(obsmap->is_path_collision(traj))
+                if(obsmap->is_path_collision(traj, 0, 0, 0, 10, true))
                 {
-                    printf("[AUTO] DRIVING -> OBS\n");
                     obs_v = 0;
                 }
             }
@@ -1538,18 +1496,18 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
-            int ld_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
-            if(ld_idx > (int)local_path.pos.size()-1)
+            int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
+            if(tgt_idx > (int)local_path.pos.size()-1)
             {
-                ld_idx = local_path.pos.size()-1;
+                tgt_idx = local_path.pos.size()-1;
             }
 
-            double dx = local_path.pos[ld_idx][0] - local_path.pos[cur_idx][0];
-            double dy = local_path.pos[ld_idx][1] - local_path.pos[cur_idx][1];
+            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
+            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
-            if(cur_idx == ld_idx)
+            if(cur_idx == tgt_idx)
             {
-                err_th = 0;
+                err_th = saturation(err_th, -5.0*D2R, 5.0*D2R);
             }
 
             // calc cross track error
@@ -1558,31 +1516,45 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // for plot
             mtx.lock();
             last_cur_pos = cur_pos;
-            last_tgt_pos = tgt_pos;
+            last_tgt_pos = local_path.pos[tgt_idx];
             mtx.unlock();
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;            
-            //v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, goal_v);
-            v = saturation(v, 0, obs_v);
+            double v = ref_v;
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+            v = saturation(v, 0.0, goal_v);
+            v = saturation(v, 0.0, obs_v);
 
-            double th = (params.DRIVE_A * err_th) + (params.DRIVE_B * (err_th-pre_err_th)/dt) + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+            double th = (params.DRIVE_A * err_th)
+                        + (params.DRIVE_B * (err_th-pre_err_th)/dt)
+                        + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
-            double w0 = cur_vel[2];
             double w = (v * std::tan(th)) / params.DRIVE_L;
-            //w = saturation(w, w0 - (params.LIMIT_W_ACC*D2R)*dt, w0 + (params.LIMIT_W_ACC*D2R)*dt);
+            double w0 = cur_vel[2];
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
             // scaling
             double scale_v = 1.0 - params.DRIVE_T*std::abs(w/(params.LIMIT_W*D2R));
             double scale_w = 1.0 - params.DRIVE_T*std::abs(v/params.LIMIT_V);
             v *= scale_v;
-            w *= scale_w;            
+            w *= scale_w;
+
+            // deadzone w
+            double d_w = 1.5*D2R;
+            if(std::abs(w) < d_w)
+            {
+                w = 0;
+            }
+            else
+            {
+                w = sgn(w)*(std::abs(w)-d_w);
+            }
 
             // goal check
             if(goal_err_d < config->DRIVE_GOAL_D || cur_idx == (int)local_path.pos.size()-1)
@@ -1620,7 +1592,7 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
             pre_err_th = err_th;
 
-            //w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
             // goal check
@@ -1917,8 +1889,8 @@ void AUTOCONTROL::b_loop_hpp(Eigen::Matrix4d goal_tf)
             // calc control input
             double ref_v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);            
             ref_v = saturation(ref_v, ref_v0 - params.LIMIT_V_ACC*dt, ref_v0 + params.LIMIT_V_ACC*dt);
-            ref_v = saturation(ref_v, 0, goal_v);
-            ref_v = saturation(ref_v, 0, obs_v);
+            ref_v = saturation(ref_v, 0.0, goal_v);
+            ref_v = saturation(ref_v, 0.0, obs_v);
 
             double kp_w = 1.0;
             double kd_w = 0.1;
@@ -2302,9 +2274,9 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
             double v = saturation(kp_v*err_d + kd_v*(err_d - pre_err_d)/dt, params.ED_V, params.LIMIT_V);
             pre_err_d = err_d;
 
-            v = saturation(v, 0, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, 0, params.LIMIT_V);
-            v = saturation(v, 0, obs_v);
+            v = saturation(v, 0.0, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, 0.0, params.LIMIT_V);
+            v = saturation(v, 0.0, obs_v);
 
             double kp_w = 1.0;
             double kd_w = 0.05;
@@ -2368,7 +2340,7 @@ void AUTOCONTROL::b_loop_tng(Eigen::Matrix4d goal_tf)
                     }
 
                     // decel only
-                    v = saturation(v, 0, v0);
+                    v = saturation(v, 0.0, v0);
                     w = 0;
                 }
             }

@@ -17,6 +17,7 @@
 	},
 	"control": {
 		"DRIVE_EXTENDED_CONTROL_TIME": "2.0",
+		"DRIVE_GOAL_APPROACH_GAIN": "0.75",
 		"DRIVE_GOAL_D": "0.1",
 		"DRIVE_GOAL_TH": "3.0"
 	},
@@ -67,12 +68,13 @@
 		"OBS_AVOID": "1",
 		"OBS_DEADZONE": "1.0",
 		"OBS_LOCAL_GOAL_D": "4.0",
-		"OBS_SAFE_MARGIN_X": "0.3",
-		"OBS_SAFE_MARGIN_Y": "0.3",
-		"OBS_PATH_MARGIN_X": "0.1",
-		"OBS_PATH_MARGIN_Y": "0.1",
+		"OBS_SAFE_MARGIN_X": "0.0",
+		"OBS_SAFE_MARGIN_Y": "0.2",
+		"OBS_PATH_MARGIN_X": "0.05",
+		"OBS_PATH_MARGIN_Y": "0.05",
     		"OBS_MAP_GRID_SIZE": "0.05",
     		"OBS_MAP_RANGE": "5.0",
+    		"OBS_MAP_MIN_V": "0.3",
     		"OBS_MAP_MIN_Z": "-1.0",
     		"OBS_MAP_MAX_Z": "1.0",
     		"OBS_PREDICT_TIME": "3.0"
