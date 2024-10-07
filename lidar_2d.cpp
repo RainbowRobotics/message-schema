@@ -141,11 +141,9 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
                 Eigen::Vector3d P2 = pts[neighbor_idx];
                 double r2 = std::sqrt(P2(0)*P2(0) + P2(1)*P2(1));
 
-                // calculate encoder angle
-                float angle_1 = atan2((double)p, pts.size());
-                float angle_2 = atan2((double)neighbor_idx, pts.size());
-
                 // calculate included angle
+                float angle_1 = atan2(P1.y(), P1.x());
+                float angle_2 = atan2(P2.y(), P2.x());
                 float included_angle = fabs(deltaRad(angle_1, angle_2));
 
                 float min_angle_tan = tanf(5.0*D2R);
