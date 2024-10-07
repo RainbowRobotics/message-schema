@@ -100,6 +100,78 @@ std::vector<Eigen::Vector3d> LIDAR_2D::get_cur_scan()
     return res;
 }
 
+bool LIDAR_2D::is_shadow(const float r1, const float r2, const float included_angle, const float min_angle_tan, const float max_angle_tan)
+{
+    const float perpendicular_y = r2 * sinf(included_angle);
+    const float perpendicular_x = r1 - r2 * cosf(included_angle);
+    const float perpendicular_tan = fabs(perpendicular_y) / perpendicular_x;
+
+    if(perpendicular_tan > 0)
+    {
+        if(perpendicular_tan < min_angle_tan)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        if(perpendicular_tan > max_angle_tan)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vector3d>& pts, int shadow_window)
+{
+    std::vector<Eigen::Vector3d> filtered_pts;
+
+    for(size_t p = 0; p < pts.size(); p++)
+    {
+        Eigen::Vector3d P1 = pts[p];
+        double r1 = std::sqrt(P1(0)*P1(0) + P1(1)*P1(1));
+
+        bool is_good = true;
+        for(int k = -shadow_window; k < shadow_window; k++)
+        {
+            int neighbor_idx = p + k;
+            if(neighbor_idx >= 0 && neighbor_idx < pts.size())
+            {
+                Eigen::Vector3d P2 = pts[neighbor_idx];
+                double r2 = std::sqrt(P2(0)*P2(0) + P2(1)*P2(1));
+
+                // calculate encoder angle
+                float angle_1 = atan2((double)p, pts.size());
+                float angle_2 = atan2((double)neighbor_idx, pts.size());
+
+                // calculate included angle
+                float included_angle = fabs(deltaRad(angle_1, angle_2));
+
+                float min_angle_tan = tanf(5.0*D2R);
+                float max_angle_tan = tanf(175.0*D2R);
+
+                if(is_shadow(r1, r2, included_angle, min_angle_tan, max_angle_tan))
+                // if(false)
+                {
+                    // std::cerr << "Shadow detected at: p = " << p << ", r1 = " << r1 << ", r2 = " << r2 << ", included_angle = " << included_angle << std::endl;
+
+                    is_good = false;
+                    break;
+                }
+            }
+        }
+
+        if(is_good)
+        {
+            filtered_pts.push_back(P1);
+        }
+    }
+
+    return filtered_pts;
+}
+
+
 #if defined(USE_SRV)
 void LIDAR_2D::grab_loop_f()
 {
@@ -883,12 +955,17 @@ void LIDAR_2D::a_loop()
             {
                 RAW_FRAME frm1 = storage[min_idx];
 
+                // apply shadow filter for frm0 and frm1
+                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
+                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 3);
+
                 // lidar frame to robot frame
                 std::vector<double> reflects_f;
                 std::vector<Eigen::Vector3d> pts_f;
-                for(size_t p = 0; p < frm0.dsk.size(); p++)
+
+                for(size_t p = 0; p < filtered_pts_f.size(); p++)
                 {
-                    Eigen::Vector3d P = tf_f.block(0,0,3,3)*frm0.dsk[p] + tf_f.block(0,3,3,1);
+                    Eigen::Vector3d P = tf_f.block(0,0,3,3)*filtered_pts_f[p] + tf_f.block(0,3,3,1);
 
                     if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                        P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])
@@ -902,9 +979,9 @@ void LIDAR_2D::a_loop()
                 // lidar frame to robot frame
                 std::vector<double> reflects_b;
                 std::vector<Eigen::Vector3d> pts_b;
-                for(size_t p = 0; p < frm1.dsk.size(); p++)
+                for(size_t p = 0; p < filtered_pts_b.size(); p++)
                 {
-                    Eigen::Vector3d P = tf_b.block(0,0,3,3)*frm1.dsk[p] + tf_b.block(0,3,3,1);
+                    Eigen::Vector3d P = tf_b.block(0,0,3,3)*filtered_pts_b[p] + tf_b.block(0,3,3,1);
 
                     if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                        P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])

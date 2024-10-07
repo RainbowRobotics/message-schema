@@ -95,12 +95,6 @@ public:
     CONFIG* config = NULL;
     LOGGER* logger = NULL;
 
-Q_SIGNALS:
-    void signal_send(int _fd, std::vector<uchar> msg);
-
-public Q_SLOTS:
-    void slot_send(int _fd, std::vector<uchar> msg);
-
 };
 
 #endif // MOBILE_H
