@@ -136,7 +136,7 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
         for(int k = -shadow_window; k < shadow_window; k++)
         {
             int neighbor_idx = p + k;
-            if(neighbor_idx >= 0 && neighbor_idx < pts.size())
+            if(neighbor_idx >= 0 && neighbor_idx < (int)pts.size())
             {
                 Eigen::Vector3d P2 = pts[neighbor_idx];
                 double r2 = std::sqrt(P2(0)*P2(0) + P2(1)*P2(1));
@@ -149,11 +149,8 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
                 float min_angle_tan = tanf(5.0*D2R);
                 float max_angle_tan = tanf(175.0*D2R);
 
-                if(is_shadow(r1, r2, included_angle, min_angle_tan, max_angle_tan))
-                // if(false)
+                if(is_shadow(r1, r2, included_angle, min_angle_tan, max_angle_tan))                
                 {
-                    // std::cerr << "Shadow detected at: p = " << p << ", r1 = " << r1 << ", r2 = " << r2 << ", included_angle = " << included_angle << std::endl;
-
                     is_good = false;
                     break;
                 }
@@ -460,13 +457,15 @@ void LIDAR_2D::a_loop()
         RAW_FRAME frm0;
         if(raw_que_f.try_pop(frm0))
         {
+            std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
+
             Eigen::Matrix4d tf_f = ZYX_to_TF(config->LIDAR_TF_F);
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> pts;
             std::vector<Eigen::Vector3d> pts_f;
-            for(size_t p = 0; p < frm0.dsk.size(); p++)
+            for(size_t p = 0; p < filtered_pts_f.size(); p++)
             {
-                Eigen::Vector3d P = tf_f.block(0,0,3,3)*frm0.dsk[p] + tf_f.block(0,3,3,1);
+                Eigen::Vector3d P = tf_f.block(0,0,3,3)*filtered_pts_f[p] + tf_f.block(0,3,3,1);
 
                 if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                    P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])
