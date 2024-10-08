@@ -4,6 +4,8 @@
 
 #include <QApplication>
 
+node_lidar_t node_lidar;
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

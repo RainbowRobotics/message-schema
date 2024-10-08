@@ -869,24 +869,41 @@ void SLAM_2D::obs_loop()
         TIME_POSE_PTS tpp;
         if(tpp_que.try_pop(tpp))
         {            
-            // add cam pts
-            TIME_PTS cam_scan0 = cam->get_scan0();
-            Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(cam_scan0.t);
-
-            for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
+            // add blidar pts
             {
-                Eigen::Vector3d P = cam_scan0.pts[p];
-                Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
-                tpp.pts.push_back(_P);
+                TIME_PTS blidar_scan = blidar->get_cur_scan();
+                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(blidar_scan.t);
+
+                std::cout << "blidar_scan.pts.size(): " << blidar_scan.pts.size() << std::endl;
+
+                for(size_t p = 0; p < blidar_scan.pts.size(); p+=4)
+                {
+                    Eigen::Vector3d P = blidar_scan.pts[p];
+                    Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+                    tpp.pts.push_back(_P);
+                }
             }
 
-            TIME_PTS cam_scan1 = cam->get_scan1();
-            Eigen::Matrix4d tf1 = tpp.tf.inverse()*get_best_tf(cam_scan1.t);
-            for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
+            // add cam pts
             {
-                Eigen::Vector3d P = cam_scan1.pts[p];
-                Eigen::Vector3d _P = tf1.block(0,0,3,3)*P + tf1.block(0,3,3,1);
-                tpp.pts.push_back(_P);
+                TIME_PTS cam_scan0 = cam->get_scan0();
+                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(cam_scan0.t);
+
+                for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
+                {
+                    Eigen::Vector3d P = cam_scan0.pts[p];
+                    Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+                    tpp.pts.push_back(_P);
+                }
+
+                TIME_PTS cam_scan1 = cam->get_scan1();
+                Eigen::Matrix4d tf1 = tpp.tf.inverse()*get_best_tf(cam_scan1.t);
+                for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
+                {
+                    Eigen::Vector3d P = cam_scan1.pts[p];
+                    Eigen::Vector3d _P = tf1.block(0,0,3,3)*P + tf1.block(0,3,3,1);
+                    tpp.pts.push_back(_P);
+                }
             }
 
             obsmap->update_obs_map(tpp);

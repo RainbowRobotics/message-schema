@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , mobile(this)
     , lidar(this)
+    , blidar(this)
     , cam(this)
     , code(this)
     , slam(this)
@@ -19,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , cui(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
-    , plot_timer2(this)        
+    , plot_timer2(this)
     , qa_timer(this)
 {
     ui->setupUi(this);
@@ -304,6 +305,12 @@ void MainWindow::init_modules()
     lidar.mobile = &mobile;
     lidar.open();
 
+    // bottom lidar module init
+    blidar.config = &config;
+    blidar.logger = &logger;
+    blidar.mobile = &mobile;
+    blidar.open();
+
     // cam module init
     cam.config = &config;
     cam.logger = &logger;
@@ -321,6 +328,7 @@ void MainWindow::init_modules()
     slam.logger = &logger;
     slam.mobile = &mobile;
     slam.lidar = &lidar;
+    slam.blidar = &blidar;
     slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
@@ -2886,6 +2894,7 @@ void MainWindow::raw_plot()
 
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
+        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan().pts;
         std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
         std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
 
@@ -2899,6 +2908,20 @@ void MainWindow::raw_plot()
             pt.z = cur_scan[p][2];
             pt.r = 255;
             pt.g = 0;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cur_scan_b.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan_b[p][0];
+            pt.y = cur_scan_b[p][1];
+            pt.z = cur_scan_b[p][2];
+            pt.r = 0;
+            pt.g = 255;
             pt.b = 0;
 
             cloud->push_back(pt);
