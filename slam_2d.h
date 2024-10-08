@@ -94,7 +94,14 @@ public:
     std::atomic<double> proc_time_loc_b = {0};
 
     // algorithm params
-    const double rmt_sigma = 0.01;
+    const int max_iter0 = 50;
+    const double lambda0 = 0.1; // 0.1
+    const double lambda_dec = 0.1; // 0.01 ~ 0.1
+    const double lambda_inc = 150; // 100 ~ 300
+    const double t_dist_v0 = 15; // 5~30
+    const int near_pt_num = 10; // 5~10
+    const double rmt_sigma = 0.01; // 0.01 good
+    const double sigma_eps = 1e-6;
 
 public:
     std::atomic<bool> map_a_flag = {false};
