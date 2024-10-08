@@ -71,6 +71,8 @@ public:
     void ui_tasks_update();
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
+    void update_jog_values(double vx, double vy, double wz);
+    double apply_jog_acc(double cur_vel, double tar_vel, double acc, double decel, double dt);
 
 public:
     Ui::MainWindow *ui;
@@ -92,6 +94,11 @@ public:
     std::atomic<bool> watch_flag = {false};
     std::thread *watch_thread = NULL;
     void watch_loop();
+
+    // jog
+    std::atomic<bool> jog_flag = {false};
+    std::thread *jog_thread = NULL;
+    void jog_loop();
 
     // quick annotation timer
     QTimer qa_timer;
@@ -128,6 +135,18 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+
+    // jog
+    std::atomic<bool> key_active    = {false};
+    std::atomic<bool> button_active = {false};
+
+    double vx_target = 0;
+    double vy_target = 0;
+    double wz_target = 0;
+
+    double vx_current = 0;
+    double vy_current = 0;
+    double wz_current = 0;
 
     // 3d plot funcs
     void map_plot();

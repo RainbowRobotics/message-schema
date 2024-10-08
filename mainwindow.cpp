@@ -412,6 +412,10 @@ void MainWindow::init_modules()
     // start watchdog loop
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
+
+    // jog loop
+    jog_flag = true;
+    jog_thread = new std::thread(&MainWindow::jog_loop, this);
 }
 
 void MainWindow::setup_vtk()
@@ -476,23 +480,28 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+            key_active = true;
 
             switch(ke->key())
             {
-                case Qt::Key_Up:
-                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                    break;
-                default:
-                    return false;
+            case Qt::Key_Up:
+                // mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
+                update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                // mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                break;
+            case Qt::Key_Down:
+                // mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
+                update_jog_values(-ui->spb_JogV->value(), 0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                // mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                update_jog_values(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                break;
+            default:
+                return false;
             }
             return true;
         }
@@ -503,23 +512,28 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+            key_active = false;
 
             switch(ke->key())
             {
-                case Qt::Key_Up:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                default:
-                    return false;
+            case Qt::Key_Up:
+                // mobile.move(0, 0, mobile.wz0);
+                update_jog_values(0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                // mobile.move(mobile.vx0, 0, 0);
+                update_jog_values(mobile.vx0, 0, 0);
+                break;
+            case Qt::Key_Down:
+                // mobile.move(0, 0, mobile.wz0);
+                update_jog_values(0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                // mobile.move(mobile.vx0, 0, 0);
+                update_jog_values(mobile.vx0, 0, 0);
+                break;
+            default:
+                return false;
             }
             return true;
         }
@@ -1038,6 +1052,29 @@ Eigen::Vector3d MainWindow::ray_intersection(Eigen::Vector3d ray_center, Eigen::
     return ray_center + t*ray_direction;
 }
 
+void MainWindow::update_jog_values(double vx, double vy, double wz)
+{
+    vx_target = vx;
+    vy_target = vy;
+    wz_target = wz;
+}
+
+double MainWindow::apply_jog_acc(double cur_vel, double tar_vel, double acc, double decel, double dt)
+{
+    double err = tar_vel - cur_vel;
+
+    if(tar_vel != 0)
+    {
+        cur_vel += saturation(err, -acc*dt, acc*dt);
+    }
+    else
+    {
+        cur_vel += saturation(err, -decel*dt, decel*dt);
+    }
+
+    return cur_vel;
+}
+
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
@@ -1102,48 +1139,47 @@ void MainWindow::bt_MoveRotate()
 
 void MainWindow::bt_JogF()
 {
-    double vx = ui->spb_JogV->value();
-    double vy = 0;
-    double wz = 0;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(ui->spb_JogV->value(), 0, 0);
+    }
 }
 
 void MainWindow::bt_JogB()
 {
-    double vx = -ui->spb_JogV->value();
-    double vy = 0;
-    double wz = 0;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(-ui->spb_JogV->value(), 0, 0);
+    }
 }
 
 void MainWindow::bt_JogL()
 {
-    double vx = 0;
-    double vy = 0;
-    double wz = ui->spb_JogW->value()*D2R;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
+    }
 }
 
 void MainWindow::bt_JogR()
 {
-    double vx = 0;
-    double vy = 0;
-    double wz = -ui->spb_JogW->value()*D2R;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
+    }
 }
 
 void MainWindow::bt_JogReleased()
 {
-    mobile.move(0, 0, 0);
-    printf("[JOG] 0, 0, 0\n");
+    if(!key_active)
+    {
+        button_active = false;
+        update_jog_values(0, 0, 0);
+    }
 }
 
 // for mapping and localization
@@ -2184,6 +2220,49 @@ void MainWindow::watch_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[WATCHDOG] loop stop\n");
+}
+
+// jog
+void MainWindow::jog_loop()
+{
+    // loop params
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+
+    printf("[JOG] loop start\n");
+    while(jog_flag)
+    {
+        double v_acc = ui->spb_AccV->value();
+        double v_decel = ui->spb_DecelV->value();
+
+        double w_acc = ui->spb_AccW->value()*D2R;
+        double w_decel = ui->spb_DecelW->value()*D2R;
+
+        vx_current = apply_jog_acc(vx_current, vx_target, v_acc, v_decel, dt);
+        vy_current = apply_jog_acc(vy_current, vy_target, v_acc, v_decel, dt);
+        wz_current = apply_jog_acc(wz_current, wz_target, w_acc, w_decel, dt);
+
+        if(ctrl.is_moving == false)
+        {
+            mobile.move(vx_current, vy_current, wz_current);
+            printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, vx_current, vy_current, wz_current*R2D);
+        }
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
+    }
+    printf("[JOG] loop stop\n");
 }
 
 // for plot loop
