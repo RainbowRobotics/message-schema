@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
+#include "lidar_bottom.h"
 #include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
@@ -35,6 +36,7 @@ public:
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
+    LIDAR_BOTTOM *blidar = NULL;
     CAM *cam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;

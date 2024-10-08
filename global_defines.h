@@ -89,6 +89,8 @@
 #include <QHeaderView>
 #include <QtConcurrent/QtConcurrent>
 
+#include "node_lidar.h"
+
 // defines
 #define ACC_G 9.80665
 #define N2S (1.0e-9) // nanosec to sec

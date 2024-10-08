@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
+#include "lidar_bottom.h"
 #include "cam.h"
 #include "code_reader.h"
 #include "slam_2d.h"
@@ -46,6 +47,7 @@ public:
     LOGGER logger;
     MOBILE mobile;
     LIDAR_2D lidar;
+    LIDAR_BOTTOM blidar;
     CAM cam;
     CODE_READER code;
     SLAM_2D slam;

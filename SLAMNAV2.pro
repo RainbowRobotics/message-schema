@@ -25,6 +25,14 @@ SOURCES += \
     LakiBeamHTTP.cpp \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
+    blidar/calibration.cpp \
+    blidar/lidar_data_processing.cpp \
+    blidar/lidar_information.cpp \
+    blidar/mtime.cpp \
+    blidar/node_lidar.cpp \
+    blidar/point_cloud_optimize.cpp \
+    blidar/serial_port.cpp \
+    blidar/timer.cpp \
     cam.cpp \
     code_reader.cpp \
     comm_fms.cpp \
@@ -34,6 +42,7 @@ SOURCES += \
     config.cpp \
     cv_to_qt.cpp \
     lidar_2d.cpp \
+    lidar_bottom.cpp \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -51,6 +60,16 @@ HEADERS += \
     LakiBeamHTTP.h \
     LakiBeamUDP.h \
     autocontrol.h \
+    blidar/calibration.h \
+    blidar/lidar_data_processing.h \
+    blidar/lidar_information.h \
+    blidar/locker.h \
+    blidar/msg_recept.h \
+    blidar/mtime.h \
+    blidar/node_lidar.h \
+    blidar/point_cloud_optimize.h \
+    blidar/serial_port.h \
+    blidar/timer.h \
     cam.h \
     code_reader.h \
     comm_fms.h \
@@ -61,6 +80,7 @@ HEADERS += \
     cv_to_qt.h \
     global_defines.h \
     lidar_2d.h \
+    lidar_bottom.h \
     logger.h \
     mainwindow.h \
     mobile.h \
@@ -203,3 +223,6 @@ LIBS += -lOrbbecSDK
 INCLUDEPATH += $$HOME/rplidar_sdk/sdk/include/
 LIBS += -L$$HOME/rplidar_sdk/output/Linux/Release/
 LIBS += -lsl_lidar_sdk
+
+# bottom lidar
+INCLUDEPATH += $$PWD/blidar/
