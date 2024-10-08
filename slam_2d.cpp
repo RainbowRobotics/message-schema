@@ -918,8 +918,8 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
 
     // optimization param
-    const int max_iter = 100;
-    double lambda = 0.01;
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -951,7 +951,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             // knn points
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = 5;
+                const int pt_num = near_pt_num;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1036,16 +1036,16 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < SIGMA_EPS)
+        if(sigma < sigma_eps)
         {
-            sigma = SIGMA_EPS;
+            sigma = sigma_eps;
         }
 
         // calc weight
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = 30;
+            double V0 = t_dist_v0;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -1095,11 +1095,11 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         // lambda update
         if(err < last_err)
         {
-            lambda *= 0.1;
+            lambda *= lambda_dec;
         }
         else
         {
-            lambda *= std::pow(2, iter);
+            lambda *= lambda_inc;
         }
         last_err = err;
 
@@ -1166,8 +1166,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
 
     // optimization param
-    const int max_iter = 100;
-    double lambda = 0.01;
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -1202,7 +1202,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = 5;
+                const int pt_num = near_pt_num;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1302,16 +1302,16 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < SIGMA_EPS)
+        if(sigma < sigma_eps)
         {
-            sigma = SIGMA_EPS;
+            sigma = sigma_eps;
         }
 
         // calc weight
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = 30;
+            double V0 = t_dist_v0;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -1361,11 +1361,11 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         // lambda update
         if(err < last_err)
         {
-            lambda *= 0.1;
+            lambda *= lambda_dec;
         }
         else
         {
-            lambda *= std::pow(2, iter);
+            lambda *= lambda_inc;
         }
         last_err = err;
 
@@ -1440,8 +1440,8 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     Eigen::Matrix4d _dG = Eigen::Matrix4d::Identity();
 
     // optimization param
-    const int max_iter = 100;
-    double lambda = 0.01;
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
     double first_err = 9999;
     double last_err = 9999;
     double convergence = 9999;
@@ -1475,7 +1475,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = 0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = 5;
+                const int pt_num = near_pt_num;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1566,16 +1566,16 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < SIGMA_EPS)
+        if(sigma < sigma_eps)
         {
-            sigma = SIGMA_EPS;
+            sigma = sigma_eps;
         }
 
         // calc weight
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = 30;
+            double V0 = t_dist_v0;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -1625,11 +1625,11 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         // lambda update
         if(err < last_err)
         {
-            lambda *= 0.1;
+            lambda *= lambda_dec;
         }
         else
         {
-            lambda *= std::pow(2, iter);
+            lambda *= lambda_inc;
         }
         last_err = err;
 

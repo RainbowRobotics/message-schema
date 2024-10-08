@@ -35,9 +35,28 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     CTRL_PARAM res;
 
     // read
-    QString preset_path;
-    preset_path.sprintf("/preset/preset_%d.json", preset);
-    preset_path = QCoreApplication::applicationDirPath() + preset_path;
+    QString preset_path = "";
+
+    // config module init
+    #ifdef USE_SRV
+    preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
+    #ifdef USE_AMR_400
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
+    #ifdef USE_AMR_400_PROTO
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_PROTO/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
+    #ifdef USE_AMR_400_LAKI
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
+    #ifdef USE_AMR_KAI
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/" + "preset_" + QString::number(preset) + ".json";
+    #endif
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
@@ -1037,6 +1056,39 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
     return min_idx;
 }
 
+int AUTOCONTROL::get_next_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos)
+{
+    int min_idx = 0;
+    double min_d = 99999999;
+    for(size_t p = 0; p < path.size()-1; p++)
+    {
+        double d = calc_seg_dist(path[p], path[p+1], cur_pos);
+        if(d < min_d)
+        {
+            min_d = d;
+
+            double d0 = (path[p]-cur_pos).norm();
+            double d1 = (path[p+1]-cur_pos).norm();
+            if(d0 < d1)
+            {
+                min_idx = p;
+            }
+            else
+            {
+                min_idx = p+1;
+            }
+        }
+    }
+
+    int res = min_idx + 1;
+    if(res > (int)path.size()-1)
+    {
+        res = path.size()-1;
+    }
+
+    return res;
+}
+
 PATH AUTOCONTROL::calc_local_path()
 {
     // get params
@@ -1152,6 +1204,19 @@ PATH AUTOCONTROL::calc_avoid_path()
     std::vector<Eigen::Matrix4d> path_pose = obsmap->calc_path(st_tf, ed_tf);
     if(path_pose.size() > 0)
     {
+        // adding some global path
+        int idx0 = get_next_idx(global_path.pos, path_pose.back().block(0,3,3,1));
+        int idx1 = idx0 + config->OBS_DEADZONE/GLOBAL_PATH_STEP;
+        if(idx1 > (int)global_path.pos.size()-1)
+        {
+            idx1 = global_path.pos.size()-1;
+        }
+
+        for(int p = idx0; p <= idx1; p++)
+        {
+            path_pose.push_back(global_path.pose[p]);
+        }
+
         path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
         std::vector<Eigen::Vector3d> path_pos;
         for(size_t p = 0; p < path_pose.size(); p++)
@@ -1315,30 +1380,32 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
             // check avoid path
             if(avoid_path.pos.size() > 0)
             {
-                int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
-                if(avoid_idx > avoid_path.pos.size()*0.9)
+                // clear avoid path
+                double goal_d = calc_dist_2d(avoid_path.pos.back() - goal_pos);
+                if(goal_d >= config->DRIVE_GOAL_D)
                 {
-                    // clear avoid path                    
-                    avoid_path = PATH();
-                    printf("[AUTO] avoid_path complete\n");
-                    continue;
-                }
-                else
-                {
-                    // check
-                    if(local_path != avoid_path)
+                    int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
+                    if(avoid_idx > avoid_path.pos.size()*0.9)
                     {
-                        // set avoid path to local path
-                        local_path = avoid_path;
-
-                        // update local path
-                        mtx.lock();
-                        cur_local_path = local_path;
-                        last_local_goal = local_path.goal_tf.block(0,3,3,1);
-                        mtx.unlock();
-
-                        Q_EMIT signal_local_path_updated();
+                        // clear avoid path
+                        avoid_path = PATH();
+                        printf("[AUTO] avoid_path complete\n");
+                        continue;
                     }
+                }
+
+                // set avoid path to local path
+                if(local_path != avoid_path)
+                {
+                    local_path = avoid_path;
+
+                    // update local path
+                    mtx.lock();
+                    cur_local_path = local_path;
+                    last_local_goal = local_path.goal_tf.block(0,3,3,1);
+                    mtx.unlock();
+
+                    Q_EMIT signal_local_path_updated();
                 }
             }
             else
@@ -1504,10 +1571,10 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
             double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
-            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
+            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);            
             if(cur_idx == tgt_idx)
             {
-                err_th = saturation(err_th, -5.0*D2R, 5.0*D2R);
+                err_th = 0;
             }
 
             // calc cross track error
@@ -1521,11 +1588,12 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;
+            double v = ref_v;            
+
+            v = saturation(v, 0.0, obs_v);
             v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
             v = saturation(v, 0.0, goal_v);
-            v = saturation(v, 0.0, obs_v);
 
             double th = (params.DRIVE_A * err_th)
                         + (params.DRIVE_B * (err_th-pre_err_th)/dt)

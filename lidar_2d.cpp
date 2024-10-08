@@ -100,11 +100,11 @@ std::vector<Eigen::Vector3d> LIDAR_2D::get_cur_scan()
     return res;
 }
 
-bool LIDAR_2D::is_shadow(const float r1, const float r2, const float included_angle, const float min_angle_tan, const float max_angle_tan)
+bool LIDAR_2D::is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan)
 {
-    const float perpendicular_y = r2 * sinf(included_angle);
-    const float perpendicular_x = r1 - r2 * cosf(included_angle);
-    const float perpendicular_tan = fabs(perpendicular_y) / perpendicular_x;
+    const double perpendicular_y = r2 * std::sin(included_angle);
+    const double perpendicular_x = r1 - r2 * std::cos(included_angle);
+    const double perpendicular_tan = std::abs(perpendicular_y) / perpendicular_x;
 
     if(perpendicular_tan > 0)
     {
@@ -124,9 +124,11 @@ bool LIDAR_2D::is_shadow(const float r1, const float r2, const float included_an
 }
 
 std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vector3d>& pts, int shadow_window)
-{
-    std::vector<Eigen::Vector3d> filtered_pts;
+{    
+    const double min_angle_tan = std::tan(5.0*D2R);
+    const double max_angle_tan = std::tan(175.0*D2R);
 
+    std::vector<Eigen::Vector3d> filtered_pts;
     for(size_t p = 0; p < pts.size(); p++)
     {
         Eigen::Vector3d P1 = pts[p];
@@ -142,13 +144,9 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
                 double r2 = std::sqrt(P2(0)*P2(0) + P2(1)*P2(1));
 
                 // calculate included angle
-                float angle_1 = atan2(P1.y(), P1.x());
-                float angle_2 = atan2(P2.y(), P2.x());
-                float included_angle = fabs(deltaRad(angle_1, angle_2));
-
-                float min_angle_tan = tanf(5.0*D2R);
-                float max_angle_tan = tanf(175.0*D2R);
-
+                double angle_1 = std::atan2(P1.y(), P1.x());
+                double angle_2 = std::atan2(P2.y(), P2.x());
+                double included_angle = std::abs(deltaRad(angle_1, angle_2));
                 if(is_shadow(r1, r2, included_angle, min_angle_tan, max_angle_tan))                
                 {
                     is_good = false;
@@ -457,7 +455,7 @@ void LIDAR_2D::a_loop()
         RAW_FRAME frm0;
         if(raw_que_f.try_pop(frm0))
         {
-            std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
+            std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 5);
 
             Eigen::Matrix4d tf_f = ZYX_to_TF(config->LIDAR_TF_F);
             std::vector<double> reflects;

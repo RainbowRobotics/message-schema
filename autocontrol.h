@@ -89,7 +89,8 @@ public:
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);        
-    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);        
+    int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+    int get_next_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
     PATH calc_local_path();
     PATH calc_avoid_path();
 

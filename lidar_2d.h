@@ -81,7 +81,7 @@ public:
     std::vector<Eigen::Vector3d> cur_scan_outlier;
 
     // shadow filter
-    bool is_shadow(const float r1, const float r2, const float included_angle, const float min_angle_tan, const float max_angle_tan);
+    bool is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan);
     std::vector<Eigen::Vector3d> scan_shadow_filter(std::vector<Eigen::Vector3d>& dsk, int shadow_window);
 
     // loops
