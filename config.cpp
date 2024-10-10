@@ -287,7 +287,7 @@ void CONFIG::load()
                 printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
             }
 
-            QJsonObject obj_map = obj["MAP_PATH"].toObject();
+            QJsonObject obj_map = obj["path"].toObject();
             {
                 MAP_PATH = obj_map["MAP_PATH"].toString();
                 printf("[CONFIG] MAP_PATH, %s\n", obj_docking["MAP_PATH"].toString().toLocal8Bit().data());
