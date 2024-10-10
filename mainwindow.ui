@@ -239,7 +239,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1,1,1,1,1">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1,1,1,1,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -1184,7 +1184,7 @@ Stop</string>
                <x>140</x>
                <y>10</y>
                <width>101</width>
-               <height>31</height>
+               <height>20</height>
               </rect>
              </property>
              <property name="suffix">
@@ -1197,16 +1197,16 @@ Stop</string>
               <double>0.100000000000000</double>
              </property>
              <property name="value">
-              <double>0.200000000000000</double>
+              <double>1.000000000000000</double>
              </property>
             </widget>
             <widget class="QDoubleSpinBox" name="spb_JogW">
              <property name="geometry">
               <rect>
                <x>140</x>
-               <y>40</y>
+               <y>50</y>
                <width>101</width>
-               <height>31</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="suffix">
@@ -1216,16 +1216,16 @@ Stop</string>
               <double>120.000000000000000</double>
              </property>
              <property name="value">
-              <double>20.000000000000000</double>
+              <double>45.000000000000000</double>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>140</x>
-               <y>70</y>
-               <width>101</width>
-               <height>21</height>
+               <x>10</x>
+               <y>10</y>
+               <width>31</width>
+               <height>31</height>
               </rect>
              </property>
              <property name="text">
@@ -1254,6 +1254,82 @@ Stop</string>
              <property name="text">
               <string>Emergency
 stop</string>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_AccV">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>30</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.300000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_DecelV">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>30</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.600000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_AccW">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>70</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>15.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_DecelW">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>70</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>30.000000000000000</double>
              </property>
             </widget>
            </widget>

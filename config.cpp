@@ -169,11 +169,11 @@ void CONFIG::load()
 
             QJsonObject obj_control = obj["control"].toObject();
             {
+                DRIVE_GOAL_APPROACH_GAIN = obj_control["DRIVE_GOAL_APPROACH_GAIN"].toString().toDouble();
+                printf("[CONFIG] DRIVE_GOAL_APPROACH_GAIN, %s\n", obj_control["DRIVE_GOAL_APPROACH_GAIN"].toString().toLocal8Bit().data());
+
                 DRIVE_GOAL_D = obj_control["DRIVE_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] DRIVE_GOAL_D, %s\n", obj_control["DRIVE_GOAL_D"].toString().toLocal8Bit().data());
-
-                DRIVE_GOAL_NEAR_D = obj_control["DRIVE_GOAL_NEAR_D"].toString().toDouble();
-                printf("[CONFIG] DRIVE_GOAL_NEAR_D, %s\n", obj_control["DRIVE_GOAL_NEAR_D"].toString().toLocal8Bit().data());
 
                 DRIVE_GOAL_TH = obj_control["DRIVE_GOAL_TH"].toString().toDouble();
                 printf("[CONFIG] DRIVE_GOAL_TH, %s\n", obj_control["DRIVE_GOAL_TH"].toString().toLocal8Bit().data());
@@ -193,23 +193,26 @@ void CONFIG::load()
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
 
-                OBS_EB_MARGIN_X = obj_obs["OBS_EB_MARGIN_X"].toString().toDouble();
-                printf("[CONFIG] OBS_EB_MARGIN_X, %s\n", obj_obs["OBS_EB_MARGIN_X"].toString().toLocal8Bit().data());
+                OBS_SAFE_MARGIN_X = obj_obs["OBS_SAFE_MARGIN_X"].toString().toDouble();
+                printf("[CONFIG] OBS_SAFE_MARGIN_X, %s\n", obj_obs["OBS_SAFE_MARGIN_X"].toString().toLocal8Bit().data());
 
-                OBS_EB_MARGIN_Y = obj_obs["OBS_EB_MARGIN_Y"].toString().toDouble();
-                printf("[CONFIG] OBS_EB_MARGIN_Y, %s\n", obj_obs["OBS_EB_MARGIN_Y"].toString().toLocal8Bit().data());
+                OBS_SAFE_MARGIN_Y = obj_obs["OBS_SAFE_MARGIN_Y"].toString().toDouble();
+                printf("[CONFIG] OBS_SAFE_MARGIN_Y, %s\n", obj_obs["OBS_SAFE_MARGIN_Y"].toString().toLocal8Bit().data());
 
-                OBS_OMPL_MARGIN_X = obj_obs["OBS_OMPL_MARGIN_X"].toString().toDouble();
-                printf("[CONFIG] OBS_OMPL_MARGIN_X, %s\n", obj_obs["OBS_OMPL_MARGIN_X"].toString().toLocal8Bit().data());
+                OBS_PATH_MARGIN_X = obj_obs["OBS_PATH_MARGIN_X"].toString().toDouble();
+                printf("[CONFIG] OBS_PATH_MARGIN_X, %s\n", obj_obs["OBS_PATH_MARGIN_X"].toString().toLocal8Bit().data());
 
-                OBS_OMPL_MARGIN_Y = obj_obs["OBS_OMPL_MARGIN_Y"].toString().toDouble();
-                printf("[CONFIG] OBS_OMPL_MARGIN_Y, %s\n", obj_obs["OBS_OMPL_MARGIN_Y"].toString().toLocal8Bit().data());
+                OBS_PATH_MARGIN_Y = obj_obs["OBS_PATH_MARGIN_Y"].toString().toDouble();
+                printf("[CONFIG] OBS_PATH_MARGIN_Y, %s\n", obj_obs["OBS_PATH_MARGIN_Y"].toString().toLocal8Bit().data());
 
                 OBS_MAP_GRID_SIZE = obj_obs["OBS_MAP_GRID_SIZE"].toString().toDouble();
                 printf("[CONFIG] OBS_MAP_GRID_SIZE, %s\n", obj_obs["OBS_MAP_GRID_SIZE"].toString().toLocal8Bit().data());
 
                 OBS_MAP_RANGE = obj_obs["OBS_MAP_RANGE"].toString().toDouble();
                 printf("[CONFIG] OBS_MAP_RANGE, %s\n", obj_obs["OBS_MAP_RANGE"].toString().toLocal8Bit().data());
+
+                OBS_MAP_MIN_V = obj_obs["OBS_MAP_MIN_V"].toString().toDouble();
+                printf("[CONFIG] OBS_MAP_MIN_V, %s\n", obj_obs["OBS_MAP_MIN_V"].toString().toLocal8Bit().data());
 
                 OBS_MAP_MIN_Z = obj_obs["OBS_MAP_MIN_Z"].toString().toDouble();
                 printf("[CONFIG] OBS_MAP_MIN_Z, %s\n", obj_obs["OBS_MAP_MIN_Z"].toString().toLocal8Bit().data());

@@ -95,8 +95,6 @@ public:
     CONFIG* config = NULL;
     LOGGER* logger = NULL;
 
-Q_SIGNALS:
-
 };
 
 #endif // MOBILE_H

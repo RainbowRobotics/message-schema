@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , mobile(this)
     , lidar(this)
+    , blidar(this)
     , cam(this)
     , code(this)
     , slam(this)
@@ -19,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , cui(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
-    , plot_timer2(this)        
+    , plot_timer2(this)
     , qa_timer(this)
 {
     ui->setupUi(this);
@@ -305,6 +306,12 @@ void MainWindow::init_modules()
     lidar.mobile = &mobile;
     lidar.open();
 
+    // bottom lidar module init
+    blidar.config = &config;
+    blidar.logger = &logger;
+    blidar.mobile = &mobile;
+    blidar.open();
+
     // cam module init
     cam.config = &config;
     cam.logger = &logger;
@@ -322,6 +329,7 @@ void MainWindow::init_modules()
     slam.logger = &logger;
     slam.mobile = &mobile;
     slam.lidar = &lidar;
+    slam.blidar = &blidar;
     slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
@@ -405,6 +413,10 @@ void MainWindow::init_modules()
     // start watchdog loop
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
+
+    // jog loop
+    jog_flag = true;
+    jog_thread = new std::thread(&MainWindow::jog_loop, this);
 }
 
 void MainWindow::setup_vtk()
@@ -469,23 +481,28 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+            key_active = true;
 
             switch(ke->key())
             {
-                case Qt::Key_Up:
-                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                    break;
-                default:
-                    return false;
+            case Qt::Key_Up:
+                // mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
+                update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                // mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+                break;
+            case Qt::Key_Down:
+                // mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
+                update_jog_values(-ui->spb_JogV->value(), 0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                // mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                update_jog_values(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
+                break;
+            default:
+                return false;
             }
             return true;
         }
@@ -496,23 +513,28 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+            key_active = false;
 
             switch(ke->key())
             {
-                case Qt::Key_Up:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                default:
-                    return false;
+            case Qt::Key_Up:
+                // mobile.move(0, 0, mobile.wz0);
+                update_jog_values(0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Left:
+                // mobile.move(mobile.vx0, 0, 0);
+                update_jog_values(mobile.vx0, 0, 0);
+                break;
+            case Qt::Key_Down:
+                // mobile.move(0, 0, mobile.wz0);
+                update_jog_values(0, 0, mobile.wz0);
+                break;
+            case Qt::Key_Right:
+                // mobile.move(mobile.vx0, 0, 0);
+                update_jog_values(mobile.vx0, 0, 0);
+                break;
+            default:
+                return false;
             }
             return true;
         }
@@ -1031,6 +1053,29 @@ Eigen::Vector3d MainWindow::ray_intersection(Eigen::Vector3d ray_center, Eigen::
     return ray_center + t*ray_direction;
 }
 
+void MainWindow::update_jog_values(double vx, double vy, double wz)
+{
+    vx_target = vx;
+    vy_target = vy;
+    wz_target = wz;
+}
+
+double MainWindow::apply_jog_acc(double cur_vel, double tar_vel, double acc, double decel, double dt)
+{
+    double err = tar_vel - cur_vel;
+
+    if(tar_vel != 0)
+    {
+        cur_vel += saturation(err, -acc*dt, acc*dt);
+    }
+    else
+    {
+        cur_vel += saturation(err, -decel*dt, decel*dt);
+    }
+
+    return cur_vel;
+}
+
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
@@ -1095,48 +1140,47 @@ void MainWindow::bt_MoveRotate()
 
 void MainWindow::bt_JogF()
 {
-    double vx = ui->spb_JogV->value();
-    double vy = 0;
-    double wz = 0;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(ui->spb_JogV->value(), 0, 0);
+    }
 }
 
 void MainWindow::bt_JogB()
 {
-    double vx = -ui->spb_JogV->value();
-    double vy = 0;
-    double wz = 0;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(-ui->spb_JogV->value(), 0, 0);
+    }
 }
 
 void MainWindow::bt_JogL()
 {
-    double vx = 0;
-    double vy = 0;
-    double wz = ui->spb_JogW->value()*D2R;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
+    }
 }
 
 void MainWindow::bt_JogR()
 {
-    double vx = 0;
-    double vy = 0;
-    double wz = -ui->spb_JogW->value()*D2R;
-
-    mobile.move(vx, vy, wz);
-    printf("[JOG] %f, %f, %f\n", vx, vy, wz*R2D);
+    if(!key_active)
+    {
+        button_active = true;
+        update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
+    }
 }
 
 void MainWindow::bt_JogReleased()
 {
-    mobile.move(0, 0, 0);
-    printf("[JOG] 0, 0, 0\n");
+    if(!key_active)
+    {
+        button_active = false;
+        update_jog_values(0, 0, 0);
+    }
 }
 
 // for mapping and localization
@@ -2200,6 +2244,49 @@ void MainWindow::watch_loop()
     printf("[WATCHDOG] loop stop\n");
 }
 
+// jog
+void MainWindow::jog_loop()
+{
+    // loop params
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+
+    printf("[JOG] loop start\n");
+    while(jog_flag)
+    {
+        double v_acc = ui->spb_AccV->value();
+        double v_decel = ui->spb_DecelV->value();
+
+        double w_acc = ui->spb_AccW->value()*D2R;
+        double w_decel = ui->spb_DecelW->value()*D2R;
+
+        vx_current = apply_jog_acc(vx_current, vx_target, v_acc, v_decel, dt);
+        vy_current = apply_jog_acc(vy_current, vy_target, v_acc, v_decel, dt);
+        wz_current = apply_jog_acc(wz_current, wz_target, w_acc, w_decel, dt);
+
+        if(ctrl.is_moving == false)
+        {
+            mobile.move(vx_current, vy_current, wz_current);
+            printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, vx_current, vy_current, wz_current*R2D);
+        }
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
+    }
+    printf("[JOG] loop stop\n");
+}
+
 // for plot loop
 void MainWindow::map_plot()
 {
@@ -2261,7 +2348,7 @@ void MainWindow::obs_plot()
         obsmap.get_obs_map(obs_map, obs_tf);
         obsmap.get_dyn_map(dyn_map, obs_tf);
 
-        std::vector<Eigen::Vector4d> obs_pts = obsmap.get_obs_pts();
+        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
 
         // plot grid map
         {
@@ -2291,12 +2378,12 @@ void MainWindow::obs_plot()
 
         // plot obs pts
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < obs_pts.size(); p++)
+        for(size_t p = 0; p < plot_pts.size(); p++)
         {
-            double x = obs_pts[p][0];
-            double y = obs_pts[p][1];
-            double z = obs_pts[p][2];
-            double prob = obs_pts[p][3];
+            double x = plot_pts[p][0];
+            double y = plot_pts[p][1];
+            double z = plot_pts[p][2];
+            double prob = plot_pts[p][3];
 
             if(prob <= 0.5)
             {
@@ -2315,13 +2402,13 @@ void MainWindow::obs_plot()
             cloud->push_back(pt);
         }
 
-        if(!viewer->updatePointCloud(cloud, "obs_pts"))
+        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
         {
-            viewer->addPointCloud(cloud, "obs_pts");
+            viewer->addPointCloud(cloud, "obs_plot_pts");
         }
 
         // point size
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_pts");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
     }
 }
 void MainWindow::topo_plot()
@@ -2921,6 +3008,7 @@ void MainWindow::raw_plot()
 
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
+        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan().pts;
         std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
         std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
 
@@ -2934,6 +3022,20 @@ void MainWindow::raw_plot()
             pt.z = cur_scan[p][2];
             pt.r = 255;
             pt.g = 0;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cur_scan_b.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan_b[p][0];
+            pt.y = cur_scan_b[p][1];
+            pt.z = cur_scan_b[p][2];
+            pt.r = 0;
+            pt.g = 255;
             pt.b = 0;
 
             cloud->push_back(pt);
@@ -3096,39 +3198,27 @@ void MainWindow::ctrl_plot()
 
         // draw local path
         PATH local_path = ctrl.get_cur_local_path();
+
+        // draw local path
         if(local_path.pos.size() >= 2)
         {
-            bool color_toggle = true;
-            int last_p = 0;
-            for(size_t p = 1; p < local_path.pos.size(); p++)
+            for(size_t p = 0; p < local_path.pose.size(); p++)
             {
-                if(p == 1 || p == local_path.pos.size()-1 || p%10 == 0)
+                if(p == local_path.pose.size()-1 || p % 25 == 0)
                 {
                     QString name;
-                    name.sprintf("local_path_%d_%d", last_p, (int)p);
+                    name.sprintf("local_path_%d", (int)p);
 
-                    Eigen::Vector3d P0 = local_path.pos[last_p];
-                    Eigen::Vector3d P1 = local_path.pos[p];
+                    Eigen::Matrix4d tf = local_path.pose[p];
+                    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0, 1, 0, name.toStdString());
 
-                    pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.02);
-                    pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.02);
-
-                    if(color_toggle)
-                    {
-                        viewer->addLine(pt0, pt1, 1.0, 0.5, 0.0, name.toStdString());
-                        color_toggle = false;
-                    }
-                    else
-                    {
-                        viewer->addLine(pt0, pt1, 0.0, 0.5, 1.0, name.toStdString());
-                        color_toggle = true;
-                    }
-
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
-
+                    viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                        name.toStdString());
                     last_plot_local_path.push_back(name);
-                    last_p = p;
                 }
             }
         }

@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
+#include "lidar_bottom.h"
 #include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
@@ -35,6 +36,7 @@ public:
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
+    LIDAR_BOTTOM *blidar = NULL;
     CAM *cam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
@@ -99,7 +101,14 @@ public:
     std::atomic<double> proc_time_loc_b = {0};
 
     // algorithm params
-    const double rmt_sigma = 0.01;
+    const int max_iter0 = 50;
+    const double lambda0 = 0.1; // 0.1
+    const double lambda_dec = 0.1; // 0.01 ~ 0.1
+    const double lambda_inc = 150; // 100 ~ 300
+    const double t_dist_v0 = 15; // 5~30
+    const int near_pt_num = 10; // 5~10
+    const double rmt_sigma = 0.01; // 0.01 good
+    const double sigma_eps = 1e-6;
 
 public:
     std::atomic<bool> map_a_flag = {false};

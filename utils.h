@@ -26,6 +26,8 @@ Eigen::Matrix4d string_to_TF(QString str);
 QString TF_to_string(Eigen::Matrix4d TF);
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1);
+std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, double dist_step, double th_step);
+
 void refine_pose(Eigen::Matrix4d& G);
 void refine_zero(Eigen::Matrix4d& G);
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold);
@@ -40,6 +42,7 @@ bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 
 
 double sgn(double val);
+int saturation(int val, int min, int max);
 double saturation(double val, double min, double max);
 double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2);
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
@@ -48,7 +51,7 @@ double calc_length(std::vector<Eigen::Vector3d>& src);
 double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos);
 double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
 double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1);
-
+double calc_dth(const Eigen::Matrix4d& G0, const Eigen::Matrix4d& G1);
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
 std::vector<cv::Vec2i> circle_iterator(cv::Vec2i pt, int r);

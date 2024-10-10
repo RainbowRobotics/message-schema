@@ -80,6 +80,10 @@ public:
     std::vector<Eigen::Vector3d> cur_scan;
     std::vector<Eigen::Vector3d> cur_scan_outlier;
 
+    // shadow filter
+    bool is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan);
+    std::vector<Eigen::Vector3d> scan_shadow_filter(std::vector<Eigen::Vector3d>& dsk, int shadow_window);
+
     // loops
     std::atomic<bool> grab_flag_f;
     std::thread* grab_thread_f = NULL;
