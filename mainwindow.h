@@ -150,13 +150,13 @@ public:
     std::atomic<bool> key_active    = {false};
     std::atomic<bool> button_active = {false};
 
-    double vx_target = 0;
-    double vy_target = 0;
-    double wz_target = 0;
+    std::atomic<double> vx_target = {0.};
+    std::atomic<double> vy_target = {0.};
+    std::atomic<double> wz_target = {0.};
 
-    double vx_current = 0;
-    double vy_current = 0;
-    double wz_current = 0;
+    std::atomic<double> vx_current = {0.};
+    std::atomic<double> vy_current = {0.};
+    std::atomic<double> wz_current = {0.};
 
     // 3d plot funcs
     void map_plot();
@@ -230,6 +230,13 @@ public Q_SLOTS:
     void bt_AlignNodeTh();
     void bt_ClearTopo();
 
+    void bt_NodePoseXUp();
+    void bt_NodePoseYUp();
+    void bt_NodePoseThUp();
+    void bt_NodePoseXDown();
+    void bt_NodePoseYDown();
+    void bt_NodePoseThDown();
+
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
 
@@ -272,6 +279,9 @@ public Q_SLOTS:
     void bt_TaskPlay();
     void bt_TaskPause();    
     void bt_TaskCancel();
+
+    // for log
+    void slot_write_log(QString user_log, QString color_code);
 
 };
 #endif // MAINWINDOW_H

@@ -1251,17 +1251,82 @@ PATH AUTOCONTROL::calc_avoid_path()
 }
 
 // check condition
-bool AUTOCONTROL::is_everything_fine()
+int AUTOCONTROL::is_everything_fine()
 {
     // check localization
     QString loc_state = slam->get_cur_loc_state();
     if(loc_state == "none" || loc_state == "fail")
     {
-        printf("[AUTO] localization fail, autodrive stop\n");
-        return false;
+        logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
+        return DRIVING_FAILED;
     }
 
-    return true;
+    if(slam->is_qa == true)
+    {
+        logger->write_log("[AUTO] qa working, auto-drive stop", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    MOBILE_STATUS ms = mobile->get_status();
+    if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
+    {
+        logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    if(ms.status_m0 > 1 || ms.status_m1 > 1)
+    {
+        int motor_err_code = ms.status_m0 > 1 ? ms.status_m0 : ms.status_m1;
+        if(motor_err_code == MOTOR_ERR_MOD)
+        {
+            logger->write_log("[AUTO] failed (motor error MOD, 2)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_JAM)
+        {
+            logger->write_log("[AUTO] failed (motor error JAM, 4)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_CUR)
+        {
+            logger->write_log("[AUTO] failed (motor error CUR, 8)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_BIG)
+        {
+            logger->write_log("[AUTO] failed (motor error BIG, 16)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_IN)
+        {
+            logger->write_log("[AUTO] failed (motor error IN, 32)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_PSI)
+        {
+            logger->write_log("[AUTO] failed (motor error:PS1|2, 64)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_NON)
+        {
+            logger->write_log("[AUTO] failed (motor error NON, 128)", "Red", true, false);
+        }
+        return DRIVING_FAILED;
+    }
+
+    if(ms.charge_state == 1)
+    {
+        logger->write_log("[AUTO] failed (robot charging)", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    if(ms.emo_state == 0)
+    {
+        logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
+        return DRIVING_NOT_READY;
+    }
+
+    if(ms.status_m0 == 0 && ms.status_m1 == 0)
+    {
+        logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
+        return DRIVING_NOT_READY;
+    }
+
+    return DRIVING_FINE;
 }
 
 // loops
@@ -1356,7 +1421,8 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
         }
 
         // check everything
-        if(is_everything_fine() == false)
+        int is_good_everything = is_everything_fine();
+        if(is_good_everything == DRIVING_FAILED)
         {
             mobile->move(0, 0, 0);
             is_moving = false;
@@ -1364,7 +1430,19 @@ void AUTOCONTROL::b_loop_pp(Eigen::Matrix4d goal_tf)
 
             Q_EMIT signal_move_failed("something wrong");
 
-            printf("[AUTO] something wrong\n");
+            printf("[AUTO] something wrong (failed)\n");
+            break;
+        }
+
+        else if(is_good_everything == DRIVING_NOT_READY)
+        {
+            mobile->move(0, 0, 0);
+            is_moving = false;
+            clear_path();
+
+            Q_EMIT signal_move_failed("something wrong (not ready)");
+
+            printf("[AUTO] something wrong (not ready)\n");
             break;
         }
 

@@ -4,7 +4,7 @@
 		"PLATFORM_TYPE": "AMR"
 	},
 	"debug": {
-		"SIM_MODE": "0"
+		"SIM_MODE": "1"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",

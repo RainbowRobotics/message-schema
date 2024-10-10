@@ -873,9 +873,6 @@ void SLAM_2D::obs_loop()
             {
                 TIME_PTS blidar_scan = blidar->get_cur_scan();
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(blidar_scan.t);
-
-                std::cout << "blidar_scan.pts.size(): " << blidar_scan.pts.size() << std::endl;
-
                 for(size_t p = 0; p < blidar_scan.pts.size(); p+=4)
                 {
                     Eigen::Vector3d P = blidar_scan.pts[p];

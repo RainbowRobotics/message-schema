@@ -158,6 +158,24 @@ enum TASK_FSM_STATE
     TASK_COMPLETE,
 };
 
+enum CHECK_DRIVING_STATE
+{
+    DRIVING_FAILED = 0,
+    DRIVING_NOT_READY = 1,
+    DRIVING_FINE = 2,
+};
+
+enum MOTOR_ERROR_STATE
+{
+    MOTOR_ERR_MOD = 2,
+    MOTOR_ERR_JAM = 4,
+    MOTOR_ERR_CUR = 8,
+    MOTOR_ERR_BIG = 16,
+    MOTOR_ERR_IN = 32,
+    MOTOR_ERR_PSI = 64,
+    MOTOR_ERR_NON = 128,
+};
+
 // structure
 struct PICKING
 {

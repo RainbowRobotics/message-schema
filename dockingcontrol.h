@@ -47,7 +47,7 @@ public:
     void a_loop(Eigen::Matrix4d goal_tf);
 
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
-    bool is_everything_fine();
+    int is_everything_fine();
 
     Eigen::Vector3d last_cur_pos;
 

@@ -38,7 +38,7 @@ QString CODE_READER::get_code_info()
     return str;
 }
 
-void CODE_READER::init()
+void CODE_READER::open()
 {
     client.connectToHost(QHostAddress("192.168.2.12"), 2112);
     reconnect_timer.start(1000);
@@ -91,7 +91,7 @@ void CODE_READER::readyread()
         cur_code = code;
         if(ref_codes.find(code.id) == ref_codes.end())
         {
-            logger->PrintLog("[CODE] no exist ref code.", "Red", true, false);
+            logger->write_log("[CODE] no exist ref code.", "Red", true, false);
             return;
         }
         else
@@ -178,7 +178,7 @@ void CODE_READER::connected()
 {
     is_connected = true;
     connect(&client, &QTcpSocket::readyRead, this, &CODE_READER::readyread);
-    logger->PrintLog("[CODE] connected", "Green", true, false);
+    logger->write_log("[CODE] connected", "Green", true, false);
 }
 
 void CODE_READER::disconnected()
@@ -187,14 +187,14 @@ void CODE_READER::disconnected()
     QTcpSocket *socket = static_cast<QTcpSocket*>(sender());
     socket->deleteLater();
 
-    logger->PrintLog("[CODE] disconnected", "Red", true, false);
+    logger->write_log("[CODE] disconnected", "Red", true, false);
 }
 
 void CODE_READER::check_recv_loop()
 {
     if(is_recv_data == true)
     {
-        logger->PrintLog("[CODE] data not received", "Orange", true, false);
+        logger->write_log("[CODE] data not received", "Orange", true, false);
     }
     is_recv_data = false;
 }

@@ -287,6 +287,12 @@ void CONFIG::load()
                 printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
             }
 
+            QJsonObject obj_map = obj["MAP_PATH"].toObject();
+            {
+                MAP_PATH = obj_map["MAP_PATH"].toString();
+                printf("[CONFIG] MAP_PATH, %s\n", obj_docking["MAP_PATH"].toString().toLocal8Bit().data());
+            }
+
             // complete
             is_load = true;
             config_file.close();
@@ -296,5 +302,41 @@ void CONFIG::load()
     else
     {
         printf("[CONFIG] %s, load failed\n", config_path.toLocal8Bit().data());
+    }
+}
+
+void CONFIG::save_map_path()
+{
+    if(config_path == "")
+    {
+        return;
+    }
+
+    QFile config_file(config_path);
+    if(config_file.open(QIODevice::ReadOnly))
+    {
+        QByteArray data = config_file.readAll();
+        config_file.close();
+
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        QJsonObject rootObj = doc.object();
+
+        if(rootObj.contains("path"))
+        {
+            QJsonObject pathObj = rootObj["path"].toObject();
+            if(pathObj.contains("MAP_PATH"))
+            {
+                pathObj["MAP_PATH"] = MAP_PATH;
+            }
+
+            rootObj["path"] = pathObj;
+        }
+
+        if(config_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+            doc.setObject(rootObj);
+            config_file.write(doc.toJson());
+            config_file.close();
+        }
     }
 }

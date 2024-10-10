@@ -21,7 +21,7 @@ public:
     ~CODE_READER();
     std::mutex mtx;
 
-    void init();
+    void open();
     void load_codes();
 
     cv::Mat get_plot_img();

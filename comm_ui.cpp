@@ -510,6 +510,9 @@ void COMM_UI::slot_mapload(double time, QString name)
     QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
     if(!load_dir.isNull())
     {
+        slam->localization_stop();
+        obsmap->clear();
+
         _main->map_dir = load_dir;
         unimap->load_map(load_dir);
         _main->all_update();
@@ -554,13 +557,13 @@ void COMM_UI::slot_localization_semiautoinit(double time)
         return;
     }
 
-    logger->PrintLog("[AUTO_INIT] try semi-auto init", "Green", true, false);
+    logger->write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
     slam->localization_stop();
 
     // semi auto init
     if(semi_auto_init_thread != NULL)
     {
-        logger->PrintLog("[AUTO_INIT] thread already running.", "Orange", true, false);
+        logger->write_log("[AUTO_INIT] thread already running.", "Orange", true, false);
         semi_auto_init_thread->join();
         semi_auto_init_thread = NULL;
     }

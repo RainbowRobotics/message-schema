@@ -35,6 +35,13 @@ void OBSMAP::clear()
 {
     mtx.lock();
     octree->clear();
+    obs_pts.clear();
+    dyn_pts.clear();
+    plot_pts.clear();
+    wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    map_tf = Eigen::Matrix4d::Identity();
     mtx.unlock();
 }
 

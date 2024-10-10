@@ -9,7 +9,8 @@
 #include <QDir>
 #endif
 
-LOGGER::LOGGER()
+LOGGER::LOGGER(QObject *parent)
+    : QObject{parent}
 {
 }
 
@@ -93,7 +94,7 @@ void LOGGER::init()
 }
 #endif
 
-void LOGGER::PrintLog(QString user_log, QString color_code, bool time, bool hide)
+void LOGGER::write_log(QString user_log, QString color_code, bool time, bool hide)
 {
     logWithHtml(user_log, color_code, time, hide);
 }
@@ -125,6 +126,8 @@ void LOGGER::logWithHtml(QString msg, QString color_code, bool time, bool hide)
     {
         printf("%s\n", log_for_write.toStdString().c_str());
     }
+
+    Q_EMIT signal_write_log(log_for_write, color_code);
 }
 
 void LOGGER::writeLogFile(QString log)

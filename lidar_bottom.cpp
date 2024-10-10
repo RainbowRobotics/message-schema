@@ -64,7 +64,7 @@ void LIDAR_BOTTOM::grab_loop()
     //sudo adduser $USER dialout
     //return;
 
-    logger->PrintLog("[BLIDAR] start grab loop", "Green", true, false);
+    logger->write_log("[BLIDAR] start grab loop", "Green", true, false);
 
     Eigen::Vector2d circle_xy(0.3, 0.15);
     double circle_radius = 0.05;
@@ -138,7 +138,6 @@ void LIDAR_BOTTOM::grab_loop()
                 pts.push_back(P);
             }
 
-            std::cout << "minxy " << min_x << ", " << min_y << std::endl;
             double _time = get_time();
 
             // update scan
@@ -176,7 +175,7 @@ void LIDAR_BOTTOM::recv_loop()
 
     if(!initialize())
     {
-        logger->PrintLog("[BLIDAR] init failed", "Red", true, false);
+        logger->write_log("[BLIDAR] init failed", "Red", true, false);
         return;
     }
 

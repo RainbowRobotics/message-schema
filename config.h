@@ -106,6 +106,9 @@ public:
     double DOCKING_GAIN_KD = 0.025;
     double DOCKING_EXTENDED_CONTROL_TIME = 3.0;
 
+    // map
+    QString MAP_PATH = "";
+
     std::vector<QString> params;
 
 public:
@@ -113,6 +116,8 @@ public:
     void load();
     QString config_path = "";
     std::atomic<bool> is_load = {false};
+
+    void save_map_path();
 
 Q_SIGNALS:
 
