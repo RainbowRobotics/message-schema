@@ -57,6 +57,9 @@ public:
     QString get_cur_loc_state();
     void set_cur_loc_state(QString str);    
 
+    // auto init
+    void semi_auto_init_start();
+
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
@@ -67,6 +70,9 @@ public:
     // flag
     std::atomic<bool> is_slam = {false};
     std::atomic<bool> is_loc = {false};
+    std::atomic<bool> is_busy = {false};
+    std::atomic<bool> is_init = {false};
+    std::atomic<bool> is_qa = {false};
 
     // live kd_tree
     XYZR_CLOUD live_cloud;

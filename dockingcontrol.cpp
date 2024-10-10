@@ -21,6 +21,7 @@ DOCKINGCONTROL::~DOCKINGCONTROL()
 
 void DOCKINGCONTROL::init()
 {
+
 }
 
 void DOCKINGCONTROL::stop()
@@ -37,7 +38,7 @@ void DOCKINGCONTROL::stop()
     is_pause = false;
 }
 
-void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf)
+void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf, double p_gain, double d_gain, double off_x, double off_y, double off_t)
 {
     // stop first
     stop();
@@ -45,7 +46,12 @@ void DOCKINGCONTROL::move(Eigen::Matrix4d goal_tf)
     // obs clear
     obsmap->clear();
 
-    fsm_state = DOCKING_FSM_DRIVING;
+    ox = off_x;
+    oy = off_y;
+    ot = off_t;
+
+    p_gain_ratio = std::clamp(p_gain, 0.0, 2.0);
+    d_gain_ratio = std::clamp(d_gain, 0.0, 2.0);
 
     // start control loop
     a_flag = true;
@@ -56,30 +62,20 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 {
     // set flag
     is_moving = true;
-
-    // check goal
-    Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
-    if(dtdr[0] > config->DRIVE_GOAL_D)
-    {
-        if(std::abs(dtdr[1]) > config->DRIVE_GOAL_TH*D2R)
-        {
-            // robot is not in goal
-            mobile->move(0, 0, 0);
-            is_moving = false;
-
-            logger->PrintLog("[DOCKING] not in goal.", "Red", true, false);
-            return;
-        }
-    }
-
     if(code->is_connected == false)
     {
-        logger->PrintLog("[DOCKING] code reader not connected.", "Red", true, false);
+        logger->write_log("[DOCKING] code reader not connected.", "Red", true, false);
+        return;
+    }
+
+    if(code->is_recv_data == false)
+    {
+        logger->write_log("[DOCKING] code not detected.", "Red", true, false);
         return;
     }
 
     // loop params
-    const double dt = 0.05; // 20hz
+    const double dt = 0.01; // 100hz
     double pre_loop_time = get_time();
 
     // control params
@@ -91,6 +87,7 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
     double pre_err_th = 0;
     double pre_goal_err_d = 0;
 
+    fsm_state = DOCKING_FSM_DRIVING;
     printf("[DOCKING] a_loop start\n");
     while(a_flag)
     {
@@ -102,15 +99,23 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
             continue;
         }
 
-        if(is_everything_fine() == false)
+        int is_good_everything = is_everything_fine();
+        if(is_good_everything == DRIVING_FAILED)
         {
             mobile->move(0, 0, 0);
             is_moving = false;
 
-            fsm_state = DOCKING_FSM_FAILED;
+            printf("[DOCKING] something wrong (failed)\n");
+            break;
+        }
 
-            printf("[DOCKING] something wrong\n");
-            return;
+        else if(is_good_everything == DRIVING_NOT_READY)
+        {
+            mobile->move(0, 0, 0);
+            is_moving = false;
+
+            printf("[DOCKING] something wrong (not ready)\n");
+            break;
         }
 
         // get current status
@@ -118,8 +123,8 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
 
         // code reader error
-        double code_err_x = code->err_x;
-        double code_err_y = code->err_y;
+        double code_err_x = code->err_x - ox * 0.001;
+        double code_err_y = code->err_y - oy * 0.001;
 
         if(fsm_state == DOCKING_FSM_DRIVING)
         {
@@ -135,14 +140,17 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
             // calc error and ref vel
             double goal_err_d = std::sqrt(code_err_x*code_err_x + code_err_y*code_err_y);
-            double goal_err_th = code->err_th;
+            double goal_err_th = code->err_th - ot * D2R;
 
             double dir_x = code_err_x/goal_err_d;
             double dir_y = code_err_y/goal_err_d;
-            double ref_v = config->DOCKING_GAIN_KP*goal_err_d + config->DOCKING_GAIN_KD*(goal_err_d- pre_goal_err_d)/dt;
+            double ref_v = p_gain_ratio*config->DOCKING_GAIN_KP*goal_err_d + d_gain_ratio*config->DOCKING_GAIN_KD*(goal_err_d- pre_goal_err_d)/dt;
 
             double kp_w = 2.0;
             double kd_w = 0.5;
+
+            kp_w *= p_gain_ratio;
+            kd_w *= d_gain_ratio;
 
             double vx = dir_x*ref_v;
             double vy = dir_y*ref_v;
@@ -181,9 +189,6 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
             mobile->move(vx, vy, wz);
 
             pre_goal_err_d = goal_err_d;
-
-            std::cout << "v: " << vx << ", w:" << wz*R2D <<
-                         ", goal_err_d: " << goal_err_d << ", goal_err_th:" << goal_err_th*R2D << std::endl;
         }
 
         else if(fsm_state == DOCKING_FSM_OBS)
@@ -251,16 +256,79 @@ std::vector<Eigen::Matrix4d> DOCKINGCONTROL::calc_trajectory(Eigen::Vector3d cur
     return res;
 }
 
-bool DOCKINGCONTROL::is_everything_fine()
+// check condition
+int DOCKINGCONTROL::is_everything_fine()
 {
-    if(code->is_recv_data == false)
+    if(code->is_connected == false)
     {
-        return false;
-    }
-    if(slam->get_cur_loc_state() == "none" || slam->get_cur_loc_state() == "fail")
-    {
-        return false;
+        logger->write_log("[DOCKING] failed (not connected code)", "Red", true, false);
+        return DRIVING_FAILED;
     }
 
-    return true;
+    if(code->is_recv_data == false)
+    {
+        logger->write_log("[DOCKING] failed (not received code)", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    MOBILE_STATUS ms = mobile->get_status();
+    if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
+    {
+        logger->write_log("[DOCKING] failed (motor not connected)", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    if(ms.status_m0 > 1 || ms.status_m1 > 1)
+    {
+        int motor_err_code = ms.status_m0 > 1 ? ms.status_m0 : ms.status_m1;
+        if(motor_err_code == MOTOR_ERR_MOD)
+        {
+            logger->write_log("[DOCKING] failed (motor error MOD, 2)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_JAM)
+        {
+            logger->write_log("[DOCKING] failed (motor error JAM, 4)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_CUR)
+        {
+            logger->write_log("[DOCKING] failed (motor error CUR, 8)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_BIG)
+        {
+            logger->write_log("[DOCKING] failed (motor error BIG, 16)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_IN)
+        {
+            logger->write_log("[DOCKING] failed (motor error IN, 32)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_PSI)
+        {
+            logger->write_log("[DOCKING] failed (motor error:PS1|2, 64)", "Red", true, false);
+        }
+        else if(motor_err_code == MOTOR_ERR_NON)
+        {
+            logger->write_log("[DOCKING] failed (motor error NON, 128)", "Red", true, false);
+        }
+        return DRIVING_FAILED;
+    }
+
+    if(ms.charge_state == 1)
+    {
+        logger->write_log("[DOCKING] failed (robot charging)", "Red", true, false);
+        return DRIVING_FAILED;
+    }
+
+    if(ms.emo_state == 0)
+    {
+        logger->write_log("[DOCKING] not ready (emo pushed)", "Orange", true, false);
+        return DRIVING_NOT_READY;
+    }
+
+    if(ms.status_m0 == 0 && ms.status_m1 == 0)
+    {
+        logger->write_log("[DOCKING] not ready (motor lock offed)", "Orange", true, false);
+        return DRIVING_NOT_READY;
+    }
+
+    return DRIVING_FINE;
 }

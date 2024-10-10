@@ -95,7 +95,7 @@ public:
     PATH calc_avoid_path();
 
     // for control
-    bool is_everything_fine();
+    int is_everything_fine();
 
     // control loop
     std::atomic<bool> b_flag = {false};

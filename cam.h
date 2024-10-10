@@ -27,7 +27,7 @@ public:
     MOBILE *mobile = NULL;
 
     // interface func
-    void init();
+    void open();
 
     cv::Mat get_img0();
     cv::Mat get_img1();

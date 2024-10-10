@@ -144,7 +144,7 @@ void UNIMAP::load_map(QString path)
 
                 QString str;
                 str.sprintf("[UNIMAP] %s loaded", topo_path.toStdString().c_str());
-                logger->PrintLog(str, "Green", true, false);
+                logger->write_log(str, "Green", true, false);
             }
         }
     }
@@ -482,6 +482,16 @@ std::vector<QString> UNIMAP::get_nodes(QString type)
         {
             res.push_back(it.id);
         }
+    }
+    return res;
+}
+
+std::vector<QString> UNIMAP::get_nodes()
+{
+    std::vector<QString> res;
+    for(auto& it: nodes)
+    {
+        res.push_back(it.id);
     }
     return res;
 }
