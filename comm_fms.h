@@ -43,7 +43,7 @@ public:
 
     // vars    
     std::atomic<bool> is_connected = {false};
-    FMS_INFO fms_info;
+    QString robot_id = "";
 
     // funcs
     void init();
@@ -69,8 +69,7 @@ private Q_SLOTS:
     void recv_stop();
 
     // send slots
-    void slot_new_goal(Eigen::Matrix4d goal_tf, int preset);
-    void slot_stop();
+    void send_info();
 
 };
 

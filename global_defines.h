@@ -1004,47 +1004,6 @@ struct NODE_INFO
     }
 };
 
-struct FMS_INFO
-{
-    QString id;
-    QString cur_tf;
-    QString goal_tf;
-    QString loc_state; // none, fail, good
-    QString pdu_state; // none, fail, good
-    QString req_state; // none, req
-
-    FMS_INFO()
-    {
-        id = "R_0";
-        cur_tf = "0,0,0,0,0,0";
-        goal_tf = "0,0,0,0,0,0";
-        loc_state = "none";
-        pdu_state = "none";
-        req_state = "none";
-    }
-
-    FMS_INFO(const FMS_INFO& p)
-    {
-        id = p.id;
-        cur_tf = p.cur_tf;
-        goal_tf = p.goal_tf;
-        loc_state = p.loc_state;
-        pdu_state = p.pdu_state;
-        req_state = p.req_state;
-    }
-
-    FMS_INFO& operator=(const FMS_INFO& p)
-    {
-        id = p.id;
-        cur_tf = p.cur_tf;
-        goal_tf = p.goal_tf;
-        loc_state = p.loc_state;
-        pdu_state = p.pdu_state;
-        req_state = p.req_state;
-        return *this;
-    }
-};
-
 // tree typedef
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZR_CLOUD>, XYZR_CLOUD, 3> KD_TREE_XYZR;
 

@@ -775,8 +775,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
     const double chk_dt = 0.03;
     const double chk_dr = 3.0*D2R;
 
-    const double sampling_dt = 0.1;
-    const double sampling_dr = 10.0*D2R;
+    const double sampling_dt = 0.05;
+    const double sampling_dr = 5.0*D2R;
 
     // get maps
     mtx.lock();
@@ -822,8 +822,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
     st->f = st->g + 5*st->h;
     open_set.push_back(st);
 
-    // search loop
-    bool is_first = true;
+    // search loop    
     int iter = 0;
     double st_time = get_time();
     while(open_set.size() > 0)
@@ -959,16 +958,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                 }
 
                 // check collision
-                std::vector<Eigen::Matrix4d> traj;
-                if(is_first)
-                {
-                    traj.push_back(tf1);
-                }
-                else
-                {
-                    traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
-                }
-
+                std::vector<Eigen::Matrix4d> traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
                 if(is_collision(obs_map, traj, margin_x, margin_y))
                 {
                     continue;
@@ -1046,7 +1036,6 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         iter++;
-        is_first = false;
     }
 
     std::vector<Eigen::Matrix4d> res;

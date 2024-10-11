@@ -580,6 +580,65 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     return "";
 }
 
+QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
+{
+    if(nodes.size() == 0)
+    {
+        return "";
+    }
+
+    Eigen::Vector3d _P0(0,0,0);
+    Eigen::Vector3d _P1(0,0,0);
+    double min_d = 99999999;
+
+    bool is_found = false;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        QString node_id0 = nodes[p].id;
+        Eigen::Matrix4d tf0 = nodes[p].tf;
+        Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
+
+        for(size_t q = 0; q < nodes[p].linked.size(); q++)
+        {
+            QString node_id1 = nodes[p].linked[q];
+
+            NODE* node = get_node_by_id(node_id1);
+            if(node == NULL)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf1 = node->tf;
+            Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
+
+            double d = calc_seg_dist(pos0, pos1, pos);
+            if(d < min_d)
+            {
+                min_d = d;
+                _P0 = pos0;
+                _P1 = pos1;
+                is_found = true;
+            }
+        }
+    }
+
+    if(is_found)
+    {
+        double d0 = (_P0-pos).norm();
+        double d1 = (_P1-pos).norm();
+        if(d0 < d1)
+        {
+            return get_node_id_nn(_P0);
+        }
+        else
+        {
+            return get_node_id_nn(_P1);
+        }
+    }
+
+    return "";
+}
+
 NODE* UNIMAP::get_node_by_id(QString id)
 {
     if(id == "")

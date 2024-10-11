@@ -34,6 +34,7 @@ bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double th
 
 std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Eigen::Matrix4d tf);
 
+double calc_line_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection);

@@ -38,6 +38,7 @@ public:
     QString get_node_id(Eigen::Vector3d pos);
     QString get_goal_id(Eigen::Vector3d pos);
     QString get_node_id_nn(Eigen::Vector3d pos);
+    QString get_node_id_edge(Eigen::Vector3d pos);
     NODE* get_node_by_id(QString id);
 
     QString add_node(Eigen::Matrix4d tf, QString type);

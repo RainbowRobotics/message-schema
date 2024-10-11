@@ -76,8 +76,13 @@ void CONFIG::load()
                 ROBOT_SIZE_Z[1] = obj_default["ROBOT_SIZE_MAX_Z"].toString().toDouble();
                 printf("[CONFIG] ROBOT_SIZE_MAX_Z, %s\n", obj_default["ROBOT_SIZE_MAX_Z"].toString().toLocal8Bit().data());
 
-                ROBOT_RADIUS = obj_default["ROBOT_RADIUS"].toString().toDouble();
-                printf("[CONFIG] ROBOT_RADIUS, %s\n", obj_default["ROBOT_RADIUS"].toString().toLocal8Bit().data());
+                // robot radius calculation
+                //ROBOT_RADIUS = obj_default["ROBOT_RADIUS"].toString().toDouble();
+                //printf("[CONFIG] ROBOT_RADIUS, %s\n", obj_default["ROBOT_RADIUS"].toString().toLocal8Bit().data());
+                double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
+                double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
+                ROBOT_RADIUS = std::sqrt(lx*lx + ly*ly);
+                printf("[CONFIG] ROBOT_RADIUS, %.3f\n", ROBOT_RADIUS);
 
                 LIDAR_MAX_RANGE = obj_default["LIDAR_MAX_RANGE"].toString().toDouble();
                 printf("[CONFIG] LIDAR_MAX_RANGE, %s\n", obj_default["LIDAR_MAX_RANGE"].toString().toLocal8Bit().data());

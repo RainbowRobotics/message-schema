@@ -137,8 +137,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // for fms
-    connect(&ctrl, SIGNAL(signal_new_goal(Eigen::Matrix4d, int)), &cfms, SLOT(slot_new_goal(Eigen::Matrix4d, int)));
-    connect(&ctrl, SIGNAL(signal_stop()), &cfms, SLOT(slot_stop()));
+    connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(send_info()));
 
     // set plot window
     setup_vtk();
@@ -309,7 +308,10 @@ void MainWindow::init_modules()
     blidar.config = &config;
     blidar.logger = &logger;
     blidar.mobile = &mobile;
+
+    #ifdef USE_SRV
     blidar.open();
+    #endif
 
     // cam module init
     cam.config = &config;
@@ -1937,8 +1939,12 @@ void MainWindow::watch_loop()
 
             if(cui.is_connected)
             {
-                //wsui.send_status();
                 Q_EMIT signal_send_status();
+            }
+
+            if(cfms.is_connected)
+            {
+                Q_EMIT signal_send_info();
             }
         }
 
@@ -2245,7 +2251,7 @@ void MainWindow::jog_loop()
         if(ctrl.is_moving == false)
         {
             mobile.move(vx_current, vy_current, wz_current);
-            printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, vx_current, vy_current, wz_current*R2D);
+            //printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, vx_current, vy_current, wz_current*R2D);
         }
 
         // for real time loop
@@ -2258,7 +2264,7 @@ void MainWindow::jog_loop()
         }
         else
         {
-            printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+            printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -2923,11 +2929,12 @@ void MainWindow::raw_plot()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nstate: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
                           (bool)ctrl.is_moving ? "true" : "false",
                           (bool)ctrl.is_pause ? "true" : "false",
-                          ctrl.get_obs_condition().toLocal8Bit().data());
+                          ctrl.get_obs_condition().toLocal8Bit().data(),
+                          ctrl.get_cur_state().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam
@@ -3313,6 +3320,23 @@ void MainWindow::ctrl_plot()
         QString text;
         text.sprintf("%.2f/%.2f/%.2f\n%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
         viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 1.0, 1.0, "vel_text");
+
+        // draw cur node
+        if(viewer->contains("cur_tf_node"))
+        {
+            viewer->removeShape("cur_tf_node");
+        }
+
+        QString cur_node_id = unimap.get_node_id_edge(cur_tf.block(0,3,3,1));
+        if(cur_node_id != "")
+        {
+            NODE *node = unimap.get_node_by_id(cur_node_id);
+            if(node != NULL)
+            {
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, node->tf, 0.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "cur_tf_node");
+            }
+        }
     }
 
     // plot tactile
@@ -3351,9 +3375,6 @@ void MainWindow::ctrl_plot()
             last_plot_tactile.push_back(name);
         }
     }
-
-
-
 }
 void MainWindow::plot_loop()
 {

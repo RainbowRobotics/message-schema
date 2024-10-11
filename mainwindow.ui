@@ -1254,8 +1254,14 @@ stop</string>
              <property name="suffix">
               <string/>
              </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
              <property name="maximum">
               <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
              </property>
              <property name="value">
               <double>0.300000000000000</double>
@@ -1273,8 +1279,14 @@ stop</string>
              <property name="suffix">
               <string/>
              </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
              <property name="maximum">
               <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
              </property>
              <property name="value">
               <double>0.600000000000000</double>
@@ -1292,11 +1304,17 @@ stop</string>
              <property name="suffix">
               <string/>
              </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
              <property name="maximum">
               <double>120.000000000000000</double>
              </property>
+             <property name="singleStep">
+              <double>5.000000000000000</double>
+             </property>
              <property name="value">
-              <double>15.000000000000000</double>
+              <double>30.000000000000000</double>
              </property>
             </widget>
             <widget class="QDoubleSpinBox" name="spb_DecelW">
@@ -1311,11 +1329,17 @@ stop</string>
              <property name="suffix">
               <string/>
              </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
              <property name="maximum">
               <double>120.000000000000000</double>
              </property>
+             <property name="singleStep">
+              <double>5.000000000000000</double>
+             </property>
              <property name="value">
-              <double>30.000000000000000</double>
+              <double>60.000000000000000</double>
              </property>
             </widget>
            </widget>
