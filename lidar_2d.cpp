@@ -171,12 +171,12 @@ void LIDAR_2D::grab_loop_f()
     //sudo adduser $USER dialout
     //return;
 
-    logger->PrintLog("[LIDAR] start grab loop", "Green", true, false);
+    logger->write_log("[LIDAR] start grab loop", "Green", true, false);
 
     sl::ILidarDriver* drv = *sl::createLidarDriver();
     if(!drv)
     {
-        logger->PrintLog("[LIDAR] driver init failed", "Red", true, false);
+        logger->write_log("[LIDAR] driver init failed", "Red", true, false);
         return;
     }
 
@@ -184,7 +184,7 @@ void LIDAR_2D::grab_loop_f()
     //sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyUSB0", 256000));
     if(!channel->open())
     {
-        logger->PrintLog("[LIDAR] port open failed", "Red", true, false);
+        logger->write_log("[LIDAR] port open failed", "Red", true, false);
         return;
     }
     else
@@ -195,7 +195,7 @@ void LIDAR_2D::grab_loop_f()
 
     if(drv->connect(channel) != SL_RESULT_OK)
     {
-        logger->PrintLog("[LIDAR] connection failed", "Red", true, false);
+        logger->write_log("[LIDAR] connection failed", "Red", true, false);
         return;
     }
 
@@ -217,19 +217,19 @@ void LIDAR_2D::grab_loop_f()
 
     if(drv->setMotorSpeed(DEFAULT_MOTOR_SPEED) != SL_RESULT_OK)
     {
-        logger->PrintLog("[LIDAR] lidar set motor speed failed", "Red", true, false);
+        logger->write_log("[LIDAR] lidar set motor speed failed", "Red", true, false);
         return;
     }
 
     if(drv->startScanExpress(0, mode.id, 0, &mode) != SL_RESULT_OK)
     {
-        logger->PrintLog("[LIDAR] start scan failed", "Red", true, false);
+        logger->write_log("[LIDAR] start scan failed", "Red", true, false);
         return;
     }
 
     QString str;
     str.sprintf("[LIDAR] lidar scan start, MODE :%s", mode.scan_mode);
-    logger->PrintLog(str, "Green", true, false);
+    logger->write_log(str, "Green", true, false);
 
     is_connected_f = true;
 
@@ -444,7 +444,7 @@ void LIDAR_2D::grab_loop_f()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    logger->PrintLog("[LIDAR] stop, front", "Green", true, false);
+    logger->write_log("[LIDAR] stop, front", "Green", true, false);
 }
 
 void LIDAR_2D::a_loop()

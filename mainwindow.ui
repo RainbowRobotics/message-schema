@@ -311,7 +311,7 @@
                 <x>20</x>
                 <y>20</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -324,7 +324,7 @@
                 <x>90</x>
                 <y>20</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -337,7 +337,7 @@
                 <x>160</x>
                 <y>20</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -350,7 +350,7 @@
                 <x>20</x>
                 <y>60</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -363,11 +363,12 @@
                 <x>160</x>
                 <y>60</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
-               <string>Auto init</string>
+               <string>Auto init
+(global)</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_LocStart">
@@ -376,7 +377,7 @@
                 <x>20</x>
                 <y>100</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -389,7 +390,7 @@
                 <x>90</x>
                 <y>100</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -405,7 +406,7 @@
                 <x>230</x>
                 <y>20</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -418,7 +419,7 @@
                 <x>160</x>
                 <y>100</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
@@ -431,11 +432,12 @@
                 <x>230</x>
                 <y>100</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
-               <string>Config load</string>
+               <string>Reload
+config</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_LocInitSemiAuto">
@@ -444,12 +446,12 @@
                 <x>90</x>
                 <y>60</y>
                 <width>71</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">
-               <string>Semi
-Auto init</string>
+               <string>Auto init
+(semi)</string>
               </property>
              </widget>
             </widget>
