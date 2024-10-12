@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     , cfms(this)
     , cms(this)
     , cui(this)
+    , logger(this)
+    , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
@@ -77,7 +79,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
-    connect(ui->bt_LocInit2, SIGNAL(clicked()), this, SLOT(bt_LocInit2()));
+    connect(ui->bt_LocInitSemiAuto, SIGNAL(clicked()), this, SLOT(bt_LocInitSemiAuto()));
+    connect(ui->bt_LocInitAuto, SIGNAL(clicked()), this, SLOT(bt_LocInitAuto()));
     connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
     connect(ui->bt_LocStop, SIGNAL(clicked()), this, SLOT(bt_LocStop()));
 
@@ -97,6 +100,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AlignNodeY, SIGNAL(clicked()), this, SLOT(bt_AlignNodeY()));
     connect(ui->bt_AlignNodeTh, SIGNAL(clicked()), this, SLOT(bt_AlignNodeTh()));
     connect(ui->bt_ClearTopo, SIGNAL(clicked()), this, SLOT(bt_ClearTopo()));
+
+    connect(ui->bt_NodePoseXUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseXUp()));
+    connect(ui->bt_NodePoseYUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseYUp()));
+    connect(ui->bt_NodePoseThUp, SIGNAL(clicked()), this, SLOT(bt_NodePoseThUp()));
+    connect(ui->bt_NodePoseXDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseXDown()));
+    connect(ui->bt_NodePoseYDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseYDown()));
+    connect(ui->bt_NodePoseThDown, SIGNAL(clicked()), this, SLOT(bt_NodePoseThDown()));
 
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
@@ -139,6 +149,9 @@ MainWindow::MainWindow(QWidget *parent)
     // for fms
     connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(send_info()));
 
+    // for log
+    connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
+
     // set plot window
     setup_vtk();
 
@@ -158,14 +171,17 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // solve tab with vtk render window problem
-    QTimer::singleShot(100, [&]()
+    if(ui->main_tab->currentIndex() == 0)
     {
-        ui->main_tab->setCurrentIndex(1);
         QTimer::singleShot(100, [&]()
         {
-            ui->main_tab->setCurrentIndex(0);
+            ui->main_tab->setCurrentIndex(1);
+            QTimer::singleShot(100, [&]()
+            {
+                ui->main_tab->setCurrentIndex(0);
+            });
         });
-    });
+    }
 
     QTimer::singleShot(3000, [&]()
     {
@@ -186,6 +202,13 @@ MainWindow::~MainWindow()
         watch_thread = NULL;
     }
 
+    if(jog_thread != NULL)
+    {
+        jog_flag = false;
+        jog_thread->join();
+        jog_thread = NULL;
+    }
+
     delete ui;
 }
 
@@ -194,6 +217,7 @@ void MainWindow::bt_Emergency()
 {
     task.cancel();
     ctrl.stop();
+    dctrl.stop();
     mobile.move(0,0,0);
 }
 
@@ -268,6 +292,7 @@ void MainWindow::init_modules()
 
     config.load();
 
+    // simulation check
     if(config.SIM_MODE == 1)
     {
         this->setWindowTitle("SLAMNAV2 (SIMULATION MODE)");
@@ -279,9 +304,25 @@ void MainWindow::init_modules()
         ui->bt_SimInit->setEnabled(true);
     }
 
-    // log module init
+    // map auto load
+    if(config.MAP_PATH != "")
+    {
+        QDir dir(config.MAP_PATH);
+        if(dir.exists())
+        {
+            map_dir = config.MAP_PATH;
+            unimap.load_map(map_dir);
+            all_update();
+        }
+    }
+
+    // log module init (slamnav)
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
+
+    // log module init (system)
+    system_logger.log_path = QCoreApplication::applicationDirPath() + "/systemlog/";
+    system_logger.init();
 
     // unimap module init
     unimap.config = &config;
@@ -317,13 +358,13 @@ void MainWindow::init_modules()
     cam.config = &config;
     cam.logger = &logger;
     cam.mobile = &mobile;
-    cam.init();
+    cam.open();
 
     // code reader module init
     code.config = &config;
     code.logger = &logger;
     code.unimap = &unimap;
-    code.init();
+    code.open();
 
     // slam module init
     slam.config = &config;
@@ -415,7 +456,7 @@ void MainWindow::init_modules()
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
-    // jog loop
+    // start jog loop
     jog_flag = true;
     jog_thread = new std::thread(&MainWindow::jog_loop, this);
 }
@@ -482,29 +523,31 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+
             key_active = true;
 
-            switch(ke->key())
+            int cur_key = ke->key();
+            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
             {
-            case Qt::Key_Up:
-                // mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
                 update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
-                break;
-            case Qt::Key_Left:
-                // mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
+            {
                 update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-                break;
-            case Qt::Key_Down:
-                // mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
-                update_jog_values(-ui->spb_JogV->value(), 0, mobile.wz0);
-                break;
-            case Qt::Key_Right:
-                // mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                update_jog_values(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                break;
-            default:
+            }
+            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
+            {
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
+            {
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else
+            {
                 return false;
             }
+
             return true;
         }
         else if(ev->type() == QEvent::KeyRelease)
@@ -514,29 +557,31 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             {
                 return false;
             }
+
             key_active = false;
 
-            switch(ke->key())
+            int cur_key = ke->key();
+            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
             {
-            case Qt::Key_Up:
-                // mobile.move(0, 0, mobile.wz0);
                 update_jog_values(0, 0, mobile.wz0);
-                break;
-            case Qt::Key_Left:
-                // mobile.move(mobile.vx0, 0, 0);
+            }
+            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
+            {
                 update_jog_values(mobile.vx0, 0, 0);
-                break;
-            case Qt::Key_Down:
-                // mobile.move(0, 0, mobile.wz0);
+            }
+            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
+            {
                 update_jog_values(0, 0, mobile.wz0);
-                break;
-            case Qt::Key_Right:
-                // mobile.move(mobile.vx0, 0, 0);
+            }
+            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
+            {
                 update_jog_values(mobile.vx0, 0, 0);
-                break;
-            default:
+            }
+            else
+            {
                 return false;
             }
+
             return true;
         }
 
@@ -557,7 +602,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 picking_ray(x, y, w, h, ray_center, ray_direction, viewer);
 
                 Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                //pick.cur_node = unimap.get_node_id(pt);
                 pick.cur_node = unimap.get_goal_id(pt);
 
                 // update last mouse button
@@ -680,23 +724,30 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 return false;
             }
 
-            switch(ke->key())
+            key_active = true;
+
+            int cur_key = ke->key();
+            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
             {
-                case Qt::Key_Up:
-                    mobile.move(ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(-ui->spb_JogV->value(), 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, -ui->spb_JogW->value()*D2R);
-                    break;
-                default:
-                    return false;
+                update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
             }
+            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
+            {
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
+            {
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
+            {
+                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
+            }
+            else
+            {
+                return false;
+            }
+
             return true;
         }
         else if(ev->type() == QEvent::KeyRelease)
@@ -707,23 +758,30 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 return false;
             }
 
-            switch(ke->key())
+            key_active = false;
+
+            int cur_key = ke->key();
+            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
             {
-                case Qt::Key_Up:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Left:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                case Qt::Key_Down:
-                    mobile.move(0, 0, mobile.wz0);
-                    break;
-                case Qt::Key_Right:
-                    mobile.move(mobile.vx0, 0, 0);
-                    break;
-                default:
-                    return false;
+                update_jog_values(0, 0, mobile.wz0);
             }
+            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
+            {
+                update_jog_values(mobile.vx0, 0, 0);
+            }
+            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
+            {
+                update_jog_values(0, 0, mobile.wz0);
+            }
+            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
+            {
+                update_jog_values(mobile.vx0, 0, 0);
+            }
+            else
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -1018,10 +1076,24 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
 
     Eigen::Matrix4d proj;
     Eigen::Matrix4d view;
-    cams[0].computeProjectionMatrix(proj);
-    cams[0].computeViewMatrix(view);
 
-    Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+    pcl::visualization::Camera cam0;
+    try
+    {
+        cam0 = cams.at(0);
+    }
+    catch(std::out_of_range)
+    {
+        logger.write_log("pcl viewer not have camera ..", "Red", true, false);
+        center = Eigen::Vector3d(0,0,0);
+        dir = Eigen::Vector3d(0,0,0);
+        return;
+    }
+
+    cam0.computeProjectionMatrix(proj);
+    cam0.computeViewMatrix(view);
+
+    Eigen::Vector3d pos(cam0.pos[0], cam0.pos[1], cam0.pos[2]);
 
     Eigen::Vector4d p_ndc;
     p_ndc[0] = (2.0*u)/w - 1.0;
@@ -1082,7 +1154,7 @@ void MainWindow::bt_SimInit()
 {
     if(unimap.is_loaded == false)
     {
-        printf("[SIM] map load first\n");
+        logger.write_log("[SIM] map load first", "Red", true, false);
         return;
     }
 
@@ -1189,7 +1261,7 @@ void MainWindow::bt_MapBuild()
 {
     if(config.SIM_MODE == 1)
     {
-        printf("[MAIN] map build not allowed SIM_MODE\n");
+        logger.write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
         return;
     }
 
@@ -1206,14 +1278,14 @@ void MainWindow::bt_MapSave()
 {
     if(config.SIM_MODE == 1)
     {
-        printf("[MAIN] map save not allowed SIM_MODE\n");
+        logger.write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
         return;
     }
 
     // check
     if(map_dir == "")
     {
-        printf("[MAIN] no map_dir\n");
+        logger.write_log("[MAIN] no map_dir", "Red", true, false);
         return;
     }
 
@@ -1287,6 +1359,9 @@ void MainWindow::bt_MapSave()
         cloud_csv_file.close();
         printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
     }
+
+    config.MAP_PATH = map_dir;
+    config.save_map_path();
 }
 
 void MainWindow::bt_MapLoad()
@@ -1294,6 +1369,9 @@ void MainWindow::bt_MapLoad()
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
     if(!path.isNull())
     {
+        slam.localization_stop();
+        obsmap.clear();
+
         map_dir = path;
         unimap.load_map(path);
         all_update();
@@ -1308,7 +1386,28 @@ void MainWindow::bt_LocInit()
     slam.mtx.unlock();
 }
 
-void MainWindow::bt_LocInit2()
+void MainWindow::bt_LocInitSemiAuto()
+{
+    logger.write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
+    slam.localization_stop();
+
+    // semi auto init
+    if(semi_auto_init_thread != NULL)
+    {
+        logger.write_log("[AUTO_INIT] thread already running.", "Orange", true, false);
+        semi_auto_init_thread->join();
+        semi_auto_init_thread = NULL;
+    }
+    semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, &slam);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while(!slam.is_busy)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+void MainWindow::bt_LocInitAuto()
 {
     // auto init
 }
@@ -1337,6 +1436,9 @@ void MainWindow::bt_MapReload()
         printf("[MAIN] check map load\n");
         return;
     }
+
+    slam.localization_stop();
+    obsmap.clear();
 
     unimap.load_map(map_dir);
     all_update();
@@ -1389,6 +1491,266 @@ void MainWindow::bt_ClearTopo()
     topo_update();
 }
 
+void MainWindow::bt_NodePoseXUp()
+{
+    double dx = ui->spb_NodeMovementXY->value();
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) += dx;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf = node->tf;
+        tf(0,3) += dx;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_NodePoseYUp()
+{
+    double dy = ui->spb_NodeMovementXY->value();
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) += dy;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf = node->tf;
+        tf(0,3) += dy;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_NodePoseThUp()
+{
+    Eigen::Matrix4d tf1 = ZYX_to_TF(0, 0, 0, 0, 0, ui->spb_NodeMovementTh->value()*D2R);
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf0 = node->tf;
+        Eigen::Matrix4d tf = tf0 * tf1;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_NodePoseXDown()
+{
+    double dx = ui->spb_NodeMovementXY->value();
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) -= dx;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf = node->tf;
+        tf(0,3) -= dx;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_NodePoseYDown()
+{
+    double dy = ui->spb_NodeMovementXY->value();
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) -= dy;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf = node->tf;
+        tf(0,3) -= dy;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_NodePoseThDown()
+{
+    Eigen::Matrix4d tf1 = ZYX_to_TF(0, 0, 0, 0, 0, -ui->spb_NodeMovementTh->value()*D2R);
+
+    if(ui->ckb_TransformEntireNode->isChecked())
+    {
+
+        std::vector<QString> nodes_id = unimap.get_nodes();
+        for(auto& id: nodes_id)
+        {
+            NODE* node = unimap.get_node_by_id(id);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else
+    {
+        QString id = pick.cur_node;
+        if(id == "")
+        {
+            return;
+        }
+
+        NODE* node = unimap.get_node_by_id(id);
+        if(node == nullptr)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d tf0 = node->tf;
+        Eigen::Matrix4d tf = tf0 * tf1;
+        unimap.edit_node_pos(id, tf);
+    }
+
+    topo_update();
+    pick_update();
+}
+
 void MainWindow::bt_MinGapNodeX()
 {
     double gap = ui->spb_NodeGap->value();
@@ -1400,8 +1762,15 @@ void MainWindow::bt_MinGapNodeX()
         return;
     }
 
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
+    NODE* node0 = unimap.get_node_by_id(id0);
+    NODE* node1 = unimap.get_node_by_id(id1);
+    if(node0 == nullptr || node1 == nullptr)
+    {
+        return;
+    }
+
+    Eigen::Matrix4d tf0 = node0->tf;
+    Eigen::Matrix4d tf1 = node0->tf;
 
     if(tf0(0,3) > tf1(0,3))
     {
@@ -1427,8 +1796,15 @@ void MainWindow::bt_MinGapNodeY()
         return;
     }
 
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
+    NODE* node0 = unimap.get_node_by_id(id0);
+    NODE* node1 = unimap.get_node_by_id(id1);
+    if(node0 == nullptr || node1 == nullptr)
+    {
+        return;
+    }
+
+    Eigen::Matrix4d tf0 = node0->tf;
+    Eigen::Matrix4d tf1 = node0->tf;
 
     if(tf0(1,3) > tf1(1,3))
     {
@@ -1452,8 +1828,15 @@ void MainWindow::bt_AlignNodeX()
         return;
     }
 
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
+    NODE* node0 = unimap.get_node_by_id(id0);
+    NODE* node1 = unimap.get_node_by_id(id1);
+    if(node0 == nullptr || node1 == nullptr)
+    {
+        return;
+    }
+
+    Eigen::Matrix4d tf0 = node0->tf;
+    Eigen::Matrix4d tf1 = node0->tf;
 
     // align x
     tf1(0,3) = tf0(0,3);
@@ -1470,10 +1853,17 @@ void MainWindow::bt_AlignNodeY()
         return;
     }
 
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
+    NODE* node0 = unimap.get_node_by_id(id0);
+    NODE* node1 = unimap.get_node_by_id(id1);
+    if(node0 == nullptr || node1 == nullptr)
+    {
+        return;
+    }
 
-    // align x
+    Eigen::Matrix4d tf0 = node0->tf;
+    Eigen::Matrix4d tf1 = node0->tf;
+
+    // align y
     tf1(1,3) = tf0(1,3);
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -1488,10 +1878,17 @@ void MainWindow::bt_AlignNodeTh()
         return;
     }
 
-    Eigen::Matrix4d tf0 = unimap.get_node_by_id(id0)->tf;
-    Eigen::Matrix4d tf1 = unimap.get_node_by_id(id1)->tf;
+    NODE* node0 = unimap.get_node_by_id(id0);
+    NODE* node1 = unimap.get_node_by_id(id1);
+    if(node0 == nullptr || node1 == nullptr)
+    {
+        return;
+    }
 
-    // align x
+    Eigen::Matrix4d tf0 = node0->tf;
+    Eigen::Matrix4d tf1 = node0->tf;
+
+    // align th
     tf1.block(0,0,3,3) = tf0.block(0,0,3,3);
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -1517,10 +1914,11 @@ void MainWindow::bt_QuickAnnotStart()
         return;
     }
 
-
     Eigen::Matrix4d cur_tf = slam.get_cur_tf();
     qa_last_node = unimap.add_node(cur_tf, "GOAL");
 
+    // loop start
+    slam.is_qa = true;
     qa_timer.start(1000);
 
     topo_update();
@@ -1535,6 +1933,7 @@ void MainWindow::bt_QuickAnnotStop()
     }
 
     // loop stop
+    slam.is_qa = false;
     qa_timer.stop();
 
     NODE* last_node = unimap.get_node_by_id(qa_last_node);
@@ -1741,7 +2140,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    //ws_mapping_save(0, "test0001");
+    logger.write_log("hello", "Green", true, false);
 }
 
 // for obsmap
@@ -1766,7 +2165,6 @@ void MainWindow::ui_tasks_update()
         QString res;
         res.sprintf("T_%02d", (int)i);
         node->name = res;
-
     }
     is_topo_update = true;
 }
@@ -1775,14 +2173,14 @@ void MainWindow::bt_TaskAdd()
 {
     if(pick.cur_node.isEmpty())
     {
-        printf("No selected node\n");
+        printf("[TASK] No selected node\n");
         return;
     }
 
     NODE* node = unimap.get_node_by_id(pick.cur_node);
     if(node == NULL)
     {
-        printf("Node null\n");
+        printf("[TASK] Node null\n");
         return;
     }
 
@@ -1792,7 +2190,7 @@ void MainWindow::bt_TaskAdd()
     }
     else
     {
-        printf("Unselectable node\n");
+        printf("[TASK] Unselectable node\n");
         return;
     }
 
@@ -2116,11 +2514,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        temp_str.sprintf("[TEMP] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", (int)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
                     }
                     else
                     {
-                        temp_str.sprintf("[TEMP] cpu:0.0, m0:%.2f, m1:%.2f", ms.temp_m0, ms.temp_m1);
+                        temp_str.sprintf("[TEMP] cpu:0, m0:%d, m1:d", ms.temp_m0, ms.temp_m1);
                     }
                 }
 
@@ -2161,11 +2559,11 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                     else
                     {
-                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", ms.cur_m0, ms.cur_m1);
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                 }
 
@@ -2217,7 +2615,7 @@ void MainWindow::watch_loop()
                     if(log_cnt >= 10)
                     {
                         log_cnt = 0;
-                        system_logger.PrintLog(system_info_str, "White", true, true);
+                        system_logger.write_log(system_info_str, "White", true, true);
                     }
                 }
             }
@@ -2244,14 +2642,14 @@ void MainWindow::jog_loop()
         double w_acc = ui->spb_AccW->value()*D2R;
         double w_decel = ui->spb_DecelW->value()*D2R;
 
-        vx_current = apply_jog_acc(vx_current, vx_target, v_acc, v_decel, dt);
-        vy_current = apply_jog_acc(vy_current, vy_target, v_acc, v_decel, dt);
-        wz_current = apply_jog_acc(wz_current, wz_target, w_acc, w_decel, dt);
+        vx_current = apply_jog_acc((double)vx_current, (double)vx_target, v_acc, v_decel, dt);
+        vy_current = apply_jog_acc((double)vy_current, (double)vy_target, v_acc, v_decel, dt);
+        wz_current = apply_jog_acc((double)wz_current, (double)wz_target, w_acc, w_decel, dt);
 
         if(ctrl.is_moving == false)
         {
             mobile.move(vx_current, vy_current, wz_current);
-            //printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, vx_current, vy_current, wz_current*R2D);
+            //printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, (double)vx_current, (double)vy_current, (double)wz_current*R2D);
         }
 
         // for real time loop
@@ -2468,6 +2866,19 @@ void MainWindow::topo_plot()
                     {
                         const double size = 0.15;
                         viewer->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
+                    else if(unimap.nodes[p].type == "INIT")
+                    {
+                        const double size = 0.15;
+                        viewer->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 0.5, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
@@ -3550,6 +3961,19 @@ void MainWindow::topo_plot2()
                         viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
                         viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
+                    else if(unimap.nodes[p].type == "INIT")
+                    {
+                        const double size = 0.15;
+                        viewer2->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 0.5, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
                         viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
@@ -3759,7 +4183,6 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("text_pre");
         }
 
-
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
         {
@@ -3767,22 +4190,24 @@ void MainWindow::pick_plot2()
             {
                 Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(pick.l_pt0[0], pick.l_pt0[1], 0));
 
-                pcl::PolygonMesh donut = make_donut(0.15, 0.01, tf, 1.0, 0.0, 0.0, 0.5);
+                double val = ui->dsb_MapEraseSize->value();
+                pcl::PolygonMesh donut = make_donut(val, 0.01, tf, 1.0, 0.0, 0.0, 0.5);
                 viewer2->addPolygonMesh(donut, "pick_body");
 
                 // erase
-                unimap.set_cloud_mask(pick.l_pt0, 0.15, 0);
+                unimap.set_cloud_mask(pick.l_pt0, val, 0);
                 map_update();
             }
             else if(pick.r_drag)
             {
                 Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(pick.r_pt0[0], pick.r_pt0[1], 0));
 
-                pcl::PolygonMesh donut = make_donut(0.15, 0.01, tf, 0.0, 1.0, 0.0, 0.5);
+                double val = ui->dsb_MapEraseSize->value();
+                pcl::PolygonMesh donut = make_donut(val, 0.01, tf, 0.0, 1.0, 0.0, 0.5);
                 viewer2->addPolygonMesh(donut, "pick_body");
 
                 // restore
-                unimap.set_cloud_mask(pick.r_pt0, 0.15, 1);
+                unimap.set_cloud_mask(pick.r_pt0, val, 1);
                 map_update();
             }
         }
@@ -3862,6 +4287,12 @@ void MainWindow::pick_plot2()
                 // draw pose
                 viewer2->addCoordinateSystem(1.0, "O_pick");
                 if(ui->cb_NodeType->currentText() == "ROUTE")
+                {
+                    viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
+                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+                }
+                else if(ui->cb_NodeType->currentText() == "INIT")
                 {
                     viewer2->addSphere(pcl::PointXYZ(0, 0, 0), 0.15, 0.5, 0.5, 0.5, "pick_body");
                     viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
@@ -3964,3 +4395,29 @@ void MainWindow::plot_loop2()
 
     plot_timer2.start();
 }
+
+void MainWindow::slot_write_log(QString user_log, QString color_code)
+{
+    if(color_code == "Red")
+    {
+        color_code = "red";
+    }
+    else if(color_code == "Green")
+    {
+        color_code = "green";
+    }
+    else if(color_code == "Orange")
+    {
+        color_code = "orange";
+    }
+    else if(color_code == "White")
+    {
+        color_code = "black";
+    }
+
+    color_code += "QLabel { color : " + color_code + "; }";
+
+    ui->lb_LogInfo->setText(user_log);
+    ui->lb_LogInfo->setStyleSheet(color_code);
+}
+

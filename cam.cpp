@@ -14,7 +14,7 @@ CAM::~CAM()
     }
 }
 
-void CAM::init()
+void CAM::open()
 {
     // check simulation mode
     if(config->SIM_MODE == 1)

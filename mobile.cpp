@@ -59,7 +59,7 @@ void MOBILE::sync()
 
     QString str;
     str.sprintf("[MOBILE] time sync, sync_st_time:%f\n", (double)sync_st_time);
-    logger->PrintLog(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "DeepSkyBlue", true, false);
 }
 
 QString MOBILE::get_cur_pdu_state()
@@ -560,13 +560,13 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->PrintLog(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "DeepSkyBlue", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0)
     {
-        logger->PrintLog("[MOBILE] socket create failed", "Red", true, false);
+        logger->write_log("[MOBILE] socket create failed", "Red", true, false);
         return;
     }
 
@@ -583,7 +583,7 @@ void MOBILE::recv_loop()
     int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
     if(status < 0 && errno != EINPROGRESS)
     {
-        logger->PrintLog("[MOBILE] connect failed", "Red", true, false);
+        logger->write_log("[MOBILE] connect failed", "Red", true, false);
         return;
     }
 
@@ -599,7 +599,7 @@ void MOBILE::recv_loop()
     status = select(fd + 1, NULL, &writefds, NULL, &tv);
     if (status <= 0) // timeout or error
     {
-        logger->PrintLog("[MOBILE] connect timeout or error", "Red", true, false);
+        logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
         close(fd);
         return;
     }
@@ -608,7 +608,7 @@ void MOBILE::recv_loop()
     fcntl(fd, F_SETFL, flags);
 
     is_connected = true;
-    logger->PrintLog("[MOBILE] connected", "Green", true, false);
+    logger->write_log("[MOBILE] connected", "Green", true, false);
 
     // var init
     const int packet_size = 150;
@@ -1362,7 +1362,7 @@ void MOBILE::motor_on()
         }
     }
 
-    logger->PrintLog("[MOBILE] motor lock on", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock on", "DeepSkyBlue", true, false);
 }
 
 void MOBILE::motor_off()
@@ -1386,7 +1386,7 @@ void MOBILE::motor_off()
         msg_que.push(send_byte);
     }
 
-    logger->PrintLog("[MOBILE] motor lock off", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock off", "DeepSkyBlue", true, false);
 }
 
 void MOBILE::move(double vx, double vy, double wz)

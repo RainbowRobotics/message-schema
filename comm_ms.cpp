@@ -45,6 +45,7 @@ COMM_MS::COMM_MS(QObject *parent)
     connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
 
     connect(this, SIGNAL(signal_localization_autoinit(double)), this, SLOT(slot_localization_autoinit(double)));
+    connect(this, SIGNAL(signal_localization_semiautoinit(double)), this, SLOT(slot_localization_semiautoinit(double)));
     connect(this, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(slot_localization_init(double, double, double, double, double)));
     connect(this, SIGNAL(signal_localization_start(double)), this, SLOT(slot_localization_start(double)));
     connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
@@ -260,6 +261,10 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
         if(command == "autoinit")
         {
             Q_EMIT signal_localization_autoinit(time);
+        }
+        else if(command == "semiautoinit")
+        {
+            Q_EMIT signal_localization_semiautoinit(time);
         }
         else if(command == "init")
         {
@@ -1032,6 +1037,9 @@ void COMM_MS::slot_mapload(double time, QString name)
     QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
     if(!load_dir.isNull())
     {
+        slam->localization_stop();
+        obsmap->clear();
+
         _main->map_dir = load_dir;
         unimap->load_map(load_dir);
         _main->all_update();
@@ -1047,10 +1055,46 @@ void COMM_MS::slot_mapload(double time, QString name)
     }
 }
 
-
 void COMM_MS::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
+}
+
+void COMM_MS::slot_localization_semiautoinit(double time)
+{
+    if(unimap->is_loaded == false || lidar->is_connected_f == false)
+    {
+        send_localization_response("semiautoinit", "fail");
+        return;
+    }
+
+    logger->write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
+    slam->localization_stop();
+
+    // semi auto init
+    if(semi_auto_init_thread != NULL)
+    {
+        logger->write_log("[AUTO_INIT] thread already running.", "Orange", true, false);
+        semi_auto_init_thread->join();
+        semi_auto_init_thread = NULL;
+    }
+
+    semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, slam);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while(!slam->is_busy)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    if(slam->is_init)
+    {
+        send_localization_response("semiautoinit", "success");
+        return;
+    }
+
+    send_localization_response("semiautoinit", "fail");
+    return;
 }
 
 void COMM_MS::slot_localization_init(double time, double x, double y, double z, double rz)
@@ -1078,5 +1122,3 @@ void COMM_MS::slot_localization_stop(double time)
 {
     slam->localization_stop();
 }
-
-

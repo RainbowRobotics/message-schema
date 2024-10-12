@@ -73,7 +73,7 @@
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -81,6 +81,9 @@
            <number>0</number>
           </property>
           <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>
@@ -236,10 +239,37 @@
             </widget>
            </widget>
           </item>
+          <item>
+           <widget class="QLabel" name="lb_LogInfo">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[LOG_INFO]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1,1,1,1,0">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1,1,1,1,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -327,10 +357,10 @@
                <string>Init</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_LocInit2">
+             <widget class="QPushButton" name="bt_LocInitAuto">
               <property name="geometry">
                <rect>
-                <x>90</x>
+                <x>160</x>
                 <y>60</y>
                 <width>71</width>
                 <height>31</height>
@@ -343,8 +373,8 @@
              <widget class="QPushButton" name="bt_LocStart">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>60</y>
+                <x>20</x>
+                <y>100</y>
                 <width>71</width>
                 <height>31</height>
                </rect>
@@ -356,8 +386,8 @@
              <widget class="QPushButton" name="bt_LocStop">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>60</y>
+                <x>90</x>
+                <y>100</y>
                 <width>71</width>
                 <height>31</height>
                </rect>
@@ -385,7 +415,7 @@
              <widget class="QPushButton" name="bt_ObsClear">
               <property name="geometry">
                <rect>
-                <x>20</x>
+                <x>160</x>
                 <y>100</y>
                 <width>71</width>
                 <height>31</height>
@@ -398,7 +428,7 @@
              <widget class="QPushButton" name="bt_ConfigLoad">
               <property name="geometry">
                <rect>
-                <x>90</x>
+                <x>230</x>
                 <y>100</y>
                 <width>71</width>
                 <height>31</height>
@@ -406,6 +436,20 @@
               </property>
               <property name="text">
                <string>Config load</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_LocInitSemiAuto">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>60</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Semi
+Auto init</string>
               </property>
              </widget>
             </widget>
@@ -733,7 +777,7 @@ Stop</string>
                 <x>8</x>
                 <y>30</y>
                 <width>311</width>
-                <height>91</height>
+                <height>131</height>
                </rect>
               </property>
               <property name="font">
@@ -1661,6 +1705,38 @@ stop</string>
                <double>180.000000000000000</double>
               </property>
              </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MapEraseSize">
+              <property name="geometry">
+               <rect>
+                <x>248</x>
+                <y>31</y>
+                <width>65</width>
+                <height>26</height>
+               </rect>
+              </property>
+              <property name="suffix">
+               <string>m</string>
+              </property>
+              <property name="minimum">
+               <double>0.150000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_22">
+              <property name="geometry">
+               <rect>
+                <x>180</x>
+                <y>30</y>
+                <width>61</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>erase size : </string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="page_edit_topo">
              <attribute name="title">
@@ -1763,6 +1839,11 @@ stop</string>
               <item>
                <property name="text">
                 <string>ROUTE</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>INIT</string>
                </property>
               </item>
               <item>
@@ -2102,6 +2183,249 @@ stop</string>
               <property name="text">
                <string>size_z:</string>
               </property>
+             </widget>
+             <widget class="QGroupBox" name="groupBox">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>390</y>
+                <width>401</width>
+                <height>141</height>
+               </rect>
+              </property>
+              <property name="title">
+               <string>노드 이동</string>
+              </property>
+              <widget class="QLabel" name="label_15">
+               <property name="geometry">
+                <rect>
+                 <x>20</x>
+                 <y>80</y>
+                 <width>21</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>y :</string>
+               </property>
+              </widget>
+              <widget class="QLineEdit" name="le_CurNodeTh">
+               <property name="geometry">
+                <rect>
+                 <x>50</x>
+                 <y>110</y>
+                 <width>101</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+              <widget class="QLabel" name="label_16">
+               <property name="geometry">
+                <rect>
+                 <x>20</x>
+                 <y>110</y>
+                 <width>21</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>th :</string>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseThDown">
+               <property name="geometry">
+                <rect>
+                 <x>160</x>
+                 <y>110</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+              <widget class="QLineEdit" name="le_CurNodeY">
+               <property name="geometry">
+                <rect>
+                 <x>50</x>
+                 <y>80</y>
+                 <width>101</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+              <widget class="QLabel" name="label_14">
+               <property name="geometry">
+                <rect>
+                 <x>20</x>
+                 <y>50</y>
+                 <width>21</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>x :</string>
+               </property>
+              </widget>
+              <widget class="QLineEdit" name="le_CurNodeX">
+               <property name="geometry">
+                <rect>
+                 <x>50</x>
+                 <y>50</y>
+                 <width>101</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="dragEnabled">
+                <bool>true</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+              <widget class="QDoubleSpinBox" name="spb_NodeMovementXY">
+               <property name="geometry">
+                <rect>
+                 <x>270</x>
+                 <y>50</y>
+                 <width>81</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="suffix">
+                <string> m</string>
+               </property>
+               <property name="maximum">
+                <double>5.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.010000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.100000000000000</double>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseYDown">
+               <property name="geometry">
+                <rect>
+                 <x>160</x>
+                 <y>80</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseYUp">
+               <property name="geometry">
+                <rect>
+                 <x>210</x>
+                 <y>80</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>+</string>
+               </property>
+              </widget>
+              <widget class="QCheckBox" name="ckb_TransformEntireNode">
+               <property name="geometry">
+                <rect>
+                 <x>10</x>
+                 <y>22</y>
+                 <width>141</width>
+                 <height>23</height>
+                </rect>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>9</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>노드 전체 이동</string>
+               </property>
+              </widget>
+              <widget class="QDoubleSpinBox" name="spb_NodeMovementTh">
+               <property name="geometry">
+                <rect>
+                 <x>270</x>
+                 <y>110</y>
+                 <width>81</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="suffix">
+                <string> deg</string>
+               </property>
+               <property name="minimum">
+                <double>-180.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>180.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>1.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseXDown">
+               <property name="geometry">
+                <rect>
+                 <x>160</x>
+                 <y>50</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseThUp">
+               <property name="geometry">
+                <rect>
+                 <x>210</x>
+                 <y>110</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>+</string>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="bt_NodePoseXUp">
+               <property name="geometry">
+                <rect>
+                 <x>210</x>
+                 <y>50</y>
+                 <width>41</width>
+                 <height>21</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>+</string>
+               </property>
+              </widget>
              </widget>
             </widget>
            </widget>
