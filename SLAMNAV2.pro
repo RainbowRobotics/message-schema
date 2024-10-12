@@ -55,8 +55,7 @@ SOURCES += \
     sim.cpp \
     slam_2d.cpp \
     unimap.cpp \
-    utils.cpp \
-    vfh.cpp
+    utils.cpp
 
 HEADERS += \
     LakiBeamHTTP.h \
@@ -94,8 +93,7 @@ HEADERS += \
     slam_2d.h \
     tinycolormap.hpp \
     unimap.h \
-    utils.h \
-    vfh.h
+    utils.h
 
 FORMS += \
     mainwindow.ui
