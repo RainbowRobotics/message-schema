@@ -804,7 +804,7 @@ void SLAM_2D::loc_b_loop()
 
                 // for odometry slip
                 Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                if(std::abs(dtdr[1]) > 1.5*D2R)
+                if(std::abs(dtdr[1]) > 3.0*D2R)
                 {
                     alpha = 0;
                     printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
@@ -873,6 +873,7 @@ void SLAM_2D::obs_loop()
             {
                 TIME_PTS blidar_scan = blidar->get_cur_scan();
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(blidar_scan.t);
+
                 for(size_t p = 0; p < blidar_scan.pts.size(); p+=4)
                 {
                     Eigen::Vector3d P = blidar_scan.pts[p];

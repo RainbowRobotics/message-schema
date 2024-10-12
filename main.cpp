@@ -4,10 +4,12 @@
 
 #include <QApplication>
 
-node_lidar_t node_lidar;
+Q_DECLARE_METATYPE(Eigen::Matrix4d)
 
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<Eigen::Matrix4d>();
+
     QApplication a(argc, argv);
 
     // VTK

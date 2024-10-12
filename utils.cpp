@@ -355,6 +355,18 @@ double saturation(double val, double min, double max)
     return val;
 }
 
+double calc_line_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
+{
+    Eigen::Vector3d ab = P1 - P0;
+    Eigen::Vector3d av = P - P0;
+
+    // project av onto ab to find the closest point on the line
+    Eigen::Vector3d projection = ab * (av.dot(ab) / ab.dot(ab));
+
+    // the distance from point P to the line is the norm of the perpendicular vector
+    return (av - projection).norm();
+}
+
 double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
 {
     Eigen::Vector3d ab = P1-P0;

@@ -31,9 +31,6 @@
 #include <ompl/config.h>
 #include <ompl/util/Console.h>
 
-// vfh
-#include "vfh.h"
-
 // qt
 #include <QObject>
 
@@ -67,6 +64,7 @@ public:
     PATH get_cur_global_path();
     PATH get_cur_local_path();
     QString get_obs_condition();
+    QString get_cur_state();
     void clear_path();
 
     void init();
@@ -107,6 +105,7 @@ public:
     // storage    
     int cur_preset_idx;
     Eigen::Matrix4d cur_goal_tf;
+    QString cur_state = "complete"; // complete, request, moving
 
     PATH cur_global_path;
     PATH cur_local_path;
@@ -127,9 +126,6 @@ Q_SIGNALS:
     void signal_local_path_updated();
     void signal_move_succeed(QString message);
     void signal_move_failed(QString message);
-
-    void signal_new_goal(Eigen::Matrix4d goal_tf, int preset);
-    void signal_stop();
 
 };
 

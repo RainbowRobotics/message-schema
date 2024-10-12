@@ -1,6 +1,6 @@
 #include "lidar_bottom.h"
 
-using namespace std;
+node_lidar_t node_lidar;
 
 LIDAR_BOTTOM::LIDAR_BOTTOM(QObject *parent)
     : QObject{parent}
@@ -78,14 +78,12 @@ void LIDAR_BOTTOM::grab_loop()
         LaserScan scan;
         if(data_handling(scan))
         {
-            double min_dist = 9999999;
-            double min_x, min_y;
             std::vector<Eigen::Vector3d> pts;
             for(size_t p = 0; p < scan.points.size(); p++)
             {
                 double th = scan.points[p].angle*D2R;
                 double dist = scan.points[p].range;
-                if(dist > 1.0)
+                if(dist > 0.5)
                 {
                     continue;
                 }
@@ -126,13 +124,6 @@ void LIDAR_BOTTOM::grab_loop()
                 if(masking_dist0 < circle_radius || masking_dist1 < circle_radius)
                 {
                     continue;
-                }
-
-                if(dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_x = P[0];
-                    min_y = P[1];
                 }
 
                 pts.push_back(P);

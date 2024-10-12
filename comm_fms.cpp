@@ -21,17 +21,17 @@ COMM_FMS::~COMM_FMS()
 
 void COMM_FMS::init()
 {
-    // set id
-    QString _id;
-    _id.sprintf("R_%lld", (long long)(get_time0()*1000));
+    // make robot id
+    QString _robot_id;
+    _robot_id.sprintf("R_%lld", (long long)(get_time0()*1000));
 
-    mtx.lock();
-    fms_info.id = _id;
-    mtx.unlock();
-    printf("[COMM_FMS] ID: %s\n", _id.toLocal8Bit().data());
+    // update robot id
+    robot_id = _robot_id;
+    printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
 
+    // start reconnect loop
     reconnect_timer.start(3000);
-    printf("[COMM_FMS] start reconnect timer\n", _id.toLocal8Bit().data());
+    printf("[COMM_FMS] start reconnect timer\n");
 }
 
 void COMM_FMS::reconnect_loop()
@@ -96,51 +96,31 @@ void COMM_FMS::recv_stop()
 }
 
 // send slots
-void COMM_FMS::slot_new_goal(Eigen::Matrix4d goal_tf, int preset)
+void COMM_FMS::send_info()
 {
     double time = get_time0();
-    QString node_id = unimap->get_node_id_nn(goal_tf.block(0,3,3,1));
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
+    QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+    QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+    QString state = ctrl->get_cur_state();
 
     // Creating the JSON object
     QJsonObject rootObj;
 
     // Adding the command and time
-    rootObj["type"] = "new_goal";
-    rootObj["node_id"] = node_id;
+    rootObj["type"] = "info";
+    rootObj["robot_id"] = robot_id;
+    rootObj["cur_tf"] = TF_to_string(cur_tf);
+    rootObj["goal_tf"] = TF_to_string(goal_tf);
+    rootObj["cur_node_id"] = cur_node_id;
+    rootObj["goal_node_id"] = goal_node_id;
+    rootObj["state"] = state;
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
     QString str(doc.toJson());
     client.sendTextMessage(str);
-
-    printf("[COMM_FMS] new_goal, node_id: %s, preset: %d, time: %f\n", node_id.toLocal8Bit().data(), preset, time);
 }
-
-void COMM_FMS::slot_stop()
-{
-    double time = get_time0();
-
-    // Creating the JSON object
-    QJsonObject rootObj;
-
-    // Adding the command and time
-    rootObj["type"] = "stop";
-    rootObj["time"] = QString::number((long long)(time*1000), 10);
-
-    // send
-    QJsonDocument doc(rootObj);
-    QString str(doc.toJson());
-    client.sendTextMessage(str);
-
-    printf("[COMM_FMS] stop, time: %f\n", time);
-}
-
-
-
-
-
-
-
-
 
