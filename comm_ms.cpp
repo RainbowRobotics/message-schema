@@ -412,6 +412,10 @@ void COMM_MS::send_status()
     conditionObj["obs_state"] = ctrl->get_obs_condition();
     rootObj["condition"] = conditionObj;
 
+    QJsonObject settingObj;
+    settingObj["platform_type"] = config->PLATFORM_TYPE;
+    rootObj["setting"] = settingObj;
+
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());

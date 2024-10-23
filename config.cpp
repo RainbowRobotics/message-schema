@@ -20,6 +20,15 @@ void CONFIG::load()
             QJsonObject obj = doc.object();
 
             // param load
+            QJsonObject obj_robot = obj["robot"].toObject();
+            {
+                PLATFORM_NAME = obj_robot["PLATFORM_NAME"].toString();
+                printf("[CONFIG] PLATFORM_NAME, %s\n", obj_robot["PLATFORM_NAME"].toString().toLocal8Bit().data());
+
+                PLATFORM_TYPE = obj_robot["PLATFORM_TYPE"].toString();
+                printf("[CONFIG] PLATFORM_TYPE, %s\n", obj_robot["PLATFORM_TYPE"].toString().toLocal8Bit().data());
+            }
+
             QJsonObject obj_motor = obj["motor"].toObject();
             {
                 MOTOR_ID_L = obj_motor["MOTOR_ID_L"].toString().toInt();
