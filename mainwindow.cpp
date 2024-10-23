@@ -155,6 +155,16 @@ MainWindow::MainWindow(QWidget *parent)
     // set plot window
     setup_vtk();
 
+    // solve tab with vtk render window problem
+    QTimer::singleShot(100, [&]()
+    {
+        ui->main_tab->setCurrentIndex(1);
+        QTimer::singleShot(100, [&]()
+        {
+            ui->main_tab->setCurrentIndex(0);
+        });
+    });
+
     // init modules
     init_modules();
 
@@ -170,19 +180,7 @@ MainWindow::MainWindow(QWidget *parent)
         plot_timer2.start(100);
     }
 
-    // solve tab with vtk render window problem
-    if(ui->main_tab->currentIndex() == 0)
-    {
-        QTimer::singleShot(100, [&]()
-        {
-            ui->main_tab->setCurrentIndex(1);
-            QTimer::singleShot(100, [&]()
-            {
-                ui->main_tab->setCurrentIndex(0);
-            });
-        });
-    }
-
+    // first motor init
     QTimer::singleShot(3000, [&]()
     {
         if(mobile.is_connected)
@@ -304,6 +302,7 @@ void MainWindow::init_modules()
         ui->bt_SimInit->setEnabled(true);
     }
 
+    /*
     // map auto load
     if(config.MAP_PATH != "")
     {
@@ -315,6 +314,7 @@ void MainWindow::init_modules()
             all_update();
         }
     }
+    */
 
     // log module init (slamnav)
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";

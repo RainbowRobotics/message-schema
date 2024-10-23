@@ -90,8 +90,5 @@
 	    	"SERVER_IP": "127.0.0.1",
 	    	"SERVER_ID": "rainbow",
 		"SERVER_PW": "rainbow"
-	},
-	"path": {
-	    	"MAP_PATH": ""
 	}
 }
