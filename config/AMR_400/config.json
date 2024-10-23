@@ -4,7 +4,7 @@
 		"PLATFORM_TYPE": "AMR"
 	},
 	"debug": {
-		"SIM_MODE": "1"
+		"SIM_MODE": "0"
 	},
 	"loc": {
 		"LOC_CHECK_DIST": "0.3",
@@ -90,8 +90,5 @@
 	    	"SERVER_IP": "127.0.0.1",
 	    	"SERVER_ID": "rainbow",
 		"SERVER_PW": "rainbow"
-	},
-	"path": {
-	    	"MAP_PATH": ""
 	}
 }
