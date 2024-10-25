@@ -4,6 +4,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , config(this)
+    , logger(this)
     , mobile(this)
     , lidar(this)
     , blidar(this)
@@ -13,12 +14,12 @@ MainWindow::MainWindow(QWidget *parent)
     , unimap(this)
     , obsmap(this)
     , ctrl(this)
+    , dctrl(this)
     , task(this)
     , sim(this)
     , cfms(this)
     , cms(this)
-    , cui(this)
-    , logger(this)
+    , cui(this)    
     , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -180,7 +181,6 @@ MainWindow::MainWindow(QWidget *parent)
         plot_timer2.start(100);
     }
 
-    // first motor init
     QTimer::singleShot(3000, [&]()
     {
         if(mobile.is_connected)
@@ -1993,120 +1993,53 @@ void MainWindow::bt_AutoMove()
         return;
     }
 
-    // get goal
-    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(pick.cur_node != "")
+    if(ctrl.is_multi)
     {
-        NODE* node = unimap.get_node_by_id(pick.cur_node);
-        if(node != NULL)
+        if(pick.cur_node != "")
         {
-            goal_tf = node->tf;
-            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
+            ctrl.set_goal(pick.cur_node);
         }
     }
     else
     {
-        if(pick.last_btn == 1)
+        // get goal
+        Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
+        if(pick.cur_node != "")
         {
-            goal_tf = se2_to_TF(pick.r_pose);
-            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            NODE* node = unimap.get_node_by_id(pick.cur_node);
+            if(node != NULL)
+            {
+                goal_tf = node->tf;
+                printf("[MAIN] clicked goal, %s\n", pick.cur_node.toLocal8Bit().data());
+            }
         }
         else
         {
-            printf("[MAIN] goal empty\n");
-            return;
+            if(pick.last_btn == 1)
+            {
+                goal_tf = se2_to_TF(pick.r_pose);
+                printf("[MAIN] clicked goal pose, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            }
+            else
+            {
+                printf("[MAIN] goal empty\n");
+                return;
+            }
         }
-    }
 
-    // pure pursuit
-    ctrl.move_pp(goal_tf, 0);
+        // pure pursuit
+        ctrl.move_pp(goal_tf, 0);
+    }
 }
 
 void MainWindow::bt_AutoMove2()
 {
-    if(unimap.is_loaded == false)
-    {
-        printf("[MAIN] check map load\n");
-        return;
-    }
 
-    // get goal
-    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(pick.cur_node != "")
-    {
-        NODE* node = unimap.get_node_by_id(pick.cur_node);
-        if(node != NULL)
-        {
-            goal_tf = node->tf;
-            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
-        }
-    }
-    else
-    {
-        if(pick.last_btn == 1)
-        {
-            goal_tf = se2_to_TF(pick.r_pose);
-            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-        }
-        else
-        {
-            printf("[MAIN] goal empty\n");
-            return;
-        }
-    }
-
-    // holonomic pure pursuit
-    if(config.SIM_MODE == 1)
-    {
-        ctrl.move_hpp(goal_tf, 0);
-    }
-    else
-    {
-        #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
-        ctrl.move_pp(goal_tf, 0);
-        #endif
-
-        #if defined (USE_AMR_KAI)
-        ctrl.move_hpp(goal_tf, 0);
-        #endif
-    }
 }
 
 void MainWindow::bt_AutoMove3()
 {
-    if(unimap.is_loaded == false)
-    {
-        printf("[MAIN] check map load\n");
-        return;
-    }
 
-    // get goal
-    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(pick.cur_node != "")
-    {
-        NODE* node = unimap.get_node_by_id(pick.cur_node);
-        if(node != NULL)
-        {
-            goal_tf = node->tf;
-            printf("[MAIN] automove, %s\n", pick.cur_node.toLocal8Bit().data());
-        }
-    }
-    else
-    {
-        if(pick.last_btn == 1)
-        {
-            goal_tf = se2_to_TF(pick.r_pose);
-            printf("[MAIN] automove, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-        }
-        else
-        {
-            printf("[MAIN] goal empty\n");
-            return;
-        }
-    }
-
-    // turn and go
-    ctrl.move_tng(goal_tf, 0);
 }
 
 void MainWindow::bt_AutoStop()
@@ -3340,12 +3273,12 @@ void MainWindow::raw_plot()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nstate: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_goal: %s, is_moving: %s, is_pause: %s, obs: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_moving ? "true" : "false",
-                          (bool)ctrl.is_pause ? "true" : "false",
-                          ctrl.get_obs_condition().toLocal8Bit().data(),
-                          ctrl.get_cur_state().toLocal8Bit().data());
+                          (bool)ctrl.is_goal ? "1" : "0",
+                          (bool)ctrl.is_moving ? "1" : "0",
+                          (bool)ctrl.is_pause ? "1" : "0",
+                          ctrl.get_obs_condition().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam

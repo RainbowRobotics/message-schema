@@ -182,11 +182,11 @@ void TASK::a_loop()
             }
             else if(driving_mode == "holonomic")
             {
-                ctrl->move_hpp(node->tf, 0);
+                //ctrl->move_hpp(node->tf, 0);
             }
             else if(driving_mode == "tng")
             {
-                ctrl->move_tng(node->tf, 0);
+                //ctrl->move_tng(node->tf, 0);
             }
             else
             {

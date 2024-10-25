@@ -870,38 +870,41 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         // found goal
-        Eigen::Matrix4d goal_tf0 = calc_tf(cur->tf.block(0,3,3,1), ed->tf.block(0,3,3,1));
-        Eigen::Matrix4d goal_tf1 = goal_tf0;
-        goal_tf0.block(0,3,3,1) = cur->tf.block(0,3,3,1);
-        goal_tf1.block(0,3,3,1) = ed->tf.block(0,3,3,1);
-
-        std::vector<Eigen::Matrix4d> traj_goal0 = intp_tf(cur->tf, goal_tf0, sampling_dt, sampling_dr);
-        std::vector<Eigen::Matrix4d> traj_goal1 = intp_tf(goal_tf0, goal_tf1, sampling_dt, sampling_dr);
-
-        std::vector<Eigen::Matrix4d> traj_goal = traj_goal0;
-        traj_goal.insert(traj_goal.end(), traj_goal1.begin(), traj_goal1.end());
-
-        if(!is_collision(obs_map, traj_goal, margin_x, margin_y))
+        if(cur->h < st->h*0.5)
         {
-            std::vector<Eigen::Matrix4d> res;
+            Eigen::Matrix4d goal_tf0 = calc_tf(cur->tf.block(0,3,3,1), ed->tf.block(0,3,3,1));
+            Eigen::Matrix4d goal_tf1 = goal_tf0;
+            goal_tf0.block(0,3,3,1) = cur->tf.block(0,3,3,1);
+            goal_tf1.block(0,3,3,1) = ed->tf.block(0,3,3,1);
 
-            ASTAR_NODE* _cur = cur;
-            while(_cur != NULL)
+            std::vector<Eigen::Matrix4d> traj_goal0 = intp_tf(cur->tf, goal_tf0, sampling_dt, sampling_dr);
+            std::vector<Eigen::Matrix4d> traj_goal1 = intp_tf(goal_tf0, goal_tf1, sampling_dt, sampling_dr);
+
+            std::vector<Eigen::Matrix4d> traj_goal = traj_goal0;
+            traj_goal.insert(traj_goal.end(), traj_goal1.begin(), traj_goal1.end());
+
+            if(!is_collision(obs_map, traj_goal, margin_x, margin_y))
             {
-                res.push_back(obs_tf*_cur->tf);
-                _cur = _cur->parent;
+                std::vector<Eigen::Matrix4d> res;
+
+                ASTAR_NODE* _cur = cur;
+                while(_cur != NULL)
+                {
+                    res.push_back(obs_tf*_cur->tf);
+                    _cur = _cur->parent;
+                }
+
+                std::reverse(res.begin(), res.end());
+
+                // set final pose
+                for(size_t p = 0; p < traj_goal.size(); p++)
+                {
+                    res.push_back(obs_tf*traj_goal[p]);
+                }
+
+                printf("[OBSMAP] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
+                return res;
             }
-
-            std::reverse(res.begin(), res.end());
-
-            // set final pose
-            for(size_t p = 0; p < traj_goal.size(); p++)
-            {
-                res.push_back(obs_tf*traj_goal[p]);
-            }
-
-            printf("[OBSMAP] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
-            return res;
         }
 
         // expand nodes for differential drive        
@@ -964,7 +967,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     continue;
                 }
 
-                // check collision
+                // check collision                
                 std::vector<Eigen::Matrix4d> traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
                 if(is_collision(obs_map, traj, margin_x, margin_y))
                 {
