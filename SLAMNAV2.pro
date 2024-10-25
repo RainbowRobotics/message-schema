@@ -21,11 +21,11 @@ DEFINES += USE_SRV
 #DEFINES += USE_AMR_KAI
 
 # auto copy config files
-copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
-copy_config.target = copy_config
-QMAKE_EXTRA_TARGETS += copy_config
-PRE_TARGETDEPS += copy_config
-.PHONY: copy_config
+#copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
+#copy_config.target = copy_config
+#QMAKE_EXTRA_TARGETS += copy_config
+#PRE_TARGETDEPS += copy_config
+#.PHONY: copy_config
 
 # set home dir
 HOME = $$system(echo $HOME)
