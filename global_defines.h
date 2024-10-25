@@ -777,12 +777,14 @@ struct PATH
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;    
-    Eigen::Matrix4d goal_tf;
+    Eigen::Matrix4d ed_tf;
+    int is_align;
 
     PATH()
     {
         t = 0;
-        goal_tf.setIdentity();        
+        ed_tf.setIdentity();
+        is_align = 1; // default do is_align
     }
 
     PATH(const PATH& p)
@@ -792,7 +794,8 @@ struct PATH
         pose = p.pose;
         pos = p.pos;                
         ref_v = p.ref_v;        
-        goal_tf = p.goal_tf;
+        ed_tf = p.ed_tf;
+        is_align = p.is_align;
     }
 
     PATH& operator=(const PATH& p)
@@ -802,7 +805,8 @@ struct PATH
         pose = p.pose;
         pos = p.pos;        
         ref_v = p.ref_v;        
-        goal_tf = p.goal_tf;
+        ed_tf = p.ed_tf;
+        is_align = p.is_align;
         return *this;
     }
 
@@ -813,7 +817,8 @@ struct PATH
                pose == p.pose &&
                pos == p.pos &&
                ref_v == p.ref_v &&               
-               goal_tf.isApprox(p.goal_tf);
+               ed_tf.isApprox(p.ed_tf) &&
+               is_align == p.is_align;
     }
 
     bool operator!=(const PATH& p) const

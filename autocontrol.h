@@ -58,30 +58,28 @@ public:
     CTRL_PARAM params;
     CTRL_PARAM load_preset(int preset);
 
-    // interface funcs
-    int get_cur_preset_idx();
+    // interface funcs    
     Eigen::Matrix4d get_cur_goal_tf();
     PATH get_cur_global_path();
     PATH get_cur_local_path();
-    QString get_obs_condition();
-    QString get_cur_state();
+    QString get_obs_condition();    
     void clear_path();
 
     void init();
     void stop();
+    void set_goal(QString goal_id);
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
-    void move_hpp(Eigen::Matrix4d goal_tf, int preset);
-    void move_tng(Eigen::Matrix4d goal_tf, int preset);
+    void move_pp(std::vector<QString> node_path, int preset, int is_align);
 
     // global path planning (using topo)
-    PATH calc_global_path(Eigen::Matrix4d goal, bool is_hpp = false);    
+    PATH calc_global_path(Eigen::Matrix4d goal);
+    PATH calc_global_path(std::vector<QString> node_path, int is_align);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
     std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);
     std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step, bool use_ccma = true);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
 
-    void calc_ref_v0(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v);
     void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
@@ -98,14 +96,10 @@ public:
     // control loop
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
-    void b_loop_pp(Eigen::Matrix4d goal_tf);    
-    void b_loop_hpp(Eigen::Matrix4d goal_tf);
-    void b_loop_tng(Eigen::Matrix4d goal_tf);
+    void b_loop_pp();
 
-    // storage    
-    int cur_preset_idx;
+    // storage        
     Eigen::Matrix4d cur_goal_tf;
-    QString cur_state = "complete"; // complete, request, moving
 
     PATH cur_global_path;
     PATH cur_local_path;
@@ -114,10 +108,11 @@ public:
     Eigen::Vector3d last_tgt_pos;
     Eigen::Vector3d last_local_goal;
 
-    // flags    
+    // flags
     std::atomic<bool> is_multi = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};
+    std::atomic<bool> is_goal = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
     QString obs_condition = "none";
 

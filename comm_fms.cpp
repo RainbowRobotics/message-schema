@@ -19,6 +19,11 @@ COMM_FMS::~COMM_FMS()
     }
 }
 
+QString COMM_FMS::get_json(QJsonObject& json, QString key)
+{
+    return json[key].toString();
+}
+
 void COMM_FMS::init()
 {
     // make robot id
@@ -71,28 +76,45 @@ void COMM_FMS::disconnected()
 // recv callback
 void COMM_FMS::recv_message(QString message)
 {
+    QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
+    if(get_json(data, "robot_id") != robot_id)
+    {
+        return;
+    }
 
-}
+    // parsing
+    if(get_json(data, "type") == "goal")
+    {
+        QString goal_id = get_json(data, "goal_id");
+        double time = get_json(data, "time").toDouble()/1000;
 
-// recv slots
-void COMM_FMS::recv_path(std::vector<QString> node_path)
-{
+        ctrl->set_goal(goal_id);
+        printf("[COMM_FMS] recv_goal, goal_id: %s, time: %.3f\n", goal_id.toLocal8Bit().data(), time);
+    }
+    else if(get_json(data, "type") == "path")
+    {
+        QString path_str = get_json(data, "path");
+        int preset = get_json(data, "preset").toInt();
+        int is_align = get_json(data, "is_align").toInt();
+        double time = get_json(data, "time").toDouble()/1000;
 
-}
+        QStringList path_str_list = path_str.split(",");
+        std::vector<QString> path;
+        for(int p = 0; p < path_str_list.size(); p++)
+        {
+            path.push_back(path_str_list[p]);
+        }
 
-void COMM_FMS::recv_pause()
-{
+        ctrl->move_pp(path, preset, is_align);
+        printf("[COMM_FMS] recv_path, num: %d, preset: %d, is_align: %d, time: %.3f\n", (int)path.size(), preset, is_align, time);
+    }
+    else if(get_json(data, "type") == "stop")
+    {
+        double time = get_json(data, "time").toDouble()/1000;
 
-}
-
-void COMM_FMS::recv_resume()
-{
-
-}
-
-void COMM_FMS::recv_stop()
-{
-
+        ctrl->stop();
+        printf("[COMM_FMS] recv_stop, time: %.3f\n", time);
+    }
 }
 
 // send slots
@@ -103,7 +125,17 @@ void COMM_FMS::send_info()
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-    QString state = ctrl->get_cur_state();
+
+    QString state = "stop";
+    if(ctrl->is_moving)
+    {
+        state = "move";
+    }
+    else if(ctrl->is_goal)
+    {
+        state = "plan";
+        ctrl->is_goal = false;
+    }
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -114,7 +146,7 @@ void COMM_FMS::send_info()
     rootObj["cur_tf"] = TF_to_string(cur_tf);
     rootObj["goal_tf"] = TF_to_string(goal_tf);
     rootObj["cur_node_id"] = cur_node_id;
-    rootObj["goal_node_id"] = goal_node_id;
+    rootObj["goal_node_id"] = goal_node_id;    
     rootObj["state"] = state;
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 

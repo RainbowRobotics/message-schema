@@ -47,26 +47,19 @@ public:
 
     // funcs
     void init();
+    QString get_json(QJsonObject& json, QString key);
 
 Q_SIGNALS:
-    void signal_recv_path(std::vector<QString> node_path);
-    void signal_recv_pause();
-    void signal_recv_resume();
-    void signal_recv_stop();
 
 private Q_SLOTS:
     void reconnect_loop();
 
     void connected();
     void disconnected();
+
     void recv_message(QString message);
 
 private Q_SLOTS:
-    // recv slots
-    void recv_path(std::vector<QString> node_path);
-    void recv_pause();
-    void recv_resume();
-    void recv_stop();
 
     // send slots
     void send_info();
