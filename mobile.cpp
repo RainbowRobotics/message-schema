@@ -312,7 +312,7 @@ void MOBILE::recv_loop()
     logger->write_log("[MOBILE] connected", "Green", true, false);
 
     // var init
-    const int packet_size = 91;
+    const int packet_size = 92;
     std::vector<uchar> buf;
     int drop_cnt = 10;
 
