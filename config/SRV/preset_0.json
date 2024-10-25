@@ -7,7 +7,7 @@
     "LIMIT_PIVOT_W": "60.0",  
     "ST_V": "0.1",
     "ED_V": "0.1",
-    "DRIVE_T": "0.0",
+    "DRIVE_T": "0.05",
     "DRIVE_H": "2.5",
     "DRIVE_A": "1.2",
     "DRIVE_B": "0.05",
