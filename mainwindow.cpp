@@ -1374,6 +1374,9 @@ void MainWindow::bt_MapLoad()
         map_dir = path;
         unimap.load_map(path);
         all_update();
+
+        config.MAP_PATH = map_dir;
+        config.save_map_path();
     }
 }
 
@@ -2305,6 +2308,23 @@ void MainWindow::watch_loop()
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
+            // led control(temp)
+            if(ctrl.is_moving)
+            {
+                if(ctrl.get_obs_condition() == "near")
+                {
+                    mobile.led(0, 5); // yellow blink
+                }
+                else
+                {
+                    mobile.led(0, 2); // white
+                }
+            }
+            else
+            {
+                mobile.led(0, 1); // green
+            }
+
             // check mobile
             if(mobile.is_connected)
             {
