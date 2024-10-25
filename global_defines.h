@@ -251,7 +251,57 @@ struct PICKING
     }
 };
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
+#if defined(USE_SRV)
+struct MOBILE_STATUS
+{
+    double t = 0;
+
+    // motor status
+    uint8_t connection_m0 = 0;
+    uint8_t connection_m1 = 0;
+
+    uint8_t status_m0 = 0;
+    uint8_t status_m1 = 0;
+
+    uint8_t temp_m0 = 0;
+    uint8_t temp_m1 = 0;
+
+    uint8_t temp_ex_m0 = 0;
+    uint8_t temp_ex_m1 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+
+    uint8_t charge_state = 0;
+    uint8_t power_state = 0;
+    uint8_t emo_state = 0;
+    uint8_t remote_state = 0;
+
+    float bat_in = 0;
+    float bat_out = 0;
+    float bat_current = 0;
+    float power = 0;
+    float total_power = 0;
+
+    float core_temp0 = 0;
+    float core_temp1 = 0;
+    uint8_t state = 0;
+
+    // for timesync
+    uint32_t recv_tick = 0;
+    float return_time = 0;
+
+    // imu status
+    float imu_gyr_x =0;
+    float imu_gyr_y =0;
+    float imu_gyr_z =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
+};
+#endif
+
+#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
 struct MOBILE_STATUS
 {
     double t = 0;
