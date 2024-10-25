@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
     connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));    
+    connect(ui->bt_EditNodeName, SIGNAL(clicked()), this, SLOT(bt_EditNodeName()));
     connect(ui->bt_MinGapNodeX, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeX()));
     connect(ui->bt_MinGapNodeY, SIGNAL(clicked()), this, SLOT(bt_MinGapNodeY()));
     connect(ui->bt_AlignNodeX, SIGNAL(clicked()), this, SLOT(bt_AlignNodeX()));
@@ -302,20 +303,6 @@ void MainWindow::init_modules()
         ui->bt_SimInit->setEnabled(true);
     }
 
-    /*
-    // map auto load
-    if(config.MAP_PATH != "")
-    {
-        QDir dir(config.MAP_PATH);
-        if(dir.exists())
-        {
-            map_dir = config.MAP_PATH;
-            unimap.load_map(map_dir);
-            all_update();
-        }
-    }
-    */
-
     // log module init (slamnav)
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
@@ -451,6 +438,18 @@ void MainWindow::init_modules()
     cui.obsmap = &obsmap;
     cui.ctrl = &ctrl;
     cui.init();
+
+    // map auto load
+    if(config.MAP_PATH != "")
+    {
+        QDir dir(config.MAP_PATH);
+        if(dir.exists())
+        {
+            map_dir = config.MAP_PATH;
+            unimap.load_map(map_dir);
+            all_update();
+        }
+    }
 
     // start watchdog loop
     watch_flag = true;
@@ -1465,6 +1464,12 @@ void MainWindow::bt_EditNodeType()
 void MainWindow::bt_EditNodeInfo()
 {
     unimap.edit_node_info(pick, ui->te_NodeInfo->toPlainText());
+    topo_update();
+}
+
+void MainWindow::bt_EditNodeName()
+{
+    unimap.edit_node_name(pick);
     topo_update();
 }
 
@@ -2981,8 +2986,7 @@ void MainWindow::pick_plot()
                 viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString id = node->id;
-                QString text = id;
+                QString text = node->name;
 
                 pcl::PointXYZ position;
                 position.x = node->tf(0,3);
@@ -4169,8 +4173,7 @@ void MainWindow::pick_plot2()
                     }
 
                     // plot text
-                    QString id = node->id;
-                    QString text = id;
+                    QString text = node->name;
 
                     pcl::PointXYZ position;
                     position.x = node->tf(0,3);
@@ -4202,8 +4205,7 @@ void MainWindow::pick_plot2()
                     }
 
                     // plot text
-                    QString id = node->id;
-                    QString text = id;
+                    QString text = node->name;
 
                     pcl::PointXYZ position;
                     position.x = node->tf(0,3);

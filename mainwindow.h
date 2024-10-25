@@ -224,6 +224,7 @@ public Q_SLOTS:
     void bt_EditNodePos();
     void bt_EditNodeType();
     void bt_EditNodeInfo();
+    void bt_EditNodeName();
     void bt_MinGapNodeX();
     void bt_MinGapNodeY();    
     void bt_AlignNodeX();

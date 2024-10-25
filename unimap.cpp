@@ -2,6 +2,7 @@
 
 UNIMAP::UNIMAP(QObject *parent) : QObject(parent)
 {    
+
 }
 
 UNIMAP::~UNIMAP()
@@ -242,7 +243,7 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
 {
     if(pick.cur_node == "")
     {
-        QString name = "";
+        QString name = gen_node_name();
         if(type == "ZONE")
         {
             name = QInputDialog::getText(nullptr, "INPUT", "name:");
@@ -292,6 +293,7 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     // for quick annotation
     NODE node;
     node.id = gen_node_id();
+    node.name = gen_node_name();
     node.type = type;
     node.info = "";
     node.tf = tf;
@@ -360,6 +362,26 @@ void UNIMAP::edit_node_info(PICKING pick, QString info)
     if(node != NULL)
     {
         node->info = info;
+    }
+}
+
+void UNIMAP::edit_node_name(PICKING pick)
+{
+    if(pick.cur_node == "")
+    {
+        printf("cur_node empty\n");
+        return;
+    }
+
+    NODE* node = get_node_by_id(pick.cur_node);
+    if(node != NULL)
+    {
+        bool ok;
+        QString str = QInputDialog::getText(NULL, "Input", "node name:", QLineEdit::Normal, node->name, &ok);
+        if(ok && !str.isEmpty())
+        {
+            node->name = str;
+        }
     }
 }
 
@@ -500,6 +522,30 @@ QString UNIMAP::gen_node_id()
 {
     QString res;
     res.sprintf("N_%lld", (long long)(get_time0()*1000));
+    return res;
+}
+
+QString UNIMAP::gen_node_name()
+{
+    int max = 0;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        QString str = nodes[p].name;
+        QStringList str_list = str.split("_");
+        if(str_list.size() != 2)
+        {
+            continue;
+        }
+
+        int n = str_list[1].toInt();
+        if(n > max)
+        {
+            max = n;
+        }
+    }
+
+    QString res;
+    res.sprintf("N_%d", max + 1);
     return res;
 }
 
