@@ -79,7 +79,7 @@
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
-        "OBS_MAP_MIN_V": "0.1",
+        "OBS_MAP_MIN_V": "0.3",
         "OBS_MAP_MIN_Z": "-1.0",
         "OBS_MAP_RANGE": "5.0",
         "OBS_PATH_MARGIN_X": "0.05",
@@ -89,7 +89,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/rainbow/maps/2024_10_25_18_26_13_059"
+        "MAP_PATH": "/home/rainbow/maps/2024_10_27_18_07_07_692"
     },
     "robot": {
         "PLATFORM_NAME": "TT",
