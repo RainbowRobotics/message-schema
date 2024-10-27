@@ -1306,12 +1306,25 @@ PATH AUTOCONTROL::calc_avoid_path()
             path_pose.push_back(global_path.pose[p]);
         }
 
+        path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
+        std::vector<Eigen::Vector3d> path_pos;
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pos.push_back(path_pose[p].block(0,3,3,1));
+        }
+        path_pos = path_ccma(path_pos);
+
+        path_pos = path_resampling(path_pos, LOCAL_PATH_STEP);
+        path_pose = calc_path_tf(path_pos);
+
+        /*
         path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
         std::vector<Eigen::Vector3d> path_pos;
         for(size_t p = 0; p < path_pose.size(); p++)
         {
             path_pos.push_back(path_pose[p].block(0,3,3,1));
         }
+        */
 
         // set ref_v
         std::vector<double> ref_v;
@@ -1649,8 +1662,9 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs decel
             QString _obs_condition = "none";
+
             double obs_v = config->OBS_MAP_MIN_V;
-            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.05)
+            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.01)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->OBS_PREDICT_TIME, cur_tf);
 
@@ -1739,7 +1753,7 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;
+            double v = ref_v;            
             v = saturation(v, 0.0, obs_v);
             v = saturation(v, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);

@@ -2161,7 +2161,7 @@ void MainWindow::bt_TaskAdd()
         return;
     }
 
-    if(node->type == "GOAL")
+    if(node->type == "GOAL" || node->type == "INIT")
     {
         task.add_task(node);
     }
@@ -2353,12 +2353,13 @@ void MainWindow::watch_loop()
                 }
                 else
                 {
-                    mobile.led(0, LED_WHITE); // white
+                    mobile.led(0, LED_CYAN); // cyan
                 }
             }
             else
             {
-                mobile.led(0, LED_CYAN); // green
+                mobile.led(0, LED_WHITE); // green
+
             }
 
             // check mobile
