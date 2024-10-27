@@ -68,6 +68,7 @@ public:
     // funcs
     void init_modules();
     void setup_vtk();
+    void all_plot_clear();
     void ui_tasks_update();
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
@@ -171,7 +172,7 @@ public:
     void map_plot2();
     void topo_plot2();
     void pick_plot2();
-    void loc_plot2();
+    void loc_plot2();    
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);

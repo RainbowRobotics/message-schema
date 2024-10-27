@@ -10,6 +10,29 @@ UNIMAP::~UNIMAP()
 
 }
 
+void UNIMAP::clear()
+{
+    is_loaded = false;
+
+    kdtree_mask.clear();
+    kdtree_cloud.pts.clear();
+
+    if(kdtree_index != NULL)
+    {
+        delete kdtree_index;
+        kdtree_index = NULL;
+    }
+
+    nodes.clear();
+
+    map_min_x = 99999999;
+    map_max_x = -99999999;
+    map_min_y = 99999999;
+    map_max_y = -99999999;
+    map_min_z = 99999999;
+    map_max_z = -99999999;
+}
+
 void UNIMAP::load_map(QString path)
 {
     // clear flag
