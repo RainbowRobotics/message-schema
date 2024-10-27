@@ -440,7 +440,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
 
     // divide and smooth metric path
     std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    path_pos = path_ccma(path_pos);
+    //path_pos = path_ccma(path_pos);
 
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
@@ -1711,7 +1711,7 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc ref_v            
             double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
-            double goal_v = saturation(0.75 * goal_err_d, params.ED_V, params.LIMIT_V);
+            double goal_v = 0.75 * goal_err_d;
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
@@ -1740,11 +1740,10 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;            
-
+            double v = ref_v;
             v = saturation(v, 0.0, obs_v);
-            v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, 0.0, goal_v);
+            v = saturation(v, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
             double th = (params.DRIVE_A * err_th)
@@ -1754,7 +1753,8 @@ void AUTOCONTROL::b_loop_pp()
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
-            double w = (v * std::tan(th)) / params.DRIVE_L;
+            //double w = (v * std::tan(th)) / params.DRIVE_L;
+            double w = std::tan(th) / params.DRIVE_L;
             double w0 = cur_vel[2];
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
@@ -1983,7 +1983,16 @@ void AUTOCONTROL::b_loop_pp()
                     continue;
                 }
 
-                mobile->move(vel[0], vel[1], vel[2]);
+                double v0 = cur_vel[0];
+                double w0 = cur_vel[2];
+                double v = vel[0];
+                double w = vel[2];
+                v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+                v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+                w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+                w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
+
+                mobile->move(v, 0, w);
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {

@@ -154,9 +154,6 @@ MainWindow::MainWindow(QWidget *parent)
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
 
-    // set plot window
-    setup_vtk();
-
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
     {
@@ -164,31 +161,34 @@ MainWindow::MainWindow(QWidget *parent)
         QTimer::singleShot(100, [&]()
         {
             ui->main_tab->setCurrentIndex(0);
+
+            // set plot window
+            setup_vtk();
+
+            // init modules
+            init_modules();
+
+            // start plot loop
+            if(config.SIM_MODE == 1)
+            {
+                plot_timer.start(50);
+                plot_timer2.start(50);
+            }
+            else
+            {
+                plot_timer.start(100);
+                plot_timer2.start(100);
+            }
+
+            QTimer::singleShot(3000, [&]()
+            {
+                if(mobile.is_connected)
+                {
+                    mobile.motor_on();
+                    printf("[MAIN] first time motor on\n");
+                }
+            });
         });
-    });
-
-    // init modules
-    init_modules();
-
-    // start plot loop
-    if(config.SIM_MODE == 1)
-    {
-        plot_timer.start(50);
-        plot_timer2.start(50);        
-    }
-    else
-    {
-        plot_timer.start(100);
-        plot_timer2.start(100);
-    }
-
-    QTimer::singleShot(3000, [&]()
-    {
-        if(mobile.is_connected)
-        {
-            mobile.motor_on();
-            printf("[MAIN] first time motor on\n");
-        }
     });
 }
 
