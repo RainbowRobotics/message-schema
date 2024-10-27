@@ -1059,6 +1059,16 @@ void COMM_MS::slot_mapload(double time, QString name)
     }
 }
 
+void COMM_MS::slot_localization_semiautoinit_succeed(QString message)
+{
+    send_localization_response("semiautoinit", "success");
+}
+
+void COMM_MS::slot_localization_semiautoinit_failed(QString message)
+{
+    send_localization_response("semiautoinit", "fail");
+}
+
 void COMM_MS::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
@@ -1066,7 +1076,23 @@ void COMM_MS::slot_localization_autoinit(double time)
 
 void COMM_MS::slot_localization_semiautoinit(double time)
 {
+    #ifdef USE_SRV
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
+    {
+        send_localization_response("semiautoinit", "fail");
+        return;
+    }
+    #endif
+
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
+    if(unimap->is_loaded == false || lidar->is_connected_f == false || lidar->is_connected_b == false)
+    {
+        send_localization_response("semiautoinit", "fail");
+        return;
+    }
+    #endif
+
+    if(slam->is_busy)
     {
         send_localization_response("semiautoinit", "fail");
         return;
@@ -1084,20 +1110,6 @@ void COMM_MS::slot_localization_semiautoinit(double time)
     }
 
     semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, slam);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    while(!slam->is_busy)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    if(slam->is_init)
-    {
-        send_localization_response("semiautoinit", "success");
-        return;
-    }
-
-    send_localization_response("semiautoinit", "fail");
     return;
 }
 

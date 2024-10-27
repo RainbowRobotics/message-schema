@@ -123,6 +123,16 @@ enum AUTO_FSM_STATE
     AUTO_FSM_PAUSE,    
 };
 
+enum LED_STATE
+{
+    LED_OFF = 0,
+    LED_RED,
+    LED_WHITE,
+    LED_CYAN,
+    LED_CYAN_DIM,
+    LED_MAGENTA
+};
+
 enum DOCKING_FSM_STATE
 {
     DOCKING_FSM_DRIVING = 0,

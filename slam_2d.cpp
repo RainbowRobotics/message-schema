@@ -1684,15 +1684,44 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 void SLAM_2D::semi_auto_init_start()
 {
     is_busy = true;
+    is_init = false;
+
+    if(unimap->kdtree_cloud.pts.size() == 0)
+    {
+        is_busy = false;
+        Q_EMIT signal_localization_semiautoinit_failed("kdtree_cloud size 0");
+        return;
+    }
+
+    int wait_cnt = 0;
+    std::vector<Eigen::Vector3d> _cur_scan = lidar->get_cur_scan();
+    while(_cur_scan.size() == 0)
+    {
+        wait_cnt++;
+        if(wait_cnt > 30)
+        {
+            is_busy = false;
+            Q_EMIT signal_localization_semiautoinit_failed("cur scan size 0");
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     FRAME frm;
-    frm.pts = lidar->get_cur_scan();
+    frm.pts = _cur_scan;
 
     // find best match
     Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
     double min_cost = std::numeric_limits<double>::max();
 
     std::vector<QString> ids = unimap->get_nodes("INIT");
+    if(ids.size() == 0)
+    {
+        is_busy = false;
+        Q_EMIT signal_localization_semiautoinit_failed("no INIT nodes");
+        return;
+    }
+
     for(size_t p=0; p<ids.size(); p++)
     {
         NODE* node = unimap->get_node_by_id(ids[p]);
@@ -1720,7 +1749,6 @@ void SLAM_2D::semi_auto_init_start()
         }
     }
 
-    is_init = false;
     if(min_cost != std::numeric_limits<double>::max())
     {
         is_init = true;
@@ -1732,9 +1760,12 @@ void SLAM_2D::semi_auto_init_start()
         mtx.unlock();
 
         localization_start();
+        Q_EMIT signal_localization_semiautoinit_succeed("success");
     }
     else
     {
+        is_init = false;
+        Q_EMIT signal_localization_semiautoinit_failed("failed semi-auto init");
         printf("[AUTOINIT] failed auto init.\n");
     }
 
