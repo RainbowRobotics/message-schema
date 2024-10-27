@@ -1711,7 +1711,6 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc ref_v            
             double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
-            double goal_v = 0.75 * goal_err_d;
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
@@ -1742,7 +1741,6 @@ void AUTOCONTROL::b_loop_pp()
             double v0 = cur_vel[0];
             double v = ref_v;
             v = saturation(v, 0.0, obs_v);
-            v = saturation(v, 0.0, goal_v);
             v = saturation(v, v0 - 2.0*params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
@@ -1782,8 +1780,9 @@ void AUTOCONTROL::b_loop_pp()
                 // check local sign
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                v = config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0];
 
-                extend_dt += dt;                
+                extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || _goal_pos[0] < 0)
                 {
                     extend_dt = 0;

@@ -18,6 +18,7 @@ class UNIMAP : public QObject
 public:
     explicit UNIMAP(QObject *parent = nullptr);
     ~UNIMAP();
+    void clear();
 
     // mutex
     std::mutex mtx;
@@ -25,7 +26,7 @@ public:
     // map dir
     QString map_dir;
 
-    // interface func
+    // interface func    
     void load_map(QString path);
     void save_map();
     void save_annotation();

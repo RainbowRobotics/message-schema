@@ -503,6 +503,21 @@ void MainWindow::setup_vtk()
     }
 }
 
+void MainWindow::all_plot_clear()
+{
+    viewer->removeAllCoordinateSystems();
+    viewer->removeAllPointClouds();
+    viewer->removeAllShapes();
+
+    viewer2->removeAllCoordinateSystems();
+    viewer2->removeAllPointClouds();
+    viewer2->removeAllShapes();
+
+    // add global axis
+    viewer->addCoordinateSystem(1.0, "O_global");
+    viewer2->addCoordinateSystem(1.0, "O_global");
+}
+
 // for picking interface
 bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
@@ -1264,6 +1279,14 @@ void MainWindow::bt_MapBuild()
         return;
     }
 
+    // stop first
+    slam.localization_stop();
+    slam.mapping_stop();
+
+    // clear first
+    unimap.clear();
+    all_plot_clear();
+
     // auto generation dir path
     QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
     QDir().mkpath(_map_dir);
@@ -1407,6 +1430,8 @@ void MainWindow::bt_LocInitSemiAuto()
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+
 }
 
 void MainWindow::bt_LocInitAuto()
@@ -1416,6 +1441,12 @@ void MainWindow::bt_LocInitAuto()
 
 void MainWindow::bt_LocStart()
 {
+    if(slam.is_slam)
+    {
+        printf("[MAIN] mapping already running\n");
+        return;
+    }
+
     slam.localization_start();
 }
 
@@ -2081,7 +2112,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    logger.write_log("hello", "Green", true, false);
+    all_plot_clear();
 }
 
 // for obsmap
