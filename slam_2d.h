@@ -133,7 +133,8 @@ public:
     void obs_loop();
 
 Q_SIGNALS:
-
+    void signal_localization_semiautoinit_succeed(QString message);
+    void signal_localization_semiautoinit_failed(QString message);
 };
 
 #endif // SLAM_2D_H

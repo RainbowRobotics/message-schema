@@ -611,7 +611,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        if(nodes[p].type == "GOAL")
+        if(nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
             double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
             if(d < config->ROBOT_RADIUS*2 && d < min_d)
@@ -641,7 +641,7 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL")
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
             double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
             if(d < min_d)

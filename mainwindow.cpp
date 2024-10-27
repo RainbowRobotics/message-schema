@@ -128,9 +128,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
-    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));    
+    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
     connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &cms, SLOT(slot_move_succeed(QString)));
     connect(&ctrl, SIGNAL(signal_move_failed(QString)), &cms, SLOT(slot_move_failed(QString)));
+
+    // for slam
+    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cms, SLOT(slot_localization_semiautoinit_succeed(QString)));
+    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cms, SLOT(slot_localization_semiautoinit_failed(QString)));
+    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cui, SLOT(slot_localization_semiautoinit_succeed(QString)));
+    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cui, SLOT(slot_localization_semiautoinit_failed(QString)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -1413,6 +1419,12 @@ void MainWindow::bt_LocInit()
 
 void MainWindow::bt_LocInitSemiAuto()
 {
+    if(slam.is_busy)
+    {
+        printf("[AUTO_INIT] semi-auto init already running\n");
+        return;
+    }
+
     logger.write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
     slam.localization_stop();
 
@@ -1423,15 +1435,8 @@ void MainWindow::bt_LocInitSemiAuto()
         semi_auto_init_thread->join();
         semi_auto_init_thread = NULL;
     }
+
     semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, &slam);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    while(!slam.is_busy)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-
 }
 
 void MainWindow::bt_LocInitAuto()
@@ -2344,16 +2349,16 @@ void MainWindow::watch_loop()
             {
                 if(ctrl.get_obs_condition() == "near")
                 {
-                    mobile.led(0, 5); // yellow blink
+                    mobile.led(0, LED_RED); // red
                 }
                 else
                 {
-                    mobile.led(0, 2); // white
+                    mobile.led(0, LED_WHITE); // white
                 }
             }
             else
             {
-                mobile.led(0, 1); // green
+                mobile.led(0, LED_CYAN); // green
             }
 
             // check mobile

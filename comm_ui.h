@@ -115,6 +115,8 @@ public Q_SLOTS:
 
     void slot_localization_autoinit(double time);
     void slot_localization_semiautoinit(double time);
+    void slot_localization_semiautoinit_succeed(QString message);
+    void slot_localization_semiautoinit_failed(QString message);
     void slot_localization_init(double time, double x, double y, double z, double rz);
     void slot_localization_start(double time);
     void slot_localization_stop(double time);
