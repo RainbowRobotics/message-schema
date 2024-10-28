@@ -1,7 +1,7 @@
 {
 	"robot": {
 		"PLATFORM_NAME": "400_LAKI",
-		"PLATFORM_TYPE": "AMR"
+		"PLATFORM_TYPE": "AMR_400_LAKI"
 	},
 	"debug": {
 		"SIM_MODE": "0"

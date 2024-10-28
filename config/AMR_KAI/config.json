@@ -1,7 +1,7 @@
 {
 	"robot": {
 		"PLATFORM_NAME": "MECANUM",
-		"PLATFORM_TYPE": "AMR"
+		"PLATFORM_TYPE": "AMR_KAI"
 	},
 	"debug": {
 		"SIM_MODE": "0"

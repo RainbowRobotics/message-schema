@@ -67,7 +67,7 @@ QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
 
 void COMM_MS::init()
 {
-    //reconnect_timer.start(10000);
+    reconnect_timer.start(10000);
 }
 
 void COMM_MS::sio_connected()
@@ -91,7 +91,8 @@ void COMM_MS::reconnect_loop()
 {
     if(is_connected == false)
     {
-        io->connect("ws://localhost:11337");
+        //io->connect("ws://localhost:11337");
+        io->connect("ws://10.108.1.10:11337");
         reconnect_cnt++;
         if(reconnect_cnt > 10)
         {
@@ -807,7 +808,9 @@ void COMM_MS::slot_motorinit(double time)
 
 void COMM_MS::slot_move_jog(double time, double vx, double vy, double wz)
 {
-    mobile->move(vx, vy, wz*D2R);
+    MainWindow* _main = (MainWindow*)main;
+    _main->update_jog_values(vx, vy, wz*D2R);
+    //mobile->move(vx, vy, wz*D2R);
 }
 
 void COMM_MS::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
