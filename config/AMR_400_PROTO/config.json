@@ -1,7 +1,7 @@
 {
 	"robot": {
 		"PLATFORM_NAME": "400_PROTO",
-		"PLATFORM_TYPE": "AMR"
+		"PLATFORM_TYPE": "AMR_400_PROTO"
 	},
 	"debug": {
 		"SIM_MODE": "0"

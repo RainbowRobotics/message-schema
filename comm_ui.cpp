@@ -276,7 +276,9 @@ void COMM_UI::slot_motorinit(double time)
 
 void COMM_UI::slot_move_jog(double time, double vx, double vy, double wz)
 {
-    mobile->move(vx, vy, wz*D2R);
+    MainWindow* _main = (MainWindow*)main;
+    _main->update_jog_values(vx, vy, wz*D2R);
+    //mobile->move(vx, vy, wz*D2R);
 }
 
 void COMM_UI::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
