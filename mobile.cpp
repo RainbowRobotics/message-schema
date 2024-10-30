@@ -815,7 +815,7 @@ void MOBILE::recv_loop()
                 mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
                 // get orientation
-                Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
+                Eigen::Matrix3d R = Eigen::Matrix3d::Identity();//Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
                 Eigen::Vector3d r = Sophus::SO3d::fitToSO3(R).log();
 
                 MOBILE_IMU imu;
