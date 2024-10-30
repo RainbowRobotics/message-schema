@@ -1761,11 +1761,9 @@ void AUTOCONTROL::b_loop_pp()
             double th = (params.DRIVE_A * err_th)
                         + (params.DRIVE_B * (err_th-pre_err_th)/dt)
                         + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
-
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
-            //double w = (v * std::tan(th)) / params.DRIVE_L;
             double w = std::tan(th) / params.DRIVE_L;
             double w0 = cur_vel[2];
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
@@ -1794,7 +1792,7 @@ void AUTOCONTROL::b_loop_pp()
                 // check local sign
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
-                v = config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0];
+                v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], params.ED_V, v);
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME || _goal_pos[0] < 0)

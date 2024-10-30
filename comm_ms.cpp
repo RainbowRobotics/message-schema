@@ -91,8 +91,9 @@ void COMM_MS::reconnect_loop()
 {
     if(is_connected == false)
     {
-        //io->connect("ws://localhost:11337");
-        io->connect("ws://10.108.1.10:11337");
+        io->connect("ws://localhost:11337");
+        //io->connect("ws://10.108.1.10:11337"); // for test
+
         reconnect_cnt++;
         if(reconnect_cnt > 10)
         {
