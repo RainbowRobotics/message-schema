@@ -179,6 +179,12 @@ void CONFIG::load()
             {
                 SIM_MODE = obj_debug["SIM_MODE"].toString().toInt();
                 printf("[CONFIG] SIM_MODE, %s\n", obj_debug["SIM_MODE"].toString().toLocal8Bit().data());
+
+                USE_IMU = obj_debug["USE_IMU"].toString().toInt();
+                printf("[CONFIG] USE_IMU, %s\n", obj_debug["USE_IMU"].toString().toLocal8Bit().data());
+
+                USE_BEEP = obj_debug["USE_BEEP"].toString().toInt();
+                printf("[CONFIG] USE_BEEP, %s\n", obj_debug["USE_BEEP"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

@@ -62,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MoveLinear, SIGNAL(clicked()), this, SLOT(bt_MoveLinear()));
     connect(ui->bt_MoveRotate, SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
+    connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
 
     // jog
     connect(ui->bt_JogF, SIGNAL(pressed()), this, SLOT(bt_JogF()));
@@ -168,30 +169,24 @@ MainWindow::MainWindow(QWidget *parent)
         {
             ui->main_tab->setCurrentIndex(0);
 
-            // set plot window
-            setup_vtk();
-
-            // init modules
-            init_modules();
-
-            // start plot loop
-            if(config.SIM_MODE == 1)
+            QTimer::singleShot(1000, [&]()
             {
-                plot_timer.start(50);
-                plot_timer2.start(50);
-            }
-            else
-            {
-                plot_timer.start(100);
-                plot_timer2.start(100);
-            }
+                // set plot window
+                setup_vtk();
 
-            QTimer::singleShot(3000, [&]()
-            {
-                if(mobile.is_connected)
+                // init modules
+                init_modules();
+
+                // start plot loop
+                if(config.SIM_MODE == 1)
                 {
-                    mobile.motor_on();
-                    printf("[MAIN] first time motor on\n");
+                    plot_timer.start(50);
+                    plot_timer2.start(50);
+                }
+                else
+                {
+                    plot_timer.start(100);
+                    plot_timer2.start(100);
                 }
             });
         });
@@ -445,6 +440,7 @@ void MainWindow::init_modules()
     cui.ctrl = &ctrl;
     cui.init();
 
+    /*
     // map auto load
     if(config.MAP_PATH != "")
     {
@@ -456,6 +452,7 @@ void MainWindow::init_modules()
             all_update();
         }
     }
+    */
 
     // start watchdog loop
     watch_flag = true;
@@ -533,76 +530,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         if(ui->cb_ViewType->currentText() == "VIEW_3D")
         {
             return false;
-        }
-
-        // keyboard event
-        if(ev->type() == QEvent::KeyPress)
-        {
-            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-            if(ke->isAutoRepeat())
-            {
-                return false;
-            }
-
-            key_active = true;
-
-            int cur_key = ke->key();
-            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
-            {
-                update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else
-            {
-                return false;
-            }
-
-            return true;
-        }
-        else if(ev->type() == QEvent::KeyRelease)
-        {
-            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-            if(ke->isAutoRepeat())
-            {
-                return false;
-            }
-
-            key_active = false;
-
-            int cur_key = ke->key();
-            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
-            {
-                update_jog_values(0, 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
-            {
-                update_jog_values(mobile.vx0, 0, 0);
-            }
-            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
-            {
-                update_jog_values(0, 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
-            {
-                update_jog_values(mobile.vx0, 0, 0);
-            }
-            else
-            {
-                return false;
-            }
-
-            return true;
         }
 
         // mouse event
@@ -735,76 +662,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
     }
     else if(object == ui->qvtkWidget2)
     {
-        // keyboard event
-        if(ev->type() == QEvent::KeyPress)
-        {
-            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-            if(ke->isAutoRepeat())
-            {
-                return false;
-            }
-
-            key_active = true;
-
-            int cur_key = ke->key();
-            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
-            {
-                update_jog_values(ui->spb_JogV->value(), 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
-            {
-                update_jog_values(mobile.vx0, 0, ui->spb_JogW->value()*D2R);
-            }
-            else
-            {
-                return false;
-            }
-
-            return true;
-        }
-        else if(ev->type() == QEvent::KeyRelease)
-        {
-            QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
-            if(ke->isAutoRepeat())
-            {
-                return false;
-            }
-
-            key_active = false;
-
-            int cur_key = ke->key();
-            if(cur_key == Qt::Key_Up || cur_key == Qt::Key_W)
-            {
-                update_jog_values(0, 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Left || cur_key == Qt::Key_A)
-            {
-                update_jog_values(mobile.vx0, 0, 0);
-            }
-            else if(cur_key == Qt::Key_Down || cur_key == Qt::Key_S)
-            {
-                update_jog_values(0, 0, mobile.wz0);
-            }
-            else if(cur_key == Qt::Key_Right || cur_key == Qt::Key_D)
-            {
-                update_jog_values(mobile.vx0, 0, 0);
-            }
-            else
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
         {
@@ -1148,6 +1005,8 @@ Eigen::Vector3d MainWindow::ray_intersection(Eigen::Vector3d ray_center, Eigen::
 
 void MainWindow::update_jog_values(double vx, double vy, double wz)
 {
+    last_jog_update_t = get_time();
+
     vx_target = vx;
     vy_target = vy;
     wz_target = wz;
@@ -1233,47 +1092,32 @@ void MainWindow::bt_MoveRotate()
 
 void MainWindow::bt_JogF()
 {
-    if(!key_active)
-    {
-        button_active = true;
-        update_jog_values(ui->spb_JogV->value(), 0, 0);
-    }
+    is_jog_pressed = true;
+    update_jog_values(ui->spb_JogV->value(), 0, 0);
 }
 
 void MainWindow::bt_JogB()
 {
-    if(!key_active)
-    {
-        button_active = true;
-        update_jog_values(-ui->spb_JogV->value(), 0, 0);
-    }
+    is_jog_pressed = true;
+    update_jog_values(-ui->spb_JogV->value(), 0, 0);
 }
 
 void MainWindow::bt_JogL()
 {
-    if(!key_active)
-    {
-        button_active = true;
-        update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
-    }
+    is_jog_pressed = true;
+    update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
 }
 
 void MainWindow::bt_JogR()
 {
-    if(!key_active)
-    {
-        button_active = true;
-        update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
-    }
+    is_jog_pressed = true;
+    update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
 }
 
 void MainWindow::bt_JogReleased()
 {
-    if(!key_active)
-    {
-        button_active = false;
-        update_jog_values(0, 0, 0);
-    }
+    is_jog_pressed = false;
+    update_jog_values(0, 0, 0);
 }
 
 // for mapping and localization
@@ -2120,6 +1964,12 @@ void MainWindow::bt_Test()
     all_plot_clear();
 }
 
+void MainWindow::bt_TestLed()
+{
+    mobile.led(0, ui->spb_Led->value());
+    printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+}
+
 // for obsmap
 void MainWindow::bt_ObsClear()
 {
@@ -2139,6 +1989,11 @@ void MainWindow::ui_tasks_update()
     for(size_t i = 0; i < task.task_node_list.size(); i++)
     {
         NODE* node = unimap.get_node_by_id(task.task_node_list[i]);
+        if(node == NULL)
+        {
+            continue;
+        }
+
         QString res;
         res.sprintf("T_%02d", (int)i);
         node->name = res;
@@ -2181,7 +2036,10 @@ void MainWindow::bt_TaskDel()
         // list delete
         QString id = ui->lw_TaskList->selectedItems().front()->text();
         NODE* node = unimap.get_node_by_id(id);
-        task.del_task(node);
+        if(node != NULL)
+        {
+            task.del_task(node);
+        }
     }
     else
     {
@@ -2298,18 +2156,6 @@ void MainWindow::watch_loop()
             if(cms.is_connected)
             {
                 cms.send_status();
-
-                if(is_global_path_update2)
-                {
-                    is_global_path_update2 = false;
-                    cms.send_global_path();
-                }
-
-                if(is_local_path_update2)
-                {
-                    is_local_path_update2 = false;
-                    cms.send_local_path();
-                }
             }
 
             if(cui.is_connected)
@@ -2329,6 +2175,18 @@ void MainWindow::watch_loop()
             if(cms.is_connected)
             {
                 cms.send_mapping_cloud();
+
+                if(is_global_path_update2)
+                {
+                    is_global_path_update2 = false;
+                    cms.send_global_path();
+                }
+
+                if(is_local_path_update2)
+                {
+                    is_local_path_update2 = false;
+                    cms.send_local_path();
+                }
             }
         }
 
@@ -2344,22 +2202,29 @@ void MainWindow::watch_loop()
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
-            // led control(temp)
+            // led state
+            int led_color = LED_GREEN;
+
+            // autodrive led control
             if(ctrl.is_moving)
             {
-                if(ctrl.get_obs_condition() == "near")
+                if(ctrl.get_obs_condition() == "far")
                 {
-                    mobile.led(0, LED_RED); // red
+                    led_color = LED_WHITE_BLINK;
+                }
+                else if(ctrl.get_obs_condition() == "near")
+                {
+                    led_color = LED_RED;
+
+                    if(config.USE_BEEP)
+                    {
+                        QApplication::beep();
+                    }
                 }
                 else
                 {
-                    mobile.led(0, LED_CYAN); // cyan
+                    led_color = LED_WHITE;
                 }
-            }
-            else
-            {
-                mobile.led(0, LED_WHITE); // green
-
             }
 
             // check mobile
@@ -2390,6 +2255,7 @@ void MainWindow::watch_loop()
                     else
                     {
                         mobile.set_cur_pdu_state("fail");
+                        led_color = LED_MAGENTA;
                     }
                 }
             }
@@ -2439,6 +2305,7 @@ void MainWindow::watch_loop()
             {
                 loc_fail_cnt = 0;
                 slam.set_cur_loc_state("none");
+                led_color = LED_MAGENTA;
             }
             else
             {
@@ -2449,6 +2316,7 @@ void MainWindow::watch_loop()
                     if(loc_fail_cnt > 3)
                     {
                         slam.set_cur_loc_state("fail");
+                        led_color = LED_MAGENTA_BLINK;
                     }
                 }
                 else
@@ -2509,7 +2377,12 @@ void MainWindow::watch_loop()
 
                     if(cnt != 0)
                     {
-                        temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", (int)cpu_temp_sum/cnt, ms.temp_m0, ms.temp_m1);
+                        int pc_temp = cpu_temp_sum/cnt;
+                        temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", pc_temp, ms.temp_m0, ms.temp_m1);
+                        if(pc_temp > 85)
+                        {
+                            led_color = LED_RED_BLINK;
+                        }
                     }
                     else
                     {
@@ -2614,6 +2487,9 @@ void MainWindow::watch_loop()
                     }
                 }
             }
+
+            // set led
+            mobile.led(0, led_color);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -2631,20 +2507,30 @@ void MainWindow::jog_loop()
     printf("[JOG] loop start\n");
     while(jog_flag)
     {
-        double v_acc = ui->spb_AccV->value();
-        double v_decel = ui->spb_DecelV->value();
-
-        double w_acc = ui->spb_AccW->value()*D2R;
-        double w_decel = ui->spb_DecelW->value()*D2R;
-
-        vx_current = apply_jog_acc((double)vx_current, (double)vx_target, v_acc, v_decel, dt);
-        vy_current = apply_jog_acc((double)vy_current, (double)vy_target, v_acc, v_decel, dt);
-        wz_current = apply_jog_acc((double)wz_current, (double)wz_target, w_acc, w_decel, dt);
-
+        // check autodrive
         if(ctrl.is_moving == false)
         {
-            mobile.move(vx_current, vy_current, wz_current);
-            //printf("[JOG: %d, %d] %f, %f, %f\n", (int)key_active, (int)button_active, (double)vx_current, (double)vy_current, (double)wz_current*R2D);
+            // action
+            double v_acc = ui->spb_AccV->value();
+            double v_decel = ui->spb_DecelV->value();
+
+            double w_acc = ui->spb_AccW->value()*D2R;
+            double w_decel = ui->spb_DecelW->value()*D2R;
+
+            double vx = apply_jog_acc(mobile.vx0, vx_target, v_acc, v_decel, dt);
+            double vy = apply_jog_acc(mobile.vy0, vy_target, v_acc, v_decel, dt);
+            double wz = apply_jog_acc(mobile.wz0, wz_target, w_acc, w_decel, dt);
+            if(is_jog_pressed == false && get_time() - last_jog_update_t > 1.0)
+            {
+                if(vx_target != 0 || vy_target != 0 || wz_target != 0)
+                {
+                    vx_target = 0;
+                    vy_target = 0;
+                    wz_target = 0;
+                    printf("[JOG] no input, stop\n");
+                }
+            }
+            mobile.move(vx, vy, wz);
         }
 
         // for real time loop
@@ -2942,6 +2828,11 @@ void MainWindow::topo_plot()
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
                         NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
+                        if(node == NULL)
+                        {
+                            continue;
+                        }
+
                         Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 
@@ -4027,6 +3918,11 @@ void MainWindow::topo_plot2()
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
                         NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
+                        if(node == NULL)
+                        {
+                            continue;
+                        }
+
                         Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 

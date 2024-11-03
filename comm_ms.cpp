@@ -6,7 +6,6 @@ COMM_MS::COMM_MS(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
-    , reconnect_timer(this)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -25,7 +24,8 @@ COMM_MS::COMM_MS(QObject *parent)
 
     io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
     io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
-    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));
+    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));    
+    io->set_reconnect_attempts(5);
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
@@ -49,14 +49,10 @@ COMM_MS::COMM_MS(QObject *parent)
     connect(this, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(slot_localization_init(double, double, double, double, double)));
     connect(this, SIGNAL(signal_localization_start(double)), this, SLOT(slot_localization_start(double)));
     connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
-
-    // timer
-    connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 }
 
 COMM_MS::~COMM_MS()
 {
-    reconnect_timer.stop();
     io->close();
 }
 
@@ -67,7 +63,7 @@ QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
 
 void COMM_MS::init()
 {
-    reconnect_timer.start(10000);
+    io->connect("ws://localhost:11337");
 }
 
 void COMM_MS::sio_connected()
@@ -86,23 +82,6 @@ void COMM_MS::sio_error()
 {
     printf("[COMM_MS] some error\n");
 }
-
-void COMM_MS::reconnect_loop()
-{
-    if(is_connected == false)
-    {
-        io->connect("ws://localhost:11337");
-        //io->connect("ws://10.108.1.10:11337"); // for test
-
-        reconnect_cnt++;
-        if(reconnect_cnt > 10)
-        {
-            reconnect_timer.stop();
-            printf("[COMM_MS] server not opened, give up reconnect\n");
-        }
-    }
-}
-
 
 // recv parser -> emit recv signals
 void COMM_MS::recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
@@ -903,10 +882,10 @@ void COMM_MS::slot_move_goal(double time, QString node_id, int preset, QString m
         }
 
         NODE* node = unimap->get_node_by_id(node_id);
-        if(node_id == NULL)
+        if(node == NULL)
         {
             QString result = "reject";
-            QString message = "null node";
+            QString message = "invalid node id";
             send_move_goal_response(node_id, preset, method, result, message);
             return;
         }
@@ -918,12 +897,6 @@ void COMM_MS::slot_move_goal(double time, QString node_id, int preset, QString m
 
         QString result = "accept";
         QString message = "";
-        send_move_goal_response(node_id, preset, method, result, message);
-    }
-    else if(method == "tng")
-    {
-        QString result = "reject";
-        QString message = "not supported";
         send_move_goal_response(node_id, preset, method, result, message);
     }
     else
@@ -1045,6 +1018,13 @@ void COMM_MS::slot_mapload(double time, QString name)
     QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
     if(!load_dir.isNull())
     {
+        if(!QDir(load_dir).exists())
+        {
+            printf("[COMM_MS] invalid map dir\n");
+            send_mapload_response(name, "fail");
+            return;
+        }
+
         slam->localization_stop();
         obsmap->clear();
 

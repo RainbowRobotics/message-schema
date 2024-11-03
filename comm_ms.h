@@ -51,9 +51,7 @@ public:
     AUTOCONTROL *ctrl = NULL;
 
     // vars
-    std::unique_ptr<sio::client> io;
-    int reconnect_cnt = 0;
-    QTimer reconnect_timer;
+    std::unique_ptr<sio::client> io;    
     std::atomic<int> last_send_kfrm_idx = {0};
     MOVE_INFO last_move_info;
 
@@ -117,8 +115,6 @@ Q_SIGNALS:
 
 
 private Q_SLOTS:
-    void reconnect_loop();
-
     void sio_connected();
     void sio_disconnected(sio::client::close_reason const& reason);
     void sio_error();

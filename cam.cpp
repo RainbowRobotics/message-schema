@@ -383,6 +383,7 @@ void CAM::grab_loop()
     // set property
     QString sn = dev_list->getDevice(0)->getDeviceInfo()->serialNumber();
     logger->write_log(QString("[CAM] cam serial num:") + sn, "Green");
+    printf("[CAM] cam serial num: %s\n", sn.toLocal8Bit().data());
 
     if((sn != config->CAM_SERIAL_NUMBER_0) && (sn != config->CAM_SERIAL_NUMBER_1))
     {

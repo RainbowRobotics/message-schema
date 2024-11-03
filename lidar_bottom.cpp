@@ -24,8 +24,11 @@ LIDAR_BOTTOM::~LIDAR_BOTTOM()
         grab_thread = NULL;
     }
 
-    flushSerial();
-    node_lidar.initialization_node_lidar();
+    if(is_connected)
+    {
+        flushSerial();
+        node_lidar.initialization_node_lidar();
+    }
 }
 
 void LIDAR_BOTTOM::open()

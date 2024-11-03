@@ -27,6 +27,13 @@ QString AUTO_FSM_STATE_STR[6] =
     "AUTO_FSM_PAUSE"
 };
 
+bool ping(std::string ip_address)
+{
+    std::string command = "ping -c 1 -W 1 " + ip_address + " > /dev/null 2>&1";
+    int result = system(command.c_str());
+    return (result == 0);
+}
+
 double get_time0()
 {
     std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();

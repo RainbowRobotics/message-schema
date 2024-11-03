@@ -46,6 +46,13 @@ void COMM_FMS::reconnect_loop()
         QString server_addr;
         server_addr.sprintf("ws://%s:12334", config->SERVER_IP.toLocal8Bit().data());
         client.open(QUrl(server_addr));
+
+        reconnect_cnt++;
+        if(reconnect_cnt > 5)
+        {
+            reconnect_timer.stop();
+            printf("[COMM_FMS] server not opened, give up reconnect\n");
+        }
     }
 }
 

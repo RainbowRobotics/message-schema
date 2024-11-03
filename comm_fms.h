@@ -31,6 +31,7 @@ public:
     std::mutex mtx;
     QWebSocket client;
     QTimer reconnect_timer;
+    int reconnect_cnt = 0;
 
     // other modules
     CONFIG *config = NULL;
