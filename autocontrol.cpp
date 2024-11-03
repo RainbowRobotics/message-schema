@@ -118,6 +118,10 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
             file.close();
         }
     }
+    else
+    {
+        printf("[AUTO] invalid preset path\n");
+    }
 
     return res;
 }
@@ -230,7 +234,7 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     obsmap->clear();
 
     // load preset
-    params = load_preset(preset);
+    //params = load_preset(preset);
 
     // calc global path
     PATH global_path = calc_global_path(goal_tf);
@@ -260,7 +264,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset, int is_ali
     obsmap->clear();
 
     // load preset
-    params = load_preset(preset);
+    //params = load_preset(preset);
 
     // update global path
     PATH path = calc_global_path(node_path, is_align);
@@ -563,6 +567,11 @@ std::vector<QString> AUTOCONTROL::topo_path_finding(QString st_node_id, QString 
         {
             // calc heuristics
             NODE* node = unimap->get_node_by_id(around[p]);
+            if(node == NULL)
+            {
+                continue;
+            }
+
             double g = cur->g + (node->tf.block(0,3,3,1) - cur->node->tf.block(0,3,3,1)).norm();
             double h = (node->tf.block(0,3,3,1) - ed->node->tf.block(0,3,3,1)).norm();
             double f = g + h;

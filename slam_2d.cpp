@@ -147,6 +147,8 @@ void SLAM_2D::localization_start()
 
 void SLAM_2D::localization_stop()
 {
+    is_loc = false;
+
     // stop loc loops
     if(loc_a_thread != NULL)
     {
@@ -167,9 +169,7 @@ void SLAM_2D::localization_stop()
         obs_flag = false;
         obs_thread->join();
         obs_thread = NULL;
-    }
-
-    is_loc = false;
+    }    
 }
 
 Eigen::Matrix4d SLAM_2D::get_cur_tf()
@@ -694,13 +694,19 @@ void SLAM_2D::map_b_loop()
 void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
-
+    int cnt = 0;
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
+            cnt++;
+            if(cnt%2 != 0)
+            {
+                continue;
+            }
+
             if(unimap->is_loaded == false)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -752,7 +758,7 @@ void SLAM_2D::loc_a_loop()
                 mtx.unlock();
             }
 
-            lidar->scan_que.clear();
+            //lidar->scan_que.clear();
 
             // update processing time
             proc_time_loc_a = get_time() - st_time;
@@ -804,7 +810,7 @@ void SLAM_2D::loc_b_loop()
 
                 // for odometry slip
                 Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                if(std::abs(dtdr[1]) > 3.0*D2R)
+                if(std::abs(dtdr[1]) > 10.0*D2R)
                 {
                     alpha = 0;
                     printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
@@ -1725,6 +1731,11 @@ void SLAM_2D::semi_auto_init_start()
     for(size_t p=0; p<ids.size(); p++)
     {
         NODE* node = unimap->get_node_by_id(ids[p]);
+        if(node == NULL)
+        {
+            continue;
+        }
+
         Eigen::Matrix4d tf = node->tf;
 
         for(double th_offset = -180.0; th_offset <= 180.0; th_offset += 10.0)
@@ -1830,7 +1841,7 @@ double SLAM_2D::calc_overlap_ratio(std::vector<Eigen::Vector3d>& pts0, std::vect
     double interVol = intersectionVolume(min0, max0, min1, max1);
 
     // Compute overlap ratio
-    double unionVol = vol0 + vol1 - interVol;
+    double unionVol = vol0 + vol1 - interVol;                        
     return (unionVol == 0) ? 0.0 : interVol / unionVol;
 }
 
@@ -1861,8 +1872,18 @@ Eigen::Vector2d SLAM_2D::calc_ie_ir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME
         err_num++;
     }
 
-    Eigen::Vector2d res;
-    res[0] = err_sum/err_num; // inlier error
-    res[1] = (double)err_num/frm.pts.size(); // inlier ratio
-    return res;
+    if(err_num == 0)
+    {
+        Eigen::Vector2d res;
+        res[0] = 1.0;
+        res[1] = 0.0;
+        return res;
+    }
+    else
+    {
+        Eigen::Vector2d res;
+        res[0] = err_sum/err_num; // inlier error
+        res[1] = (double)err_num/frm.pts.size(); // inlier ratio
+        return res;
+    }
 }

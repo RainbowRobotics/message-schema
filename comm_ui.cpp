@@ -62,6 +62,13 @@ void COMM_UI::reconnect_loop()
     {
         QString server_addr = "ws://127.0.0.1:11338";
         client.open(QUrl(server_addr));
+
+        reconnect_cnt++;
+        if(reconnect_cnt > 5)
+        {
+            reconnect_timer.stop();
+            printf("[COMM_UI] server not opened, give up reconnect\n");
+        }
     }
 }
 
@@ -370,7 +377,7 @@ void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString m
         }
 
         NODE* node = unimap->get_node_by_id(node_id);
-        if(node_id == NULL)
+        if(node == NULL)
         {
             QString result = "reject";
             QString message = "null node";

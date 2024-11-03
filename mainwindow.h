@@ -148,9 +148,6 @@ public:
     std::vector<QString> last_plot_tactile;
 
     // jog
-    std::atomic<bool> key_active    = {false};
-    std::atomic<bool> button_active = {false};
-
     std::atomic<double> vx_target = {0.};
     std::atomic<double> vy_target = {0.};
     std::atomic<double> wz_target = {0.};
@@ -158,6 +155,9 @@ public:
     std::atomic<double> vx_current = {0.};
     std::atomic<double> vy_current = {0.};
     std::atomic<double> wz_current = {0.};
+
+    std::atomic<double> last_jog_update_t = {0};
+    std::atomic<bool> is_jog_pressed = {false};
 
     // 3d plot funcs
     void map_plot();
@@ -259,6 +259,7 @@ public Q_SLOTS:
 
     // for test
     void bt_Test();
+    void bt_TestLed();
 
     // for autocontrol
     void bt_AutoMove();

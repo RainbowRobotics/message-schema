@@ -1079,6 +1079,8 @@ void LIDAR_2D::grab_loop_f()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
+            //printf("[LIDAR] front lidar data received\n");
+
             // initial drop
             if(drop_cnt > 0)
             {
@@ -1288,6 +1290,8 @@ void LIDAR_2D::grab_loop_b()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
+            //printf("[LIDAR] back lidar data received\n");
+
             // initial drop
             if(drop_cnt > 0)
             {
@@ -1354,7 +1358,7 @@ void LIDAR_2D::grab_loop_b()
                     continue;
                 }
 
-                // angle filter
+                // angle filterping
                 if((deg < 45.0 + angle_offset) || (deg > 315.0 - angle_offset))
                 {
                     continue;
@@ -1529,12 +1533,17 @@ void LIDAR_2D::a_loop()
             {
                 RAW_FRAME frm1 = storage[min_idx];
 
+                // apply shadow filter for frm0 and frm1
+                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
+                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 3);
+
                 // lidar frame to robot frame
                 std::vector<double> reflects_f;
                 std::vector<Eigen::Vector3d> pts_f;
-                for(size_t p = 0; p < frm0.dsk.size(); p++)
+
+                for(size_t p = 0; p < filtered_pts_f.size(); p++)
                 {
-                    Eigen::Vector3d P = tf_f.block(0,0,3,3)*frm0.dsk[p] + tf_f.block(0,3,3,1);
+                    Eigen::Vector3d P = tf_f.block(0,0,3,3)*filtered_pts_f[p] + tf_f.block(0,3,3,1);
 
                     if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                        P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])
@@ -1548,9 +1557,9 @@ void LIDAR_2D::a_loop()
                 // lidar frame to robot frame
                 std::vector<double> reflects_b;
                 std::vector<Eigen::Vector3d> pts_b;
-                for(size_t p = 0; p < frm1.dsk.size(); p++)
+                for(size_t p = 0; p < filtered_pts_b.size(); p++)
                 {
-                    Eigen::Vector3d P = tf_b.block(0,0,3,3)*frm1.dsk[p] + tf_b.block(0,3,3,1);
+                    Eigen::Vector3d P = tf_b.block(0,0,3,3)*filtered_pts_b[p] + tf_b.block(0,3,3,1);
 
                     if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
                        P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])
@@ -1603,8 +1612,11 @@ void LIDAR_2D::a_loop()
                 }
 
                 // update result
-                pts = pts_inlier;
-                reflects = reflects_inlier;
+                if(config->USE_IMU)
+                {
+                    pts = pts_inlier;
+                    reflects = reflects_inlier;
+                }
 
                 // update
                 mtx.lock();

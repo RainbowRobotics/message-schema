@@ -988,14 +988,40 @@ Stop</string>
              <widget class="QPushButton" name="bt_Test">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>130</y>
+                <x>100</x>
+                <y>10</y>
                 <width>81</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="text">
                <string>Test</string>
+              </property>
+             </widget>
+             <widget class="QSpinBox" name="spb_Led">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>132</y>
+                <width>44</width>
+                <height>26</height>
+               </rect>
+              </property>
+              <property name="maximum">
+               <number>14</number>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TestLed">
+              <property name="geometry">
+               <rect>
+                <x>60</x>
+                <y>130</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>LED test</string>
               </property>
              </widget>
             </widget>

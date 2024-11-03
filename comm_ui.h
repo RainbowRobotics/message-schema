@@ -48,6 +48,7 @@ public:
 
     QWebSocket client;
     QTimer reconnect_timer;
+    int reconnect_cnt = 0;
 
     // vars
     std::atomic<bool> is_connected = {false};
