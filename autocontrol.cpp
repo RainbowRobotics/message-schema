@@ -1784,6 +1784,7 @@ void AUTOCONTROL::b_loop_pp()
             v *= scale_v;
             w *= scale_w;
 
+            /*
             // deadzone w
             double d_w = 1.5*D2R;
             if(std::abs(w) < d_w)
@@ -1794,6 +1795,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 w = sgn(w)*(std::abs(w)-d_w);
             }
+            */
 
             // goal check
             if(goal_err_d < config->DRIVE_GOAL_D || cur_idx == (int)local_path.pos.size()-1)
