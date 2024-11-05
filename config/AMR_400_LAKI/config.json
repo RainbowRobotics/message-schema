@@ -17,9 +17,9 @@
         "DRIVE_GOAL_TH": "3.0"
     },
     "debug": {
-        "SIM_MODE": "0",
-        "USE_IMU": "1",
-        "USE_BEEP": "1"
+        "SIM_MODE": "1",
+        "USE_BEEP": "1",
+        "USE_IMU": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -91,7 +91,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/rainbow/maps/Test2"
+        "MAP_PATH": "/home/tw/maps/test_map"
     },
     "robot": {
         "PLATFORM_NAME": "400_LAKI",

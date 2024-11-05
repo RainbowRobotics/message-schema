@@ -37,19 +37,13 @@ public:
     MOBILE *mobile = NULL;
 
     void open();
-    void run();
-    void stop();
+    std::vector<Eigen::Vector3d> get_cur_scan();
+    TIME_PTS get_cur_tp();
 
-    TIME_PTS get_cur_scan();
-    cv::Vec2d transform(cv::Vec3d xi, cv::Vec2d pt);
+    std::vector<Eigen::Vector3d> cur_scan;
+    TIME_PTS cur_tp;
 
     std::atomic<bool> is_connected = {false};
-
-    TIME_PTS cur_scan;
-    double time = 0;
-
-    std::atomic<int> grab_fail_cnt = {0};
-    std::atomic<int> reconnection_fail_cnt = {0};
 
 private:
     std::atomic<bool> recv_flag = {false};

@@ -3276,7 +3276,7 @@ void MainWindow::raw_plot()
 
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
-        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan().pts;
+        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan();
         std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
         std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
 

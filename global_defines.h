@@ -320,7 +320,7 @@ struct MOBILE_STATUS
 };
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -369,7 +369,7 @@ struct MOBILE_STATUS
 };
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_AMR_400_PROTO)
 struct MOBILE_STATUS
 {
     double t = 0;
