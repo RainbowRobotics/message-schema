@@ -53,13 +53,22 @@ void LIDAR_BOTTOM::open()
     }
 }
 
-TIME_PTS LIDAR_BOTTOM::get_cur_scan()
+std::vector<Eigen::Vector3d> LIDAR_BOTTOM::get_cur_scan()
 {
     mtx.lock();
-    TIME_PTS _cur_scan = cur_scan;
+    std::vector<Eigen::Vector3d> res = cur_scan;
     mtx.unlock();
 
-    return _cur_scan;
+    return res;
+}
+
+TIME_PTS LIDAR_BOTTOM::get_cur_tp()
+{
+    mtx.lock();
+    TIME_PTS res = cur_tp;
+    mtx.unlock();
+
+    return res;
 }
 
 void LIDAR_BOTTOM::grab_loop()
@@ -135,20 +144,14 @@ void LIDAR_BOTTOM::grab_loop()
             double _time = get_time();
 
             // update scan
-            TIME_PTS scan;
-            scan.t = _time;
-            scan.pts = pts;
+            TIME_PTS tp;
+            tp.t = _time;
+            tp.pts = pts;
 
             mtx.lock();
-            time = _time;
-            cur_scan = scan;
+            cur_scan = pts;
+            cur_tp = tp;
             mtx.unlock();
-
-            grab_fail_cnt = 0;
-        }
-        else
-        {
-            grab_fail_cnt++;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -172,12 +175,18 @@ void LIDAR_BOTTOM::recv_loop()
         logger->write_log("[BLIDAR] init failed", "Red", true, false);
         return;
     }
+    else
+    {
+        logger->write_log("[BLIDAR] initialized");
+        is_connected = true;
+    }
 
     node_lidar.lidar_status.lidar_ready = true;
     memset(local_scan, 0, sizeof(local_scan));
     node_lidar.lidar_time.scan_time_record = current_times();
 
     bool is_lidar_closed = false;
+    printf("[BLIDAR] recv loop start\n");
     while(recv_flag)
     {
         if(lidar_state_judgment(is_lidar_closed))
@@ -190,7 +199,6 @@ void LIDAR_BOTTOM::recv_loop()
 
             size_t count = localBufSize;
             ans = node_lidar.lidar_data_processing.waitScanData(local_buf, count);
-
             if(IS_OK(ans))
             {
                 node_lidar.lidar_status.lidar_restart_try = false;
@@ -273,6 +281,7 @@ void LIDAR_BOTTOM::recv_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    printf("[BLIDAR] recv loop stop\n");
 
     recv_flag = false;
     cleanup_lidar_resources();

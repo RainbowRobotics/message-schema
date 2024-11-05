@@ -1029,8 +1029,11 @@ void LIDAR_2D::a_loop()
                 }
 
                 // update result
-                //pts = pts_inlier;
-                //reflects = reflects_inlier;
+                if(config->USE_IMU)
+                {
+                    pts = pts_inlier;
+                    reflects = reflects_inlier;
+                }
 
                 // update
                 mtx.lock();

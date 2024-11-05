@@ -180,7 +180,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -211,7 +211,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_AMR_400_PROTO)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -546,7 +546,7 @@ void MOBILE::recv_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
 // recv loop
 void MOBILE::recv_loop()
 {
@@ -851,7 +851,7 @@ void MOBILE::recv_loop()
 }
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO)
+#if defined(USE_AMR_400_PROTO)
 // recv loop
 void MOBILE::recv_loop()
 {

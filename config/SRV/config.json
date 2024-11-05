@@ -17,7 +17,9 @@
         "DRIVE_GOAL_TH": "3.0"
     },
     "debug": {
-        "SIM_MODE": "0"
+        "SIM_MODE": "0",
+        "USE_BEEP": "1",
+        "USE_IMU": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -89,7 +91,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/rainbow/maps/2024_10_27_18_07_07_692"
+        "MAP_PATH": "/home/tw/maps/2024_11_04_13_42_47_400"
     },
     "robot": {
         "PLATFORM_NAME": "TT",

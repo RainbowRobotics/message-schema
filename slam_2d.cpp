@@ -694,19 +694,14 @@ void SLAM_2D::map_b_loop()
 void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
-    int cnt = 0;
+    //Eigen::Vector3d pre_mo(0,0,0);
+
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
-            cnt++;
-            if(cnt%2 != 0)
-            {
-                continue;
-            }
-
             if(unimap->is_loaded == false)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -719,7 +714,21 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
-            // pose estimation
+            /*
+            // check moving
+            Eigen::Vector3d cur_mo = frm.mo.pose;
+            double dx = pre_mo[0] - cur_mo[0];
+            double dy = pre_mo[1] - cur_mo[1];
+            double d = std::sqrt(dx*dx + dy*dy);
+            double dth = std::abs(deltaRad(cur_mo[2], pre_mo[2]));
+            if(d < 0.1 && dth < 5.0*D2R)
+            {
+                continue;
+            }
+            pre_mo = cur_mo;
+            */
+
+            // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
             if(err < config->SLAM_ICP_ERROR_THRESHOLD)
             {
@@ -758,7 +767,7 @@ void SLAM_2D::loc_a_loop()
                 mtx.unlock();
             }
 
-            //lidar->scan_que.clear();
+            lidar->scan_que.clear();
 
             // update processing time
             proc_time_loc_a = get_time() - st_time;
@@ -877,10 +886,10 @@ void SLAM_2D::obs_loop()
         {            
             // add blidar pts
             {
-                TIME_PTS blidar_scan = blidar->get_cur_scan();
+                TIME_PTS blidar_scan = blidar->get_cur_tp();
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(blidar_scan.t);
 
-                for(size_t p = 0; p < blidar_scan.pts.size(); p+=4)
+                for(size_t p = 0; p < blidar_scan.pts.size(); p++)
                 {
                     Eigen::Vector3d P = blidar_scan.pts[p];
                     Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
