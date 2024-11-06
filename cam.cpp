@@ -370,7 +370,7 @@ void CAM::grab_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
 void CAM::grab_loop()
 {
     // check device
@@ -446,6 +446,11 @@ void CAM::grab_loop()
     {
         if(fs->depthFrame() != nullptr)
         {
+            if(is_connected0 == false)
+            {
+                is_connected0 = true;
+            }
+
             uint64_t ts = fs->depthFrame()->systemTimeStamp();
             double t = (double)ts/1000.0 - st_time_for_get_time;
 
@@ -604,10 +609,6 @@ void CAM::grab_loop()
         }
     });*/
 
-    // set flag
-    is_connected0 = true;
-    is_connected1 = false;
-
     logger->write_log("[CAM] start grab loop", "Green");
     while(grab_flag)
     {
@@ -620,7 +621,7 @@ void CAM::grab_loop()
 }
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_KAI)
+#if defined(USE_AMR_400_PROTO) || defined(USE_AMR_KAI)
 void CAM::grab_loop()
 {
     // set flag
