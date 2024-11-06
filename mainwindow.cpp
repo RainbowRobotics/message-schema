@@ -279,14 +279,17 @@ void MainWindow::init_modules()
     // config module init
     #ifdef USE_SRV
     config.config_path = QCoreApplication::applicationDirPath() + "/config/SRV/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/SRV/config_sn.json";
     #endif
 
     #ifdef USE_AMR_400
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config_sn.json";
     #endif
 
     #ifdef USE_AMR_400_LAKI
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
     #endif
 
     config.load();
@@ -336,22 +339,28 @@ void MainWindow::init_modules()
     blidar.config = &config;
     blidar.logger = &logger;
     blidar.mobile = &mobile;
-
-    #ifdef USE_SRV
-    blidar.open();
-    #endif
-
-    // cam module init
-    cam.config = &config;
-    cam.logger = &logger;
-    cam.mobile = &mobile;
-    cam.open();
+    if(config.USE_BLIDAR)
+    {
+        blidar.open();
+    }
 
     // code reader module init
     code.config = &config;
     code.logger = &logger;
     code.unimap = &unimap;
-    code.open();
+    if(config.USE_BLIDAR)
+    {
+        code.open();
+    }
+
+    // cam module init
+    cam.config = &config;
+    cam.logger = &logger;
+    cam.mobile = &mobile;
+    if(config.USE_CAM)
+    {
+        cam.open();
+    }
 
     // slam module init
     slam.config = &config;
@@ -2174,7 +2183,7 @@ void MainWindow::comm_loop()
                 Q_EMIT signal_send_info();
             }
 
-            if(config.USE_RTSP)
+            if(config.USE_RTSP && config.USE_CAM)
             {
                 // cam streaming
                 if(cam.is_connected0)

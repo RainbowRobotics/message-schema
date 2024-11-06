@@ -5,8 +5,6 @@
     "cam": {
         "CAM_HEIGHT_MAX": "1.0",
         "CAM_HEIGHT_MIN": "0.1",
-        "CAM_SERIAL_NUMBER_0": "AY4P4310016",
-        "CAM_SERIAL_NUMBER_1": "AY4P431005S",
         "CAM_TF_0": "0.223,0.0831,0.2,64.0,0.0,115.0",
         "CAM_TF_1": "0.235,-0.0881,0.2,-62.0,0.0,-115.0"
     },
@@ -22,7 +20,10 @@
         "SIM_MODE": "0",
         "USE_BEEP": "1",
         "USE_IMU": "1",
-        "USE_RTSP": "0"
+        "USE_RTSP": "0",
+        "USE_BLIDAR": "1",
+        "USE_BQR": "0",
+        "USE_CAM": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",

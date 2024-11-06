@@ -884,10 +884,14 @@ void COMM_MS::slot_move_goal(double time, QString node_id, int preset, QString m
         NODE* node = unimap->get_node_by_id(node_id);
         if(node == NULL)
         {
-            QString result = "reject";
-            QString message = "invalid node id";
-            send_move_goal_response(node_id, preset, method, result, message);
-            return;
+            node = unimap->get_node_by_name(node_id);
+            if(node == NULL)
+            {
+                QString result = "reject";
+                QString message = "invalid node id";
+                send_move_goal_response(node_id, preset, method, result, message);
+                return;
+            }
         }
 
         Eigen::Matrix4d goal_tf = node->tf;
