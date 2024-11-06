@@ -21,7 +21,8 @@
     "debug": {
         "SIM_MODE": "0",
         "USE_BEEP": "1",
-        "USE_IMU": "1"
+        "USE_IMU": "1",
+        "USE_RTSP": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",

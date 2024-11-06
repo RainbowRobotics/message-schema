@@ -19,9 +19,10 @@
         "DRIVE_W_DEADZONE":"0.5"
     },
     "debug": {
-        "SIM_MODE": "0"
+        "SIM_MODE": "0",
         "USE_BEEP": "1",
-        "USE_IMU": "1"
+        "USE_IMU": "1",
+        "USE_RTSP": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "24.0",

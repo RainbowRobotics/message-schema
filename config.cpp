@@ -185,6 +185,9 @@ void CONFIG::load()
 
                 USE_BEEP = obj_debug["USE_BEEP"].toString().toInt();
                 printf("[CONFIG] USE_BEEP, %s\n", obj_debug["USE_BEEP"].toString().toLocal8Bit().data());
+
+                USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
+                printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

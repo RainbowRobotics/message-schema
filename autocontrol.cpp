@@ -45,16 +45,8 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400_PROTO
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_PROTO/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
     #ifdef USE_AMR_400_LAKI
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
-    #ifdef USE_AMR_KAI
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
     QFileInfo info(preset_path);
@@ -1455,8 +1447,8 @@ void AUTOCONTROL::b_loop_pp()
         is_moving = false;
         clear_path();
 
-        Q_EMIT signal_move_failed("no global path");
-        printf("[AUTO] global path init failed\n");
+        Q_EMIT signal_move_failed("no global path");        
+        logger->write_log("[AUTO] global path init failed");
         return;
     }
 
@@ -1478,7 +1470,7 @@ void AUTOCONTROL::b_loop_pp()
             clear_path();
 
             Q_EMIT signal_move_failed("already goal");
-            printf("[AUTO] already goal\n");
+            logger->write_log("[AUTO] already goal");
             return;
         }
         else
@@ -1487,7 +1479,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 // do final align
                 fsm_state = AUTO_FSM_FINAL_ALIGN;
-                printf("[AUTO] jump to FINAL_ALIGN\n");
+                logger->write_log("[AUTO] jump to FINAL_ALIGN");
             }
         }
     }
@@ -1508,7 +1500,7 @@ void AUTOCONTROL::b_loop_pp()
     int obs_state = AUTO_OBS_CHECK;
     double obs_wait_st_time = 0;
 
-    printf("[AUTO] b_loop_pp start\n");
+    logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
     {
         // pause
@@ -1528,7 +1520,7 @@ void AUTOCONTROL::b_loop_pp()
             clear_path();
 
             Q_EMIT signal_move_failed("something wrong");
-            printf("[AUTO] something wrong (failed)\n");
+            logger->write_log("[AUTO] something wrong (failed)");
             return;
         }
         else if(is_good_everything == DRIVING_NOT_READY)
@@ -1538,7 +1530,7 @@ void AUTOCONTROL::b_loop_pp()
             clear_path();
 
             Q_EMIT signal_move_failed("something wrong (not ready)");
-            printf("[AUTO] something wrong (not ready)\n");
+            logger->write_log("[AUTO] something wrong (not ready)");
             return;
         }
 
@@ -1645,7 +1637,9 @@ void AUTOCONTROL::b_loop_pp()
                 mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
-                printf("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%f\n", err_th*R2D);
+
+                QString log_str; log_str.sprintf("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%f", err_th*R2D);
+                logger->write_log(log_str);
                 continue;
             }
 
@@ -1657,7 +1651,9 @@ void AUTOCONTROL::b_loop_pp()
 
                 obs_state = AUTO_OBS_CHECK;
                 fsm_state = AUTO_FSM_OBS;
-                printf("[AUTO] FIRST_ALIGN -> OBS, err_th:%f\n", err_th*R2D);
+
+                QString log_str; log_str.sprintf("[AUTO] FIRST_ALIGN -> OBS, err_th:%f", err_th*R2D);
+                logger->write_log(log_str);
                 continue;
             }
 
@@ -1822,7 +1818,8 @@ void AUTOCONTROL::b_loop_pp()
                     if(global_path.is_align)
                     {
                         fsm_state = AUTO_FSM_FINAL_ALIGN;
-                        printf("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%f\n", goal_err_d);
+                        QString log_str; log_str.sprintf("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%f", goal_err_d);
+                        logger->write_log(log_str);
                     }
                     else
                     {
@@ -1834,7 +1831,8 @@ void AUTOCONTROL::b_loop_pp()
                         Q_EMIT signal_move_succeed("early stopped, due to no align");
 
                         fsm_state = AUTO_FSM_COMPLETE;
-                        printf("[AUTO] FINAL ALIGN COMPLETE(no align), err_th: %.3f\n", err_th*R2D);
+                        QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(no align), err_th: %.3f", err_th*R2D);
+                        logger->write_log(log_str);
                         return;
                     }
 
@@ -1875,7 +1873,8 @@ void AUTOCONTROL::b_loop_pp()
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
-                    printf("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %.3f\n", err_th*R2D);
+                    QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %.3f", err_th*R2D);
+                    logger->write_log(log_str);
                     return;
                 }
             }
@@ -1891,7 +1890,8 @@ void AUTOCONTROL::b_loop_pp()
                 Q_EMIT signal_move_succeed("early stopped, due to obstacle");
 
                 fsm_state = AUTO_FSM_COMPLETE;
-                printf("[AUTO] FINAL ALIGN COMPLETE(early stop), err_th: %.3f\n", err_th*R2D);
+                QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(early stop), err_th: %.3f", err_th*R2D);
+                logger->write_log(log_str);
                 return;
             }
 
@@ -2055,6 +2055,6 @@ void AUTOCONTROL::b_loop_pp()
     is_moving = false;
     clear_path();
 
-    Q_EMIT signal_move_succeed("stopped");
-    printf("[AUTO] b_loop_pp stop\n");
+    Q_EMIT signal_move_succeed("stopped");    
+    logger->write_log("[AUTO] b_loop_pp stop\n");
 }

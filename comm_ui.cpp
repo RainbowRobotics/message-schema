@@ -578,7 +578,7 @@ void COMM_UI::slot_localization_semiautoinit(double time)
     }
     #endif
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     if(unimap->is_loaded == false || lidar->is_connected_f == false || lidar->is_connected_b == false)
     {
         send_localization_response("semiautoinit", "fail");

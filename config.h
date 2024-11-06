@@ -68,6 +68,7 @@ public:
     int SIM_MODE = 1; // 0: real mode, 1: simulation mode
     int USE_IMU = 0;
     int USE_BEEP = 0;
+    int USE_RTSP = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    

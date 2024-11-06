@@ -195,18 +195,18 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    if(comm_thread != NULL)
-    {
-        comm_flag = false;
-        comm_thread->join();
-        comm_thread = NULL;
-    }
-
     if(watch_thread != NULL)
     {
         watch_flag = false;
         watch_thread->join();
         watch_thread = NULL;
+    }
+
+    if(comm_thread != NULL)
+    {
+        comm_flag = false;
+        comm_thread->join();
+        comm_thread = NULL;
     }
 
     if(jog_thread != NULL)
@@ -285,16 +285,8 @@ void MainWindow::init_modules()
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config.json";
     #endif
 
-    #ifdef USE_AMR_400_PROTO
-    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_PROTO/config.json";
-    #endif
-
     #ifdef USE_AMR_400_LAKI
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
-    #endif
-
-    #ifdef USE_AMR_KAI
-    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config.json";
     #endif
 
     config.load();
@@ -2155,11 +2147,12 @@ void MainWindow::comm_loop()
 
     const int send_w = 320;
     const int send_h = 240;
+
     cv::VideoWriter writer0(pipeline0, 0, (double)10, cv::Size(320,240), true);
     cv::VideoWriter writer1(pipeline1, 0, (double)10, cv::Size(320,240), true);
 
     printf("[COMM] loop start\n");
-    while(watch_flag)
+    while(comm_flag)
     {
         cnt++;
 
@@ -2181,44 +2174,47 @@ void MainWindow::comm_loop()
                 Q_EMIT signal_send_info();
             }
 
-            // cam streaming
-            if(cam.is_connected0)
+            if(config.USE_RTSP)
             {
-                if(writer0.isOpened())
+                // cam streaming
+                if(cam.is_connected0)
                 {
-                    cv::Mat img = cam.get_img0();
-                    if(!img.empty())
+                    if(writer0.isOpened())
                     {
-                        if(img.cols != send_w || img.rows != send_h)
+                        cv::Mat img = cam.get_img0();
+                        if(!img.empty())
                         {
-                            cv::Mat _img;
-                            cv::resize(img, _img, cv::Size(send_w, send_h));
-                            writer0.write(_img);
-                        }
-                        else
-                        {
-                            writer0.write(img);
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer0.write(_img);
+                            }
+                            else
+                            {
+                                writer0.write(img);
+                            }
                         }
                     }
                 }
-            }
 
-            if(cam.is_connected1)
-            {
-                if(writer1.isOpened())
+                if(cam.is_connected1)
                 {
-                    cv::Mat img = cam.get_img1();
-                    if(!img.empty())
+                    if(writer1.isOpened())
                     {
-                        if(img.cols != send_w || img.rows != send_h)
+                        cv::Mat img = cam.get_img1();
+                        if(!img.empty())
                         {
-                            cv::Mat _img;
-                            cv::resize(img, _img, cv::Size(send_w, send_h));
-                            writer1.write(_img);
-                        }
-                        else
-                        {
-                            writer1.write(img);
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer1.write(_img);
+                            }
+                            else
+                            {
+                                writer1.write(img);
+                            }
                         }
                     }
                 }
@@ -2355,8 +2351,10 @@ void MainWindow::watch_loop()
             }
 
             // resync for time skew
-            if(get_time() - last_sync_time > 1000.0 && ctrl.is_moving == false)
+            if(get_time() - last_sync_time > 1200.0 && ctrl.is_moving == false)
             {
+                logger.write_log("[WATCH] resync all");
+
                 if(mobile.is_connected)
                 {
                     mobile.sync();
@@ -2370,7 +2368,7 @@ void MainWindow::watch_loop()
                 if(lidar.is_connected_b)
                 {
                     lidar.sync_b();
-                }
+                }                
 
                 last_sync_time = get_time();
             }

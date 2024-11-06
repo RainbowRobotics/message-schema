@@ -1,7 +1,7 @@
 {
     "LIMIT_V": "1.0",
     "LIMIT_W": "40.0",
-    "LIMIT_V_ACC": "0.5",
+    "LIMIT_V_ACC": "0.3",
     "LIMIT_V_DCC": "0.1",
     "LIMIT_W_ACC": "180.0",
     "LIMIT_PIVOT_W": "45.0",  

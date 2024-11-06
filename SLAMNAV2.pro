@@ -14,11 +14,9 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-DEFINES += USE_SRV
+#DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
-#DEFINES += USE_AMR_400_LAKI
-#DEFINES += USE_AMR_400_PROTO
-#DEFINES += USE_AMR_KAI
+DEFINES += USE_AMR_400_LAKI
 
 # auto copy config files
 #copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
