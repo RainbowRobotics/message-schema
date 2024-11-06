@@ -101,6 +101,11 @@ public:
     std::thread *auto_init_thread = NULL;
     void auto_init_loop();
 
+    // comm loop
+    std::atomic<bool> comm_flag = {false};
+    std::thread *comm_thread = NULL;
+    void comm_loop();
+
     // watchdog
     std::atomic<bool> watch_flag = {false};
     std::thread *watch_thread = NULL;
