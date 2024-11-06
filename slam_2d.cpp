@@ -699,8 +699,15 @@ void SLAM_2D::loc_a_loop()
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {
+        bool is_new = false;
         FRAME frm;
-        if(lidar->scan_que.try_pop(frm))
+        while(lidar->scan_que.try_pop(frm))
+        {
+            is_new = true;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        if(is_new)
         {
             if(unimap->is_loaded == false)
             {
@@ -767,7 +774,7 @@ void SLAM_2D::loc_a_loop()
                 mtx.unlock();
             }
 
-            lidar->scan_que.clear();
+            //lidar->scan_que.clear();
 
             // update processing time
             proc_time_loc_a = get_time() - st_time;

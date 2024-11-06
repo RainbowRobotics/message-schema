@@ -200,6 +200,12 @@ void CONFIG::load()
 
                 DRIVE_EXTENDED_CONTROL_TIME = obj_control["DRIVE_EXTENDED_CONTROL_TIME"].toString().toDouble();
                 printf("[CONFIG] DRIVE_EXTENDED_CONTROL_TIME, %s\n", obj_control["DRIVE_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
+
+                DRIVE_V_DEADZONE = obj_control["DRIVE_V_DEADZONE"].toString().toDouble();
+                printf("[CONFIG] DRIVE_V_DEADZONE, %s\n", obj_control["DRIVE_V_DEADZONE"].toString().toLocal8Bit().data());
+
+                DRIVE_W_DEADZONE = obj_control["DRIVE_W_DEADZONE"].toString().toDouble();
+                printf("[CONFIG] DRIVE_W_DEADZONE, %s\n", obj_control["DRIVE_W_DEADZONE"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_obs = obj["obs"].toObject();
