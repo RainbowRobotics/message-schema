@@ -73,6 +73,8 @@ public:
     double DRIVE_GOAL_D = 0.05;    
     double DRIVE_GOAL_TH = 3.0;
     double DRIVE_EXTENDED_CONTROL_TIME = 2.0;
+    double DRIVE_V_DEADZONE = 0.5;
+    double DRIVE_W_DEADZONE = 0.02;
 
     int OBS_AVOID = 1; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
     double OBS_DEADZONE = 1.0;

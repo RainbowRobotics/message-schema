@@ -11,10 +11,12 @@
         "CAM_TF_1": "0.235,-0.0881,0.2,-62.0,0.0,-115.0"
     },
     "control": {
-        "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
-        "DRIVE_GOAL_APPROACH_GAIN": "0.75",
-        "DRIVE_GOAL_D": "0.1",
-        "DRIVE_GOAL_TH": "3.0"
+        "DRIVE_EXTENDED_CONTROL_TIME": "2.0",
+        "DRIVE_GOAL_APPROACH_GAIN": "1.0",
+        "DRIVE_GOAL_D": "0.05",
+        "DRIVE_GOAL_TH": "2.0",
+        "DRIVE_V_DEADZONE": "0.02",
+        "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
         "SIM_MODE": "0",
@@ -91,7 +93,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/2024_11_04_13_42_47_400"
+        "MAP_PATH": "/home/tw/maps/test_map"
     },
     "robot": {
         "PLATFORM_NAME": "TT",

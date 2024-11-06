@@ -1673,7 +1673,7 @@ void AUTOCONTROL::b_loop_pp()
             QString _obs_condition = "none";
 
             double obs_v = config->OBS_MAP_MIN_V;
-            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.02)
+            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->OBS_PREDICT_TIME, cur_tf);
 
@@ -1748,7 +1748,8 @@ void AUTOCONTROL::b_loop_pp()
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
             if(cur_idx == tgt_idx)
             {
-                err_th = saturation(err_th, -10.0*D2R, 10.0*D2R);
+                //err_th = saturation(err_th, -10.0*D2R, 10.0*D2R);
+                err_th = 0;
             }
 
             // calc cross track error
@@ -1784,9 +1785,15 @@ void AUTOCONTROL::b_loop_pp()
             v *= scale_v;
             w *= scale_w;
 
-            /*
-            // deadzone w
-            double d_w = 1.5*D2R;
+            // deadzone v
+            double d_v = config->DRIVE_V_DEADZONE;
+            if(std::abs(v) < d_v)
+            {
+                v = sgn(v)*d_v;
+            }
+
+            // deadzone w            
+            double d_w = config->DRIVE_W_DEADZONE*D2R;
             if(std::abs(w) < d_w)
             {
                 w = 0;
@@ -1795,7 +1802,6 @@ void AUTOCONTROL::b_loop_pp()
             {
                 w = sgn(w)*(std::abs(w)-d_w);
             }
-            */
 
             // goal check
             if(goal_err_d < config->DRIVE_GOAL_D || cur_idx == (int)local_path.pos.size()-1)
