@@ -195,6 +195,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    if(comm_thread != NULL)
+    {
+        comm_flag = false;
+        comm_thread->join();
+        comm_thread = NULL;
+    }
+
     if(watch_thread != NULL)
     {
         watch_flag = false;
@@ -454,13 +461,17 @@ void MainWindow::init_modules()
     }
     */
 
+    // start jog loop
+    jog_flag = true;
+    jog_thread = new std::thread(&MainWindow::jog_loop, this);
+
     // start watchdog loop
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
-    // start jog loop
-    jog_flag = true;
-    jog_thread = new std::thread(&MainWindow::jog_loop, this);
+    // start watchdog loop
+    comm_flag = true;
+    comm_thread = new std::thread(&MainWindow::comm_loop, this);
 }
 
 void MainWindow::setup_vtk()
@@ -2134,18 +2145,20 @@ void MainWindow::bt_TaskCancel()
     task.cancel();
 }
 
-
-// watchdog
-void MainWindow::watch_loop()
+// comm
+void MainWindow::comm_loop()
 {
     int cnt = 0;
-    int loc_fail_cnt = 0;
-    double last_sync_time = 0;
-    bool last_fms_connection = false;
 
-    CPU_USAGE pre_cpu_usage;
+    std::string pipeline0 = "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=30 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://127.0.0.1:8554/cam0";
+    std::string pipeline1 = "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=30 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://127.0.0.1:8554/cam1";
 
-    printf("[WATCHDOG] loop start\n");
+    const int send_w = 320;
+    const int send_h = 240;
+    cv::VideoWriter writer0(pipeline0, 0, (double)10, cv::Size(320,240), true);
+    cv::VideoWriter writer1(pipeline1, 0, (double)10, cv::Size(320,240), true);
+
+    printf("[COMM] loop start\n");
     while(watch_flag)
     {
         cnt++;
@@ -2166,6 +2179,49 @@ void MainWindow::watch_loop()
             if(cfms.is_connected)
             {
                 Q_EMIT signal_send_info();
+            }
+
+            // cam streaming
+            if(cam.is_connected0)
+            {
+                if(writer0.isOpened())
+                {
+                    cv::Mat img = cam.get_img0();
+                    if(!img.empty())
+                    {
+                        if(img.cols != send_w || img.rows != send_h)
+                        {
+                            cv::Mat _img;
+                            cv::resize(img, _img, cv::Size(send_w, send_h));
+                            writer0.write(_img);
+                        }
+                        else
+                        {
+                            writer0.write(img);
+                        }
+                    }
+                }
+            }
+
+            if(cam.is_connected1)
+            {
+                if(writer1.isOpened())
+                {
+                    cv::Mat img = cam.get_img1();
+                    if(!img.empty())
+                    {
+                        if(img.cols != send_w || img.rows != send_h)
+                        {
+                            cv::Mat _img;
+                            cv::resize(img, _img, cv::Size(send_w, send_h));
+                            writer1.write(_img);
+                        }
+                        else
+                        {
+                            writer1.write(img);
+                        }
+                    }
+                }
             }
         }
 
@@ -2198,6 +2254,25 @@ void MainWindow::watch_loop()
                 cms.send_lidar();
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[COMM] loop stop\n");
+}
+
+// watchdog
+void MainWindow::watch_loop()
+{
+    int cnt = 0;
+    int loc_fail_cnt = 0;
+    double last_sync_time = 0;
+    bool last_fms_connection = false;
+
+    CPU_USAGE pre_cpu_usage;
+
+    printf("[WATCHDOG] loop start\n");
+    while(watch_flag)
+    {
+        cnt++;
 
         // for 1000ms loop
         if(cnt % 10 == 0)
