@@ -13,7 +13,7 @@ LIDAR_2D::~LIDAR_2D()
         grab_thread_f = NULL;
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI) || defined(USE_AMR_KAI)
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     if(grab_thread_b != NULL)
     {
         grab_flag_b = false;
@@ -46,7 +46,7 @@ void LIDAR_2D::open()
         grab_thread_f = new std::thread(&LIDAR_2D::grab_loop_f, this);
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_400_LAKI) || defined(USE_AMR_KAI)
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     if(grab_thread_b == NULL)
     {
         grab_flag_b = true;
@@ -260,7 +260,6 @@ void LIDAR_2D::grab_loop_f()
             {
                 is_sync_f = false;
                 offset_t_f = pc_t - lidar_t;
-                raw_que_f.clear();
 
                 is_synced_f = true;
                 printf("[LIDAR] sync, offset_t_f: %f\n", (double)offset_t_f);
@@ -501,10 +500,9 @@ void LIDAR_2D::a_loop()
 
     printf("[LIDAR] stop a loop\n");
 }
-
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_PROTO) || defined(USE_AMR_KAI)
+#if defined(USE_AMR_400)
 void LIDAR_2D::grab_loop_f()
 {
     printf("[LIDAR] start grab loop, front\n");
@@ -552,7 +550,6 @@ void LIDAR_2D::grab_loop_f()
             {
                 is_sync_f = false;
                 offset_t_f = pc_t - lidar_t;
-                raw_que_f.clear();
 
                 is_synced_f = true;
                 printf("[LIDAR] sync, lidar_t_f: %f, offset_t_f: %f\n", lidar_t, (double)offset_t_f);
@@ -753,7 +750,6 @@ void LIDAR_2D::grab_loop_b()
             {
                 is_sync_b = false;
                 offset_t_b = pc_t - lidar_t;
-                raw_que_b.clear();
 
                 is_synced_b = true;
                 printf("[LIDAR] sync, lidar_t_b: %f, offset_t_b: %f\n", lidar_t, (double)offset_t_b);
@@ -1100,7 +1096,6 @@ void LIDAR_2D::grab_loop_f()
             {
                 is_sync_f = false;
                 offset_t_f = pc_t - lidar_t;
-                raw_que_f.clear();
 
                 is_synced_f = true;
                 printf("[LIDAR] sync, offset_t_f: %f\n", (double)offset_t_f);
@@ -1310,7 +1305,6 @@ void LIDAR_2D::grab_loop_b()
             {
                 is_sync_b = false;
                 offset_t_b = pc_t - lidar_t;
-                raw_que_b.clear();
 
                 is_synced_b = true;
                 printf("[LIDAR] sync, offset_t_b: %f\n", (double)offset_t_b);
@@ -1523,10 +1517,6 @@ void LIDAR_2D::a_loop()
                     min_idx = p;
                 }
             }
-
-            // merge two lidar frame
-            //Eigen::Matrix4d tf_f = ZYX_to_TF(config->LIDAR_TF_F);
-            //Eigen::Matrix4d tf_b = ZYX_to_TF(config->LIDAR_TF_B);
 
             // merge two lidar frame
             Eigen::Matrix4d tf_f = reversed_Lidar(ZYX_to_TF(config->LIDAR_TF_F));

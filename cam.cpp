@@ -155,11 +155,6 @@ void CAM::grab_loop()
     {
         if(fs->depthFrame() != nullptr)
         {
-            if(is_connected0 == false)
-            {
-                is_connected0 = true;
-            }
-
             uint64_t ts = fs->depthFrame()->systemTimeStamp();
             double t = (double)ts/1000.0 - st_time_for_get_time;
 
@@ -225,6 +220,11 @@ void CAM::grab_loop()
 
         if(fs->colorFrame() != nullptr)
         {
+            if(is_connected0 == false)
+            {
+                is_connected0 = true;
+            }
+
             // get color image
             std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
 
@@ -268,11 +268,6 @@ void CAM::grab_loop()
     {
         if(fs->depthFrame() != nullptr)
         {
-            if(is_connected1 == false)
-            {
-                is_connected1 = true;
-            }
-
             uint64_t ts = fs->depthFrame()->systemTimeStamp();
             double t = (double)ts/1000.0 - st_time_for_get_time;
 
@@ -338,6 +333,11 @@ void CAM::grab_loop()
 
         if(fs->colorFrame() != nullptr)
         {
+            if(is_connected1 == false)
+            {
+                is_connected1 = true;
+            }
+
             // get color image
             std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
 
@@ -446,11 +446,6 @@ void CAM::grab_loop()
     {
         if(fs->depthFrame() != nullptr)
         {
-            if(is_connected0 == false)
-            {
-                is_connected0 = true;
-            }
-
             uint64_t ts = fs->depthFrame()->systemTimeStamp();
             double t = (double)ts/1000.0 - st_time_for_get_time;
 
@@ -516,6 +511,11 @@ void CAM::grab_loop()
 
         if(fs->colorFrame() != nullptr)
         {
+            if(is_connected0 == false)
+            {
+                is_connected0 = true;
+            }
+
             // get color image
             std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
 
@@ -618,22 +618,5 @@ void CAM::grab_loop()
     cam_pipe->stop();
     //imu_pipe->stop();
     logger->write_log("[CAM] stop grab loop", "Green");
-}
-#endif
-
-#if defined(USE_AMR_400_PROTO) || defined(USE_AMR_KAI)
-void CAM::grab_loop()
-{
-    // set flag
-    is_connected0 = false;
-    is_connected1 = false;
-
-    printf("[CAM] grab loop started\n");
-
-    while(grab_flag)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    printf("[CAM] grab loop stopped\n");
 }
 #endif

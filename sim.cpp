@@ -156,28 +156,12 @@ void SIM::a_loop()
 
         MOBILE_STATUS status;
 
-        #if defined (USE_SRV) || defined (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+        #if defined (USE_SRV) || defined (USE_AMR_400) || (USE_AMR_400_LAKI)
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;
         status.status_m0 = 1;
         status.status_m1 = 1;
-        status.charge_state = 0;
-        status.emo_state = 1;
-        status.power_state = 1;
-        status.remote_state = 1;
-        #endif
-
-        #ifdef USE_AMR_KAI
-        status.t = sim_t;
-        status.connection_m0 = 1;
-        status.connection_m1 = 1;
-        status.connection_m2 = 1;
-        status.connection_m3 = 1;
-        status.status_m0 = 1;
-        status.status_m1 = 1;
-        status.status_m2 = 1;
-        status.status_m3 = 1;
         status.charge_state = 0;
         status.emo_state = 1;
         status.power_state = 1;
