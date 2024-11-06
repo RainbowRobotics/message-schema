@@ -41,7 +41,7 @@ QString CODE_READER::get_code_info()
 void CODE_READER::open()
 {
     client.connectToHost(QHostAddress("192.168.2.12"), 2112);
-    reconnect_timer.start(1000);
+    reconnect_timer.start(3000);
 }
 
 void CODE_READER::readyread()

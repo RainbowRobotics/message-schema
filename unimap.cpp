@@ -740,3 +740,26 @@ NODE* UNIMAP::get_node_by_id(QString id)
 
     return node;
 }
+
+NODE* UNIMAP::get_node_by_name(QString name)
+{
+    if(name == "")
+    {
+        return NULL;
+    }
+
+    NODE *node = NULL;
+    if((int)nodes.size() != 0)
+    {
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            if(nodes[p].name == name)
+            {
+                node = &nodes[p];
+                break;
+            }
+        }
+    }
+
+    return node;
+}

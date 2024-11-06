@@ -69,6 +69,9 @@ public:
     int USE_IMU = 0;
     int USE_BEEP = 0;
     int USE_RTSP = 0;
+    int USE_BLIDAR = 0;
+    int USE_BQR = 0;
+    int USE_CAM = 1;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    
@@ -124,6 +127,7 @@ public:
     // interface
     void load();
     QString config_path = "";
+    QString config_sn_path = "";
     std::atomic<bool> is_load = {false};
 
     void save_map_path();

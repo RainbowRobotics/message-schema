@@ -9,9 +9,10 @@ void CONFIG::load()
 {
     // load params
     QFileInfo config_info(config_path);
-    if(config_info.exists() && config_info.isFile())
+    QFileInfo config_sn_info(config_sn_path);
+    if(config_info.exists() && config_info.isFile() && config_sn_info.exists() && config_sn_info.isFile())
     {
-        // read
+        // read config
         QFile config_file(config_path);
         if(config_file.open(QIODevice::ReadOnly))
         {
@@ -188,6 +189,15 @@ void CONFIG::load()
 
                 USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
                 printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
+
+                USE_BLIDAR = obj_debug["USE_BLIDAR"].toString().toInt();
+                printf("[CONFIG] USE_BLIDAR, %s\n", obj_debug["USE_BLIDAR"].toString().toLocal8Bit().data());
+
+                USE_BQR = obj_debug["USE_BQR"].toString().toInt();
+                printf("[CONFIG] USE_BQR, %s\n", obj_debug["USE_BQR"].toString().toLocal8Bit().data());
+
+                USE_CAM = obj_debug["USE_CAM"].toString().toInt();
+                printf("[CONFIG] USE_CAM, %s\n", obj_debug["USE_CAM"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();
@@ -255,12 +265,6 @@ void CONFIG::load()
 
             QJsonObject obj_cam = obj["cam"].toObject();
             {
-                CAM_SERIAL_NUMBER_0 = obj_cam["CAM_SERIAL_NUMBER_0"].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER_0, %s\n", obj_cam["CAM_SERIAL_NUMBER_0"].toString().toLocal8Bit().data());
-
-                CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
-
                 CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
                 printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
 
@@ -323,14 +327,36 @@ void CONFIG::load()
             }
 
             // complete
-            is_load = true;
             config_file.close();
             printf("[CONFIG] %s, load successed\n", config_path.toLocal8Bit().data());
+        }
+
+        // read config
+        QFile config_sn_file(config_sn_path);
+        if(config_sn_file.open(QIODevice::ReadOnly))
+        {
+            QByteArray data = config_sn_file.readAll();
+            QJsonDocument doc = QJsonDocument::fromJson(data);
+            QJsonObject obj = doc.object();
+
+            QJsonObject obj_cam = obj["cam"].toObject();
+            {
+                CAM_SERIAL_NUMBER_0 = obj_cam["CAM_SERIAL_NUMBER_0"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_0, %s\n", obj_cam["CAM_SERIAL_NUMBER_0"].toString().toLocal8Bit().data());
+
+                CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
+            }
+
+            // complete
+            is_load = true;
+            config_sn_file.close();
+            printf("[CONFIG] %s, load successed\n", config_sn_path.toLocal8Bit().data());
         }
     }
     else
     {
-        printf("[CONFIG] %s, load failed\n", config_path.toLocal8Bit().data());
+        printf("[CONFIG] config file load failed\n");
     }
 }
 

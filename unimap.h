@@ -45,6 +45,7 @@ public:
     QString get_node_id_nn(Eigen::Vector3d pos);
     QString get_node_id_edge(Eigen::Vector3d pos);
     NODE* get_node_by_id(QString id);
+    NODE* get_node_by_name(QString name);
 
     QString add_node(Eigen::Matrix4d tf, QString type);
     void add_node(PICKING pick, QString type, QString info="");
