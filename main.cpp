@@ -69,8 +69,12 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 int main(int argc, char *argv[])
 {
     // critical error catcher
+    std::signal(SIGINT, signalHandler);
     std::signal(SIGSEGV, signalHandler);
     std::signal(SIGABRT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+    std::signal(SIGKILL, signalHandler);
+    std::signal(SIGPIPE, signalHandler);
 
     // init qt app
     qRegisterMetaType<Eigen::Matrix4d>();

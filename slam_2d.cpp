@@ -25,6 +25,14 @@ SLAM_2D::~SLAM_2D()
 
     is_slam = false;
 
+    // stop obs loops
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
+    }
+
     // stop loc loops
     if(loc_a_thread != NULL)
     {
@@ -38,13 +46,6 @@ SLAM_2D::~SLAM_2D()
         loc_b_flag = false;
         loc_b_thread->join();
         loc_b_thread = NULL;
-    }
-
-    if(obs_thread != NULL)
-    {
-        obs_flag = false;
-        obs_thread->join();
-        obs_thread = NULL;
     }
 
     is_loc = false;
@@ -701,7 +702,7 @@ void SLAM_2D::loc_a_loop()
     {
         bool is_new = false;
         FRAME frm;
-        while(lidar->scan_que.try_pop(frm))
+        while(lidar->scan_que.try_pop(frm) && loc_a_flag)
         {
             is_new = true;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

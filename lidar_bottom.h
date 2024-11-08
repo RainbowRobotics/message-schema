@@ -3,6 +3,8 @@
 
 #include "global_defines.h"
 
+#if defined(USE_SRV)
+
 // lidar sdk
 #include "node_lidar.h"
 #include "msg_recept.h"
@@ -12,6 +14,8 @@
 #include "lidar_information.h"
 #include "mtime.h"
 #include "calibration.h"
+
+#endif
 
 // module
 #include "config.h"

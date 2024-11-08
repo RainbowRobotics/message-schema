@@ -19,11 +19,12 @@
     "debug": {
         "SIM_MODE": "0",
         "USE_BEEP": "1",
-        "USE_IMU": "1",
-        "USE_RTSP": "0",
         "USE_BLIDAR": "1",
         "USE_BQR": "0",
-        "USE_CAM": "1"
+        "USE_CAM": "1",
+        "USE_EARLYSTOP": "0",
+        "USE_IMU": "0",
+        "USE_RTSP": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",

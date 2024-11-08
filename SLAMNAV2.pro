@@ -5,7 +5,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += resources_big
 
-QMAKE_CXXFLAGS_RELEASE += -O3
+#QMAKE_CXXFLAGS_RELEASE += -O3
+QMAKE_CXXFLAGS_RELEASE += -g
+QMAKE_LFLAGS_RELEASE += -g
+
+# AddressSanitizer
+#QMAKE_CXXFLAGS += -fsanitize=address
+#QMAKE_LFLAGS += -fsanitize=address
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -33,14 +39,6 @@ SOURCES += \
     LakiBeamHTTP.cpp \
     LakiBeamUDP.cpp \
     autocontrol.cpp \
-    blidar/calibration.cpp \
-    blidar/lidar_data_processing.cpp \
-    blidar/lidar_information.cpp \
-    blidar/mtime.cpp \
-    blidar/node_lidar.cpp \
-    blidar/point_cloud_optimize.cpp \
-    blidar/serial_port.cpp \
-    blidar/timer.cpp \
     cam.cpp \
     code_reader.cpp \
     comm_fms.cpp \
@@ -67,16 +65,6 @@ HEADERS += \
     LakiBeamHTTP.h \
     LakiBeamUDP.h \
     autocontrol.h \
-    blidar/calibration.h \
-    blidar/lidar_data_processing.h \
-    blidar/lidar_information.h \
-    blidar/locker.h \
-    blidar/msg_recept.h \
-    blidar/mtime.h \
-    blidar/node_lidar.h \
-    blidar/point_cloud_optimize.h \
-    blidar/serial_port.h \
-    blidar/timer.h \
     cam.h \
     code_reader.h \
     comm_fms.h \
@@ -103,6 +91,30 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui
+
+contains(DEFINES, USE_SRV) {
+    SOURCES += \
+        blidar/calibration.cpp \
+        blidar/lidar_data_processing.cpp \
+        blidar/lidar_information.cpp \
+        blidar/mtime.cpp \
+        blidar/node_lidar.cpp \
+        blidar/point_cloud_optimize.cpp \
+        blidar/serial_port.cpp \
+        blidar/timer.cpp \
+
+    HEADERS += \
+        blidar/calibration.h \
+        blidar/lidar_data_processing.h \
+        blidar/lidar_information.h \
+        blidar/locker.h \
+        blidar/msg_recept.h \
+        blidar/mtime.h \
+        blidar/node_lidar.h \
+        blidar/point_cloud_optimize.h \
+        blidar/serial_port.h \
+        blidar/timer.h \
+}
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -196,11 +208,6 @@ LIBS += -L/usr/local/lib/
 LIBS += -lgtsam \
         -lmetis-gtsam
 
-# OMPL
-INCLUDEPATH += /usr/local/include/ompl-1.6/
-LIBS += -L/usr/local/lib/
-LIBS += -lompl
-
 # Octomap
 INCLUDEPATH += /usr/local/include/octomap
 LIBS += -L/usr/local/lib/
@@ -221,8 +228,8 @@ LIBS += -L/usr/local/lib/
 LIBS += -lsick_safetyscanners_base
 
 # Gemini2L sdk
-INCLUDEPATH += $$HOME/OrbbecSDK/include/
-LIBS += -L$$HOME/OrbbecSDK/lib/linux_x64/
+INCLUDEPATH += $$HOME/OrbbecSDK/SDK/include/
+LIBS += -L$$HOME/OrbbecSDK/SDK/lib/
 LIBS += -lOrbbecSDK
 
 # rplidar sdk

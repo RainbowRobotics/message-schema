@@ -9,14 +9,6 @@
 #include <QTextEdit>
 #include <string>
 
-struct LOG_INFO
-{
-    QString user_log = "";
-    QString color_code = "";
-    bool is_time = true;
-    bool is_hide = false;
-};
-
 class LOGGER: public QObject
 {
     Q_OBJECT
@@ -32,7 +24,7 @@ public:
     void write_log(QString user_log, QString color_code="white", bool time = true, bool hide = false);
     void PrintLogList(std::vector<QString> user_log_list, QString color_code="white", bool time = true, bool hide = false);
 
-    QString log_path;
+    QString log_path = "";
 
 private:
 
@@ -40,8 +32,8 @@ private:
     void writeLogFile(QString log);
     QString logWithTime(QString msg);
 
-    QString log_file_name;
-    std::string log_;
+    QString log_file_name = "";
+    std::string log_ = "";
     std::vector<std::string> log_list_;
 
     tbb::concurrent_queue<LOG_INFO> log_que;

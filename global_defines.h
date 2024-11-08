@@ -110,6 +110,7 @@
 
 #define GLOBAL_PATH_STEP 0.1
 #define LOCAL_PATH_STEP 0.01
+#define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
 // enumulator
 enum AUTO_FSM_STATE
@@ -156,6 +157,7 @@ enum AUTO_OBS_STATE
     AUTO_OBS_RECOVERY,
     AUTO_OBS_AVOID,
     AUTO_OBS_WAIT,
+    AUTO_OBS_WAIT2,
 };
 
 enum LOCAL_PATH_STATE
@@ -196,6 +198,39 @@ enum MOTOR_ERROR_STATE
 };
 
 // structure
+struct LOG_INFO
+{
+    QString user_log = "";
+    QString color_code = "";
+    bool is_time = true;
+    bool is_hide = false;
+
+    LOG_INFO()
+    {
+        user_log = "";
+        color_code = "";
+        is_time = true;
+        is_hide = false;
+    }
+
+    LOG_INFO(const LOG_INFO& p)
+    {
+        user_log = p.user_log;
+        color_code = p.color_code;
+        is_time = p.is_time;
+        is_hide = p.is_hide;
+    }
+
+    LOG_INFO& operator=(const LOG_INFO& p)
+    {
+        user_log = p.user_log;
+        color_code = p.color_code;
+        is_time = p.is_time;
+        is_hide = p.is_hide;
+        return *this;
+    }
+};
+
 struct PICKING
 {
     bool l_drag;
@@ -774,9 +809,12 @@ struct PATH
     std::vector<QString> nodes;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
-    std::vector<double> ref_v;    
+    std::vector<double> ref_v;
     Eigen::Matrix4d ed_tf;
     int is_align;
+
+    std::vector<int> passed; // global path progress
+    std::vector<int> label; // local path assign to global path
 
     PATH()
     {
@@ -794,6 +832,8 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_align = p.is_align;
+        passed = p.passed;
+        label = p.label;
     }
 
     PATH& operator=(const PATH& p)
@@ -805,6 +845,8 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_align = p.is_align;
+        passed = p.passed;
+        label = p.label;
         return *this;
     }
 
@@ -814,9 +856,11 @@ struct PATH
                std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
                pose == p.pose &&
                pos == p.pos &&
-               ref_v == p.ref_v &&               
+               ref_v == p.ref_v &&
                ed_tf.isApprox(p.ed_tf) &&
-               is_align == p.is_align;
+               is_align == p.is_align &&
+               passed == p.passed &&
+               label == p.label;
     }
 
     bool operator!=(const PATH& p) const
@@ -860,39 +904,6 @@ struct CODE_INFO
         y = p.y;
         z = p.z;
         th = p.th;
-        return *this;
-    }
-};
-
-struct BUBBLE
-{
-    Eigen::Vector3d ref;
-    Eigen::Vector3d pos;
-    Eigen::Vector3d vel;
-    double r;
-
-    BUBBLE()
-    {
-        ref.setZero();
-        pos.setZero();
-        vel.setZero();
-        r = 1.0;
-    }
-
-    BUBBLE(const BUBBLE& p)
-    {
-        ref = p.ref;
-        pos = p.pos;
-        vel = p.vel;
-        r = p.r;
-    }
-
-    BUBBLE& operator=(const BUBBLE& p)
-    {
-        ref = p.ref;
-        pos = p.pos;
-        vel = p.vel;
-        r = p.r;
         return *this;
     }
 };

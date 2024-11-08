@@ -399,8 +399,14 @@ void UNIMAP::edit_node_name(PICKING pick)
     NODE* node = get_node_by_id(pick.cur_node);
     if(node != NULL)
     {
-        bool ok;
-        QString str = QInputDialog::getText(NULL, "Input", "node name:", QLineEdit::Normal, node->name, &ok);
+        QString name = node->name;
+        if(name == "")
+        {
+            name = gen_node_name();
+        }
+
+        bool ok = false;
+        QString str = QInputDialog::getText(NULL, "Input", "node name:", QLineEdit::Normal, name, &ok);
         if(ok && !str.isEmpty())
         {
             node->name = str;
@@ -568,7 +574,7 @@ QString UNIMAP::gen_node_name()
     }
 
     QString res;
-    res.sprintf("N_%d", max + 1);
+    res.sprintf("LOC_%d", max + 1);
     return res;
 }
 

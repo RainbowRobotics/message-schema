@@ -17,13 +17,14 @@ cv::Vec3b colors[10] =
     cv::Vec3b(158,193,207)
 };
 
-QString AUTO_FSM_STATE_STR[6] =
+QString AUTO_FSM_STATE_STR[7] =
 {
     "AUTO_FSM_FIRST_ALIGN",
     "AUTO_FSM_DRIVING",
     "AUTO_FSM_FINAL_ALIGN",
     "AUTO_FSM_OBS",
     "AUTO_FSM_COMPLETE",
+    "AUTO_FSM_DOCKING",
     "AUTO_FSM_PAUSE"
 };
 
@@ -367,10 +368,12 @@ double calc_line_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
     Eigen::Vector3d ab = P1 - P0;
     Eigen::Vector3d av = P - P0;
 
-    // project av onto ab to find the closest point on the line
-    Eigen::Vector3d projection = ab * (av.dot(ab) / ab.dot(ab));
-
-    // the distance from point P to the line is the norm of the perpendicular vector
+    double ab_dot_ab = ab.dot(ab);
+    if (ab_dot_ab == 0.0)
+    {
+        return av.norm();
+    }
+    Eigen::Vector3d projection = ab * (av.dot(ab) / ab_dot_ab);
     return (av - projection).norm();
 }
 
@@ -399,6 +402,10 @@ std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::V
 
     double c1 = w.dot(v);
     double c2 = v.dot(v);
+    if (c2 == 0.0)
+    {
+        return std::make_pair(P0, (P - P0).norm());
+    }
 
     if (c1 <= 0)
     {
@@ -421,10 +428,17 @@ bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen:
     Eigen::Vector3d d = P1 - P0;
     Eigen::Vector3d v = P0 - P;
     double a = d.dot(d);
+
+    // handle the case where P0 and P1 are the same point
+    if (a == 0.0)
+    {
+        return false;
+    }
+
     double b = 2.0 * d.dot(v);
     double c = v.dot(v) - r * r;
-
     double discriminant = b * b - 4 * a * c;
+
     if (discriminant < 0)
     {
         return false;
@@ -452,13 +466,13 @@ bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen:
         return true;
     }
 
-    if(intersect1)
+    if (intersect1)
     {
         intersection = P0 + t1 * d;
         return true;
     }
 
-    if(intersect2)
+    if (intersect2)
     {
         intersection = P0 + t2 * d;
         return true;
@@ -975,6 +989,8 @@ Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix)
     result(2, 1) = rotation_matrix(2, 1);
     result(2, 2) = rotation_matrix(2, 2);
 
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(result, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    result = svd.matrixU() * svd.matrixV().transpose();
     return result;
 }
 

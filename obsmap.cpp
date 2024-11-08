@@ -8,7 +8,12 @@ OBSMAP::OBSMAP(QObject *parent)
 
 OBSMAP::~OBSMAP()
 {
-
+    if(octree != NULL)
+    {
+        octree->clear();
+        delete octree;
+        octree= NULL;
+    }
 }
 
 void OBSMAP::init()
@@ -34,7 +39,18 @@ void OBSMAP::init()
 void OBSMAP::clear()
 {
     mtx.lock();
-    octree->clear();
+
+    if(octree != NULL)
+    {
+        octree->clear();
+        delete octree;
+        octree= NULL;
+    }
+
+    octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+    octree->setProbHit(P_HIT);
+    octree->setProbMiss(P_MISS);
+
     obs_pts.clear();
     dyn_pts.clear();
     plot_pts.clear();
@@ -42,11 +58,14 @@ void OBSMAP::clear()
     static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     map_tf = Eigen::Matrix4d::Identity();
+
     mtx.unlock();
 }
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
+    mtx.lock();
+
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
@@ -98,7 +117,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         cloud.push_back(_P[0], _P[1], 0);
     }
 
-    mtx.lock();
     octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), config->OBS_MAP_RANGE, false, false);
 
     // calc grid map
@@ -808,7 +826,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 
     // calc flowfield
     cv::Mat obs_map2;
-    int robot_head_r = std::ceil((config->ROBOT_SIZE_Y[1]+margin_y)/gs);
+    //int robot_head_r = std::ceil((config->ROBOT_SIZE_Y[1]+margin_y)/gs);
+    int robot_head_r = (config->ROBOT_SIZE_Y[1]+margin_y)/gs;
     cv::dilate(obs_map, obs_map2, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2*robot_head_r+1, 2*robot_head_r+1)));
 
     cv::Mat flow_field = calc_flowfield(obs_map2, ed_uv);
@@ -908,7 +927,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         // expand nodes for differential drive        
-        double step = 0.05;
+        double step = gs;
         std::vector<Eigen::Matrix4d> around;
         for(int i = -2; i <= 2; i++)
         {
@@ -1039,7 +1058,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         }
 
         double timeout = get_time() - st_time;
-        if(timeout > 1.0)
+        if(timeout > 1.5)
         {
             printf("[OBSMAP] timeout, iter:%d\n", iter);
             break;

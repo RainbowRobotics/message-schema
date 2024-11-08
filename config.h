@@ -72,6 +72,7 @@ public:
     int USE_BLIDAR = 0;
     int USE_BQR = 0;
     int USE_CAM = 1;
+    int USE_EARLYSTOP = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    

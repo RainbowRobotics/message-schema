@@ -29,10 +29,13 @@ node_lidar_t::~node_lidar_t()
 		globalRecvBuffer = NULL;
     }
 
-	node_lidar.serial_port->close();
-	node_lidar.lidar_status.lidar_ready = false;
-	node_lidar.lidar_status.close_lidar = true;
-	flushSerial();
+    if(node_lidar.serial_port != nullptr)
+    {
+        node_lidar.serial_port->close();
+        node_lidar.lidar_status.lidar_ready = false;
+        node_lidar.lidar_status.close_lidar = true;
+        flushSerial();
+    }
 }
 
 void node_lidar_t::initialization_node_lidar()

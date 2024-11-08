@@ -198,6 +198,9 @@ void CONFIG::load()
 
                 USE_CAM = obj_debug["USE_CAM"].toString().toInt();
                 printf("[CONFIG] USE_CAM, %s\n", obj_debug["USE_CAM"].toString().toLocal8Bit().data());
+
+                USE_EARLYSTOP = obj_debug["USE_EARLYSTOP"].toString().toInt();
+                printf("[CONFIG] USE_EARLYSTOP, %s\n", obj_debug["USE_EARLYSTOP"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();
