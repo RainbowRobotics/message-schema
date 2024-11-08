@@ -1,6 +1,8 @@
 #include "lidar_bottom.h"
 
+#if defined(USE_SRV)
 node_lidar_t node_lidar;
+#endif
 
 LIDAR_BOTTOM::LIDAR_BOTTOM(QObject *parent)
     : QObject{parent}
@@ -10,6 +12,7 @@ LIDAR_BOTTOM::LIDAR_BOTTOM(QObject *parent)
 
 LIDAR_BOTTOM::~LIDAR_BOTTOM()
 {
+    #if defined(USE_SRV)
     if(recv_thread != NULL)
     {
         recv_flag = false;
@@ -29,6 +32,7 @@ LIDAR_BOTTOM::~LIDAR_BOTTOM()
         flushSerial();
         node_lidar.initialization_node_lidar();
     }
+    #endif
 }
 
 void LIDAR_BOTTOM::open()
@@ -40,6 +44,7 @@ void LIDAR_BOTTOM::open()
         return;
     }
 
+    #if defined(USE_SRV)
     if(recv_thread == NULL)
     {
         recv_flag = true;
@@ -51,6 +56,7 @@ void LIDAR_BOTTOM::open()
         grab_flag = true;
         grab_thread = new std::thread(&LIDAR_BOTTOM::grab_loop, this);
     }
+    #endif
 }
 
 std::vector<Eigen::Vector3d> LIDAR_BOTTOM::get_cur_scan()
@@ -73,6 +79,8 @@ TIME_PTS LIDAR_BOTTOM::get_cur_tp()
 
 void LIDAR_BOTTOM::grab_loop()
 {
+    #if defined(USE_SRV)
+
     //sudo adduser $USER dialout
     //return;
 
@@ -156,10 +164,14 @@ void LIDAR_BOTTOM::grab_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+
+    #endif
 }
 
 void LIDAR_BOTTOM::recv_loop()
 {
+    #if defined(USE_SRV)
+
     constexpr size_t localBufSize = 128;
     constexpr size_t localScanSize = 1000;
 
@@ -285,4 +297,6 @@ void LIDAR_BOTTOM::recv_loop()
 
     recv_flag = false;
     cleanup_lidar_resources();
+
+    #endif
 }

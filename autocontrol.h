@@ -17,20 +17,6 @@
 #include "obsmap.h"
 #include "dockingcontrol.h"
 
-// ompl
-#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
-#include <ompl/base/spaces/DubinsStateSpace.h>
-#include <ompl/base/SpaceInformation.h>
-#include <ompl/base/ScopedState.h>
-#include <ompl/base/goals/GoalState.h>
-#include <ompl/base/goals/GoalStates.h>
-#include <ompl/geometric/SimpleSetup.h>
-#include <ompl/geometric/planners/rrt/RRTstar.h>
-#include <ompl/geometric/planners/prm/PRMstar.h>
-#include <ompl/geometric/PathSimplifier.h>
-#include <ompl/config.h>
-#include <ompl/util/Console.h>
-
 // qt
 #include <QObject>
 
@@ -85,10 +71,13 @@ public:
 
     // for local path planning (using obs_map)
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);        
+    int get_global_nn_idx(PATH& global_path, Eigen::Vector3d cur_pos);
+    int get_local_nn_idx(PATH& local_path, Eigen::Vector3d cur_pos, int global_idx);
+
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
-    int get_next_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
-    PATH calc_local_path();
-    PATH calc_avoid_path();
+
+    PATH calc_local_path(PATH& global_path);
+    PATH calc_avoid_path(PATH& global_path);
 
     // for control
     int is_everything_fine();

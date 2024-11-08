@@ -8,23 +8,15 @@ CODE_READER::CODE_READER(QObject *parent)
     connect(&client, &QTcpSocket::disconnected, this, &CODE_READER::disconnected);
 
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
-    connect(&check_recv_timer, SIGNAL(timeout()), this, SLOT(check_recv_loop()));
-
-    check_recv_timer.setInterval(100);
-    check_recv_timer.start();
-
-    load_codes();
-
-    double th = 0*D2R;
-    R(0,0) = std::cos(th);
-    R(0,1) = -std::sin(th);
-    R(1,0) = std::sin(th);
-    R(1,1) = std::cos(th);
+    connect(&check_recv_timer, SIGNAL(timeout()), this, SLOT(check_recv_loop()));    
 }
 
 CODE_READER::~CODE_READER()
 {
-    client.close();
+    if(client.isOpen())
+    {
+        client.close();
+    }
 }
 
 QString CODE_READER::get_code_info()
@@ -40,7 +32,16 @@ QString CODE_READER::get_code_info()
 
 void CODE_READER::open()
 {
-    client.connectToHost(QHostAddress("192.168.2.12"), 2112);
+    check_recv_timer.start(100);
+
+    load_codes();
+
+    double th = 0*D2R;
+    R(0,0) = std::cos(th);
+    R(0,1) = -std::sin(th);
+    R(1,0) = std::sin(th);
+    R(1,1) = std::cos(th);
+
     reconnect_timer.start(3000);
 }
 

@@ -11,7 +11,7 @@
     "DRIVE_H": "4.0",
     "DRIVE_A": "0.8",
     "DRIVE_B": "0.05",
-    "DRIVE_L": "0.5",
+    "DRIVE_L": "0.3",
     "DRIVE_K": "0.8",
     "DRIVE_EPS": "0.3"
 }

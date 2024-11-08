@@ -14,7 +14,6 @@ COMM_MS::COMM_MS(QObject *parent)
     using std::placeholders::_4;
 
     sio::socket::ptr sock = io->socket();
-    io->set_logs_quiet();
 
     BIND_EVENT(sock, "motorinit", std::bind(&COMM_MS::recv_motorinit, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "move", std::bind(&COMM_MS::recv_move, this, _1, _2, _3, _4));
@@ -25,7 +24,9 @@ COMM_MS::COMM_MS(QObject *parent)
     io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
     io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
     io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));    
-    io->set_reconnect_attempts(5);
+
+    // no reconnect
+    io->set_reconnect_attempts(0);
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));

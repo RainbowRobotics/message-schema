@@ -169,7 +169,7 @@ MainWindow::MainWindow(QWidget *parent)
         {
             ui->main_tab->setCurrentIndex(0);
 
-            QTimer::singleShot(1000, [&]()
+            QTimer::singleShot(2000, [&]()
             {
                 // set plot window
                 setup_vtk();
@@ -348,7 +348,7 @@ void MainWindow::init_modules()
     code.config = &config;
     code.logger = &logger;
     code.unimap = &unimap;
-    if(config.USE_BLIDAR)
+    if(config.USE_BQR)
     {
         code.open();
     }
@@ -1973,7 +1973,17 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    all_plot_clear();
+    std::vector<QString> path;
+    path.push_back("N_0112");
+    path.push_back("N_1729820377638");
+    path.push_back("N_1729820437542");
+    path.push_back("N_1729820446577");
+    path.push_back("N_1729746747992");
+    path.push_back("N_0106");
+    path.push_back("N_1729820446577");
+    path.push_back("N_1729820437542");
+    path.push_back("N_1729820461736");
+    ctrl.move_pp(path, 0, 1);
 }
 
 void MainWindow::bt_TestLed()
@@ -2127,7 +2137,7 @@ void MainWindow::bt_TaskPlay()
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_AMR_400_PROTO)
+    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
     if(mode == "holonomic")
     {
         mode = "basic";
@@ -2157,8 +2167,8 @@ void MainWindow::comm_loop()
     const int send_w = 320;
     const int send_h = 240;
 
-    cv::VideoWriter writer0(pipeline0, 0, (double)10, cv::Size(320,240), true);
-    cv::VideoWriter writer1(pipeline1, 0, (double)10, cv::Size(320,240), true);
+    cv::VideoWriter writer0;
+    cv::VideoWriter writer1;
 
     printf("[COMM] loop start\n");
     while(comm_flag)
@@ -2257,6 +2267,28 @@ void MainWindow::comm_loop()
             if(cms.is_connected)
             {
                 cms.send_lidar();
+            }
+
+            // open video writer
+            if(config.USE_RTSP && config.USE_CAM)
+            {
+                if(cam.is_connected0)
+                {
+                    if(!writer0.isOpened())
+                    {
+                        writer0.open(pipeline0, 0, (double)10, cv::Size(320,240), true);
+                        logger.write_log("[COMM] cam0 rtsp writer try open");
+                    }
+                }
+
+                if(cam.is_connected1)
+                {
+                    if(!writer1.isOpened())
+                    {
+                        writer1.open(pipeline1, 0, (double)10, cv::Size(320,240), true);
+                        logger.write_log("[COMM] cam1 rtsp writer try open");
+                    }
+                }
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -2546,9 +2578,11 @@ void MainWindow::watch_loop()
                         double pre_idle_usage = pre_cpu_usage.idle;
 
                         double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
-                        cpu_usage_str.sprintf("[CPU]: %.2f", cpu_usage);
-
-                        pre_cpu_usage = cur_cpu_usage;
+                        if(isfinite(cpu_usage))
+                        {
+                            cpu_usage_str.sprintf("[CPU]: %.2f", cpu_usage);
+                            pre_cpu_usage = cur_cpu_usage;
+                        }
                     }
                     else
                     {
@@ -3508,15 +3542,15 @@ void MainWindow::ctrl_plot()
 
         // draw
         PATH global_path = ctrl.get_cur_global_path();
-        if(global_path.pos.size() >= 2)
+        if(global_path.pos.size() >= 4)
         {
-            for(size_t p = 0; p < global_path.pos.size()-1; p++)
+            for(size_t p = 0; p < global_path.pos.size()-3; p+=3)
             {
                 QString name;
-                name.sprintf("global_path_%d_%d", (int)p, (int)p+1);
+                name.sprintf("global_path_%d_%d", (int)p, (int)p+3);
 
                 Eigen::Vector3d P0 = global_path.pos[p];
-                Eigen::Vector3d P1 = global_path.pos[p+1];
+                Eigen::Vector3d P1 = global_path.pos[p+3];
 
                 pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.01);
                 pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.01);

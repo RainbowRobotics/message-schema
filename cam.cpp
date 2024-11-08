@@ -153,94 +153,102 @@ void CAM::grab_loop()
 
     pipe0->start(config0, [&](std::shared_ptr<ob::FrameSet> fs)
     {
-        if(fs->depthFrame() != nullptr)
+        try
         {
-            uint64_t ts = fs->depthFrame()->systemTimeStamp();
-            double t = (double)ts/1000.0 - st_time_for_get_time;
-
-            // get point cloud
-            ob::PointCloudFilter point_cloud;
-            auto camera_param = pipe0->getCameraParam();
-
-            point_cloud.setCameraParam(camera_param);
-            point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
-
-            auto scale = fs->depthFrame()->getValueScale();
-            point_cloud.setPositionDataScaled(scale);
-
-            std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
-            OBPoint *point = (OBPoint *)frame->data();
-
-            int w = fs->depthFrame()->width();
-            int h = fs->depthFrame()->height();
-
-            std::vector<Eigen::Vector3d> pts;
-            for(int i = 0; i < h; i++)
+            if(fs->depthFrame() != nullptr)
             {
-                for(int j = 0; j < w; j++)
+                uint64_t ts = fs->depthFrame()->systemTimeStamp();
+                double t = (double)ts/1000.0 - st_time_for_get_time;
+
+                // get point cloud
+                ob::PointCloudFilter point_cloud;
+                auto camera_param = pipe0->getCameraParam();
+
+                point_cloud.setCameraParam(camera_param);
+                point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
+
+                auto scale = fs->depthFrame()->getValueScale();
+                point_cloud.setPositionDataScaled(scale);
+
+                std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
+                OBPoint *point = (OBPoint *)frame->data();
+
+                int w = fs->depthFrame()->width();
+                int h = fs->depthFrame()->height();
+
+                std::vector<Eigen::Vector3d> pts;
+                for(int i = 0; i < h; i++)
                 {
-                    double x = -point[i*w+j].x/1000.0;
-                    double y = point[i*w+j].y/1000.0;
-                    double z = point[i*w+j].z/1000.0;
-                    if(x != 0 || y != 0 || z != 0)
+                    for(int j = 0; j < w; j++)
                     {
-                        Eigen::Vector3d P(x,y,z);
-                        Eigen::Vector3d _P = TF0.block(0,0,3,3)*P + TF0.block(0,3,3,1);
-
-                        if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
-                           _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                        double x = -point[i*w+j].x/1000.0;
+                        double y = point[i*w+j].y/1000.0;
+                        double z = point[i*w+j].z/1000.0;
+                        if(x != 0 || y != 0 || z != 0)
                         {
-                            continue;
-                        }
+                            Eigen::Vector3d P(x,y,z);
+                            Eigen::Vector3d _P = TF0.block(0,0,3,3)*P + TF0.block(0,3,3,1);
 
-                        if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
-                        {
-                            continue;
-                        }
+                            if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
+                               _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                            {
+                                continue;
+                            }
 
-                        // orthogonal projection
-                        _P[2] = 0;
-                        pts.push_back(_P);
+                            if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
+                            {
+                                continue;
+                            }
+
+                            // orthogonal projection
+                            _P[2] = 0;
+                            pts.push_back(_P);
+                        }
                     }
                 }
-            }
 
-            // voxel filtering
-            pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+                // voxel filtering
+                pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
 
-            // update scan
-            TIME_PTS scan;
-            scan.t = t;
-            scan.pts = pts;
+                // update scan
+                TIME_PTS scan;
+                scan.t = t;
+                scan.pts = pts;
 
-            mtx.lock();
-            cur_scan0 = scan;
-            mtx.unlock();
-        }
-
-        if(fs->colorFrame() != nullptr)
-        {
-            if(is_connected0 == false)
-            {
-                is_connected0 = true;
-            }
-
-            // get color image
-            std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-
-            // convert opencv image
-            cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-
-            cv::Mat img;
-            cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-            cv::flip(img, img, -1);
-
-            if(!img.empty())
-            {
                 mtx.lock();
-                cur_img0 = img.clone();
+                cur_scan0 = scan;
                 mtx.unlock();
             }
+
+            if(fs->colorFrame() != nullptr)
+            {
+                if(is_connected0 == false)
+                {
+                    is_connected0 = true;
+                }
+
+                // get color image
+                std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
+
+                // convert opencv image
+                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
+
+                cv::Mat img;
+                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                cv::flip(img, img, -1);
+
+                if(!img.empty())
+                {
+                    mtx.lock();
+                    cur_img0 = img.clone();
+                    mtx.unlock();
+                }
+            }
+        }
+        catch(const ob::Error &e)
+        {
+            QString str = QString::fromLocal8Bit(e.getMessage());
+            logger->write_log("[CAM] " + str, "Red");
         }
     });
 
@@ -266,94 +274,102 @@ void CAM::grab_loop()
 
     pipe1->start(config1, [&](std::shared_ptr<ob::FrameSet> fs)
     {
-        if(fs->depthFrame() != nullptr)
+        try
         {
-            uint64_t ts = fs->depthFrame()->systemTimeStamp();
-            double t = (double)ts/1000.0 - st_time_for_get_time;
-
-            // get point cloud
-            ob::PointCloudFilter point_cloud;
-            auto camera_param = pipe1->getCameraParam();
-
-            point_cloud.setCameraParam(camera_param);
-            point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
-
-            auto scale = fs->depthFrame()->getValueScale();
-            point_cloud.setPositionDataScaled(scale);
-
-            std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
-            OBPoint *point = (OBPoint *)frame->data();
-
-            int w = fs->depthFrame()->width();
-            int h = fs->depthFrame()->height();
-
-            std::vector<Eigen::Vector3d> pts;
-            for(int i = 0; i < h; i++)
+            if(fs->depthFrame() != nullptr)
             {
-                for(int j = 0; j < w; j++)
+                uint64_t ts = fs->depthFrame()->systemTimeStamp();
+                double t = (double)ts/1000.0 - st_time_for_get_time;
+
+                // get point cloud
+                ob::PointCloudFilter point_cloud;
+                auto camera_param = pipe1->getCameraParam();
+
+                point_cloud.setCameraParam(camera_param);
+                point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
+
+                auto scale = fs->depthFrame()->getValueScale();
+                point_cloud.setPositionDataScaled(scale);
+
+                std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
+                OBPoint *point = (OBPoint *)frame->data();
+
+                int w = fs->depthFrame()->width();
+                int h = fs->depthFrame()->height();
+
+                std::vector<Eigen::Vector3d> pts;
+                for(int i = 0; i < h; i++)
                 {
-                    double x = -point[i*w+j].x/1000.0;
-                    double y = point[i*w+j].y/1000.0;
-                    double z = point[i*w+j].z/1000.0;
-                    if(x != 0 || y != 0 || z != 0)
+                    for(int j = 0; j < w; j++)
                     {
-                        Eigen::Vector3d P(x,y,z);
-                        Eigen::Vector3d _P = TF1.block(0,0,3,3)*P + TF1.block(0,3,3,1);
-
-                        if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
-                           _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                        double x = -point[i*w+j].x/1000.0;
+                        double y = point[i*w+j].y/1000.0;
+                        double z = point[i*w+j].z/1000.0;
+                        if(x != 0 || y != 0 || z != 0)
                         {
-                            continue;
-                        }
+                            Eigen::Vector3d P(x,y,z);
+                            Eigen::Vector3d _P = TF1.block(0,0,3,3)*P + TF1.block(0,3,3,1);
 
-                        if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
-                        {
-                            continue;
-                        }
+                            if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
+                               _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                            {
+                                continue;
+                            }
 
-                        // orthogonal projection
-                        _P[2] = 0;
-                        pts.push_back(_P);
+                            if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
+                            {
+                                continue;
+                            }
+
+                            // orthogonal projection
+                            _P[2] = 0;
+                            pts.push_back(_P);
+                        }
                     }
                 }
-            }
 
-            // voxel filtering
-            pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+                // voxel filtering
+                pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
 
-            // update scan
-            TIME_PTS scan;
-            scan.t = t;
-            scan.pts = pts;
+                // update scan
+                TIME_PTS scan;
+                scan.t = t;
+                scan.pts = pts;
 
-            mtx.lock();
-            cur_scan1 = scan;
-            mtx.unlock();
-        }
-
-        if(fs->colorFrame() != nullptr)
-        {
-            if(is_connected1 == false)
-            {
-                is_connected1 = true;
-            }
-
-            // get color image
-            std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-
-            // convert opencv image
-            cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-
-            cv::Mat img;
-            cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-            //cv::flip(img, img, -1);
-
-            if(!img.empty())
-            {
                 mtx.lock();
-                cur_img1 = img.clone();
+                cur_scan1 = scan;
                 mtx.unlock();
             }
+
+            if(fs->colorFrame() != nullptr)
+            {
+                if(is_connected1 == false)
+                {
+                    is_connected1 = true;
+                }
+
+                // get color image
+                std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
+
+                // convert opencv image
+                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
+
+                cv::Mat img;
+                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                //cv::flip(img, img, -1);
+
+                if(!img.empty())
+                {
+                    mtx.lock();
+                    cur_img1 = img.clone();
+                    mtx.unlock();
+                }
+            }
+        }
+        catch(const ob::Error &e)
+        {
+            QString str = QString::fromLocal8Bit(e.getMessage());
+            logger->write_log("[CAM] " + str, "Red");
         }
     });
     printf("[CAM] grab loop started\n");
@@ -374,7 +390,7 @@ void CAM::grab_loop()
 void CAM::grab_loop()
 {
     // check device
-    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_FATAL);
+    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_ERROR);
 
     ob::Context ctx;
     auto dev_list = ctx.queryDeviceList();
@@ -444,170 +460,102 @@ void CAM::grab_loop()
 
     cam_pipe->start(cam_config, [&](std::shared_ptr<ob::FrameSet> fs)
     {
-        if(fs->depthFrame() != nullptr)
+        try
         {
-            uint64_t ts = fs->depthFrame()->systemTimeStamp();
-            double t = (double)ts/1000.0 - st_time_for_get_time;
-
-            // get point cloud
-            ob::PointCloudFilter point_cloud;
-            auto camera_param = cam_pipe->getCameraParam();
-
-            point_cloud.setCameraParam(camera_param);
-            point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
-
-            auto scale = fs->depthFrame()->getValueScale();
-            point_cloud.setPositionDataScaled(scale);
-
-            std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
-            OBPoint *point = (OBPoint *)frame->data();
-
-            int w = fs->depthFrame()->width();
-            int h = fs->depthFrame()->height();
-
-            std::vector<Eigen::Vector3d> pts;
-            for(int i = 0; i < h; i++)
+            if(fs->depthFrame() != nullptr)
             {
-                for(int j = 0; j < w; j++)
+                uint64_t ts = fs->depthFrame()->systemTimeStamp();
+                double t = (double)ts/1000.0 - st_time_for_get_time;
+
+                // get point cloud
+                ob::PointCloudFilter point_cloud;
+                auto camera_param = cam_pipe->getCameraParam();
+
+                point_cloud.setCameraParam(camera_param);
+                point_cloud.setCreatePointFormat(OB_FORMAT_POINT);
+
+                auto scale = fs->depthFrame()->getValueScale();
+                point_cloud.setPositionDataScaled(scale);
+
+                std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
+                OBPoint *point = (OBPoint *)frame->data();
+
+                int w = fs->depthFrame()->width();
+                int h = fs->depthFrame()->height();
+
+                std::vector<Eigen::Vector3d> pts;
+                for(int i = 0; i < h; i++)
                 {
-                    double x = -point[i*w+j].x/1000.0;
-                    double y = point[i*w+j].y/1000.0;
-                    double z = point[i*w+j].z/1000.0;
-                    if(x != 0 || y != 0 || z != 0)
+                    for(int j = 0; j < w; j++)
                     {
-                        Eigen::Vector3d P(x,y,z);
-                        Eigen::Vector3d _P = TF.block(0,0,3,3)*P + TF.block(0,3,3,1);
-
-                        if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
-                           _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                        double x = -point[i*w+j].x/1000.0;
+                        double y = point[i*w+j].y/1000.0;
+                        double z = point[i*w+j].z/1000.0;
+                        if(x != 0 || y != 0 || z != 0)
                         {
-                            continue;
-                        }
+                            Eigen::Vector3d P(x,y,z);
+                            Eigen::Vector3d _P = TF.block(0,0,3,3)*P + TF.block(0,3,3,1);
 
-                        if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
-                        {
-                            continue;
-                        }
+                            if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
+                               _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                            {
+                                continue;
+                            }
 
-                        // orthogonal projection
-                        _P[2] = 0;
-                        pts.push_back(_P);
+                            if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
+                            {
+                                continue;
+                            }
+
+                            // orthogonal projection
+                            _P[2] = 0;
+                            pts.push_back(_P);
+                        }
                     }
                 }
-            }
 
-            // voxel filtering
-            pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+                // voxel filtering
+                pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
 
-            // update scan
-            TIME_PTS scan;
-            scan.t = t;
-            scan.pts = pts;
+                // update scan
+                TIME_PTS scan;
+                scan.t = t;
+                scan.pts = pts;
 
-            mtx.lock();
-            cur_scan0 = scan;
-            mtx.unlock();
-        }
-
-        if(fs->colorFrame() != nullptr)
-        {
-            if(is_connected0 == false)
-            {
-                is_connected0 = true;
-            }
-
-            // get color image
-            std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-
-            // convert opencv image
-            cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-
-            cv::Mat img;
-            cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-            if(!img.empty())
-            {
                 mtx.lock();
-                cur_img0 = img.clone();
+                cur_scan0 = scan;
                 mtx.unlock();
             }
+
+            if(fs->colorFrame() != nullptr)
+            {
+                if(is_connected0 == false)
+                {
+                    is_connected0 = true;
+                }
+
+                // get color image
+                std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
+
+                // convert opencv image
+                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
+
+                cv::Mat img;
+                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                if(!img.empty())
+                {
+                    mtx.lock();
+                    cur_img0 = img.clone();
+                    mtx.unlock();
+                }
+            }
+        }
+        catch(const ob::Error &e)
+        {
+            QString str = QString::fromLocal8Bit(e.getMessage());
+            logger->write_log("[CAM] " + str, "Red");
         }
     });
-
-    // set imu
-    /*imu_tools::ComplementaryFilter imu_filter;
-    std::shared_ptr<ob::Pipeline> imu_pipe = std::make_shared<ob::Pipeline>(dev);
-    auto gyro_profile_list = imu_pipe->getStreamProfileList(OB_SENSOR_GYRO);
-    //for(size_t p = 0; p < gyro_profile_list->count(); p++)
-    //{
-    //    auto profile = gyro_profile_list->getProfile(p)->as<ob::GyroStreamProfile>();
-    //    printf("gyro_profile(%d), fsr:%d, sr:%d\n", p, profile->fullScaleRange(), profile->sampleRate());
-    //}
-
-    auto accel_profile_list = imu_pipe->getStreamProfileList(OB_SENSOR_ACCEL);
-    //for(size_t p = 0; p < accel_profile_list->count(); p++)
-    //{
-    //    auto profile = accel_profile_list->getProfile(p)->as<ob::AccelStreamProfile>();
-    //    printf("accel_profile(%d), fsr:%d, sr:%d\n", p, profile->fullScaleRange(), profile->sampleRate());
-    //}
-
-    auto gyro_profile = gyro_profile_list->getProfile(1)->as<ob::GyroStreamProfile>();
-    QString str_gyro;
-    str_gyro.sprintf("[CAM][INFO] gyro_profile(1), fsr:%d, sr:%d", gyro_profile->fullScaleRange(), gyro_profile->sampleRate());
-    logger->write_log(WATCHDOG_STATE_INFO, str_gyro);
-
-
-    auto accel_profile = accel_profile_list->getProfile(1)->as<ob::AccelStreamProfile>();
-    QString str_accel;
-    str_accel.sprintf("[CAM][INFO] accel_profile(1), fsr:%d, sr:%d", accel_profile->fullScaleRange(), accel_profile->sampleRate());
-    logger->write_log(WATCHDOG_STATE_INFO, str_accel);
-
-    std::shared_ptr<ob::Config> imu_config = std::make_shared<ob::Config>();
-    imu_config->disableAllStream();
-    imu_config->enableGyroStream(gyro_profile->fullScaleRange(), gyro_profile->sampleRate());
-    imu_config->enableAccelStream(accel_profile->fullScaleRange(), accel_profile->sampleRate());
-
-    double imu_gyr_x=0; double imu_gyr_y=0; double imu_gyr_z=0;
-    double imu_acc_x=0; double imu_acc_y=0; double imu_acc_z=0;
-    imu_pipe->start(imu_config, [&](std::shared_ptr<ob::FrameSet> fs)
-    {
-        auto count = fs->frameCount();
-        for(int i = 0; i < count; i++)
-        {
-            auto frame = fs->getFrame(i);
-            uint64_t ts = frame->systemTimeStamp();
-            double t = (double)ts/1000.0 - st_time_for_get_time;
-
-            if(frame->type() == OB_FRAME_GYRO)
-            {
-                OBGyroValue gyro_val = frame->as<ob::GyroFrame>()->value();
-                imu_gyr_x = (double)gyro_val.x;
-                imu_gyr_y = (double)gyro_val.y;
-                imu_gyr_z = (double)gyro_val.z;
-                //printf("[GYRO] x,y,z: %.3f,%.3f,%.3f\n", gyro_x, gyro_y, gyro_z);
-            }
-            else if(frame->type() == OB_FRAME_ACCEL)
-            {
-                OBAccelValue accel_val = frame->as<ob::AccelFrame>()->value();
-                imu_acc_x = accel_val.x;
-                imu_acc_y = accel_val.y;
-                imu_acc_z = accel_val.z;
-                //printf("[ACC] x,y,z: %.3f,%.3f,%.3f\n", acc_x, acc_y, acc_z);
-            }
-        }
-
-        // get orientation using complementary filter
-        Eigen::Vector3d r(0, 0, 0);
-        if(std::abs(imu_gyr_x) > 0 || std::abs(imu_gyr_y) > 0 || std::abs(imu_gyr_z) > 0 ||
-           std::abs(imu_acc_x) > 0 || std::abs(imu_acc_y) > 0 || std::abs(imu_acc_z) > 0)
-        {
-            double q0, q1, q2, q3;
-            imu_filter.update(imu_acc_x, imu_acc_y, imu_acc_z,
-                              imu_gyr_x, imu_gyr_y, imu_gyr_z, 0.05);
-            imu_filter.getOrientation(q0, q1, q2, q3);
-            Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-            r = Sophus::SO3d(R).log();
-        }
-    });*/
 
     logger->write_log("[CAM] start grab loop", "Green");
     while(grab_flag)
@@ -616,7 +564,6 @@ void CAM::grab_loop()
     }
 
     cam_pipe->stop();
-    //imu_pipe->stop();
     logger->write_log("[CAM] stop grab loop", "Green");
 }
 #endif

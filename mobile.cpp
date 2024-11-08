@@ -219,6 +219,21 @@ void MOBILE::recv_loop()
     const QString pdu_ip = "192.168.2.100";
     const int pdu_port = 1977;
 
+    /*
+    // check
+    while(!ping(pdu_ip.toStdString()))
+    {
+        if(recv_flag == false)
+        {
+            logger->write_log("[MOBILE] pdu connection failed", "Red", true, false);
+            return;
+        }
+
+        printf("[MOBILE] pdu ping check failed\n");
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    }
+    */
+
     // socket
     sockaddr_in server_addr;
     bzero((char*)&server_addr, sizeof(server_addr));
@@ -483,12 +498,20 @@ void MOBILE::recv_loop()
     const QString pdu_ip = "192.168.2.100";
     const int pdu_port = 1977;
 
+    /*
     // check
-    while(!ping(pdu_ip.toStdString()) && recv_flag)
+    while(!ping(pdu_ip.toStdString()))
     {
+        if(recv_flag == false)
+        {
+            logger->write_log("[MOBILE] pdu connection failed", "Red", true, false);
+            return;
+        }
+
         printf("[MOBILE] pdu ping check failed\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     }
+    */
 
     // socket
     sockaddr_in server_addr;

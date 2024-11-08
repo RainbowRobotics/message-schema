@@ -4,7 +4,7 @@
 #include "global_defines.h"
 
 extern cv::Vec3b colors[10];
-extern QString AUTO_FSM_STATE_STR[6];
+extern QString AUTO_FSM_STATE_STR[7];
 
 bool ping(std::string ip_address);
 
