@@ -155,8 +155,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    mtx.unlock();
-
     // make wall map
     cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
     for(int i = 0; i < h; i++)
@@ -379,8 +377,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // update
-    mtx.lock();
+    // update    
     obs_pts = _obs_pts;
     dyn_pts = _dyn_pts;
     plot_pts = _plot_pts;
@@ -388,10 +385,10 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     wall_map = _wall_map;
     static_map = _static_map;
     dynamic_map = _dynamic_map;    
-    mtx.unlock();
 
     // signal for redrawing
     Q_EMIT obs_updated();
+    mtx.unlock();
 }
 
 void OBSMAP::get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf)

@@ -58,7 +58,7 @@ void MOBILE::sync()
     is_sync = true;
 
     QString str;
-    str.sprintf("[MOBILE] time sync, sync_st_time:%f\n", (double)sync_st_time);
+    str.sprintf("[MOBILE] time sync, sync_st_time:%f", (double)sync_st_time);
     logger->write_log(str, "DeepSkyBlue", true, false);
 }
 
@@ -615,7 +615,6 @@ void MOBILE::recv_loop()
                 uint32_t tick;
                 memcpy(&tick, &_buf[index], dlc_f);     index=index+dlc_f;
                 double mobile_t = tick*0.002;
-                double pc_t = get_time();
 
                 uint32_t recv_tick;
                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
@@ -691,7 +690,7 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
                 // calc time offset
-                if(is_sync && pc_t > sync_st_time + 0.1)
+                if(is_sync && get_time() > sync_st_time + 0.1)
                 {
                     is_sync = false;
 
@@ -700,7 +699,9 @@ void MOBILE::recv_loop()
                     offset_t = _offset_t;
 
                     is_synced = true;
-                    printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
+
+                    QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
+                    logger->write_log(str);
                 }
 
                 // received mobile pose update
