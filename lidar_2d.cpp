@@ -64,13 +64,13 @@ void LIDAR_2D::open()
 void LIDAR_2D::sync_f()
 {
     is_sync_f = true;
-    printf("[LIDAR] front time sync\n");
+    logger->write_log("[LIDAR] front time sync");
 }
 
 void LIDAR_2D::sync_b()
 {
     is_sync_b = true;
-    printf("[LIDAR] back time sync\n");
+    logger->write_log("[LIDAR] back time sync");
 }
 
 std::vector<Eigen::Vector3d> LIDAR_2D::get_cur_scan_f()
@@ -1071,6 +1071,10 @@ void LIDAR_2D::grab_loop_f()
     // init lidar (host pc should be set ip 192.168.2.2)
     std::unique_ptr<LakiBeamUDP> lidar(new LakiBeamUDP("192.168.2.2", "2367", "192.168.2.10", "8888"));
     is_connected_f = true;
+    is_synced_f = true;
+
+    // gap time each points
+    const double point_interval = 32*U2S;
 
     int drop_cnt = 100;
     while(grab_flag_f)
@@ -1078,8 +1082,6 @@ void LIDAR_2D::grab_loop_f()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
-            //printf("[LIDAR] front lidar data received\n");
-
             // initial drop
             if(drop_cnt > 0)
             {
@@ -1090,34 +1092,16 @@ void LIDAR_2D::grab_loop_f()
 
             if(temp_pack.maxdots == 0 || temp_pack.maxdots > 3599)
             {
-                logger->write_log("[LIDAR] no data from front lidar\n");
+                logger->write_log("[LIDAR] invalid data from front lidar\n");
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
-            // time sync
-            double pc_t = get_time();
-            double lidar_t = temp_pack.dotcloud[0].timestamp * U2S;
-
-            if(is_sync_f)
-            {
-                is_sync_f = false;
-                offset_t_f = pc_t - lidar_t;
-
-                is_synced_f = true;
-                printf("[LIDAR] sync, offset_t_f: %f\n", (double)offset_t_f);
-            }
-
-            // check lidar, mobile sync
-            if(is_synced_f == false || mobile->is_synced == false)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
+            double lidar_t = get_time();
 
             // lidar frame synced ref time
-            double t0 = lidar_t + offset_t_f;
-            double t1 = (temp_pack.dotcloud[temp_pack.maxdots-1].timestamp * U2S) + offset_t_f;
+            double t0 = lidar_t - (temp_pack.maxdots * point_interval);
+            double t1 = lidar_t;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -1135,12 +1119,6 @@ void LIDAR_2D::grab_loop_f()
 
             // get mobile poses
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
-            if(pose_storage.size() == 0)
-            {
-                logger->write_log("[LIDAR] pose storage empty, front\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
 
             // get lidar raw data
             std::vector<double> times;
@@ -1148,7 +1126,7 @@ void LIDAR_2D::grab_loop_f()
             std::vector<Eigen::Vector3d> raw_pts;
             for (int p = 0; p < temp_pack.maxdots; p++)
             {
-                double t = temp_pack.dotcloud[p].timestamp*U2S + offset_t_f;
+                double t = t0 + (p*point_interval);
                 double deg = (double)temp_pack.dotcloud[p].angle/100; // deg, 0~360
                 double dist = ((double)temp_pack.dotcloud[p].distance)/1000; // meter
                 double rssi = (double)temp_pack.dotcloud[p].rssi;
@@ -1201,8 +1179,8 @@ void LIDAR_2D::grab_loop_f()
             // check
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
-                // drop
-                printf("[LIDAR] front lidar, invalid mobile poses\n");
+                // drop                
+                printf("[LIDAR] front sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
@@ -1298,6 +1276,10 @@ void LIDAR_2D::grab_loop_b()
     // init lidar
     std::unique_ptr<LakiBeamUDP> lidar(new LakiBeamUDP("192.168.2.2", "2368", "192.168.2.11", "8888"));
     is_connected_b = true;
+    is_synced_b = true;
+
+    // gap time each points
+    const double point_interval = 32*U2S;
 
     int drop_cnt = 100;
     while(grab_flag_b)
@@ -1305,8 +1287,6 @@ void LIDAR_2D::grab_loop_b()
         repark_t temp_pack;
         if(lidar->get_repackedpack(temp_pack))
         {
-            //printf("[LIDAR] back lidar data received\n");
-
             // initial drop
             if(drop_cnt > 0)
             {
@@ -1320,29 +1300,11 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            // time sync
-            double pc_t = get_time();
-            double lidar_t = temp_pack.dotcloud[0].timestamp * U2S;
-
-            if(is_sync_b)
-            {
-                is_sync_b = false;
-                offset_t_b = pc_t - lidar_t;
-
-                is_synced_b = true;
-                printf("[LIDAR] sync, offset_t_b: %f\n", (double)offset_t_b);
-            }
-
-            // check lidar, mobile sync
-            if(is_synced_b == false || mobile->is_synced == false)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
+            double lidar_t = get_time();
 
             // lidar frame synced ref time
-            double t0 = lidar_t + offset_t_b;
-            double t1 = (temp_pack.dotcloud[temp_pack.maxdots-1].timestamp * U2S) + offset_t_b;
+            double t0 = lidar_t - (temp_pack.maxdots * point_interval);
+            double t1 = lidar_t;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -1360,12 +1322,6 @@ void LIDAR_2D::grab_loop_b()
 
             // get mobile poses
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
-            if(pose_storage.size() == 0)
-            {
-                logger->write_log("[LIDAR] pose storage empty, back\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
 
             // get lidar raw data
             std::vector<double> times;
@@ -1373,7 +1329,7 @@ void LIDAR_2D::grab_loop_b()
             std::vector<Eigen::Vector3d> raw_pts;
             for (int p = 0; p < temp_pack.maxdots; p++)
             {
-                double t = temp_pack.dotcloud[p].timestamp*U2S + offset_t_b;
+                double t = t0 + (p*point_interval);
                 double deg = (double)temp_pack.dotcloud[p].angle/100; // deg, 0~360
                 double dist = ((double)temp_pack.dotcloud[p].distance)/1000; // meter
                 double rssi = (double)temp_pack.dotcloud[p].rssi;
@@ -1427,7 +1383,7 @@ void LIDAR_2D::grab_loop_b()
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop
-                printf("[LIDAR] back lidar, invalid mobile poses\n");
+                printf("[LIDAR] back sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }

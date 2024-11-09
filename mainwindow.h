@@ -49,10 +49,10 @@ public:
     LIDAR_2D lidar;
     LIDAR_BOTTOM blidar;
     CAM cam;
-    CODE_READER code;
-    SLAM_2D slam;
+    CODE_READER code;    
     UNIMAP unimap;
     OBSMAP obsmap;
+    SLAM_2D slam;
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
     TASK task;    

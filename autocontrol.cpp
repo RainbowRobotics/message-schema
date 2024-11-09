@@ -1590,8 +1590,8 @@ void AUTOCONTROL::b_loop_pp()
                     if(avoid_idx > avoid_path.pos.size()*0.9)
                     {
                         // clear avoid path
-                        avoid_path = PATH();
-                        printf("[AUTO] avoid_path complete\n");
+                        avoid_path = PATH();                        
+                        logger->write_log("[AUTO] avoid_path complete");
                         continue;
                     }
                 }
@@ -1781,12 +1781,6 @@ void AUTOCONTROL::b_loop_pp()
             double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
             double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);            
-            if(cur_idx == tgt_idx)
-            {
-                err_th = saturation(err_th, -5.0*D2R, 5.0*D2R);
-            }
-
-            //printf("[AUTO] err_th:%f\n", err_th*R2D);
 
             // calc cross track error
             double cte = calc_cte(local_path.pose, cur_pos);
@@ -1846,7 +1840,7 @@ void AUTOCONTROL::b_loop_pp()
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
                 v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], -params.ED_V, params.ED_V);
-                w = sgn(v)*w;
+                w = 0;
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
@@ -1970,14 +1964,15 @@ void AUTOCONTROL::b_loop_pp()
                     // mode 0, just wait
                     obs_wait_st_time = get_time();
                     obs_state = AUTO_OBS_WAIT;
-                    printf("[AUTO] avoid mode 0, OBS_WAIT\n");
+                    logger->write_log("[AUTO] avoid mode 0, OBS_WAIT");
+
                     continue;
                 }
                 else
                 {
                     // mode 1, avoid
                     obs_state = AUTO_OBS_AVOID;
-                    printf("[AUTO] avoid mode 1, OBS_AVOID\n");
+                    logger->write_log("[AUTO] avoid mode 1, OBS_AVOID");
                     continue;
                 }
             }
@@ -1990,13 +1985,13 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
-                    printf("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN\n");
+                    logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
                     continue;
                 }
                 else
                 {
                     obs_state = AUTO_OBS_RECOVERY;
-                    printf("[AUTO] avoid path failed, OBS_AVOID -> OBS_RECOVERY\n");
+                    logger->write_log("[AUTO] avoid path failed, OBS_AVOID -> OBS_RECOVERY");
                     continue;
                 }
             }
@@ -2066,7 +2061,9 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     mobile->move(0, 0, 0);
                     obs_state = AUTO_OBS_AVOID;
-                    printf("[AUTO] max_d: %f, OBS_RECOVERY -> OBS_AVOID\n", max_d);
+                    QString str; str.sprintf("[AUTO] max_d: %f, OBS_RECOVERY -> OBS_AVOID", max_d);
+                    logger->write_log(str);
+
                     continue;
                 }
 
@@ -2088,7 +2085,7 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
-                    printf("[AUTO] OBS_WAIT -> FIRST_ALIGN\n");
+                    logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
                     continue;
                 }
             }
@@ -2099,7 +2096,7 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FINAL_ALIGN;
-                    printf("[AUTO] OBS_WAIT -> FINAL_ALIGN\n");
+                    logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
                     continue;
                 }
             }
@@ -2115,7 +2112,8 @@ void AUTOCONTROL::b_loop_pp()
         }
         else
         {
-            printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+            QString str; str.sprintf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+            logger->write_log(str);
         }
         pre_loop_time = get_time();
     }

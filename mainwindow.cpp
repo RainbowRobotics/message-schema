@@ -10,9 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
     , blidar(this)
     , cam(this)
     , code(this)
-    , slam(this)
     , unimap(this)
     , obsmap(this)
+    , slam(this)
     , ctrl(this)
     , dctrl(this)
     , task(this)
@@ -2346,7 +2346,7 @@ void MainWindow::watch_loop()
                 {
                     mobile.sync();
                     last_sync_time = get_time();
-                    printf("[WATCH] try time sync, pc and mobile\n");
+                    logger.write_log("[WATCH] try time sync, pc and mobile");
                 }
 
                 MOBILE_STATUS ms = mobile.get_status();
@@ -2378,7 +2378,7 @@ void MainWindow::watch_loop()
                 if(lidar.is_synced_f == false)
                 {
                     lidar.sync_f();
-                    printf("[WATCH] try time sync, pc and front lidar\n");
+                    logger.write_log("[WATCH] try time sync, pc and front lidar");
                 }
             }
 
@@ -2387,7 +2387,7 @@ void MainWindow::watch_loop()
                 if(lidar.is_synced_b == false)
                 {
                     lidar.sync_b();
-                    printf("[WATCH] try time sync, pc and back lidar\n");
+                    logger.write_log("[WATCH] try time sync, pc and back lidar");
                 }
             }
 
