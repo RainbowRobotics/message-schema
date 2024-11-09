@@ -201,6 +201,15 @@ void CONFIG::load()
 
                 USE_EARLYSTOP = obj_debug["USE_EARLYSTOP"].toString().toInt();
                 printf("[CONFIG] USE_EARLYSTOP, %s\n", obj_debug["USE_EARLYSTOP"].toString().toLocal8Bit().data());
+
+                USE_WEB_UI = obj_debug["USE_WEB_UI"].toString().toInt();
+                printf("[CONFIG] USE_WEB_UI, %s\n", obj_debug["USE_WEB_UI"].toString().toLocal8Bit().data());
+
+                USE_QT_UI = obj_debug["USE_QT_UI"].toString().toInt();
+                printf("[CONFIG] USE_QT_UI, %s\n", obj_debug["USE_QT_UI"].toString().toLocal8Bit().data());
+
+                USE_FMS = obj_debug["USE_FMS"].toString().toInt();
+                printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

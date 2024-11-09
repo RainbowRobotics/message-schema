@@ -73,6 +73,9 @@ public:
     int USE_BQR = 0;
     int USE_CAM = 1;
     int USE_EARLYSTOP = 0;
+    int USE_WEB_UI = 0;
+    int USE_QT_UI = 0;
+    int USE_FMS = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    

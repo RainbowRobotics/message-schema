@@ -24,7 +24,10 @@
         "USE_CAM": "1",
         "USE_EARLYSTOP": "0",
         "USE_IMU": "1",
-        "USE_RTSP": "0"
+        "USE_RTSP": "0",
+        "USE_WEB_UI": "1",
+        "USE_QT_UI": "0",
+        "USE_FMS": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -81,7 +84,7 @@
         "MOTOR_LIMIT_W_ACC": "360"
     },
     "obs": {
-        "OBS_AVOID": "1",
+        "OBS_AVOID": "0",
         "OBS_DEADZONE": "0.5",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",

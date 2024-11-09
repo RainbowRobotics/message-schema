@@ -1088,6 +1088,13 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
+            if(temp_pack.maxdots == 0 || temp_pack.maxdots > 3599)
+            {
+                logger->write_log("[LIDAR] no data from front lidar\n");
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
             // time sync
             double pc_t = get_time();
             double lidar_t = temp_pack.dotcloud[0].timestamp * U2S;
@@ -1128,6 +1135,12 @@ void LIDAR_2D::grab_loop_f()
 
             // get mobile poses
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
+            if(pose_storage.size() == 0)
+            {
+                logger->write_log("[LIDAR] pose storage empty, front\n");
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
 
             // get lidar raw data
             std::vector<double> times;
@@ -1166,7 +1179,7 @@ void LIDAR_2D::grab_loop_f()
 
             // get boundary mobile pose
             int idx0 = -1;
-            for(size_t p = pose_storage.size()-1; p >= 0; p--)
+            for(int p = (int)pose_storage.size()-1; p >= 0; p--)
             {
                 if(pose_storage[p].t < t0)
                 {
@@ -1186,7 +1199,7 @@ void LIDAR_2D::grab_loop_f()
             }
 
             // check
-            if(idx0 == -1 || idx1 == -1)
+            if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop
                 printf("[LIDAR] front lidar, invalid mobile poses\n");
@@ -1235,6 +1248,10 @@ void LIDAR_2D::grab_loop_f()
                 // get bound_t
                 double _mo_t0 = pose_storage[i0].t;
                 double _mo_t1 = pose_storage[i1].t;
+                if(_mo_t1-_mo_t0 <= 0)
+                {
+                    continue;
+                }
 
                 Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
                 Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);
@@ -1297,6 +1314,12 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
+            if(temp_pack.maxdots == 0 || temp_pack.maxdots > 3599)
+            {
+                logger->write_log("[LIDAR] no data from back lidar\n");
+                continue;
+            }
+
             // time sync
             double pc_t = get_time();
             double lidar_t = temp_pack.dotcloud[0].timestamp * U2S;
@@ -1337,6 +1360,12 @@ void LIDAR_2D::grab_loop_b()
 
             // get mobile poses
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
+            if(pose_storage.size() == 0)
+            {
+                logger->write_log("[LIDAR] pose storage empty, back\n");
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
 
             // get lidar raw data
             std::vector<double> times;
@@ -1375,7 +1404,7 @@ void LIDAR_2D::grab_loop_b()
 
             // get boundary mobile pose
             int idx0 = -1;
-            for(size_t p = pose_storage.size()-1; p >= 0; p--)
+            for(int p = (int)pose_storage.size()-1; p >= 0; p--)
             {
                 if(pose_storage[p].t < t0)
                 {
@@ -1395,7 +1424,7 @@ void LIDAR_2D::grab_loop_b()
             }
 
             // check
-            if(idx0 == -1 || idx1 == -1)
+            if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop
                 printf("[LIDAR] back lidar, invalid mobile poses\n");
@@ -1444,6 +1473,10 @@ void LIDAR_2D::grab_loop_b()
                 // get bound_t
                 double _mo_t0 = pose_storage[i0].t;
                 double _mo_t1 = pose_storage[i1].t;
+                if(_mo_t1-_mo_t0 <= 0)
+                {
+                    continue;
+                }
 
                 Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
                 Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);

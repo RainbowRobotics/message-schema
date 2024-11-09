@@ -52,8 +52,11 @@ QString COMM_UI::get_json(QJsonObject& json, QString key)
 
 void COMM_UI::init()
 {
-    reconnect_timer.start(3000);
-    printf("[COMM_UI] start reconnect timer\n");
+    if(config->USE_QT_UI)
+    {
+        reconnect_timer.start(3000);
+        printf("[COMM_UI] start reconnect timer\n");
+    }
 }
 
 void COMM_UI::reconnect_loop()

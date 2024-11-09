@@ -35,8 +35,11 @@ void COMM_FMS::init()
     printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
 
     // start reconnect loop
-    reconnect_timer.start(3000);
-    printf("[COMM_FMS] start reconnect timer\n");
+    if(config->USE_FMS)
+    {
+        reconnect_timer.start(3000);
+        printf("[COMM_FMS] start reconnect timer\n");
+    }
 }
 
 void COMM_FMS::reconnect_loop()
