@@ -24,7 +24,10 @@
         "USE_BLIDAR": "0",
         "USE_BQR": "0",
         "USE_CAM": "1",
-        "USE_EARLYSTOP": "0"
+        "USE_EARLYSTOP": "0",
+        "USE_WEB_UI": "1",
+        "USE_QT_UI": "0",
+        "USE_FMS": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "24.0",

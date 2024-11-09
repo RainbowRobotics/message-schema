@@ -5,9 +5,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += resources_big
 
-#QMAKE_CXXFLAGS_RELEASE += -O3
-QMAKE_CXXFLAGS_RELEASE += -g
-QMAKE_LFLAGS_RELEASE += -g
+QMAKE_CXXFLAGS_RELEASE += -O3
+#QMAKE_CXXFLAGS_RELEASE += -g
+#QMAKE_LFLAGS_RELEASE += -g
 
 # AddressSanitizer
 #QMAKE_CXXFLAGS += -fsanitize=address
