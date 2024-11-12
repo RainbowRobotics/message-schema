@@ -55,6 +55,10 @@ public:
     std::vector<Eigen::Vector3d> dyn_pts;
     std::vector<Eigen::Vector4d> plot_pts;
 
+    // virtual obs for multirobot
+    std::vector<Eigen::Vector3d> vobs_list_robots;
+    std::vector<Eigen::Vector3d> vobs_list_closures;
+
     // grid map
     Eigen::Matrix4d map_tf;
     cv::Mat wall_map;

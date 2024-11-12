@@ -147,7 +147,7 @@ PATH AUTOCONTROL::get_cur_local_path()
 
 void AUTOCONTROL::clear_path()
 {
-    mtx.lock();
+    mtx.lock();    
     cur_global_path = PATH();
     cur_local_path = PATH();
     mtx.unlock();
@@ -160,6 +160,15 @@ QString AUTOCONTROL::get_obs_condition()
 {
     mtx.lock();
     QString res = obs_condition;
+    mtx.unlock();
+
+    return res;
+}
+
+QString AUTOCONTROL::get_multi_state()
+{
+    mtx.lock();
+    QString res = multi_state;
     mtx.unlock();
 
     return res;
@@ -185,6 +194,27 @@ void AUTOCONTROL::stop()
     is_moving = false;
     is_pause = false;    
     clear_path();
+
+    // clear que
+    global_path_que.clear();
+}
+
+void AUTOCONTROL::change()
+{
+    // control loop stop
+    if(b_thread != NULL)
+    {
+        is_change = true;
+        b_flag = false;
+        b_thread->join();
+        b_thread = NULL;
+    }
+
+    // clear path
+    clear_path();
+
+    // clear que
+    global_path_que.clear();
 }
 
 void AUTOCONTROL::set_goal(QString goal_id)
@@ -192,6 +222,7 @@ void AUTOCONTROL::set_goal(QString goal_id)
     NODE* node = unimap->get_node_by_id(goal_id);
     if(node == NULL)
     {
+        logger->write_log("[AUTO] invalid goal received");
         return;
     }
 
@@ -204,17 +235,25 @@ void AUTOCONTROL::set_goal(QString goal_id)
     QString goal_node_id = unimap->get_node_id_edge(node->tf.block(0,3,3,1));
     if(cur_node_id == goal_node_id)
     {
-        printf("[AUTO] refine moving\n");
         Eigen::Vector2d dtdr = dTdR(cur_tf, node->tf);
         if(dtdr[0] > config->DRIVE_GOAL_D || dtdr[1] > config->DRIVE_GOAL_TH*D2R)
         {
             move_pp(node->tf, 0); // preset0
+            logger->write_log("[AUTO] set goal, refine moving");
             return;
+        }
+        else
+        {
+            logger->write_log("[AUTO] set goal, already goal");
         }
     }
 
-    // set flag
-    is_goal = true;
+    // set multi state
+    mtx.lock();
+    multi_state = "need_plan";
+    mtx.unlock();
+
+    logger->write_log("[AUTO] multi_state: need_plan");
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -226,20 +265,14 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     obsmap->clear();
 
     // load preset
-    //params = load_preset(preset);
+    params = load_preset(preset);
 
     // calc global path
-    PATH global_path = calc_global_path(goal_tf);
-    if(global_path.pos.size() > 0)
+    PATH path = calc_global_path(goal_tf);
+    if(path.pos.size() > 0)
     {
-        // update global path and goal_tf
-        mtx.lock();
-        cur_global_path = global_path;
-        cur_goal_tf = goal_tf;
-        mtx.unlock();
-
-        Q_EMIT signal_global_path_updated();
-        printf("[AUTO] global path found\n");
+        // enque global path
+        global_path_que.push(path);
     }
 
     // start control loop
@@ -247,30 +280,120 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
 }
 
-void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset, int is_align)
+void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 {
-    // stop
-    stop();
+    // stop    
+    change();
 
     // obs clear
     obsmap->clear();
 
     // load preset
-    //params = load_preset(preset);
+    params = load_preset(preset);
 
-    // update global path
-    PATH path = calc_global_path(node_path, is_align);
+    // symmetric cut
+    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
+    for(size_t p = 0; p < path_list.size(); p++)
+    {
+        // enque path
+        PATH path = calc_global_path(path_list[p], p == 0);
+        if(p == path_list.size()-1)
+        {
+            path.is_align = 1;
+        }
+        else
+        {
+            path.is_align = 0;
+        }
 
+        global_path_que.push(path);
+    }
+
+    // set flag
     mtx.lock();
-    cur_global_path = path;
+    multi_state = "recv_path";
     mtx.unlock();
 
-    Q_EMIT signal_global_path_updated();
-    printf("[AUTO] global path found\n");
+    logger->write_log("[AUTO] multi_state: recv_path");
 
     // start control loop
     b_flag = true;
     b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
+}
+
+std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_path)
+{
+    if(node_path.size() < 2)
+    {
+        return node_path;
+    }
+
+    std::vector<QString> res;
+    res.push_back(node_path[0]);
+
+    for(size_t p = 1; p < node_path.size(); p++)
+    {
+        if(res.back() == node_path[p])
+        {
+            continue;
+        }
+
+        res.push_back(node_path[p]);
+    }
+
+    return res;
+}
+
+std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString> node_path)
+{
+    std::vector<QString> path = remove_duplicates(node_path);
+    if(path.size() >= 3)
+    {
+        // find symmetric
+        std::vector<int> split_idxs;
+        for(size_t p = 1; p < path.size()-1; p++)
+        {
+            if(path[p-1] == path[p+1])
+            {
+                split_idxs.push_back(p);
+            }
+        }
+
+        // split
+        if(split_idxs.size() == 0)
+        {
+            std::vector<std::vector<QString>> res;
+            res.push_back(path);
+            return res;
+        }
+        else
+        {
+            std::vector<std::vector<QString>> res;
+
+            int idx0 = 0;
+            for(size_t i = 0; i < split_idxs.size(); i++)
+            {
+                int idx1 = split_idxs[i];
+                std::vector<QString> sub_path(path.begin() + idx0, path.begin() + (idx1+1));
+                res.push_back(sub_path);
+                idx0 = idx1;
+            }
+
+            if(idx0 < (int)path.size()-1)
+            {
+                std::vector<QString> sub_path(path.begin() + idx0, path.end());
+                res.push_back(sub_path);
+            }
+
+            return res;
+        }
+    }
+    else
+    {
+        std::vector<std::vector<QString>> res;
+        res.push_back(path);
+        return res;
+    }
 }
 
 PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
@@ -371,13 +494,12 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     res.pos = path_pos;
     res.ref_v = ref_v;    
     res.ed_tf = goal_tf;
-    res.is_align = 1;
-    res.passed.resize(path_pose.size(), false);
+    res.is_align = 1;    
 
     return res;
 }
 
-PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
+PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_tf)
 {
     NODE* ed_node = unimap->get_node_by_id(node_path.back());
     if(ed_node == NULL)
@@ -387,9 +509,6 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
 
     Eigen::Matrix4d ed_tf = ed_node->tf;
     Eigen::Vector3d ed_pos = ed_tf.block(0,3,3,1);
-
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
     // convert metric path
     std::vector<Eigen::Vector3d> node_pos;
@@ -410,25 +529,31 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
     }
 
     // add cur pos
-    if(node_pos.size() == 1)
+    if(add_cur_tf)
     {
-        node_pos.insert(node_pos.begin(), cur_pos);
-        node_pose.insert(node_pose.begin(), cur_tf);
-    }
-    else
-    {
-        if(!check_point_on_segment(node_pos[0], node_pos[1], cur_pos))
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        if(node_pos.size() == 1)
         {
             node_pos.insert(node_pos.begin(), cur_pos);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
         else
         {
-            node_pos.erase(node_pos.begin());
-            node_pose.erase(node_pose.begin());
+            if(!check_point_on_segment(node_pos[0], node_pos[1], cur_pos))
+            {
+                node_pos.insert(node_pos.begin(), cur_pos);
+                node_pose.insert(node_pose.begin(), cur_tf);
+            }
+            else
+            {
+                node_pos.erase(node_pos.begin());
+                node_pose.erase(node_pose.begin());
 
-            node_pos.insert(node_pos.begin(), cur_pos);
-            node_pose.insert(node_pose.begin(), cur_tf);
+                node_pos.insert(node_pos.begin(), cur_pos);
+                node_pose.insert(node_pose.begin(), cur_tf);
+            }
         }
     }
 
@@ -443,9 +568,16 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
 
-    // set ref_v
+    // set ref_v    
     std::vector<double> ref_v;
-    calc_ref_v(path_pose, ref_v, params.ST_V, GLOBAL_PATH_STEP);
+    if(add_cur_tf)
+    {
+        calc_ref_v(path_pose, ref_v, std::max<double>(params.ST_V, mobile->vx0), GLOBAL_PATH_STEP);
+    }
+    else
+    {
+        calc_ref_v(path_pose, ref_v, params.ST_V, GLOBAL_PATH_STEP);
+    }
     ref_v.back() = params.ED_V;
 
     // smoothing ref_v
@@ -459,8 +591,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, int is_align)
     res.pos = path_pos;
     res.ref_v = ref_v;
     res.ed_tf = ed_tf;
-    res.is_align = is_align;
-    res.passed.resize(path_pose.size(), false);
+    res.is_align = 1;
 
     return res;
 }
@@ -979,7 +1110,8 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
 
         double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
         double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
-        _ref_th[p] = std::atan2(dy, dx);
+        double th = std::atan2(dy, dx);
+        _ref_th[p] = th;
     }
 
     std::vector<double> _ref_v(src.size(), params.LIMIT_V);
@@ -1123,77 +1255,6 @@ std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_ve
     return res;
 }
 
-int AUTOCONTROL::get_global_nn_idx(PATH& global_path, Eigen::Vector3d cur_pos)
-{
-    int search_range = 0.3/GLOBAL_PATH_STEP;
-    int st_idx = global_path.pos.size()-1;
-    for(size_t p = 1; p < global_path.passed.size(); p++)
-    {
-        if(global_path.passed[p] == false)
-        {
-            st_idx = p-1;
-            break;
-        }
-    }
-
-    int ed_idx = st_idx + search_range;
-    if(ed_idx > (int)global_path.pos.size()-1)
-    {
-        ed_idx = global_path.pos.size()-1;
-    }
-
-    int min_idx = ed_idx;
-    double min_d = 99999999;
-    for(int p = st_idx; p <= ed_idx; p++)
-    {
-        double d = calc_dist_2d(global_path.pos[p] - cur_pos);
-        if(d < min_d)
-        {
-            min_d = d;
-            min_idx = p;
-        }
-    }
-    return min_idx;
-}
-
-int AUTOCONTROL::get_local_nn_idx(PATH& local_path, Eigen::Vector3d cur_pos, int global_idx)
-{
-    if(local_path.label.size() == 0)
-    {
-        return get_nn_idx(local_path.pos, cur_pos);
-    }
-
-    int lb0 = global_idx - 1;
-    int lb1 = global_idx + 1;
-
-    bool is_found = false;
-    int min_idx = 0;
-    double min_d = 99999999;
-    for(size_t p = 0; p < local_path.label.size(); p++)
-    {
-        int lb = local_path.label[p];
-        if(lb < lb0 || lb > lb1)
-        {
-            continue;
-        }
-
-        double d = calc_dist_2d(local_path.pos[p] - cur_pos);
-        if(d < min_d)
-        {
-            min_d = d;
-            min_idx = p;
-            is_found = true;
-        }
-    }
-
-    if(!is_found)
-    {
-        return get_nn_idx(local_path.pos, cur_pos);
-    }
-
-    return min_idx;
-}
-
 int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos)
 {
     int min_idx = 0;
@@ -1226,20 +1287,23 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     // get cur params
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-    int cur_idx = get_global_nn_idx(global_path, cur_pos);
+    int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
     // get global path segment    
     std::vector<Eigen::Vector3d> _path_pos;
+    std::vector<int> _label;
     int range = config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
     int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
     int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
     for(int p = st_idx; p <= ed_idx; p++)
     {
         _path_pos.push_back(global_path.pos[p]);
+        _label.push_back(p);
     }
     double st_v = global_path.ref_v[st_idx];
 
-    std::vector<Eigen::Vector3d> path_pos = sample_and_interpolation(_path_pos, GLOBAL_PATH_STEP, LOCAL_PATH_STEP, false);
+    // resampling
+    std::vector<Eigen::Vector3d> path_pos = path_resampling(_path_pos, LOCAL_PATH_STEP);
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
 
     // calc ref_v        
@@ -1247,7 +1311,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     calc_ref_v(path_pose, ref_v, st_v, LOCAL_PATH_STEP);
 
     // check global path end
-    double d = calc_dist_2d(global_path.pos.back() - path_pos.back());
+    double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
     if(d < config->DRIVE_GOAL_D)
     {
         ref_v.back() = params.ED_V;
@@ -1256,24 +1320,6 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     // smoothing ref_v
     ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
 
-    // update label
-    std::vector<int> label(path_pos.size(), st_idx);
-    for(int p = st_idx; p <= ed_idx; p++)
-    {
-        int lb = p;
-        int range0 = (p-st_idx) * STEP_SCALE;
-        int range1 = (p-st_idx+1) * STEP_SCALE;
-
-        for(int q = range0; q <= range1; q++)
-        {
-            if(q > (int)label.size()-1)
-            {
-                break;
-            }
-            label[q] = lb;
-        }
-    }
-
     // set result
     PATH res;
     res.t = get_time();
@@ -1281,7 +1327,6 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     res.pos = path_pos;
     res.ref_v = ref_v;
     res.ed_tf = path_pose.back(); // local goal
-    res.label = label;
 
     return res;
 }
@@ -1294,7 +1339,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     Eigen::Vector3d cur_vel = mobile->get_pose().vel;
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-    int cur_idx = get_global_nn_idx(global_path, cur_pos);
+    int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
     // get local goal
     int tgt_idx = cur_idx + config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
@@ -1463,12 +1508,49 @@ int AUTOCONTROL::is_everything_fine()
 
 // loops
 void AUTOCONTROL::b_loop_pp()
-{
+{    
     // set flag
     is_moving = true;
+    if(global_path_que.unsafe_size() == 0)
+    {
+        // no global path
+        mobile->move(0, 0, 0);
+        is_moving = false;
+        clear_path();
+
+        Q_EMIT signal_move_failed("no global path que");
+        logger->write_log("[AUTO] global path init failed 1");
+        return;
+    }
+    else
+    {
+        QString str; str.sprintf("[AUTO] global path que size: %d", global_path_que.unsafe_size());
+        logger->write_log(str);
+    }
 
     // check global path
-    PATH global_path = get_cur_global_path();
+    PATH global_path;
+    while(b_flag)
+    {
+        if(global_path_que.try_pop(global_path))
+        {
+            logger->write_log("[AUTO] deque global path");
+
+            // update global path and goal_tf
+            mtx.lock();
+            cur_global_path = global_path;
+            mtx.unlock();
+
+            Q_EMIT signal_global_path_updated();
+            break;
+        }
+        else
+        {
+            printf("[AUTO] try pop global path\n");
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+
     if(global_path.pos.size() == 0)
     {
         // no global path
@@ -1476,8 +1558,8 @@ void AUTOCONTROL::b_loop_pp()
         is_moving = false;
         clear_path();
 
-        Q_EMIT signal_move_failed("no global path");        
-        logger->write_log("[AUTO] global path init failed");
+        Q_EMIT signal_move_failed("no global path");
+        logger->write_log("[AUTO] global path init failed 2");
         return;
     }
 
@@ -1569,13 +1651,6 @@ void AUTOCONTROL::b_loop_pp()
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-        // marking passed
-        int global_idx = get_global_nn_idx(global_path, cur_pos);
-        for(int p = 0; p < global_idx; p++)
-        {
-            global_path.passed[p] = true;
-        }
-
         // calc local path
         if(fsm_state != AUTO_FSM_FINAL_ALIGN)
         {
@@ -1635,8 +1710,7 @@ void AUTOCONTROL::b_loop_pp()
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
         {
-            // find tgt
-            //int cur_idx = get_local_nn_idx(local_path, cur_pos, global_idx);
+            // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
             int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
             if(tgt_idx > (int)local_path.pos.size()-1)
@@ -1665,6 +1739,17 @@ void AUTOCONTROL::b_loop_pp()
 
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            double v0 = cur_vel[0];
+            double v = 0;
+            v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+
+            // scaling
+            double scale_v = 1.0 - 0.5*std::abs(w/(params.LIMIT_W*D2R));
+            double scale_w = 1.0 - 0.5*std::abs(v/params.LIMIT_V);
+            v *= scale_v;
+            w *= scale_w;
 
             // goal check
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
@@ -1695,14 +1780,20 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // send control
-            mobile->move(0, 0, w);
+            if(!is_debug)
+            {
+                mobile->move(v, 0, w);
+            }
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-            //int cur_idx = get_local_nn_idx(local_path, cur_pos, global_idx);
-            //printf("[AUTO] global_idx:%d, cur_idx:%d\n", global_idx, local_path.cur_idx);
+            int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
+            if(tgt_idx > (int)local_path.pos.size()-1)
+            {
+                tgt_idx = local_path.pos.size()-1;
+            }
 
             // obs decel
             QString _obs_condition = "none";
@@ -1772,12 +1863,6 @@ void AUTOCONTROL::b_loop_pp()
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
-            int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
-            if(tgt_idx > (int)local_path.pos.size()-1)
-            {
-                tgt_idx = local_path.pos.size()-1;
-            }
-
             double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
             double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);            
@@ -1857,25 +1942,54 @@ void AUTOCONTROL::b_loop_pp()
                     }
                     else
                     {
-                        // no final align finish
-                        mobile->move(0, 0, 0);
-                        is_moving = false;
-                        clear_path();
+                        PATH _global_path;
+                        if(global_path_que.try_pop(_global_path))
+                        {
+                            logger->write_log("[AUTO] deque global path");
 
-                        Q_EMIT signal_move_succeed("final align passed, due to no align");
+                            // update global path
+                            global_path = _global_path;
 
-                        fsm_state = AUTO_FSM_COMPLETE;
-                        QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(no align), err_th: %.3f", err_th*R2D);
-                        logger->write_log(log_str);
-                        return;
+                            // update global goal
+                            goal_tf = global_path.ed_tf;
+                            goal_pos = goal_tf.block(0,3,3,1);
+                            goal_xi = TF_to_se2(goal_tf);
+
+                            // clear local path
+                            local_path = calc_local_path(global_path);
+                            avoid_path = PATH();
+
+                            // update global path and goal_tf
+                            mtx.lock();
+                            cur_global_path = global_path;
+                            mtx.unlock();
+                            Q_EMIT signal_global_path_updated();
+
+                            // update local path
+                            mtx.lock();
+                            cur_local_path = local_path;
+                            last_local_goal = local_path.ed_tf.block(0,3,3,1);
+                            mtx.unlock();
+                            Q_EMIT signal_local_path_updated();
+
+                            // return to first align
+                            fsm_state = AUTO_FSM_FIRST_ALIGN;
+                            QString log_str; log_str.sprintf("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%f", goal_err_d);
+                            logger->write_log(log_str);
+                            continue;
+                        }
                     }
 
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
                     continue;
                 }
             }
 
             // send control
-            mobile->move(v, 0, w);
+            if(!is_debug)
+            {
+                mobile->move(v, 0, w);
+            }
             //printf("v:%f, w:%f, err_th:%f, cte:%f, ref_v:%f, obs_v:%f, goal_v:%f\n", v, w*R2D, err_th*R2D, cte, ref_v, obs_v, goal_v);
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
@@ -1948,7 +2062,10 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // send control
-            mobile->move(0, 0, w);
+            if(!is_debug)
+            {
+                mobile->move(0, 0, w);
+            }
         }
         else if(fsm_state == AUTO_FSM_OBS)
         {
@@ -2076,7 +2193,10 @@ void AUTOCONTROL::b_loop_pp()
                 w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
                 w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
-                mobile->move(v, 0, w);
+                if(!is_debug)
+                {
+                    mobile->move(v, 0, w);
+                }
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {
@@ -2118,10 +2238,18 @@ void AUTOCONTROL::b_loop_pp()
         pre_loop_time = get_time();
     }
 
-    mobile->move(0, 0, 0);
-    is_moving = false;
-    clear_path();
+    if(is_multi && is_change)
+    {
+        is_change = false;
+        logger->write_log("[AUTO] global path change, b_loop_pp stop");
+    }
+    else
+    {
+        mobile->move(0, 0, 0);
+        is_moving = false;
+        clear_path();
 
-    Q_EMIT signal_move_succeed("stopped");    
-    logger->write_log("[AUTO] b_loop_pp stop");
+        Q_EMIT signal_move_succeed("stopped");
+        logger->write_log("[AUTO] b_loop_pp stop");
+    }
 }

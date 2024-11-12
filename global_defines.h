@@ -813,9 +813,6 @@ struct PATH
     Eigen::Matrix4d ed_tf;
     int is_align;
 
-    std::vector<int> passed; // global path progress
-    std::vector<int> label; // local path assign to global path
-
     PATH()
     {
         t = 0;
@@ -832,8 +829,6 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_align = p.is_align;
-        passed = p.passed;
-        label = p.label;
     }
 
     PATH& operator=(const PATH& p)
@@ -845,8 +840,6 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_align = p.is_align;
-        passed = p.passed;
-        label = p.label;
         return *this;
     }
 
@@ -858,9 +851,7 @@ struct PATH
                pos == p.pos &&
                ref_v == p.ref_v &&
                ed_tf.isApprox(p.ed_tf) &&
-               is_align == p.is_align &&
-               passed == p.passed &&
-               label == p.label;
+               is_align == p.is_align;
     }
 
     bool operator!=(const PATH& p) const

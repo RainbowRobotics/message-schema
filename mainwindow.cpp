@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MoveRotate, SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
+    connect(ui->ckb_TestDebug, SIGNAL(stateChanged(int)), this, SLOT(ckb_TestDebug()));
 
     // jog
     connect(ui->bt_JogF, SIGNAL(pressed()), this, SLOT(bt_JogF()));
@@ -1980,16 +1981,22 @@ void MainWindow::bt_Test()
     path.push_back("N_1729820446577");
     path.push_back("N_1729746747992");
     path.push_back("N_0106");
+    path.push_back("N_1729746747992");
     path.push_back("N_1729820446577");
     path.push_back("N_1729820437542");
     path.push_back("N_1729820461736");
-    ctrl.move_pp(path, 0, 1);
+    ctrl.move_pp(path, 0);
 }
 
 void MainWindow::bt_TestLed()
 {
     mobile.led(0, ui->spb_Led->value());
     printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+}
+
+void MainWindow::ckb_TestDebug()
+{
+    ctrl.is_debug = ui->ckb_TestDebug->isChecked();
 }
 
 // for obsmap
@@ -2624,7 +2631,7 @@ void MainWindow::jog_loop()
     while(jog_flag)
     {
         // check autodrive
-        if(ctrl.is_moving == false)
+        if(ctrl.is_moving == false || ctrl.is_debug == true)
         {
             // action
             double v_acc = ui->spb_AccV->value();
@@ -3332,21 +3339,22 @@ void MainWindow::raw_plot()
 
     // plot que info
     QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%f",
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%.3f\nlidar_t:%.3f, %.3f",
                          (int)lidar.scan_que.unsafe_size(),
                          (int)mobile.msg_que.unsafe_size(),
                          (int)slam.kfrm_que.unsafe_size(),
-                         (double)plot_proc_t);
+                         (double)plot_proc_t,
+                         (double)lidar.last_t_f, (double)lidar.last_t_b);
     ui->lb_QueInfo->setText(que_info_str);
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_goal: %s, is_moving: %s, is_pause: %s, obs: %s",
-                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_goal ? "1" : "0",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s, multi: %s",
+                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
-                          ctrl.get_obs_condition().toLocal8Bit().data());
+                          ctrl.get_obs_condition().toLocal8Bit().data(),
+                          ctrl.get_multi_state().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam

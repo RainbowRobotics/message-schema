@@ -154,7 +154,7 @@ Sophus::Vector6d TF_to_ZYX(Eigen::Matrix4d tf)
 
 Eigen::Vector3d TF_to_se2(Eigen::Matrix4d tf)
 {
-    Eigen::Vector3d t = tf.block<3,1>(0,3);
+    Eigen::Vector3d t = tf.block<3,1>(0,3);    
     double rz = std::atan2(tf(1, 0), tf(0, 0));
 
     Eigen::Vector3d res;
@@ -827,6 +827,20 @@ std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r)
                 res.push_back(cv::Vec2i(i,j) + pt);
             }
         }
+    }
+    return res;
+}
+
+std::vector<Eigen::Vector3d> circle_iterator_3d(Eigen::Vector3d center, double radius)
+{
+    std::vector<Eigen::Vector3d> res;
+    for (int angle = 0; angle < 360; angle += 10)
+    {
+        double radians = angle * D2R;
+        double x = center.x() + radius * std::cos(radians);
+        double y = center.y() + radius * std::sin(radians);
+        double z = center.z();
+        res.push_back(Eigen::Vector3d(x, y, z));
     }
     return res;
 }

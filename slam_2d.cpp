@@ -70,6 +70,7 @@ void SLAM_2D::mapping_start()
             live_cloud.pts.clear();
         }
         live_tree = new KD_TREE_XYZR(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+        cur_tf = Eigen::Matrix4d::Identity();
         mtx.unlock();
 
         // start loop

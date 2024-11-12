@@ -64,8 +64,7 @@ void OBSMAP::clear()
 
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
-    mtx.lock();
-
+    mtx.lock();    
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
@@ -374,6 +373,60 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         if(_dynamic_map.ptr<uchar>(uv[1])[uv[0]] == 255)
         {
             _dyn_pts.push_back(Eigen::Vector3d(global_obs_pts[p][0], global_obs_pts[p][1], global_obs_pts[p][2]));
+        }
+    }
+
+    // add vobs robots from fms
+    for(size_t p = 0; p < vobs_list_robots.size(); p++)
+    {
+        // add global points
+        Eigen::Vector3d center = vobs_list_robots[p];
+
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_RADIUS);
+        for(size_t q = 0; q < pts.size(); q++)
+        {
+            Eigen::Vector3d P = pts[q];
+            _dyn_pts.push_back(P);
+
+            // add local obsmap
+            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+            double x = _P[0];
+            double y = _P[1];
+
+            cv::Vec2i uv = xy_uv(x,y);
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+            _dynamic_map.ptr<uchar>(uv[1])[uv[0]] = 255;
+        }
+    }
+
+    // add vobs closures from fms
+    for(size_t p = 0; p < vobs_list_closures.size(); p++)
+    {
+        // add global points
+        Eigen::Vector3d center = vobs_list_closures[p];
+
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_RADIUS);
+        for(size_t q = 0; q < pts.size(); q++)
+        {
+            Eigen::Vector3d P = pts[q];
+            _dyn_pts.push_back(P);
+
+            // add local obsmap
+            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+            double x = _P[0];
+            double y = _P[1];
+
+            cv::Vec2i uv = xy_uv(x,y);
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+            _dynamic_map.ptr<uchar>(uv[1])[uv[0]] = 255;
         }
     }
 
