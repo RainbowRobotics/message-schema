@@ -262,7 +262,9 @@ void LIDAR_2D::grab_loop_f()
                 offset_t_f = pc_t - lidar_t;
 
                 is_synced_f = true;
-                printf("[LIDAR] sync, offset_t_f: %f\n", (double)offset_t_f);
+
+                QString str; str.sprintf("[LIDAR] sync, offset_t_f: %f", (double)offset_t_f);
+                logger->write_log(str);
             }
 
             // check lidar, mobile sync
@@ -331,7 +333,7 @@ void LIDAR_2D::grab_loop_f()
             if(raw_pts.size() < 100)
             {
                 // drop
-                printf("[LIDAR] invalid lidar frame\n");
+                logger->write_log("[LIDAR] not enough points, drop");
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
@@ -358,10 +360,10 @@ void LIDAR_2D::grab_loop_f()
             }
 
             // check
-            if(idx0 == -1 || idx1 == -1)
+            if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
-                // drop
-                printf("[LIDAR] front lidar, invalid mobile poses\n");
+                // drop                
+                logger->write_log("[LIDAR] sync drop");
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
@@ -407,6 +409,10 @@ void LIDAR_2D::grab_loop_f()
                 // get bound_t
                 double _mo_t0 = pose_storage[i0].t;
                 double _mo_t1 = pose_storage[i1].t;
+                if(_mo_t1-_mo_t0 <= 0)
+                {
+                    continue;
+                }
 
                 Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
                 Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);

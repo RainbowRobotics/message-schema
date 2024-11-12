@@ -104,8 +104,7 @@ void COMM_FMS::recv_message(QString message)
     else if(get_json(data, "type") == "path")
     {
         QString path_str = get_json(data, "path");
-        int preset = get_json(data, "preset").toInt();
-        int is_align = get_json(data, "is_align").toInt();
+        int preset = get_json(data, "preset").toInt();        
         double time = get_json(data, "time").toDouble()/1000;
 
         QStringList path_str_list = path_str.split(",");
@@ -115,8 +114,8 @@ void COMM_FMS::recv_message(QString message)
             path.push_back(path_str_list[p]);
         }
 
-        ctrl->move_pp(path, preset, is_align);
-        printf("[COMM_FMS] recv_path, num: %d, preset: %d, is_align: %d, time: %.3f\n", (int)path.size(), preset, is_align, time);
+        ctrl->move_pp(path, preset);
+        printf("[COMM_FMS] recv_path, num: %d, preset: %d, time: %.3f\n", (int)path.size(), preset, time);
     }
     else if(get_json(data, "type") == "stop")
     {
@@ -124,6 +123,75 @@ void COMM_FMS::recv_message(QString message)
 
         ctrl->stop();
         printf("[COMM_FMS] recv_stop, time: %.3f\n", time);
+    }
+    else if(get_json(data, "type") == "vobs_robots")
+    {
+        double time = get_json(data, "time").toDouble()/1000;
+        std::vector<Eigen::Vector3d> vobs_list;
+
+        QString vobs_str = get_json(data, "vobs_str");
+        QStringList vobs_str_list = vobs_str.split("\n");
+        if(vobs_str_list.size() > 0)
+        {
+            for(int p = 0; p < vobs_str_list.size(); p++)
+            {
+                QStringList vobs_str_list2 = vobs_str_list[p].split(",");
+                if(vobs_str_list2.size() == 3)
+                {
+                    Eigen::Vector3d P;
+                    P[0] = vobs_str_list2[0].toDouble();
+                    P[1] = vobs_str_list2[1].toDouble();
+                    P[2] = vobs_str_list2[2].toDouble();
+                    vobs_list.push_back(P);
+                }
+            }
+        }
+
+        // update vobs
+        obsmap->mtx.lock();
+        obsmap->vobs_list_robots = vobs_list;
+        obsmap->mtx.unlock();
+
+        /*
+        if(vobs_list.size() > 0)
+        {
+            printf("[COMM_FMS] recv_vobs_robots, num: %d, time: %.3f\n", (int)vobs_list.size(), time);
+        }
+        */
+    }
+    else if(get_json(data, "type") == "vobs_closures")
+    {
+        double time = get_json(data, "time").toDouble()/1000;
+
+        QString vobs_str = get_json(data, "vobs_str");
+        QStringList vobs_str_list = vobs_str.split(",");
+
+        // set vobs
+        std::vector<Eigen::Vector3d> vobs_list;
+        for(int p = 0; p < vobs_str_list.size(); p++)
+        {
+            QString node_id = vobs_str_list[p];
+            if(node_id != "")
+            {
+                NODE *node = unimap->get_node_by_id(node_id);
+                if(node != NULL)
+                {
+                    vobs_list.push_back(node->tf.block(0,3,3,1));
+                }
+            }
+        }
+
+        // update vobs
+        obsmap->mtx.lock();
+        obsmap->vobs_list_closures = vobs_list;
+        obsmap->mtx.unlock();
+
+        /*
+        if(vobs_list.size() > 0)
+        {
+            printf("[COMM_FMS] recv_vobs_closures, num: %d, time: %.3f\n", (int)vobs_list.size(), time);
+        }
+        */
     }
 }
 
@@ -135,16 +203,17 @@ void COMM_FMS::send_info()
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-
-    QString state = "stop";
-    if(ctrl->is_moving)
+    QString state = ctrl->get_multi_state(); // need_plan, recv_path
+    if(state == "recv_path")
     {
-        state = "move";
-    }
-    else if(ctrl->is_goal)
-    {
-        state = "plan";
-        ctrl->is_goal = false;
+        if(ctrl->is_moving)
+        {
+            state = "move";
+        }
+        else
+        {
+            state = "stop";
+        }
     }
 
     // Creating the JSON object
@@ -157,7 +226,7 @@ void COMM_FMS::send_info()
     rootObj["goal_tf"] = TF_to_string(goal_tf);
     rootObj["cur_node_id"] = cur_node_id;
     rootObj["goal_node_id"] = goal_node_id;    
-    rootObj["state"] = state;
+    rootObj["state"] = state; // need_plan, recv_path, move, stop
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send

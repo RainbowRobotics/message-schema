@@ -265,6 +265,7 @@ public Q_SLOTS:
     // for test
     void bt_Test();
     void bt_TestLed();
+    void ckb_TestDebug();
 
     // for autocontrol
     void bt_AutoMove();
