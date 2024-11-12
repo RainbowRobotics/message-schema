@@ -998,7 +998,7 @@ void COMM_MS::slot_mapping_save(double time, QString name)
     _main->bt_MapSave();
 
     QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
-    std::string command = "cp -r " + _main->map_dir.toStdString() + " " + save_dir.toStdString();
+    std::string command = "cp -r " + _main->map_dir.toStdString() + " '" + save_dir.toStdString() + "'";
     int result = std::system(command.c_str());
     if(result == 0)
     {
