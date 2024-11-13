@@ -203,17 +203,17 @@ void COMM_FMS::send_info()
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-    QString state = ctrl->get_multi_state(); // need_plan, recv_path
-    if(state == "recv_path")
+    QString request = ctrl->get_multi_req(); // req_path, recv_path
+
+    QString state = "stop"; // stop, move, error
+    if(ctrl->is_moving)
     {
-        if(ctrl->is_moving)
-        {
-            state = "move";
-        }
-        else
-        {
-            state = "stop";
-        }
+        state = "move";
+    }
+
+    if(mobile->get_cur_pdu_state() != "good")
+    {
+        state = "error";
     }
 
     // Creating the JSON object
@@ -226,7 +226,8 @@ void COMM_FMS::send_info()
     rootObj["goal_tf"] = TF_to_string(goal_tf);
     rootObj["cur_node_id"] = cur_node_id;
     rootObj["goal_node_id"] = goal_node_id;    
-    rootObj["state"] = state; // need_plan, recv_path, move, stop
+    rootObj["request"] = request;
+    rootObj["state"] = state;
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
