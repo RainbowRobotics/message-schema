@@ -2182,9 +2182,9 @@ void MainWindow::bt_SendMap()
 
     QProcess process;
     process.start(program, arguments);
-    if (!process.waitForStarted())
+    if(!process.waitForStarted())
     {
-        ui->lb_FmsInfo->setText("Failed to start process.");
+        QMessageBox::information(this, "Send Map", "Failed to start process.");
         return;
     }
 
@@ -2196,8 +2196,8 @@ void MainWindow::bt_SendMap()
     }
     else
     {
-        QString errorOutput = process.readAllStandardError();
-        QMessageBox::critical(this, "Send Map", "Send Failed.\nReason:\n" + errorOutput);
+        QString error_output = process.readAllStandardError();
+        QMessageBox::critical(this, "Send Map", "Send Failed.\nReason:\n" + error_output);
     }
 }
 
