@@ -2173,8 +2173,6 @@ void MainWindow::bt_SendMap()
         return;
     }
 
-    QString d_path = "~/maps/";
-
     QString program = "sshpass";
     QStringList arguments;
     arguments << "-p" << config.SERVER_PW
