@@ -158,6 +158,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for fms
     connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(send_info()));
+    connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
@@ -2163,6 +2164,43 @@ void MainWindow::bt_TaskCancel()
     task.cancel();
 }
 
+// for fms
+void MainWindow::bt_SendMap()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[SEND_MAP] check map load\n");
+        return;
+    }
+
+    QString program = "sshpass";
+    QStringList arguments;
+    arguments << "-p" << config.SERVER_PW
+              << "rsync" << "-avz" << "--rsh=ssh -o StrictHostKeyChecking=no -p 22"
+              << map_dir
+              << QString("%1@%2:%3").arg(config.SERVER_ID, config.SERVER_IP, "~/maps/");
+
+    QProcess process;
+    process.start(program, arguments);
+    if(!process.waitForStarted())
+    {
+        QMessageBox::information(this, "Send Map", "Failed to start process.");
+        return;
+    }
+
+    process.waitForFinished();
+    int exit_code = process.exitCode();
+    if(process.exitStatus() == QProcess::NormalExit && exit_code == 0)
+    {
+        QMessageBox::information(this, "Send Map", "Send Successful.");
+    }
+    else
+    {
+        QString error_output = process.readAllStandardError();
+        QMessageBox::critical(this, "Send Map", "Send Failed.\nReason:\n" + error_output);
+    }
+}
+
 // comm
 void MainWindow::comm_loop()
 {
@@ -2453,6 +2491,9 @@ void MainWindow::watch_loop()
                 printf("[WATCH] fms disconnect dectected\n");
             }
             last_fms_connection = cfms.is_connected;
+
+            QString fms_info_str = "[FMS_INFO]\n" + config.SERVER_ID + "\n" +  config.SERVER_IP;
+            ui->lb_FmsInfo->setText(fms_info_str);
 
             // check system info
             {

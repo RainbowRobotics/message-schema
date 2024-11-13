@@ -28,6 +28,8 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QTimer>
+#include <QProcess>
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -290,8 +292,12 @@ public Q_SLOTS:
     void bt_TaskPause();    
     void bt_TaskCancel();
 
+    // for fms
+    void bt_SendMap();
+
     // for log
     void slot_write_log(QString user_log, QString color_code);
+
 
 };
 #endif // MAINWINDOW_H
