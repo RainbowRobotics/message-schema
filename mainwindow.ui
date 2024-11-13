@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -1993,6 +1993,9 @@ stop</string>
               </property>
               <property name="suffix">
                <string> m</string>
+              </property>
+              <property name="minimum">
+               <double>-5.000000000000000</double>
               </property>
               <property name="maximum">
                <double>5.000000000000000</double>

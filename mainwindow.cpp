@@ -1452,7 +1452,7 @@ void MainWindow::bt_NodePoseYUp()
             }
 
             Eigen::Matrix4d tf = node->tf;
-            tf(0,3) += dy;
+            tf(1,3) += dy;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -1471,7 +1471,7 @@ void MainWindow::bt_NodePoseYUp()
         }
 
         Eigen::Matrix4d tf = node->tf;
-        tf(0,3) += dy;
+        tf(1,3) += dy;
         unimap.edit_node_pos(id, tf);
     }
 
@@ -1582,7 +1582,7 @@ void MainWindow::bt_NodePoseYDown()
             }
 
             Eigen::Matrix4d tf = node->tf;
-            tf(0,3) -= dy;
+            tf(1,3) -= dy;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -1601,7 +1601,7 @@ void MainWindow::bt_NodePoseYDown()
         }
 
         Eigen::Matrix4d tf = node->tf;
-        tf(0,3) -= dy;
+        tf(1,3) -= dy;
         unimap.edit_node_pos(id, tf);
     }
 
@@ -1672,16 +1672,21 @@ void MainWindow::bt_MinGapNodeX()
     }
 
     Eigen::Matrix4d tf0 = node0->tf;
-    Eigen::Matrix4d tf1 = node0->tf;
+    Eigen::Matrix4d tf1 = node1->tf;
 
-    if(tf0(0,3) > tf1(0,3))
-    {
-        tf1(0,3) = tf0(0,3) + gap;
-    }
-    else
-    {
-        tf1(0,3) = tf0(0,3) - gap;
-    }
+    // if(tf0(0,3) > tf1(0,3))
+    // {
+    //     tf1(0,3) = tf0(0,3) + gap;
+    // }
+    // else
+    // {
+    //     tf1(0,3) = tf0(0,3) - gap;
+    // }
+
+    Eigen::Vector3d dir = tf0.block(0,0,3,1);
+    Eigen::Vector3d _gap = dir * gap;
+
+    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -1706,16 +1711,21 @@ void MainWindow::bt_MinGapNodeY()
     }
 
     Eigen::Matrix4d tf0 = node0->tf;
-    Eigen::Matrix4d tf1 = node0->tf;
+    Eigen::Matrix4d tf1 = node1->tf;
 
-    if(tf0(1,3) > tf1(1,3))
-    {
-        tf1(1,3) = tf0(1,3) + gap;
-    }
-    else
-    {
-        tf1(1,3) = tf0(1,3) - gap;
-    }
+    // if(tf0(1,3) > tf1(1,3))
+    // {
+    //     tf1(1,3) = tf0(1,3) + gap;
+    // }
+    // else
+    // {
+    //     tf1(1,3) = tf0(1,3) - gap;
+    // }
+
+    Eigen::Vector3d dir = tf0.block(0,1,3,1);
+    Eigen::Vector3d _gap = dir * gap;
+
+    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -1738,10 +1748,11 @@ void MainWindow::bt_AlignNodeX()
     }
 
     Eigen::Matrix4d tf0 = node0->tf;
-    Eigen::Matrix4d tf1 = node0->tf;
+    Eigen::Matrix4d tf1 = node1->tf;
 
     // align x
     tf1(0,3) = tf0(0,3);
+
     unimap.edit_node_pos(id1, tf1);
     topo_update();
 }
@@ -1763,7 +1774,7 @@ void MainWindow::bt_AlignNodeY()
     }
 
     Eigen::Matrix4d tf0 = node0->tf;
-    Eigen::Matrix4d tf1 = node0->tf;
+    Eigen::Matrix4d tf1 = node1->tf;
 
     // align y
     tf1(1,3) = tf0(1,3);
@@ -1788,7 +1799,7 @@ void MainWindow::bt_AlignNodeTh()
     }
 
     Eigen::Matrix4d tf0 = node0->tf;
-    Eigen::Matrix4d tf1 = node0->tf;
+    Eigen::Matrix4d tf1 = node1->tf;
 
     // align th
     tf1.block(0,0,3,3) = tf0.block(0,0,3,3);
