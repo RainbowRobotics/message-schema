@@ -3354,7 +3354,7 @@ void MainWindow::raw_plot()
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
-                          ctrl.get_multi_state().toLocal8Bit().data());
+                          ctrl.get_multi_req().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam

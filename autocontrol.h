@@ -49,7 +49,7 @@ public:
     PATH get_cur_global_path();
     PATH get_cur_local_path();
     QString get_obs_condition();    
-    QString get_multi_state();
+    QString get_multi_req();
     void clear_path();
 
     void init();
@@ -109,7 +109,7 @@ public:
 
     // flags for multi
     std::atomic<bool> is_multi = {false};
-    QString multi_state = "stop";
+    QString multi_req = "none"; // none, req_path, recv_path
 
 Q_SIGNALS:
     void signal_global_path_updated();
