@@ -119,6 +119,9 @@ void SLAM_2D::localization_start()
 {
     if(is_loc == false)
     {
+        // set loc start time
+        loc_st_time = get_time();
+
         // start loop
         if(loc_a_thread == NULL)
         {
@@ -696,7 +699,7 @@ void SLAM_2D::map_b_loop()
 void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
-    //Eigen::Vector3d pre_mo(0,0,0);
+    Eigen::Vector3d pre_mo(0,0,0);
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
@@ -723,19 +726,20 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
-            /*
             // check moving
-            Eigen::Vector3d cur_mo = frm.mo.pose;
-            double dx = pre_mo[0] - cur_mo[0];
-            double dy = pre_mo[1] - cur_mo[1];
-            double d = std::sqrt(dx*dx + dy*dy);
-            double dth = std::abs(deltaRad(cur_mo[2], pre_mo[2]));
-            if(d < 0.1 && dth < 5.0*D2R)
+            if(get_time() > loc_st_time + 10.0)
             {
-                continue;
+                Eigen::Vector3d cur_mo = frm.mo.pose;
+                double dx = pre_mo[0] - cur_mo[0];
+                double dy = pre_mo[1] - cur_mo[1];
+                double d = std::sqrt(dx*dx + dy*dy);
+                double dth = std::abs(deltaRad(cur_mo[2], pre_mo[2]));
+                if(d < 0.1 && dth < 5.0*D2R)
+                {
+                    continue;
+                }
+                pre_mo = cur_mo;
             }
-            pre_mo = cur_mo;
-            */
 
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
