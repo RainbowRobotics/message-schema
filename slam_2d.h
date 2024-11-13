@@ -90,6 +90,7 @@ public:
     std::vector<KFRAME> kfrm_storage;
 
     // for loc
+    std::atomic<double> loc_st_time = {0};
     std::vector<TIME_POSE> tp_storage;
     tbb::concurrent_queue<TIME_POSE> tp_que;
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
