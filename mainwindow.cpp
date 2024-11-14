@@ -2015,6 +2015,7 @@ void MainWindow::ckb_TestDebug()
 void MainWindow::bt_ObsClear()
 {
     obsmap.clear();
+    obs_update();
 }
 
 // for task

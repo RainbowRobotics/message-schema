@@ -51,11 +51,14 @@ void COMM_FMS::reconnect_loop()
         client.open(QUrl(server_addr));
 
         reconnect_cnt++;
+
+        /*
         if(reconnect_cnt > 5)
         {
             reconnect_timer.stop();
             printf("[COMM_FMS] server not opened, give up reconnect\n");
         }
+        */
     }
 }
 
@@ -93,7 +96,26 @@ void COMM_FMS::recv_message(QString message)
     }
 
     // parsing
-    if(get_json(data, "type") == "goal")
+    if(get_json(data, "type") == "init")
+    {
+        QString robot_id = get_json(data, "robot_id");
+        QString pos_str = get_json(data, "pos_str");
+        double time = get_json(data, "time").toDouble()/1000;
+
+        QStringList pos_str_list = pos_str.split(",");
+        if(pos_str_list.size() == 3)
+        {
+            Eigen::Vector3d pos;
+            pos[0] = pos_str_list[0].toDouble();
+            pos[1] = pos_str_list[1].toDouble();
+            pos[2] = pos_str_list[2].toDouble();
+
+            // do semiauto init
+        }
+
+        printf("[COMM_FMS] recv_init, pos: %s, time: %.3f\n", pos_str.toLocal8Bit().data(), time);
+    }
+    else if(get_json(data, "type") == "goal")
     {
         QString goal_id = get_json(data, "goal_id");
         double time = get_json(data, "time").toDouble()/1000;
@@ -199,10 +221,16 @@ void COMM_FMS::recv_message(QString message)
 void COMM_FMS::send_info()
 {
     double time = get_time0();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();    
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+    if(goal_tf.isIdentity())
+    {
+        goal_tf = cur_tf;
+        goal_node_id = cur_node_id;
+    }
+
     QString request = ctrl->get_multi_req(); // req_path, recv_path
 
     QString state = "stop"; // stop, move, error

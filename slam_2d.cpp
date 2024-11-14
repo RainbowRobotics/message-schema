@@ -726,6 +726,7 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
+            /*
             // check moving
             if(get_time() > loc_st_time + 10.0)
             {
@@ -734,12 +735,13 @@ void SLAM_2D::loc_a_loop()
                 double dy = pre_mo[1] - cur_mo[1];
                 double d = std::sqrt(dx*dx + dy*dy);
                 double dth = std::abs(deltaRad(cur_mo[2], pre_mo[2]));
-                if(d < 0.1 && dth < 5.0*D2R)
+                if(d < 0.05 && dth < 2.0*D2R)
                 {
                     continue;
                 }
                 pre_mo = cur_mo;
             }
+            */
 
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
@@ -980,8 +982,6 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     {
         std::vector<double> costs;
         std::vector<COST_JACOBIAN> cj_set;
-
-        Eigen::Matrix4d cur_G = _G*G;
         for(size_t p = 0; p < idx_list.size(); p++)
         {
             // get index
@@ -1040,8 +1040,8 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double dist = calc_dist_2d(pts[i] - cur_G.block(0,3,3,1));
-            double weight = 1.0 + 0.01*dist;
+            double dist = calc_dist_2d(frm.pts[i]);
+            double weight = 1.0 + 0.02*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1306,8 +1306,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight
-            double dist = calc_dist_2d(pts[i] - cur_G.block(0,3,3,1));
-            double weight = 1.0 + 0.01*dist;
+            double dist = calc_dist_2d(frm.pts[i]);
+            double weight = 1.0 + 0.02*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1738,10 +1738,7 @@ void SLAM_2D::semi_auto_init_start()
     FRAME frm;
     frm.pts = _cur_scan;
 
-    // find best match
-    Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
-    double min_cost = std::numeric_limits<double>::max();
-
+    // candidates
     std::vector<QString> ids = unimap->get_nodes("INIT");
     if(ids.size() == 0)
     {
@@ -1750,7 +1747,10 @@ void SLAM_2D::semi_auto_init_start()
         return;
     }
 
-    for(size_t p=0; p<ids.size(); p++)
+    // find best match
+    Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+    double min_cost = std::numeric_limits<double>::max();
+    for(size_t p = 0; p < ids.size(); p++)
     {
         NODE* node = unimap->get_node_by_id(ids[p]);
         if(node == NULL)
@@ -1803,7 +1803,6 @@ void SLAM_2D::semi_auto_init_start()
     }
 
     is_busy = false;
-    return;
 }
 
 double SLAM_2D::calc_overlap_ratio(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1)
