@@ -1,12 +1,16 @@
 #include "comm_fms.h"
+#include "mainwindow.h"
 
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
+    , main(parent)
     , reconnect_timer(this)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
+
+    connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -51,11 +55,14 @@ void COMM_FMS::reconnect_loop()
         client.open(QUrl(server_addr));
 
         reconnect_cnt++;
+
+        /*
         if(reconnect_cnt > 5)
         {
             reconnect_timer.stop();
             printf("[COMM_FMS] server not opened, give up reconnect\n");
         }
+        */
     }
 }
 
@@ -93,7 +100,22 @@ void COMM_FMS::recv_message(QString message)
     }
 
     // parsing
-    if(get_json(data, "type") == "goal")
+    if(get_json(data, "type") == "load")
+    {
+        QString map_name = get_json(data, "map_name");
+        double time = get_json(data, "time").toDouble()/1000;
+
+        Q_EMIT signal_mapload(time, map_name);
+        printf("[COMM_FMS] recv_load, map_name: %s, time: %.3f\n", map_name.toLocal8Bit().data(), time);
+    }
+    else if(get_json(data, "type") == "init")
+    {
+        double time = get_json(data, "time").toDouble()/1000;
+        // do semiauto init
+
+        printf("[COMM_FMS] recv_init, time: %.3f\n", time);
+    }
+    else if(get_json(data, "type") == "goal")
     {
         QString goal_id = get_json(data, "goal_id");
         double time = get_json(data, "time").toDouble()/1000;
@@ -195,14 +217,37 @@ void COMM_FMS::recv_message(QString message)
     }
 }
 
+// recv slots
+void COMM_FMS::slot_mapload(double time, QString name)
+{
+    MainWindow* _main = (MainWindow*)main;
+
+    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    if(!load_dir.isNull())
+    {
+        slam->localization_stop();
+        obsmap->clear();
+
+        _main->map_dir = load_dir;
+        unimap->load_map(load_dir);
+        _main->all_update();
+    }
+}
+
 // send slots
-void COMM_FMS::send_info()
+void COMM_FMS::slot_send_info()
 {
     double time = get_time0();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();    
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+    if(goal_tf.isIdentity())
+    {
+        goal_tf = cur_tf;
+        goal_node_id = cur_node_id;
+    }
+
     QString request = ctrl->get_multi_req(); // req_path, recv_path
 
     QString state = "stop"; // stop, move, error
