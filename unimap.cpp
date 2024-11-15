@@ -31,6 +31,8 @@ void UNIMAP::clear()
     map_max_y = -99999999;
     map_min_z = 99999999;
     map_max_z = -99999999;
+
+    map_dir = "";
 }
 
 void UNIMAP::load_map(QString path)
