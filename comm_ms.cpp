@@ -277,6 +277,11 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
 // send functions
 void COMM_MS::send_status()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -411,6 +416,11 @@ void COMM_MS::send_status()
 
 void COMM_MS::send_global_path()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     PATH path = ctrl->get_cur_global_path();
 
     sio::array_message::ptr jsonArray = sio::array_message::create();
@@ -432,6 +442,11 @@ void COMM_MS::send_global_path()
 
 void COMM_MS::send_local_path()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     PATH path = ctrl->get_cur_local_path();
 
     sio::array_message::ptr jsonArray = sio::array_message::create();
@@ -456,6 +471,11 @@ void COMM_MS::send_local_path()
 
 void COMM_MS::send_lidar()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     TIME_POSE_PTS tpp = slam->get_cur_tpp();
@@ -533,6 +553,11 @@ void COMM_MS::send_lidar()
 
 void COMM_MS::send_mapping_cloud()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
         // send kfrm
@@ -572,6 +597,11 @@ void COMM_MS::send_mapping_cloud()
 
 void COMM_MS::send_mapping_start_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -592,6 +622,11 @@ void COMM_MS::send_mapping_start_response(QString result)
 
 void COMM_MS::send_mapping_stop_response()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -612,6 +647,11 @@ void COMM_MS::send_mapping_stop_response()
 
 void COMM_MS::send_mapping_save_response(QString name, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -633,6 +673,11 @@ void COMM_MS::send_mapping_save_response(QString name, QString result)
 
 void COMM_MS::send_mapload_response(QString name, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -653,6 +698,11 @@ void COMM_MS::send_mapload_response(QString name, QString result)
 
 void COMM_MS::send_localization_response(QString command, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -673,6 +723,11 @@ void COMM_MS::send_localization_response(QString command, QString result)
 
 void COMM_MS::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -700,6 +755,11 @@ void COMM_MS::send_move_target_response(double x, double y, double z, double rz,
 
 void COMM_MS::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -724,6 +784,11 @@ void COMM_MS::send_move_goal_response(QString node_id, int preset, QString metho
 
 void COMM_MS::send_move_pause_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -744,6 +809,11 @@ void COMM_MS::send_move_pause_response(QString result)
 
 void COMM_MS::send_move_resume_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -764,6 +834,11 @@ void COMM_MS::send_move_resume_response(QString result)
 
 void COMM_MS::send_move_stop_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object

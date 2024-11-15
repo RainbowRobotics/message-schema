@@ -53,6 +53,7 @@ public:
 
 Q_SIGNALS:
     void signal_mapload(double time, QString name);
+    void signal_init(double time);
 
 private Q_SLOTS:
     void reconnect_loop();
@@ -66,6 +67,7 @@ private Q_SLOTS:
     // send slots
     void slot_send_info();
     void slot_mapload(double time, QString name);
+    void slot_init(double time);
 
 };
 

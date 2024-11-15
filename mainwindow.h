@@ -75,7 +75,7 @@ public:
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     void update_jog_values(double vx, double vy, double wz);
-    double apply_jog_acc(double cur_vel, double tar_vel, double acc, double decel, double dt);
+    double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
 
 public:
     Ui::MainWindow *ui;

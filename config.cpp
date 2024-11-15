@@ -148,6 +148,9 @@ void CONFIG::load()
 
             QJsonObject obj_loc = obj["loc"].toObject();
             {
+                LOC_ICP_COST_THRESHOLD_0 = obj_loc["LOC_ICP_COST_THRESHOLD_0"].toString().toDouble();
+                printf("[CONFIG] LOC_ICP_COST_THRESHOLD_0, %s\n", obj_loc["LOC_ICP_COST_THRESHOLD_0"].toString().toLocal8Bit().data());
+
                 LOC_ICP_COST_THRESHOLD = obj_loc["LOC_ICP_COST_THRESHOLD"].toString().toDouble();
                 printf("[CONFIG] LOC_ICP_COST_THRESHOLD, %s\n", obj_loc["LOC_ICP_COST_THRESHOLD"].toString().toLocal8Bit().data());
 

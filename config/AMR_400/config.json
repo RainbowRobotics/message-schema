@@ -53,6 +53,7 @@
         "LOC_CHECK_IE": "0.3",
         "LOC_CHECK_IR": "0.3",
         "LOC_FUSION_RATIO": "0.5",
+        "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_COST_THRESHOLD": "0.5",
         "LOC_ICP_ERROR_THRESHOLD": "0.3",
         "LOC_ICP_MAX_FEATURE_NUM": "2000"
