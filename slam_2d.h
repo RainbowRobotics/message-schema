@@ -62,6 +62,7 @@ public:
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
+    double map_icp0(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
     double kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG);
     double calc_overlap_ratio(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1);
@@ -70,8 +71,7 @@ public:
     // flag
     std::atomic<bool> is_slam = {false};
     std::atomic<bool> is_loc = {false};
-    std::atomic<bool> is_busy = {false};
-    std::atomic<bool> is_init = {false};
+    std::atomic<bool> is_busy = {false};    
     std::atomic<bool> is_qa = {false};
 
     // live kd_tree

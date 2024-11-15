@@ -11,6 +11,7 @@ COMM_FMS::COMM_FMS(QObject *parent)
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
     connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
+    connect(this, SIGNAL(signal_init(double)), this, SLOT(slot_init(double)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -111,8 +112,8 @@ void COMM_FMS::recv_message(QString message)
     else if(get_json(data, "type") == "init")
     {
         double time = get_json(data, "time").toDouble()/1000;
-        // do semiauto init
 
+        Q_EMIT signal_init(time);
         printf("[COMM_FMS] recv_init, time: %.3f\n", time);
     }
     else if(get_json(data, "type") == "goal")
@@ -222,7 +223,7 @@ void COMM_FMS::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
-    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    QString load_dir = QDir::homePath() + "/maps/" + name;
     if(!load_dir.isNull())
     {
         slam->localization_stop();
@@ -234,9 +235,20 @@ void COMM_FMS::slot_mapload(double time, QString name)
     }
 }
 
+void COMM_FMS::slot_init(double time)
+{
+    MainWindow* _main = (MainWindow*)main;
+    _main->bt_LocInitSemiAuto();
+}
+
 // send slots
 void COMM_FMS::slot_send_info()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();    
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));

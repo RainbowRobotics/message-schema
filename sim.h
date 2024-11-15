@@ -36,6 +36,8 @@ public:
     std::thread* a_thread = NULL;
     void a_loop();
 
+    Eigen::Matrix4d cur_tf;
+
 Q_SIGNALS:
 
 

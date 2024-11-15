@@ -627,6 +627,11 @@ void COMM_UI::slot_localization_stop(double time)
 // send functions
 void COMM_UI::send_status()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -758,16 +763,29 @@ void COMM_UI::send_status()
 
 void COMM_UI::send_global_path()
 {
+    if(!is_connected)
+    {
+        return;
+    }
 
 }
 
 void COMM_UI::send_local_path()
 {
+    if(!is_connected)
+    {
+        return;
+    }
 
 }
 
 void COMM_UI::send_mapping_start_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -789,6 +807,11 @@ void COMM_UI::send_mapping_start_response(QString result)
 
 void COMM_UI::send_mapping_stop_response()
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -810,6 +833,11 @@ void COMM_UI::send_mapping_stop_response()
 
 void COMM_UI::send_mapping_save_response(QString name, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -832,6 +860,11 @@ void COMM_UI::send_mapping_save_response(QString name, QString result)
 
 void COMM_UI::send_mapload_response(QString name, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -853,6 +886,11 @@ void COMM_UI::send_mapload_response(QString name, QString result)
 
 void COMM_UI::send_localization_response(QString command, QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -874,6 +912,11 @@ void COMM_UI::send_localization_response(QString command, QString result)
 
 void COMM_UI::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -902,6 +945,11 @@ void COMM_UI::send_move_target_response(double x, double y, double z, double rz,
 
 void COMM_UI::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -927,6 +975,11 @@ void COMM_UI::send_move_goal_response(QString node_id, int preset, QString metho
 
 void COMM_UI::send_move_pause_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -948,6 +1001,11 @@ void COMM_UI::send_move_pause_response(QString result)
 
 void COMM_UI::send_move_resume_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object
@@ -969,6 +1027,11 @@ void COMM_UI::send_move_resume_response(QString result)
 
 void COMM_UI::send_move_stop_response(QString result)
 {
+    if(!is_connected)
+    {
+        return;
+    }
+
     double time = get_time0();
 
     // Creating the JSON object

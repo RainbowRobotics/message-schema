@@ -54,6 +54,7 @@ public:
     double SLAM_KFRM_LC_TRY_DIST = 2.0;
     double SLAM_KFRM_LC_TRY_OVERLAP = 0.5;
 
+    double LOC_ICP_COST_THRESHOLD_0 = 2.0;
     double LOC_ICP_COST_THRESHOLD = 2.0;
     double LOC_ICP_ERROR_THRESHOLD = 0.2;
     int LOC_ICP_MAX_FEATURE_NUM = 750;

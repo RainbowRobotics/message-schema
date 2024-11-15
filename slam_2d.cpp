@@ -943,6 +943,242 @@ void SLAM_2D::obs_loop()
 }
 
 // algorithms
+double SLAM_2D::map_icp0(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G)
+{
+    // for processing time
+    double t_st = get_time();
+
+    // for random selection
+    std::vector<int> idx_list;
+    std::vector<Eigen::Vector3d> pts;
+    for(size_t p = 0; p < frm.pts.size(); p++)
+    {
+        idx_list.push_back(p);
+
+        Eigen::Vector3d P = G.block(0,0,3,3)*frm.pts[p] + G.block(0,3,3,1);
+        pts.push_back(P);
+    }
+
+    // solution
+    Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
+
+    // optimization param
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
+    double first_err = 9999;
+    double last_err = 9999;
+    double convergence = 9999;
+    int num_correspondence = 0;
+
+    const double cost_threshold = config->LOC_ICP_COST_THRESHOLD_0*config->LOC_ICP_COST_THRESHOLD_0;
+    const int num_feature = std::min<int>(idx_list.size(), config->LOC_ICP_MAX_FEATURE_NUM);
+
+    // for rmt
+    double tm0 = 0;
+    double tm1 = 0;
+
+    int iter = 0;
+    for(iter = 0; iter < max_iter; iter++)
+    {
+        std::vector<double> costs;
+        std::vector<COST_JACOBIAN> cj_set;
+        for(size_t p = 0; p < idx_list.size(); p++)
+        {
+            // get index
+            int i = idx_list[p];
+
+            // local to global
+            Eigen::Vector3d P1 = pts[i];
+            Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
+
+            // knn points
+            Eigen::Vector3d P0(0, 0, 0);
+            {
+                const int pt_num = near_pt_num;
+                std::vector<unsigned int> ret_near_idxs(pt_num);
+                std::vector<double> ret_near_sq_dists(pt_num);
+
+                double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
+                tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+                for(int q = 0; q < pt_num; q++)
+                {
+                    int idx = ret_near_idxs[q];
+                    P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                }
+                P0 /= pt_num;
+            }
+
+            // rmt
+            double rmt = 1.0;
+            if(iter >= 1)
+            {
+                rmt = tm1/tm0;
+                if(rmt > 1.0)
+                {
+                    rmt = 1.0;
+                }
+            }
+
+            // point to point distance
+            double cost = (_P1 - P0).squaredNorm();
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
+            {
+                continue;
+            }
+
+            // jacobian
+            Eigen::Vector3d xi = TF_to_se2(_G);
+
+            double J[3] = {0,};
+            J[0] = 2.0 * (_P1[0] - P0[0]);
+            J[1] = 2.0 * (_P1[1] - P0[1]);
+            J[2] = 2.0 * ((_P1[0] - P0[0]) * (-std::sin(xi[2]) * P1[0] - std::cos(xi[2]) * P1[1]) + (_P1[1] - P0[1]) * (std::cos(xi[2]) * P1[0] - std::sin(xi[2]) * P1[1]));
+            if(!isfinite(J[0]) || !isfinite(J[1]) || !isfinite(J[2]))
+            {
+                continue;
+            }
+
+            // additional weight
+            double dist = calc_dist_2d(frm.pts[i]);
+            double weight = 1.0 + 0.02*dist;
+
+            // storing cost jacobian
+            COST_JACOBIAN cj;
+            cj.c = cost;
+            cj.w = weight;
+            memcpy(cj.J, J, sizeof(double)*3);
+
+            cj_set.push_back(cj);
+            costs.push_back(cost);
+
+            // check num
+            if((int)cj_set.size() == num_feature)
+            {
+                break;
+            }
+        }
+
+        // num of correspondence
+        num_correspondence = cj_set.size();
+        if(num_correspondence < 100)
+        {
+            //printf("[map_icp0] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
+            return 9999;
+        }
+
+        // calc mu
+        std::nth_element(costs.begin(), costs.begin() + costs.size() / 2, costs.end());
+        double mu = costs[costs.size() / 2];
+
+        // calc sigma
+        std::vector<double> vars(costs.size());
+        for (size_t p = 0; p < costs.size(); p++)
+        {
+            vars[p] = std::abs(costs[p] - mu);
+        }
+        std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
+        double sigma = vars[vars.size() / 2];
+        if(sigma < sigma_eps)
+        {
+            sigma = sigma_eps;
+        }
+
+        // calc weight
+        for (size_t p = 0; p < cj_set.size(); p++)
+        {
+            double c = cj_set[p].c;
+            double V0 = t_dist_v0;
+            double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
+            cj_set[p].w *= w;
+        }
+
+        // make matrix
+        double _A[3*3] = { 0, };
+        double _b[3] = { 0, };
+        double err = 0;
+        double err_cnt = 0;
+        for (size_t p = 0; p < cj_set.size(); p++)
+        {
+            double c = cj_set[p].c;
+            double* J = cj_set[p].J;
+            double w = cj_set[p].w;
+
+            // set tempolar matrix(col major)
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < 3; x++)
+                {
+                    _A[y * 3 + x] += w * J[y] * J[x];
+                }
+                _b[y] += w * c * J[y];
+            }
+
+            // error
+            //err += std::abs(w*c);
+            err += std::sqrt(std::abs(c));
+            err_cnt += w;
+        }
+        err /= err_cnt;
+
+        // set first error
+        if(iter == 0)
+        {
+            first_err = err;
+        }
+
+        // solve
+        Eigen::Matrix<double, 3, 3> A(_A);
+        A += 1e-6*Eigen::Matrix<double, 3, 3>::Identity();
+
+        Eigen::Matrix<double, 3, 1> b(_b);
+        Eigen::Matrix<double, 3, 3> diag_A = A.diagonal().asDiagonal();
+        Eigen::Matrix<double, 3, 1> X = (-(A + lambda * diag_A)).ldlt().solve(b);
+
+        // lambda update
+        if(err < last_err)
+        {
+            lambda *= lambda_dec;
+        }
+        else
+        {
+            lambda *= lambda_inc;
+        }
+        last_err = err;
+
+        // pose update
+        Eigen::Vector3d xi;
+        xi[0] = X(0, 0);
+        xi[1] = X(1, 0);
+        xi[2] = X(2, 0);
+
+        _G = se2_to_TF(xi)*_G;
+        refine_pose(_G);
+
+        // for rmt
+        tm0 = tm1;
+        tm1 = _G.block(0,3,3,1).norm();
+
+        // convergence check
+        convergence = X.cwiseAbs().maxCoeff();
+        if(convergence < 1e-7)
+        {
+            break;
+        }
+    }
+
+    // update
+    G = _G*G;
+
+    if(last_err > first_err+0.01 || last_err > config->LOC_ICP_ERROR_THRESHOLD)
+    {
+        //printf("[map_icp0] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+        return 9999;
+    }
+
+    return last_err;
+}
+
 double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G)
 {
     // for processing time
@@ -1712,7 +1948,6 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 void SLAM_2D::semi_auto_init_start()
 {
     is_busy = true;
-    is_init = false;
 
     if(unimap->kdtree_cloud.pts.size() == 0)
     {
@@ -1748,6 +1983,7 @@ void SLAM_2D::semi_auto_init_start()
     }
 
     // find best match
+    Eigen::Vector2d min_ieir(1.0, 0.0);
     Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
     double min_cost = std::numeric_limits<double>::max();
     for(size_t p = 0; p < ids.size(); p++)
@@ -1759,21 +1995,21 @@ void SLAM_2D::semi_auto_init_start()
         }
 
         Eigen::Matrix4d tf = node->tf;
-
-        for(double th_offset = -180.0; th_offset <= 180.0; th_offset += 10.0)
+        for(double th = -180.0; th < 180.0; th += 10.0)
         {
-            Eigen::Matrix4d tf_bound = ZYX_to_TF(0, 0, 0, 0, 0, th_offset*D2R);
-            Eigen::Matrix4d _cur_tf = tf*tf_bound;
+            Eigen::Matrix4d rot = se2_to_TF(Eigen::Vector3d(0, 0, th*D2R));
+            Eigen::Matrix4d _tf = tf*rot;
 
-            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+            double err = map_icp0(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
-                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
                 double cost = (ieir[0]/config->LOC_ICP_ERROR_THRESHOLD) + (1.0 - ieir[1]);
                 if(cost < min_cost)
                 {
+                    min_ieir = ieir;
                     min_cost = cost;
-                    min_tf = tf;
+                    min_tf = _tf;
 
                     //Eigen::Vector3d min_pose = TF_to_se2(min_tf);
                     //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
@@ -1782,9 +2018,8 @@ void SLAM_2D::semi_auto_init_start()
         }
     }
 
-    if(min_cost != std::numeric_limits<double>::max())
+    if(min_ieir[0] < config->LOC_CHECK_IE && min_ieir[1] > config->LOC_CHECK_IR)
     {
-        is_init = true;
         Eigen::Vector3d min_pose = TF_to_se2(min_tf);
         printf("[AUTOINIT] success auto init. x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, min_cost);
 
@@ -1797,7 +2032,6 @@ void SLAM_2D::semi_auto_init_start()
     }
     else
     {
-        is_init = false;
         Q_EMIT signal_localization_semiautoinit_failed("failed semi-auto init");
         printf("[AUTOINIT] failed auto init.\n");
     }
