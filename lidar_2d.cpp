@@ -1191,72 +1191,28 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            // precise deskewing
-            double min_t = 0;
+            Eigen::Vector3d min_pose = pose_storage[idx1].pose;
             double min_dt = 99999999;
-            Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
                 double dt = std::abs(pose_storage[p].t - t1);
                 if(dt < min_dt)
                 {
-                    min_t = pose_storage[p].t;
                     min_dt = dt;
-                    min_tf = se2_to_TF(pose_storage[p].pose);
+                    min_pose = pose_storage[p].pose;
                 }
-            }
-            Eigen::Matrix4d min_tf_inv = min_tf.inverse();
-
-            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
-            for(size_t p = 0; p < raw_pts.size(); p++)
-            {
-                double t = times[p];
-
-                int i1 = 0;
-                for(int i = idx0; i <= idx1; i++)
-                {
-                    if(pose_storage[i].t > t)
-                    {
-                        i1 = i;
-                        break;
-                    }
-                }
-
-                int i0 = i1 - 1;
-                if(i0 < 0)
-                {
-                    i0 = idx0;
-                    i1 = idx1;
-                }
-
-                // get bound_t
-                double _mo_t0 = pose_storage[i0].t;
-                double _mo_t1 = pose_storage[i1].t;
-                if(_mo_t1-_mo_t0 <= 0)
-                {
-                    continue;
-                }
-
-                Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
-                Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);
-
-                double alpha = (t-_mo_t0)/(_mo_t1-_mo_t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, _mo_tf0, _mo_tf1);
-
-                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
-                dsk_pts[p] = min_tf_inv.block(0,0,3,3)*dsk_pts[p] + min_tf_inv.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
-            mo.t = min_t;
-            mo.pose = TF_to_se2(min_tf);
+            mo.t = t1;
+            mo.pose = min_pose;
 
             RAW_FRAME frm;
             frm.t0 = t0;
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
-            frm.dsk = dsk_pts;
+            frm.dsk = raw_pts;
             frm.mo = mo;
             raw_que_f.push(frm);
 
@@ -1394,72 +1350,28 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            // precise deskewing
-            double min_t = 0;
+            Eigen::Vector3d min_pose = pose_storage[idx1].pose;
             double min_dt = 99999999;
-            Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
                 double dt = std::abs(pose_storage[p].t - t1);
                 if(dt < min_dt)
                 {
-                    min_t = pose_storage[p].t;
                     min_dt = dt;
-                    min_tf = se2_to_TF(pose_storage[p].pose);
+                    min_pose = pose_storage[p].pose;
                 }
-            }
-            Eigen::Matrix4d min_tf_inv = min_tf.inverse();
-
-            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
-            for(size_t p = 0; p < raw_pts.size(); p++)
-            {
-                double t = times[p];
-
-                int i1 = 0;
-                for(int i = idx0; i <= idx1; i++)
-                {
-                    if(pose_storage[i].t > t)
-                    {
-                        i1 = i;
-                        break;
-                    }
-                }
-
-                int i0 = i1 - 1;
-                if(i0 < 0)
-                {
-                    i0 = idx0;
-                    i1 = idx1;
-                }
-
-                // get bound_t
-                double _mo_t0 = pose_storage[i0].t;
-                double _mo_t1 = pose_storage[i1].t;
-                if(_mo_t1-_mo_t0 <= 0)
-                {
-                    continue;
-                }
-
-                Eigen::Matrix4d _mo_tf0 = se2_to_TF(pose_storage[i0].pose);
-                Eigen::Matrix4d _mo_tf1 = se2_to_TF(pose_storage[i1].pose);
-
-                double alpha = (t-_mo_t0)/(_mo_t1-_mo_t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, _mo_tf0, _mo_tf1);
-
-                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
-                dsk_pts[p] = min_tf_inv.block(0,0,3,3)*dsk_pts[p] + min_tf_inv.block(0,3,3,1);
             }
 
             MOBILE_POSE mo;
-            mo.t = min_t;
-            mo.pose = TF_to_se2(min_tf);
+            mo.t = t1;
+            mo.pose = min_pose;
 
             RAW_FRAME frm;
             frm.t0 = t0;
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
-            frm.dsk = dsk_pts;
+            frm.dsk = raw_pts;
             frm.mo = mo;
             raw_que_b.push(frm);
 
@@ -1505,7 +1417,7 @@ void LIDAR_2D::a_loop()
             double min_dt = 99999999;
             for(size_t p = 0; p < storage.size(); p++)
             {
-                double dt = std::abs(storage[p].t0 - frm0.t0);
+                double dt = std::abs(storage[p].t1 - frm0.t1);
                 if(dt < min_dt)
                 {
                     min_dt = dt;

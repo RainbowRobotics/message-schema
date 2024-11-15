@@ -1,12 +1,16 @@
 #include "comm_fms.h"
+#include "mainwindow.h"
 
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
+    , main(parent)
     , reconnect_timer(this)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
+
+    connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -96,24 +100,20 @@ void COMM_FMS::recv_message(QString message)
     }
 
     // parsing
-    if(get_json(data, "type") == "init")
+    if(get_json(data, "type") == "load")
     {
-        QString robot_id = get_json(data, "robot_id");
-        QString pos_str = get_json(data, "pos_str");
+        QString map_name = get_json(data, "map_name");
         double time = get_json(data, "time").toDouble()/1000;
 
-        QStringList pos_str_list = pos_str.split(",");
-        if(pos_str_list.size() == 3)
-        {
-            Eigen::Vector3d pos;
-            pos[0] = pos_str_list[0].toDouble();
-            pos[1] = pos_str_list[1].toDouble();
-            pos[2] = pos_str_list[2].toDouble();
+        Q_EMIT signal_mapload(time, map_name);
+        printf("[COMM_FMS] recv_load, map_name: %s, time: %.3f\n", map_name.toLocal8Bit().data(), time);
+    }
+    else if(get_json(data, "type") == "init")
+    {
+        double time = get_json(data, "time").toDouble()/1000;
+        // do semiauto init
 
-            // do semiauto init
-        }
-
-        printf("[COMM_FMS] recv_init, pos: %s, time: %.3f\n", pos_str.toLocal8Bit().data(), time);
+        printf("[COMM_FMS] recv_init, time: %.3f\n", time);
     }
     else if(get_json(data, "type") == "goal")
     {
@@ -217,8 +217,25 @@ void COMM_FMS::recv_message(QString message)
     }
 }
 
+// recv slots
+void COMM_FMS::slot_mapload(double time, QString name)
+{
+    MainWindow* _main = (MainWindow*)main;
+
+    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    if(!load_dir.isNull())
+    {
+        slam->localization_stop();
+        obsmap->clear();
+
+        _main->map_dir = load_dir;
+        unimap->load_map(load_dir);
+        _main->all_update();
+    }
+}
+
 // send slots
-void COMM_FMS::send_info()
+void COMM_FMS::slot_send_info()
 {
     double time = get_time0();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();    

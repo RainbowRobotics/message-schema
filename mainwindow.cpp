@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // for fms
-    connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(send_info()));
+    connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
 
     // for log
@@ -1273,6 +1273,11 @@ void MainWindow::bt_LocInit()
     slam.mtx.lock();
     slam.cur_tf = se2_to_TF(pick.r_pose);
     slam.mtx.unlock();
+
+    if(config.SIM_MODE)
+    {
+        bt_SimInit();
+    }
 }
 
 void MainWindow::bt_LocInitSemiAuto()

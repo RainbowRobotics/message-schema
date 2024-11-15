@@ -34,6 +34,7 @@ public:
     int reconnect_cnt = 0;
 
     // other modules
+    QObject *main = NULL;
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
@@ -51,10 +52,10 @@ public:
     QString get_json(QJsonObject& json, QString key);
 
 Q_SIGNALS:
+    void signal_mapload(double time, QString name);
 
 private Q_SLOTS:
     void reconnect_loop();
-
     void connected();
     void disconnected();
 
@@ -63,7 +64,8 @@ private Q_SLOTS:
 private Q_SLOTS:
 
     // send slots
-    void send_info();
+    void slot_send_info();
+    void slot_mapload(double time, QString name);
 
 };
 
