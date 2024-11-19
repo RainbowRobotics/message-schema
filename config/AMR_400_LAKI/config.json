@@ -17,7 +17,7 @@
         "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
-        "SIM_MODE": "0",
+        "SIM_MODE": "1",
         "USE_BEEP": "1",
         "USE_BLIDAR": "0",
         "USE_BQR": "0",
@@ -30,6 +30,7 @@
         "USE_WEB_UI": "1"
     },
     "default": {
+        "LIDAR_MIN_RANGE": "1.0",
         "LIDAR_MAX_RANGE": "40.0",
         "LIDAR_TF_B": "-0.32, 0.225, 0.0, 0.0, 0.0, -45.0",
         "LIDAR_TF_F": "0.32, -0.225, 0.0, 0.0, 0.0, 135.0",
@@ -56,7 +57,9 @@
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_COST_THRESHOLD": "0.5",
         "LOC_ICP_ERROR_THRESHOLD": "0.3",
-        "LOC_ICP_MAX_FEATURE_NUM": "2000"
+        "LOC_ICP_MAX_FEATURE_NUM": "2000",
+        "LOC_SURFEL_NUM": "5",
+        "LOC_SURFEL_RANGE": "0.15"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",

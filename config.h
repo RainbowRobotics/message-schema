@@ -36,6 +36,7 @@ public:
     double MOTOR_GAIN_KI = 0.0;
     double MOTOR_GAIN_KD = 100.0;
 
+    double LIDAR_MIN_RANGE = 1.0;
     double LIDAR_MAX_RANGE = 40.0;
     QString LIDAR_TF_F = "0,0,0,0,0,0";
     QString LIDAR_TF_B = "0,0,0,0,0,0";
@@ -58,6 +59,8 @@ public:
     double LOC_ICP_COST_THRESHOLD = 2.0;
     double LOC_ICP_ERROR_THRESHOLD = 0.2;
     int LOC_ICP_MAX_FEATURE_NUM = 750;
+    int LOC_SURFEL_NUM = 5;
+    double LOC_SURFEL_RANGE = 0.15;
 
     double LOC_CHECK_DIST = 0.3;
     double LOC_CHECK_IE = 0.2;

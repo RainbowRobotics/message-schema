@@ -286,7 +286,7 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 {
-    // stop    
+    // stop
     change();
 
     // obs clear
@@ -477,7 +477,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
     // divide and smooth metric path    
     std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    path_pos = path_ccma(path_pos);
+    //path_pos = path_ccma(path_pos);
 
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
@@ -567,7 +567,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 
     // divide and smooth metric path
     std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    path_pos = path_ccma(path_pos);
+    //path_pos = path_ccma(path_pos);
 
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
@@ -1580,12 +1580,13 @@ void AUTOCONTROL::b_loop_pp()
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
-    // check goal
+    // check goal    
+    const double loose_factor = 2.0;
     fsm_state = AUTO_FSM_FIRST_ALIGN;
     Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
-    if(dtdr[0] < config->DRIVE_GOAL_D)
+    if(dtdr[0] < config->DRIVE_GOAL_D*loose_factor)
     {
-        if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*D2R)
+        if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*loose_factor*D2R)
         {
             // already goal
             mobile->move(0, 0, 0);
@@ -1776,11 +1777,11 @@ void AUTOCONTROL::b_loop_pp()
             w *= scale_w;
 
             // goal check
-            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
+            if(std::abs(err_th) < config->DRIVE_GOAL_TH*loose_factor*D2R)
             {
                 extend_dt = 0;
                 pre_err_th = 0;
-                mobile->move(0, 0, 0);
+                //mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
 

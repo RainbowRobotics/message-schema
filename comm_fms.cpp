@@ -273,6 +273,11 @@ void COMM_FMS::slot_send_info()
         state = "error";
     }
 
+    if(slam->is_loc == false)
+    {
+        state = "error";
+    }
+
     // Creating the JSON object
     QJsonObject rootObj;
 

@@ -994,19 +994,31 @@ double SLAM_2D::map_icp0(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eige
             // knn points
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = near_pt_num;
+                const int pt_num = config->LOC_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
                 tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
+                int cnt = 0;
+                int idx0 = ret_near_idxs[0];
+                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
+                    double dx = cloud.pts[idx].x - cloud.pts[idx0].x;
+                    double dy = cloud.pts[idx].y - cloud.pts[idx0].y;
+                    double sq_d = dx*dx + dy*dy;
+                    if(sq_d > sq_d_max)
+                    {
+                        continue;
+                    }
+
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                    cnt++;
                 }
-                P0 /= pt_num;
+                P0 /= cnt;
             }
 
             // rmt
@@ -1222,27 +1234,44 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         {
             // get index
             int i = idx_list[p];
+            double dist = calc_dist_2d(frm.pts[i]);
+            if(dist < config->LIDAR_MIN_RANGE)
+            {
+                continue;
+            }
 
             // local to global
-            Eigen::Vector3d P1 = pts[i];
+            Eigen::Vector3d P1 = pts[i];            
             Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
 
             // knn points
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = near_pt_num;
+                const int pt_num = config->LOC_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
                 tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
+                int cnt = 0;
+                int idx0 = ret_near_idxs[0];
+                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
+                    double dx = cloud.pts[idx].x - cloud.pts[idx0].x;
+                    double dy = cloud.pts[idx].y - cloud.pts[idx0].y;
+                    double sq_d = dx*dx + dy*dy;
+                    if(sq_d > sq_d_max)
+                    {
+                        continue;
+                    }
+
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                    cnt++;
                 }
-                P0 /= pt_num;
+                P0 /= cnt;
             }
 
             // rmt
@@ -1275,8 +1304,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
                 continue;
             }
 
-            // additional weight
-            double dist = calc_dist_2d(frm.pts[i]);
+            // additional weight            
             double weight = 1.0 + 0.02*dist;
 
             // storing cost jacobian
@@ -1481,7 +1509,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = near_pt_num;
+                const int pt_num = config->LOC_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1491,12 +1519,24 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
                 nn_idx = ret_near_idxs[0];
                 V0 = Eigen::Vector3d(cloud.pts[nn_idx].vx, cloud.pts[nn_idx].vy, cloud.pts[nn_idx].vz);
 
+                int cnt = 0;
+                int idx0 = ret_near_idxs[0];
+                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
+                    double dx = cloud.pts[idx].x - cloud.pts[idx0].x;
+                    double dy = cloud.pts[idx].y - cloud.pts[idx0].y;
+                    double sq_d = dx*dx + dy*dy;
+                    if(sq_d > sq_d_max)
+                    {
+                        continue;
+                    }
+
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                    cnt++;
                 }
-                P0 /= pt_num;
+                P0 /= cnt;
             }
 
             // view filter
@@ -1754,7 +1794,7 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = 0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = near_pt_num;
+                const int pt_num = config->LOC_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -1762,12 +1802,25 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
                 tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
                 nn_idx = ret_near_idxs[0];
+
+                int cnt = 0;
+                int idx0 = ret_near_idxs[0];
+                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
+                    double dx = cloud.pts[idx].x - cloud.pts[idx0].x;
+                    double dy = cloud.pts[idx].y - cloud.pts[idx0].y;
+                    double sq_d = dx*dx + dy*dy;
+                    if(sq_d > sq_d_max)
+                    {
+                        continue;
+                    }
+
                     P0 += Eigen::Vector3d(cloud.pts[idx].x, cloud.pts[idx].y, cloud.pts[idx].z);
+                    cnt++;
                 }
-                P0 /= pt_num;
+                P0 /= cnt;
             }
 
             // rmt
