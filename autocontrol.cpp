@@ -1296,7 +1296,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     // get global path segment    
     std::vector<Eigen::Vector3d> _path_pos;
     std::vector<int> _label;
-    int range = config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
+    int range = (0.5*config->OBS_LOCAL_GOAL_D)/GLOBAL_PATH_STEP;
     int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
     int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
     for(int p = st_idx; p <= ed_idx; p++)
