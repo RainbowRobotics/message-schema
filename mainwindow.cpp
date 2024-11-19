@@ -3859,6 +3859,11 @@ void MainWindow::ctrl_plot()
 }
 void MainWindow::plot_loop()
 {
+    if(ui->ckb_PlotEnable->isChecked() == false)
+    {
+        return;
+    }
+
     plot_timer.stop();
 
     double st_time = get_time();
@@ -4457,6 +4462,11 @@ void MainWindow::loc_plot2()
 }
 void MainWindow::plot_loop2()
 {
+    if(ui->ckb_PlotEnable->isChecked() == false)
+    {
+        return;
+    }
+
     plot_timer2.stop();
 
     map_plot2();

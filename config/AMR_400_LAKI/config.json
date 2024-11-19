@@ -17,7 +17,7 @@
         "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
-        "SIM_MODE": "1",
+        "SIM_MODE": "0",
         "USE_BEEP": "1",
         "USE_BLIDAR": "0",
         "USE_BQR": "0",

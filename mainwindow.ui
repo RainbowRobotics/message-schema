@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -178,6 +178,16 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotEnable">
+              <property name="text">
+               <string>Plot enable</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -1361,6 +1371,7 @@ Stop</string>
              <property name="font">
               <font>
                <pointsize>9</pointsize>
+               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
