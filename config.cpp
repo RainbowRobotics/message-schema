@@ -94,6 +94,9 @@ void CONFIG::load()
                 ROBOT_RADIUS = std::sqrt(lx*lx + ly*ly);
                 printf("[CONFIG] ROBOT_RADIUS, %.3f\n", ROBOT_RADIUS);
 
+                LIDAR_MIN_RANGE = obj_default["LIDAR_MIN_RANGE"].toString().toDouble();
+                printf("[CONFIG] LIDAR_MIN_RANGE, %s\n", obj_default["LIDAR_MIN_RANGE"].toString().toLocal8Bit().data());
+
                 LIDAR_MAX_RANGE = obj_default["LIDAR_MAX_RANGE"].toString().toDouble();
                 printf("[CONFIG] LIDAR_MAX_RANGE, %s\n", obj_default["LIDAR_MAX_RANGE"].toString().toLocal8Bit().data());
 
@@ -148,6 +151,12 @@ void CONFIG::load()
 
             QJsonObject obj_loc = obj["loc"].toObject();
             {
+                LOC_SURFEL_NUM = obj_loc["LOC_SURFEL_NUM"].toString().toInt();
+                printf("[CONFIG] LOC_SURFEL_NUM, %s\n", obj_loc["LOC_SURFEL_NUM"].toString().toLocal8Bit().data());
+
+                LOC_SURFEL_RANGE = obj_loc["LOC_SURFEL_RANGE"].toString().toDouble();
+                printf("[CONFIG] LOC_SURFEL_RANGE, %s\n", obj_loc["LOC_SURFEL_RANGE"].toString().toLocal8Bit().data());
+
                 LOC_ICP_COST_THRESHOLD_0 = obj_loc["LOC_ICP_COST_THRESHOLD_0"].toString().toDouble();
                 printf("[CONFIG] LOC_ICP_COST_THRESHOLD_0, %s\n", obj_loc["LOC_ICP_COST_THRESHOLD_0"].toString().toLocal8Bit().data());
 

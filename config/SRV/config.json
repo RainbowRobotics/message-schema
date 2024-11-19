@@ -17,7 +17,7 @@
         "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
-        "SIM_MODE": "0",
+        "SIM_MODE": "1",
         "USE_BEEP": "1",
         "USE_BLIDAR": "1",
         "USE_BQR": "0",
@@ -31,6 +31,7 @@
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
+        "LIDAR_MIN_RANGE": "1.0",
         "LIDAR_TF_B": "0.0, 0.0, 0.0, 0.0, 0.0, 0.0",
         "LIDAR_TF_F": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
         "ROBOT_RADIUS": "0.3",
@@ -53,10 +54,12 @@
         "LOC_CHECK_IE": "0.3",
         "LOC_CHECK_IR": "0.3",
         "LOC_FUSION_RATIO": "0.5",
-        "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_COST_THRESHOLD": "0.5",
+        "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.3",
-        "LOC_ICP_MAX_FEATURE_NUM": "2000"
+        "LOC_ICP_MAX_FEATURE_NUM": "2000",
+        "LOC_SURFEL_NUM": "5",
+        "LOC_SURFEL_RANGE": "0.15"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
@@ -100,7 +103,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/test_map"
+        "MAP_PATH": "/home/tw/maps/2024_11_16_12_26_36_197"
     },
     "robot": {
         "PLATFORM_NAME": "TT",
