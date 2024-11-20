@@ -400,6 +400,37 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
     }
 }
 
+std::vector<std::vector<QString>> AUTOCONTROL::loop_cut(std::vector<QString> node_path)
+{
+    std::vector<std::vector<QString>> res;
+    if(node_path.size() < 4)
+    {
+        res.push_back(node_path);
+        return res;
+    }
+
+    // check loop
+    std::vector<QString> tmp;
+    for(size_t p = 0; p < node_path.size(); p++)
+    {
+        auto it = std::find(tmp.begin(), tmp.end(), node_path[p]);
+        if(it == tmp.end())
+        {
+            tmp.push_back(node_path[p]);
+        }
+        else
+        {
+            res.push_back(tmp);
+            QString last_node_id = tmp.back();
+            tmp.clear();
+            //tmp.push_back()
+        }
+    }
+
+
+    return res;
+}
+
 PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 {
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
