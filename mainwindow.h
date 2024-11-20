@@ -190,6 +190,10 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 
+    // for tab
+    void slot_main_tab_changed();
+    void slot_menu_tab_changed();
+
     // replot
     void map_update();
     void obs_update();
@@ -249,6 +253,7 @@ public Q_SLOTS:
 
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
+    void bt_QuickAddNode();
 
     // mapping & localization
     void bt_MapBuild();    
@@ -297,6 +302,8 @@ public Q_SLOTS:
 
     // for log
     void slot_write_log(QString user_log, QString color_code);
+
+
 
 
 };
