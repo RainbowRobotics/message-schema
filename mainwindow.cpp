@@ -3894,6 +3894,27 @@ void MainWindow::plot_loop()
         printf("[MAIN] reset view camera\n");
     }
 
+    // mapping view
+    if(ui->cb_ViewType->currentText() == "VIEW_MAPPING")
+    {
+        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+        Eigen::Matrix4d _cur_tf = se2_to_TF(TF_to_se2(cur_tf));
+        _cur_tf(2,3) = cur_tf(2,3);
+
+        double d = ui->cb_ViewHeight->currentText().toDouble();
+        Eigen::Vector3d cam_pos = _cur_tf.block(0,0,3,3)*Eigen::Vector3d(0,0,d) + _cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cam_tgt = _cur_tf.block(0,0,3,3)*Eigen::Vector3d(0,0,0) + _cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cam_up(1,0,0);
+
+        viewer->setCameraPosition(cam_pos[0], cam_pos[1], cam_pos[2],
+                                  cam_tgt[0], cam_tgt[1], cam_tgt[2],
+                                  cam_up[0], cam_up[1], cam_up[2]);
+
+        double near = 2.0;
+        double far = 2.0*d;
+        viewer->setCameraClipDistances(near, far);
+    }
+
     // rendering
     ui->qvtkWidget->renderWindow()->Render();
 
