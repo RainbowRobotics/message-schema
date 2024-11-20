@@ -17,7 +17,7 @@
         "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
-        "SIM_MODE": "0",
+        "SIM_MODE": "1",
         "USE_BEEP": "1",
         "USE_BLIDAR": "1",
         "USE_BQR": "0",
@@ -34,12 +34,12 @@
         "LIDAR_MIN_RANGE": "1.0",
         "LIDAR_TF_B": "0.0, 0.0, 0.0, 0.0, 0.0, 0.0",
         "LIDAR_TF_F": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
-        "ROBOT_RADIUS": "0.3",
-        "ROBOT_SIZE_MAX_X": "0.255",
-        "ROBOT_SIZE_MAX_Y": "0.255",
+        "ROBOT_RADIUS": "1.0",
+        "ROBOT_SIZE_MAX_X": "0.35",
+        "ROBOT_SIZE_MAX_Y": "0.35",
         "ROBOT_SIZE_MAX_Z": "0.22",
-        "ROBOT_SIZE_MIN_X": "-0.255",
-        "ROBOT_SIZE_MIN_Y": "-0.255",
+        "ROBOT_SIZE_MIN_X": "-0.35",
+        "ROBOT_SIZE_MIN_Y": "-0.35",
         "ROBOT_SIZE_MIN_Z": "0",
         "ROBOT_WHEEL_BASE": "0.387",
         "ROBOT_WHEEL_RADIUS": "0.0635"
@@ -103,7 +103,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/2024_11_16_12_26_36_197"
+        "MAP_PATH": "/home/tw/maps/multi_test_241113_2"
     },
     "robot": {
         "PLATFORM_NAME": "TT",
