@@ -297,11 +297,24 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
+
+    // loop cut
+    std::vector<std::vector<QString>> path_list2;
     for(size_t p = 0; p < path_list.size(); p++)
     {
+        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
+        for(size_t q = 0; q < res.size(); q++)
+        {
+            path_list2.push_back(res[q]);
+        }
+    }
+
+    // update global path que
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
         // enque path
-        PATH path = calc_global_path(path_list[p], p == 0);
-        if(p == path_list.size()-1)
+        PATH path = calc_global_path(path_list2[p], p == 0);
+        if(p == path_list2.size()-1)
         {
             path.is_align = 1;
         }
@@ -420,14 +433,17 @@ std::vector<std::vector<QString>> AUTOCONTROL::loop_cut(std::vector<QString> nod
         }
         else
         {
-            res.push_back(tmp);
             QString last_node_id = tmp.back();
+            res.push_back(tmp);
+
             tmp.clear();
-            //tmp.push_back()
+            tmp.push_back(last_node_id);
+            tmp.push_back(node_path[p]);
         }
     }
 
-
+    // set last segment
+    res.push_back(tmp);
     return res;
 }
 
