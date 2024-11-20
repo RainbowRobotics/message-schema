@@ -114,6 +114,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+    connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -162,6 +163,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
+
+    // for tab
+    connect(ui->main_tab, &QTabWidget::currentChanged, this, &MainWindow::slot_main_tab_changed);
+    connect(ui->menu_tab, &QTabWidget::currentChanged, this, &MainWindow::slot_menu_tab_changed);
+
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -228,6 +234,32 @@ void MainWindow::bt_Emergency()
     ctrl.stop();
     dctrl.stop();
     mobile.move(0,0,0);
+}
+
+// for tab
+void MainWindow::slot_main_tab_changed()
+{
+    QWidget *cur_tab = ui->main_tab->currentWidget();
+    if(cur_tab ==  ui->page_slamnav)
+    {
+        ui->menu_tab->setCurrentWidget(ui->tab_S);
+    }
+    else if(cur_tab == ui->page_annot)
+    {
+        ui->menu_tab->setCurrentWidget(ui->tab_A);
+    }
+}
+void MainWindow::slot_menu_tab_changed()
+{
+    QWidget *cur_tab = ui->menu_tab->currentWidget();
+    if(cur_tab ==  ui->tab_S)
+    {
+        ui->main_tab->setCurrentWidget(ui->page_slamnav);
+    }
+    else if(cur_tab == ui->tab_A)
+    {
+        ui->main_tab->setCurrentWidget(ui->page_annot);
+    }
 }
 
 // for replot
@@ -1879,6 +1911,27 @@ void MainWindow::bt_QuickAnnotStop()
 
     topo_update();
     printf("[QA] qa stop\n");
+}
+
+void MainWindow::bt_QuickAddNode()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[QA] check map load\n");
+        return;
+    }
+
+    if(slam.is_loc == false)
+    {
+        printf("[QA] check localization\n");
+        return;
+    }
+
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+    unimap.add_node(cur_tf, "GOAL");
+
+    topo_update();
+    printf("[QA] quick add node\n");
 }
 
 void MainWindow::qa_loop()

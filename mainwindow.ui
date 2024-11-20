@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -446,11 +446,11 @@
      </widget>
     </item>
     <item row="0" column="1">
-     <widget class="QTabWidget" name="tabWidget_2">
+     <widget class="QTabWidget" name="menu_tab">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
-      <widget class="QWidget" name="tab_7">
+      <widget class="QWidget" name="tab_S">
        <attribute name="title">
         <string>S</string>
        </attribute>
@@ -1400,7 +1400,7 @@ Stop</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_8">
+      <widget class="QWidget" name="tab_A">
        <attribute name="title">
         <string>A</string>
        </attribute>
@@ -1523,6 +1523,19 @@ Stop</string>
              </property>
              <property name="text">
               <string>Reload</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_QuickAddNode">
+             <property name="geometry">
+              <rect>
+               <x>220</x>
+               <y>50</y>
+               <width>61</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>QA Node</string>
              </property>
             </widget>
            </widget>
@@ -2518,7 +2531,6 @@ Stop</string>
        <property name="font">
         <font>
          <pointsize>9</pointsize>
-         <weight>50</weight>
          <bold>false</bold>
         </font>
        </property>
