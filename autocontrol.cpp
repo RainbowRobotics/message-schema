@@ -1838,7 +1838,8 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // obs check
-            std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, tgt_tf, 0.2, 10.0*D2R);
+            //std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, tgt_tf, 0.2, 10.0*D2R);
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
             if(obsmap->is_path_collision(traj))
             {
                 mobile->move(0, 0, 0);
