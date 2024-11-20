@@ -649,14 +649,17 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
+        // check non drivable
+        if(nodes[p].type == "OBS" || nodes[p].type == "ZONE")
         {
-            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-            if(d < min_d)
-            {
-                min_d = d;
-                min_idx = p;
-            }
+            continue;
+        }
+
+        double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+        if(d < min_d)
+        {
+            min_d = d;
+            min_idx = p;
         }
     }
 
@@ -681,6 +684,12 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     bool is_found = false;
     for(size_t p = 0; p < nodes.size(); p++)
     {
+        // check non drivable
+        if(nodes[p].type == "OBS" || nodes[p].type == "ZONE")
+        {
+            continue;
+        }
+
         QString node_id0 = nodes[p].id;
         Eigen::Matrix4d tf0 = nodes[p].tf;
         Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
@@ -691,6 +700,12 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 
             NODE* node = get_node_by_id(node_id1);
             if(node == NULL)
+            {
+                continue;
+            }
+
+            // check non drivable
+            if(node->type == "OBS" || node->type == "ZONE")
             {
                 continue;
             }
