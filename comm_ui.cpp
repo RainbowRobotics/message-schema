@@ -63,15 +63,17 @@ void COMM_UI::reconnect_loop()
 {
     if(is_connected == false)
     {
-        QString server_addr = "ws://127.0.0.1:11338";
+        QString server_addr = "ws://127.0.0.1:13359";
         client.open(QUrl(server_addr));
 
+        /*
         reconnect_cnt++;
         if(reconnect_cnt > 5)
         {
             reconnect_timer.stop();
             printf("[COMM_UI] server not opened, give up reconnect\n");
         }
+        */
     }
 }
 
