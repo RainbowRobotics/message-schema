@@ -38,6 +38,7 @@ message($$HOME)
 SOURCES += \
     LakiBeamHTTP.cpp \
     LakiBeamUDP.cpp \
+    aruco.cpp \
     autocontrol.cpp \
     cam.cpp \
     code_reader.cpp \
@@ -64,6 +65,7 @@ SOURCES += \
 HEADERS += \
     LakiBeamHTTP.h \
     LakiBeamUDP.h \
+    aruco.h \
     autocontrol.h \
     cam.h \
     code_reader.h \
@@ -136,7 +138,8 @@ LIBS += -lopencv_core \
         -lopencv_video \
         -lopencv_videoio \
         -lboost_system \
-        -lopencv_ximgproc
+        -lopencv_ximgproc \
+        -lopencv_aruco
 
 # VTK
 VTK_VERSION = 9.1

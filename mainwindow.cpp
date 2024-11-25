@@ -64,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
     connect(ui->ckb_TestDebug, SIGNAL(stateChanged(int)), this, SLOT(ckb_TestDebug()));
+    connect(ui->bt_TestImgSave, SIGNAL(clicked()), this, SLOT(bt_TestImgSave()));
 
     // jog
     connect(ui->bt_JogF, SIGNAL(pressed()), this, SLOT(bt_JogF()));
@@ -405,6 +406,16 @@ void MainWindow::init_modules()
     slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
+
+    aruco.config = &config;
+    aruco.logger = &logger;
+    aruco.cam = &cam;
+    aruco.slam = &slam;
+    aruco.unimap = &unimap;
+    if(config.USE_ARUCO)
+    {
+        aruco.init();
+    }
 
     // docking control module init
     dctrl.config = &config;
@@ -2071,6 +2082,60 @@ void MainWindow::ckb_TestDebug()
     ctrl.is_debug = ui->ckb_TestDebug->isChecked();
 }
 
+void MainWindow::bt_TestImgSave()
+{
+    cv::Mat cur_img0 = cam.get_img0();
+    cv::Mat cur_img1 = cam.get_img1();
+
+    if(cur_img0.empty())
+    {
+        printf("[MAIN] cur_img0 is empty. Skipping save operation.\n");
+        return;
+    }
+    if(cur_img1.empty())
+    {
+        printf("[MAIN] cur_img1 is empty. Skipping save operation.\n");
+        return;
+    }
+
+    QString home_dir = QDir::homePath();
+    QString img_folder = home_dir + "/Pictures";
+
+    QDir dir;
+    if(!dir.exists(img_folder))
+    {
+        if(!dir.mkpath(img_folder))
+        {
+            printf("[MAIN] Failed to create image directory: %s\n", img_folder.toStdString().c_str());
+            return;
+        }
+    }
+
+    QString img_path0 = img_folder + "/img0.png";
+    QString img_path1 = img_folder + "/img1.png";
+
+    if(!cv::imwrite(img_path0.toStdString(), cur_img0))
+    {
+        printf("[MAIN] Failed to save img0.png\n");
+    }
+    else
+    {
+        printf("[MAIN] Saved img0.png at %s",img_path0.toStdString().c_str());
+    }
+
+    if(!cv::imwrite(img_path1.toStdString(), cur_img1))
+    {
+         printf("[MAIN] Failed to save img1.png\n");
+    }
+    else
+    {
+         printf("[MAIN] Saved img1.png at %s",img_path1.toStdString().c_str());
+    }
+
+    printf("[MAIN] Img Save test complete.\n");
+
+}
+
 // for obsmap
 void MainWindow::bt_ObsClear()
 {
@@ -3490,6 +3555,34 @@ void MainWindow::raw_plot()
             ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen3->setScaledContents(true);
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    // if(cam.is_connected0)
+    {
+        if(config.USE_ARUCO)
+        {
+            cv::Mat plot = aruco.get_aruco0();
+            if(!plot.empty())
+            {
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                ui->lb_Screen4->setScaledContents(true);
+                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+        }
+    }
+
+    // if(cam.is_connected0)
+    {
+        if(config.USE_ARUCO)
+        {
+            cv::Mat plot = aruco.get_aruco1();
+            if(!plot.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
         }
     }
 
