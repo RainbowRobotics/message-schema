@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 12.0.1, 2024-11-25T10:06:49. -->
+<!-- Written by QtCreator 12.0.1, 2024-11-25T21:33:39. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -146,7 +146,7 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes">
-     <value type="QString">LD_LIBRARY_PATH=/home/juyeon/Qt/5.15.16/gcc_64/lib:/usr/lib/x86_64-linux-gnu:/home/juyeon/Tools/OrbbecSDK/SDK/lib</value>
+     <value type="QString">LD_LIBRARY_PATH=/home/juyeon/Qt/5.15.16/gcc_64/lib:/usr/lib/x86_64-linux-gnu:/home/juyeon/OrbbecSDK/SDK/lib</value>
     </valuelist>
     <value type="bool" key="PE.EnvironmentAspect.PrintOnRun">false</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>

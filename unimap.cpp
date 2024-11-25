@@ -329,7 +329,6 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     return node.id;
 }
 
-
 void UNIMAP::edit_node_pos(PICKING pick)
 {
     if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))

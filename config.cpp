@@ -222,6 +222,9 @@ void CONFIG::load()
 
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
+
+                USE_ARUCO = obj_debug["USE_ARUCO"].toString().toInt();
+                printf("[CONFIG] USE_ARUCO, %s\n", obj_debug["USE_ARUCO"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

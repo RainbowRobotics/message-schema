@@ -15,6 +15,7 @@
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "aruco.h"
 #include "autocontrol.h"
 #include "dockingcontrol.h"
 #include "task.h"
@@ -55,6 +56,7 @@ public:
     UNIMAP unimap;
     OBSMAP obsmap;
     SLAM_2D slam;
+    ARUCO aruco;
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
     TASK task;    
@@ -273,6 +275,7 @@ public Q_SLOTS:
     void bt_Test();
     void bt_TestLed();
     void ckb_TestDebug();
+    void bt_TestImgSave();
 
     // for autocontrol
     void bt_AutoMove();
@@ -296,6 +299,8 @@ public Q_SLOTS:
     void bt_TaskPlay();
     void bt_TaskPause();    
     void bt_TaskCancel();
+
+    // for aruco
 
     // for fms
     void bt_SendMap();
