@@ -49,6 +49,24 @@ cv::Mat CAM::get_img1()
     return res;
 }
 
+TIME_IMG CAM::get_time_img0()
+{
+    mtx.lock();
+    TIME_IMG res = cur_time_img0;
+    mtx.unlock();
+
+    return res;
+}
+
+TIME_IMG CAM::get_time_img1()
+{
+    mtx.lock();
+    TIME_IMG res = cur_time_img1;
+    mtx.unlock();
+
+    return res;
+}
+
 TIME_PTS CAM::get_scan0()
 {
     mtx.lock();
@@ -62,6 +80,24 @@ TIME_PTS CAM::get_scan1()
 {
     mtx.lock();
     TIME_PTS res = cur_scan1;
+    mtx.unlock();
+
+    return res;
+}
+
+CAM_INTRINSIC CAM::get_rgb_intrinsic0()
+{
+    mtx.lock();
+    CAM_INTRINSIC res = rgb_intrinsic0;
+    mtx.unlock();
+
+    return res;
+}
+
+CAM_INTRINSIC CAM::get_rgb_intrinsic1()
+{
+    mtx.lock();
+    CAM_INTRINSIC res = rgb_intrinsic1;
     mtx.unlock();
 
     return res;
@@ -116,12 +152,13 @@ void CAM::grab_loop()
     // set cam0
     auto dev0 = dev_list->getDevice(cam_idx0);
     dev0->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
-    dev0->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, true);
+    dev0->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
 
     std::shared_ptr<ob::Pipeline> pipe0 = std::make_shared<ob::Pipeline>(dev0);
     Eigen::Matrix4d TF0 = string_to_TF(config->CAM_TF_0);
 
     auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
+
     /*
     for(size_t p = 0; p < depth_profile_list0->count(); p++)
     {
@@ -130,7 +167,9 @@ void CAM::grab_loop()
     }
     */
 
+
     auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
+
     /*
     for(size_t p = 0; p < color_profile_list0->count(); p++)
     {
@@ -139,11 +178,14 @@ void CAM::grab_loop()
     }
     */
 
-    auto depth_profile0 = depth_profile_list0->getProfile(27)->as<ob::VideoStreamProfile>();
+    auto depth_profile0 = depth_profile_list0->getProfile(31)->as<ob::VideoStreamProfile>();
     printf("[CAM] depth_profile(31), w:%d, h:%d, fps:%d, format:%d\n", depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
-    auto color_profile0 = color_profile_list0->getProfile(123)->as<ob::VideoStreamProfile>();
-    printf("[CAM] color_profile(119), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+    //auto color_profile0 = color_profile_list0->getProfile(123)->as<ob::VideoStreamProfile>();
+    //printf("[CAM] color_profile(119), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+
+    auto color_profile0 = color_profile_list0->getProfile(101)->as<ob::VideoStreamProfile>();
+    printf("[CAM] color_profile(101), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
     std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
     config0->disableAllStream();
@@ -181,7 +223,7 @@ void CAM::grab_loop()
                 {
                     for(int j = 0; j < w; j++)
                     {
-                        double x = -point[i*w+j].x/1000.0;
+                        double x = point[i*w+j].x/1000.0;
                         double y = point[i*w+j].y/1000.0;
                         double z = point[i*w+j].z/1000.0;
                         if(x != 0 || y != 0 || z != 0)
@@ -227,6 +269,9 @@ void CAM::grab_loop()
                     is_connected0 = true;
                 }
 
+                uint64_t ts = fs->colorFrame()->systemTimeStamp();
+                double t = (double)ts/1000.0 - st_time_for_get_time;
+
                 // get color image
                 std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
 
@@ -235,12 +280,17 @@ void CAM::grab_loop()
 
                 cv::Mat img;
                 cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-                cv::flip(img, img, -1);
+                //cv::flip(img, img, -1);
 
                 if(!img.empty())
                 {
+                    TIME_IMG time_img;
+                    time_img.t = t;
+                    time_img.img = img.clone();
+
                     mtx.lock();
                     cur_img0 = img.clone();
+                    cur_time_img0 = time_img;
                     mtx.unlock();
                 }
             }
@@ -255,7 +305,7 @@ void CAM::grab_loop()
     // set cam1
     auto dev1 = dev_list->getDevice(cam_idx1);
     dev1->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
-    dev1->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, true);
+    dev1->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
 
     std::shared_ptr<ob::Pipeline> pipe1 = std::make_shared<ob::Pipeline>(dev1);
     Eigen::Matrix4d TF1 = string_to_TF(config->CAM_TF_1);
@@ -263,8 +313,9 @@ void CAM::grab_loop()
     auto depth_profile_list1 = pipe1->getStreamProfileList(OB_SENSOR_DEPTH);
     auto color_profile_list1 = pipe1->getStreamProfileList(OB_SENSOR_COLOR);
 
-    auto depth_profile1 = depth_profile_list1->getProfile(27)->as<ob::VideoStreamProfile>();
-    auto color_profile1 = color_profile_list1->getProfile(123)->as<ob::VideoStreamProfile>();
+    auto depth_profile1 = depth_profile_list1->getProfile(31)->as<ob::VideoStreamProfile>();
+    //auto color_profile1 = color_profile_list1->getProfile(123)->as<ob::VideoStreamProfile>();
+    auto color_profile1 = color_profile_list1->getProfile(101)->as<ob::VideoStreamProfile>();
 
     std::shared_ptr<ob::Config> config1 = std::make_shared<ob::Config>();
     config1->disableAllStream();
@@ -302,7 +353,7 @@ void CAM::grab_loop()
                 {
                     for(int j = 0; j < w; j++)
                     {
-                        double x = -point[i*w+j].x/1000.0;
+                        double x = point[i*w+j].x/1000.0;
                         double y = point[i*w+j].y/1000.0;
                         double z = point[i*w+j].z/1000.0;
                         if(x != 0 || y != 0 || z != 0)
@@ -348,6 +399,9 @@ void CAM::grab_loop()
                     is_connected1 = true;
                 }
 
+                uint64_t ts = fs->colorFrame()->systemTimeStamp();
+                double t = (double)ts/1000.0 - st_time_for_get_time;
+
                 // get color image
                 std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
 
@@ -360,8 +414,13 @@ void CAM::grab_loop()
 
                 if(!img.empty())
                 {
+                    TIME_IMG time_img;
+                    time_img.t = t;
+                    time_img.img = img.clone();
+
                     mtx.lock();
                     cur_img1 = img.clone();
+                    cur_time_img1 = time_img;
                     mtx.unlock();
                 }
             }
@@ -372,8 +431,37 @@ void CAM::grab_loop()
             logger->write_log("[CAM] " + str, "Red");
         }
     });
-    printf("[CAM] grab loop started\n");
 
+    // get intrinsics
+    auto camera_param0 = pipe0->getCameraParam();
+    mtx.lock();
+    rgb_intrinsic0.fx = camera_param0.rgbIntrinsic.fx; rgb_intrinsic0.fy = camera_param0.rgbIntrinsic.fy;
+    rgb_intrinsic0.cx = camera_param0.rgbIntrinsic.cx; rgb_intrinsic0.cy = camera_param0.rgbIntrinsic.cy;
+
+    rgb_intrinsic0.k1 = camera_param0.rgbDistortion.k1; rgb_intrinsic0.k2 = camera_param0.rgbDistortion.k2;
+    rgb_intrinsic0.k3 = camera_param0.rgbDistortion.k3; rgb_intrinsic0.k4 = camera_param0.rgbDistortion.k4;
+    rgb_intrinsic0.k5 = camera_param0.rgbDistortion.k5; rgb_intrinsic0.k6 = camera_param0.rgbDistortion.k6;
+    rgb_intrinsic0.p1 = camera_param0.rgbDistortion.p1; rgb_intrinsic0.p2 = camera_param0.rgbDistortion.p2;
+    mtx.unlock();
+
+    printf("[CAM] rgb_intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic0.fx, rgb_intrinsic0.fy, rgb_intrinsic0.cx, rgb_intrinsic0.cy);
+
+    auto camera_param1 = pipe1->getCameraParam();
+    mtx.lock();
+    rgb_intrinsic1.fx = camera_param1.rgbIntrinsic.fx; rgb_intrinsic1.fy = camera_param1.rgbIntrinsic.fy;
+    rgb_intrinsic1.cx = camera_param1.rgbIntrinsic.cx; rgb_intrinsic1.cy = camera_param1.rgbIntrinsic.cy;
+
+    rgb_intrinsic1.k1 = camera_param1.rgbDistortion.k1; rgb_intrinsic1.k2 = camera_param1.rgbDistortion.k2;
+    rgb_intrinsic1.k3 = camera_param1.rgbDistortion.k3; rgb_intrinsic1.k4 = camera_param1.rgbDistortion.k4;
+    rgb_intrinsic1.k5 = camera_param1.rgbDistortion.k5; rgb_intrinsic1.k6 = camera_param1.rgbDistortion.k6;
+    rgb_intrinsic1.p1 = camera_param1.rgbDistortion.p1; rgb_intrinsic1.p2 = camera_param1.rgbDistortion.p2;
+    mtx.unlock();
+
+    printf("[CAM] rgb_intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic1.fx, rgb_intrinsic1.fy, rgb_intrinsic1.cx, rgb_intrinsic1.cy);
+
+    is_param_loaded = true;
+
+    printf("[CAM] grab loop started\n");
     while(grab_flag)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -198,6 +198,96 @@ enum MOTOR_ERROR_STATE
 };
 
 // structure
+struct TIME_IMG
+{
+    double t = 0;
+    cv::Mat img;
+
+    TIME_IMG()
+    {
+
+    }
+
+    TIME_IMG(const TIME_IMG& p)
+    {
+        t = p.t;
+        img = p.img.clone();
+    }
+
+    TIME_IMG& operator=(const TIME_IMG& p)
+    {
+        t = p.t;
+        img = p.img.clone();
+        return *this;
+    }
+};
+
+struct CAM_INTRINSIC
+{
+    int w = 0;
+    int h = 0;
+
+    double fx = 0;
+    double fy = 0;
+    double cx = 0;
+    double cy = 0;
+
+    double k1 = 0;
+    double k2 = 0;
+    double k3 = 0;
+    double k4 = 0;
+    double k5 = 0;
+    double k6 = 0;
+    double p1 = 0;
+    double p2 = 0;
+
+    CAM_INTRINSIC()
+    {
+
+    }
+
+    CAM_INTRINSIC(const CAM_INTRINSIC& p)
+    {
+        w = p.w;
+        h = p.h;
+
+        fx = p.cy;
+        fy = p.cx;
+        cx = p.fy;
+        cy = p.fx;
+
+        k1 = p.k1;
+        k2 = p.k2;
+        k3 = p.k3;
+        k4 = p.k4;
+        k5 = p.k5;
+        k6 = p.k6;
+        p1 = p.p1;
+        p2 = p.p2;
+    }
+
+    CAM_INTRINSIC& operator=(const CAM_INTRINSIC& p)
+    {
+        w = p.w;
+        h = p.h;
+
+        fx = p.cy;
+        fy = p.cx;
+        cx = p.fy;
+        cy = p.fx;
+
+        k1 = p.k1;
+        k2 = p.k2;
+        k3 = p.k3;
+        k4 = p.k4;
+        k5 = p.k5;
+        k6 = p.k6;
+        p1 = p.p1;
+        p2 = p.p2;
+        return *this;
+    }
+};
+
 struct LOG_INFO
 {
     QString user_log = "";
