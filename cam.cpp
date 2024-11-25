@@ -280,13 +280,15 @@ void CAM::grab_loop()
 
                 cv::Mat img;
                 cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
-                //cv::flip(img, img, -1);
 
                 if(!img.empty())
                 {
                     TIME_IMG time_img;
                     time_img.t = t;
                     time_img.img = img.clone();
+
+                    // flip for plot
+                    cv::flip(img, img, -1);
 
                     mtx.lock();
                     cur_img0 = img.clone();
