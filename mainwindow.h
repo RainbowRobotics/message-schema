@@ -17,6 +17,7 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "dockingcontrol.h"
+#include "l_dockingcontrol.h"
 #include "task.h"
 #include "sim.h"
 #include "comm_fms.h"
@@ -57,6 +58,7 @@ public:
     SLAM_2D slam;
     AUTOCONTROL ctrl;
     DOCKINGCONTROL dctrl;
+    L_DOCKINGCONTROL ldctrl;
     TASK task;    
     SIM sim;
     COMM_FMS cfms;
@@ -282,6 +284,10 @@ public Q_SLOTS:
     void bt_AutoPause();
     void bt_AutoResume();
 
+    // for ldock
+    void bt_DockingMove();
+    void bt_DockingStop();
+    
     void slot_local_path_updated();
     void slot_global_path_updated();
 

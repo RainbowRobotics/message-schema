@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , slam(this)
     , ctrl(this)
     , dctrl(this)
+    , ldctrl(this)
     , task(this)
     , sim(this)
     , cfms(this)
@@ -233,6 +234,7 @@ void MainWindow::bt_Emergency()
     task.cancel();
     ctrl.stop();
     dctrl.stop();
+    ldctrl.stop();    
     mobile.move(0,0,0);
 }
 
@@ -417,6 +419,16 @@ void MainWindow::init_modules()
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
     dctrl.init();
+
+    // lidar docking control module init
+    ldctrl.config = &config;
+    ldctrl.logger = &logger;
+    ldctrl.mobile = &mobile;
+    ldctrl.lidar = &lidar;
+    ldctrl.slam = &slam;
+    ldctrl.unimap = &unimap;
+    ldctrl.obsmap = &obsmap;
+    ldctrl.init();
 
     // autocontrol module init
     ctrl.config = &config;
@@ -2041,6 +2053,19 @@ void MainWindow::slot_global_path_updated()
 {
     is_global_path_update = true;
     is_global_path_update2 = true;
+}
+
+// for ldock
+void MainWindow::bt_DockingMove()
+{   
+    ctrl.is_moving = true;
+    ldctrl.move();
+}
+
+void MainWindow::bt_DockingStop()
+{
+    ldctrl.stop();
+    ctrl.is_moving = false;
 }
 
 // for test

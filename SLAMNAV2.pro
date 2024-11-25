@@ -45,6 +45,7 @@ SOURCES += \
     comm_ms.cpp \
     comm_ui.cpp \
     dockingcontrol.cpp \
+    l_dockingcontrol.cpp \
     config.cpp \
     cv_to_qt.cpp \
     lidar_2d.cpp \
@@ -71,6 +72,7 @@ HEADERS += \
     comm_ms.h \
     comm_ui.h \
     dockingcontrol.h \
+    l_dockingcontrol.h \
     config.h \
     cv_to_qt.h \
     global_defines.h \
