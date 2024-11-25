@@ -294,6 +294,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
     // load preset
     params = load_preset(preset);
+    Eigen::Vector3d final_goal_pos = get_cur_goal_tf().block(0,3,3,1);
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
@@ -316,7 +317,15 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         PATH path = calc_global_path(path_list2[p], p == 0);
         if(p == path_list2.size()-1)
         {
-            path.is_align = 1;
+            double d = calc_dist_2d(path.pos.back() - final_goal_pos);
+            if(d < config->DRIVE_GOAL_D)
+            {
+                path.is_align = 1;
+            }
+            else
+            {
+                path.is_align = 0;
+            }
         }
         else
         {

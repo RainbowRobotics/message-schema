@@ -32,8 +32,14 @@ public:
     cv::Mat get_img0();
     cv::Mat get_img1();
 
+    TIME_IMG get_time_img0();
+    TIME_IMG get_time_img1();
+
     TIME_PTS get_scan0();
     TIME_PTS get_scan1();
+
+    CAM_INTRINSIC get_rgb_intrinsic0();
+    CAM_INTRINSIC get_rgb_intrinsic1();
 
     // loop
     std::atomic<bool> grab_flag;
@@ -44,14 +50,22 @@ public:
     std::atomic<bool> is_connected0 = {false};
     std::atomic<bool> is_connected1 = {false};
 
+    std::atomic<bool> is_param_loaded = {false};
+
     // storage    
     std::mutex mtx;
 
     cv::Mat cur_img0;
     cv::Mat cur_img1;
 
+    TIME_IMG cur_time_img0;
+    TIME_IMG cur_time_img1;
+
     TIME_PTS cur_scan0;
     TIME_PTS cur_scan1;
+
+    CAM_INTRINSIC rgb_intrinsic0; // color camera intrinsic
+    CAM_INTRINSIC rgb_intrinsic1;
 
 private:
 
