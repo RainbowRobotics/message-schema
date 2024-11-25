@@ -829,29 +829,57 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE tp;
             if(tp_que.try_pop(tp))
             {
-                double alpha = config->LOC_FUSION_RATIO;
-                Eigen::Matrix4d icp_tf = tp.tf;
-
-                // for odometry slip
-                Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                if(std::abs(dtdr[1]) > 10.0*D2R)
+                if(std::abs(mo.t - tp.t) < 0.3)
                 {
-                    alpha = 0;
-                    printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                    double alpha = config->LOC_FUSION_RATIO; // 1.0 means odo_tf 100%
+                    Eigen::Matrix4d icp_tf = tp.tf;
+
+                    // for odometry slip
+                    Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                    if(std::abs(dtdr[1]) > 10.0*D2R)
+                    {
+                        alpha = 0;
+                        printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                    }
+
+                    // interpolation
+                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                    // update
+                    _cur_tf = fused_tf;
                 }
-
-                // interpolation
-                Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
-                Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf); // 1.0 mean odometry 100%
-
-                // update
-                _cur_tf = fused_tf;
             }
             else
             {
                 // update
                 _cur_tf = odo_tf;
             }
+
+            /*
+            // aruco fusion
+            TIME_POSE_ID aruco_tpi;
+
+            // calc tf
+            NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
+            if(node != NULL)
+            {
+                if(std::abs(mo.t - aruco_tpi.t) < 0.3)
+                {
+                    Eigen::Matrix4d T_g_m = node->tf;
+                    Eigen::Matrix4d T_m_r = aruco_tpi.tf;
+                    Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
+
+                    // interpolation
+                    double alpha = 0.1; // 0.1 means 90% aruco_tf, 10% cur_tf
+                    Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
+                    Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                    // update
+                    _cur_tf = fused_tf;
+                }
+            }
+            */
 
             // update
             mtx.lock();
