@@ -2086,20 +2086,6 @@ void MainWindow::ui_tasks_update()
     {
         ui->lw_TaskList->addItem(task.task_node_list[i]);
     }
-
-    //gen task name
-    for(size_t i = 0; i < task.task_node_list.size(); i++)
-    {
-        NODE* node = unimap.get_node_by_id(task.task_node_list[i]);
-        if(node == NULL)
-        {
-            continue;
-        }
-
-        QString res;
-        res.sprintf("T_%02d", (int)i);
-        node->name = res;
-    }
     is_topo_update = true;
 }
 
