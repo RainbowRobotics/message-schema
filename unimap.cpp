@@ -649,16 +649,14 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     for(size_t p = 0; p < nodes.size(); p++)
     {
         // check non drivable
-        if(nodes[p].type == "OBS" || nodes[p].type == "ZONE")
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
-            continue;
-        }
-
-        double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-        if(d < min_d)
-        {
-            min_d = d;
-            min_idx = p;
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+            if(d < min_d)
+            {
+                min_d = d;
+                min_idx = p;
+            }
         }
     }
 
@@ -683,42 +681,38 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     bool is_found = false;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        // check non drivable
-        if(nodes[p].type == "OBS" || nodes[p].type == "ZONE")
+        // check drivable
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
-            continue;
-        }
+            QString node_id0 = nodes[p].id;
+            Eigen::Matrix4d tf0 = nodes[p].tf;
+            Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
 
-        QString node_id0 = nodes[p].id;
-        Eigen::Matrix4d tf0 = nodes[p].tf;
-        Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
-
-        for(size_t q = 0; q < nodes[p].linked.size(); q++)
-        {
-            QString node_id1 = nodes[p].linked[q];
-
-            NODE* node = get_node_by_id(node_id1);
-            if(node == NULL)
+            for(size_t q = 0; q < nodes[p].linked.size(); q++)
             {
-                continue;
-            }
+                QString node_id1 = nodes[p].linked[q];
 
-            // check non drivable
-            if(node->type == "OBS" || node->type == "ZONE")
-            {
-                continue;
-            }
+                NODE* node = get_node_by_id(node_id1);
+                if(node == NULL)
+                {
+                    continue;
+                }
 
-            Eigen::Matrix4d tf1 = node->tf;
-            Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
+                // check drivable
+                if(node->type == "ROUTE" || node->type == "GOAL" || node->type == "INIT")
+                {
+                    Eigen::Matrix4d tf1 = node->tf;
+                    Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
 
-            double d = calc_seg_dist(pos0, pos1, pos);
-            if(d < min_d)
-            {
-                min_d = d;
-                _P0 = pos0;
-                _P1 = pos1;
-                is_found = true;
+                    double d = calc_seg_dist(pos0, pos1, pos);
+                    if(d < min_d)
+                    {
+                        min_d = d;
+                        _P0 = pos0;
+                        _P1 = pos1;
+                        is_found = true;
+                    }
+                }
             }
         }
     }

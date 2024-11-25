@@ -3101,6 +3101,19 @@ void MainWindow::topo_plot()
                             viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
                         }
                     }
+                    else if(unimap.nodes[p].type == "ARUCO")
+                    {
+                        const double size = 0.15;
+                        viewer->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 1.0, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                    }
 
                     // for erase
                     last_plot_nodes.push_back(id);
@@ -4246,6 +4259,19 @@ void MainWindow::topo_plot2()
                             viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                             viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
                         }
+                    }
+                    else if(unimap.nodes[p].type == "ARUCO")
+                    {
+                        const double size = 0.15;
+                        viewer2->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 1.0, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        const double size2 = 0.05;
+                        const double offset = size - size2;
+                        QString axis_id = id + "_axis";
+                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
+                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                     }
 
                     // for erase

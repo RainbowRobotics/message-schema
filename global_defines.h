@@ -781,6 +781,35 @@ struct TIME_POSE_PTS
     }
 };
 
+struct TIME_POSE_ID
+{
+    double t = 0;
+    int id = 0;
+    Eigen::Matrix4d tf;
+
+    TIME_POSE_ID()
+    {
+        t = 0;
+        id = 0;
+        tf.setIdentity();
+    }
+
+    TIME_POSE_ID(const TIME_POSE_ID& p)
+    {
+        t = p.t;
+        id = p.id;
+        tf = p.tf;
+    }
+
+    TIME_POSE_ID& operator=(const TIME_POSE_ID& p)
+    {
+        t = p.t;
+        id = p.id;
+        tf = p.tf;
+        return *this;
+    }
+};
+
 // topomap node
 struct NODE
 {
