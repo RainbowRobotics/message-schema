@@ -123,7 +123,7 @@ Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec)
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
-    // T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
+    T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
 
     // cam to marker
     return T;
