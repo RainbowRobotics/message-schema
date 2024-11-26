@@ -162,7 +162,7 @@ void ARUCO::detect_loop(int cam_idx)
                        0,  0,  1);
 
         double d[8] = {intrinsic.k1, intrinsic.k2, intrinsic.p1,intrinsic.p2, intrinsic.k3, intrinsic.k4, intrinsic.k5, intrinsic.k6};
-        cv::Mat dc(8, 1, cv::DataType<double>::type, d);
+        cv::Mat dc(8, 1, CV_64F, d);
 
         TIME_IMG time_img = (config->SIM_MODE == 1) ? load_sim_image(cam_idx)
                                                     : (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
@@ -181,7 +181,7 @@ void ARUCO::detect_loop(int cam_idx)
         cv::equalizeHist(gray_img, cur_img);
 
         cv::Mat plot_aruco = time_img.img.clone();
-        std::vector<std::vector<cv::Point2f>> detected_uv, rejectedCandidates;
+        std::vector<std::vector<cv::Point2f>> detected_uv;
         std::vector<int> detected_id;
         cv::aruco::detectMarkers(cur_img, dictionary, detected_uv, detected_id, parameters);
 
@@ -207,19 +207,18 @@ void ARUCO::detect_loop(int cam_idx)
         cv::circle(plot_aruco, detected_uv[0][2], 10, cv::Scalar(255,0,0), -1, cv::LINE_AA);
         cv::circle(plot_aruco, detected_uv[0][3], 10, cv::Scalar(0,255,255), -1, cv::LINE_AA);
 
-        // std::vector<cv::Point3d> matched_xyzs;
         std::vector<cv::Point3f> matched_xyzs = make_obj_pts();
-        std::vector<cv::Point2d> matched_uvs;
+        std::vector<cv::Point2f> matched_uvs;
         // if(check_regist_aruco(QString::number(detected_id[0]), matched_xyzs))
         {
             // extract information from array
-            std::vector<cv::Point2i> uvs;
+            std::vector<cv::Point2f> uvs;
             for(int p = 0; p < 4; p++)
             {
                 double u = (double)detected_uv[0][p].x;
                 double v = (double)detected_uv[0][p].y;
 
-                uvs.push_back(cv::Point2d(u,v));
+                uvs.push_back(cv::Point2f(u,v));
             }
 
             matched_uvs.insert(matched_uvs.end(), uvs.begin(), uvs.end());
