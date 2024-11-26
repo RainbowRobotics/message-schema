@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AddNode, SIGNAL(clicked()), this, SLOT(bt_AddNode()));
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
+    connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
     connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));    
@@ -1565,6 +1566,12 @@ void MainWindow::bt_AddLink1()
 void MainWindow::bt_AddLink2()
 {
     unimap.add_link2(pick);
+    topo_update();
+}
+
+void MainWindow::bt_AutoLink()
+{
+    unimap.add_link_auto();
     topo_update();
 }
 
