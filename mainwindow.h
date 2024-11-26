@@ -141,6 +141,23 @@ public:
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};
 
+    // for copy & paste
+    Eigen::Vector4d rect;
+    double lt_x = 0.0;
+    double lt_y = 0.0;
+    double rb_x = 0.0;
+    double rb_y = 0.0;
+
+    std::atomic<bool> is_free_move = {false};
+    std::atomic<bool> is_grab = {false};
+    std::atomic<bool> is_pressed_btn_ctrl = {false};
+    std::atomic<bool> is_pressed_btn_c = {false};
+    std::atomic<bool> is_pressed_btn_v = {false};
+    std::vector<QString> contains_nodes;
+    std::vector<QString> temp_contains_nodes;
+    std::vector<QString> copy_contains_nodes;
+    std::vector<QString> selected_nodes;
+
     // plot object names
     std::vector<QString> last_plot_kfrms;
 
@@ -155,6 +172,8 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+    std::vector<QString> last_plot_contains;
+    std::vector<QString> last_plot_copy;
 
     // jog
     std::atomic<double> vx_target = {0.};
@@ -235,6 +254,7 @@ public Q_SLOTS:
     void bt_AddNode();
     void bt_AddLink1();
     void bt_AddLink2();
+    void bt_AutoLink();
     void bt_EditNodePos();
     void bt_EditNodeType();
     void bt_EditNodeInfo();

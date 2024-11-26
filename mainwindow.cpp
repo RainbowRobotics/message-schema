@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AddNode, SIGNAL(clicked()), this, SLOT(bt_AddNode()));
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
+    connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
     connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));    
@@ -869,12 +870,73 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         }
         else if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_TOPO")
         {
+            // keyboard event
+            if(ev->type() == QEvent::KeyPress)
+            {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                switch(ke->key())
+                {
+                    case Qt::Key_A:
+                        printf("[KEY] is_grab is true\n");
+                        is_grab = true;
+                        pick.pre_node = "";
+                        pick.cur_node = "";
+                        break;
+                    case Qt::Key_Q:
+                        is_free_move = true;
+                        break;
+                    case Qt::Key_Control:
+                        is_pressed_btn_ctrl = true;
+                        break;
+                    case Qt::Key_C:
+                        is_pressed_btn_c = true;
+                        break;
+                    case Qt::Key_V:
+                        is_pressed_btn_v = true;
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+            else if(ev->type() == QEvent::KeyRelease)
+            {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                switch(ke->key())
+                {
+                    case Qt::Key_A:
+                        printf("[KEY] is_grab is false\n");
+                        is_grab = false;
+                        break;
+                    case Qt::Key_Q:
+                        is_free_move = false;
+                        break;
+                    case Qt::Key_Control:
+                        is_pressed_btn_ctrl = false;
+                        break;
+                    case Qt::Key_C:
+                        is_pressed_btn_c = false;
+                        break;
+                    case Qt::Key_V:
+                        is_pressed_btn_v = false;
+                        break;
+                    case::Qt::Key_Escape:
+                        selected_nodes.clear();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+
             // mouse event
             if(ev->type() == QEvent::MouseButtonPress)
             {
                 QMouseEvent* me = static_cast<QMouseEvent*>(ev);
                 if(me->button() == Qt::LeftButton)
                 {
+                    pick.l_drag = true;
+
                     // ray casting
                     double x = me->pos().x();
                     double y = me->pos().y();
@@ -891,6 +953,30 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
                     // update last mouse button
                     pick.last_btn = 0;
+
+                    if(is_grab == true)
+                    {
+                        // nodes clicked
+                        lt_x = pt[0];
+                        lt_y = pt[1];
+                        rb_x = pt[0];
+                        rb_y = pt[1];
+                        contains_nodes.clear();
+                    }
+                    else if(is_grab == false)
+                    {
+                        // only one node clicked
+                        std::vector<QString> _selected_nodes;
+                        _selected_nodes.push_back(pick.cur_node);
+                        selected_nodes = _selected_nodes;
+
+                        lt_x = 0.0;
+                        lt_y = 0.0;
+                        rb_x = 0.0;
+                        rb_y = 0.0;
+                        copy_contains_nodes.clear();
+                        contains_nodes.clear();
+                    }
 
                     pick_update();
                     return true;
@@ -934,6 +1020,26 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 QMouseEvent* me = static_cast<QMouseEvent*>(ev);
                 if(pick.l_drag)
                 {
+                    // ray casting
+                    double x = me->pos().x();
+                    double y = me->pos().y();
+                    double w = ui->qvtkWidget2->size().width();
+                    double h = ui->qvtkWidget2->size().height();
+
+                    Eigen::Vector3d ray_center;
+                    Eigen::Vector3d ray_direction;
+                    picking_ray(x, y, w, h, ray_center, ray_direction, viewer2);
+
+                    Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+                    pick.l_pt1 = pt;
+
+                    if(is_grab == true)
+                    {
+                        rb_x = pt[0];
+                        rb_y = pt[1];
+                    }
+
+                    pick_update();
                     return true;
                 }
 
@@ -955,7 +1061,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     // calc pose
                     pick.r_pose[0] = pick.r_pt0[0];
                     pick.r_pose[1] = pick.r_pt0[1];
-                    pick.r_pose[2] = std::atan2(pick.r_pt1[1] - pick.r_pt0[1], pick.r_pt1[0] - pick.r_pt0[0]);
+                    pick.r_pose[2] = std::atan2(pick.r_pt1[1] - pick.r_pt0[1], pick.r_pt1[0] - pick.r_pt0[0]);                  
 
                     pick_update();
                     return true;
@@ -967,6 +1073,37 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 QMouseEvent* me = static_cast<QMouseEvent*>(ev);
                 if(me->button() == Qt::LeftButton)
                 {
+                    pick.l_drag = false;
+                    if(is_grab == true)
+                    {
+                        if(unimap.is_loaded)
+                        {
+                            std::vector<QString> nodes = unimap.get_nodes();
+                            for(size_t p=0; p < nodes.size(); p++)
+                            {
+                                NODE* node = unimap.get_node_by_id(nodes[p]);
+                                if(node == NULL)
+                                {
+                                    continue;
+                                }
+
+                                double x = node->tf(0,3);
+                                double y = node->tf(1,3);
+
+                                if(x >= lt_x && x <= rb_x && y >= rb_y && y <= lt_y)
+                                {
+                                    contains_nodes.push_back(node->id);
+                                }
+                            }
+
+                            selected_nodes = contains_nodes;
+
+                            copy_contains_nodes.clear();
+                            pick.pre_node = "";
+                            pick.cur_node = "";
+                        }
+                    }
+
                     pick_update();
                     return true;
                 }
@@ -1432,6 +1569,12 @@ void MainWindow::bt_AddLink2()
     topo_update();
 }
 
+void MainWindow::bt_AutoLink()
+{
+    unimap.add_link_auto();
+    topo_update();
+}
+
 void MainWindow::bt_ClearTopo()
 {
     if(unimap.is_loaded == false)
@@ -1458,6 +1601,22 @@ void MainWindow::bt_NodePoseXUp()
                 continue;
             }
 
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) += dx;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
             Eigen::Matrix4d tf = node->tf;
             tf(0,3) += dx;
             unimap.edit_node_pos(id, tf);
@@ -1506,6 +1665,22 @@ void MainWindow::bt_NodePoseYUp()
             unimap.edit_node_pos(id, tf);
         }
     }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf = node->tf;
+            tf(1,3) += dy;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
     else
     {
         QString id = pick.cur_node;
@@ -1535,7 +1710,6 @@ void MainWindow::bt_NodePoseThUp()
 
     if(ui->ckb_TransformEntireNode->isChecked())
     {
-
         std::vector<QString> nodes_id = unimap.get_nodes();
         for(auto& id: nodes_id)
         {
@@ -1545,6 +1719,22 @@ void MainWindow::bt_NodePoseThUp()
                 continue;
             }
 
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
             Eigen::Matrix4d tf0 = node->tf;
             Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
@@ -1593,6 +1783,22 @@ void MainWindow::bt_NodePoseXDown()
             unimap.edit_node_pos(id, tf);
         }
     }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf = node->tf;
+            tf(0,3) -= dx;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
     else
     {
         QString id = pick.cur_node;
@@ -1631,6 +1837,22 @@ void MainWindow::bt_NodePoseYDown()
                 continue;
             }
 
+            Eigen::Matrix4d tf = node->tf;
+            tf(1,3) -= dy;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
             Eigen::Matrix4d tf = node->tf;
             tf(1,3) -= dy;
             unimap.edit_node_pos(id, tf);
@@ -1675,6 +1897,22 @@ void MainWindow::bt_NodePoseThDown()
                 continue;
             }
 
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
+            unimap.edit_node_pos(id, tf);
+        }
+    }
+    else if(selected_nodes.size() != 0 )
+    {
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
             Eigen::Matrix4d tf0 = node->tf;
             Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
@@ -2478,6 +2716,47 @@ void MainWindow::watch_loop()
     while(watch_flag)
     {
         cnt++;
+
+        if(is_pressed_btn_c == true && is_pressed_btn_ctrl == true && contains_nodes.size() != 0)
+        {
+            temp_contains_nodes.clear();
+            temp_contains_nodes = contains_nodes;
+        }
+
+        if(is_pressed_btn_v == true && is_pressed_btn_ctrl == true && temp_contains_nodes.size() != 0)
+        {
+            copy_contains_nodes.clear();
+            for(size_t p=0; p < temp_contains_nodes.size(); p++)
+            {
+                NODE* node = unimap.get_node_by_id(temp_contains_nodes[p]);
+                if(node == NULL)
+                {
+                    continue;
+                }
+
+                Eigen::Matrix4d tf = node->tf;
+                QString type = node->type;
+
+                // for click offset
+                tf(0,3) += 0.5;
+                tf(1,3) -= 0.5;
+
+                QString id = unimap.add_node(tf, type);
+                copy_contains_nodes.push_back(id);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+
+            if(copy_contains_nodes.size() != 0)
+            {
+                selected_nodes = copy_contains_nodes;
+                contains_nodes.clear();
+                temp_contains_nodes.clear();
+                pick.pre_node = "";
+                pick.cur_node = "";
+                topo_update();
+                pick_update();
+            }
+        }
 
         // for 1000ms loop
         if(cnt % 10 == 0)
@@ -4443,6 +4722,36 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("text_pre");
         }
 
+        // erase first
+        if(last_plot_contains.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_contains.size(); p++)
+            {
+                QString contain_id = last_plot_contains[p] + "_contain";
+                if(viewer2->contains(contain_id.toStdString()))
+                {
+                    viewer2->removeShape(contain_id.toStdString());
+                }
+            }
+        }
+
+        if(last_plot_copy.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_copy.size(); p++)
+            {
+                QString copy_id = last_plot_copy[p] + "_copy";
+                if(viewer2->contains(copy_id.toStdString()))
+                {
+                    viewer2->removeShape(copy_id.toStdString());
+                }
+            }
+        }
+
+        if(viewer2->contains("contain_area"))
+        {
+            viewer2->removeShape("contain_area");
+        }
+
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
         {
@@ -4473,6 +4782,37 @@ void MainWindow::pick_plot2()
         }
         else if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_TOPO")
         {
+            if(contains_nodes.size() != 0)
+            {
+                for(size_t p = 0; p < contains_nodes.size(); p++)
+                {
+                    NODE *node = unimap.get_node_by_id(contains_nodes[p]);
+                    if(node != NULL)
+                    {
+                        QString id = node->id + "_contain";
+                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 1.0, 0.0);
+                        viewer2->addPolygonMesh(donut, id.toStdString());
+                        last_plot_contains.push_back(node->id);
+                    }
+                }
+            }
+            viewer2->addCube(lt_x, rb_x, rb_y, lt_y, -1.1, -1, 0.3, 0.3, 0.3, "contain_area");
+
+            if(copy_contains_nodes.size() != 0)
+            {
+                for(size_t p = 0; p < copy_contains_nodes.size(); p++)
+                {
+                    NODE *node = unimap.get_node_by_id(copy_contains_nodes[p]);
+                    if(node != NULL)
+                    {
+                        QString id = node->id + "_copy";
+                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.5);
+                        viewer2->addPolygonMesh(donut, id.toStdString());
+                        last_plot_copy.push_back(node->id);
+                    }
+                }
+            }
+
             // draw selection
             if(pick.pre_node != "")
             {
