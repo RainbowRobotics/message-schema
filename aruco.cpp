@@ -183,7 +183,7 @@ void ARUCO::detect_loop(int cam_idx)
         cv::Mat plot_aruco = time_img.img.clone();
         std::vector<std::vector<cv::Point2f>> detected_uv, rejectedCandidates;
         std::vector<int> detected_id;
-        cv::aruco::detectMarkers(cur_img, dictionary, detected_uv, detected_id, parameters, rejectedCandidates, cm, dc);
+        cv::aruco::detectMarkers(cur_img, dictionary, detected_uv, detected_id, parameters);
 
         if(detected_id.size() != 1)
         {
@@ -240,7 +240,7 @@ void ARUCO::detect_loop(int cam_idx)
         if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec, false, cv::SOLVEPNP_ITERATIVE))
         {
             cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
-
+            cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
         }
         else
         {
@@ -254,7 +254,6 @@ void ARUCO::detect_loop(int cam_idx)
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }
-        cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
 
         Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
         refine_pose(cam_to_marker);
@@ -283,7 +282,7 @@ void ARUCO::detect_loop(int cam_idx)
         mtx.unlock();
 
         // result
-        std::cout << "[ARUCO_" << cam_idx << "] ID:" << detected_id[0] << "\n"
+        std::cout << "[ARUCO_" << cam_idx << "] aruco id:" << detected_id[0] << "\n"
                   << "robot_to_marker:\n" << robot_to_marker << std::endl;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
