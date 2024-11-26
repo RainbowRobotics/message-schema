@@ -279,7 +279,7 @@ void ARUCO::detect_loop(int cam_idx)
         aruco_tpi.tf = robot_to_marker;
 
         mtx.lock();
-        if(aruco_tpi.t > cur_tpi.t)
+        if(aruco_tpi.t > cur_tpi.t || config->SIM_MODE == 1)
         {
             cur_tpi = aruco_tpi;
         }

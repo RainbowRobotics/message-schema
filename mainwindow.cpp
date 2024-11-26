@@ -3603,7 +3603,7 @@ void MainWindow::raw_plot()
         }
     }
 
-    // if(cam.is_connected0)
+    if(cam.is_connected0 || config.SIM_MODE == 1)
     {
         if(config.USE_ARUCO)
         {
@@ -3617,7 +3617,7 @@ void MainWindow::raw_plot()
         }
     }
 
-    // if(cam.is_connected0)
+    if(cam.is_connected0 || config.SIM_MODE == 1)
     {
         if(config.USE_ARUCO)
         {
@@ -3631,10 +3631,11 @@ void MainWindow::raw_plot()
         }
     }
 
+    if(cam.is_connected0 || config.SIM_MODE == 1)
     {
         if(config.USE_ARUCO)
         {
-            Eigen::Matrix4d tf = aruco.get_cur_tpi().tf;
+            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * aruco.get_cur_tpi().tf;
 
             // draw axis
             if(viewer->contains("aruco_axis"))
@@ -3642,9 +3643,8 @@ void MainWindow::raw_plot()
                 viewer->removeCoordinateSystem("aruco_axis");
             }
             viewer->addCoordinateSystem(1.0, "aruco_axis");
-            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(tf.cast<float>()));
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
         }
-
     }
 
     if(!slam.is_slam && !slam.is_loc)
