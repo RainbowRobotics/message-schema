@@ -37,18 +37,20 @@ public:
     cv::Mat get_plot_img0();
     cv::Mat get_plot_img1();
 
-    std::vector<cv::Point3d> make_obj_pts();
+    TIME_IMG load_sim_image(int cam_idx);
+    std::vector<cv::Point3f> make_obj_pts();
     bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
     Eigen::Matrix4d se3_exp(cv::Mat rvec, cv::Mat tvec);
 
 
     std::thread* detect_thread0 = NULL;
     std::atomic<bool> detect_flag0 = {false};
-    void detect_loop0();
+    // void detect_loop0();
 
     std::thread* detect_thread1 = NULL;
     std::atomic<bool> detect_flag1 = {false};
-    void detect_loop1();
+    // void detect_loop1();
+    void detect_loop(int cam_idx);
 
 
     double marker_size = 0.18;
