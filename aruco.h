@@ -32,10 +32,8 @@ public:
     cv::Mat get_plot_img0();
     cv::Mat get_plot_img1();
 
-    TIME_IMG load_sim_image(int cam_idx);
     std::vector<cv::Point3f> make_obj_pts();
     Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec);
-
 
     std::thread* detect_thread0 = NULL;
     std::atomic<bool> detect_flag0 = {false};
@@ -44,22 +42,13 @@ public:
     std::atomic<bool> detect_flag1 = {false};
     void detect_loop(int cam_idx);
 
-
-    double marker_size = 0.18;
-
+    const double marker_size = 0.18;
 
     // storage
     TIME_POSE_ID cur_tpi;
 
     cv::Mat cur_aruco_img0;
     cv::Mat cur_aruco_img1;
-
-
-
-    // flag
-    // std::atomic<bool> is_detect0 = {false};
-    // std::atomic<bool> is_detect1 = {false};
-
 
 Q_SIGNALS:
 
