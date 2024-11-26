@@ -63,8 +63,8 @@ public:
 
 
     // flag
-    std::atomic<bool> is_detect0 = {false};
-    std::atomic<bool> is_detect1 = {false};
+    // std::atomic<bool> is_detect0 = {false};
+    // std::atomic<bool> is_detect1 = {false};
 
 
 Q_SIGNALS:

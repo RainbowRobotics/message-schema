@@ -43,7 +43,7 @@ void ARUCO::init()
 
 }
 
-TIME_POSE_ID  ARUCO::get_cur_tpi()
+TIME_POSE_ID ARUCO::get_cur_tpi()
 {
     mtx.lock();
     TIME_POSE_ID _cur_tpi = cur_tpi;
@@ -100,6 +100,8 @@ Eigen::Matrix4d ARUCO::m2e(cv::Mat rvec, cv::Mat tvec)
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
+    T = T*ZYX_to_TF(0,0,0,0,-90,-90);
+
     return T;
 }
 
@@ -143,11 +145,8 @@ void ARUCO::detect_loop0()
                        0, intrinsic.fy, intrinsic.cy,
                        0,  0,  1);
 
-        cv::Mat dc(8,1,cv::DataType<double>::type);
-        dc.at<double>(0) = intrinsic.k1; dc.at<double>(1) = intrinsic.k2;
-        dc.at<double>(2) = intrinsic.p1; dc.at<double>(3) = intrinsic.p2;
-        dc.at<double>(4) = intrinsic.k3; dc.at<double>(5) = intrinsic.k4;
-        dc.at<double>(6) = intrinsic.k5; dc.at<double>(7) = intrinsic.k6;
+        double d[8] = {intrinsic.k1, intrinsic.k2, intrinsic.p1,intrinsic.p2, intrinsic.k3, intrinsic.k4, intrinsic.k5, intrinsic.k6};
+        cv::Mat dc(8, 1, cv::DataType<double>::type, d);
 
         // cv::Mat cur_img;
         TIME_IMG time_img;
@@ -202,10 +201,10 @@ void ARUCO::detect_loop0()
         // std::vector<cv::Point3d> matched_xyzs;
         std::vector<cv::Point3d> matched_xyzs =
         {
-            cv::Point3d(0.0, -marker_size / 2,  marker_size / 2),
-            cv::Point3d(0.0,  marker_size / 2,  marker_size / 2),
-            cv::Point3d(0.0,  marker_size / 2, -marker_size / 2),
-            cv::Point3d(0.0, -marker_size / 2, -marker_size / 2)
+            cv::Point3d(-marker_size/2,  marker_size/2, 0.0),
+            cv::Point3d( marker_size/2,  marker_size/2, 0.0),
+            cv::Point3d( marker_size/2, -marker_size/2, 0.0),
+            cv::Point3d(-marker_size/2, -marker_size/2, 0.0)
         };
 
         std::vector<cv::Point2d> matched_uvs;
@@ -273,7 +272,7 @@ void ARUCO::detect_loop0()
         // result
         std::cout << "[ARUCO_0] ID:" << detected_id[0] << "\n" << "[ARUCO_0] robot_to_marker:\n" << robot_to_marker << std::endl;
 
-        is_detect0 = true;
+        // is_detect0 = true;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -319,11 +318,8 @@ void ARUCO::detect_loop1()
                        0, intrinsic.fy, intrinsic.cy,
                        0,  0,  1);
 
-        cv::Mat dc(8,1,cv::DataType<double>::type);
-        dc.at<double>(0) = intrinsic.k1; dc.at<double>(1) = intrinsic.k2;
-        dc.at<double>(2) = intrinsic.p1; dc.at<double>(3) = intrinsic.p2;
-        dc.at<double>(4) = intrinsic.k3; dc.at<double>(5) = intrinsic.k4;
-        dc.at<double>(6) = intrinsic.k5; dc.at<double>(7) = intrinsic.k6;
+        double d[8] = {intrinsic.k1, intrinsic.k2, intrinsic.p1,intrinsic.p2, intrinsic.k3, intrinsic.k4, intrinsic.k5, intrinsic.k6};
+        cv::Mat dc(8, 1, cv::DataType<double>::type, d);
 
         // cv::Mat cur_img;
         TIME_IMG time_img;
@@ -377,10 +373,10 @@ void ARUCO::detect_loop1()
         // std::vector<cv::Point3d> matched_xyzs;
         std::vector<cv::Point3d> matched_xyzs =
         {
-            cv::Point3d(0.0, -marker_size / 2,  marker_size / 2),
-            cv::Point3d(0.0,  marker_size / 2,  marker_size / 2),
-            cv::Point3d(0.0,  marker_size / 2, -marker_size / 2),
-            cv::Point3d(0.0, -marker_size / 2, -marker_size / 2)
+            cv::Point3d(-marker_size/2,  marker_size/2, 0.0),
+            cv::Point3d( marker_size/2,  marker_size/2, 0.0),
+            cv::Point3d( marker_size/2, -marker_size/2, 0.0),
+            cv::Point3d(-marker_size/2, -marker_size/2, 0.0)
         };
 
         std::vector<cv::Point2d> matched_uvs;
@@ -447,7 +443,7 @@ void ARUCO::detect_loop1()
         // result
         std::cout << "[ARUCO_1] ID:" << detected_id[0] << "\n" << "[ARUCO_1] robot_to_marker:\n" << robot_to_marker << std::endl;
 
-        is_detect1 = true;
+        // is_detect1 = true;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

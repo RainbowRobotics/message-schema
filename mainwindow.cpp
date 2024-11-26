@@ -3586,6 +3586,24 @@ void MainWindow::raw_plot()
         }
     }
 
+    {
+        if(config.USE_ARUCO)
+        {
+            Eigen::Matrix4d tf = aruco.get_cur_tpi().tf;
+
+            // draw axis
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeCoordinateSystem("aruco_axis");
+            }
+            viewer->addCoordinateSystem(1.0, "aruco_axis");
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(tf.cast<float>()));
+
+
+        }
+
+    }
+
     if(!slam.is_slam && !slam.is_loc)
     {
         // remove first
