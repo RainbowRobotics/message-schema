@@ -877,7 +877,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 switch(ke->key())
                 {
                     case Qt::Key_A:
-                        printf("[KEY] is_grab is true\n");
                         is_grab = true;
                         pick.pre_node = "";
                         pick.cur_node = "";
@@ -905,7 +904,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 switch(ke->key())
                 {
                     case Qt::Key_A:
-                        printf("[KEY] is_grab is false\n");
                         is_grab = false;
                         break;
                     case Qt::Key_Q:
@@ -1726,6 +1724,28 @@ void MainWindow::bt_NodePoseThUp()
     }
     else if(selected_nodes.size() != 0 )
     {
+        double cnt = 0.0;
+        Eigen::Vector3d center_pose(0, 0, 0);
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            cnt++;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
+            center_pose += pose0;
+        }
+
+        if(cnt == 0.0)
+        {
+            return;
+        }
+
+        center_pose /= cnt;
         for(size_t p = 0; p < selected_nodes.size(); p++)
         {
             NODE* node = unimap.get_node_by_id(selected_nodes[p]);
@@ -1736,7 +1756,17 @@ void MainWindow::bt_NodePoseThUp()
 
             QString id = node->id;
             Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Matrix4d tf = tf0 * tf1;
+            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
+
+            Eigen::Vector3d pose1 = pose0 - center_pose;
+            pose1 = tf1.block(0,0,3,3) * pose1;
+
+            Eigen::Vector3d pose = pose1 + center_pose;
+
+            Eigen::Matrix4d tf = Eigen::Matrix4d::Identity();
+            tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
+            tf.block(0,3,3,1) = pose;
+
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -1887,7 +1917,6 @@ void MainWindow::bt_NodePoseThDown()
 
     if(ui->ckb_TransformEntireNode->isChecked())
     {
-
         std::vector<QString> nodes_id = unimap.get_nodes();
         for(auto& id: nodes_id)
         {
@@ -1904,6 +1933,28 @@ void MainWindow::bt_NodePoseThDown()
     }
     else if(selected_nodes.size() != 0 )
     {
+        double cnt = 0.0;
+        Eigen::Vector3d center_pose(0, 0, 0);
+        for(size_t p = 0; p < selected_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(selected_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            cnt++;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
+            center_pose += pose0;
+        }
+
+        if(cnt == 0.0)
+        {
+            return;
+        }
+
+        center_pose /= cnt;
         for(size_t p = 0; p < selected_nodes.size(); p++)
         {
             NODE* node = unimap.get_node_by_id(selected_nodes[p]);
@@ -1914,7 +1965,17 @@ void MainWindow::bt_NodePoseThDown()
 
             QString id = node->id;
             Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Matrix4d tf = tf0 * tf1;
+            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
+
+            Eigen::Vector3d pose1 = pose0 - center_pose;
+            pose1 = tf1.block(0,0,3,3) * pose1;
+
+            Eigen::Vector3d pose = pose1 + center_pose;
+
+            Eigen::Matrix4d tf = Eigen::Matrix4d::Identity();
+            tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
+            tf.block(0,3,3,1) = pose;
+
             unimap.edit_node_pos(id, tf);
         }
     }
