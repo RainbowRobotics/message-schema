@@ -877,7 +877,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 switch(ke->key())
                 {
                     case Qt::Key_A:
-                        printf("[KEY] is_grab is true\n");
+                        //printf("[KEY] is_grab is true\n");
                         is_grab = true;
                         pick.pre_node = "";
                         pick.cur_node = "";
@@ -905,7 +905,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 switch(ke->key())
                 {
                     case Qt::Key_A:
-                        printf("[KEY] is_grab is false\n");
+                        //printf("[KEY] is_grab is false\n");
                         is_grab = false;
                         break;
                     case Qt::Key_Q:
@@ -3806,11 +3806,12 @@ void MainWindow::raw_plot()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s, multi: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nrequest: %s, multi: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
+                          cfms.get_multi_state().toLocal8Bit().data(),
                           ctrl.get_multi_req().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
@@ -4300,7 +4301,6 @@ void MainWindow::plot_loop()
     slam_plot();
     loc_plot();
     raw_plot();
-
     ctrl_plot();
 
     // camera reset

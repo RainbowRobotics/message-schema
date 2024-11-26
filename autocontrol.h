@@ -49,7 +49,7 @@ public:
     PATH get_cur_global_path();
     PATH get_cur_local_path();
     QString get_obs_condition();    
-    QString get_multi_req();
+    QString get_multi_req();    
     void clear_path();
 
     void init();

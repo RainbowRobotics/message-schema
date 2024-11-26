@@ -29,6 +29,15 @@ QString COMM_FMS::get_json(QJsonObject& json, QString key)
     return json[key].toString();
 }
 
+QString COMM_FMS::get_multi_state()
+{
+    mtx.lock();
+    QString res = multi_state;
+    mtx.unlock();
+
+    return res;
+}
+
 void COMM_FMS::init()
 {
     // make robot id
@@ -262,7 +271,7 @@ void COMM_FMS::slot_send_info()
 
     QString request = ctrl->get_multi_req(); // req_path, recv_path
 
-    QString state = "stop"; // stop, move, error
+    QString state = "stop"; // stop, move, pause, error
     if(ctrl->is_moving)
     {
         state = "move";
@@ -270,13 +279,17 @@ void COMM_FMS::slot_send_info()
 
     if(mobile->get_cur_pdu_state() != "good")
     {
-        state = "error";
+        state = "pause";
     }
 
-    if(slam->is_loc == false)
+    if(slam->get_cur_loc_state() != "good")
     {
         state = "error";
     }
+
+    mtx.lock();
+    multi_state = state;
+    mtx.unlock();
 
     // Creating the JSON object
     QJsonObject rootObj;
