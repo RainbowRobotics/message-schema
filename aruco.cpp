@@ -93,18 +93,6 @@ std::vector<cv::Point3f> ARUCO::make_obj_pts()
     return obj_pts;
 }
 
-bool ARUCO::check_regist_aruco(QString id, std::vector<cv::Point3d>& corners)
-{
-    if(aruco_metric.find(id) == aruco_metric.end())
-    {
-        printf("[ARUCO] no found\n");
-        return false;
-    }
-
-    corners = aruco_metric[id];
-    return true;
-}
-
 Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec)
 {
     cv::Mat R;
@@ -210,31 +198,18 @@ void ARUCO::detect_loop(int cam_idx)
 
         std::vector<cv::Point3f> matched_xyzs = make_obj_pts();
         std::vector<cv::Point2f> matched_uvs;
-        // if(check_regist_aruco(QString::number(detected_id[0]), matched_xyzs))
+
+        // extract information from array
+        std::vector<cv::Point2f> uvs;
+        for(int p = 0; p < 4; p++)
         {
-            // extract information from array
-            std::vector<cv::Point2f> uvs;
-            for(int p = 0; p < 4; p++)
-            {
-                double u = (double)detected_uv[0][p].x;
-                double v = (double)detected_uv[0][p].y;
+            double u = (double)detected_uv[0][p].x;
+            double v = (double)detected_uv[0][p].y;
 
-                uvs.push_back(cv::Point2f(u,v));
-            }
-
-            matched_uvs.insert(matched_uvs.end(), uvs.begin(), uvs.end());
+            uvs.push_back(cv::Point2f(u,v));
         }
 
-        // debug
-        for(int i = 0; i < 4; i++)
-        {
-            printf("uv:(%f, %f) , xyz:(%f, %f, %f)\n", matched_uvs[i].x, matched_uvs[i].y, matched_xyzs[i].x, matched_xyzs[i].y, matched_xyzs[i].z);
-        }
-        for(int i = 0; i < (int)detected_id.size(); i++)
-        {
-            printf("detected id: %d, size:%d\n", detected_id[i], (int)detected_id.size());
-        }
-        printf("img size(%d, %d)\n", time_img.img.cols, time_img.img.rows);
+        matched_uvs.insert(matched_uvs.end(), uvs.begin(), uvs.end());
 
         // not detected uv or no matching points
         if(matched_xyzs.size() == 0 || matched_uvs.size() == 0 || matched_xyzs.size() != matched_uvs.size())
@@ -252,8 +227,6 @@ void ARUCO::detect_loop(int cam_idx)
         {
             cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
-
-            std::cout << "tvec\n" << tvec << std::endl;
         }
         else
         {
@@ -296,8 +269,8 @@ void ARUCO::detect_loop(int cam_idx)
         mtx.unlock();
 
         // result
-        std::cout << "[ARUCO_" << cam_idx << "] aruco id:" << detected_id[0] << "\n"
-                  << "robot_to_marker:\n" << robot_to_marker << std::endl;
+        // std::cout << "[ARUCO_" << cam_idx << "] aruco id:" << detected_id[0] << "\n"
+        //           << "robot_to_marker:\n" << robot_to_marker << std::endl;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

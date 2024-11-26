@@ -8,11 +8,8 @@
 #include "config.h"
 #include "logger.h"
 #include "cam.h"
-#include "slam_2d.h"
-#include "unimap.h"
 
 #include <QObject>
-#include <QTimer>
 
 #include <opencv2/aruco.hpp>
 
@@ -28,8 +25,6 @@ public:
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     CAM *cam = NULL;
-    SLAM_2D *slam = NULL;
-    UNIMAP* unimap = NULL;
 
     void init();
 
@@ -39,22 +34,18 @@ public:
 
     TIME_IMG load_sim_image(int cam_idx);
     std::vector<cv::Point3f> make_obj_pts();
-    bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
     Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec);
 
 
     std::thread* detect_thread0 = NULL;
     std::atomic<bool> detect_flag0 = {false};
-    // void detect_loop0();
 
     std::thread* detect_thread1 = NULL;
     std::atomic<bool> detect_flag1 = {false};
-    // void detect_loop1();
     void detect_loop(int cam_idx);
 
 
     double marker_size = 0.18;
-    std::map<QString, std::vector<cv::Point3d>> aruco_metric;
 
 
     // storage

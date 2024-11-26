@@ -856,9 +856,9 @@ void SLAM_2D::loc_b_loop()
                 _cur_tf = odo_tf;
             }
 
-            /*
+
             // aruco fusion
-            TIME_POSE_ID aruco_tpi;
+            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
 
             // calc tf
             NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
@@ -879,7 +879,7 @@ void SLAM_2D::loc_b_loop()
                     _cur_tf = fused_tf;
                 }
             }
-            */
+
 
             // update
             mtx.lock();

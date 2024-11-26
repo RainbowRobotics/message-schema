@@ -398,6 +398,15 @@ void MainWindow::init_modules()
         cam.open();
     }
 
+    // aruco module init
+    aruco.config = &config;
+    aruco.logger = &logger;
+    aruco.cam = &cam;
+    if(config.USE_ARUCO)
+    {
+        aruco.init();
+    }
+
     // slam module init
     slam.config = &config;
     slam.logger = &logger;
@@ -407,16 +416,7 @@ void MainWindow::init_modules()
     slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
-
-    aruco.config = &config;
-    aruco.logger = &logger;
-    aruco.cam = &cam;
-    aruco.slam = &slam;
-    aruco.unimap = &unimap;
-    if(config.USE_ARUCO)
-    {
-        aruco.init();
-    }
+    slam.aruco = &aruco;
 
     // docking control module init
     dctrl.config = &config;
@@ -3642,7 +3642,7 @@ void MainWindow::raw_plot()
             {
                 viewer->removeCoordinateSystem("aruco_axis");
             }
-            viewer->addCoordinateSystem(1.0, "aruco_axis");
+            viewer->addCoordinateSystem(0.5, "aruco_axis");
             viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
         }
     }
