@@ -178,8 +178,14 @@ void CONFIG::load()
                 LOC_CHECK_IR = obj_loc["LOC_CHECK_IR"].toString().toDouble();
                 printf("[CONFIG] LOC_CHECK_IR, %s\n", obj_loc["LOC_CHECK_IR"].toString().toLocal8Bit().data());
 
-                LOC_FUSION_RATIO = obj_loc["LOC_FUSION_RATIO"].toString().toDouble();
-                printf("[CONFIG] LOC_FUSION_RATIO, %s\n", obj_loc["LOC_FUSION_RATIO"].toString().toLocal8Bit().data());
+                LOC_ICP_ODO_FUSION_RATIO = obj_loc["LOC_ICP_ODO_FUSION_RATIO"].toString().toDouble();
+                printf("[CONFIG] LOC_ICP_ODO_FUSION_RATIO, %s\n", obj_loc["LOC_ICP_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_ODO_FUSION_RATIO = obj_loc["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toDouble();
+                printf("[CONFIG] LOC_ARUCO_ODO_FUSION_RATIO, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_ODO_FUSION_DIST = obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toDouble();
+                printf("[CONFIG] LOC_ARUCO_ODO_FUSION_DIST, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_annot = obj["annotation"].toObject();

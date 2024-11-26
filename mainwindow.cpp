@@ -3932,6 +3932,11 @@ void MainWindow::raw_plot()
             ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+    else
+    {
+        ui->lb_Screen2->setStyleSheet("background-color: transparent;");
+        ui->lb_Screen2->clear();
+    }
 
     if(cam.is_connected1)
     {
@@ -3943,13 +3948,17 @@ void MainWindow::raw_plot()
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+    else
+    {
+        ui->lb_Screen3->setStyleSheet("background-color: transparent;");
+        ui->lb_Screen3->clear();
+    }
 
     // plot aruco
     if(config.USE_ARUCO)
     {
         TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
-
-        if(cur_tpi.t > aruco_prev_t || config.SIM_MODE == 1)
+        if(cur_tpi.t > aruco_prev_t)
         {
             aruco_prev_t = cur_tpi.t;
 

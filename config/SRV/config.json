@@ -54,13 +54,15 @@
         "LOC_CHECK_DIST": "0.3",
         "LOC_CHECK_IE": "0.3",
         "LOC_CHECK_IR": "0.3",
-        "LOC_FUSION_RATIO": "0.9",
         "LOC_ICP_COST_THRESHOLD": "0.3",
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.3",
         "LOC_ICP_MAX_FEATURE_NUM": "2000",
         "LOC_SURFEL_NUM": "3",
-        "LOC_SURFEL_RANGE": "0.15"
+        "LOC_SURFEL_RANGE": "0.15",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.9",
+        "LOC_ARUCO_ODO_FUSION_RATIO": "0.1",
+        "LOC_ARUCO_ODO_FUSION_DIST": "2.0"        
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
