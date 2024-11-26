@@ -3610,6 +3610,8 @@ void MainWindow::raw_plot()
 
         if(cur_tpi.t > aruco_prev_t || config.SIM_MODE == 1)
         {
+            aruco_prev_t = cur_tpi.t;
+
             // Update screen for camera 0
             cv::Mat plot0 = aruco.get_plot_img0();
             if(!plot0.empty())
@@ -3657,6 +3659,11 @@ void MainWindow::raw_plot()
 
             ui->lb_Screen5->setStyleSheet("background-color: transparent;");
             ui->lb_Screen5->clear();
+
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeShape("aruco_axis");
+            }
         }
     }
 

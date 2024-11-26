@@ -864,19 +864,19 @@ void SLAM_2D::loc_b_loop()
             NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
             if(node != NULL)
             {
-                if(std::abs(mo.t - aruco_tpi.t) < 0.3)
+                // if(std::abs(mo.t - aruco_tpi.t) < 0.3)
                 {
                     Eigen::Matrix4d T_g_m = node->tf;
                     Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
                     Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
 
                     // interpolation
-                    double alpha = 0.1; // 0.1 means 90% aruco_tf, 10% cur_tf
-                    Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
-                    Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                    // double alpha = 0.1; // 0.1 means 90% aruco_tf, 10% cur_tf
+                    // Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
+                    // Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
                     // update
-                    _cur_tf = fused_tf;
+                    _cur_tf = T_g_r;
                 }
             }
 
