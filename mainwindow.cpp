@@ -117,6 +117,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_QuickAddAruco, SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
 
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -398,6 +399,15 @@ void MainWindow::init_modules()
         cam.open();
     }
 
+    // aruco module init
+    aruco.config = &config;
+    aruco.logger = &logger;
+    aruco.cam = &cam;
+    if(config.USE_ARUCO)
+    {
+        aruco.init();
+    }
+
     // slam module init
     slam.config = &config;
     slam.logger = &logger;
@@ -407,16 +417,7 @@ void MainWindow::init_modules()
     slam.cam = &cam;
     slam.unimap = &unimap;
     slam.obsmap = &obsmap;
-
-    aruco.config = &config;
-    aruco.logger = &logger;
-    aruco.cam = &cam;
-    aruco.slam = &slam;
-    aruco.unimap = &unimap;
-    if(config.USE_ARUCO)
-    {
-        aruco.init();
-    }
+    slam.aruco = &aruco;
 
     // docking control module init
     dctrl.config = &config;
@@ -2227,13 +2228,13 @@ void MainWindow::bt_QuickAddNode()
 {
     if(unimap.is_loaded == false)
     {
-        printf("[QA] check map load\n");
+        printf("[QA_Node] check map load\n");
         return;
     }
 
     if(slam.is_loc == false)
     {
-        printf("[QA] check localization\n");
+        printf("[QA_Node] check localization\n");
         return;
     }
 
@@ -2241,7 +2242,51 @@ void MainWindow::bt_QuickAddNode()
     unimap.add_node(cur_tf, "GOAL");
 
     topo_update();
-    printf("[QA] quick add node\n");
+    printf("[QA_Node] quick add node\n");
+}
+
+void MainWindow::bt_QuickAddAruco()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[QA_Aruco] check map load\n");
+        return;
+    }
+
+    if(slam.is_loc == false)
+    {
+        printf("[QA_Aruco] check localization\n");
+        return;
+    }
+
+    // global to marker
+    TIME_POSE_ID cur_tpi = aruco.get_cur_tpi();
+    Eigen::Matrix4d cur_tf = slam.get_best_tf(cur_tpi.t);
+    Eigen::Matrix4d global_to_marker = cur_tf * cur_tpi.tf;
+
+    QString aruco_id = QString::number(cur_tpi.id, 10);
+
+    bool updated = false;
+    for(size_t i = 0; i < unimap.nodes.size(); i++)
+    {
+        if(unimap.nodes[i].name == aruco_id)
+        {
+            // tf update
+            unimap.nodes[i].tf = global_to_marker;
+            printf("[QA_Aruco] updated aruco node: %s\n", aruco_id.toLocal8Bit().data());
+            updated = true;
+            break;
+        }
+    }
+
+    // add new aruco node
+    if (!updated)
+    {
+        unimap.add_node(global_to_marker, "ARUCO", aruco_id);
+        printf("[QA_Aruco] added new aruco node: %s\n", aruco_id.toLocal8Bit().data());
+    }
+
+    topo_update();
 }
 
 void MainWindow::qa_loop()
@@ -3899,33 +3944,70 @@ void MainWindow::raw_plot()
         }
     }
 
-    // if(cam.is_connected0)
+    // plot aruco
+    if(config.USE_ARUCO)
     {
-        if(config.USE_ARUCO)
+        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
+
+        if(cur_tpi.t > aruco_prev_t || config.SIM_MODE == 1)
         {
-            cv::Mat plot = aruco.get_aruco0();
-            if(!plot.empty())
+            aruco_prev_t = cur_tpi.t;
+
+            // Update screen for camera 0
+            cv::Mat plot0 = aruco.get_plot_img0();
+            if(!plot0.empty())
             {
-                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
                 ui->lb_Screen4->setScaledContents(true);
                 ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+            else
+            {
+                ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen4->clear();
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot1 = aruco.get_plot_img1();
+            if(!plot1.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+            else
+            {
+                ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen5->clear();
+            }
+
+            // Compute global_to_marker
+            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * cur_tpi.tf;
+
+            // Draw axis
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeCoordinateSystem("aruco_axis");
+            }
+            viewer->addCoordinateSystem(0.5, "aruco_axis");
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+        }
+        else
+        {
+            // t has not been updated, make screens transparent
+            ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen4->clear();
+
+            ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen5->clear();
+
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeShape("aruco_axis");
             }
         }
     }
 
-    // if(cam.is_connected0)
-    {
-        if(config.USE_ARUCO)
-        {
-            cv::Mat plot = aruco.get_aruco1();
-            if(!plot.empty())
-            {
-                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-                ui->lb_Screen5->setScaledContents(true);
-                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            }
-        }
-    }
 
     if(!slam.is_slam && !slam.is_loc)
     {

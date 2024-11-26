@@ -8,11 +8,8 @@
 #include "config.h"
 #include "logger.h"
 #include "cam.h"
-#include "slam_2d.h"
-#include "unimap.h"
 
 #include <QObject>
-#include <QTimer>
 
 #include <opencv2/aruco.hpp>
 
@@ -28,40 +25,40 @@ public:
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     CAM *cam = NULL;
-    SLAM_2D *slam = NULL;
-    UNIMAP* unimap = NULL;
 
     void init();
 
-    cv::Mat get_aruco0();
-    cv::Mat get_aruco1();
+    TIME_POSE_ID get_cur_tpi();
+    cv::Mat get_plot_img0();
+    cv::Mat get_plot_img1();
 
-    // TIME_POSE_ID get_cur_tpi();
-    // cv::Mat get_plot_img();
-
-    bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
-    Eigen::Matrix4d m2e(cv::Mat rvec, cv::Mat tvec);
+    TIME_IMG load_sim_image(int cam_idx);
+    std::vector<cv::Point3f> make_obj_pts();
+    Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec);
 
 
     std::thread* detect_thread0 = NULL;
     std::atomic<bool> detect_flag0 = {false};
-    void detect_loop0();
 
     std::thread* detect_thread1 = NULL;
     std::atomic<bool> detect_flag1 = {false};
-    void detect_loop1();
+    void detect_loop(int cam_idx);
 
 
-
-    std::map<QString, std::vector<cv::Point3d>> aruco_metric;
+    double marker_size = 0.18;
 
 
     // storage
-    cv::Mat cur_aruco0;
-    cv::Mat cur_aruco1;
+    TIME_POSE_ID cur_tpi;
+
+    cv::Mat cur_aruco_img0;
+    cv::Mat cur_aruco_img1;
+
+
 
     // flag
-    std::atomic<bool> is_detect = {false};
+    // std::atomic<bool> is_detect0 = {false};
+    // std::atomic<bool> is_detect1 = {false};
 
 
 Q_SIGNALS:

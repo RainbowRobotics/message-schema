@@ -14,6 +14,7 @@
 #include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "aruco.h"
 
 // third party
 #include "pgo.h"
@@ -40,6 +41,7 @@ public:
     CAM *cam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
+    ARUCO *aruco = NULL;
 
     // interface
     void mapping_start();

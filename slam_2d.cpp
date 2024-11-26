@@ -856,18 +856,18 @@ void SLAM_2D::loc_b_loop()
                 _cur_tf = odo_tf;
             }
 
-            /*
+
             // aruco fusion
-            TIME_POSE_ID aruco_tpi;
+            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
 
             // calc tf
             NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
             if(node != NULL)
             {
-                if(std::abs(mo.t - aruco_tpi.t) < 0.3)
+                if(std::abs(mo.t - aruco_tpi.t) < 1.0)
                 {
                     Eigen::Matrix4d T_g_m = node->tf;
-                    Eigen::Matrix4d T_m_r = aruco_tpi.tf;
+                    Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
                     Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
 
                     // interpolation
@@ -879,7 +879,7 @@ void SLAM_2D::loc_b_loop()
                     _cur_tf = fused_tf;
                 }
             }
-            */
+
 
             // update
             mtx.lock();
