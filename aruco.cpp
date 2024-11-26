@@ -70,6 +70,18 @@ cv::Mat ARUCO::get_plot_img1()
     return _cur_aruco_img1;
 }
 
+std::vector<cv::Point3d> ARUCO::make_obj_pts()
+{
+    std::vector<cv::Point3d> obj_pts(4);
+
+    obj_pts[0] = cv::Point3d(-marker_size/2,  marker_size/2, 0.0);
+    obj_pts[1] = cv::Point3d( marker_size/2,  marker_size/2, 0.0);
+    obj_pts[2] = cv::Point3d( marker_size/2, -marker_size/2, 0.0);
+    obj_pts[3] = cv::Point3d(-marker_size/2, -marker_size/2, 0.0);
+
+    return obj_pts;
+}
+
 bool ARUCO::check_regist_aruco(QString id, std::vector<cv::Point3d>& corners)
 {
     if(aruco_metric.find(id) == aruco_metric.end())
@@ -100,7 +112,7 @@ Eigen::Matrix4d ARUCO::m2e(cv::Mat rvec, cv::Mat tvec)
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
-    T = T*ZYX_to_TF(0,0,0,0,-90,-90);
+//    T = T*ZYX_to_TF(0,0,0,0,-90,-90);
 
     return T;
 }
@@ -199,14 +211,7 @@ void ARUCO::detect_loop0()
         cv::circle(plot_aruco, detected_uv[0][3], 10, cv::Scalar(0,255,255), -1, cv::LINE_AA);
 
         // std::vector<cv::Point3d> matched_xyzs;
-        std::vector<cv::Point3d> matched_xyzs =
-        {
-            cv::Point3d(-marker_size/2,  marker_size/2, 0.0),
-            cv::Point3d( marker_size/2,  marker_size/2, 0.0),
-            cv::Point3d( marker_size/2, -marker_size/2, 0.0),
-            cv::Point3d(-marker_size/2, -marker_size/2, 0.0)
-        };
-
+        std::vector<cv::Point3d> matched_xyzs = make_obj_pts();
         std::vector<cv::Point2d> matched_uvs;
         // if(check_regist_aruco(QString::number(detected_id[0]), matched_xyzs))
         {
@@ -370,15 +375,7 @@ void ARUCO::detect_loop1()
         cv::circle(plot_aruco, detected_uv[0][2], 10, cv::Scalar(255,0,0), -1, cv::LINE_AA);
         cv::circle(plot_aruco, detected_uv[0][3], 10, cv::Scalar(0,255,255), -1, cv::LINE_AA);
 
-        // std::vector<cv::Point3d> matched_xyzs;
-        std::vector<cv::Point3d> matched_xyzs =
-        {
-            cv::Point3d(-marker_size/2,  marker_size/2, 0.0),
-            cv::Point3d( marker_size/2,  marker_size/2, 0.0),
-            cv::Point3d( marker_size/2, -marker_size/2, 0.0),
-            cv::Point3d(-marker_size/2, -marker_size/2, 0.0)
-        };
-
+        std::vector<cv::Point3d> matched_xyzs = make_obj_pts();
         std::vector<cv::Point2d> matched_uvs;
         // if(check_regist_aruco(QString::number(detected_id[0]), matched_xyzs))
         {

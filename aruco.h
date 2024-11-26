@@ -37,6 +37,7 @@ public:
     cv::Mat get_plot_img0();
     cv::Mat get_plot_img1();
 
+    std::vector<cv::Point3d> make_obj_pts();
     bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
     Eigen::Matrix4d m2e(cv::Mat rvec, cv::Mat tvec);
 
