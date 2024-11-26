@@ -65,7 +65,10 @@ public:
     double LOC_CHECK_DIST = 0.3;
     double LOC_CHECK_IE = 0.2;
     double LOC_CHECK_IR = 0.5;
-    double LOC_FUSION_RATIO = 0.5;
+
+    double LOC_ICP_ODO_FUSION_RATIO = 0.5;
+    double LOC_ARUCO_ODO_FUSION_RATIO = 0.5;
+    double LOC_ARUCO_ODO_FUSION_DIST = 2.0;
 
     double ANNOT_QA_STEP = 0.3;
 

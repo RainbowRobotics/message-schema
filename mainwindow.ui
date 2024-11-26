@@ -261,10 +261,10 @@
             <widget class="QLabel" name="lb_Screen1">
              <property name="geometry">
               <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>200</width>
-               <height>200</height>
+               <x>1</x>
+               <y>1</y>
+               <width>191</width>
+               <height>181</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -277,8 +277,8 @@
             <widget class="QLabel" name="lb_Screen2">
              <property name="geometry">
               <rect>
-               <x>210</x>
-               <y>0</y>
+               <x>193</x>
+               <y>1</y>
                <width>160</width>
                <height>90</height>
               </rect>
@@ -293,8 +293,8 @@
             <widget class="QLabel" name="lb_Screen3">
              <property name="geometry">
               <rect>
-               <x>380</x>
-               <y>0</y>
+               <x>354</x>
+               <y>1</y>
                <width>160</width>
                <height>90</height>
               </rect>
@@ -309,10 +309,10 @@
             <widget class="QLabel" name="lb_Screen4">
              <property name="geometry">
               <rect>
-               <x>0</x>
-               <y>210</y>
-               <width>320</width>
-               <height>231</height>
+               <x>193</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -325,10 +325,10 @@
             <widget class="QLabel" name="lb_Screen5">
              <property name="geometry">
               <rect>
-               <x>0</x>
-               <y>450</y>
-               <width>320</width>
-               <height>231</height>
+               <x>354</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -480,7 +480,7 @@
     <item row="0" column="1">
      <widget class="QTabWidget" name="menu_tab">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">

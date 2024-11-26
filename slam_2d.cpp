@@ -726,23 +726,6 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
-            /*
-            // check moving
-            if(get_time() > loc_st_time + 10.0)
-            {
-                Eigen::Vector3d cur_mo = frm.mo.pose;
-                double dx = pre_mo[0] - cur_mo[0];
-                double dy = pre_mo[1] - cur_mo[1];
-                double d = std::sqrt(dx*dx + dy*dy);
-                double dth = std::abs(deltaRad(cur_mo[2], pre_mo[2]));
-                if(d < 0.05 && dth < 2.0*D2R)
-                {
-                    continue;
-                }
-                pre_mo = cur_mo;
-            }
-            */
-
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
             if(err < config->SLAM_ICP_ERROR_THRESHOLD)
@@ -803,6 +786,7 @@ void SLAM_2D::loc_b_loop()
     mtx.unlock();
 
     MOBILE_POSE mo0 = mobile->get_pose();
+    double pre_aruco_t = 0;
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -831,7 +815,7 @@ void SLAM_2D::loc_b_loop()
             {
                 if(std::abs(mo.t - tp.t) < 0.3)
                 {
-                    double alpha = config->LOC_FUSION_RATIO; // 1.0 means odo_tf 100%
+                    double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
                     Eigen::Matrix4d icp_tf = tp.tf;
 
                     // for odometry slip
@@ -859,27 +843,35 @@ void SLAM_2D::loc_b_loop()
 
             // aruco fusion
             TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
-
-            // calc tf
-            NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
-            if(node != NULL)
+            if(aruco_tpi.t > pre_aruco_t)
             {
-                if(std::abs(mo.t - aruco_tpi.t) < 1.0)
+                // calc tf
+                NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
+                if(node != NULL)
                 {
-                    Eigen::Matrix4d T_g_m = node->tf;
-                    Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
-                    Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
+                    if(std::abs(mo.t - aruco_tpi.t) < 1.0)
+                    {
+                        Eigen::Matrix4d T_g_m = node->tf;
+                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse(); // T_r_m -> T_m_r
+                        double d = calc_dist_2d(T_m_r.block(0,3,3,1));
+                        if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
+                        {
+                            // calc global pose using aruco
+                            Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
 
-                    // interpolation
-                    double alpha = 0.1; // 0.1 means 90% aruco_tf, 10% cur_tf
-                    Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
-                    Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                            // interpolation
+                            double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                            Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
+                            Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
-                    // update
-                    _cur_tf = fused_tf;
+                            // update
+                            _cur_tf = fused_tf;
+                        }
+                    }
                 }
-            }
 
+                pre_aruco_t = aruco_tpi.t;
+            }
 
             // update
             mtx.lock();
