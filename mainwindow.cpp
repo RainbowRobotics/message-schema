@@ -3562,7 +3562,7 @@ void MainWindow::raw_plot()
     {
         if(config.USE_ARUCO)
         {
-            cv::Mat plot = aruco.get_aruco0();
+            cv::Mat plot = aruco.get_plot_img0();
             if(!plot.empty())
             {
                 ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
@@ -3576,7 +3576,7 @@ void MainWindow::raw_plot()
     {
         if(config.USE_ARUCO)
         {
-            cv::Mat plot = aruco.get_aruco1();
+            cv::Mat plot = aruco.get_plot_img1();
             if(!plot.empty())
             {
                 ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
