@@ -94,7 +94,7 @@ bool ARUCO::check_regist_aruco(QString id, std::vector<cv::Point3d>& corners)
     return true;
 }
 
-Eigen::Matrix4d ARUCO::m2e(cv::Mat rvec, cv::Mat tvec)
+Eigen::Matrix4d ARUCO::se3_exp(cv::Mat rvec, cv::Mat tvec)
 {
     cv::Mat R;
     cv::Rodrigues(rvec, R);
@@ -112,8 +112,9 @@ Eigen::Matrix4d ARUCO::m2e(cv::Mat rvec, cv::Mat tvec)
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
-//    T = T*ZYX_to_TF(0,0,0,0,-90,-90);
+    T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
 
+    // cam to marker
     return T;
 }
 
@@ -256,7 +257,7 @@ void ARUCO::detect_loop0()
         mtx.unlock();
 
         // cam to marker
-        Eigen::Matrix4d cam_to_marker = m2e(rvec, tvec);
+        Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
         refine_pose(cam_to_marker);
 
         // std::cout << "[ARUCO] cam_to_marker:\n" << cam_to_marker << std::endl;
@@ -419,7 +420,7 @@ void ARUCO::detect_loop1()
         mtx.unlock();
 
         // cam to marker
-        Eigen::Matrix4d cam_to_marker = m2e(rvec, tvec);
+        Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
         refine_pose(cam_to_marker);
 
         // std::cout << "[ARUCO] cam_to_marker:\n" << cam_to_marker << std::endl;

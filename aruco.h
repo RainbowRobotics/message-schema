@@ -39,7 +39,7 @@ public:
 
     std::vector<cv::Point3d> make_obj_pts();
     bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
-    Eigen::Matrix4d m2e(cv::Mat rvec, cv::Mat tvec);
+    Eigen::Matrix4d se3_exp(cv::Mat rvec, cv::Mat tvec);
 
 
     std::thread* detect_thread0 = NULL;
