@@ -168,6 +168,9 @@ public:
     std::atomic<double> last_jog_update_t = {0};
     std::atomic<bool> is_jog_pressed = {false};
 
+    // aruco
+    std::atomic<double> aruco_prev_t = {0};
+
     // 3d plot funcs
     void map_plot();
     void obs_plot();

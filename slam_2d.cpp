@@ -867,7 +867,7 @@ void SLAM_2D::loc_b_loop()
                 if(std::abs(mo.t - aruco_tpi.t) < 0.3)
                 {
                     Eigen::Matrix4d T_g_m = node->tf;
-                    Eigen::Matrix4d T_m_r = aruco_tpi.tf;
+                    Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
                     Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
 
                     // interpolation

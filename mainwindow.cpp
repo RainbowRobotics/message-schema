@@ -3603,41 +3603,45 @@ void MainWindow::raw_plot()
         }
     }
 
-    if(cam.is_connected0 || config.SIM_MODE == 1)
+    // plot aruco
+    if(config.USE_ARUCO)
     {
-        if(config.USE_ARUCO)
+        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
+
+        if(cur_tpi.t > aruco_prev_t || config.SIM_MODE == 1)
         {
-            cv::Mat plot = aruco.get_plot_img0();
-            if(!plot.empty())
+            // Update screen for camera 0
+            cv::Mat plot0 = aruco.get_plot_img0();
+            if(!plot0.empty())
             {
-                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
                 ui->lb_Screen4->setScaledContents(true);
                 ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
-        }
-    }
-
-    if(cam.is_connected0 || config.SIM_MODE == 1)
-    {
-        if(config.USE_ARUCO)
-        {
-            cv::Mat plot = aruco.get_plot_img1();
-            if(!plot.empty())
+            else
             {
-                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen4->clear();
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot1 = aruco.get_plot_img1();
+            if(!plot1.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
                 ui->lb_Screen5->setScaledContents(true);
                 ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
-        }
-    }
+            else
+            {
+                ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen5->clear();
+            }
 
-    if(cam.is_connected0 || config.SIM_MODE == 1)
-    {
-        if(config.USE_ARUCO)
-        {
-            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * aruco.get_cur_tpi().tf;
+            // Compute global_to_marker
+            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * cur_tpi.tf;
 
-            // draw axis
+            // Draw axis
             if(viewer->contains("aruco_axis"))
             {
                 viewer->removeCoordinateSystem("aruco_axis");
@@ -3645,7 +3649,17 @@ void MainWindow::raw_plot()
             viewer->addCoordinateSystem(0.5, "aruco_axis");
             viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
         }
+        else
+        {
+            // t has not been updated, make screens transparent
+            ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen4->clear();
+
+            ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen5->clear();
+        }
     }
+
 
     if(!slam.is_slam && !slam.is_loc)
     {
