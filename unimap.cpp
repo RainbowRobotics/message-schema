@@ -329,6 +329,20 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     return node.id;
 }
 
+QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
+{
+    NODE node;
+    node.id = gen_node_id();
+    node.name = name;
+    node.type = type;
+    node.tf = tf;
+    nodes.push_back(node);
+
+    printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
+
+    return node.id;
+}
+
 void UNIMAP::edit_node_pos(PICKING pick)
 {
     if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))

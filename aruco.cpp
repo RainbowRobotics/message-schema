@@ -114,7 +114,6 @@ Eigen::Matrix4d ARUCO::se3_exp(cv::Mat rvec, cv::Mat tvec)
 
     T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
 
-    // cam to marker
     return T;
 }
 
@@ -131,12 +130,6 @@ void ARUCO::detect_loop0()
     {
         // get intrinic
         CAM_INTRINSIC intrinsic = cam->get_rgb_intrinsic0();
-
-        if(intrinsic.fx == -1)
-        {
-            logger->write_log("[ARUCO] no intrinsic info(cam0).", "Red");
-            return;
-        }
         if(cam->is_param_loaded == false && config->SIM_MODE == 0)
         {
             printf("[ARUCO_0] failed to load cam params(cam0)\n");
@@ -258,7 +251,7 @@ void ARUCO::detect_loop0()
 
         // cam to marker
         Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
-        refine_pose(cam_to_marker);
+        // refine_pose(cam_to_marker);
 
         // std::cout << "[ARUCO] cam_to_marker:\n" << cam_to_marker << std::endl;
         Eigen::Matrix4d robot_to_marker = cam_tf * cam_to_marker;
@@ -298,11 +291,6 @@ void ARUCO::detect_loop1()
         // get intrinic
         CAM_INTRINSIC intrinsic = cam->get_rgb_intrinsic1();
 
-        if(intrinsic.fx == -1)
-        {
-            logger->write_log("[ARUCO] no intrinsic info(cam1).", "Red");
-            return;
-        }
         if(cam->is_param_loaded == false && config->SIM_MODE == 0)
         {
             printf("[ARUCO_1] failed to load cam params\n");
@@ -421,7 +409,7 @@ void ARUCO::detect_loop1()
 
         // cam to marker
         Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
-        refine_pose(cam_to_marker);
+        // refine_pose(cam_to_marker);
 
         // std::cout << "[ARUCO] cam_to_marker:\n" << cam_to_marker << std::endl;
         Eigen::Matrix4d robot_to_marker = cam_tf * cam_to_marker;

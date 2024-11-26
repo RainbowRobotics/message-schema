@@ -116,6 +116,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_QuickAddAruco, SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
 
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -1928,13 +1929,13 @@ void MainWindow::bt_QuickAddNode()
 {
     if(unimap.is_loaded == false)
     {
-        printf("[QA] check map load\n");
+        printf("[QA_Node] check map load\n");
         return;
     }
 
     if(slam.is_loc == false)
     {
-        printf("[QA] check localization\n");
+        printf("[QA_Node] check localization\n");
         return;
     }
 
@@ -1942,7 +1943,51 @@ void MainWindow::bt_QuickAddNode()
     unimap.add_node(cur_tf, "GOAL");
 
     topo_update();
-    printf("[QA] quick add node\n");
+    printf("[QA_Node] quick add node\n");
+}
+
+void MainWindow::bt_QuickAddAruco()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[QA_Aruco] check map load\n");
+        return;
+    }
+
+    if(slam.is_loc == false)
+    {
+        printf("[QA_Aruco] check localization\n");
+        return;
+    }
+
+    // global to marker
+    TIME_POSE_ID cur_tpi = aruco.get_cur_tpi();
+    Eigen::Matrix4d cur_tf = slam.get_best_tf(cur_tpi.t);
+    Eigen::Matrix4d global_to_marker = cur_tf * cur_tpi.tf;
+
+    QString aruco_id = QString::number(cur_tpi.id, 10);
+
+    bool updated = false;
+    for(size_t i = 0; i < unimap.nodes.size(); i++)
+    {
+        if(unimap.nodes[i].name == aruco_id)
+        {
+            // tf update
+            unimap.nodes[i].tf = global_to_marker;
+            printf("[QA_Aruco] updated aruco node: %s\n", aruco_id.toLocal8Bit().data());
+            updated = true;
+            break;
+        }
+    }
+
+    // add new aruco node
+    if (!updated)
+    {
+        unimap.add_node(global_to_marker, "ARUCO", aruco_id);
+        printf("[QA_Aruco] added new aruco node: %s\n", aruco_id.toLocal8Bit().data());
+    }
+
+    topo_update();
 }
 
 void MainWindow::qa_loop()
@@ -3598,8 +3643,6 @@ void MainWindow::raw_plot()
             }
             viewer->addCoordinateSystem(1.0, "aruco_axis");
             viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(tf.cast<float>()));
-
-
         }
 
     }
