@@ -145,7 +145,7 @@ void ARUCO::detect_loop(int cam_idx)
         // wait for new image
         if(time_img.t <= pre_t)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
         pre_t = time_img.t;
