@@ -105,7 +105,7 @@ bool ARUCO::check_regist_aruco(QString id, std::vector<cv::Point3d>& corners)
     return true;
 }
 
-Eigen::Matrix4d ARUCO::se3_exp(cv::Mat rvec, cv::Mat tvec)
+Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec)
 {
     cv::Mat R;
     cv::Rodrigues(rvec, R);
@@ -116,15 +116,16 @@ Eigen::Matrix4d ARUCO::se3_exp(cv::Mat rvec, cv::Mat tvec)
           R.at<double>(2,0), R.at<double>(2,1), R.at<double>(2,2);
 
     Eigen::Vector3d et;
-    et << tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
+    et << tvec[0], tvec[1], tvec[2];
 
     Eigen::Matrix4d T;
     T.setIdentity();
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
-    T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
+    // T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
 
+    // cam to marker
     return T;
 }
 
@@ -224,6 +225,17 @@ void ARUCO::detect_loop(int cam_idx)
             matched_uvs.insert(matched_uvs.end(), uvs.begin(), uvs.end());
         }
 
+        // debug
+        for(int i = 0; i < 4; i++)
+        {
+            printf("uv:(%f, %f) , xyz:(%f, %f, %f)\n", matched_uvs[i].x, matched_uvs[i].y, matched_xyzs[i].x, matched_xyzs[i].y, matched_xyzs[i].z);
+        }
+        for(int i = 0; i < (int)detected_id.size(); i++)
+        {
+            printf("detected id: %d, size:%d\n", detected_id[i], (int)detected_id.size());
+        }
+        printf("img size(%d, %d)\n", time_img.img.cols, time_img.img.rows);
+
         // not detected uv or no matching points
         if(matched_xyzs.size() == 0 || matched_uvs.size() == 0 || matched_xyzs.size() != matched_uvs.size())
         {
@@ -240,6 +252,8 @@ void ARUCO::detect_loop(int cam_idx)
         {
             cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
+
+            std::cout << "tvec\n" << tvec << std::endl;
         }
         else
         {
@@ -256,6 +270,7 @@ void ARUCO::detect_loop(int cam_idx)
 
         Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
         refine_pose(cam_to_marker);
+
         Eigen::Matrix4d robot_to_marker = cam_tf * cam_to_marker;
 
         TIME_POSE_ID aruco_tpi;

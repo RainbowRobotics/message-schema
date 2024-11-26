@@ -40,7 +40,7 @@ public:
     TIME_IMG load_sim_image(int cam_idx);
     std::vector<cv::Point3f> make_obj_pts();
     bool check_regist_aruco(QString id, std::vector<cv::Point3d>& corners);
-    Eigen::Matrix4d se3_exp(cv::Mat rvec, cv::Mat tvec);
+    Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec);
 
 
     std::thread* detect_thread0 = NULL;
