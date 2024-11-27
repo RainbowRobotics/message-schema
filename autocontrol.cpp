@@ -1419,7 +1419,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
             for(int q = 0; q <= range; q++)
             {
                 int i = p + q;
-                if(obsmap->is_tf_collision(global_path.pose[i], config->OBS_PATH_MARGIN_X, config->OBS_PATH_MARGIN_Y))
+                if(obsmap->is_tf_collision(global_path.pose[i], false, config->OBS_PATH_MARGIN_X, config->OBS_PATH_MARGIN_Y))
                 {
                     is_collision = true;
                     break;
@@ -1849,7 +1849,7 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             //std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, tgt_tf, 0.2, 10.0*D2R);
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
-            if(obsmap->is_path_collision(traj))
+            if(obsmap->is_path_collision(traj, true))
             {
                 mobile->move(0, 0, 0);
 
@@ -1888,7 +1888,7 @@ void AUTOCONTROL::b_loop_pp()
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision(traj[p], config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y, true))
+                    if(obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y))
                     {
                         is_collision = true;
                         break;
@@ -1918,7 +1918,7 @@ void AUTOCONTROL::b_loop_pp()
                     traj.push_back(local_path.pose[p]);
                 }
 
-                if(obsmap->is_path_collision(traj, 0, 0, 0, 10, true))
+                if(obsmap->is_path_collision(traj, true, 0, 0, 0, 10))
                 {
                     obs_v = 0;
                 }
@@ -2081,7 +2081,7 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-            if(obsmap->is_path_collision(traj))
+            if(obsmap->is_path_collision(traj, true))
             {
                 if(config->USE_EARLYSTOP && is_multi == false)
                 {

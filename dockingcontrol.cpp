@@ -128,7 +128,7 @@ void DOCKINGCONTROL::a_loop(Eigen::Matrix4d goal_tf)
 
         if(fsm_state == DOCKING_FSM_DRIVING)
         {
-            if(obsmap->is_tf_collision(cur_tf, 0.1, 0.1))
+            if(obsmap->is_tf_collision(cur_tf, false, 0.1, 0.1))
             {
                 obs_wait_st_time = get_time();
                 mobile->move(0,0,0);
