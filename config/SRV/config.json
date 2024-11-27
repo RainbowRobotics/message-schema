@@ -28,7 +28,8 @@
         "USE_QT_UI": "1",
         "USE_RTSP": "0",
         "USE_WEB_UI": "1",
-        "USE_ARUCO": "1"
+        "USE_ARUCO": "1",
+        "USE_ARUCO_FILTER": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",

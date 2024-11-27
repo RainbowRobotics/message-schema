@@ -113,9 +113,6 @@ public:
     const double rmt_sigma = 0.01; // 0.01 good
     const double sigma_eps = 1e-6;
 
-    // flag
-    std::atomic<bool> is_filter = {false};
-
 public:
     std::atomic<bool> map_a_flag = {false};
     std::thread* map_a_thread = NULL;

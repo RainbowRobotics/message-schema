@@ -235,6 +235,9 @@ void CONFIG::load()
 
                 USE_ARUCO = obj_debug["USE_ARUCO"].toString().toInt();
                 printf("[CONFIG] USE_ARUCO, %s\n", obj_debug["USE_ARUCO"].toString().toLocal8Bit().data());
+
+                USE_ARUCO_FILTER = obj_debug["USE_ARUCO_FILTER"].toString().toInt();
+                printf("[CONFIG] USE_ARUCO_FILTER, %s\n", obj_debug["USE_ARUCO_FILTER"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

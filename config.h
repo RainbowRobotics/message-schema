@@ -85,6 +85,7 @@ public:
     int USE_QT_UI = 0;
     int USE_FMS = 0;
     int USE_ARUCO = 0;
+    int USE_ARUCO_FILTER = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    

@@ -369,7 +369,7 @@ void SLAM_2D::map_a_loop()
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
                     Eigen::Vector2d ieir = calc_ie_ir(*live_tree, live_cloud, frm, G);
-                    if(err < config->SLAM_ICP_ERROR_THRESHOLD)
+                    if(err < config->LOC_ICP_ERROR_THRESHOLD)
                     {
                         // local to global
                         std::vector<PT_XYZR> dsk;
@@ -859,7 +859,7 @@ void SLAM_2D::loc_b_loop()
                             // calc global pose using aruco
                             Eigen::Matrix4d T_g_r0 = T_g_m*T_m_r;
 
-                            if(is_filter)
+                            if(config->USE_ARUCO_FILTER == 1)
                             {
                                 static std::deque<Eigen::Matrix4d> tf_storage;
                                 size_t storage_size = config->LOC_ARUCO_MEDIAN_NUM;
@@ -877,24 +877,15 @@ void SLAM_2D::loc_b_loop()
                                     return TF_to_se3(a).norm() < TF_to_se3(b).norm();
                                 });
 
-                                Eigen::Matrix4d filtered_T_g_r = sorted_tfs[sorted_tfs.size() / 2];
+                                Eigen::Matrix4d filtered_T_g_r = se2_to_TF(TF_to_se2(sorted_tfs[sorted_tfs.size() / 2]));
 
                                 // interpolation
                                 double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
                                 Eigen::Matrix4d dtf = filtered_T_g_r.inverse()*_cur_tf;
                                 fused_tf = filtered_T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                                // debug
-                                // std::cout << "Sorted Transforms (by norm):" << std::endl;
-                                // for(size_t i = 0; i < sorted_tfs.size(); ++i)
-                                // {
-                                //     std::cout << "Transform " << i << " - Norm: " << std::setprecision(6) <<  TF_to_se3(sorted_tfs[i]).norm() << std::endl;
-                                //     std::cout << "Matrix:" << std::endl << sorted_tfs[i] << std::endl;
-                                // }
                             }
                             else
                             {
-
                                 Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m*T_m_r));
 
                                 // interpolation
