@@ -728,7 +728,7 @@ void SLAM_2D::loc_a_loop()
 
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-            if(err < config->SLAM_ICP_ERROR_THRESHOLD)
+            if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
                 TIME_POSE tp;
@@ -2054,6 +2054,7 @@ void SLAM_2D::semi_auto_init_start()
         Q_EMIT signal_localization_semiautoinit_failed("no INIT nodes");
         return;
     }
+    printf("[AUTOINIT] INIT node num: %d\n", ids.size());
 
     // find best match
     Eigen::Vector2d min_ieir(1.0, 0.0);
@@ -2084,8 +2085,8 @@ void SLAM_2D::semi_auto_init_start()
                     min_cost = cost;
                     min_tf = _tf;
 
-                    //Eigen::Vector3d min_pose = TF_to_se2(min_tf);
-                    //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
+                    Eigen::Vector3d min_pose = TF_to_se2(min_tf);
+                    printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
                 }
             }
         }
@@ -2106,7 +2107,7 @@ void SLAM_2D::semi_auto_init_start()
     else
     {
         Q_EMIT signal_localization_semiautoinit_failed("failed semi-auto init");
-        printf("[AUTOINIT] failed auto init.\n");
+        printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);
     }
 
     is_busy = false;
