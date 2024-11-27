@@ -62,8 +62,8 @@
         "LOC_SURFEL_NUM": "3",
         "LOC_SURFEL_RANGE": "0.15",
         "LOC_ICP_ODO_FUSION_RATIO": "0.9",
-        "LOC_ARUCO_ODO_FUSION_RATIO": "0.1",
-        "LOC_ARUCO_ODO_FUSION_DIST": "2.0",
+        "LOC_ARUCO_ODO_FUSION_RATIO": "0.5",
+        "LOC_ARUCO_ODO_FUSION_DIST": "3.0",
         "LOC_ARUCO_MEDIAN_NUM": "10"        
     },
     "mapping": {
