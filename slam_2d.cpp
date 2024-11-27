@@ -857,7 +857,7 @@ void SLAM_2D::loc_b_loop()
                         if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
                         {
                             // calc global pose using aruco
-                            Eigen::Matrix4d T_g_r = T_g_m*T_m_r;
+                            Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m*T_m_r));
 
                             // interpolation
                             double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf

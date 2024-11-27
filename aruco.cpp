@@ -165,7 +165,8 @@ void ARUCO::detect_loop(int cam_idx)
         }
 
         // only use first detected marker
-        cv::Mat plot_aruco = time_img.img.clone();
+        cv::Mat plot_aruco;
+        cv::cvtColor(cur_img, plot_aruco, cv::COLOR_GRAY2BGR);
         cv::circle(plot_aruco, detected_uv[0][0], 10, cv::Scalar(0,0,255), -1, cv::LINE_AA);
         cv::circle(plot_aruco, detected_uv[0][1], 10, cv::Scalar(0,255,0), -1, cv::LINE_AA);
         cv::circle(plot_aruco, detected_uv[0][2], 10, cv::Scalar(255,0,0), -1, cv::LINE_AA);
