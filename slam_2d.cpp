@@ -885,12 +885,12 @@ void SLAM_2D::loc_b_loop()
                                 fused_tf = filtered_T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
                                 // debug
-                                std::cout << "Sorted Transforms (by norm):" << std::endl;
-                                for(size_t i = 0; i < sorted_tfs.size(); ++i)
-                                {
-                                    std::cout << "Transform " << i << " - Norm: " << std::setprecision(6) <<  TF_to_se3(sorted_tfs[i]).norm() << std::endl;
-                                    std::cout << "Matrix:" << std::endl << sorted_tfs[i] << std::endl;
-                                }
+                                // std::cout << "Sorted Transforms (by norm):" << std::endl;
+                                // for(size_t i = 0; i < sorted_tfs.size(); ++i)
+                                // {
+                                //     std::cout << "Transform " << i << " - Norm: " << std::setprecision(6) <<  TF_to_se3(sorted_tfs[i]).norm() << std::endl;
+                                //     std::cout << "Matrix:" << std::endl << sorted_tfs[i] << std::endl;
+                                // }
                             }
                             else
                             {
