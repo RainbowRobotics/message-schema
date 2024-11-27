@@ -135,6 +135,7 @@ void ARUCO::detect_loop(int cam_idx)
         cv::Mat dc(8, 1, CV_64F, d);
 
         TIME_IMG time_img = (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
+
         if(time_img.img.empty())
         {
             printf("[ARUCO_%d] time_img empty\n", cam_idx);

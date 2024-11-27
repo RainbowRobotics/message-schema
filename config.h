@@ -69,6 +69,7 @@ public:
     double LOC_ICP_ODO_FUSION_RATIO = 0.5;
     double LOC_ARUCO_ODO_FUSION_RATIO = 0.5;
     double LOC_ARUCO_ODO_FUSION_DIST = 2.0;
+    int LOC_ARUCO_MEDIAN_NUM	= 10;
 
     double ANNOT_QA_STEP = 0.3;
 
@@ -84,6 +85,7 @@ public:
     int USE_QT_UI = 0;
     int USE_FMS = 0;
     int USE_ARUCO = 0;
+    int USE_ARUCO_FILTER = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    

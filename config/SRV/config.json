@@ -28,7 +28,8 @@
         "USE_QT_UI": "1",
         "USE_RTSP": "0",
         "USE_WEB_UI": "1",
-        "USE_ARUCO": "1"
+        "USE_ARUCO": "1",
+        "USE_ARUCO_FILTER": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -62,7 +63,8 @@
         "LOC_SURFEL_RANGE": "0.15",
         "LOC_ICP_ODO_FUSION_RATIO": "0.9",
         "LOC_ARUCO_ODO_FUSION_RATIO": "0.5",
-        "LOC_ARUCO_ODO_FUSION_DIST": "3.0"
+        "LOC_ARUCO_ODO_FUSION_DIST": "3.0",
+        "LOC_ARUCO_MEDIAN_NUM": "10"        
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
