@@ -25,11 +25,11 @@ ARUCO::~ARUCO()
 void ARUCO::init()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
-    {
-        printf("[ARUCO] simulation mode\n");
-        return;
-    }
+    // if(config->SIM_MODE == 1)
+    // {
+    //     printf("[ARUCO] simulation mode\n");
+    //     return;
+    // }
 
     if(detect_thread0 == NULL)
     {
@@ -120,11 +120,19 @@ void ARUCO::detect_loop(int cam_idx)
     while((cam_idx == 0) ? detect_flag0 : detect_flag1)
     {
         CAM_INTRINSIC intrinsic = (cam_idx == 0) ? cam->get_rgb_intrinsic0() : cam->get_rgb_intrinsic1();
-        if(cam->is_param_loaded == false)
+        if(cam->is_param_loaded == false && config->SIM_MODE == 0)
         {
             printf("[ARUCO_%d] failed to load cam params\n", cam_idx);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
+        }
+
+        if(config->SIM_MODE)
+        {
+            intrinsic.fx = 721.142;
+            intrinsic.fy = 721.142;
+            intrinsic.cx = 636.912;
+            intrinsic.cy = 359.406;
         }
 
         cv::Matx33d cm(intrinsic.fx, 0, intrinsic.cx,
@@ -134,7 +142,20 @@ void ARUCO::detect_loop(int cam_idx)
         double d[8] = {intrinsic.k1, intrinsic.k2, intrinsic.p1,intrinsic.p2, intrinsic.k3, intrinsic.k4, intrinsic.k5, intrinsic.k6};
         cv::Mat dc(8, 1, CV_64F, d);
 
-        TIME_IMG time_img = (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
+        // TIME_IMG time_img = (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
+
+        TIME_IMG time_img;
+        if(config->SIM_MODE)
+        {
+            QString img_path = QDir::homePath() + QString("/Pictures/img%1.png").arg(cam_idx);
+            time_img.img  = cv::imread(img_path.toStdString(), cv::IMREAD_COLOR);
+            time_img.t = get_time();
+        }
+        else
+        {
+            time_img = (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
+        }
+
         if(time_img.img.empty())
         {
             printf("[ARUCO_%d] time_img empty\n", cam_idx);

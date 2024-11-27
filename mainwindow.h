@@ -299,6 +299,7 @@ public Q_SLOTS:
     void bt_Test();
     void bt_TestLed();
     void ckb_TestDebug();
+    void ckb_TestArucoFilter();
     void bt_TestImgSave();
 
     // for autocontrol

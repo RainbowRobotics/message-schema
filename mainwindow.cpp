@@ -64,6 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
     connect(ui->ckb_TestDebug, SIGNAL(stateChanged(int)), this, SLOT(ckb_TestDebug()));
+    connect(ui->ckb_TestArucoFilter, SIGNAL(stateChanged(int)), this, SLOT(ckb_TestArucoFilter()));
     connect(ui->bt_TestImgSave, SIGNAL(clicked()), this, SLOT(bt_TestImgSave()));
 
     // jog
@@ -2424,6 +2425,12 @@ void MainWindow::bt_TestLed()
 void MainWindow::ckb_TestDebug()
 {
     ctrl.is_debug = ui->ckb_TestDebug->isChecked();
+}
+
+void MainWindow::ckb_TestArucoFilter()
+{
+    slam.is_filter = ui->ckb_TestArucoFilter->isChecked();
+    printf("[MAIN] aruco filter: %d\n", (int)slam.is_filter);
 }
 
 void MainWindow::bt_TestImgSave()

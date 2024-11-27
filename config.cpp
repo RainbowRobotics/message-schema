@@ -186,6 +186,10 @@ void CONFIG::load()
 
                 LOC_ARUCO_ODO_FUSION_DIST = obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toDouble();
                 printf("[CONFIG] LOC_ARUCO_ODO_FUSION_DIST, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_MEDIAN_NUM = obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toInt();
+                printf("[CONFIG] LOC_ARUCO_MEDIAN_NUM, %s\n", obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toLocal8Bit().data());
+
             }
 
             QJsonObject obj_annot = obj["annotation"].toObject();

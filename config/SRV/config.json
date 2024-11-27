@@ -62,7 +62,8 @@
         "LOC_SURFEL_RANGE": "0.15",
         "LOC_ICP_ODO_FUSION_RATIO": "0.9",
         "LOC_ARUCO_ODO_FUSION_RATIO": "0.1",
-        "LOC_ARUCO_ODO_FUSION_DIST": "2.0"        
+        "LOC_ARUCO_ODO_FUSION_DIST": "2.0",
+        "LOC_ARUCO_MEDIAN_NUM": "10"        
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
