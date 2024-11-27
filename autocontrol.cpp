@@ -2322,7 +2322,7 @@ void AUTOCONTROL::b_loop_pp()
         }
         else
         {
-            QString str; str.sprintf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+            QString str; str.sprintf("[AUTO] loop time drift, dt:%f", delta_loop_time);
             logger->write_log(str);
         }
         pre_loop_time = get_time();

@@ -73,7 +73,7 @@
         "SLAM_ICP_ERROR_THRESHOLD": "0.3",
         "SLAM_ICP_MAX_FEATURE_NUM": "2000",
         "SLAM_ICP_VIEW_THRESHOLD": "170",
-        "SLAM_KFRM_LC_TRY_DIST": "2.0",
+        "SLAM_KFRM_LC_TRY_DIST": "3.0",
         "SLAM_KFRM_LC_TRY_OVERLAP": "0.25",
         "SLAM_KFRM_UPDATE_NUM": "50",
         "SLAM_VOXEL_SIZE": "0.05",
