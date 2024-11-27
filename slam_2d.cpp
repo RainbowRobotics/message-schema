@@ -787,6 +787,7 @@ void SLAM_2D::loc_b_loop()
 
     MOBILE_POSE mo0 = mobile->get_pose();
     double pre_aruco_t = 0;
+    int pre_aruco_id = -1;
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -864,6 +865,14 @@ void SLAM_2D::loc_b_loop()
                                 static std::deque<Eigen::Matrix4d> tf_storage;
                                 size_t storage_size = config->LOC_ARUCO_MEDIAN_NUM;
 
+                                // clear when new id is detected
+                                if (aruco_tpi.id != pre_aruco_id)
+                                {
+                                    tf_storage.clear();
+                                    pre_aruco_id = aruco_tpi.id;
+                                    printf("[LOC] new aruco ID detected. clearing tf_storage. ID: %d\n",aruco_tpi.id);
+                                }
+
                                 // storage update
                                 tf_storage.push_back(T_g_r0);
                                 if(tf_storage.size() > storage_size)
@@ -899,7 +908,6 @@ void SLAM_2D::loc_b_loop()
                         }
                     }
                 }
-
                 pre_aruco_t = aruco_tpi.t;
             }
 
