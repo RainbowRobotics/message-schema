@@ -788,6 +788,7 @@ void SLAM_2D::loc_b_loop()
     MOBILE_POSE mo0 = mobile->get_pose();
     double pre_aruco_t = 0;
     int pre_aruco_id = -1;
+    std::vector<Eigen::Matrix4d> tf_storage;
 
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
@@ -862,36 +863,43 @@ void SLAM_2D::loc_b_loop()
 
                             if(config->USE_ARUCO_FILTER == 1)
                             {
-                                static std::deque<Eigen::Matrix4d> tf_storage;
-                                size_t storage_size = config->LOC_ARUCO_MEDIAN_NUM;
+
+                                size_t storage_max_num = config->LOC_ARUCO_MEDIAN_NUM;
 
                                 // clear when new id is detected
-                                if (aruco_tpi.id != pre_aruco_id)
+                                if(aruco_tpi.id != pre_aruco_id)
                                 {
                                     tf_storage.clear();
                                     pre_aruco_id = aruco_tpi.id;
-                                    printf("[LOC] new aruco ID detected. clearing tf_storage. ID: %d\n",aruco_tpi.id);
+                                    printf("[LOC] new aruco ID detected. clearing tf_storage. size: %d\n", (int)tf_storage.size());
                                 }
 
                                 // storage update
                                 tf_storage.push_back(T_g_r0);
-                                if(tf_storage.size() > storage_size)
+                                if(tf_storage.size() > storage_max_num)
                                 {
-                                    tf_storage.pop_front();
+                                    tf_storage.erase(tf_storage.begin());
                                 }
 
                                 std::vector<Eigen::Matrix4d> sorted_tfs(tf_storage.begin(), tf_storage.end());
-                                std::sort(sorted_tfs.begin(), sorted_tfs.end(),[](Eigen::Matrix4d& a, Eigen::Matrix4d& b)
+
+                                if(tf_storage.size() > 2)
                                 {
-                                    return TF_to_se3(a).norm() < TF_to_se3(b).norm();
-                                });
+                                    std::sort(sorted_tfs.begin(), sorted_tfs.end(),[](Eigen::Matrix4d& a, Eigen::Matrix4d& b)
+                                    {
+                                        return TF_to_se3(a).norm() < TF_to_se3(b).norm();
+                                    });
+                                    Eigen::Matrix4d filtered_T_g_r = se2_to_TF(TF_to_se2(sorted_tfs[sorted_tfs.size() / 2]));
 
-                                Eigen::Matrix4d filtered_T_g_r = se2_to_TF(TF_to_se2(sorted_tfs[sorted_tfs.size() / 2]));
 
-                                // interpolation
-                                double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
-                                Eigen::Matrix4d dtf = filtered_T_g_r.inverse()*_cur_tf;
-                                fused_tf = filtered_T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                                    // interpolation
+                                    double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                                    Eigen::Matrix4d dtf = filtered_T_g_r.inverse()*_cur_tf;
+                                    fused_tf = filtered_T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                                    // update
+                                    _cur_tf = fused_tf;
+                                }
                             }
                             else
                             {
@@ -901,10 +909,10 @@ void SLAM_2D::loc_b_loop()
                                 double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
                                 Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
                                 fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-                            }
 
-                            // update
-                            _cur_tf = fused_tf;
+                                // update
+                                _cur_tf = fused_tf;
+                            }
                         }
                     }
                 }
