@@ -852,12 +852,11 @@ void SLAM_2D::loc_b_loop()
                 {
                     if(std::abs(mo.t - aruco_tpi.t) < 1.0)
                     {
-                        Eigen::Matrix4d fused_tf;
-                        Eigen::Matrix4d T_g_m = node->tf;
-                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse(); // T_r_m -> T_m_r
-                        double d = calc_dist_2d(T_m_r.block(0,3,3,1));
+                        double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
                         if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
                         {
+                            Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
+
                             if(config->USE_ARUCO_FILTER == 1)
                             {
                                 // clear when new id is detected
@@ -868,8 +867,8 @@ void SLAM_2D::loc_b_loop()
                                     printf("[LOC] new aruco ID detected. clearing tf_storage. size: %d\n", (int)tf_storage.size());
                                 }
 
-                                // storage update (T_g_r*T_r_m , T_r_m)
-                                tf_storage.push_back(std::make_pair(_cur_tf*aruco_tpi.tf, aruco_tpi.tf));
+                                // storage update (T_g_m^-1*(T_g_r*T_r_m), T_r_m)
+                                tf_storage.push_back(std::make_pair(T_g_m0.inverse()*(_cur_tf*aruco_tpi.tf), aruco_tpi.tf));
                                 if(tf_storage.size() > (size_t)config->LOC_ARUCO_MEDIAN_NUM)
                                 {
                                     tf_storage.erase(tf_storage.begin());
@@ -877,23 +876,21 @@ void SLAM_2D::loc_b_loop()
 
                                 if(tf_storage.size() > 2)
                                 {
-                                    // sort by T_g_r*T_r_m(T_g_m)
+                                    // sort for median filter
                                     std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> sorted_tfs = tf_storage;
-
-                                    std::sort(sorted_tfs.begin(), sorted_tfs.end(),
-                                              [](std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& a, std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& b)
+                                    std::sort(sorted_tfs.begin(), sorted_tfs.end(), [](std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& a, std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& b)
                                     {
                                         return TF_to_se3(a.first).norm() < TF_to_se3(b.first).norm();
                                     });
 
                                     size_t median_idx = sorted_tfs.size() / 2;
-                                    Eigen::Matrix4d T_m_r0 = (sorted_tfs[median_idx].second).inverse();
+                                    Eigen::Matrix4d T_m_r = (sorted_tfs[median_idx].second).inverse();
+                                    Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r));
 
-                                    Eigen::Matrix4d T_g_r0 = se2_to_TF(TF_to_se2(T_g_m*T_m_r0));
                                     // interpolation
                                     double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
-                                    Eigen::Matrix4d dtf = T_g_r0.inverse()*_cur_tf;
-                                    fused_tf = T_g_r0*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                                    Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
+                                    Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
                                     // update
                                     _cur_tf = fused_tf;
@@ -901,12 +898,13 @@ void SLAM_2D::loc_b_loop()
                             }
                             else
                             {
-                                Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m*T_m_r));
+                                Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+                                Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r));
 
                                 // interpolation
                                 double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
                                 Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
-                                fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                                Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
                                 // update
                                 _cur_tf = fused_tf;
