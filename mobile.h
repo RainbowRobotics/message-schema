@@ -36,7 +36,8 @@ public:
     QString get_cur_pdu_state();
     void set_cur_pdu_state(QString str);
 
-    MOBILE_POSE get_pose();        
+    MOBILE_POSE get_pose();
+    MOBILE_POSE get_best_mo(double ref_t);
     MOBILE_STATUS get_status();
     QString get_pose_text();
     QString get_status_text();
