@@ -849,6 +849,7 @@ void SLAM_2D::loc_b_loop()
 
             // aruco fusion
             TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
+            // if(aruco_tpi.t > pre_aruco_t && std::abs(mo.vel[2]) < 30*D2R)
             if(aruco_tpi.t > pre_aruco_t)
             {
                 double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
@@ -919,7 +920,7 @@ void SLAM_2D::loc_b_loop()
                                     std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> sorted_tfs = tf_storage;
                                     std::sort(sorted_tfs.begin(), sorted_tfs.end(), [](std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& a, std::pair<Eigen::Matrix4d, Eigen::Matrix4d>& b)
                                     {
-                                        //return TF_to_se3(a.first).norm() < TF_to_se3(b.first).norm();
+                                        // return TF_to_se3(a.first).norm() < TF_to_se3(b.first).norm();
                                         return TF_to_se2(a.first).norm() < TF_to_se2(b.first).norm();
                                     });
 
