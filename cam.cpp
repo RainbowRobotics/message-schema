@@ -288,10 +288,12 @@ void CAM::grab_loop()
                     time_img.img = img.clone();
 
                     // flip for plot
-                    cv::flip(img, img, -1);
+                    cv::Mat plot_img;
+                    cv::resize(img, plot_img, cv::Size(160, 90));
+                    cv::flip(plot_img, plot_img, -1);
 
                     mtx.lock();
-                    cur_img0 = img.clone();
+                    cur_img0 = plot_img.clone();
                     cur_time_img0 = time_img;
                     mtx.unlock();
                 }
@@ -420,8 +422,11 @@ void CAM::grab_loop()
                     time_img.t = t;
                     time_img.img = img.clone();
 
+                    cv::Mat plot_img;
+                    cv::resize(img, plot_img, cv::Size(160, 90));
+
                     mtx.lock();
-                    cur_img1 = img.clone();
+                    cur_img1 = plot_img.clone();
                     cur_time_img1 = time_img;
                     mtx.unlock();
                 }

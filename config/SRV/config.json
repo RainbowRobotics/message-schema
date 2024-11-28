@@ -18,6 +18,8 @@
     },
     "debug": {
         "SIM_MODE": "0",
+        "USE_ARUCO": "1",
+        "USE_ARUCO_FILTER": "0",
         "USE_BEEP": "1",
         "USE_BLIDAR": "1",
         "USE_BQR": "0",
@@ -27,9 +29,7 @@
         "USE_IMU": "0",
         "USE_QT_UI": "1",
         "USE_RTSP": "0",
-        "USE_WEB_UI": "1",
-        "USE_ARUCO": "1",
-        "USE_ARUCO_FILTER": "1"
+        "USE_WEB_UI": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -52,19 +52,19 @@
         "SERVER_PW": "rainbow"
     },
     "loc": {
+        "LOC_ARUCO_MEDIAN_NUM": "5",
+        "LOC_ARUCO_ODO_FUSION_DIST": "2.0",
+        "LOC_ARUCO_ODO_FUSION_RATIO": "0.8",
         "LOC_CHECK_DIST": "0.3",
-        "LOC_CHECK_IE": "0.3",
-        "LOC_CHECK_IR": "0.3",
+        "LOC_CHECK_IE": "0.1",
+        "LOC_CHECK_IR": "0.4",
         "LOC_ICP_COST_THRESHOLD": "0.3",
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
-        "LOC_ICP_ERROR_THRESHOLD": "0.3",
+        "LOC_ICP_ERROR_THRESHOLD": "0.2",
         "LOC_ICP_MAX_FEATURE_NUM": "2000",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.8",
         "LOC_SURFEL_NUM": "3",
-        "LOC_SURFEL_RANGE": "0.15",
-        "LOC_ICP_ODO_FUSION_RATIO": "0.9",
-        "LOC_ARUCO_ODO_FUSION_RATIO": "0.5",
-        "LOC_ARUCO_ODO_FUSION_DIST": "3.0",
-        "LOC_ARUCO_MEDIAN_NUM": "10"        
+        "LOC_SURFEL_RANGE": "0.15"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
@@ -108,7 +108,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/multi_test_241113_2"
+        "MAP_PATH": "/home/rainbow/maps/241127"
     },
     "robot": {
         "PLATFORM_NAME": "TT",

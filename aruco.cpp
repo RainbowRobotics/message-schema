@@ -218,11 +218,13 @@ void ARUCO::detect_loop(int cam_idx)
 
             if(cam_idx == 0)
             {
+                cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
                 cv::flip(plot_aruco, plot_aruco, -1);
                 cur_aruco_img0 = plot_aruco.clone();
             }
             else if(cam_idx == 1)
             {
+                cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
                 cur_aruco_img1 = plot_aruco.clone();
             }
             mtx.unlock();

@@ -87,6 +87,27 @@ MOBILE_POSE MOBILE::get_pose()
     return res;
 }
 
+MOBILE_POSE MOBILE::get_best_mo(double ref_t)
+{
+    mtx.lock();
+
+    MOBILE_POSE res;
+    double min_dt = 99999999;
+    for(size_t p = 0; p < pose_storage.size(); p++)
+    {
+        double dt = std::abs(pose_storage[p].t - ref_t);
+        if(dt < min_dt)
+        {
+            min_dt = dt;
+            res = pose_storage[p];
+        }
+    }
+
+    mtx.unlock();
+
+    return res;
+}
+
 MOBILE_STATUS MOBILE::get_status()
 {
     mtx.lock();

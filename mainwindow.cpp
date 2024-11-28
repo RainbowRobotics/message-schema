@@ -3991,7 +3991,7 @@ void MainWindow::raw_plot()
             }
 
             // Compute global_to_marker
-            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * cur_tpi.tf;
+            Eigen::Matrix4d global_to_marker = slam.get_best_tf(cur_tpi.t) * cur_tpi.tf;
 
             // Draw axis
             if(viewer->contains("aruco_axis"))
