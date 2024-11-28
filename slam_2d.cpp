@@ -786,6 +786,9 @@ void SLAM_2D::loc_b_loop()
     mtx.unlock();
 
     MOBILE_POSE mo0 = mobile->get_pose();
+
+    // for aruco fusion
+    MOBILE_POSE pre_aruco_mo = mo0;
     double pre_aruco_t = 0;
     int pre_aruco_id = -1;
     std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
@@ -820,6 +823,7 @@ void SLAM_2D::loc_b_loop()
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
                     Eigen::Matrix4d icp_tf = tp.tf;
 
+                    /*
                     // for odometry slip
                     Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
                     if(std::abs(dtdr[1]) > 10.0*D2R)
@@ -827,6 +831,7 @@ void SLAM_2D::loc_b_loop()
                         alpha = 0;
                         printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
                     }
+                    */
 
                     // interpolation
                     Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
@@ -847,6 +852,40 @@ void SLAM_2D::loc_b_loop()
             // if(aruco_tpi.t > pre_aruco_t && std::abs(mo.vel[2]) < 30*D2R)
             if(aruco_tpi.t > pre_aruco_t)
             {
+                double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
+                if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
+                {
+                    NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
+                    if(node != NULL)
+                    {
+                        Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
+                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+                        Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r));
+                        T_g_r.block(0,0,3,3) = _cur_tf.block(0,0,3,3);
+
+                        // interpolation
+                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                        Eigen::Matrix4d dtf = T_g_r.inverse()*_cur_tf;
+                        Eigen::Matrix4d fused_tf = T_g_r*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                        // update
+                        _cur_tf = fused_tf;
+
+                        pre_aruco_t = aruco_tpi.t;
+                    }
+                }
+
+                /*
+                Eigen::Matrix4d mo_dtf = Eigen::Matrix4d::Identity();
+                {
+                    double t0 = pre_aruco_mo.t;
+                    double t1 = mo.t;
+                    double t = aruco_tpi.t;
+                    double alpha = (t-t0)/(t1-t0);
+                    Eigen::Matrix4d dtf = se2_to_TF(pre_aruco_mo.pose).inverse()*se2_to_TF(mo.pose);
+                    mo_dtf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                }
+
                 // calc tf
                 NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
                 if(node != NULL)
@@ -868,7 +907,7 @@ void SLAM_2D::loc_b_loop()
                                     printf("[LOC] new aruco ID detected. clearing tf_storage. size: %d\n", (int)tf_storage.size());
                                 }
 
-                                // storage update (T_g_m^-1*(T_g_r*T_r_m), T_r_m)
+                                // storage update (T_g_m0^-1*(T_g_r*T_r_m), T_r_m)
                                 tf_storage.push_back(std::make_pair(T_g_m0.inverse()*(_cur_tf*aruco_tpi.tf), aruco_tpi.tf));
                                 if(tf_storage.size() > (size_t)config->LOC_ARUCO_MEDIAN_NUM)
                                 {
@@ -887,7 +926,7 @@ void SLAM_2D::loc_b_loop()
 
                                     size_t median_idx = sorted_tfs.size() / 2;
                                     Eigen::Matrix4d T_m_r = (sorted_tfs[median_idx].second).inverse();
-                                    Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r));
+                                    Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r*mo_dtf));
 
                                     // interpolation
                                     double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
@@ -901,7 +940,7 @@ void SLAM_2D::loc_b_loop()
                             else
                             {
                                 Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
-                                Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r));
+                                Eigen::Matrix4d T_g_r = se2_to_TF(TF_to_se2(T_g_m0*T_m_r*mo_dtf));
 
                                 // interpolation
                                 double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
@@ -914,8 +953,13 @@ void SLAM_2D::loc_b_loop()
                         }
                     }
                 }
+
+                */
+
                 pre_aruco_t = aruco_tpi.t;
+                pre_aruco_mo = mo;
             }
+
 
             // update
             mtx.lock();

@@ -184,8 +184,8 @@ void CAM::grab_loop()
     //auto color_profile0 = color_profile_list0->getProfile(123)->as<ob::VideoStreamProfile>();
     //printf("[CAM] color_profile(119), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
-    auto color_profile0 = color_profile_list0->getProfile(101)->as<ob::VideoStreamProfile>();
-    printf("[CAM] color_profile(101), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+    auto color_profile0 = color_profile_list0->getProfile(83)->as<ob::VideoStreamProfile>();
+    printf("[CAM] color_profile(83), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
     std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
     config0->disableAllStream();
@@ -317,7 +317,7 @@ void CAM::grab_loop()
 
     auto depth_profile1 = depth_profile_list1->getProfile(31)->as<ob::VideoStreamProfile>();
     //auto color_profile1 = color_profile_list1->getProfile(123)->as<ob::VideoStreamProfile>();
-    auto color_profile1 = color_profile_list1->getProfile(101)->as<ob::VideoStreamProfile>();
+    auto color_profile1 = color_profile_list1->getProfile(83)->as<ob::VideoStreamProfile>();
 
     std::shared_ptr<ob::Config> config1 = std::make_shared<ob::Config>();
     config1->disableAllStream();
