@@ -397,7 +397,14 @@ void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString m
         Eigen::Matrix4d goal_tf = node->tf;
 
         // pure pursuit
-        ctrl->move_pp(goal_tf, preset);
+        if(ctrl->is_multi)
+        {
+            ctrl->set_goal(node_id);
+        }
+        else
+        {
+            ctrl->move_pp(goal_tf, preset);
+        }
 
         QString result = "accept";
         QString message = "";
