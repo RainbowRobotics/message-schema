@@ -194,7 +194,8 @@ void ARUCO::detect_loop(int cam_idx)
 
         // estimate extrinsic
         cv::Mat rvec, tvec;        
-        if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec))
+        //if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec))
+        if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec, false, cv::SOLVEPNP_SQPNP))
         {
             cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
