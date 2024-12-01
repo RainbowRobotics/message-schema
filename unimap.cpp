@@ -480,6 +480,25 @@ void UNIMAP::add_link2(PICKING pick)
     }
 }
 
+void UNIMAP::add_link1(QString id0, QString id1)
+{
+    if(id0 != "" && id1 != "" && id0 != id1)
+    {
+        NODE* node0 = get_node_by_id(id0);
+        NODE* node1 = get_node_by_id(id1);
+        if(node0 != NULL && node1 != NULL)
+        {
+            auto it0 = std::find(node0->linked.begin(), node0->linked.end(), id0);
+            auto it1 = std::find(node1->linked.begin(), node1->linked.end(), id1);
+            if(it0 == node0->linked.end() && it1 == node1->linked.end())
+            {
+                node0->linked.push_back(id1);
+                printf("[UNIMAP] add link, %s -> %s\n", id0.toLocal8Bit().data(), id1.toLocal8Bit().data());
+            }
+        }
+    }
+}
+
 void UNIMAP::add_link2(QString id0, QString id1)
 {
     if(id0 != "" && id1 != "" && id0 != id1)
@@ -637,6 +656,11 @@ std::vector<QString> UNIMAP::get_nodes()
         res.push_back(it.id);
     }
     return res;
+}
+
+int UNIMAP::get_nodes_size()
+{
+    return (int)nodes.size();
 }
 
 QString UNIMAP::gen_node_id()
@@ -861,6 +885,47 @@ NODE* UNIMAP::get_node_by_name(QString name)
         for(size_t p = 0; p < nodes.size(); p++)
         {
             if(nodes[p].name == name)
+            {
+                node = &nodes[p];
+                break;
+            }
+        }
+    }
+
+    return node;
+}
+
+int UNIMAP::get_node_idx_by_id(QString id)
+{
+    if(id == "")
+    {
+        return -1;
+    }
+
+    int idx = -1;
+    if((int)nodes.size() != 0)
+    {
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            if(nodes[p].id == id)
+            {
+                idx = (int)p;
+                break;
+            }
+        }
+    }
+
+    return idx;
+}
+
+NODE* UNIMAP::get_node_by_idx(int idx)
+{
+    NODE* node = NULL;
+    if((int)nodes.size() != 0)
+    {
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            if((int)p == idx)
             {
                 node = &nodes[p];
                 break;
