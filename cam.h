@@ -67,6 +67,9 @@ public:
     CAM_INTRINSIC rgb_intrinsic0; // color camera intrinsic
     CAM_INTRINSIC rgb_intrinsic1;
 
+    Eigen::Matrix4d rgb_extrinsic0;
+    Eigen::Matrix4d rgb_extrinsic1;
+
 private:
 
 
