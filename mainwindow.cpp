@@ -3932,11 +3932,6 @@ void MainWindow::raw_plot()
             ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
-    else
-    {
-        ui->lb_Screen2->setStyleSheet("background-color: transparent;");
-        ui->lb_Screen2->clear();
-    }
 
     if(cam.is_connected1)
     {
@@ -3947,11 +3942,6 @@ void MainWindow::raw_plot()
             ui->lb_Screen3->setScaledContents(true);
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
-    }
-    else
-    {
-        ui->lb_Screen3->setStyleSheet("background-color: transparent;");
-        ui->lb_Screen3->clear();
     }
 
     // plot aruco
@@ -3970,11 +3960,6 @@ void MainWindow::raw_plot()
                 ui->lb_Screen4->setScaledContents(true);
                 ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
-            else
-            {
-                ui->lb_Screen4->setStyleSheet("background-color: transparent;");
-                ui->lb_Screen4->clear();
-            }
 
             // Update screen for camera 1
             cv::Mat plot1 = aruco.get_plot_img1();
@@ -3983,11 +3968,6 @@ void MainWindow::raw_plot()
                 ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
                 ui->lb_Screen5->setScaledContents(true);
                 ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            }
-            else
-            {
-                ui->lb_Screen5->setStyleSheet("background-color: transparent;");
-                ui->lb_Screen5->clear();
             }
 
             // Compute global_to_marker
@@ -4001,22 +3981,7 @@ void MainWindow::raw_plot()
             viewer->addCoordinateSystem(0.5, "aruco_axis");
             viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
         }
-        else
-        {
-            // t has not been updated, make screens transparent
-            ui->lb_Screen4->setStyleSheet("background-color: transparent;");
-            ui->lb_Screen4->clear();
-
-            ui->lb_Screen5->setStyleSheet("background-color: transparent;");
-            ui->lb_Screen5->clear();
-
-            if(viewer->contains("aruco_axis"))
-            {
-                viewer->removeShape("aruco_axis");
-            }
-        }
     }
-
 
     if(!slam.is_slam && !slam.is_loc)
     {

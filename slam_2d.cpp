@@ -789,7 +789,6 @@ void SLAM_2D::loc_b_loop()
 
     // for aruco fusion
     double pre_aruco_t = 0;
-    int pre_aruco_id = -1;
     std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
 
     printf("[SLAM] loc_b_loop start\n");
@@ -815,10 +814,11 @@ void SLAM_2D::loc_b_loop()
 
             // icp-odometry fusion
             TIME_POSE tp;
-            if(tp_que.try_pop(tp))
+            if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
             {
                 if(std::abs(mo.t - tp.t) < 0.3)
                 {
+                    // time delay compensation
                     Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
                     Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
                     Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
@@ -849,9 +849,8 @@ void SLAM_2D::loc_b_loop()
             }
 
             // aruco fusion
-            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();            
-            //if(aruco_tpi.t > pre_aruco_t && aruco_tpi.id != pre_aruco_id)
-            if(aruco_tpi.t > pre_aruco_t)
+            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
+            if(aruco_tpi.t > pre_aruco_t && config->SIM_MODE == 0)
             {
                 double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
                 if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
@@ -859,16 +858,16 @@ void SLAM_2D::loc_b_loop()
                     NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
                     if(node != NULL)
                     {
+                        // parse tf
                         Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
                         Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
 
+                        // time delay compensation
                         Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
                         Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
                         Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                         Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
-                        //T_g_r.block(0,0,3,3) = _cur_tf.block(0,0,3,3);
-
                         Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
 
                         // interpolation
@@ -880,7 +879,6 @@ void SLAM_2D::loc_b_loop()
                         _cur_tf = fused_tf;
 
                         pre_aruco_t = aruco_tpi.t;
-                        pre_aruco_id = aruco_tpi.id;
                     }
                 }
             }
