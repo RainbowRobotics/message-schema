@@ -178,8 +178,18 @@ void CONFIG::load()
                 LOC_CHECK_IR = obj_loc["LOC_CHECK_IR"].toString().toDouble();
                 printf("[CONFIG] LOC_CHECK_IR, %s\n", obj_loc["LOC_CHECK_IR"].toString().toLocal8Bit().data());
 
-                LOC_FUSION_RATIO = obj_loc["LOC_FUSION_RATIO"].toString().toDouble();
-                printf("[CONFIG] LOC_FUSION_RATIO, %s\n", obj_loc["LOC_FUSION_RATIO"].toString().toLocal8Bit().data());
+                LOC_ICP_ODO_FUSION_RATIO = obj_loc["LOC_ICP_ODO_FUSION_RATIO"].toString().toDouble();
+                printf("[CONFIG] LOC_ICP_ODO_FUSION_RATIO, %s\n", obj_loc["LOC_ICP_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_ODO_FUSION_RATIO = obj_loc["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toDouble();
+                printf("[CONFIG] LOC_ARUCO_ODO_FUSION_RATIO, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_ODO_FUSION_DIST = obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toDouble();
+                printf("[CONFIG] LOC_ARUCO_ODO_FUSION_DIST, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toLocal8Bit().data());
+
+                LOC_ARUCO_MEDIAN_NUM = obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toInt();
+                printf("[CONFIG] LOC_ARUCO_MEDIAN_NUM, %s\n", obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toLocal8Bit().data());
+
             }
 
             QJsonObject obj_annot = obj["annotation"].toObject();
@@ -222,6 +232,12 @@ void CONFIG::load()
 
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
+
+                USE_ARUCO = obj_debug["USE_ARUCO"].toString().toInt();
+                printf("[CONFIG] USE_ARUCO, %s\n", obj_debug["USE_ARUCO"].toString().toLocal8Bit().data());
+
+                USE_ARUCO_FILTER = obj_debug["USE_ARUCO_FILTER"].toString().toInt();
+                printf("[CONFIG] USE_ARUCO_FILTER, %s\n", obj_debug["USE_ARUCO_FILTER"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();
@@ -316,32 +332,7 @@ void CONFIG::load()
 
             QJsonObject obj_docking = obj["docking"].toObject();
             {
-                DOCKING_GOAL_D = obj_docking["DOCKING_GOAL_D"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GOAL_D, %s\n", obj_docking["DOCKING_GOAL_D"].toString().toLocal8Bit().data());
 
-                DOCKING_GOAL_TH = obj_docking["DOCKING_GOAL_TH"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GOAL_TH, %s\n", obj_docking["DOCKING_GOAL_TH"].toString().toLocal8Bit().data());
-
-                DOCKING_LIMIT_W_ACC = obj_docking["DOCKING_LIMIT_W_ACC"].toString().toDouble();
-                printf("[CONFIG] DOCKING_LIMIT_W_ACC, %s\n", obj_docking["DOCKING_LIMIT_W_ACC"].toString().toLocal8Bit().data());
-
-                DOCKING_LIMIT_V = obj_docking["DOCKING_LIMIT_V"].toString().toDouble();
-                printf("[CONFIG] DOCKING_LIMIT_V, %s\n", obj_docking["DOCKING_LIMIT_V"].toString().toLocal8Bit().data());
-
-                DOCKING_LIMIT_W = obj_docking["DOCKING_LIMIT_W"].toString().toDouble();
-                printf("[CONFIG] DOCKING_LIMIT_W, %s\n", obj_docking["DOCKING_LIMIT_W"].toString().toLocal8Bit().data());
-
-                DOCKING_DRIVE_T = obj_docking["DOCKING_DRIVE_T"].toString().toDouble();
-                printf("[CONFIG] DOCKING_DRIVE_T, %s\n", obj_docking["DOCKING_DRIVE_T"].toString().toLocal8Bit().data());
-
-                DOCKING_GAIN_KP = obj_docking["DOCKING_GAIN_KP"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GAIN_KP, %s\n", obj_docking["DOCKING_GAIN_KP"].toString().toLocal8Bit().data());
-
-                DOCKING_GAIN_KD = obj_docking["DOCKING_GAIN_KD"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GAIN_KD, %s\n", obj_docking["DOCKING_GAIN_KD"].toString().toLocal8Bit().data());
-
-                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toDouble();
-                printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_map = obj["path"].toObject();

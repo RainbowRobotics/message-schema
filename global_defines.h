@@ -251,10 +251,10 @@ struct CAM_INTRINSIC
         w = p.w;
         h = p.h;
 
-        fx = p.cy;
-        fy = p.cx;
-        cx = p.fy;
-        cy = p.fx;
+        fx = p.fx;
+        fy = p.fy;
+        cx = p.cx;
+        cy = p.cy;
 
         k1 = p.k1;
         k2 = p.k2;
@@ -271,10 +271,10 @@ struct CAM_INTRINSIC
         w = p.w;
         h = p.h;
 
-        fx = p.cy;
-        fy = p.cx;
-        cx = p.fy;
-        cy = p.fx;
+        fx = p.fx;
+        fy = p.fy;
+        cx = p.cx;
+        cy = p.cy;
 
         k1 = p.k1;
         k2 = p.k2;

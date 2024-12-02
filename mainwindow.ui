@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -261,10 +261,10 @@
             <widget class="QLabel" name="lb_Screen1">
              <property name="geometry">
               <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>200</width>
-               <height>200</height>
+               <x>1</x>
+               <y>1</y>
+               <width>191</width>
+               <height>181</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -277,8 +277,8 @@
             <widget class="QLabel" name="lb_Screen2">
              <property name="geometry">
               <rect>
-               <x>210</x>
-               <y>0</y>
+               <x>193</x>
+               <y>1</y>
                <width>160</width>
                <height>90</height>
               </rect>
@@ -293,8 +293,40 @@
             <widget class="QLabel" name="lb_Screen3">
              <property name="geometry">
               <rect>
-               <x>380</x>
-               <y>0</y>
+               <x>354</x>
+               <y>1</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen4">
+             <property name="geometry">
+              <rect>
+               <x>193</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen5">
+             <property name="geometry">
+              <rect>
+               <x>354</x>
+               <y>92</y>
                <width>160</width>
                <height>90</height>
               </rect>
@@ -448,7 +480,7 @@
     <item row="0" column="1">
      <widget class="QTabWidget" name="menu_tab">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -1276,13 +1308,26 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>220</x>
-                <y>134</y>
+                <y>130</y>
                 <width>92</width>
                 <height>23</height>
                </rect>
               </property>
               <property name="text">
                <string>Debug</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_TestImgSave">
+              <property name="geometry">
+               <rect>
+                <x>140</x>
+                <y>130</y>
+                <width>71</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>IMG save</string>
               </property>
              </widget>
             </widget>
@@ -1529,13 +1574,26 @@ Stop</string>
              <property name="geometry">
               <rect>
                <x>220</x>
-               <y>50</y>
+               <y>10</y>
                <width>61</width>
                <height>31</height>
               </rect>
              </property>
              <property name="text">
               <string>QA Node</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_QuickAddAruco">
+             <property name="geometry">
+              <rect>
+               <x>220</x>
+               <y>50</y>
+               <width>61</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>QA Aruco</string>
              </property>
             </widget>
            </widget>
@@ -2353,6 +2411,19 @@ Stop</string>
               </property>
               <property name="text">
                <string>Edit name</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoLink">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>50</y>
+                <width>91</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Auto link</string>
               </property>
              </widget>
             </widget>

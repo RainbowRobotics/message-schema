@@ -15,9 +15,9 @@
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "aruco.h"
 #include "autocontrol.h"
-#include "dockingcontrol.h"
-#include "l_dockingcontrol.h"
+#include "docking.h"
 #include "task.h"
 #include "sim.h"
 #include "comm_fms.h"
@@ -56,9 +56,9 @@ public:
     UNIMAP unimap;
     OBSMAP obsmap;
     SLAM_2D slam;
+    ARUCO aruco;
     AUTOCONTROL ctrl;
-    DOCKINGCONTROL dctrl;
-    L_DOCKINGCONTROL ldctrl;
+    DOCKING dctrl;
     TASK task;    
     SIM sim;
     COMM_FMS cfms;
@@ -141,6 +141,23 @@ public:
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};
 
+    // for copy & paste
+    Eigen::Vector4d rect;
+    double lt_x = 0.0;
+    double lt_y = 0.0;
+    double rb_x = 0.0;
+    double rb_y = 0.0;
+
+    std::atomic<bool> is_free_move = {false};
+    std::atomic<bool> is_grab = {false};
+    std::atomic<bool> is_pressed_btn_ctrl = {false};
+    std::atomic<bool> is_pressed_btn_c = {false};
+    std::atomic<bool> is_pressed_btn_v = {false};
+    std::vector<QString> contains_nodes;
+    std::vector<QString> temp_contains_nodes;
+    std::vector<QString> copy_contains_nodes;
+    std::vector<QString> selected_nodes;
+
     // plot object names
     std::vector<QString> last_plot_kfrms;
 
@@ -155,6 +172,8 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+    std::vector<QString> last_plot_contains;
+    std::vector<QString> last_plot_copy;
 
     // jog
     std::atomic<double> vx_target = {0.};
@@ -167,6 +186,9 @@ public:
 
     std::atomic<double> last_jog_update_t = {0};
     std::atomic<bool> is_jog_pressed = {false};
+
+    // aruco
+    std::atomic<double> aruco_prev_t = {0};
 
     // 3d plot funcs
     void map_plot();
@@ -235,6 +257,7 @@ public Q_SLOTS:
     void bt_AddNode();
     void bt_AddLink1();
     void bt_AddLink2();
+    void bt_AutoLink();
     void bt_EditNodePos();
     void bt_EditNodeType();
     void bt_EditNodeInfo();
@@ -256,6 +279,7 @@ public Q_SLOTS:
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
     void bt_QuickAddNode();
+    void bt_QuickAddAruco();
 
     // mapping & localization
     void bt_MapBuild();    
@@ -275,6 +299,7 @@ public Q_SLOTS:
     void bt_Test();
     void bt_TestLed();
     void ckb_TestDebug();
+    void bt_TestImgSave();
 
     // for autocontrol
     void bt_AutoMove();
@@ -284,10 +309,6 @@ public Q_SLOTS:
     void bt_AutoPause();
     void bt_AutoResume();
 
-    // for ldock
-    void bt_DockingMove();
-    void bt_DockingStop();
-    
     void slot_local_path_updated();
     void slot_global_path_updated();
 
@@ -302,6 +323,8 @@ public Q_SLOTS:
     void bt_TaskPlay();
     void bt_TaskPause();    
     void bt_TaskCancel();
+
+    // for aruco
 
     // for fms
     void bt_SendMap();

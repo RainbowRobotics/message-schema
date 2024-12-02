@@ -568,7 +568,7 @@ bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is
     return false;
 }
 
-bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, double margin_y, bool is_dyn)
+bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double margin_x, double margin_y)
 {
     // get
     mtx.lock();
@@ -628,7 +628,7 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x, d
     return false;
 }
 
-bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step, bool is_dyn)
+bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
     mtx.lock();

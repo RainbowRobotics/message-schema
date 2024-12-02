@@ -329,6 +329,19 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     return node.id;
 }
 
+QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
+{
+    NODE node;
+    node.id = gen_node_id();
+    node.name = name;
+    node.type = type;
+    node.tf = tf;
+    nodes.push_back(node);
+
+    printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
+
+    return node.id;
+}
 
 void UNIMAP::edit_node_pos(PICKING pick)
 {
@@ -484,6 +497,83 @@ void UNIMAP::add_link2(QString id0, QString id1)
 
                 printf("[UNIMAP] add link, %s -> %s\n", id0.toLocal8Bit().data(), id1.toLocal8Bit().data());
             }
+        }
+    }
+}
+
+void UNIMAP::add_link_auto()
+{
+    if(nodes.size() == 0)
+    {
+        return;
+    }
+
+    std::vector<QString> nodes_id;
+    std::vector<QString> goals_id = get_nodes("GOAL");
+    std::vector<QString> inits_id = get_nodes("INIT");
+    std::vector<QString> routes_id = get_nodes("ROUTE");
+
+    nodes_id.insert(nodes_id.end(), goals_id.begin(), goals_id.end());
+    nodes_id.insert(nodes_id.end(), inits_id.begin(), inits_id.end());
+    nodes_id.insert(nodes_id.end(), routes_id.begin(), routes_id.end());
+
+    std::vector<NODE*> _nodes;
+    for (size_t p = 0; p < nodes_id.size(); p++)
+    {
+        NODE* node = get_node_by_id(nodes_id[p]);
+        if(node == nullptr)
+        {
+            continue;
+        }
+
+        _nodes.push_back(node);
+    }
+
+    if(_nodes.size() == 0)
+    {
+        return;
+    }
+
+    Graph g(_nodes.size());
+    boost::property_map<Graph, boost::edge_weight_t>::type weightmap = boost::get(boost::edge_weight, g);
+    for (size_t p = 0; p < _nodes.size(); p++)
+    {
+        Eigen::Vector3d pt1 = _nodes[p]->tf.block(0,3,3,1);
+        Point p1(pt1[0], pt1[1]);
+
+        for (size_t q = p + 1; q < _nodes.size(); q++)
+        {
+            Eigen::Vector3d pt2 = _nodes[q]->tf.block(0,3,3,1);
+            Point p2(pt2[0], pt2[1]);
+
+            Edge e;
+            bool inserted;
+            std::tie(e, inserted) = boost::add_edge(p, q, g);
+            weightmap[e] = std::sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+        }
+    }
+
+    std::vector<Vertex> p_(num_vertices(g));
+    boost::prim_minimum_spanning_tree(g, &p_[0]);
+    for (size_t i = 0; i != p_.size(); ++i)
+    {
+        bool is_alreay_linked = false;
+        if (p_[i] != i)
+        {
+            for(size_t c = 0; c < _nodes[i]->linked.size(); c++)
+            {
+                if(_nodes[i]->linked[c] == _nodes[p_[i]]->id)
+                {
+                    is_alreay_linked = true;
+                    break;
+                }
+            }
+            if(is_alreay_linked == true)
+            {
+                continue;
+            }
+
+            add_link2(_nodes[i]->id, _nodes[p_[i]]->id);
         }
     }
 }

@@ -12,6 +12,20 @@
 #include <QObject>
 #include <QDir>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/prim_minimum_spanning_tree.hpp>
+
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, boost::property<boost::edge_weight_t, double>> Graph;
+typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+
+struct Point
+{
+    double x;
+    double y;
+    Point(double x, double y): x(x), y(y) {}
+};
+
 class UNIMAP : public QObject
 {
     Q_OBJECT
@@ -49,6 +63,7 @@ public:
 
     QString add_node(Eigen::Matrix4d tf, QString type);
     void add_node(PICKING pick, QString type, QString info="");
+    QString add_node(Eigen::Matrix4d tf, QString type, QString name);
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
@@ -58,6 +73,7 @@ public:
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
     void add_link2(QString id0, QString id1);
+    void add_link_auto();
 
     // annotation
     std::vector<NODE> nodes;

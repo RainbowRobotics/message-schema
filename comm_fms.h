@@ -46,10 +46,12 @@ public:
     // vars    
     std::atomic<bool> is_connected = {false};
     QString robot_id = "";
+    QString multi_state = "";
 
     // funcs
     void init();
     QString get_json(QJsonObject& json, QString key);
+    QString get_multi_state();
 
 Q_SIGNALS:
     void signal_mapload(double time, QString name);

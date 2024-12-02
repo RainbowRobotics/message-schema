@@ -65,7 +65,11 @@ public:
     double LOC_CHECK_DIST = 0.3;
     double LOC_CHECK_IE = 0.2;
     double LOC_CHECK_IR = 0.5;
-    double LOC_FUSION_RATIO = 0.5;
+
+    double LOC_ICP_ODO_FUSION_RATIO = 0.5;
+    double LOC_ARUCO_ODO_FUSION_RATIO = 0.5;
+    double LOC_ARUCO_ODO_FUSION_DIST = 2.0;
+    int LOC_ARUCO_MEDIAN_NUM	= 10;
 
     double ANNOT_QA_STEP = 0.3;
 
@@ -80,6 +84,8 @@ public:
     int USE_WEB_UI = 0;
     int USE_QT_UI = 0;
     int USE_FMS = 0;
+    int USE_ARUCO = 0;
+    int USE_ARUCO_FILTER = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 0.75;
     double DRIVE_GOAL_D = 0.05;    
@@ -116,15 +122,20 @@ public:
     QString SERVER_PW = "rainbow";
 
     // docking
-    double DOCKING_GOAL_D = 0.03;
-    double DOCKING_GOAL_TH = 3.0;
-    double DOCKING_LIMIT_W_ACC = 5.0;
-    double DOCKING_LIMIT_V = 0.05;
-    double DOCKING_LIMIT_W = 5.0;
-    double DOCKING_DRIVE_T = 0.15;
-    double DOCKING_GAIN_KP = 0.5;
-    double DOCKING_GAIN_KD = 0.025;
-    double DOCKING_EXTENDED_CONTROL_TIME = 3.0;
+    double DOCKING_GOAL_D = 0.05;
+    double DOCKING_GOAL_TH = 0.1*D2R;
+    double DOCKING_KP_d = 0.15;
+    double DOCKING_KD_d = 0.1;
+    double DOCKING_KP_th = 0.35;
+    double DOCKING_KD_th = 0.15;
+    double DOCKING_CLUST_D_THRESHOLD = 0.05;
+    double DOCKING_CLUST_DIST_THRESHOLD_MIN = 0.45;
+    double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.0;
+    double DOCKING_CLUST_ANGLE_THRESHOLD = 30.0*D2R;
+    double DOCKING_DOCK_SIZE_X[2] = {-0.025, 0.025};
+    double DOCKING_POINTDOCK_MARGIN = 0.20;
+    double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
+    double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
 
     // map
     QString MAP_PATH = "";
