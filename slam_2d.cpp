@@ -790,9 +790,6 @@ void SLAM_2D::loc_b_loop()
     mtx.unlock();
 
     MOBILE_POSE mo0 = mobile->get_pose();
-    double pre_aruco_t = 0;
-    int pre_aruco_id = -1;
-    std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
 
     // for aruco fusion
     double pre_aruco_t = 0;
@@ -888,7 +885,6 @@ void SLAM_2D::loc_b_loop()
                         pre_aruco_t = aruco_tpi.t;
                     }
                 }
-                pre_aruco_t = aruco_tpi.t;
             }
 
             // update
