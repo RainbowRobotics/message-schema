@@ -259,12 +259,16 @@ QString SLAM_2D::get_info_text()
     Eigen::Vector2d cur_ieir = get_cur_ieir();
     QString loc_state = get_cur_loc_state();
 
+    Eigen::Matrix4d cur_tf = get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+
     QString str;
-    str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f, loc_state: %s",
+    str.sprintf("[SLAM_INFO]\nmap_t: %.3f, %.3f\nloc_t: %.3f, %.3f\nkfrm_num: %d\nie: %.3f, ir: %.3f, loc_state: %s\npos:%.2f,%.2f,%.2f",
                           (double)proc_time_map_a, (double)proc_time_map_b,
                           (double)proc_time_loc_a, (double)proc_time_loc_b,
                           (int)kfrm_storage.size(),
-                          cur_ieir[0], cur_ieir[1], loc_state.toLocal8Bit().data());
+                          cur_ieir[0], cur_ieir[1], loc_state.toLocal8Bit().data(),
+                          cur_xi[0], cur_xi[1], cur_xi[2]*R2D);
     return str;
 }
 
