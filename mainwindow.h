@@ -17,7 +17,7 @@
 #include "obsmap.h"
 #include "aruco.h"
 #include "autocontrol.h"
-#include "docking.h"
+#include "dockingcontrol.h"
 #include "task.h"
 #include "sim.h"
 #include "comm_fms.h"
@@ -58,7 +58,7 @@ public:
     SLAM_2D slam;
     ARUCO aruco;
     AUTOCONTROL ctrl;
-    DOCKING dctrl;
+    DOCKINGCONTROL dctrl;
     TASK task;    
     SIM sim;
     COMM_FMS cfms;
