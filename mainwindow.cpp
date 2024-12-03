@@ -424,8 +424,6 @@ void MainWindow::init_modules()
     dctrl.logger = &logger;
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
-    dctrl.cam = &cam;
-    dctrl.code = &code;
     dctrl.slam = &slam;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
@@ -2398,6 +2396,20 @@ void MainWindow::slot_global_path_updated()
     is_global_path_update2 = true;
 }
 
+// for ldock
+
+void MainWindow::bt_DockingMove()
+{   
+    ctrl.is_moving = true;
+    dctrl.move();
+}
+
+void MainWindow::bt_DockingStop()
+{
+    dctrl.stop();
+    ctrl.is_moving = false;
+}
+
 // for test
 void MainWindow::bt_Test()
 {
@@ -3932,6 +3944,11 @@ void MainWindow::raw_plot()
             ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+    else
+    {
+        ui->lb_Screen2->setStyleSheet("background-color: transparent;");
+        ui->lb_Screen2->clear();
+    }
 
     if(cam.is_connected1)
     {
@@ -3943,6 +3960,75 @@ void MainWindow::raw_plot()
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+    else
+    {
+        ui->lb_Screen3->setStyleSheet("background-color: transparent;");
+        ui->lb_Screen3->clear();
+    }
+
+    // plot aruco
+    if(config.USE_ARUCO)
+    {
+        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
+        if(cur_tpi.t > aruco_prev_t)
+        {
+            aruco_prev_t = cur_tpi.t;
+
+            // Update screen for camera 0
+            cv::Mat plot0 = aruco.get_plot_img0();
+            if(!plot0.empty())
+            {
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                ui->lb_Screen4->setScaledContents(true);
+                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+            else
+            {
+                ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen4->clear();
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot1 = aruco.get_plot_img1();
+            if(!plot1.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+            else
+            {
+                ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+                ui->lb_Screen5->clear();
+            }
+
+            // Compute global_to_marker
+            Eigen::Matrix4d global_to_marker = slam.get_cur_tf() * cur_tpi.tf;
+
+            // Draw axis
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeCoordinateSystem("aruco_axis");
+            }
+            viewer->addCoordinateSystem(0.5, "aruco_axis");
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+        }
+        else
+        {
+            // t has not been updated, make screens transparent
+            ui->lb_Screen4->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen4->clear();
+
+            ui->lb_Screen5->setStyleSheet("background-color: transparent;");
+            ui->lb_Screen5->clear();
+
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeShape("aruco_axis");
+            }
+        }
+    }
+
 
     // plot aruco
     if(config.USE_ARUCO)
