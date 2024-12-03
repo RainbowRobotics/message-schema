@@ -87,8 +87,25 @@ public:
     void send_move_resume_response(QString result);
     void send_move_stop_response(QString result);
 
+    void send_docking_dock_response(QString result, QString message);
+    void send_docking_undock_response(QString result, QString message);
+
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
+
+private Q_SLOTS:
+    void sio_connected();
+    void sio_disconnected(sio::client::close_reason const& reason);
+    void sio_error();
+
+    void recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+
+    void recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 Q_SIGNALS:
     void signal_motorinit(double time);
@@ -113,17 +130,8 @@ Q_SIGNALS:
     void signal_localization_start(double time);
     void signal_localization_stop(double time);
 
-
-private Q_SLOTS:
-    void sio_connected();
-    void sio_disconnected(sio::client::close_reason const& reason);
-    void sio_error();
-
-    void recv_motorinit(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_mapload(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void signal_docking_dock(double time);
+    void signal_docking_undock(double time);
 
 private Q_SLOTS:
     void slot_motorinit(double time);
@@ -152,6 +160,8 @@ private Q_SLOTS:
     void slot_localization_start(double time);
     void slot_localization_stop(double time);
 
+    void slot_docking_dock(double time);
+    void slot_docking_undock(double time);
 };
 
 #endif // COMM_MS_H
