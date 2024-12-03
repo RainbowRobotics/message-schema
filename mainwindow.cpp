@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
+    connect(ui->bt_AutoNode, SIGNAL(clicked()), this, SLOT(bt_AutoNode()));
     connect(ui->bt_EditNodePos, SIGNAL(clicked()), this, SLOT(bt_EditNodePos()));
     connect(ui->bt_EditNodeType, SIGNAL(clicked()), this, SLOT(bt_EditNodeType()));
     connect(ui->bt_EditNodeInfo, SIGNAL(clicked()), this, SLOT(bt_EditNodeInfo()));    
@@ -175,6 +176,8 @@ MainWindow::MainWindow(QWidget *parent)
     // for advanced annot
     connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
 
+    connect(ui->bt_SelectPreNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPreNodes()));
+    connect(ui->bt_SelectPostNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPostNodes()));
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -972,6 +975,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     area_rb_x = 0.0;
                     area_rb_y = 0.0;
 
+                    saved_select_idx = (int)pre_select_nodes.size();
+
                     if(ui->cb_UseMeasure->isChecked())
                     {
                         measure_lt_x = pt[0];
@@ -992,13 +997,28 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         else if(is_quick_move == true)
                         {
                             // only one node clicked
-                            std::vector<QString> _selected_nodes;
-                            _selected_nodes.push_back(pick.cur_node);
-                            select_nodes = _selected_nodes;
+                            std::vector<QString> _select_nodes;
+                            _select_nodes.push_back(pick.cur_node);
+                            select_nodes = _select_nodes;
+
+                            pre_select_nodes.push_back(_select_nodes);
+                            if(pre_select_nodes.size() > 10)
+                            {
+                                pre_select_nodes.erase(pre_select_nodes.begin());
+                            }
+                            saved_select_idx = (int)pre_select_nodes.size();
                         }
                         else if(is_select_multi == true)
                         {
-                            select_nodes.push_back(pick.cur_node);
+                            QString id = pick.cur_node;
+                            select_nodes.push_back(id);
+
+                            pre_select_nodes.push_back(select_nodes);
+                            if(pre_select_nodes.size() > 10)
+                            {
+                                pre_select_nodes.erase(pre_select_nodes.begin());
+                            }
+                            saved_select_idx = (int)pre_select_nodes.size();
                         }
                     }
 
@@ -1128,7 +1148,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         if(unimap.is_loaded)
                         {
                             std::vector<QString> _select_nodes;
-
                             std::vector<QString> nodes = unimap.get_nodes();
                             for(size_t p = 0; p < nodes.size(); p++)
                             {
@@ -1148,7 +1167,14 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                             }
 
                             select_nodes = _select_nodes;
-                            copy_nodes.clear();
+                            pre_select_nodes.push_back(_select_nodes);
+                            if(pre_select_nodes.size() > 10)
+                            {
+                                pre_select_nodes.erase(pre_select_nodes.begin());
+                            }
+                            saved_select_idx = (int)pre_select_nodes.size();
+
+                            copy_infos.clear();
 
                             pick.pre_node = "";
                             pick.cur_node = "";
@@ -1659,7 +1685,17 @@ void MainWindow::bt_AddLink2()
 
 void MainWindow::bt_AutoLink()
 {
-    unimap.add_link_auto();
+    std::vector<QString> _select_nodes = select_nodes;
+    unimap.add_link_auto(_select_nodes);
+    topo_update();
+}
+
+void MainWindow::bt_AutoNode()
+{
+    QString type = ui->cb_NodeType->currentText();
+    double gap = ui->spb_NodeGap->value();
+
+    unimap.add_node_auto(pick, type, gap);
     topo_update();
 }
 
@@ -2158,15 +2194,6 @@ void MainWindow::bt_MinGapNodeX()
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
 
-    // if(tf0(0,3) > tf1(0,3))
-    // {
-    //     tf1(0,3) = tf0(0,3) + gap;
-    // }
-    // else
-    // {
-    //     tf1(0,3) = tf0(0,3) - gap;
-    // }
-
     Eigen::Vector3d dir = tf0.block(0,0,3,1);
     Eigen::Vector3d _gap = dir * gap;
 
@@ -2196,15 +2223,6 @@ void MainWindow::bt_MinGapNodeY()
 
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
-
-    // if(tf0(1,3) > tf1(1,3))
-    // {
-    //     tf1(1,3) = tf0(1,3) + gap;
-    // }
-    // else
-    // {
-    //     tf1(1,3) = tf0(1,3) - gap;
-    // }
 
     Eigen::Vector3d dir = tf0.block(0,1,3,1);
     Eigen::Vector3d _gap = dir * gap;
@@ -2802,6 +2820,36 @@ void MainWindow::bt_SendMap()
     }
 }
 
+void MainWindow::bt_SelectPreNodes()
+{
+    int val = (int)saved_select_idx - 1;
+    if((val < 0) || (val >= pre_select_nodes.size()))
+    {
+        return;
+    }
+
+    select_nodes = pre_select_nodes[val];
+    saved_select_idx = val;
+
+    topo_update();
+    pick_update();
+}
+
+void MainWindow::bt_SelectPostNodes()
+{
+    int val = (int)saved_select_idx + 1;
+    if((val < 0) || (val >= pre_select_nodes.size()))
+    {
+        return;
+    }
+
+    select_nodes = pre_select_nodes[val];
+    saved_select_idx = val;
+
+    topo_update();
+    pick_update();
+}
+
 // comm
 void MainWindow::comm_loop()
 {
@@ -2961,8 +3009,16 @@ void MainWindow::watch_loop()
 
         if(is_select_all == true && is_pressed_btn_ctrl == true)
         {
-            select_nodes.clear();
-            select_nodes = unimap.get_nodes();
+            std::vector<QString> _select_nodes = unimap.get_nodes();
+            select_nodes = _select_nodes;
+
+            pre_select_nodes.push_back(_select_nodes);
+            if(pre_select_nodes.size() > 10)
+            {
+                pre_select_nodes.erase(pre_select_nodes.begin());
+            }
+            saved_select_idx = (int)pre_select_nodes.size();
+
             topo_update();
             pick_update();
         }
@@ -2972,7 +3028,6 @@ void MainWindow::watch_loop()
             {
                 prevent_duplicate_clicks_cnt = 0;
 
-                copy_nodes.clear();
                 copy_infos.clear();
                 for(size_t p=0; p < select_nodes.size(); p++)
                 {
@@ -2993,7 +3048,6 @@ void MainWindow::watch_loop()
                     tf(0,3) += 0.5;
                     tf(1,3) -= 0.5;
                     QString id = unimap.add_node(tf, type);
-                    copy_nodes.push_back(id);
 
                     std::vector<int> links_idx;
                     for(size_t q = 0; q < links.size(); q++)
@@ -3008,6 +3062,7 @@ void MainWindow::watch_loop()
                     }
 
                     COPY_INFO ci;
+                    ci.id = id;
                     ci.original_idx = idx0;
                     ci.original_links = links_idx;
                     copy_infos.push_back(ci);
@@ -3015,15 +3070,17 @@ void MainWindow::watch_loop()
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
 
-                for(size_t p=0; p < copy_nodes.size(); p++)
+                for(size_t p=0; p < copy_infos.size(); p++)
                 {
-                    NODE* node0 = unimap.get_node_by_id(copy_nodes[p]);
+                    COPY_INFO ci0 = copy_infos[p];
+
+                    QString id0 = ci0.id;
+                    NODE* node0 = unimap.get_node_by_id(id0);
                     if(node0 == NULL)
                     {
                         continue;
                     }
 
-                    COPY_INFO ci0 = copy_infos[p];
                     std::vector<int> links0 = ci0.original_links;
                     for(size_t q = 0; q < links0.size(); q++)
                     {
@@ -3035,8 +3092,8 @@ void MainWindow::watch_loop()
 
                             if(idx0 == idx1)
                             {
-                                NODE* node0 = unimap.get_node_by_id(copy_nodes[p]);
-                                NODE* node1 = unimap.get_node_by_id(copy_nodes[r]);
+                                NODE* node0 = unimap.get_node_by_id(copy_infos[p].id);
+                                NODE* node1 = unimap.get_node_by_id(copy_infos[r].id);
                                 if(node0 == NULL || node1 == NULL)
                                 {
                                     continue;
@@ -3048,9 +3105,23 @@ void MainWindow::watch_loop()
                     }
                 }
 
-                if(copy_nodes.size() != 0)
+                if(copy_infos.size() != 0)
                 {
-                    select_nodes = copy_nodes;
+                    std::vector<QString> _select_nodes;
+                    for(size_t p = 0; p < copy_infos.size(); p++)
+                    {
+                        QString id = copy_infos[p].id;
+                        _select_nodes.push_back(id);
+                    }
+                    select_nodes = _select_nodes;
+
+                    pre_select_nodes.push_back(_select_nodes);
+                    if(pre_select_nodes.size() > 10)
+                    {
+                        pre_select_nodes.erase(pre_select_nodes.begin());
+                    }
+                    saved_select_idx = (int)pre_select_nodes.size();
+
                     pick.pre_node = "";
                     pick.cur_node = "";
                     topo_update();

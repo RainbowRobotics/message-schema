@@ -160,9 +160,10 @@ public:
     std::atomic<bool> is_copy = {false};
     std::atomic<bool> is_pressed_btn_ctrl = {false};
 
-    std::vector<QString> copy_nodes;
+    std::atomic<int> saved_select_idx = {0};
     std::vector<COPY_INFO> copy_infos;
     std::vector<QString> select_nodes;
+    std::vector<std::vector<QString>> pre_select_nodes;
 
     // plot object names
     std::vector<QString> last_plot_kfrms;
@@ -264,6 +265,7 @@ public Q_SLOTS:
     void bt_AddLink1();
     void bt_AddLink2();
     void bt_AutoLink();
+    void bt_AutoNode();
     void bt_EditNodePos();
     void bt_EditNodeType();
     void bt_EditNodeInfo();
@@ -332,6 +334,9 @@ public Q_SLOTS:
 
     // for advanced annot
     void cb_NodeType(QString type);
+
+    void bt_SelectPreNodes();
+    void bt_SelectPostNodes();
 
     // for fms
     void bt_SendMap();

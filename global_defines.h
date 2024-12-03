@@ -1114,8 +1114,30 @@ struct MOVE_INFO
 
 struct COPY_INFO
 {
+    QString id = "";
     int original_idx = -1;
     std::vector<int> original_links;
+
+    COPY_INFO()
+    {
+        id = "";
+        original_idx = -1;
+    }
+
+    COPY_INFO(const COPY_INFO& p)
+    {
+        id = p.id;
+        original_idx = p.original_idx;
+        original_links = p.original_links;
+    }
+
+    COPY_INFO& operator=(const COPY_INFO& p)
+    {
+        id = p.id;
+        original_idx = p.original_idx;
+        original_links = p.original_links;
+        return *this;
+    }
 };
 
 struct NODE_INFO

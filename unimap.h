@@ -82,7 +82,8 @@ public:
     void add_link2(PICKING pick);
     void add_link1(QString id0, QString id1);
     void add_link2(QString id0, QString id1);
-    void add_link_auto();
+    void add_link_auto(std::vector<QString> _select_nodes);
+    void add_node_auto(PICKING pick, QString type, double gap);
 
     // annotation
     std::vector<NODE> nodes;
