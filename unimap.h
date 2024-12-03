@@ -62,6 +62,8 @@ public:
     NODE* get_node_by_id(QString id);
     NODE* get_node_by_name(QString name);
 
+    QString get_cur_zone(Eigen::Matrix4d tf);
+
     // for copy links
     int get_node_idx_by_id(QString id);
     NODE* get_node_by_idx(int idx);
@@ -69,6 +71,7 @@ public:
     QString add_node(Eigen::Matrix4d tf, QString type);
     void add_node(PICKING pick, QString type, QString info="");
     QString add_node(Eigen::Matrix4d tf, QString type, QString name);
+    void del_node(QString id);
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);

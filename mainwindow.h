@@ -153,6 +153,7 @@ public:
     double measure_rb_x = 0.0;
     double measure_rb_y = 0.0;
 
+    std::atomic<bool> is_select_multi = {false};
     std::atomic<bool> is_select_all = {false};
     std::atomic<bool> is_quick_move = {false};
     std::atomic<bool> is_grab = {false};
@@ -160,6 +161,7 @@ public:
     std::atomic<bool> is_pressed_btn_ctrl = {false};
 
     std::vector<QString> copy_nodes;
+    std::vector<COPY_INFO> copy_infos;
     std::vector<QString> select_nodes;
 
     // plot object names
@@ -258,6 +260,7 @@ public Q_SLOTS:
     void bt_MapReload();
     void bt_MapSave2();
     void bt_AddNode();
+    void bt_DelNode();
     void bt_AddLink1();
     void bt_AddLink2();
     void bt_AutoLink();
@@ -327,7 +330,8 @@ public Q_SLOTS:
     void bt_TaskPause();    
     void bt_TaskCancel();
 
-    // for aruco
+    // for advanced annot
+    void cb_NodeType(QString type);
 
     // for fms
     void bt_SendMap();

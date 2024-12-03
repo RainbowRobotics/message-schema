@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MapReload, SIGNAL(clicked()), this, SLOT(bt_MapReload()));
     connect(ui->bt_MapSave2, SIGNAL(clicked()), this, SLOT(bt_MapSave2()));
     connect(ui->bt_AddNode, SIGNAL(clicked()), this, SLOT(bt_AddNode()));
+    connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
@@ -170,6 +171,9 @@ MainWindow::MainWindow(QWidget *parent)
     // for tab
     connect(ui->main_tab, &QTabWidget::currentChanged, this, &MainWindow::slot_main_tab_changed);
     connect(ui->menu_tab, &QTabWidget::currentChanged, this, &MainWindow::slot_menu_tab_changed);
+
+    // for advanced annot
+    connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
 
 
     // solve tab with vtk render window problem
@@ -888,6 +892,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     case Qt::Key_Q:
                         is_quick_move = true;
                         break;
+                    case Qt::Key_S:
+                        is_select_multi = true;
+                        break;
                     case Qt::Key_Control:
                         is_pressed_btn_ctrl = true;
                         break;
@@ -912,6 +919,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         break;
                     case Qt::Key_Q:
                         is_quick_move = false;
+                        break;
+                    case Qt::Key_S:
+                        is_select_multi = false;
                         break;
                     case Qt::Key_Control:
                         is_pressed_btn_ctrl = false;
@@ -953,7 +963,14 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     // update last mouse button
                     pick.last_btn = 0;
 
-                    select_nodes.clear();
+                    if(is_select_multi == false)
+                    {
+                        select_nodes.clear();
+                    }
+                    area_lt_x = 0.0;
+                    area_lt_y = 0.0;
+                    area_rb_x = 0.0;
+                    area_rb_y = 0.0;
 
                     if(ui->cb_UseMeasure->isChecked())
                     {
@@ -972,20 +989,16 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                             area_rb_x = pt[0];
                             area_rb_y = pt[1];
                         }
-                        else if(is_grab == false)
+                        else if(is_quick_move == true)
                         {
-                            if(is_quick_move == true)
-                            {
-                                // only one node clicked
-                                std::vector<QString> _selected_nodes;
-                                _selected_nodes.push_back(pick.cur_node);
-                                select_nodes = _selected_nodes;
-                            }
-
-                            area_lt_x = 0.0;
-                            area_lt_y = 0.0;
-                            area_rb_x = 0.0;
-                            area_rb_y = 0.0;
+                            // only one node clicked
+                            std::vector<QString> _selected_nodes;
+                            _selected_nodes.push_back(pick.cur_node);
+                            select_nodes = _selected_nodes;
+                        }
+                        else if(is_select_multi == true)
+                        {
+                            select_nodes.push_back(pick.cur_node);
                         }
                     }
 
@@ -1571,6 +1584,23 @@ void MainWindow::bt_AddNode()
     topo_update();
 }
 
+void MainWindow::bt_DelNode()
+{
+    if(select_nodes.size() == 0)
+    {
+        return;
+    }
+
+    for(size_t p = 0; p < select_nodes.size(); p++)
+    {
+        QString id = select_nodes[p];
+        unimap.del_node(id);
+    }
+
+    topo_update();
+    pick_update();
+}
+
 void MainWindow::bt_EditNodePos()
 {
     unimap.edit_node_pos(pick);
@@ -1611,6 +1641,44 @@ void MainWindow::bt_AutoLink()
 {
     unimap.add_link_auto();
     topo_update();
+}
+
+void MainWindow::cb_NodeType(QString type)
+{
+    ui->cb_NodeAdvanceType->clear();
+
+    if(type == "GOAL")
+    {
+        ui->cb_NodeAdvanceType->addItem("Forward");
+        ui->cb_NodeAdvanceType->addItem("Backward");
+        ui->cb_NodeAdvanceType->addItem("Offset");
+    }
+    else if(type == "INIT")
+    {
+
+    }
+    else if(type == "ROUTE")
+    {
+
+    }
+    else if(type == "OBS")
+    {
+
+    }
+    else if(type == "ZONE")
+    {
+        ui->cb_NodeAdvanceType->addItem("Forbidden");
+        ui->cb_NodeAdvanceType->addItem("SwitchableForbidden");
+        ui->cb_NodeAdvanceType->addItem("Speed");
+        ui->cb_NodeAdvanceType->addItem("SensorMute");
+        ui->cb_NodeAdvanceType->addItem("Sound");
+        ui->cb_NodeAdvanceType->addItem("Light");
+        ui->cb_NodeAdvanceType->addItem("Avoid");
+        ui->cb_NodeAdvanceType->addItem("IgnoreLowLidar");
+        ui->cb_NodeAdvanceType->addItem("IgnoreTiltLidar");
+        ui->cb_NodeAdvanceType->addItem("Offset");
+        ui->cb_NodeAdvanceType->addItem("Mask");
+    }
 }
 
 void MainWindow::bt_ClearTopo()
@@ -2857,6 +2925,7 @@ void MainWindow::comm_loop()
 // watchdog
 void MainWindow::watch_loop()
 {
+    int prevent_duplicate_clicks_cnt =0;
     int cnt = 0;
     int loc_fail_cnt = 0;
     double last_sync_time = 0;
@@ -2868,6 +2937,7 @@ void MainWindow::watch_loop()
     while(watch_flag)
     {
         cnt++;
+        prevent_duplicate_clicks_cnt++;
 
         if(is_select_all == true && is_pressed_btn_ctrl == true)
         {
@@ -2878,73 +2948,94 @@ void MainWindow::watch_loop()
         }
         if(is_copy == true && is_pressed_btn_ctrl == true && select_nodes.size() != 0)
         {
-            copy_nodes.clear();
-            std::vector<std::vector<int>> node_links_idx;
-            for(size_t p=0; p < select_nodes.size(); p++)
+            if(prevent_duplicate_clicks_cnt > 10)
             {
-                NODE* node = unimap.get_node_by_id(select_nodes[p]);
-                if(node == NULL)
+                prevent_duplicate_clicks_cnt = 0;
+
+                copy_nodes.clear();
+                copy_infos.clear();
+                for(size_t p=0; p < select_nodes.size(); p++)
                 {
-                    continue;
-                }
-
-                Eigen::Matrix4d tf = node->tf;
-                QString type = node->type;
-                std::vector<QString> links = node->linked;
-
-                // for copy nodes
-                tf(0,3) += 0.5;
-                tf(1,3) -= 0.5;
-                QString id = unimap.add_node(tf, type);
-                copy_nodes.push_back(id);
-
-                std::vector<int> links_idx;
-                for(size_t q = 0; q < links.size(); q++)
-                {
-                    QString link_id = links[q];
-                    int idx = unimap.get_node_idx_by_id(link_id);
-                    if(idx == -1)
-                    {
-                        continue;
-                    }
-                    links_idx.push_back(idx);
-                }
-                node_links_idx.push_back(links_idx);
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
-
-            int node_size = unimap.get_nodes_size();
-            for(size_t p=0; p < copy_nodes.size(); p++)
-            {
-                NODE* node0 = unimap.get_node_by_id(copy_nodes[p]);
-                if(node0 == NULL)
-                {
-                    continue;
-                }
-
-                for(size_t q = 0; q < node_links_idx[p].size(); q++)
-                {
-                    int idx = node_links_idx[p][q];
-                    idx = idx + node_size/2;
-
-                    NODE* node1 = unimap.get_node_by_idx(idx);
-                    if(node1 == NULL)
+                    NODE* node = unimap.get_node_by_id(select_nodes[p]);
+                    if(node == NULL)
                     {
                         continue;
                     }
 
-                    unimap.add_link1(node0->id, node1->id);
-                }
-            }
+                    QString id0 = node->id;
+                    Eigen::Matrix4d tf = node->tf;
+                    QString type = node->type;
+                    std::vector<QString> links = node->linked;
 
-            if(copy_nodes.size() != 0)
-            {
-                select_nodes = copy_nodes;
-                pick.pre_node = "";
-                pick.cur_node = "";
-                topo_update();
-                pick_update();
+                    int idx0 = unimap.get_node_idx_by_id(id0);
+
+                    // for copy nodes
+                    tf(0,3) += 0.5;
+                    tf(1,3) -= 0.5;
+                    QString id = unimap.add_node(tf, type);
+                    copy_nodes.push_back(id);
+
+                    std::vector<int> links_idx;
+                    for(size_t q = 0; q < links.size(); q++)
+                    {
+                        QString link_id = links[q];
+                        int idx = unimap.get_node_idx_by_id(link_id);
+                        if(idx == -1)
+                        {
+                            continue;
+                        }
+                        links_idx.push_back(idx);
+                    }
+
+                    COPY_INFO ci;
+                    ci.original_idx = idx0;
+                    ci.original_links = links_idx;
+                    copy_infos.push_back(ci);
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+
+                for(size_t p=0; p < copy_nodes.size(); p++)
+                {
+                    NODE* node0 = unimap.get_node_by_id(copy_nodes[p]);
+                    if(node0 == NULL)
+                    {
+                        continue;
+                    }
+
+                    COPY_INFO ci0 = copy_infos[p];
+                    std::vector<int> links0 = ci0.original_links;
+                    for(size_t q = 0; q < links0.size(); q++)
+                    {
+                        int idx0 = links0[q];
+                        for(size_t r = 0; r < copy_infos.size(); r++)
+                        {
+                            COPY_INFO ci1 = copy_infos[r];
+                            int idx1 = ci1.original_idx;
+
+                            if(idx0 == idx1)
+                            {
+                                NODE* node0 = unimap.get_node_by_id(copy_nodes[p]);
+                                NODE* node1 = unimap.get_node_by_id(copy_nodes[r]);
+                                if(node0 == NULL || node1 == NULL)
+                                {
+                                    continue;
+                                }
+
+                                unimap.add_link1(node0->id, node1->id);
+                            }
+                        }
+                    }
+                }
+
+                if(copy_nodes.size() != 0)
+                {
+                    select_nodes = copy_nodes;
+                    pick.pre_node = "";
+                    pick.cur_node = "";
+                    topo_update();
+                    pick_update();
+                }
             }
         }
 
@@ -5040,7 +5131,7 @@ void MainWindow::pick_plot2()
                     if(node != NULL)
                     {
                         QString id = node->id + "_select";
-                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 1.0, 0.0);
+                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.8, 0.05, node->tf, 1.0, 1.0, 0.0);
                         viewer2->addPolygonMesh(donut, id.toStdString());
                         last_plot_select.push_back(node->id);
                     }
@@ -5253,9 +5344,9 @@ void MainWindow::slot_write_log(QString user_log, QString color_code)
         color_code = "black";
     }
 
-    color_code += "QLabel { color : " + color_code + "; }";
+    QString style_code = "QLabel { color : " + color_code + "; }";
 
     ui->lb_LogInfo->setText(user_log);
-    ui->lb_LogInfo->setStyleSheet(color_code);
+    ui->lb_LogInfo->setStyleSheet(style_code);
 }
 

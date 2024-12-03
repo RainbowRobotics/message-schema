@@ -1982,7 +1982,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>175</y>
+                <y>160</y>
                 <width>31</width>
                 <height>21</height>
                </rect>
@@ -2000,9 +2000,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>50</x>
-                <y>170</y>
+                <y>160</y>
                 <width>271</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
              </widget>
@@ -2438,6 +2438,21 @@ Stop</string>
               <property name="styleSheet">
                <string notr="true"/>
               </property>
+              <item>
+               <property name="text">
+                <string>Forward</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Backward</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Offset</string>
+               </property>
+              </item>
              </widget>
              <widget class="QLabel" name="label_9">
               <property name="geometry">
@@ -2468,6 +2483,22 @@ Stop</string>
               </property>
               <property name="text">
                <string>use measure</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DelNode">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>100</y>
+                <width>91</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Del node[D]</string>
+              </property>
+              <property name="shortcut">
+               <string>D</string>
               </property>
              </widget>
             </widget>
