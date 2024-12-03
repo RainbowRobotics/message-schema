@@ -1269,18 +1269,38 @@ void MainWindow::bt_Sync()
 
 void MainWindow::bt_MoveLinear()
 {
-    double d = ui->dsb_MoveLinearDist->value();
-    double v = ui->dsb_MoveLinearV->value();
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double d = ui->dsb_MoveLinearDist->value();
+        double v = ui->dsb_MoveLinearV->value();
+        double t = std::abs(d/v) + 0.5;
 
-    mobile.move_linear(d, v);
+        mobile.move_linear(d, v);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
 }
 
 void MainWindow::bt_MoveRotate()
 {
-    double th = ui->dsb_MoveRotateDeg->value() * D2R;
-    double w = ui->dsb_MoveRotateW->value() * D2R;
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double th = ui->dsb_MoveRotateDeg->value() * D2R;
+        double w = ui->dsb_MoveRotateW->value() * D2R;
+        double t = std::abs(th/w) + 0.5;
 
-    mobile.move_rotate(th, w);
+        mobile.move_rotate(th, w);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
 }
 
 void MainWindow::bt_JogF()
