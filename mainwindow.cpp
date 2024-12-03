@@ -80,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MapBuild, SIGNAL(clicked()), this, SLOT(bt_MapBuild()));    
     connect(ui->bt_MapSave, SIGNAL(clicked()), this, SLOT(bt_MapSave()));
     connect(ui->bt_MapLoad, SIGNAL(clicked()), this, SLOT(bt_MapLoad()));
+    connect(ui->bt_MapLastLC, SIGNAL(clicked()), this, SLOT(bt_MapLastLC()));
 
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
@@ -1739,6 +1740,44 @@ void MainWindow::bt_MapLoad()
 
         config.MAP_PATH = map_dir;
         config.save_map_path();
+    }
+}
+
+void MainWindow::bt_MapLastLC()
+{
+    // try last lc
+    if(slam.kfrm_storage.size() >= 2)
+    {
+        KFRAME kfrm0 = slam.kfrm_storage.front();
+        KFRAME kfrm1 = slam.kfrm_storage.back();
+
+        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+        Eigen::Matrix4d dG = (kfrm1.G.inverse()*cur_tf*kfrm0.opt_G).inverse();
+        Eigen::Vector3d dxi = TF_to_se2(dG);
+        printf("[LAST_LC] dxi: %f, %f, %f\n", dxi[0], dxi[1], dxi[2]*R2D);
+
+        double err = slam.kfrm_icp(kfrm0, kfrm1, dG);
+        if(err < config.SLAM_ICP_ERROR_THRESHOLD)
+        {
+            slam.pgo.add_lc(kfrm0.id, kfrm1.id, dG, err);
+            printf("[LAST_LC] pose graph optimization, id:%d-%d, err:%f\n", kfrm0.id, kfrm1.id, err);
+
+            // optimal pose update
+            std::vector<Eigen::Matrix4d> opt_poses = slam.pgo.get_optimal_poses();
+            for(size_t p = kfrm0.id; p < slam.kfrm_storage.size(); p++)
+            {
+                slam.kfrm_storage[p].opt_G = opt_poses[p];
+                slam.kfrm_update_que.push(p);
+
+                printf("[LAST_LC] optimal pose update, id:%d\n", p);
+            }
+
+            printf("[LAST_LC] success\n");
+        }
+        else
+        {
+            printf("[LAST_LC] failed\n");
+        }
     }
 }
 

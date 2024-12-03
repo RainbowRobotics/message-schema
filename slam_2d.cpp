@@ -559,8 +559,6 @@ void SLAM_2D::map_a_loop()
 
 void SLAM_2D::map_b_loop()
 {
-    PGO pgo;
-
     printf("[SLAM] map_b_loop start\n");
     while(map_b_flag)
     {
