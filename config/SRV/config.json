@@ -9,7 +9,7 @@
         "CAM_TF_1": "0.2292,-0.0875,0.2,-62.0,0.0,-115.0"
     },
     "control": {
-        "DRIVE_EXTENDED_CONTROL_TIME": "2.0",
+        "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
         "DRIVE_GOAL_APPROACH_GAIN": "1.0",
         "DRIVE_GOAL_D": "0.05",
         "DRIVE_GOAL_TH": "2.0",
@@ -18,6 +18,8 @@
     },
     "debug": {
         "SIM_MODE": "0",
+        "USE_ARUCO": "1",
+        "USE_ARUCO_FILTER": "0",
         "USE_BEEP": "1",
         "USE_BLIDAR": "1",
         "USE_BQR": "0",
@@ -47,18 +49,22 @@
         "ROBOT_WHEEL_RADIUS": "0.0635"
     },
     "fms": {
-        "SERVER_ID": "rainbow",
-        "SERVER_IP": "127.0.0.1",
+        "SERVER_ID": "tw",
+        "SERVER_IP": "100.100.100.2",
         "SERVER_PW": "rainbow"
     },
     "loc": {
+        "LOC_ARUCO_MEDIAN_NUM": "5",
+        "LOC_ARUCO_ODO_FUSION_DIST": "2.0",
+        "LOC_ARUCO_ODO_FUSION_RATIO": "0.8",
         "LOC_CHECK_DIST": "0.3",
-        "LOC_CHECK_IE": "0.3",
-        "LOC_CHECK_IR": "0.3",
+        "LOC_CHECK_IE": "0.1",
+        "LOC_CHECK_IR": "0.4",
         "LOC_ICP_COST_THRESHOLD": "0.3",
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
-        "LOC_ICP_ERROR_THRESHOLD": "0.3",
+        "LOC_ICP_ERROR_THRESHOLD": "0.2",
         "LOC_ICP_MAX_FEATURE_NUM": "2000",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.8",
         "LOC_SURFEL_NUM": "3",
         "LOC_SURFEL_RANGE": "0.15",
         "LOC_ICP_ODO_FUSION_RATIO": "0.9",
@@ -94,7 +100,7 @@
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.5",
+        "OBS_DEADZONE": "0.4",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
@@ -108,7 +114,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/multi_test_241113_2"
+        "MAP_PATH": "/home/rainbow/maps/2024_11_29_09_51_13_378"
     },
     "robot": {
         "PLATFORM_NAME": "TT",

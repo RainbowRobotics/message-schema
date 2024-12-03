@@ -4030,6 +4030,45 @@ void MainWindow::raw_plot()
     }
 
 
+    // plot aruco
+    if(config.USE_ARUCO)
+    {
+        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
+        if(cur_tpi.t > aruco_prev_t)
+        {
+            aruco_prev_t = cur_tpi.t;
+
+            // Update screen for camera 0
+            cv::Mat plot0 = aruco.get_plot_img0();
+            if(!plot0.empty())
+            {
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                ui->lb_Screen4->setScaledContents(true);
+                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot1 = aruco.get_plot_img1();
+            if(!plot1.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Compute global_to_marker
+            Eigen::Matrix4d global_to_marker = slam.get_best_tf(cur_tpi.t) * cur_tpi.tf;
+
+            // Draw axis
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeCoordinateSystem("aruco_axis");
+            }
+            viewer->addCoordinateSystem(0.5, "aruco_axis");
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+        }
+    }
+
     if(!slam.is_slam && !slam.is_loc)
     {
         // remove first
