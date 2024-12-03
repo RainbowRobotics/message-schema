@@ -20,6 +20,8 @@ COMM_MS::COMM_MS(QObject *parent)
     BIND_EVENT(sock, "mapping", std::bind(&COMM_MS::recv_mapping, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "mapload", std::bind(&COMM_MS::recv_mapload, this, _1, _2, _3, _4));
     BIND_EVENT(sock, "localization", std::bind(&COMM_MS::recv_localization, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "dock", std::bind(&COMM_MS::recv_docking_dock, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "undock", std::bind(&COMM_MS::recv_docking_undock, this, _1, _2, _3, _4));
 
     io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
     io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
@@ -50,6 +52,9 @@ COMM_MS::COMM_MS(QObject *parent)
     connect(this, SIGNAL(signal_localization_init(double, double, double, double, double)), this, SLOT(slot_localization_init(double, double, double, double, double)));
     connect(this, SIGNAL(signal_localization_start(double)), this, SLOT(slot_localization_start(double)));
     connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
+
+    connect(this, SIGNAL(signal_docking_dock(double)), this, SLOT(slot_docking_dock(double)));
+    connect(this, SIGNAL(signal_docking_undock(double)), this, SLOT(slot_docking_undock(double)));
 }
 
 COMM_MS::~COMM_MS()
@@ -273,6 +278,64 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
     }
 }
 
+void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        double time = get_time0();
+
+        // check docking available
+        bool is_good = true;
+
+        // todo sk
+
+        if(is_good)
+        {
+            // accept response
+            Q_EMIT send_docking_dock_response("accept", "");
+
+            // do docking
+            Q_EMIT signal_docking_dock(time);
+        }
+        else
+        {
+            // todo sk
+
+            // reject response
+            Q_EMIT send_docking_dock_response("reject", "some reason");
+        }
+    }
+}
+
+void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        double time = get_time0();
+
+        // check undocking available
+        bool is_good = true;
+
+        // todo sk
+
+        if(is_good)
+        {
+            // accept response
+            Q_EMIT send_docking_undock_response("accept", "");
+
+            // do undocking
+            Q_EMIT signal_docking_undock(time);
+        }
+        else
+        {
+            // todo sk
+
+            // reject response
+            Q_EMIT send_docking_undock_response("reject", "some reason");
+        }
+    }
+}
+
 
 // send functions
 void COMM_MS::send_status()
@@ -376,8 +439,9 @@ void COMM_MS::send_status()
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
-    stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
+    stateObj["dock"] = "true"; // todo sk
     stateObj["map"] = unimap->map_dir.split("/").last();
+    stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
 
     // Adding the condition object
@@ -857,6 +921,53 @@ void COMM_MS::send_move_stop_response(QString result)
     printf("[COMM_MS] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
+void COMM_MS::send_docking_dock_response(QString result, QString message)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    double time = get_time0();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["result"] = result;
+    rootObj["message"] = message;
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("dockResponse", res);
+
+    printf("[COMM_MS] docking_dock_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+}
+
+void COMM_MS::send_docking_undock_response(QString result, QString message)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    double time = get_time0();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["result"] = result;
+    rootObj["message"] = message;
+
+    // send
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("undockResponse", res);
+
+    printf("[COMM_MS] docking_undock_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
+}
 
 // recv slots
 void COMM_MS::slot_motorinit(double time)
@@ -1204,4 +1315,16 @@ void COMM_MS::slot_localization_start(double time)
 void COMM_MS::slot_localization_stop(double time)
 {
     slam->localization_stop();
+}
+
+void COMM_MS::slot_docking_dock(double time)
+{
+    // todo sk
+
+}
+
+void COMM_MS::slot_docking_undock(double time)
+{
+    // todo sk
+
 }
