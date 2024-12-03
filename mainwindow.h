@@ -31,6 +31,7 @@
 #include <QTimer>
 #include <QProcess>
 #include <QMessageBox>
+#include <QGestureEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -79,6 +80,12 @@ public:
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
 
+    void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
+    void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
+
+    void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
+    void viewer_camera_pan_control(double dx, double dy);
+    void viewer_camera_pan_control2(double dx, double dy);
 public:
     Ui::MainWindow *ui;
     std::mutex mtx;
