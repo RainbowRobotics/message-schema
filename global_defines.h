@@ -1112,6 +1112,12 @@ struct MOVE_INFO
     }
 };
 
+struct COPY_INFO
+{
+    int original_idx = -1;
+    std::vector<int> original_links;
+};
+
 struct NODE_INFO
 {
     // pose

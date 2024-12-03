@@ -142,21 +142,27 @@ public:
     std::atomic<bool> is_set_top_view = {false};
 
     // for copy & paste
-    Eigen::Vector4d rect;
-    double lt_x = 0.0;
-    double lt_y = 0.0;
-    double rb_x = 0.0;
-    double rb_y = 0.0;
+    double area_lt_x = 0.0;
+    double area_lt_y = 0.0;
+    double area_rb_x = 0.0;
+    double area_rb_y = 0.0;
 
-    std::atomic<bool> is_free_move = {false};
+    // for measure
+    double measure_lt_x = 0.0;
+    double measure_lt_y = 0.0;
+    double measure_rb_x = 0.0;
+    double measure_rb_y = 0.0;
+
+    std::atomic<bool> is_select_multi = {false};
+    std::atomic<bool> is_select_all = {false};
+    std::atomic<bool> is_quick_move = {false};
     std::atomic<bool> is_grab = {false};
+    std::atomic<bool> is_copy = {false};
     std::atomic<bool> is_pressed_btn_ctrl = {false};
-    std::atomic<bool> is_pressed_btn_c = {false};
-    std::atomic<bool> is_pressed_btn_v = {false};
-    std::vector<QString> contains_nodes;
-    std::vector<QString> temp_contains_nodes;
-    std::vector<QString> copy_contains_nodes;
-    std::vector<QString> selected_nodes;
+
+    std::vector<QString> copy_nodes;
+    std::vector<COPY_INFO> copy_infos;
+    std::vector<QString> select_nodes;
 
     // plot object names
     std::vector<QString> last_plot_kfrms;
@@ -172,8 +178,7 @@ public:
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
-    std::vector<QString> last_plot_contains;
-    std::vector<QString> last_plot_copy;
+    std::vector<QString> last_plot_select;
 
     // jog
     std::atomic<double> vx_target = {0.};
@@ -255,6 +260,7 @@ public Q_SLOTS:
     void bt_MapReload();
     void bt_MapSave2();
     void bt_AddNode();
+    void bt_DelNode();
     void bt_AddLink1();
     void bt_AddLink2();
     void bt_AutoLink();
@@ -324,16 +330,14 @@ public Q_SLOTS:
     void bt_TaskPause();    
     void bt_TaskCancel();
 
-    // for aruco
+    // for advanced annot
+    void cb_NodeType(QString type);
 
     // for fms
     void bt_SendMap();
 
     // for log
     void slot_write_log(QString user_log, QString color_code);
-
-
-
 
 };
 #endif // MAINWINDOW_H
