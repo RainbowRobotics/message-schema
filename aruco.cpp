@@ -83,7 +83,7 @@ std::vector<cv::Point3f> ARUCO::make_obj_pts()
     return obj_pts;
 }
 
-Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec)
+Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec, Eigen::Matrix4d optional_tf)
 {
     cv::Mat R;
     cv::Rodrigues(rvec, R);
@@ -101,8 +101,8 @@ Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec)
     T.block<3,3>(0,0) = eR;
     T.block<3,1>(0,3) = et;
 
-    T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
-
+    T = T*optional_tf;
+    //T = T*ZYX_to_TF(0,0,0,0,-90*D2R,-90*D2R);
     // cam to marker
     return T;
 }
@@ -154,7 +154,7 @@ void ARUCO::detect_loop(int cam_idx)
         // pre processing
         cv::Mat cur_img;        
         cv::cvtColor(time_img.img, cur_img, cv::COLOR_BGR2GRAY);
-        cv::equalizeHist(cur_img, cur_img);
+        //cv::equalizeHist(cur_img, cur_img);
 
         std::vector<std::vector<cv::Point2f>> detected_uv;
         std::vector<int> detected_id;
@@ -168,10 +168,10 @@ void ARUCO::detect_loop(int cam_idx)
         // only use first detected marker
         cv::Mat plot_aruco;
         cv::cvtColor(cur_img, plot_aruco, cv::COLOR_GRAY2BGR);
-        cv::circle(plot_aruco, detected_uv[0][0], 10, cv::Scalar(0,0,255), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][1], 10, cv::Scalar(0,255,0), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][2], 10, cv::Scalar(255,0,0), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][3], 10, cv::Scalar(0,255,255), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[0][0], 30, cv::Scalar(0,0,255), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[0][1], 30, cv::Scalar(0,255,0), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[0][2], 30, cv::Scalar(255,0,0), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[0][3], 30, cv::Scalar(0,255,255), -1, cv::LINE_AA);
 
         // extract 3d-2d pairs
         std::vector<cv::Point3f> matched_xyzs = make_obj_pts();        
@@ -181,6 +181,25 @@ void ARUCO::detect_loop(int cam_idx)
             double u = (double)detected_uv[0][p].x;
             double v = (double)detected_uv[0][p].y;
             matched_uvs.push_back(cv::Point2f(u,v));
+        }
+
+        for(int i = -5; i <= 5; i++)
+        {
+            for(int j = -5; j <= 5; j++)
+            {
+                if(i == 0 && j == 0)
+                {
+                    continue;
+                }
+
+                for(int p = 0; p < 4; p++)
+                {
+                    double u = (double)detected_uv[0][p].x + (double)j*0.2;
+                    double v = (double)detected_uv[0][p].y + (double)i*0.2;
+                    matched_xyzs.push_back(matched_xyzs[p]);
+                    matched_uvs.push_back(cv::Point2f(u,v));
+                }
+            }
         }
 
         // not detected uv or no matching points
@@ -193,14 +212,24 @@ void ARUCO::detect_loop(int cam_idx)
         }
 
         // estimate extrinsic
-        cv::Mat rvec, tvec;        
-        //if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec))
+        cv::Mat rvec, tvec;
         if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec, false, cv::SOLVEPNP_SQPNP))
         {
-            cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
+            //cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
+            cv::solvePnPRefineLM(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
 
-            Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec);
+            Eigen::Matrix4d optional_tf;
+            if(cam_idx == 0)
+            {
+                optional_tf = cam->rgb_extrinsic0 * ZYX_to_TF(0,0,0,0,-90.0*D2R,-90.0*D2R);
+            }
+            else if(cam_idx == 1)
+            {
+                optional_tf = cam->rgb_extrinsic1 * ZYX_to_TF(0,0,0,0,-90.0*D2R,-90.0*D2R);
+            }
+
+            Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec, optional_tf);
             refine_pose(cam_to_marker);
 
             Eigen::Matrix4d robot_to_marker = cam_tf * cam_to_marker;

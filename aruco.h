@@ -33,7 +33,7 @@ public:
     cv::Mat get_plot_img1();
 
     std::vector<cv::Point3f> make_obj_pts();
-    Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec);
+    Eigen::Matrix4d se3_exp(cv::Vec3d rvec, cv::Vec3d tvec, Eigen::Matrix4d optional_tf);
 
     std::thread* detect_thread0 = NULL;
     std::atomic<bool> detect_flag0 = {false};

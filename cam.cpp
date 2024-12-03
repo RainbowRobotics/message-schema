@@ -449,9 +449,20 @@ void CAM::grab_loop()
     rgb_intrinsic0.k3 = camera_param0.rgbDistortion.k3; rgb_intrinsic0.k4 = camera_param0.rgbDistortion.k4;
     rgb_intrinsic0.k5 = camera_param0.rgbDistortion.k5; rgb_intrinsic0.k6 = camera_param0.rgbDistortion.k6;
     rgb_intrinsic0.p1 = camera_param0.rgbDistortion.p1; rgb_intrinsic0.p2 = camera_param0.rgbDistortion.p2;
+
+    rgb_extrinsic0.setIdentity();
+    for(int i = 0; i < 3; i++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            rgb_extrinsic0(i,j) = camera_param0.transform.rot[i*3+j];
+        }
+        rgb_extrinsic0(i,3) = camera_param0.transform.trans[i]/1000.0;
+    }
     mtx.unlock();
 
     printf("[CAM] rgb_intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic0.fx, rgb_intrinsic0.fy, rgb_intrinsic0.cx, rgb_intrinsic0.cy);
+    printf("[CAM] rgb_extrinsic0, x:%f, y:%f, z:%f\n", camera_param0.transform.trans[0], camera_param0.transform.trans[1], camera_param0.transform.trans[2]);
 
     auto camera_param1 = pipe1->getCameraParam();
     mtx.lock();
@@ -462,9 +473,20 @@ void CAM::grab_loop()
     rgb_intrinsic1.k3 = camera_param1.rgbDistortion.k3; rgb_intrinsic1.k4 = camera_param1.rgbDistortion.k4;
     rgb_intrinsic1.k5 = camera_param1.rgbDistortion.k5; rgb_intrinsic1.k6 = camera_param1.rgbDistortion.k6;
     rgb_intrinsic1.p1 = camera_param1.rgbDistortion.p1; rgb_intrinsic1.p2 = camera_param1.rgbDistortion.p2;
+
+    rgb_extrinsic1.setIdentity();
+    for(int i = 0; i < 3; i++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            rgb_extrinsic1(i,j) = camera_param1.transform.rot[i*3+j];
+        }
+        rgb_extrinsic1(i,3) = camera_param1.transform.trans[i]/1000.0;
+    }
     mtx.unlock();
 
     printf("[CAM] rgb_intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic1.fx, rgb_intrinsic1.fy, rgb_intrinsic1.cx, rgb_intrinsic1.cy);
+    printf("[CAM] rgb_extrinsic1, x:%f, y:%f, z:%f\n", camera_param1.transform.trans[0], camera_param1.transform.trans[1], camera_param1.transform.trans[2]);
 
     is_param_loaded = true;
 
