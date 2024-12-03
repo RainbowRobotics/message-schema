@@ -1860,7 +1860,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_AlignNodeX">
               <property name="geometry">
                <rect>
-                <x>50</x>
+                <x>40</x>
                 <y>330</y>
                 <width>71</width>
                 <height>21</height>
@@ -1873,7 +1873,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_MinGapNodeY">
               <property name="geometry">
                <rect>
-                <x>210</x>
+                <x>200</x>
                 <y>360</y>
                 <width>71</width>
                 <height>21</height>
@@ -1886,7 +1886,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_MinGapNodeX">
               <property name="geometry">
                <rect>
-                <x>130</x>
+                <x>120</x>
                 <y>360</y>
                 <width>71</width>
                 <height>21</height>
@@ -1899,7 +1899,7 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="spb_NodeGap">
               <property name="geometry">
                <rect>
-                <x>50</x>
+                <x>40</x>
                 <y>360</y>
                 <width>71</width>
                 <height>21</height>
@@ -1924,7 +1924,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_AlignNodeY">
               <property name="geometry">
                <rect>
-                <x>130</x>
+                <x>120</x>
                 <y>330</y>
                 <width>71</width>
                 <height>21</height>
@@ -1937,7 +1937,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_AlignNodeTh">
               <property name="geometry">
                <rect>
-                <x>210</x>
+                <x>200</x>
                 <y>330</y>
                 <width>71</width>
                 <height>21</height>
@@ -1968,7 +1968,7 @@ Stop</string>
              <widget class="QLabel" name="label_8">
               <property name="geometry">
                <rect>
-                <x>20</x>
+                <x>10</x>
                 <y>360</y>
                 <width>31</width>
                 <height>21</height>
@@ -2001,7 +2001,7 @@ Stop</string>
                <rect>
                 <x>50</x>
                 <y>160</y>
-                <width>271</width>
+                <width>151</width>
                 <height>41</height>
                </rect>
               </property>
@@ -2160,7 +2160,7 @@ Stop</string>
              <widget class="QGroupBox" name="groupBox">
               <property name="geometry">
                <rect>
-                <x>10</x>
+                <x>0</x>
                 <y>390</y>
                 <width>271</width>
                 <height>111</height>
@@ -2499,6 +2499,47 @@ Stop</string>
               </property>
               <property name="shortcut">
                <string>D</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_SelectPreNodes">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>3</y>
+                <width>41</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Pre
+Select</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_SelectPostNodes">
+              <property name="geometry">
+               <rect>
+                <x>260</x>
+                <y>3</y>
+                <width>41</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Post
+Select</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoNode">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>160</y>
+                <width>91</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Auto node</string>
               </property>
              </widget>
             </widget>
