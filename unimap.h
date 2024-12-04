@@ -50,6 +50,7 @@ public:
     std::vector<QString> get_linked_nodes(QString id);
     std::vector<QString> get_nodes(QString type);    
     std::vector<QString> get_nodes();
+    int get_nodes_size();
 
     QString gen_node_id();
     QString gen_node_name();
@@ -61,9 +62,16 @@ public:
     NODE* get_node_by_id(QString id);
     NODE* get_node_by_name(QString name);
 
+    QString get_cur_zone(Eigen::Matrix4d tf);
+
+    // for copy links
+    int get_node_idx_by_id(QString id);
+    NODE* get_node_by_idx(int idx);
+
     QString add_node(Eigen::Matrix4d tf, QString type);
     void add_node(PICKING pick, QString type, QString info="");
     QString add_node(Eigen::Matrix4d tf, QString type, QString name);
+    void del_node(QString id);
     void edit_node_pos(PICKING pick);
     void edit_node_pos(QString id, Eigen::Matrix4d tf);
     void edit_node_type(PICKING pick, QString type);
@@ -72,8 +80,10 @@ public:
     void clear_nodes();
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
+    void add_link1(QString id0, QString id1);
     void add_link2(QString id0, QString id1);
-    void add_link_auto();
+    void add_link_auto(std::vector<QString> _select_nodes);
+    void add_node_auto(PICKING pick, QString type, double gap);
 
     // annotation
     std::vector<NODE> nodes;

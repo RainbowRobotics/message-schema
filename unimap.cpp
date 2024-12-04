@@ -343,6 +343,34 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
     return node.id;
 }
 
+void UNIMAP::del_node(QString id)
+{
+    NODE* node = get_node_by_id(id);
+    if(node != NULL)
+    {
+        auto it = std::find(nodes.begin(), nodes.end(), *node);
+        if(it != nodes.end())
+        {
+            // disconnect other link
+            QString id = it->id;
+            for(size_t p = 0; p < nodes.size(); p++)
+            {
+                for(size_t q = 0; q < nodes[p].linked.size(); q++)
+                {
+                    auto _it = std::find(nodes[p].linked.begin(), nodes[p].linked.end(), id);
+                    if(_it != nodes[p].linked.end())
+                    {
+                        nodes[p].linked.erase(_it);
+                    }
+                }
+            }
+
+            // erase node
+            nodes.erase(it);
+        }
+    }
+}
+
 void UNIMAP::edit_node_pos(PICKING pick)
 {
     if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))
@@ -480,6 +508,25 @@ void UNIMAP::add_link2(PICKING pick)
     }
 }
 
+void UNIMAP::add_link1(QString id0, QString id1)
+{
+    if(id0 != "" && id1 != "" && id0 != id1)
+    {
+        NODE* node0 = get_node_by_id(id0);
+        NODE* node1 = get_node_by_id(id1);
+        if(node0 != NULL && node1 != NULL)
+        {
+            auto it0 = std::find(node0->linked.begin(), node0->linked.end(), id0);
+            auto it1 = std::find(node1->linked.begin(), node1->linked.end(), id1);
+            if(it0 == node0->linked.end() && it1 == node1->linked.end())
+            {
+                node0->linked.push_back(id1);
+                printf("[UNIMAP] add link, %s -> %s\n", id0.toLocal8Bit().data(), id1.toLocal8Bit().data());
+            }
+        }
+    }
+}
+
 void UNIMAP::add_link2(QString id0, QString id1)
 {
     if(id0 != "" && id1 != "" && id0 != id1)
@@ -501,7 +548,7 @@ void UNIMAP::add_link2(QString id0, QString id1)
     }
 }
 
-void UNIMAP::add_link_auto()
+void UNIMAP::add_link_auto(std::vector<QString> _select_nodes)
 {
     if(nodes.size() == 0)
     {
@@ -509,13 +556,20 @@ void UNIMAP::add_link_auto()
     }
 
     std::vector<QString> nodes_id;
-    std::vector<QString> goals_id = get_nodes("GOAL");
-    std::vector<QString> inits_id = get_nodes("INIT");
-    std::vector<QString> routes_id = get_nodes("ROUTE");
+    if(_select_nodes.size() == 0)
+    {
+        std::vector<QString> goals_id = get_nodes("GOAL");
+        std::vector<QString> inits_id = get_nodes("INIT");
+        std::vector<QString> routes_id = get_nodes("ROUTE");
 
-    nodes_id.insert(nodes_id.end(), goals_id.begin(), goals_id.end());
-    nodes_id.insert(nodes_id.end(), inits_id.begin(), inits_id.end());
-    nodes_id.insert(nodes_id.end(), routes_id.begin(), routes_id.end());
+        nodes_id.insert(nodes_id.end(), goals_id.begin(), goals_id.end());
+        nodes_id.insert(nodes_id.end(), inits_id.begin(), inits_id.end());
+        nodes_id.insert(nodes_id.end(), routes_id.begin(), routes_id.end());
+    }
+    else
+    {
+        nodes_id = _select_nodes;
+    }
 
     std::vector<NODE*> _nodes;
     for (size_t p = 0; p < nodes_id.size(); p++)
@@ -574,6 +628,55 @@ void UNIMAP::add_link_auto()
             }
 
             add_link2(_nodes[i]->id, _nodes[p_[i]]->id);
+        }
+    }
+}
+
+void UNIMAP::add_node_auto(PICKING pick, QString type, double gap)
+{
+    if(gap < 0.0)
+    {
+        return;
+    }
+
+    if(pick.pre_node != "" && pick.cur_node != "" && pick.pre_node != pick.cur_node)
+    {
+        NODE* node0 = get_node_by_id(pick.pre_node);
+        NODE* node1 = get_node_by_id(pick.cur_node);
+        if(node0 != NULL && node1 != NULL)
+        {
+            Eigen::Matrix4d tf0 = node0->tf;
+            Eigen::Matrix4d tf1 = node1->tf;
+
+            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
+            Eigen::Vector3d pose1 = tf1.block(0,3,3,1);
+
+            Eigen::Vector2d pos0 = Eigen::Vector2d(pose0[0], pose0[1]);
+            Eigen::Vector2d pos1 = Eigen::Vector2d(pose1[0], pose1[1]);
+
+            double dist = (pos0 - pos1).norm() + 0.000001;
+            int num = dist/gap;
+
+            double dx = (pos1[0] - pos0[0]) + 0.000001;
+            double dy = (pos1[1] - pos0[1]) + 0.000001;
+
+            double dir_x = dx/dist;
+            double dir_y = dy/dist;
+
+            for(int p = 1; p < num; p++)
+            {
+                double x = pos0[0] + (gap)*(double)p*dir_x;
+                double y = pos0[1] + (gap)*(double)p*dir_y;
+
+                Eigen::Vector3d new_pose = Eigen::Vector3d(x, y, 0.0);
+
+                Eigen::Matrix4d new_tf = Eigen::Matrix4d::Identity();
+                new_tf.block(0,0,3,3) = tf0.block(0,0,3,3);
+                new_tf.block(0,3,3,1) = new_pose;
+
+                add_node(new_tf, type);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
         }
     }
 }
@@ -637,6 +740,11 @@ std::vector<QString> UNIMAP::get_nodes()
         res.push_back(it.id);
     }
     return res;
+}
+
+int UNIMAP::get_nodes_size()
+{
+    return (int)nodes.size();
 }
 
 QString UNIMAP::gen_node_id()
@@ -869,4 +977,81 @@ NODE* UNIMAP::get_node_by_name(QString name)
     }
 
     return node;
+}
+
+int UNIMAP::get_node_idx_by_id(QString id)
+{
+    if(id == "")
+    {
+        return -1;
+    }
+
+    int idx = -1;
+    if((int)nodes.size() != 0)
+    {
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            if(nodes[p].id == id)
+            {
+                idx = (int)p;
+                break;
+            }
+        }
+    }
+
+    return idx;
+}
+
+NODE* UNIMAP::get_node_by_idx(int idx)
+{
+    NODE* node = NULL;
+    if((int)nodes.size() != 0)
+    {
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            if((int)p == idx)
+            {
+                node = &nodes[p];
+                break;
+            }
+        }
+    }
+
+    return node;
+}
+
+QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
+{
+    QString zone_type = "";
+
+    std::vector<QString> zones = get_nodes("ZONE");
+    for(size_t p=0; p<zones.size(); p++)
+    {
+        NODE* node = get_node_by_id(zones[p]);
+        if(node == NULL)
+        {
+            continue;
+        }
+
+        QString info = node->info;
+        NODE_INFO res;
+        if(parse_info(info, "SIZE", res))
+        {
+            Eigen::Matrix4d res_tf = node->tf.inverse()*tf;
+
+            double x = res_tf(0,3);
+            double y = res_tf(1,3);
+            double z = res_tf(2,3);
+
+            if(x > -res.sz[0]/2 && x < res.sz[0]/ 2 &&
+               y > -res.sz[1]/2 && y < res.sz[1]/ 2 &&
+               z > -res.sz[2]/2 && z < res.sz[2]/ 2)
+            {
+                zone_type = node->type;
+                break;
+            }
+        }
+    }
+
+    return zone_type;
 }
