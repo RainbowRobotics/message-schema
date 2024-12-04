@@ -82,6 +82,7 @@ public:
 
     void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
+    void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
 
     void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
     void viewer_camera_pan_control(double dx, double dy);

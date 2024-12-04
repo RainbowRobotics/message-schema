@@ -73,7 +73,7 @@ public:
 
     double ANNOT_QA_STEP = 0.3;
 
-    int SIM_MODE = 1; // 0: real mode, 1: simulation mode
+    int SIM_MODE = 0; // 0: real mode, 1: simulation mode
     int USE_IMU = 0;
     int USE_BEEP = 0;
     int USE_RTSP = 0;
