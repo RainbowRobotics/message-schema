@@ -1270,7 +1270,7 @@ void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object
     qreal currentScaleFactor = pinchGesture->scaleFactor();
     qreal scaleChange = currentScaleFactor / lastScaleFactor;
 
-    double zoomAmount = (scaleChange - 1.0)*100.0; // need adjust
+    double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
 
     // scale
     if (object == ui->qvtkWidget)
@@ -1279,12 +1279,13 @@ void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object
         viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
         viewer->getRenderWindow()->Render();
     }
-    //else if (object == ui->qvtkWidget2)
-    //{
-    //    // viewer2 zoom in/out
-    //    viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-    //    viewer2->getRenderWindow()->Render();
-    //}
+    else if (object == ui->qvtkWidget2) // annotation
+    {
+        // viewer2 zoom in/out
+        viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+        viewer2->getRenderWindow()->Render();
+        // to do: qvtkWidget <--> qvtkWidget2 :: camera view share
+    }
 }
 
 void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
@@ -1364,13 +1365,50 @@ void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz,
     viewer->setCameraClipDistances(2.0, 1000.0);
 }
 
+void MainWindow::viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz)
+{
+    std::vector<pcl::visualization::Camera> cams;
+    viewer2->getCameras(cams);
+
+    Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+    Eigen::Vector3d focal(cams[0].focal[0], cams[0].focal[1], cams[0].focal[2]);
+    Eigen::Vector3d up(cams[0].view[0], cams[0].view[1], cams[0].view[2]);
+    Eigen::Vector3d look = focal - pos;
+    Eigen::Vector3d right = look.cross(up);
+
+    double d = look.norm();
+
+    look.normalize();
+    right.normalize();
+    up = right.cross(look);
+
+    Eigen::Matrix4d tf = Eigen::Matrix4d::Identity();
+    tf.block<3, 1>(0, 0) = right;
+    tf.block<3, 1>(0, 1) = up;
+    tf.block<3, 1>(0, 2) = look;
+    tf.block<3, 1>(0, 3) = pos;
+
+    Eigen::Matrix4d delta_tf = ZYX_to_TF(tx, ty, tz, rx, ry, rz);
+    Eigen::Matrix4d tf_new = tf * ZYX_to_TF(0, 0, d, 0, 0, 0) * delta_tf * ZYX_to_TF(0, 0, -d, 0, 0, 0);
+
+    Eigen::Vector3d up_new = tf_new.block<3, 1>(0, 1);
+    Eigen::Vector3d pos_new = tf_new.block<3, 1>(0, 3);
+    Eigen::Vector3d focal_new = tf_new.block<3, 1>(0, 2)*d + pos_new;
+
+    viewer2->setCameraPosition(pos_new[0], pos_new[1], pos_new[2],
+                              focal_new[0], focal_new[1], focal_new[2],
+                              up_new[0], up_new[1], up_new[2]);
+
+    viewer2->setCameraClipDistances(2.0, 1000.0);
+}
+
 void MainWindow::viewer_camera_pan_control(double dx, double dy)
 {
     // camera current position & direction
     std::vector<pcl::visualization::Camera> cams;
     viewer->getCameras(cams);
 
-    double sensitivity = 0.005; // adjust
+    double sensitivity = 0.025; // adjust
     dx *= sensitivity;
     dy *= sensitivity;
 
@@ -1399,7 +1437,7 @@ void MainWindow::viewer_camera_pan_control2(double dx, double dy)
     std::vector<pcl::visualization::Camera> cams;
     viewer2->getCameras(cams);
 
-    double sensitivity = 0.005; // adjust
+    double sensitivity = 0.025; // adjust
     dx *= sensitivity;
     dy *= sensitivity;
 
