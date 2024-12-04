@@ -759,13 +759,48 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         }
 
         // touch event
-        if (ev->type() == QEvent::TouchBegin ||
-            ev->type() == QEvent::TouchUpdate ||
-            ev->type() == QEvent::TouchEnd )
+        if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
         {
-            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-            handleTouchEvent(touchEvent, object);
-            return true;
+            if(ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+            {
+                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                if (!touchPoints.isEmpty())
+                {
+                    const QTouchEvent::TouchPoint& touchPoint = touchPoints.first();
+                    QPoint pos = touchPoint.pos().toPoint();
+
+                    if (!touchEvent->isAccepted())
+                    {
+                        if (ev->type() == QEvent::TouchBegin)
+                        {
+                            QMouseEvent pressEvent(QEvent::MouseButtonPress, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                            QApplication::sendEvent(object, &pressEvent);
+                        }
+                        else if (ev->type() == QEvent::TouchUpdate)
+                        {
+                            QMouseEvent moveEvent(QEvent::MouseMove, pos, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+                            QApplication::sendEvent(object, &moveEvent);
+                        }
+                        else if (ev->type() == QEvent::TouchEnd)
+                        {
+                            QMouseEvent releaseEvent(QEvent::MouseButtonRelease, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                            QApplication::sendEvent(object, &releaseEvent);
+                        }
+
+                        touchEvent->setAccepted(true);
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                handleTouchEvent(touchEvent, object);
+                return true;
+            }
+
+
         }
     }
     else if(object == ui->qvtkWidget2)
@@ -1295,11 +1330,37 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
     if (touchPoints.count() == 1)
     {
         const QTouchEvent::TouchPoint &touchPoint = touchPoints.first();
-
+        //QTouchEvent* me = static_cast<QTouchEvent*>(touchEvent);
         if (touchEvent->type() == QEvent::TouchBegin)
         {
             lastTouchPoint = touchPoint.pos();
             isPanning = true;
+
+            //// clear node selection
+            //pick.pre_node = "";
+            //pick.cur_node = "";
+
+            //// ray casting
+            //double x = touchPoint.pos().x();
+            //double y = touchPoint.pos().y();
+            //double w = ui->qvtkWidget2->size().width();
+            //double h = ui->qvtkWidget2->size().height();
+
+            //Eigen::Vector3d ray_center;
+            //Eigen::Vector3d ray_direction;
+            //picking_ray(x, y, w, h, ray_center, ray_direction, viewer2);
+
+            //Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+            //pick.l_pt0 = pt;
+            //pick.l_drag = true;
+
+            //// update last mouse button
+            //pick.last_btn = 0;
+
+            //pick_update();
+            ////return true;
+
+
         }
         else if (touchEvent->type() == QEvent::TouchUpdate && isPanning)
         {
