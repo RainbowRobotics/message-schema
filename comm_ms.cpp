@@ -511,7 +511,7 @@ void COMM_MS::send_status()
     }
     else
     {
-        qDebug() << "<ERROR> dctrl is null.";
+        //To Do list
     }
     stateObj["dock"] = docking_state; 
     stateObj["map"] = unimap->map_dir.split("/").last();

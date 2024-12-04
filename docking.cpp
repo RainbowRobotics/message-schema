@@ -262,7 +262,7 @@ bool DOCKING::find_Vmark()
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
 
-        if(err >0.0025) //0.001
+        if(err >0.003) //0.001
         {
             return false;
         }
@@ -282,8 +282,9 @@ bool DOCKING::find_Vmark()
 void DOCKING::a_loop()
 {
     const double dt = 0.02; // 50hz
-    double obs_wait_st_time = 0;
-    double wait_start_time = 0; 
+    double obs_wait_st_time = 0.0;
+    double wait_start_time = 0.0;
+    double vmark_start_time = get_time();
 
     while(a_flag){
 
@@ -333,6 +334,14 @@ void DOCKING::a_loop()
 //                }
                 mobile->move(cmd_v,0,cmd_w);
             }
+
+            else
+            {
+                if(get_time() - vmark_start_time > 10.0)
+                {
+                    Q_EMIT signal_dock_failed(failed_reason);
+                }
+            }
         }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
@@ -379,7 +388,7 @@ void DOCKING::a_loop()
             MOBILE_STATUS ms = mobile->get_status();
 
             mobile->move(0, 0, 0); 
-            if (get_time() - wait_start_time > 10.0)
+            if (get_time() - wait_start_time > 20.0)
             {
                 failed_reason = "NOT CONNECTED";
                 Q_EMIT signal_dock_failed(failed_reason);
