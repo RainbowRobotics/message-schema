@@ -1551,6 +1551,8 @@ void AUTOCONTROL::b_loop_pp()
 {    
     // set flag
     is_moving = true;
+
+    logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
     if(global_path_que.unsafe_size() == 0)
     {
         // no global path
@@ -1559,8 +1561,6 @@ void AUTOCONTROL::b_loop_pp()
         logger->write_log("[AUTO] no global path que");
         return;
     }
-
-    logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
 
     // check global path
     PATH global_path;
@@ -1590,13 +1590,14 @@ void AUTOCONTROL::b_loop_pp()
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
-    // check goal    
-    const double loose_factor = 2.0;
+    // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
-    Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
-    if(dtdr[0] < config->DRIVE_GOAL_D*loose_factor)
+
+    // check already goal
+    Eigen::Vector3d goal_dxi = TF_to_se2(goal_tf.inverse()*slam->get_cur_tf());
+    if(calc_dist_2d(goal_dxi) < 2*config->DRIVE_GOAL_D)
     {
-        if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*loose_factor*D2R)
+        if(std::abs(goal_dxi[2]) < 2*config->DRIVE_GOAL_TH*D2R || !global_path.is_align)
         {
             // already goal
             clean_up();
@@ -1604,15 +1605,10 @@ void AUTOCONTROL::b_loop_pp()
             logger->write_log("[AUTO] already goal");
             return;
         }
-        else
-        {
-            if(global_path.is_align)
-            {
-                // do final align
-                fsm_state = AUTO_FSM_FINAL_ALIGN;
-                logger->write_log("[AUTO] jump to FINAL_ALIGN");
-            }
-        }
+
+        // else do final align
+        fsm_state = AUTO_FSM_FINAL_ALIGN;
+        logger->write_log("[AUTO] jump to FINAL_ALIGN");
     }
 
     // path storage
@@ -1766,11 +1762,10 @@ void AUTOCONTROL::b_loop_pp()
             w *= scale_w;
 
             // goal check
-            if(std::abs(err_th) < config->DRIVE_GOAL_TH*loose_factor*D2R)
+            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
                 extend_dt = 0;
                 pre_err_th = 0;
-                //mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;                
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
