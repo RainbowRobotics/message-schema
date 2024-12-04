@@ -737,7 +737,8 @@ void COMM_UI::send_status()
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
-    stateObj["map"] = unimap->map_dir.split("/").last();
+    stateObj["map"] = unimap->map_dir.split("/").last();    
+    stateObj["cur_node"] = unimap->get_node_id_edge(cur_tf.block(0,3,3,1)); // cur node id
     rootObj["state"] = stateObj;
 
     // Adding the condition object
