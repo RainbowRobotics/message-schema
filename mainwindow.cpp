@@ -609,8 +609,7 @@ void MainWindow::all_plot_clear()
 // for picking interface
 bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
-    //if(object == ui->qvtkWidget)
-    if(object == ui->qvtkWidget || object == ui->qvtkWidget2)
+    if(object == ui->qvtkWidget)
     {
         // cam control
         if(ui->cb_ViewType->currentText() == "VIEW_3D")
@@ -768,8 +767,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             handleTouchEvent(touchEvent, object);
             return true;
         }
-
-
     }
     else if(object == ui->qvtkWidget2)
     {
