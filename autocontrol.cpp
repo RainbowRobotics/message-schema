@@ -19,9 +19,6 @@ AUTOCONTROL::~AUTOCONTROL()
         b_thread->join();
         b_thread = NULL;
     }
-    mobile->move(0, 0, 0);
-    is_moving = false;
-    clear_path();
 }
 
 void AUTOCONTROL::init()
@@ -147,6 +144,8 @@ PATH AUTOCONTROL::get_cur_local_path()
 
 void AUTOCONTROL::clear_path()
 {
+    global_path_que.clear();
+
     mtx.lock();    
     cur_global_path = PATH();
     cur_local_path = PATH();
@@ -176,11 +175,6 @@ QString AUTOCONTROL::get_multi_req()
 
 void AUTOCONTROL::stop()
 {
-    if(is_moving == false)
-    {
-        return;
-    }
-
     // control loop stop
     if(b_thread != NULL)
     {
@@ -188,19 +182,8 @@ void AUTOCONTROL::stop()
         b_thread->join();
         b_thread = NULL;
     }
-    mobile->move(0, 0, 0);
 
-    // clear params
-    is_moving = false;
-    is_pause = false;
-    clear_path();
-
-    mtx.lock();
-    multi_req = "none";
-    mtx.unlock();
-
-    // clear que
-    global_path_que.clear();
+    clean_up();
 }
 
 void AUTOCONTROL::change()
@@ -216,9 +199,6 @@ void AUTOCONTROL::change()
 
     // clear path
     clear_path();
-
-    // clear que
-    global_path_que.clear();
 }
 
 void AUTOCONTROL::set_goal(QString goal_id)
@@ -1574,21 +1554,14 @@ void AUTOCONTROL::b_loop_pp()
     if(global_path_que.unsafe_size() == 0)
     {
         // no global path
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_failed("no global path que");
         logger->write_log("[AUTO] global path init failed 1");
         return;
     }
     else
     {
-        QString str; str.sprintf("[AUTO] global path que size: %d", global_path_que.unsafe_size());
+        QString str; str.sprintf("[AUTO] global path que size: %d", (int)global_path_que.unsafe_size());
         logger->write_log(str);
     }
 
@@ -1618,14 +1591,7 @@ void AUTOCONTROL::b_loop_pp()
     if(global_path.pos.size() == 0)
     {
         // no global path
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_failed("no global path");
         logger->write_log("[AUTO] global path init failed 2");
         return;
@@ -1645,14 +1611,7 @@ void AUTOCONTROL::b_loop_pp()
         if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*loose_factor*D2R)
         {
             // already goal
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("already goal");
             logger->write_log("[AUTO] already goal");
             return;
@@ -1687,43 +1646,29 @@ void AUTOCONTROL::b_loop_pp()
     logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
     {
-        // pause
-        if(is_pause)
-        {
-            mobile->move(0, 0, 0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-
         // check everything
         int is_good_everything = is_everything_fine();
         if(is_good_everything == DRIVING_FAILED)
         {
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("something wrong");
             logger->write_log("[AUTO] something wrong (failed)");
             return;
         }
         else if(is_good_everything == DRIVING_NOT_READY)
         {
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("something wrong (not ready)");
             logger->write_log("[AUTO] something wrong (not ready)");
             return;
+        }
+
+        // pause
+        if(is_pause)
+        {
+            mobile->move(0, 0, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
         }
 
         // get current status
@@ -2083,16 +2028,9 @@ void AUTOCONTROL::b_loop_pp()
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
             if(obsmap->is_path_collision(traj, true))
             {
-                if(config->USE_EARLYSTOP && is_multi == false)
+                if(config->USE_EARLYSTOP)
                 {
-                    mobile->move(0, 0, 0);
-                    is_moving = false;
-                    clear_path();
-
-                    mtx.lock();
-                    multi_req = "none";
-                    mtx.unlock();
-
+                    clean_up();
                     Q_EMIT signal_move_succeed("early stopped, due to obstacle");
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2109,6 +2047,7 @@ void AUTOCONTROL::b_loop_pp()
                     obs_condition = "near";
                     mtx.unlock();
 
+                    // obstacle works
                     obs_wait_st_time = get_time();
                     obs_state = AUTO_OBS_WAIT2;
                     fsm_state = AUTO_FSM_OBS;
@@ -2133,15 +2072,7 @@ void AUTOCONTROL::b_loop_pp()
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    pre_err_th = 0;
-                    mobile->move(0, 0, 0);
-                    is_moving = false;
-                    clear_path();
-
-                    mtx.lock();
-                    multi_req = "none";
-                    mtx.unlock();
-
+                    clean_up();
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2335,15 +2266,20 @@ void AUTOCONTROL::b_loop_pp()
     }
     else
     {
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_succeed("stopped");
         logger->write_log("[AUTO] b_loop_pp stop");
     }
+}
+
+void AUTOCONTROL::clean_up()
+{
+    mobile->move(0, 0, 0);
+    is_moving = false;
+    is_pause = false;
+    clear_path();
+
+    mtx.lock();
+    multi_req = "none";
+    mtx.unlock();
 }
