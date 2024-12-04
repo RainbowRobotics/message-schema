@@ -300,6 +300,7 @@ public Q_SLOTS:
     void bt_MapBuild();    
     void bt_MapSave();
     void bt_MapLoad();
+    void bt_MapLastLC();
 
     void bt_LocInit();
     void bt_LocInitSemiAuto();

@@ -480,7 +480,7 @@
     <item row="0" column="1">
      <widget class="QTabWidget" name="menu_tab">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -686,6 +686,20 @@ config</string>
               <property name="text">
                <string>Auto init
 (semi)</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MapLastLC">
+              <property name="geometry">
+               <rect>
+                <x>230</x>
+                <y>60</y>
+                <width>71</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Last
+LC</string>
               </property>
              </widget>
             </widget>
