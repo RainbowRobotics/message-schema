@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
     std::signal(SIGKILL, signalHandler);
     std::signal(SIGPIPE, signalHandler);
 
+    // set for high dpi
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     // init qt app
     qRegisterMetaType<Eigen::Matrix4d>();
     QApplication a(argc, argv);
