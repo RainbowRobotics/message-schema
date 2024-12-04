@@ -269,7 +269,7 @@ void COMM_FMS::slot_send_info()
         goal_node_id = cur_node_id;
     }
 
-    QString request = ctrl->get_multi_req(); // req_path, recv_path
+    QString request = ctrl->get_multi_req(); // none, req_path, recv_path
 
     QString state = "stop"; // stop, move, pause, error
     if(ctrl->is_moving)

@@ -168,9 +168,7 @@ void UNIMAP::load_map(QString path)
                 }
                 topo_file.close();
 
-                QString str;
-                str.sprintf("[UNIMAP] %s loaded", topo_path.toStdString().c_str());
-                logger->write_log(str, "Green", true, false);
+                logger->write_log(QString("[UNIMAP] %1 loaded").arg(topo_path), "Green", true, false);
             }
         }
     }
