@@ -17,7 +17,7 @@
 #include "obsmap.h"
 #include "aruco.h"
 #include "autocontrol.h"
-#include "dockingcontrol.h"
+#include "docking.h"
 #include "task.h"
 #include "sim.h"
 #include "comm_fms.h"
@@ -58,7 +58,7 @@ public:
     SLAM_2D slam;
     ARUCO aruco;
     AUTOCONTROL ctrl;
-    DOCKINGCONTROL dctrl;
+    DOCKING dctrl;
     TASK task;    
     SIM sim;
     COMM_FMS cfms;
@@ -332,6 +332,10 @@ public Q_SLOTS:
     // for log
     void slot_write_log(QString user_log, QString color_code);
 
+    // for ldock
+    void bt_DockingMove();
+    void bt_DockingStop();
+    void bt_Undock();
 
 
 

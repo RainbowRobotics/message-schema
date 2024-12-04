@@ -280,17 +280,19 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
 
 void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-    if(data->get_flag() == sio::message::flag_object)
-    {
+        qDebug() <<" plz";
         double time = get_time0();
 
         // check docking available
-        bool is_good = true;
+        bool is_good = false;
 
-        // todo sk
+        int is_good_everything = dctrl->is_everything_fine();
+        if(is_good_everything == DRIVING_FINE) is_good = true;
+        qDebug() <<"now comm_ms recv dock";
 
         if(is_good)
         {
+            qDebug() << " all is good";
             // accept response
             Q_EMIT send_docking_dock_response("accept", "");
 
@@ -299,24 +301,39 @@ void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const
         }
         else
         {
-            // todo sk
+            QString reason;
+            if(is_good_everything == DRIVING_FAILED )
+            {
+                reason = "DRIVING_FAILED";
+            }
+
+            else if (is_good_everything == DRIVING_NOT_READY )
+            {
+                reason = "DRIVING_NOT_READY";
+            }
+            
+            else 
+            {
+                reason = "SOMETHING WRONG";
+            }
 
             // reject response
-            Q_EMIT send_docking_dock_response("reject", "some reason");
+            Q_EMIT send_docking_dock_response("reject",reason);
         }
-    }
+
 }
 
 void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-    if(data->get_flag() == sio::message::flag_object)
-    {
+
         double time = get_time0();
 
         // check undocking available
-        bool is_good = true;
+        bool is_good = false;
 
-        // todo sk
+
+        int is_good_everything = dctrl->is_everything_fine();
+        if(is_good_everything == DRIVING_FINE) is_good = true; 
 
         if(is_good)
         {
@@ -328,12 +345,26 @@ void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr con
         }
         else
         {
-            // todo sk
+            QString reason;
+            if(is_good_everything == DRIVING_FAILED )
+            {
+                reason = "DRIVING_FAILED";
+            }
+
+            else if (is_good_everything == DRIVING_NOT_READY )
+            {
+                reason = "DRIVING_NOT_READY";
+            }
+            
+            else 
+            {
+                reason = "SOMETHING WRONG";
+            }
 
             // reject response
             Q_EMIT send_docking_undock_response("reject", "some reason");
         }
-    }
+    
 }
 
 
@@ -439,7 +470,24 @@ void COMM_MS::send_status()
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
-    stateObj["dock"] = "true"; // todo sk
+
+    QString docking_state = "false";
+    if (dctrl != nullptr) // dctrl이 유효한지 확인
+    {
+        if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
+        {
+            docking_state = "true";
+        }
+        else
+        {
+            docking_state = "false";
+        }
+    }
+    else
+    {
+        qDebug() << "Error: dctrl is null.";
+    }
+    stateObj["dock"] = docking_state; // todo sk
     stateObj["map"] = unimap->map_dir.split("/").last();
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
@@ -964,7 +1012,7 @@ void COMM_MS::send_docking_undock_response(QString result, QString message)
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("undockResponse", res);
+    io->socket()->emit("dockResponse", res);
 
     printf("[COMM_MS] docking_undock_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
@@ -1319,12 +1367,42 @@ void COMM_MS::slot_localization_stop(double time)
 
 void COMM_MS::slot_docking_dock(double time)
 {
-    // todo sk
-
+    ctrl->is_moving = true;
+    dctrl->move();
 }
 
 void COMM_MS::slot_docking_undock(double time)
 {
-    // todo sk
+    ctrl->is_moving = true;
+    dctrl->undock();
+}
 
+void COMM_MS::slot_dock_success(QString message)
+{
+    // accept response
+    ctrl->is_moving = false;
+    Q_EMIT send_docking_dock_response("success", "");
+    dctrl->stop();
+}
+
+void COMM_MS::slot_undock_success(QString message)
+{
+    ctrl->is_moving = false;
+    Q_EMIT send_docking_undock_response("success","");
+    dctrl->stop();
+}
+
+void COMM_MS::slot_dock_failed(QString message)
+{
+    // reject response
+    ctrl->is_moving = false;
+    Q_EMIT send_docking_dock_response("fail",message);
+    //dctrl->stop();
+}
+
+void COMM_MS::slot_undock_failed(QString message)
+{
+    ctrl->is_moving = false;
+    Q_EMIT send_docking_undock_response("fail",message);
+    //dctrl->stop();
 }

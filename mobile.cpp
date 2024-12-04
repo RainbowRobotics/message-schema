@@ -3,7 +3,7 @@
 MOBILE::MOBILE(QObject *parent)
     : QObject{parent}
 {
-    cur_imu = Eigen::Vector3d(0,0,0);    
+    cur_imu = Eigen::Vector3d(0,0,0);
 }
 
 MOBILE::~MOBILE()
@@ -698,7 +698,7 @@ void MOBILE::recv_loop()
                 memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;                
+                memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;
 
                 float imu_gyr_x, imu_gyr_y, imu_gyr_z;
                 memcpy(&imu_gyr_x, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -718,9 +718,7 @@ void MOBILE::recv_loop()
                     double _mobile_t = recv_tick*0.002;
                     double _offset_t = return_time - _mobile_t;
                     offset_t = _offset_t;
-
                     is_synced = true;
-
                     QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
                     logger->write_log(str);
                 }

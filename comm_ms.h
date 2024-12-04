@@ -16,7 +16,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
-
+#include "docking.h"
 // sio
 #include <sio_client.h>
 #define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
@@ -49,6 +49,7 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
+    DOCKING *dctrl = NULL;
 
     // vars
     std::unique_ptr<sio::client> io;    
@@ -162,6 +163,10 @@ private Q_SLOTS:
 
     void slot_docking_dock(double time);
     void slot_docking_undock(double time);
+    void slot_dock_success(QString message);
+    void slot_dock_failed(QString message);
+    void slot_undock_success(QString message);
+    void slot_undock_failed(QString message);
 };
 
 #endif // COMM_MS_H

@@ -138,6 +138,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &cms, SLOT(slot_move_succeed(QString)));
     connect(&ctrl, SIGNAL(signal_move_failed(QString)), &cms, SLOT(slot_move_failed(QString)));
 
+    // for docking
+    connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
+    connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
+    connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
+    connect(&dctrl, SIGNAL(signal_dock_succeed(QString)), &cms, SLOT(slot_dock_success(QString)));
+    connect(&dctrl, SIGNAL(signal_dock_failed(QString)), &cms, SLOT(slot_dock_failed(QString)));
+    connect(&dctrl, SIGNAL(signal_undock_succeed(QString)), &cms, SLOT(slot_undock_success(QString)));
+    connect(&dctrl, SIGNAL(signal_undock_failed(QString)), &cms, SLOT(slot_undock_failed(QString)));  
+
     // for slam
     connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cms, SLOT(slot_localization_semiautoinit_succeed(QString)));
     connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cms, SLOT(slot_localization_semiautoinit_failed(QString)));
@@ -424,8 +433,8 @@ void MainWindow::init_modules()
     dctrl.logger = &logger;
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
-    dctrl.cam = &cam;
-    dctrl.code = &code;
+//    dctrl.cam = &cam;
+//    dctrl.code = &code;
     dctrl.slam = &slam;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
@@ -480,6 +489,7 @@ void MainWindow::init_modules()
     cms.unimap = &unimap;
     cms.obsmap = &obsmap;
     cms.ctrl = &ctrl;
+    cms.dctrl = &dctrl;
     cms.init();
 
     // websocket ui init
@@ -4421,11 +4431,6 @@ void MainWindow::ctrl_plot()
 }
 void MainWindow::plot_loop()
 {
-    if(ui->ckb_PlotEnable->isChecked() == false)
-    {
-        return;
-    }
-
     plot_timer.stop();
 
     double st_time = get_time();
@@ -5161,3 +5166,26 @@ void MainWindow::slot_write_log(QString user_log, QString color_code)
     ui->lb_LogInfo->setStyleSheet(color_code);
 }
 
+void MainWindow::bt_DockingMove()
+{
+    ctrl.is_moving = true;
+    dctrl.move();
+}
+
+void MainWindow::bt_DockingStop()
+{
+    dctrl.stop();
+    ctrl.is_moving = false;
+}
+
+void MainWindow::bt_Undock()
+{
+    ctrl.is_moving = true;
+    dctrl.undock();
+
+    double t = std::abs(config.DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
+    QTimer::singleShot(t*1000, [&]()
+    {
+        ctrl.is_moving = false;
+    });
+}
