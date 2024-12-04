@@ -280,7 +280,6 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
 
 void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-        qDebug() <<" plz";
         double time = get_time0();
 
         // check docking available
@@ -288,11 +287,9 @@ void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const
 
         int is_good_everything = dctrl->is_everything_fine();
         if(is_good_everything == DRIVING_FINE) is_good = true;
-        qDebug() <<"now comm_ms recv dock";
 
         if(is_good)
         {
-            qDebug() << " all is good";
             // accept response
             Q_EMIT send_docking_dock_response("accept", "");
 
@@ -454,25 +451,54 @@ void COMM_MS::send_status()
     imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
     rootObj["imu"] = imuObj;
 
-    // Adding the power object
+
+    // Adding the power object    
     QJsonObject powerObj;
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
     powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
+    powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
+    powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     rootObj["power"] = powerObj;
 
     // Adding the state object
     QString cur_loc_state = slam->get_cur_loc_state();
-
+    QString charge_st_string = "";
+    if(ms.charge_state == CHARGE_STATE_IDLE)
+    {
+        charge_st_string = "none";
+    }
+    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_CHARGE)
+    {
+        charge_st_string = "ready";
+    }
+    else if(ms.charge_state == CHARGE_STATE_BATTERY_ON)
+    {
+        charge_st_string = "battery_on";
+    }
+    else if(ms.charge_state == CHARGE_STATE_CHARGING)
+    {
+        charge_st_string = "charging";
+    }
+    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_STOP_CHARGE)
+    {
+        charge_st_string = "finish";
+    }
+    else if(ms.charge_state == CHARGE_STATE_FAIL)
+    {
+        charge_st_string = "faile";
+    }
     QJsonObject stateObj;
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
-    stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
+    stateObj["charge"] = charge_st_string;
 
     QString docking_state = "false";
-    if (dctrl != nullptr) // dctrl이 유효한지 확인
+
+
+    if (dctrl != nullptr) 
     {
         if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
         {
@@ -485,9 +511,9 @@ void COMM_MS::send_status()
     }
     else
     {
-        qDebug() << "Error: dctrl is null.";
+        qDebug() << "<ERROR> dctrl is null.";
     }
-    stateObj["dock"] = docking_state; // todo sk
+    stateObj["dock"] = docking_state; 
     stateObj["map"] = unimap->map_dir.split("/").last();
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
@@ -1397,12 +1423,12 @@ void COMM_MS::slot_dock_failed(QString message)
     // reject response
     ctrl->is_moving = false;
     Q_EMIT send_docking_dock_response("fail",message);
-    //dctrl->stop();
+    dctrl->stop();
 }
 
 void COMM_MS::slot_undock_failed(QString message)
 {
     ctrl->is_moving = false;
     Q_EMIT send_docking_undock_response("fail",message);
-    //dctrl->stop();
+    dctrl->stop();
 }

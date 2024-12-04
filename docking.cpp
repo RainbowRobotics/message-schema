@@ -226,7 +226,6 @@ bool DOCKING::find_Vmark()
     {
         return false;
     }
-
     clusters_queue.push(docking_clust);
 
     if(clusters_queue.size() > 10)
@@ -263,7 +262,7 @@ bool DOCKING::find_Vmark()
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
 
-        if(err >0.001) //0.001
+        if(err >0.0025) //0.001
         {
             return false;
         }
@@ -367,7 +366,7 @@ void DOCKING::a_loop()
 
             else
             {
-                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN, 0.1);
+                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN +0.025, 0.1);
                 dock = true;
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
@@ -387,15 +386,16 @@ void DOCKING::a_loop()
                 fsm_state = DOCKING_FSM_FAILED;
             }
 
-            if (ms.charge_state==5)
+            if (ms.charge_state == 3)
             {
-                
-                if(!dock_first)
-                {
-                    fsm_state = DOCKING_FSM_COMPLETE;
-                    Q_EMIT signal_dock_succeed("success");
-                    dock_first = true;
-                }
+                fsm_state = DOCKING_FSM_COMPLETE;
+                Q_EMIT signal_dock_succeed("success");
+                // if(!dock_first)
+                // {
+                //     fsm_state = DOCKING_FSM_COMPLETE;
+                //     Q_EMIT signal_dock_succeed("success");
+                //     dock_first = true;
+                // }
             }
         }
 
@@ -412,6 +412,12 @@ void DOCKING::a_loop()
         
         else if (fsm_state == DOCKING_FSM_FAILED)
         {
+            //TODO what?
+        }
+
+        else if (fsm_state == DOCKING_FSM_COMPLETE)
+        {
+            //TODO what?
         }
 
         // for real time loop
@@ -556,18 +562,28 @@ KFRAME DOCKING::generateVKframe()
     XYZR_CLOUD res3;
     XYZR_CLOUD res4;
 
-    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
-    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
-    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
-    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
-    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
-    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
-    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
+    //vdock
+//    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
+//    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
+//    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
+//    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
+//    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
+//    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
+//    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
 
-    res1 = generateSamplePoints(p4,p2,40);
-    res2 = generateSamplePoints(p2,p1,80);
-    res3 = generateSamplePoints(p1,p3,80);
-    res4 = generateSamplePoints(p3,p5,40);
+//    res1 = generateSamplePoints(p4,p2,40);
+//    res2 = generateSamplePoints(p2,p1,80);
+//    res3 = generateSamplePoints(p1,p3,80);
+//    res4 = generateSamplePoints(p3,p5,40);
+
+    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1]+config->DOCKING_POINTDOCK_MARGIN, 0.225, 0.0);
+    Eigen::Vector3d p2(p1.x(), p1.y() - 0.125 ,0.0);
+    Eigen::Vector3d p3(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
+    Eigen::Vector3d p4(p3.x() , p3.y() - 0.22 , 0.0);
+
+    res1 = generateSamplePoints(p1,p2,40);
+    res2 = generateSamplePoints(p2,p3,40);
+    res3 = generateSamplePoints(p3,p4,40);
 
     for (const auto& pt : res1.pts)
     {
@@ -587,12 +603,12 @@ KFRAME DOCKING::generateVKframe()
         Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
         debug_frame.push_back(debug_pt);
     }
-    for (const auto& pt : res4.pts)
-    {
-        frame.pts.push_back(pt);
-        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-        debug_frame.push_back(debug_pt);
-    }
+//    for (const auto& pt : res4.pts)
+//    {
+//        frame.pts.push_back(pt);
+//        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//        debug_frame.push_back(debug_pt);
+//    }
 
     return frame;
 }
@@ -1017,7 +1033,7 @@ void DOCKING::b_loop()
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
-            double t = std::abs(config->DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
+            double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.1) + 0.5;
 
             if(get_time() - undock_time > t )
             {

@@ -13,25 +13,27 @@
         "DRIVE_GOAL_APPROACH_GAIN": "1.0",
         "DRIVE_GOAL_D": "0.05",
         "DRIVE_GOAL_TH": "2.0",
-        "DRIVE_V_DEADZONE":"0.02",
-        "DRIVE_W_DEADZONE":"0.5"
+        "DRIVE_V_DEADZONE": "0.02",
+        "DRIVE_W_DEADZONE": "0.5"
     },
     "debug": {
         "SIM_MODE": "0",
+        "USE_ARUCO": "1",
+        "USE_ARUCO_FILTER": "0",
         "USE_BEEP": "1",
-        "USE_IMU": "1",
-        "USE_RTSP": "0",
-        "USE_BLIDAR": "0",
+        "USE_BLIDAR": "1",
         "USE_BQR": "0",
         "USE_CAM": "1",
         "USE_EARLYSTOP": "0",
-        "USE_WEB_UI": "1",
-        "USE_QT_UI": "0",
-        "USE_FMS": "0"
+        "USE_FMS": "1",
+        "USE_IMU": "0",
+        "USE_QT_UI": "1",
+        "USE_RTSP": "0",
+        "USE_WEB_UI": "1"
     },
     "default": {
-        "LIDAR_MIN_RANGE": "1.0",
         "LIDAR_MAX_RANGE": "24.0",
+        "LIDAR_MIN_RANGE": "1.0",
         "LIDAR_TF_B": "-0.32, 0.225, 0.0, 0.0, 0.0, -135.0",
         "LIDAR_TF_F": "0.32, -0.225, 0.0, 0.0, 0.0, 45.0",
         "ROBOT_RADIUS": "0.5",
@@ -54,8 +56,8 @@
         "LOC_CHECK_IE": "0.3",
         "LOC_CHECK_IR": "0.3",
         "LOC_FUSION_RATIO": "0.5",
-        "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_COST_THRESHOLD": "0.5",
+        "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.3",
         "LOC_ICP_MAX_FEATURE_NUM": "2000",
         "LOC_SURFEL_NUM": "5",
@@ -103,7 +105,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "path": {
-        "MAP_PATH": "/home/tw/maps/test_map"
+        "MAP_PATH": "/home/rainbow/maps/1203"
     },
     "robot": {
         "PLATFORM_NAME": "400",
