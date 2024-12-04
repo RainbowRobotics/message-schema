@@ -523,12 +523,15 @@ void SLAM_2D::map_a_loop()
                         {
                             // set keyframe
                             KFRAME kfrm;
-                            kfrm.id = kfrm_id++;
+                            kfrm.id = kfrm_id;
                             kfrm.pts = live_cloud.pts;
                             kfrm.G = G;
                             kfrm.opt_G = G;
                             kfrm_que.push(kfrm);
                             printf("keyframe created, id:%d\n", kfrm.id);
+
+                            // inc keyframe id
+                            kfrm_id++;
                         }
 
                         // update ieir
@@ -2023,10 +2026,12 @@ double SLAM_2D::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
     // check
     printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-    if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    //if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01)
     {
         return 9999;
     }
+
     return last_err;
 }
 

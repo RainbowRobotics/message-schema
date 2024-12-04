@@ -113,6 +113,7 @@ public:
     const double rmt_sigma = 0.01; // 0.01 good
     const double sigma_eps = 1e-6;
 
+    // for graph optimization
     PGO pgo;
 
 public:
