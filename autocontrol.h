@@ -58,6 +58,7 @@ public:
     void set_goal(QString goal_id);
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_pp(std::vector<QString> node_path, int preset);
+    void clean_up();
 
     // global path planning (using topo)
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);

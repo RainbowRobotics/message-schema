@@ -176,19 +176,9 @@ void TASK::a_loop()
         {
             NODE* node = unimap->get_node_by_id(task_node_list[idx]);
 
-            if(driving_mode == "basic")
+            if(ctrl->is_multi)
             {
-                ctrl->move_pp(node->tf, 0);
-            }
-            else if(driving_mode == "holonomic")
-            {
-                ctrl->move_pp(node->tf, 0);
-                //ctrl->move_hpp(node->tf, 0);
-            }
-            else if(driving_mode == "tng")
-            {
-                ctrl->move_pp(node->tf, 0);
-                //ctrl->move_tng(node->tf, 0);
+                ctrl->set_goal(node->id);
             }
             else
             {
