@@ -193,7 +193,7 @@ void TASK::a_loop()
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            if(ctrl->fsm_state == AUTO_FSM_COMPLETE)
+            if(ctrl->is_moving == false)
             {
                 printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
 

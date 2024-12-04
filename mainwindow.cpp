@@ -4458,13 +4458,13 @@ void MainWindow::raw_plot()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nrequest: %s, multi: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nrequest: %s, multi_state: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
-                          cfms.get_multi_state().toLocal8Bit().data(),
-                          ctrl.get_multi_req().toLocal8Bit().data());
+                          ctrl.get_multi_req().toLocal8Bit().data(),
+                          cfms.get_multi_state().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam
