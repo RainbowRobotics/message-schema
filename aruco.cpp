@@ -264,7 +264,7 @@ void ARUCO::detect_loop(int cam_idx)
             printf("[ARUCO_%d] solve pnp failed\n", cam_idx);
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     logger->write_log(QString("[ARUCO] stop detection loop%1.").arg(cam_idx), "Green");
