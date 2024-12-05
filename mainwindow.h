@@ -87,6 +87,16 @@ public:
     void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
     void viewer_camera_pan_control(double dx, double dy);
     void viewer_camera_pan_control2(double dx, double dy);
+
+    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);
+
+    void syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer);
+
+
+    void synchronizeViewersIfNeeded(QObject* currentWidget);
+    bool wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget);
+    QObject* lastActiveWidget = nullptr;
+    
 public:
     Ui::MainWindow *ui;
     std::mutex mtx;

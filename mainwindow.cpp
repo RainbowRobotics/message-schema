@@ -553,12 +553,11 @@ void MainWindow::setup_vtk()
         viewer->setBackgroundColor(1.0, 1.0, 1.0);
         viewer->resetCamera();
 
-        ui->qvtkWidget->grabGesture(Qt::PinchGesture); // new, bj
-        ui->qvtkWidget->installEventFilter(this); // new, bj
+        ui->qvtkWidget->grabGesture(Qt::PinchGesture);
+        ui->qvtkWidget->installEventFilter(this);
 
-
-        ui->qvtkWidget2->grabGesture(Qt::PinchGesture); // new, bj
-        ui->qvtkWidget2->installEventFilter(this); // new, bj
+        ui->qvtkWidget2->grabGesture(Qt::PinchGesture);
+        ui->qvtkWidget2->installEventFilter(this);
 
 
         // init drawing
@@ -792,6 +791,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         return true;
                     }
                 }
+
+                touchEvent->setAccepted(true);
+                return true;
             }
             else
             {
@@ -1287,6 +1289,27 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     return true;
                 }
             }
+
+            // gesture event
+            if (ev->type() == QEvent::Gesture)
+            {
+                QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
+                if (QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+                {
+                    QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
+
+                    handlePinchGesture(pinchGesture, object); //handle Pin
+                    return true;
+                }
+            }
+
+            // touch event
+            //if (ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd )
+            //{
+            //    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+            //    handleTouchEvent(touchEvent, object);
+            //    return true;
+            //}
         }
     }
 
@@ -1296,7 +1319,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object)
 {
     // Sacle Factor
-
     static qreal lastScaleFactor = 1.0;
 
     qreal currentScaleFactor = pinchGesture->scaleFactor();
@@ -1316,7 +1338,6 @@ void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object
         // viewer2 zoom in/out
         viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
         viewer2->getRenderWindow()->Render();
-        // to do: qvtkWidget <--> qvtkWidget2 :: camera view share
     }
 }
 
@@ -1330,53 +1351,33 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
     if (touchPoints.count() == 1)
     {
         const QTouchEvent::TouchPoint &touchPoint = touchPoints.first();
-        //QTouchEvent* me = static_cast<QTouchEvent*>(touchEvent);
         if (touchEvent->type() == QEvent::TouchBegin)
         {
             lastTouchPoint = touchPoint.pos();
             isPanning = true;
 
-            //// clear node selection
-            //pick.pre_node = "";
-            //pick.cur_node = "";
-
-            //// ray casting
-            //double x = touchPoint.pos().x();
-            //double y = touchPoint.pos().y();
-            //double w = ui->qvtkWidget2->size().width();
-            //double h = ui->qvtkWidget2->size().height();
-
-            //Eigen::Vector3d ray_center;
-            //Eigen::Vector3d ray_direction;
-            //picking_ray(x, y, w, h, ray_center, ray_direction, viewer2);
-
-            //Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-            //pick.l_pt0 = pt;
-            //pick.l_drag = true;
-
-            //// update last mouse button
-            //pick.last_btn = 0;
-
-            //pick_update();
-            ////return true;
-
 
         }
         else if (touchEvent->type() == QEvent::TouchUpdate && isPanning)
         {
-            QPointF delta = touchPoint.pos() - lastTouchPoint;
-            lastTouchPoint = touchPoint.pos();
+            QPointF currentPos = touchPoint.pos();
+            QPointF delta = currentPos - lastTouchPoint;
+            lastTouchPoint = currentPos;
 
             // CALL camera move func
             if (object == ui->qvtkWidget)
             {
                 viewer_camera_pan_control(delta.x(), delta.y());
+                viewer_pan_screen(delta.x(), delta.y(), viewer, ui->qvtkWidget);
                 viewer->getRenderWindow()->Render();
+                syncViewerCameras(viewer, viewer2);
             }
             else if (object == ui->qvtkWidget2)
             {
                 viewer_camera_pan_control2(delta.x(), delta.y());
+                viewer_pan_screen(delta.x(), delta.y(), viewer2, ui->qvtkWidget2);
                 viewer2->getRenderWindow()->Render();
+                syncViewerCameras(viewer2, viewer);
             }
         }
         else if (touchEvent->type() == QEvent::TouchEnd)
@@ -1384,6 +1385,61 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             isPanning = false;
         }
     }
+}
+
+void MainWindow::viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget)
+{
+    // get cur cams params
+    std::vector<pcl::visualization::Camera> cams;
+    viewer->getCameras(cams);
+    if (cams.empty()) {
+        qDebug() << "No camera information available.";
+        return;
+    }
+    pcl::visualization::Camera cam = cams[0];
+
+    // get viewport size
+    int windowWidth = widget->width();
+    int windowHeight = widget->height();
+
+    // calcul D : cams <--> target
+    Eigen::Vector3d pos(cam.pos[0], cam.pos[1], cam.pos[2]);
+    Eigen::Vector3d focal(cam.focal[0], cam.focal[1], cam.focal[2]);
+    double D = (focal - pos).norm();
+
+    // get fov & ratio
+    double fovY_deg = cam.fovy;
+    double aspect = static_cast<double>(cam.window_size[0]) / static_cast<double>(cam.window_size[1]);
+
+    // calcul : viewport size from cur cams dist
+    double h = 2.0 * D * tan(fovY_deg / 2.0); // adjust
+    double w = h * aspect;
+
+    // move value - pixel
+    double pixelToWorldX = w / windowWidth;
+    double pixelToWorldY = h / windowHeight;
+
+    // move value - world
+    double world_dx = -dx * pixelToWorldX;
+    double world_dy = dy * pixelToWorldY;
+
+    // move value calcul at cams tf
+    Eigen::Vector3d up(cam.view[0], cam.view[1], cam.view[2]);
+    up.normalize();
+    Eigen::Vector3d look = (focal - pos).normalized();
+    Eigen::Vector3d right_vec = look.cross(up).normalized();
+
+    // // move value - world
+    Eigen::Vector3d translation = right_vec * world_dx + up * world_dy;
+
+    // move - cams pose & focal
+    pos += translation;
+    focal += translation;
+
+    // cams setting
+    viewer->setCameraPosition(pos[0], pos[1], pos[2],
+                              focal[0], focal[1], focal[2],
+                              up[0], up[1], up[2]);
 }
 
 void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz)
@@ -1487,6 +1543,7 @@ void MainWindow::viewer_camera_pan_control(double dx, double dy)
     viewer->setCameraPosition(pos[0], pos[1], pos[2],
                               focal[0], focal[1], focal[2],
                               up[0], up[1], up[2]);
+    syncViewerCameras(viewer, viewer2);
 }
 
 void MainWindow::viewer_camera_pan_control2(double dx, double dy)
@@ -1516,6 +1573,7 @@ void MainWindow::viewer_camera_pan_control2(double dx, double dy)
     viewer2->setCameraPosition(pos[0], pos[1], pos[2],
                                focal[0], focal[1], focal[2],
                                up[0], up[1], up[2]);
+    syncViewerCameras(viewer2, viewer);
 }
 
 
@@ -5058,8 +5116,11 @@ void MainWindow::plot_loop()
         viewer->setCameraClipDistances(near, far);
     }
 
-    // rendering
-    ui->qvtkWidget->renderWindow()->Render();
+    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
+    {
+        // rendering
+        ui->qvtkWidget->renderWindow()->Render();
+    }
 
     // check plot drift
     plot_proc_t = get_time() - st_time;
@@ -5069,6 +5130,47 @@ void MainWindow::plot_loop()
     }
 
     plot_timer.start();
+}
+
+void MainWindow::syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer)
+{
+    std::vector<pcl::visualization::Camera> cams;
+    sourceViewer->getCameras(cams);
+
+    targetViewer->setCameraPosition(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2],
+                                    cams[0].focal[0], cams[0].focal[1], cams[0].focal[2],
+                                    cams[0].view[0], cams[0].view[1], cams[0].view[2]);
+
+    targetViewer->setCameraFieldOfView(cams[0].fovy);
+    targetViewer->setCameraClipDistances(cams[0].clip[0], cams[0].clip[1]);
+}
+
+
+bool MainWindow::wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget)
+{
+    static QObject* lastActiveWidget = nullptr;
+
+    if (lastActiveWidget == fromWidget && toWidget == toWidget)
+    {
+        lastActiveWidget = toWidget;
+        return true;
+    }
+    lastActiveWidget = toWidget;
+    return false;
+}
+
+void MainWindow::synchronizeViewersIfNeeded(QObject* currentWidget)
+{
+    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
+    {
+        // qvtkWidget2 -> qvtkWidget
+        syncViewerCameras(viewer2, viewer);
+    }
+    else if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
+    {
+        // qvtkWidget -> qvtkWidget2
+        syncViewerCameras(viewer, viewer2);
+    }
 }
 
 // for plot loop2
@@ -5711,8 +5813,11 @@ void MainWindow::plot_loop2()
     pick_plot2();
     loc_plot2();
 
-    // rendering
-    ui->qvtkWidget2->renderWindow()->Render();    
+    if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
+    {
+        // rendering
+        ui->qvtkWidget2->renderWindow()->Render();
+    }
 
     plot_timer2.start();
 }
