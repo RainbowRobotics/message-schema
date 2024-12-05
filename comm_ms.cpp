@@ -995,6 +995,8 @@ void COMM_MS::send_move_stop_response(QString result)
     printf("[COMM_MS] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
+
+
 void COMM_MS::send_docking_dock_response(QString result, QString message)
 {
     if(!is_connected)
@@ -1408,6 +1410,7 @@ void COMM_MS::slot_dock_success(QString message)
     // accept response
     ctrl->is_moving = false;
     Q_EMIT send_docking_dock_response("success", "");
+    qDebug() << "slamnav2 dock success message send";
     dctrl->stop();
 }
 
@@ -1415,6 +1418,7 @@ void COMM_MS::slot_undock_success(QString message)
 {
     ctrl->is_moving = false;
     Q_EMIT send_docking_undock_response("success","");
+    qDebug() << "slamnav2 undock success message send";
     dctrl->stop();
 }
 
@@ -1423,6 +1427,7 @@ void COMM_MS::slot_dock_failed(QString message)
     // reject response
     ctrl->is_moving = false;
     Q_EMIT send_docking_dock_response("fail",message);
+    qDebug() << "slamnav2 dock failed message send";
     dctrl->stop();
 }
 
@@ -1430,5 +1435,6 @@ void COMM_MS::slot_undock_failed(QString message)
 {
     ctrl->is_moving = false;
     Q_EMIT send_docking_undock_response("fail",message);
+    qDebug() << "slamnav2 undock failed message send";
     dctrl->stop();
 }

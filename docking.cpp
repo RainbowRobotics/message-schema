@@ -47,6 +47,7 @@ void DOCKING::stop()
         b_thread->join();
         b_thread = NULL;
     }
+    undock_flag = false;
     path_flag = false;
     fsm_state = DOCKING_FSM_OFF;
     mobile->move(0, 0, 0);
@@ -60,9 +61,9 @@ void DOCKING::move()
     obsmap->clear();
     // start control loop
     a_flag = true;
+    undock_flag = false;
     path_flag = false;
     dock = false ; //dock flag init
-
     //generate V
     Vfrm = generateVKframe();
     frm1_center = calculateCenter(Vfrm);
@@ -339,6 +340,7 @@ void DOCKING::a_loop()
 
             else
             {
+                qDebug() << "vmark stat time" << vmark_start_time;
                 if(get_time() - vmark_start_time > 10.0)
                 {
                     Q_EMIT signal_dock_failed(failed_reason);
@@ -377,7 +379,7 @@ void DOCKING::a_loop()
 
             else
             {
-                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN +0.025, 0.1);
+                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN , 0.05);
                 dock = true;
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
@@ -390,17 +392,18 @@ void DOCKING::a_loop()
             MOBILE_STATUS ms = mobile->get_status();
 
             mobile->move(0, 0, 0); 
+            qDebug() << "wait start time" << wait_start_time;
             if (get_time() - wait_start_time > 20.0)
             {
                 if(!undock_flag)
                 {
                     undock_flag = true;
                     undock_waiting_time = get_time();
-                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.1);
+                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.05);
                 }
                 else
                 {
-                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.1) + 0.5;
+                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.05) + 0.5;
                     if(get_time() - undock_waiting_time > t)
                     {
                         failed_reason = "NOT CONNECTED";
@@ -1117,7 +1120,7 @@ bool DOCKING::undock()
             fsm_state = DOCKING_FSM_UNDOCK;
             b_thread = new std::thread(&DOCKING::b_loop, this);
             mobile->stop_charge();
-            mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.1);
+            mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.05);
             undock_time = get_time();
             return true;
         }
