@@ -77,6 +77,8 @@ public:
 
     // for dock
     bool path_flag = false;
+    bool undock_flag = false;
+    double undock_waiting_time = 0.0;
     Eigen::Matrix4d docking_station;
     Eigen::Matrix4d docking_station_m;
     KFRAME Vfrm;

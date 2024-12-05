@@ -122,7 +122,7 @@ void ARUCO::detect_loop(int cam_idx)
         CAM_INTRINSIC intrinsic = (cam_idx == 0) ? cam->get_rgb_intrinsic0() : cam->get_rgb_intrinsic1();
         if(cam->is_param_loaded == false)
         {
-            printf("[ARUCO_%d] failed to load cam params\n", cam_idx);
+            //printf("[ARUCO_%d] failed to load cam params\n", cam_idx);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }

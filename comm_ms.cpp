@@ -280,7 +280,6 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
 
 void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-        qDebug() <<" plz";
         double time = get_time0();
 
         // check docking available
@@ -288,11 +287,9 @@ void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const
 
         int is_good_everything = dctrl->is_everything_fine();
         if(is_good_everything == DRIVING_FINE) is_good = true;
-        qDebug() <<"now comm_ms recv dock";
 
         if(is_good)
         {
-            qDebug() << " all is good";
             // accept response
             Q_EMIT send_docking_dock_response("accept", "");
 
@@ -419,7 +416,7 @@ void COMM_MS::send_status()
     motorObj2["connection"] = (ms.connection_m1 == 1) ? "true" : "false";
     motorObj2["status"] = QString::number(ms.status_m1, 10);
     motorObj2["temp"] = QString::number(ms.temp_m1, 'f', 3);
-    motorObj1["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
+    motorObj2["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
     motorArray.append(motorObj2);
 
     rootObj["motor"] = motorArray;
@@ -454,25 +451,54 @@ void COMM_MS::send_status()
     imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
     rootObj["imu"] = imuObj;
 
-    // Adding the power object
+
+    // Adding the power object    
     QJsonObject powerObj;
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
     powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
+    powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
+    powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     rootObj["power"] = powerObj;
 
     // Adding the state object
     QString cur_loc_state = slam->get_cur_loc_state();
-
+    QString charge_st_string = "";
+    if(ms.charge_state == CHARGE_STATE_IDLE)
+    {
+        charge_st_string = "none";
+    }
+    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_CHARGE)
+    {
+        charge_st_string = "ready";
+    }
+    else if(ms.charge_state == CHARGE_STATE_BATTERY_ON)
+    {
+        charge_st_string = "battery_on";
+    }
+    else if(ms.charge_state == CHARGE_STATE_CHARGING)
+    {
+        charge_st_string = "charging";
+    }
+    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_STOP_CHARGE)
+    {
+        charge_st_string = "finish";
+    }
+    else if(ms.charge_state == CHARGE_STATE_FAIL)
+    {
+        charge_st_string = "faile";
+    }
     QJsonObject stateObj;
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
-    stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
+    stateObj["charge"] = charge_st_string;
 
     QString docking_state = "false";
-    if (dctrl != nullptr) // dctrl이 유효한지 확인
+
+
+    if (dctrl != nullptr) 
     {
         if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
         {
@@ -485,9 +511,10 @@ void COMM_MS::send_status()
     }
     else
     {
-        qDebug() << "Error: dctrl is null.";
+        qDebug() << "null ptr";
+        //To Do list
     }
-    stateObj["dock"] = docking_state; // todo sk
+    stateObj["dock"] = docking_state; 
     stateObj["map"] = unimap->map_dir.split("/").last();
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
@@ -969,6 +996,8 @@ void COMM_MS::send_move_stop_response(QString result)
     printf("[COMM_MS] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
+
+
 void COMM_MS::send_docking_dock_response(QString result, QString message)
 {
     if(!is_connected)
@@ -1367,12 +1396,14 @@ void COMM_MS::slot_localization_stop(double time)
 
 void COMM_MS::slot_docking_dock(double time)
 {
+    qDebug() << "slot dock";
     ctrl->is_moving = true;
     dctrl->move();
 }
 
 void COMM_MS::slot_docking_undock(double time)
 {
+    qDebug() << "slot undock";
     ctrl->is_moving = true;
     dctrl->undock();
 }
@@ -1382,6 +1413,7 @@ void COMM_MS::slot_dock_success(QString message)
     // accept response
     ctrl->is_moving = false;
     Q_EMIT send_docking_dock_response("success", "");
+    qDebug() << "slamnav2 dock success message send";
     dctrl->stop();
 }
 
@@ -1389,6 +1421,7 @@ void COMM_MS::slot_undock_success(QString message)
 {
     ctrl->is_moving = false;
     Q_EMIT send_docking_undock_response("success","");
+    qDebug() << "slamnav2 undock success message send";
     dctrl->stop();
 }
 
@@ -1397,12 +1430,14 @@ void COMM_MS::slot_dock_failed(QString message)
     // reject response
     ctrl->is_moving = false;
     Q_EMIT send_docking_dock_response("fail",message);
-    //dctrl->stop();
+    qDebug() << "slamnav2 dock failed message send";
+    dctrl->stop();
 }
 
 void COMM_MS::slot_undock_failed(QString message)
 {
     ctrl->is_moving = false;
     Q_EMIT send_docking_undock_response("fail",message);
-    //dctrl->stop();
+    qDebug() << "slamnav2 undock failed message send";
+    dctrl->stop();
 }

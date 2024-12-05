@@ -47,8 +47,9 @@ void DOCKING::stop()
         b_thread->join();
         b_thread = NULL;
     }
-    
-    fsm_state = DOCKING_FSM_OFF;
+    undock_flag = false;
+    path_flag = false;
+//    fsm_state = DOCKING_FSM_OFF;
     mobile->move(0, 0, 0);
 }
 
@@ -60,8 +61,9 @@ void DOCKING::move()
     obsmap->clear();
     // start control loop
     a_flag = true;
+    undock_flag = false;
+    path_flag = false;
     dock = false ; //dock flag init
-
     //generate V
     Vfrm = generateVKframe();
     frm1_center = calculateCenter(Vfrm);
@@ -214,6 +216,7 @@ bool DOCKING::find_Vmark()
         //<Seokgyun.kim>
         //clust_dist_threshold_min and max filter clusters based on the distance from the robot.
         //clust_angle_threshold filters clusters based on the angle relative to the robot's coordinate system.
+
         if( d > config->DOCKING_CLUST_DIST_THRESHOLD_MIN && d < config->DOCKING_CLUST_DIST_THRESHOLD_MAX )
         {
             filtered_clusters.push_back(clust);
@@ -226,7 +229,6 @@ bool DOCKING::find_Vmark()
     {
         return false;
     }
-
     clusters_queue.push(docking_clust);
 
     if(clusters_queue.size() > 10)
@@ -262,8 +264,8 @@ bool DOCKING::find_Vmark()
         dock_tf = calculateTranslationMatrix(frm1_center, frm0_center0);
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
-
-        if(err >0.001) //0.001
+        qDebug() << "err" << err;
+        if(err >0.002) //0.001
         {
             return false;
         }
@@ -283,8 +285,9 @@ bool DOCKING::find_Vmark()
 void DOCKING::a_loop()
 {
     const double dt = 0.02; // 50hz
-    double obs_wait_st_time = 0;
-    double wait_start_time = 0; 
+    double obs_wait_st_time = 0.0;
+    double wait_start_time = 0.0;
+    double vmark_start_time = get_time();
 
     while(a_flag){
 
@@ -334,6 +337,15 @@ void DOCKING::a_loop()
 //                }
                 mobile->move(cmd_v,0,cmd_w);
             }
+
+            else
+            {
+                qDebug() << "vmark stat time" << vmark_start_time;
+                if(get_time() - vmark_start_time > 10.0)
+                {
+                    Q_EMIT signal_dock_failed(failed_reason);
+                }
+            }
         }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
@@ -367,7 +379,7 @@ void DOCKING::a_loop()
 
             else
             {
-                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN, 0.1);
+                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN+0.025 , 0.05);
                 dock = true;
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
@@ -380,21 +392,32 @@ void DOCKING::a_loop()
             MOBILE_STATUS ms = mobile->get_status();
 
             mobile->move(0, 0, 0); 
-            if (get_time() - wait_start_time > 10.0)
+            qDebug() << "wait start time" << wait_start_time;
+            if (ms.charge_state == 3)
             {
-                failed_reason = "NOT CONNECTED";
-                Q_EMIT signal_dock_failed(failed_reason);
-                fsm_state = DOCKING_FSM_FAILED;
+                qDebug() << "now dock process done";
+                fsm_state = DOCKING_FSM_COMPLETE;
+                Q_EMIT signal_dock_succeed("success");
             }
-
-            if (ms.charge_state==5)
+            else if (get_time() - wait_start_time > 8.0)
             {
-                
-                if(!dock_first)
+                if(!undock_flag)
                 {
-                    fsm_state = DOCKING_FSM_COMPLETE;
-                    Q_EMIT signal_dock_succeed("success");
-                    dock_first = true;
+                    qDebug() << "slamnav undock";
+                    undock_flag = true;
+                    undock_waiting_time = get_time();
+                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN - 0.3, 0.05);
+                }
+                else
+                {
+                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN+0.3 /0.05) + 0.5;
+                    if(get_time() - undock_waiting_time > t)
+                    {
+                        qDebug() << "slamnav2 notconeected";
+                        failed_reason = "NOT CONNECTED";
+                        Q_EMIT signal_dock_failed(failed_reason);
+                        fsm_state = DOCKING_FSM_FAILED;
+                    }
                 }
             }
         }
@@ -412,6 +435,12 @@ void DOCKING::a_loop()
         
         else if (fsm_state == DOCKING_FSM_FAILED)
         {
+            //TODO what?
+        }
+
+        else if (fsm_state == DOCKING_FSM_COMPLETE)
+        {
+            //TODO what?
         }
 
         // for real time loop
@@ -556,18 +585,28 @@ KFRAME DOCKING::generateVKframe()
     XYZR_CLOUD res3;
     XYZR_CLOUD res4;
 
-    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
-    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
-    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
-    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
-    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
-    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
-    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
+    //vdock
+//    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
+//    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
+//    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
+//    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
+//    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
+//    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
+//    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
 
-    res1 = generateSamplePoints(p4,p2,40);
-    res2 = generateSamplePoints(p2,p1,80);
-    res3 = generateSamplePoints(p1,p3,80);
-    res4 = generateSamplePoints(p3,p5,40);
+//    res1 = generateSamplePoints(p4,p2,40);
+//    res2 = generateSamplePoints(p2,p1,80);
+//    res3 = generateSamplePoints(p1,p3,80);
+//    res4 = generateSamplePoints(p3,p5,40);
+
+    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1]+config->DOCKING_POINTDOCK_MARGIN, 0.225, 0.0);
+    Eigen::Vector3d p2(p1.x(), p1.y() - 0.125 ,0.0);
+    Eigen::Vector3d p3(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
+    Eigen::Vector3d p4(p3.x() , p3.y() - 0.22 , 0.0);
+
+    res1 = generateSamplePoints(p1,p2,40);
+    res2 = generateSamplePoints(p2,p3,40);
+    res3 = generateSamplePoints(p3,p4,40);
 
     for (const auto& pt : res1.pts)
     {
@@ -587,12 +626,12 @@ KFRAME DOCKING::generateVKframe()
         Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
         debug_frame.push_back(debug_pt);
     }
-    for (const auto& pt : res4.pts)
-    {
-        frame.pts.push_back(pt);
-        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-        debug_frame.push_back(debug_pt);
-    }
+//    for (const auto& pt : res4.pts)
+//    {
+//        frame.pts.push_back(pt);
+//        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//        debug_frame.push_back(debug_pt);
+//    }
 
     return frame;
 }
@@ -1017,7 +1056,7 @@ void DOCKING::b_loop()
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
-            double t = std::abs(config->DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
+            double t = std::abs((config->DOCKING_POINTDOCK_MARGIN +0.3) /0.1) + 0.5;
 
             if(get_time() - undock_time > t )
             {
@@ -1082,7 +1121,8 @@ bool DOCKING::undock()
             // start docking control loop
             fsm_state = DOCKING_FSM_UNDOCK;
             b_thread = new std::thread(&DOCKING::b_loop, this);
-            mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.1);
+            mobile->stop_charge();
+            mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN +0.3), 0.05);
             undock_time = get_time();
             return true;
         }
