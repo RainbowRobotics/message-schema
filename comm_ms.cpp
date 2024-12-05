@@ -416,7 +416,7 @@ void COMM_MS::send_status()
     motorObj2["connection"] = (ms.connection_m1 == 1) ? "true" : "false";
     motorObj2["status"] = QString::number(ms.status_m1, 10);
     motorObj2["temp"] = QString::number(ms.temp_m1, 'f', 3);
-    motorObj1["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
+    motorObj2["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
     motorArray.append(motorObj2);
 
     rootObj["motor"] = motorArray;
@@ -511,6 +511,7 @@ void COMM_MS::send_status()
     }
     else
     {
+        qDebug() << "null ptr";
         //To Do list
     }
     stateObj["dock"] = docking_state; 
@@ -1395,12 +1396,14 @@ void COMM_MS::slot_localization_stop(double time)
 
 void COMM_MS::slot_docking_dock(double time)
 {
+    qDebug() << "slot dock";
     ctrl->is_moving = true;
     dctrl->move();
 }
 
 void COMM_MS::slot_docking_undock(double time)
 {
+    qDebug() << "slot undock";
     ctrl->is_moving = true;
     dctrl->undock();
 }

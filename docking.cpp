@@ -49,7 +49,7 @@ void DOCKING::stop()
     }
     undock_flag = false;
     path_flag = false;
-    fsm_state = DOCKING_FSM_OFF;
+//    fsm_state = DOCKING_FSM_OFF;
     mobile->move(0, 0, 0);
 }
 
@@ -265,7 +265,7 @@ bool DOCKING::find_Vmark()
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
         qDebug() << "err" << err;
-        if(err >0.003) //0.001
+        if(err >0.002) //0.001
         {
             return false;
         }
@@ -379,7 +379,7 @@ void DOCKING::a_loop()
 
             else
             {
-                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN , 0.05);
+                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN+0.025 , 0.05);
                 dock = true;
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
@@ -393,30 +393,32 @@ void DOCKING::a_loop()
 
             mobile->move(0, 0, 0); 
             qDebug() << "wait start time" << wait_start_time;
-            if (get_time() - wait_start_time > 20.0)
+            if (ms.charge_state == 3)
+            {
+                qDebug() << "now dock process done";
+                fsm_state = DOCKING_FSM_COMPLETE;
+                Q_EMIT signal_dock_succeed("success");
+            }
+            else if (get_time() - wait_start_time > 8.0)
             {
                 if(!undock_flag)
                 {
+                    qDebug() << "slamnav undock";
                     undock_flag = true;
                     undock_waiting_time = get_time();
-                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.05);
+                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN - 0.3, 0.05);
                 }
                 else
                 {
-                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.05) + 0.5;
+                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN+0.3 /0.05) + 0.5;
                     if(get_time() - undock_waiting_time > t)
                     {
+                        qDebug() << "slamnav2 notconeected";
                         failed_reason = "NOT CONNECTED";
                         Q_EMIT signal_dock_failed(failed_reason);
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
-            }
-
-            if (ms.charge_state == 3)
-            {
-                fsm_state = DOCKING_FSM_COMPLETE;
-                Q_EMIT signal_dock_succeed("success");
             }
         }
 
@@ -1054,7 +1056,7 @@ void DOCKING::b_loop()
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
-            double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.1) + 0.5;
+            double t = std::abs((config->DOCKING_POINTDOCK_MARGIN +0.3) /0.1) + 0.5;
 
             if(get_time() - undock_time > t )
             {
@@ -1120,7 +1122,7 @@ bool DOCKING::undock()
             fsm_state = DOCKING_FSM_UNDOCK;
             b_thread = new std::thread(&DOCKING::b_loop, this);
             mobile->stop_charge();
-            mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.05);
+            mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN +0.3), 0.05);
             undock_time = get_time();
             return true;
         }
