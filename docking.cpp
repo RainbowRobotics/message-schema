@@ -47,7 +47,7 @@ void DOCKING::stop()
         b_thread->join();
         b_thread = NULL;
     }
-    
+    path_flag = false;
     fsm_state = DOCKING_FSM_OFF;
     mobile->move(0, 0, 0);
 }
@@ -60,6 +60,7 @@ void DOCKING::move()
     obsmap->clear();
     // start control loop
     a_flag = true;
+    path_flag = false;
     dock = false ; //dock flag init
 
     //generate V
@@ -262,7 +263,7 @@ bool DOCKING::find_Vmark()
         dock_tf = calculateTranslationMatrix(frm1_center, frm0_center0);
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
-
+        qDebug() << "err" << err;
         if(err >0.003) //0.001
         {
             return false;
