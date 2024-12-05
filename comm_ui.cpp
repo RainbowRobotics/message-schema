@@ -731,6 +731,14 @@ void COMM_UI::send_status()
 
     // Adding the state object
     QString cur_loc_state = slam->get_cur_loc_state();
+    QString cur_node_id = "";
+    QString cur_node_name = "";
+    if(unimap->is_loaded)
+    {
+        cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+        NODE* node = unimap->get_node_by_id(cur_node_id);
+        cur_node_name = node->name;
+    }
 
     QJsonObject stateObj;
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
@@ -738,7 +746,8 @@ void COMM_UI::send_status()
     stateObj["charge"] = (ms.charge_state == 1) ? "true" : "false";
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     stateObj["map"] = unimap->map_dir.split("/").last();    
-    stateObj["cur_node"] = unimap->get_node_id_edge(cur_tf.block(0,3,3,1)); // cur node id
+    stateObj["cur_node_id"] = cur_node_id;
+    stateObj["cur_node_name"] = cur_node_name;
     rootObj["state"] = stateObj;
 
     // Adding the condition object

@@ -226,10 +226,7 @@ void LIDAR_2D::grab_loop_f()
         logger->write_log("[LIDAR] start scan failed", "Red", true, false);
         return;
     }
-
-    QString str;
-    str.sprintf("[LIDAR] lidar scan start, MODE :%s", mode.scan_mode);
-    logger->write_log(str, "Green", true, false);
+    logger->write_log(QString("[LIDAR] lidar scan start, MODE :%1").arg(mode.scan_mode), "Green", true, false);
 
     is_connected_f = true;
 
@@ -263,8 +260,7 @@ void LIDAR_2D::grab_loop_f()
 
                 is_synced_f = true;
 
-                QString str; str.sprintf("[LIDAR] sync, offset_t_f: %f", (double)offset_t_f);
-                logger->write_log(str);
+                logger->write_log(QString("[LIDAR] sync, offset_t_f: %1").arg((double)offset_t_f));
             }
 
             // check lidar, mobile sync

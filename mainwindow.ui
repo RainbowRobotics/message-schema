@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -533,7 +533,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -688,7 +688,7 @@ config</string>
 (semi)</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_MapLastLC">
+             <widget class="QPushButton" name="bt_MapLastLc">
               <property name="geometry">
                <rect>
                 <x>230</x>

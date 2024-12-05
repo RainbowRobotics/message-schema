@@ -82,10 +82,21 @@ public:
 
     void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
+    void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
 
     void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
     void viewer_camera_pan_control(double dx, double dy);
     void viewer_camera_pan_control2(double dx, double dy);
+
+    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);
+
+    void syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer);
+
+
+    void synchronizeViewersIfNeeded(QObject* currentWidget);
+    bool wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget);
+    QObject* lastActiveWidget = nullptr;
+    
 public:
     Ui::MainWindow *ui;
     std::mutex mtx;
@@ -300,7 +311,7 @@ public Q_SLOTS:
     void bt_MapBuild();    
     void bt_MapSave();
     void bt_MapLoad();
-    void bt_MapLastLC();
+    void bt_MapLastLc();
 
     void bt_LocInit();
     void bt_LocInitSemiAuto();

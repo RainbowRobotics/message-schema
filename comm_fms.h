@@ -46,7 +46,7 @@ public:
     // vars    
     std::atomic<bool> is_connected = {false};
     QString robot_id = "";
-    QString multi_state = "";
+    QString multi_state = "none"; // none, req_path, recv_path
 
     // funcs
     void init();

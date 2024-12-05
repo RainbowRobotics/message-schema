@@ -19,9 +19,6 @@ AUTOCONTROL::~AUTOCONTROL()
         b_thread->join();
         b_thread = NULL;
     }
-    mobile->move(0, 0, 0);
-    is_moving = false;
-    clear_path();
 }
 
 void AUTOCONTROL::init()
@@ -147,6 +144,8 @@ PATH AUTOCONTROL::get_cur_local_path()
 
 void AUTOCONTROL::clear_path()
 {
+    global_path_que.clear();
+
     mtx.lock();    
     cur_global_path = PATH();
     cur_local_path = PATH();
@@ -176,11 +175,6 @@ QString AUTOCONTROL::get_multi_req()
 
 void AUTOCONTROL::stop()
 {
-    if(is_moving == false)
-    {
-        return;
-    }
-
     // control loop stop
     if(b_thread != NULL)
     {
@@ -188,19 +182,8 @@ void AUTOCONTROL::stop()
         b_thread->join();
         b_thread = NULL;
     }
-    mobile->move(0, 0, 0);
 
-    // clear params
-    is_moving = false;
-    is_pause = false;
-    clear_path();
-
-    mtx.lock();
-    multi_req = "none";
-    mtx.unlock();
-
-    // clear que
-    global_path_que.clear();
+    clean_up();
 }
 
 void AUTOCONTROL::change()
@@ -216,9 +199,6 @@ void AUTOCONTROL::change()
 
     // clear path
     clear_path();
-
-    // clear que
-    global_path_que.clear();
 }
 
 void AUTOCONTROL::set_goal(QString goal_id)
@@ -1571,63 +1551,37 @@ void AUTOCONTROL::b_loop_pp()
 {    
     // set flag
     is_moving = true;
+
+    logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
     if(global_path_que.unsafe_size() == 0)
     {
         // no global path
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_failed("no global path que");
-        logger->write_log("[AUTO] global path init failed 1");
+        logger->write_log("[AUTO] no global path que");
         return;
-    }
-    else
-    {
-        QString str; str.sprintf("[AUTO] global path que size: %d", global_path_que.unsafe_size());
-        logger->write_log(str);
     }
 
     // check global path
     PATH global_path;
-    while(b_flag)
+    if(global_path_que.try_pop(global_path))
     {
-        if(global_path_que.try_pop(global_path))
-        {
-            logger->write_log("[AUTO] deque global path");
+        logger->write_log("[AUTO] deque global path");
 
-            // update global path and goal_tf
-            mtx.lock();
-            cur_global_path = global_path;
-            mtx.unlock();
+        // update global path and goal_tf
+        mtx.lock();
+        cur_global_path = global_path;
+        mtx.unlock();
 
-            Q_EMIT signal_global_path_updated();
-            break;
-        }
-        else
-        {
-            printf("[AUTO] try pop global path\n");
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
+        Q_EMIT signal_global_path_updated();
     }
 
     if(global_path.pos.size() == 0)
     {
         // no global path
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_failed("no global path");
-        logger->write_log("[AUTO] global path init failed 2");
+        logger->write_log("[AUTO] no global path");
         return;
     }
 
@@ -1636,36 +1590,25 @@ void AUTOCONTROL::b_loop_pp()
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
-    // check goal    
-    const double loose_factor = 2.0;
+    // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
-    Eigen::Vector2d dtdr = dTdR(slam->get_cur_tf(), goal_tf);
-    if(dtdr[0] < config->DRIVE_GOAL_D*loose_factor)
+
+    // check already goal
+    Eigen::Vector3d goal_dxi = TF_to_se2(goal_tf.inverse()*slam->get_cur_tf());
+    if(calc_dist_2d(goal_dxi) < 2*config->DRIVE_GOAL_D)
     {
-        if(std::abs(dtdr[1]) < config->DRIVE_GOAL_TH*loose_factor*D2R)
+        if(std::abs(goal_dxi[2]) < 2*config->DRIVE_GOAL_TH*D2R || !global_path.is_align)
         {
             // already goal
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("already goal");
             logger->write_log("[AUTO] already goal");
             return;
         }
-        else
-        {
-            if(global_path.is_align)
-            {
-                // do final align
-                fsm_state = AUTO_FSM_FINAL_ALIGN;
-                logger->write_log("[AUTO] jump to FINAL_ALIGN");
-            }
-        }
+
+        // else do final align
+        fsm_state = AUTO_FSM_FINAL_ALIGN;
+        logger->write_log("[AUTO] jump to FINAL_ALIGN");
     }
 
     // path storage
@@ -1687,43 +1630,29 @@ void AUTOCONTROL::b_loop_pp()
     logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
     {
-        // pause
-        if(is_pause)
-        {
-            mobile->move(0, 0, 0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-
         // check everything
         int is_good_everything = is_everything_fine();
         if(is_good_everything == DRIVING_FAILED)
         {
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("something wrong");
             logger->write_log("[AUTO] something wrong (failed)");
             return;
         }
         else if(is_good_everything == DRIVING_NOT_READY)
         {
-            mobile->move(0, 0, 0);
-            is_moving = false;
-            clear_path();
-
-            mtx.lock();
-            multi_req = "none";
-            mtx.unlock();
-
+            clean_up();
             Q_EMIT signal_move_failed("something wrong (not ready)");
             logger->write_log("[AUTO] something wrong (not ready)");
             return;
+        }
+
+        // pause
+        if(is_pause)
+        {
+            mobile->move(0, 0, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
         }
 
         // get current status
@@ -1833,16 +1762,13 @@ void AUTOCONTROL::b_loop_pp()
             w *= scale_w;
 
             // goal check
-            if(std::abs(err_th) < config->DRIVE_GOAL_TH*loose_factor*D2R)
+            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
                 extend_dt = 0;
                 pre_err_th = 0;
-                //mobile->move(0, 0, 0);
 
-                fsm_state = AUTO_FSM_DRIVING;
-
-                QString log_str; log_str.sprintf("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%f", err_th*R2D);
-                logger->write_log(log_str);
+                fsm_state = AUTO_FSM_DRIVING;                
+                logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
                 continue;
             }
 
@@ -1855,9 +1781,7 @@ void AUTOCONTROL::b_loop_pp()
 
                 obs_state = AUTO_OBS_CHECK;
                 fsm_state = AUTO_FSM_OBS;
-
-                QString log_str; log_str.sprintf("[AUTO] FIRST_ALIGN -> OBS, err_th:%f", err_th*R2D);
-                logger->write_log(log_str);
+                logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS, err_th:%1").arg(err_th*R2D));
                 continue;
             }
 
@@ -2018,9 +1942,8 @@ void AUTOCONTROL::b_loop_pp()
 
                     if(global_path.is_align)
                     {
-                        fsm_state = AUTO_FSM_FINAL_ALIGN;
-                        QString log_str; log_str.sprintf("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%f", goal_err_d);
-                        logger->write_log(log_str);
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;                        
+                        logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
                     }
                     else
                     {
@@ -2055,9 +1978,8 @@ void AUTOCONTROL::b_loop_pp()
                             Q_EMIT signal_local_path_updated();
 
                             // return to first align
-                            fsm_state = AUTO_FSM_FIRST_ALIGN;
-                            QString log_str; log_str.sprintf("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%f", goal_err_d);
-                            logger->write_log(log_str);
+                            fsm_state = AUTO_FSM_FIRST_ALIGN;                            
+                            logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
                             continue;
                         }
                     }
@@ -2085,19 +2007,11 @@ void AUTOCONTROL::b_loop_pp()
             {
                 if(config->USE_EARLYSTOP && is_multi == false)
                 {
-                    mobile->move(0, 0, 0);
-                    is_moving = false;
-                    clear_path();
-
-                    mtx.lock();
-                    multi_req = "none";
-                    mtx.unlock();
-
+                    clean_up();
                     Q_EMIT signal_move_succeed("early stopped, due to obstacle");
 
                     fsm_state = AUTO_FSM_COMPLETE;
-                    QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(early stop), err_th: %.3f", err_th*R2D);
-                    logger->write_log(log_str);
+                    logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(early stop), err_th: %1").arg(err_th*R2D));
                     return;
                 }
                 else
@@ -2109,6 +2023,7 @@ void AUTOCONTROL::b_loop_pp()
                     obs_condition = "near";
                     mtx.unlock();
 
+                    // obstacle works
                     obs_wait_st_time = get_time();
                     obs_state = AUTO_OBS_WAIT2;
                     fsm_state = AUTO_FSM_OBS;
@@ -2133,20 +2048,11 @@ void AUTOCONTROL::b_loop_pp()
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    pre_err_th = 0;
-                    mobile->move(0, 0, 0);
-                    is_moving = false;
-                    clear_path();
-
-                    mtx.lock();
-                    multi_req = "none";
-                    mtx.unlock();
-
+                    clean_up();
                     Q_EMIT signal_move_succeed("very good");
 
-                    fsm_state = AUTO_FSM_COMPLETE;
-                    QString log_str; log_str.sprintf("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %.3f", err_th*R2D);
-                    logger->write_log(log_str);
+                    fsm_state = AUTO_FSM_COMPLETE;                    
+                    logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
                     return;
                 }
             }
@@ -2267,10 +2173,8 @@ void AUTOCONTROL::b_loop_pp()
                 if(max_d > config->ROBOT_RADIUS + margin_d)
                 {
                     mobile->move(0, 0, 0);
-                    obs_state = AUTO_OBS_AVOID;
-                    QString str; str.sprintf("[AUTO] max_d: %f, OBS_RECOVERY -> OBS_AVOID", max_d);
-                    logger->write_log(str);
-
+                    obs_state = AUTO_OBS_AVOID;                    
+                    logger->write_log(QString("[AUTO] max_d: %1, OBS_RECOVERY -> OBS_AVOID").arg(max_d));
                     continue;
                 }
 
@@ -2322,8 +2226,7 @@ void AUTOCONTROL::b_loop_pp()
         }
         else
         {
-            QString str; str.sprintf("[AUTO] loop time drift, dt:%f", delta_loop_time);
-            logger->write_log(str);
+            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
         }
         pre_loop_time = get_time();
     }
@@ -2335,15 +2238,20 @@ void AUTOCONTROL::b_loop_pp()
     }
     else
     {
-        mobile->move(0, 0, 0);
-        is_moving = false;
-        clear_path();
-
-        mtx.lock();
-        multi_req = "none";
-        mtx.unlock();
-
+        clean_up();
         Q_EMIT signal_move_succeed("stopped");
         logger->write_log("[AUTO] b_loop_pp stop");
     }
+}
+
+void AUTOCONTROL::clean_up()
+{
+    mobile->move(0, 0, 0);
+    is_moving = false;
+    is_pause = false;
+    clear_path();
+
+    mtx.lock();
+    multi_req = "none";
+    mtx.unlock();
 }
