@@ -56,7 +56,7 @@ public:
     void move_rotate(double th, double w);
     void led(int target, int mode);
     void time_sync();
-
+    void stop_charge();
     // recv loop
     std::atomic<bool> recv_flag = {false};
     std::thread* recv_thread = NULL;

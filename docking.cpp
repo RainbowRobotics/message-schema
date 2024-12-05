@@ -214,6 +214,7 @@ bool DOCKING::find_Vmark()
         //<Seokgyun.kim>
         //clust_dist_threshold_min and max filter clusters based on the distance from the robot.
         //clust_angle_threshold filters clusters based on the angle relative to the robot's coordinate system.
+
         if( d > config->DOCKING_CLUST_DIST_THRESHOLD_MIN && d < config->DOCKING_CLUST_DIST_THRESHOLD_MAX )
         {
             filtered_clusters.push_back(clust);
@@ -390,21 +391,28 @@ void DOCKING::a_loop()
             mobile->move(0, 0, 0); 
             if (get_time() - wait_start_time > 20.0)
             {
-                failed_reason = "NOT CONNECTED";
-                Q_EMIT signal_dock_failed(failed_reason);
-                fsm_state = DOCKING_FSM_FAILED;
+                if(!undock_flag)
+                {
+                    undock_flag = true;
+                    undock_waiting_time = get_time();
+                    mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.1);
+                }
+                else
+                {
+                    double t = std::abs(config->DOCKING_POINTDOCK_MARGIN /0.1) + 0.5;
+                    if(get_time() - undock_waiting_time > t)
+                    {
+                        failed_reason = "NOT CONNECTED";
+                        Q_EMIT signal_dock_failed(failed_reason);
+                        fsm_state = DOCKING_FSM_FAILED;
+                    }
+                }
             }
 
             if (ms.charge_state == 3)
             {
                 fsm_state = DOCKING_FSM_COMPLETE;
                 Q_EMIT signal_dock_succeed("success");
-                // if(!dock_first)
-                // {
-                //     fsm_state = DOCKING_FSM_COMPLETE;
-                //     Q_EMIT signal_dock_succeed("success");
-                //     dock_first = true;
-                // }
             }
         }
 
@@ -1107,6 +1115,7 @@ bool DOCKING::undock()
             // start docking control loop
             fsm_state = DOCKING_FSM_UNDOCK;
             b_thread = new std::thread(&DOCKING::b_loop, this);
+            mobile->stop_charge();
             mobile->move_linear(-1*config->DOCKING_POINTDOCK_MARGIN, 0.1);
             undock_time = get_time();
             return true;

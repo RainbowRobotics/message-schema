@@ -1081,6 +1081,26 @@ void MOBILE::move_linear(double d, double v)
     }
 }
 
+void MOBILE::stop_charge()
+{
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00;
+    send_byte[7] = 130; // cmd stop charge
+    send_byte[24] = 0x25;
+    if(is_connected && config->SIM_MODE == 0)
+    {
+        msg_que.push(send_byte);
+    }
+}
+
 void MOBILE::move_rotate(double th, double w)
 {
     // set last v,w
