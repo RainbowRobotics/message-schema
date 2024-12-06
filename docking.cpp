@@ -393,7 +393,8 @@ void DOCKING::a_loop()
 
             mobile->move(0, 0, 0); 
             qDebug() << "wait start time" << wait_start_time;
-            if (ms.charge_state == 3)
+            qDebug() << "motor cur" << ms.cur_m0 << ms.cur_m1;
+            if (ms.charge_state == 3 && ms.cur_m0 < 60 && ms.cur_m1 < 60)
             {
                 qDebug() << "now dock process done";
                 fsm_state = DOCKING_FSM_COMPLETE;
