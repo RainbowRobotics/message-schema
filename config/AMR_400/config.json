@@ -70,7 +70,7 @@
         "SLAM_ICP_COST_THRESHOLD": "0.5",
         "SLAM_ICP_DO_ACCUM_NUM": "2",
         "SLAM_ICP_DO_ERASE_GAP": "10",
-        "SLAM_ICP_ERROR_THRESHOLD": "0.3",
+        "SLAM_ICP_ERROR_THRESHOLD": "0.2",
         "SLAM_ICP_MAX_FEATURE_NUM": "2000",
         "SLAM_ICP_VIEW_THRESHOLD": "170",
         "SLAM_KFRM_LC_TRY_DIST": "2.0",
@@ -106,9 +106,6 @@
         "OBS_PREDICT_TIME": "3.0",
         "OBS_SAFE_MARGIN_X": "0.1",
         "OBS_SAFE_MARGIN_Y": "0.1"
-    },
-    "path": {
-        "MAP_PATH": "/home/rainbow/maps/1203"
     },
     "robot": {
         "PLATFORM_NAME": "400",

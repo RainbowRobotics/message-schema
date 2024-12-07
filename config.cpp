@@ -335,12 +335,6 @@ void CONFIG::load()
 
             }
 
-            QJsonObject obj_map = obj["path"].toObject();
-            {
-                MAP_PATH = obj_map["MAP_PATH"].toString();
-                printf("[CONFIG] MAP_PATH, %s\n", obj_docking["MAP_PATH"].toString().toLocal8Bit().data());
-            }
-
             // complete
             config_file.close();
             printf("[CONFIG] %s, load successed\n", config_path.toLocal8Bit().data());
@@ -375,38 +369,3 @@ void CONFIG::load()
     }
 }
 
-void CONFIG::save_map_path()
-{
-    if(config_path == "")
-    {
-        return;
-    }
-
-    QFile config_file(config_path);
-    if(config_file.open(QIODevice::ReadOnly))
-    {
-        QByteArray data = config_file.readAll();
-        config_file.close();
-
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-        QJsonObject rootObj = doc.object();
-
-        if(rootObj.contains("path"))
-        {
-            QJsonObject pathObj = rootObj["path"].toObject();
-            if(pathObj.contains("MAP_PATH"))
-            {
-                pathObj["MAP_PATH"] = MAP_PATH;
-            }
-
-            rootObj["path"] = pathObj;
-        }
-
-        if(config_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        {
-            doc.setObject(rootObj);
-            config_file.write(doc.toJson());
-            config_file.close();
-        }
-    }
-}
