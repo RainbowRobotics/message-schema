@@ -359,6 +359,7 @@ public Q_SLOTS:
 
     // for fms
     void bt_SendMap();
+    void slot_resist_id(QString id);
 
     // for log
     void slot_write_log(QString user_log, QString color_code);

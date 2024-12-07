@@ -1625,6 +1625,7 @@ void AUTOCONTROL::b_loop_pp()
 
     // for obs
     int obs_state = AUTO_OBS_CHECK;
+    int cur_obs_val = OBS_NONE;
     double obs_wait_st_time = 0;
 
     logger->write_log("[AUTO] b_loop_pp start");
@@ -1812,11 +1813,14 @@ void AUTOCONTROL::b_loop_pp()
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    if(obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y))
+                    int obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
+                    if(obs_val != OBS_NONE)
                     {
                         is_collision = true;
                         break;
                     }
+
+                    cur_obs_val = obs_val;
                 }
 
                 if(is_collision)
@@ -2003,7 +2007,9 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-            if(obsmap->is_path_collision(traj, true))
+
+            int obs_val = obsmap->is_path_collision(traj, true);
+            if(obs_val != OBS_NONE)
             {
                 if(config->USE_EARLYSTOP && is_multi == false)
                 {
@@ -2018,9 +2024,20 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     mobile->move(0, 0, 0);
 
+                    QString _obs_condition = "";
+                    if(obs_val == OBS_DYN)
+                    {
+                        _obs_condition = "near";
+                    }
+                    else if(obs_val == OBS_ROBOT)
+                    {
+                        _obs_condition = "near_robot";
+                    }
+                    cur_obs_val = obs_val;
+
                     // for mobile server
                     mtx.lock();
-                    obs_condition = "near";
+                    obs_condition = _obs_condition;
                     mtx.unlock();
 
                     // obstacle works
@@ -2067,9 +2084,19 @@ void AUTOCONTROL::b_loop_pp()
         {
             if(obs_state == AUTO_OBS_CHECK)
             {
+                QString _obs_condition = "";
+                if(cur_obs_val == OBS_DYN)
+                {
+                    _obs_condition = "near";
+                }
+                else if(cur_obs_val == OBS_ROBOT)
+                {
+                    _obs_condition = "near_robot";
+                }
+
                 // for mobile server
                 mtx.lock();
-                obs_condition = "near";
+                obs_condition = _obs_condition;
                 mtx.unlock();
 
                 if(config->OBS_AVOID == 0)

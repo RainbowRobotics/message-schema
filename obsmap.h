@@ -32,7 +32,7 @@ public:
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
     std::vector<Eigen::Vector3d> get_obs_pts();
-    std::vector<Eigen::Vector3d> get_dyn_pts();
+    std::vector<Eigen::Vector4d> get_dyn_pts();
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
@@ -41,7 +41,7 @@ public:
     // check collision
     bool is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is_dyn = false);
     bool is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn = false, double margin_x = 0, double margin_y = 0);
-    bool is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn = false, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
+    int is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn = false, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
 
     // for avoid path
     double calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_tf, double radius);
@@ -52,7 +52,7 @@ public:
     // octree for obsmap
     octomap::OcTree* octree = NULL;
     std::vector<Eigen::Vector3d> obs_pts;
-    std::vector<Eigen::Vector3d> dyn_pts;
+    std::vector<Eigen::Vector4d> dyn_pts;
     std::vector<Eigen::Vector4d> plot_pts;
 
     // virtual obs for multirobot

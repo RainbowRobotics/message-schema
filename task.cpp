@@ -95,7 +95,6 @@ void TASK::save_task(QString path)
 
         printf("[TASK] %s saved\n", task_path.toLocal8Bit().data());
     }
-
 }
 
 void TASK::load_task(QString path)
@@ -175,6 +174,14 @@ void TASK::a_loop()
         else if(state == TASK_MOVE)
         {
             NODE* node = unimap->get_node_by_id(task_node_list[idx]);
+            if(node == NULL)
+            {
+                state = TASK_WAIT;
+                last_task_state = state;
+                printf("[TASK] TASK_MOVE -> TASK_WAIT(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                continue;
+            }
 
             if(ctrl->is_multi)
             {
@@ -193,7 +200,10 @@ void TASK::a_loop()
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            if(ctrl->is_moving == false)
+            //if(ctrl->is_moving == false)
+
+            QString multi_state = ctrl->get_multi_req();
+            if(ctrl->fsm_state == AUTO_FSM_COMPLETE && multi_state == "none")
             {
                 printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
 

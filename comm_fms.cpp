@@ -48,6 +48,8 @@ void COMM_FMS::init()
     robot_id = _robot_id;
     printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
 
+    Q_EMIT signal_regist_id(_robot_id);
+
     // start reconnect loop
     if(config->USE_FMS)
     {

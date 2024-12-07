@@ -57,6 +57,8 @@ Q_SIGNALS:
     void signal_mapload(double time, QString name);
     void signal_init(double time);
 
+    void signal_regist_id(QString id);
+
 private Q_SLOTS:
     void reconnect_loop();
     void connected();

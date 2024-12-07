@@ -351,7 +351,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     // set denoised obs_pts
     std::vector<Eigen::Vector3d> _obs_pts;
-    std::vector<Eigen::Vector3d> _dyn_pts;
+    std::vector<Eigen::Vector4d> _dyn_pts;
     std::vector<Eigen::Vector4d> _plot_pts;
     for(size_t p = 0; p < local_obs_pts.size(); p++)
     {
@@ -372,7 +372,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
         if(_dynamic_map.ptr<uchar>(uv[1])[uv[0]] == 255)
         {
-            _dyn_pts.push_back(Eigen::Vector3d(global_obs_pts[p][0], global_obs_pts[p][1], global_obs_pts[p][2]));
+            _dyn_pts.push_back(Eigen::Vector4d(global_obs_pts[p][0], global_obs_pts[p][1], global_obs_pts[p][2], 0));
         }
     }
 
@@ -386,7 +386,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         for(size_t q = 0; q < pts.size(); q++)
         {
             Eigen::Vector3d P = pts[q];
-            _dyn_pts.push_back(P);
+            Eigen::Vector4d P0 = Eigen::Vector4d(P[0], P[1], P[2], 1);
+            _dyn_pts.push_back(P0);
 
             // add local obsmap
             Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
@@ -413,7 +414,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         for(size_t q = 0; q < pts.size(); q++)
         {
             Eigen::Vector3d P = pts[q];
-            _dyn_pts.push_back(P);
+            Eigen::Vector4d P0 = Eigen::Vector4d(P[0], P[1], P[2], 1);
+            _dyn_pts.push_back(P0);
 
             // add local obsmap
             Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
@@ -469,10 +471,10 @@ std::vector<Eigen::Vector3d> OBSMAP::get_obs_pts()
     return res;
 }
 
-std::vector<Eigen::Vector3d> OBSMAP::get_dyn_pts()
+std::vector<Eigen::Vector4d> OBSMAP::get_dyn_pts()
 {
     mtx.lock();
-    std::vector<Eigen::Vector3d> res = dyn_pts;
+    std::vector<Eigen::Vector4d> res = dyn_pts;
     mtx.unlock();
 
     return res;
@@ -543,20 +545,25 @@ bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is
 {
     // get
     mtx.lock();
-    std::vector<Eigen::Vector3d> pts;
+    std::vector<Eigen::Vector4d> pts;
     if(is_dyn)
     {
         pts = dyn_pts;
     }
     else
     {
-        pts = obs_pts;
+        for(size_t p = 0; p < obs_pts.size(); p++)
+        {
+            Eigen::Vector4d P = Eigen::Vector4d(obs_pts[p][0], obs_pts[p][1], obs_pts[p][2], 0);
+            pts.push_back(P);
+        }
     }
     mtx.unlock();
 
     for(size_t p = 0; p < pts.size(); p++)
     {
-        double d = calc_dist_2d(pts[p] - pos);
+        Eigen::Vector3d P = Eigen::Vector3d(pts[p][0], pts[p][1], pts[p][2]);
+        double d = calc_dist_2d(P - pos);
         if(d < radius)
         {
             // collision
@@ -572,14 +579,18 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, doubl
 {
     // get
     mtx.lock();
-    std::vector<Eigen::Vector3d> pts;
+    std::vector<Eigen::Vector4d> pts;
     if(is_dyn)
     {
         pts = dyn_pts;
     }
     else
     {
-        pts = obs_pts;
+        for(size_t p = 0; p < obs_pts.size(); p++)
+        {
+            Eigen::Vector4d P = Eigen::Vector4d(obs_pts[p][0], obs_pts[p][1], obs_pts[p][2], 0);
+            pts.push_back(P);
+        }
     }
     mtx.unlock();
 
@@ -603,10 +614,12 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, doubl
     // check collision
     for(size_t p = 0; p < pts.size(); p++)
     {
+        Eigen::Vector3d P = Eigen::Vector3d(pts[p][0], pts[p][1], pts[p][2]);
+
         bool is_collision = false;
         for(size_t q = 0; q < robot_pts.size(); q++)
         {
-            Eigen::Vector3d pt = pts[p];
+            Eigen::Vector3d pt = Eigen::Vector3d(P[0], P[1], P[2]);
             Eigen::Vector3d pt0 = robot_pts[q];
             Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
 
@@ -628,18 +641,22 @@ bool OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, doubl
     return false;
 }
 
-bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
+int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
     mtx.lock();
-    std::vector<Eigen::Vector3d> pts;
+    std::vector<Eigen::Vector4d> pts;
     if(is_dyn)
     {
         pts = dyn_pts;
     }
     else
     {
-        pts = obs_pts;
+        for(size_t p = 0; p < obs_pts.size(); p++)
+        {
+            Eigen::Vector4d P = Eigen::Vector4d(obs_pts[p][0], obs_pts[p][1], obs_pts[p][2], 0);
+            pts.push_back(P);
+        }
     }
     mtx.unlock();
 
@@ -670,9 +687,13 @@ bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bo
             for(size_t p = 0; p < pts.size(); p++)
             {
                 bool is_collision = false;
+
+                int is_robot = (int)pts[p][3];
+                Eigen::Vector3d P = Eigen::Vector3d(pts[p][0], pts[p][1], pts[p][2]);
+
                 for(size_t q = 0; q < robot_pts.size(); q++)
                 {
-                    Eigen::Vector3d pt = pts[p];
+                    Eigen::Vector3d pt = Eigen::Vector3d(P[0], P[1], P[2]);
                     Eigen::Vector3d pt0 = robot_pts[q];
                     Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
 
@@ -683,17 +704,21 @@ bool OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bo
                     }
                 }
 
-                if(is_collision)
+                if(is_collision && is_robot == 0)
                 {
                     // collision
-                    return true;
+                    return OBS_DYN;
+                }
+                else if(is_collision && is_robot == 1)
+                {
+                    return OBS_ROBOT;
                 }
             }
         }
     }
 
     // no collision
-    return false;
+    return OBS_NONE;
 }
 
 // for avoid path

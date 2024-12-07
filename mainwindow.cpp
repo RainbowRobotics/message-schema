@@ -175,6 +175,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for fms
     connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
+    connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
@@ -3219,6 +3220,12 @@ void MainWindow::bt_SendMap()
     }
 }
 
+void MainWindow::slot_resist_id(QString id)
+{
+    QString str = "[ID] " + id;
+    ui->lb_RobotID->setText(str);
+}
+
 void MainWindow::bt_SelectPreNodes()
 {
     int val = (int)saved_select_idx - 1;
@@ -3550,6 +3557,10 @@ void MainWindow::watch_loop()
                     {
                         QApplication::beep();
                     }
+                }
+                else if(ctrl.get_obs_condition() == "near_robot")
+                {
+                    led_color = LED_RED;
                 }
                 else
                 {
