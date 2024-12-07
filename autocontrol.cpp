@@ -1813,14 +1813,12 @@ void AUTOCONTROL::b_loop_pp()
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    int obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
-                    if(obs_val != OBS_NONE)
+                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
+                    if(cur_obs_val != OBS_NONE)
                     {
                         is_collision = true;
                         break;
                     }
-
-                    cur_obs_val = obs_val;
                 }
 
                 if(is_collision)
@@ -1846,7 +1844,8 @@ void AUTOCONTROL::b_loop_pp()
                     traj.push_back(local_path.pose[p]);
                 }
 
-                if(obsmap->is_path_collision(traj, true, 0, 0, 0, 10))
+                cur_obs_val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+                if(cur_obs_val != OBS_NONE)
                 {
                     obs_v = 0;
                 }
@@ -2008,8 +2007,8 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
 
-            int obs_val = obsmap->is_path_collision(traj, true);
-            if(obs_val != OBS_NONE)
+            cur_obs_val = obsmap->is_path_collision(traj, true);
+            if(cur_obs_val != OBS_NONE)
             {
                 if(config->USE_EARLYSTOP && is_multi == false)
                 {
@@ -2025,15 +2024,14 @@ void AUTOCONTROL::b_loop_pp()
                     mobile->move(0, 0, 0);
 
                     QString _obs_condition = "";
-                    if(obs_val == OBS_DYN)
+                    if(cur_obs_val == OBS_DYN)
                     {
                         _obs_condition = "near";
                     }
-                    else if(obs_val == OBS_ROBOT)
+                    else if(cur_obs_val == OBS_ROBOT)
                     {
                         _obs_condition = "near_robot";
                     }
-                    cur_obs_val = obs_val;
 
                     // for mobile server
                     mtx.lock();
