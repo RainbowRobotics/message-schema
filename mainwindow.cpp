@@ -1886,9 +1886,6 @@ void MainWindow::bt_MapSave()
         cloud_csv_file.close();
         printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
     }
-
-    config.MAP_PATH = map_dir;
-    config.save_map_path();
 }
 
 void MainWindow::bt_MapLoad()
@@ -1902,9 +1899,6 @@ void MainWindow::bt_MapLoad()
         map_dir = path;
         unimap.load_map(path);
         all_update();
-
-        config.MAP_PATH = map_dir;
-        config.save_map_path();
     }
 }
 

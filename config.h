@@ -137,9 +137,6 @@ public:
     double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
 
-    // map
-    QString MAP_PATH = "";
-
     std::vector<QString> params;
 
 public:
@@ -147,9 +144,7 @@ public:
     void load();
     QString config_path = "";
     QString config_sn_path = "";
-    std::atomic<bool> is_load = {false};
-
-    void save_map_path();
+    std::atomic<bool> is_load = {false};    
 
 Q_SIGNALS:
 
