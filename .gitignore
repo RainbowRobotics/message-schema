@@ -1,0 +1,6 @@
+# Ignore Qt Creator user-specific files
+*.pro.user
+*.pro.user.*
+
+# Ignore qmake stash files
+*.qmake.stash
