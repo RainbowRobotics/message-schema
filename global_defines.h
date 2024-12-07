@@ -176,6 +176,13 @@ enum AUTO_OBS_STATE
     AUTO_OBS_WAIT2,
 };
 
+enum OBS_STATE
+{
+    OBS_NONE = 0,
+    OBS_DYN = 1,
+    OBS_ROBOT = 2,
+};
+
 enum LOCAL_PATH_STATE
 {
     LOCAL_PATH_IDLE = 0,

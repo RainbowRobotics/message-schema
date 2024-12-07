@@ -459,8 +459,10 @@ void COMM_MS::send_status()
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
+    #ifdef USE_STATION
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
+    #endif
     rootObj["power"] = powerObj;
 
     // Adding the state object
