@@ -3554,7 +3554,6 @@ void MainWindow::watch_loop()
                 }
                 else if(ctrl.get_obs_condition() == "near_robot")
                 {
-                    std::cout << "near robot" << std::endl;
                     led_color = LED_RED;
                 }
                 else
