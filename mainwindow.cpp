@@ -3220,6 +3220,86 @@ void MainWindow::slot_resist_id(QString id)
     ui->lb_RobotID->setText(str);
 }
 
+void MainWindow::slot_sim_auto_init(QString seed)
+{
+    if(unimap.is_loaded == false)
+    {
+        logger.write_log("[SIM] map load first", "Red", true, false);
+        return;
+    }
+
+    NODE* node = unimap.get_node_by_id(seed);
+    if(node == NULL)
+    {
+        return;
+    }
+
+    // stop first
+    if(slam.is_loc)
+    {
+        slam.localization_stop();
+    }
+    slam.cur_tf = node->tf;
+    sim.stop();
+
+    // start
+    sim.cur_tf = node->tf;
+    sim.start();
+
+    mobile.is_connected = true;
+    mobile.is_synced = true;
+
+    lidar.is_connected_f = true;
+    lidar.is_connected_b = true;
+
+    lidar.is_synced_f = true;
+    lidar.is_synced_b = true;
+
+    slam.localization_start();
+}
+
+void MainWindow::slot_sim_random_seq(std::vector<QString> seq)
+{
+    if(unimap.is_loaded == false || slam.is_loc == false || task.is_tasking)
+    {
+        printf("check again\n");
+        return;
+    }
+
+    for(size_t p = 0; p < seq.size(); p++)
+    {
+        std::cout << seq[p].toStdString() << std::endl;
+        NODE* node = unimap.get_node_by_id(seq[p]);
+        if(node == NULL)
+        {
+            continue;
+        }
+        task.add_task(node);
+    }
+
+    if(task.task_node_list.empty())
+    {
+        printf("check again 2\n");
+        return;
+    }
+
+    task.save_task(unimap.map_dir);
+    ui_tasks_update();
+
+    task.is_start = true;
+    task.use_looping = ui->ckb_Looping->isChecked();
+    printf("[TASK] use looping: %d\n", (int)task.use_looping);
+
+    QString mode = ui->cb_TaskDrivingMode->currentText();
+    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
+    if(mode == "holonomic")
+    {
+        mode = "basic";
+    }
+    #endif
+    task.play(mode);
+}
+
 void MainWindow::bt_SelectPreNodes()
 {
     int val = (int)saved_select_idx - 1;

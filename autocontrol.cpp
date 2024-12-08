@@ -541,11 +541,14 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
 PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_tf)
 {
+    std::cout << "calc_gp0: " << node_path.size() << std::endl;
     NODE* ed_node = unimap->get_node_by_id(node_path.back());
     if(ed_node == NULL)
     {
+        std::cout << "calc_gp1: " << std::endl;
         return PATH();
     }
+    std::cout << "calc_gp2: " << std::endl;
 
     Eigen::Matrix4d ed_tf = ed_node->tf;
     Eigen::Vector3d ed_pos = ed_tf.block(0,3,3,1);
@@ -567,6 +570,8 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         node_pos.push_back(pos);
         node_pose.push_back(node->tf);
     }
+    std::cout << "calc_gp3: " << node_pos.size() << "," << node_pose.size() << std::endl;
+
 
     // add cur pos
     if(add_cur_tf)
@@ -600,13 +605,21 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     // add ed pos
     node_pos.push_back(ed_pos);
     node_pose.push_back(ed_tf);
+    std::cout << "calc_gp4: " << node_pos.size() << "," << node_pose.size() << std::endl;
 
     // divide and smooth metric path
     std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
     //path_pos = path_ccma(path_pos);
+    std::cout << "calc_gp5: " << path_pos.size() << std::endl;
+
+    for(size_t p=0; p<path_pos.size(); p++)
+    {
+        std::cout << "path_pos: " << path_pos[p] << std::endl;
+    }
 
     // calc pose
     std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
+    std::cout << "calc_gp6: " << std::endl;
 
     // set ref_v    
     std::vector<double> ref_v;
@@ -619,9 +632,11 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         calc_ref_v(path_pose, ref_v, params.ST_V, GLOBAL_PATH_STEP);
     }
     ref_v.back() = params.ED_V;
+    std::cout << "calc_gp7: " << std::endl;
 
     // smoothing ref_v
     ref_v = smoothing_v(ref_v, GLOBAL_PATH_STEP);
+    std::cout << "calc_gp8: " << std::endl;
 
     // set result
     PATH res;
@@ -1813,14 +1828,12 @@ void AUTOCONTROL::b_loop_pp()
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    int obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
-                    if(obs_val != OBS_NONE)
+                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
+                    if(cur_obs_val != OBS_NONE)
                     {
                         is_collision = true;
                         break;
                     }
-
-                    cur_obs_val = obs_val;
                 }
 
                 if(is_collision)
@@ -1846,7 +1859,8 @@ void AUTOCONTROL::b_loop_pp()
                     traj.push_back(local_path.pose[p]);
                 }
 
-                if(obsmap->is_path_collision(traj, true, 0, 0, 0, 10))
+                cur_obs_val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+                if(cur_obs_val != OBS_NONE)
                 {
                     obs_v = 0;
                 }
@@ -2008,8 +2022,8 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
 
-            int obs_val = obsmap->is_path_collision(traj, true);
-            if(obs_val != OBS_NONE)
+            cur_obs_val = obsmap->is_path_collision(traj, true);
+            if(cur_obs_val != OBS_NONE)
             {
                 if(config->USE_EARLYSTOP && is_multi == false)
                 {
@@ -2025,15 +2039,14 @@ void AUTOCONTROL::b_loop_pp()
                     mobile->move(0, 0, 0);
 
                     QString _obs_condition = "";
-                    if(obs_val == OBS_DYN)
+                    if(cur_obs_val == OBS_DYN)
                     {
                         _obs_condition = "near";
                     }
-                    else if(obs_val == OBS_ROBOT)
+                    else if(cur_obs_val == OBS_ROBOT)
                     {
                         _obs_condition = "near_robot";
                     }
-                    cur_obs_val = obs_val;
 
                     // for mobile server
                     mtx.lock();
