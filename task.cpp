@@ -200,8 +200,6 @@ void TASK::a_loop()
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            //if(ctrl->is_moving == false)
-
             QString multi_state = ctrl->get_multi_req();
             if(ctrl->fsm_state == AUTO_FSM_COMPLETE && multi_state == "none")
             {
