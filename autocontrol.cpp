@@ -293,6 +293,11 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
     // update global path que
     for(size_t p = 0; p < path_list2.size(); p++)
     {
+        if(path_list2[p].size() == 0)
+        {
+            continue;
+        }
+
         // enque path
         PATH path = calc_global_path(path_list2[p], p == 0);
         if(p == path_list2.size()-1)

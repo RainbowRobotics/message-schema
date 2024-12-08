@@ -348,7 +348,7 @@ void COMM_FMS::slot_send_info()
 
     // send
     QJsonDocument doc(rootObj);
-    QString str(doc.toJson());
+    QString str(doc.toJson(QJsonDocument::Compact));
     client.sendTextMessage(str);
 }
 
