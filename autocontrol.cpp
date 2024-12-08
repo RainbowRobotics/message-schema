@@ -2292,6 +2292,7 @@ void AUTOCONTROL::clean_up()
     clear_path();
 
     mtx.lock();
+    cur_goal_tf.setIdentity();
     multi_req = "none";
     mtx.unlock();
 }
