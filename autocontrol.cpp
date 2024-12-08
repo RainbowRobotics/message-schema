@@ -572,7 +572,6 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
     std::cout << "calc_gp3: " << node_pos.size() << "," << node_pose.size() << std::endl;
 
-
     // add cur pos
     if(add_cur_tf)
     {
@@ -2295,4 +2294,6 @@ void AUTOCONTROL::clean_up()
     cur_goal_tf.setIdentity();
     multi_req = "none";
     mtx.unlock();
+
+    fsm_state = AUTO_FSM_COMPLETE;
 }

@@ -921,12 +921,6 @@ Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1)
 std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos)
 {
     std::vector<Eigen::Matrix4d> res;
-    if(pos.size() == 1)
-    {
-        res.push_back(se2_to_TF(pos[0]));
-        return res;
-    }
-
     for(size_t p = 0; p < pos.size()-1; p++)
     {
         Eigen::Matrix4d tf = calc_tf(pos[p], pos[p+1]);
