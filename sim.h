@@ -2,7 +2,7 @@
 #define SIM_H
 
 #include "global_defines.h"
-#include "utils.h"
+#include "my_utils.h"
 
 #include "config.h"
 #include "logger.h"

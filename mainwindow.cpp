@@ -1680,6 +1680,7 @@ void MainWindow::bt_SimInit()
 
     // start
     sim.cur_tf = se2_to_TF(pick.r_pose);
+    slam.cur_tf = sim.cur_tf;
     sim.start();
 
     mobile.is_connected = true;

@@ -897,8 +897,8 @@ void LIDAR_2D::a_loop()
             }
 
             // merge two lidar frame
-            Eigen::Matrix4d tf_f = reversed_Lidar(ZYX_to_TF(config->LIDAR_TF_F));
-            Eigen::Matrix4d tf_b = reversed_Lidar(ZYX_to_TF(config->LIDAR_TF_B));
+            Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
+            Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
 
             if(min_idx >= 0)
             {
@@ -1378,8 +1378,8 @@ void LIDAR_2D::a_loop()
             }
 
             // merge two lidar frame
-            Eigen::Matrix4d tf_f = reversed_Lidar(ZYX_to_TF(config->LIDAR_TF_F));
-            Eigen::Matrix4d tf_b = reversed_Lidar(ZYX_to_TF(config->LIDAR_TF_B));
+            Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
+            Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
 
             if(min_idx >= 0)
             {
