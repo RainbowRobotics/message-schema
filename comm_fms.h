@@ -56,8 +56,8 @@ public:
 Q_SIGNALS:
     void signal_mapload(double time, QString name);
     void signal_init(double time);
-    void signal_auto_init(double time, QString seed);
-    void signal_random_seq(double time, std::vector<QString> seq);
+    void signal_random_init(double time, QString seed);
+    void signal_random_seq(double time);
 
     void signal_regist_id(QString id);
 
@@ -74,8 +74,8 @@ private Q_SLOTS:
     void slot_send_info();
     void slot_mapload(double time, QString name);
     void slot_init(double time);
-    void slot_auto_init(double time, QString seed);
-    void slot_random_seq(double time, std::vector<QString> seq);
+    void slot_random_init(double time, QString seed);
+    void slot_random_seq(double time);
 
 };
 

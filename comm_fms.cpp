@@ -12,8 +12,8 @@ COMM_FMS::COMM_FMS(QObject *parent)
 
     connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
     connect(this, SIGNAL(signal_init(double)), this, SLOT(slot_init(double)));
-    connect(this, SIGNAL(signal_auto_init(double, QString)), this, SLOT(slot_auto_init(double, QString)));
-    connect(this, SIGNAL(signal_random_seq(double, std::vector<QString>)), this, SLOT(slot_random_seq(double, std::vector<QString>)));
+    connect(this, SIGNAL(signal_random_init(double, QString)), this, SLOT(slot_random_init(double, QString)));
+    connect(this, SIGNAL(signal_random_seq(double)), this, SLOT(slot_random_seq(double)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -129,27 +129,19 @@ void COMM_FMS::recv_message(QString message)
         Q_EMIT signal_init(time);
         printf("[COMM_FMS] recv_init, time: %.3f\n", time);
     }
-    else if(get_json(data, "type") == "auto_init")
+    else if(get_json(data, "type") == "random_init")
     {
         QString seed = get_json(data, "seed");
         double time = get_json(data, "time").toDouble()/1000;
 
-        Q_EMIT signal_auto_init(time, seed);
-        printf("[COMM_FMS] recv_auto_init, seed: %s, time: %.3f\n", seed.toLocal8Bit().data(), time);
+        Q_EMIT signal_random_init(time, seed);
+        printf("[COMM_FMS] recv_random_init, seed: %s, time: %.3f\n", seed.toLocal8Bit().data(), time);
     }
     else if(get_json(data, "type") == "random_seq")
     {
-        std::vector<QString> seq;
-
-        QJsonArray arr = data["seq"].toArray();
-        Q_FOREACH(const QJsonValue &val, arr)
-        {
-            seq.push_back(val.toString());
-        }
-
         double time = get_json(data, "time").toDouble()/1000;
 
-        Q_EMIT signal_random_seq(time, seq);
+        Q_EMIT signal_random_seq(time);
         printf("[COMM_FMS] recv_random_seq, time: %.3f\n", time);
 
     }
@@ -279,16 +271,16 @@ void COMM_FMS::slot_init(double time)
     _main->bt_LocInitSemiAuto();
 }
 
-void COMM_FMS::slot_auto_init(double time, QString seed)
+void COMM_FMS::slot_random_init(double time, QString seed)
 {
     MainWindow* _main = (MainWindow*)main;
-    _main->slot_sim_auto_init(seed);
+    _main->slot_sim_random_init(seed);
 }
 
-void COMM_FMS::slot_random_seq(double time, std::vector<QString> seq)
+void COMM_FMS::slot_random_seq(double time)
 {
     MainWindow* _main = (MainWindow*)main;
-    _main->slot_sim_random_seq(seq);
+    _main->slot_sim_random_seq();
 }
 
 // send slots
