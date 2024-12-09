@@ -44,7 +44,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -237,6 +237,42 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_ZoomIn">
+              <property name="text">
+               <string>zoom in</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_ZoomOut">
+              <property name="text">
+               <string>zoom out</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_Panning">
+              <property name="text">
+               <string>Panning</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QCheckBox" name="ckb_PlotEnable">
@@ -453,6 +489,30 @@
               </property>
              </spacer>
             </item>
+            <item>
+             <widget class="QPushButton" name="bt_ZoomIn2">
+              <property name="text">
+               <string>zoom in</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_ZoomOut2">
+              <property name="text">
+               <string>zoom out</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_Panning2">
+              <property name="text">
+               <string>Panning</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -533,7 +593,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">

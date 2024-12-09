@@ -43,6 +43,18 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ckb_PlotEdges2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
     connect(ui->ckb_PlotNames2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
 
+    // for zoom-in/out, panning
+    connect(ui->bt_ZoomIn, SIGNAL(clicked()), this, SLOT(bt_ZoomIn()));
+    connect(ui->bt_ZoomIn2, SIGNAL(clicked()), this, SLOT(bt_ZoomIn2()));
+    connect(ui->bt_ZoomOut, SIGNAL(clicked()), this, SLOT(bt_ZoomOut()));
+    connect(ui->bt_ZoomOut2, SIGNAL(clicked()), this, SLOT(bt_ZoomOut2()));
+
+    //connect(ui->ckb_Panning, SIGNAL(stateChanged(int)), this, SLOT(map_update()));
+    //connect(ui->ckb_Panning2, SIGNAL(stateChanged(int)), this, SLOT(map_update()));
+    connect(ui->ckb_Panning, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning()));
+    connect(ui->ckb_Panning2, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning2()));
+
+
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
@@ -281,6 +293,133 @@ void MainWindow::slot_menu_tab_changed()
         ui->main_tab->setCurrentWidget(ui->page_annot);
     }
 }
+
+// for viewer
+void MainWindow::bt_ZoomIn()
+{
+    is_zoom_in = true;
+    qDebug()<<"111111111111111111111111111";
+
+    double zoomStep = 3.0; // 필요하면 적절히 조정
+
+    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+    //{
+    //    // 첫 번째 뷰어(3D 뷰)에서 줌인
+    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    //    viewer->getRenderWindow()->Render();
+    //    syncViewerCameras(viewer, viewer2);
+    //}
+    //else
+    //{
+        // 두 번째 뷰어(주로 지도나 어노테이션 뷰)에서 줌인
+        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+        viewer2->getRenderWindow()->Render();
+        syncViewerCameras(viewer2, viewer);
+    //}
+}
+
+void MainWindow::bt_ZoomOut()
+{
+    is_zoom_out = true;
+    qDebug()<<"33333333333333333333333333";
+
+    double zoomStep = -3.0; // 필요하면 적절히 조정
+
+
+    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+    //{
+    //    // 첫 번째 뷰어(3D 뷰)에서 줌아웃
+    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    //    viewer->getRenderWindow()->Render();
+    //    syncViewerCameras(viewer, viewer2);
+    //}
+    //else
+    //{
+        // 두 번째 뷰어(지도/어노테이션 뷰)에서 줌아웃
+        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+        viewer2->getRenderWindow()->Render();
+        syncViewerCameras(viewer2, viewer);
+    //}
+}
+
+void MainWindow::bt_ZoomIn2()
+{
+    is_zoom_in2 = true;
+    qDebug()<<"2222222222222222222222222222";
+
+    double zoomStep = 3.0; // 필요하면 적절히 조정
+
+    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+    //{
+    //    // 첫 번째 뷰어(3D 뷰)에서 줌인
+    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    //    viewer->getRenderWindow()->Render();
+    //    syncViewerCameras(viewer, viewer2);
+    //}
+    //else
+    //{
+        // 두 번째 뷰어(주로 지도나 어노테이션 뷰)에서 줌인
+        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+        viewer2->getRenderWindow()->Render();
+        syncViewerCameras(viewer2, viewer);
+    //}
+}
+
+void MainWindow::bt_ZoomOut2()
+{
+    is_zoom_out2 = true;
+    qDebug()<<"44444444444444444444444444";
+
+    double zoomStep = -3.0; // 필요하면 적절히 조정
+
+    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+    //{
+    //    // 첫 번째 뷰어(3D 뷰)에서 줌아웃
+    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    //    viewer->getRenderWindow()->Render();
+    //    syncViewerCameras(viewer, viewer2);
+    //}
+    //else
+    //{
+        // 두 번째 뷰어(지도/어노테이션 뷰)에서 줌아웃
+        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+        viewer2->getRenderWindow()->Render();
+        syncViewerCameras(viewer2, viewer);
+    //}
+}
+
+void MainWindow::ckb_Panning()
+{
+    if(ui->ckb_Panning->isChecked() == false)
+    {
+        is_panning1 = false;
+        return;
+    }
+
+    else if(ui->ckb_Panning->isChecked() == true)
+    {
+        is_panning1 = true;
+        qDebug()<<"SLAMNAV - panning";
+
+    }
+
+}
+
+void MainWindow::ckb_Panning2()
+{
+    if(ui->ckb_Panning2->isChecked() == false)
+    {
+        is_panning2 = false;
+        return;
+    }
+    else if (ui->ckb_Panning2->isChecked() == true)
+    {
+      is_panning2=true;
+      qDebug()<<"ANNOTATION - panning";
+
+    }
+}
+
 
 // for replot
 void MainWindow::bt_ViewReset()
@@ -757,51 +896,30 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             }
         }
 
-        // touch event
+        // touch event : panning or click
         if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
         {
-            if(ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+            if(ui->main_tab)
             {
                 QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
                 QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
                 if (!touchPoints.isEmpty())
                 {
-                    const QTouchEvent::TouchPoint& touchPoint = touchPoints.first();
-                    QPoint pos = touchPoint.pos().toPoint();
-
-                    if (!touchEvent->isAccepted())
+                    if(is_panning1 == true)
                     {
-                        if (ev->type() == QEvent::TouchBegin)
-                        {
-                            QMouseEvent pressEvent(QEvent::MouseButtonPress, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &pressEvent);
-                        }
-                        else if (ev->type() == QEvent::TouchUpdate)
-                        {
-                            QMouseEvent moveEvent(QEvent::MouseMove, pos, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &moveEvent);
-                        }
-                        else if (ev->type() == QEvent::TouchEnd)
-                        {
-                            QMouseEvent releaseEvent(QEvent::MouseButtonRelease, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &releaseEvent);
-                        }
-
-                        touchEvent->setAccepted(true);
+                        logger.write_log("[viewer] panning1 - active");
+                        QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                        handleTouchEvent(touchEvent, object);
                         return true;
+
                     }
+                    else if(is_panning1 == false)
+                    {
+                    }
+
                 }
 
-                touchEvent->setAccepted(true);
-                return true;
             }
-            else
-            {
-                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                handleTouchEvent(touchEvent, object);
-                return true;
-            }
-
 
         }
     }
@@ -953,6 +1071,33 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     pick_update();
                     return true;
                 }
+            }
+
+            // touch event : panning or click
+            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
+            {
+                if(ui->main_tab)
+                {
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                    if (!touchPoints.isEmpty())
+                    {
+                        if(is_panning2 == true)
+                        {
+                            logger.write_log("[viewer] panning2 - active");
+                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                            handleTouchEvent(touchEvent, object);
+                            return true;
+
+                        }
+                        else if(is_panning2 == false)
+                        {
+                        }
+
+                    }
+
+                }
+
             }
         }
         else if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_TOPO")
@@ -1303,13 +1448,34 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 }
             }
 
-            // touch event
-            //if (ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd )
-            //{
-            //    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-            //    handleTouchEvent(touchEvent, object);
-            //    return true;
-            //}
+            // touch event : panning or click
+            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
+            {
+                if(ui->main_tab)
+                {
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                    if (!touchPoints.isEmpty())
+                    {
+                        if(is_panning2 == true)
+                        {
+                            logger.write_log("[viewer] panning2 - active");
+                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                            handleTouchEvent(touchEvent, object);
+                            return true;
+
+                        }
+                        else if(is_panning2 == false)
+                        {
+                        }
+
+                    }
+
+                }
+
+            }
+
+
         }
     }
 
@@ -1365,14 +1531,14 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             lastTouchPoint = currentPos;
 
             // CALL camera move func
-            if (object == ui->qvtkWidget)
+            if (object == ui->qvtkWidget && is_panning1)
             {
                 viewer_camera_pan_control(delta.x(), delta.y());
                 viewer_pan_screen(delta.x(), delta.y(), viewer, ui->qvtkWidget);
                 viewer->getRenderWindow()->Render();
                 syncViewerCameras(viewer, viewer2);
             }
-            else if (object == ui->qvtkWidget2)
+            else if (object == ui->qvtkWidget2 && is_panning2)
             {
                 viewer_camera_pan_control2(delta.x(), delta.y());
                 viewer_pan_screen(delta.x(), delta.y(), viewer2, ui->qvtkWidget2);

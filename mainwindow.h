@@ -214,6 +214,15 @@ public:
     // aruco
     std::atomic<double> aruco_prev_t = {0};
 
+    // viewer
+    std::atomic<bool> is_zoom_in = {false};
+    std::atomic<bool> is_zoom_in2 = {false};
+    std::atomic<bool> is_zoom_out = {false};
+    std::atomic<bool> is_zoom_out2 = {false};
+    std::atomic<bool> is_panning1 = {false};
+    std::atomic<bool> is_panning2 = {false};
+
+
     // 3d plot funcs
     void map_plot();
     void obs_plot();
@@ -252,6 +261,14 @@ public Q_SLOTS:
     // for view control
     void bt_ViewReset();
     void bt_SetTopView();
+
+    // for viewer - BJ
+    void bt_ZoomIn();
+    void bt_ZoomIn2();
+    void bt_ZoomOut();
+    void bt_ZoomOut2();
+    void ckb_Panning();
+    void ckb_Panning2();
 
     // timer loops
     void plot_loop();
