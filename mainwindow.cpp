@@ -3221,7 +3221,7 @@ void MainWindow::slot_resist_id(QString id)
     ui->lb_RobotID->setText(str);
 }
 
-void MainWindow::slot_sim_auto_init(QString seed)
+void MainWindow::slot_sim_random_init(QString seed)
 {
     if(unimap.is_loaded == false)
     {
@@ -3240,11 +3240,15 @@ void MainWindow::slot_sim_auto_init(QString seed)
     {
         slam.localization_stop();
     }
-    slam.cur_tf = node->tf;
+
+    Eigen::Matrix4d tf = node->tf;
+    tf(0,3) += 0.01;
+
+    slam.cur_tf = tf;
     sim.stop();
 
     // start
-    sim.cur_tf = node->tf;
+    sim.cur_tf = tf;
     sim.start();
 
     mobile.is_connected = true;
@@ -3259,7 +3263,7 @@ void MainWindow::slot_sim_auto_init(QString seed)
     slam.localization_start();
 }
 
-void MainWindow::slot_sim_random_seq(std::vector<QString> seq)
+void MainWindow::slot_sim_random_seq()
 {
     if(unimap.is_loaded == false || slam.is_loc == false || task.is_tasking)
     {
@@ -3267,14 +3271,33 @@ void MainWindow::slot_sim_random_seq(std::vector<QString> seq)
         return;
     }
 
-    for(size_t p = 0; p < seq.size(); p++)
+    std::vector<QString> nodes_id_goal = unimap.get_nodes("GOAL");
+    std::vector<QString> nodes_id_init = unimap.get_nodes("INIT");
+
+    std::vector<QString> nodes_id;
+    nodes_id.insert(nodes_id.end(), nodes_id_goal.begin(), nodes_id_goal.end());
+    nodes_id.insert(nodes_id.end(), nodes_id_init.begin(), nodes_id_init.end());
+
+    if(nodes_id.size() == 0)
     {
-        std::cout << seq[p].toStdString() << std::endl;
-        NODE* node = unimap.get_node_by_id(seq[p]);
+        printf("check again 2\n");
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, (int)nodes_id.size()-1);
+
+    const int seq_size = 10;
+    for(int p = 0; p < seq_size; p++)
+    {
+        QString id = nodes_id[dist(gen)];
+        NODE* node = unimap.get_node_by_id(id);
         if(node == NULL)
         {
             continue;
         }
+
         task.add_task(node);
     }
 
@@ -3284,9 +3307,9 @@ void MainWindow::slot_sim_random_seq(std::vector<QString> seq)
         return;
     }
 
-    task.save_task(unimap.map_dir);
     ui_tasks_update();
 
+    //task.save_task(unimap.map_dir);
     task.is_start = true;
     task.use_looping = ui->ckb_Looping->isChecked();
     printf("[TASK] use looping: %d\n", (int)task.use_looping);

@@ -153,7 +153,6 @@ void SIM::a_loop()
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
         MOBILE_STATUS status;
-
         #if defined (USE_SRV) || defined (USE_AMR_400) || (USE_AMR_400_LAKI)
         status.t = sim_t;
         status.connection_m0 = 1;

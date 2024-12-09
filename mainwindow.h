@@ -360,8 +360,8 @@ public Q_SLOTS:
     // for fms
     void bt_SendMap();
     void slot_resist_id(QString id);
-    void slot_sim_auto_init(QString seed);
-    void slot_sim_random_seq(std::vector<QString> seq);
+    void slot_sim_random_init(QString seed);
+    void slot_sim_random_seq();
 
     // for log
     void slot_write_log(QString user_log, QString color_code);
