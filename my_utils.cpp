@@ -1,7 +1,7 @@
 #ifndef UTILS_CPP
 #define UTILS_CPP
 
-#include "utils.h"
+#include "my_utils.h"
 
 cv::Vec3b colors[10] =
 {
@@ -288,20 +288,6 @@ void refine_pose(Eigen::Matrix4d& G)
     G = Sophus::SE3d::fitToSE3(G).matrix();
 }
 
-void refine_zero(Eigen::Matrix4d& G)
-{
-    for(int i = 0; i < 4; i++)
-    {
-        for(int j = 0; j < 4; j++)
-        {
-            if(std::abs(G(i,j)) < 1e-6)
-            {
-                G(i,j) = 0;
-            }
-        }
-    }
-}
-
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold)
 {
     double angle = std::acos(V0.dot(V1));
@@ -312,26 +298,15 @@ bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double th
     return false;
 }
 
-std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Eigen::Matrix4d tf)
-{
-    std::vector<Eigen::Vector3d> res;
-    for(size_t p = 0; p < pts.size(); p++)
-    {
-        Eigen::Vector3d P = tf.block(0,0,3,3)*pts[p] + tf.block(0,3,3,1);
-        res.push_back(P);
-    }
-    return res;
-}
-
 double sgn(double val)
 {
-    if(val >= 0)
+    if(val >= 0.0)
     {
-        return 1;
+        return 1.0;
     }
     else
     {
-        return -1;
+        return -1.0;
     }
 }
 
@@ -363,122 +338,22 @@ double saturation(double val, double min, double max)
     return val;
 }
 
-double calc_line_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
-{
-    Eigen::Vector3d ab = P1 - P0;
-    Eigen::Vector3d av = P - P0;
-
-    double ab_dot_ab = ab.dot(ab);
-    if (ab_dot_ab == 0.0)
-    {
-        return av.norm();
-    }
-    Eigen::Vector3d projection = ab * (av.dot(ab) / ab_dot_ab);
-    return (av - projection).norm();
-}
-
 double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
 {
     Eigen::Vector3d ab = P1-P0;
     Eigen::Vector3d av = P-P0;
-    if(av.dot(ab) <= 0)
+    if(av.dot(ab) <= 0.0)
     {
         return av.norm();
     }
 
     Eigen::Vector3d bv = P-P1;
-    if(bv.dot(ab) >= 0)
+    if(bv.dot(ab) >= 0.0)
     {
         return bv.norm();
     }
 
     return (ab.cross(av)).norm() / ab.norm();
-}
-
-std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
-{
-    Eigen::Vector3d v = P1 - P0;
-    Eigen::Vector3d w = P - P0;
-
-    double c1 = w.dot(v);
-    double c2 = v.dot(v);
-    if (c2 == 0.0)
-    {
-        return std::make_pair(P0, (P - P0).norm());
-    }
-
-    if (c1 <= 0)
-    {
-        return std::make_pair(P0, (P - P0).norm());
-    }
-    else if (c2 <= c1)
-    {
-        return std::make_pair(P1, (P - P1).norm());
-    }
-    else
-    {
-        double b = c1 / c2;
-        Eigen::Vector3d Pb = P0 + b * v;
-        return std::make_pair(Pb, (P - Pb).norm());
-    }
-}
-
-bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection)
-{
-    Eigen::Vector3d d = P1 - P0;
-    Eigen::Vector3d v = P0 - P;
-    double a = d.dot(d);
-
-    // handle the case where P0 and P1 are the same point
-    if (a == 0.0)
-    {
-        return false;
-    }
-
-    double b = 2.0 * d.dot(v);
-    double c = v.dot(v) - r * r;
-    double discriminant = b * b - 4 * a * c;
-
-    if (discriminant < 0)
-    {
-        return false;
-    }
-
-    double t1 = (-b - std::sqrt(discriminant)) / (2 * a);
-    double t2 = (-b + std::sqrt(discriminant)) / (2 * a);
-
-    bool intersect1 = (t1 >= 0 && t1 <= 1);
-    bool intersect2 = (t2 >= 0 && t2 <= 1);
-
-    if (intersect1 && intersect2)
-    {
-        Eigen::Vector3d point1 = P0 + t1 * d;
-        Eigen::Vector3d point2 = P0 + t2 * d;
-        if ((point1 - P1).norm() < (point2 - P1).norm())
-        {
-            intersection = point1;
-        }
-        else
-        {
-            intersection = point2;
-        }
-
-        return true;
-    }
-
-    if (intersect1)
-    {
-        intersection = P0 + t1 * d;
-        return true;
-    }
-
-    if (intersect2)
-    {
-        intersection = P0 + t2 * d;
-        return true;
-    }
-
-    return false;
 }
 
 bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
@@ -501,36 +376,6 @@ bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vecto
     {
         return false;
     }
-}
-
-bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P)
-{
-    Eigen::Vector3d V0 = P1 - P0;
-    Eigen::Vector3d V1 = P - P0;
-
-    Eigen::Vector3d cross_product = V0.cross(V1);
-    double norm = cross_product.norm();
-    return norm < 0.03;
-}
-
-double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2)
-{
-    double dx1 = P1.x() - P0.x();
-    double dy1 = P1.y() - P0.y();
-    double dx2 = P2.x() - P1.x();
-    double dy2 = P2.y() - P1.y();
-
-    double area = std::abs(dx1 * dy2 - dx2 * dy1);
-    double len1 = std::sqrt(dx1 * dx1 + dy1 * dy1);
-    double len2 = std::sqrt(dx2 * dx2 + dy2 * dy2);
-    double len3 = std::sqrt((P2.x() - P0.x()) * (P2.x() - P0.x()) + (P2.y() - P0.y()) * (P2.y() - P0.y()));
-
-    if(area == 0 || len1 == 0 || len2 == 0 || len3 == 0)
-    {
-        return 0.0;
-    }
-
-    return std::abs(2.0 * area / (len1 * len2 * len3));
 }
 
 double calc_motion_time(double _s, double _v0, double _v1, double _acc)
@@ -619,23 +464,6 @@ double calc_dist_2d(Eigen::Vector3d P)
     return std::sqrt(P[0]*P[0] + P[1]*P[1]);
 }
 
-double calc_length(std::vector<Eigen::Vector3d>& src)
-{
-    if(src.size() >= 2)
-    {
-        double sum_d = 0;
-        for(size_t p = 0; p < src.size()-1; p++)
-        {
-            sum_d += calc_dist_2d(src[p+1]-src[p]);
-        }
-        return sum_d;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos)
 {
     int min_idx = 0;
@@ -653,56 +481,6 @@ double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos)
     Eigen::Matrix4d G = src[min_idx].inverse();
     Eigen::Vector3d P = G.block(0,0,3,3)*pos + G.block(0,3,3,1);
     return -P[1];
-}
-
-double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos)
-{
-    if(src.size() >= 2)
-    {
-        double min_dist = 99999999;
-        for(size_t p = 0; p < src.size()-1; p++)
-        {
-            double dist = calc_seg_dist(src[p], src[p+1], pos);
-            if(dist < min_dist)
-            {
-                min_dist = dist;
-            }
-        }
-        return min_dist;
-    }
-    else
-    {
-        double dist = calc_dist_2d(src.front()-pos);
-        return dist;
-    }
-}
-
-double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1)
-{
-    int n = src0.size();
-    int m = src1.size();
-    if(n == 0 || m == 0)
-    {
-        return 0;
-    }
-
-    std::vector<std::vector<double>> dtw(n + 1, std::vector<double>(m + 1, std::numeric_limits<double>::infinity()));
-    dtw[0][0] = 0.0;
-
-    for (int i = 1; i <= n; ++i)
-    {
-        for (int j = 1; j <= m; ++j)
-        {
-            double cost = (src0[i - 1] - src1[j - 1]).norm();
-            dtw[i][j] = cost + std::min({dtw[i - 1][j], dtw[i][j - 1], dtw[i - 1][j - 1]});
-        }
-    }
-
-    double dtw_distance = dtw[n][m];
-
-    double max_length = std::max(n, m);
-    double similarity = std::exp(-dtw_distance / max_length);
-    return similarity;
 }
 
 double calc_dth(const Eigen::Matrix4d& G0, const Eigen::Matrix4d& G1)
@@ -901,21 +679,31 @@ pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matr
 
 Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1)
 {
-    Eigen::Vector3d x_axis = (P1 - P0).normalized();
-    Eigen::Vector3d temp_z_axis(0, 0, 1);
+    if(P0.isApprox(P1))
+    {
+        printf("check calc_tf same points\n");
+        Eigen::Matrix4d res = Eigen::Matrix4d::Identity();
+        res.block(0,3,3,1) = P1;
+        return res;
+    }
+    else
+    {
+        Eigen::Vector3d x_axis = (P1 - P0).normalized();
+        Eigen::Vector3d temp_z_axis(0, 0, 1);
 
-    Eigen::Vector3d y_axis = temp_z_axis.cross(x_axis).normalized();
-    Eigen::Vector3d z_axis = x_axis.cross(y_axis).normalized();
+        Eigen::Vector3d y_axis = temp_z_axis.cross(x_axis).normalized();
+        Eigen::Vector3d z_axis = x_axis.cross(y_axis).normalized();
 
-    Eigen::Matrix3d rotation_matrix;
-    rotation_matrix.col(0) = x_axis;
-    rotation_matrix.col(1) = y_axis;
-    rotation_matrix.col(2) = z_axis;
+        Eigen::Matrix3d rotation_matrix;
+        rotation_matrix.col(0) = x_axis;
+        rotation_matrix.col(1) = y_axis;
+        rotation_matrix.col(2) = z_axis;
 
-    Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
-    transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
-    transformation_matrix.block<3, 1>(0, 3) = P0;
-    return transformation_matrix;
+        Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
+        transformation_matrix.block<3, 3>(0, 0) = rotation_matrix;
+        transformation_matrix.block<3, 1>(0, 3) = P0;
+        return transformation_matrix;
+    }
 }
 
 std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos)
@@ -934,21 +722,7 @@ std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos)
     return res;
 }
 
-double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y)
-{
-    double x1 = ref_x;
-    double y1 = ref_y;
-    double x2 = ref_x + 1.0 * std::cos(ref_yaw);
-    double y2 = ref_y + 1.0 * std::sin(ref_yaw);
-    double vx = x2 - x1;
-    double vy = y2 - y1;
-    double wx = x - x1;
-    double wy = y - y1;
-    double s = vx * wy - vy * wx; // s>0 : 차량이 경로의 왼쪽, s<0 : 차량이 경로의 오른쪽
-    return s;
-}
-
-Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf)
+Eigen::Matrix4d flip_lidar_tf(Eigen::Matrix4d tf)
 {
     Eigen::Matrix4d reverse;
     reverse.setIdentity();
@@ -958,34 +732,6 @@ Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf)
 
     Eigen::Matrix4d ref = tf*reverse;
     return ref;
-}
-
-Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf)
-{
-    Eigen::Matrix3d rotation_matrix = tf.block<3, 3>(0, 0);
-    double yaw = std::atan2(rotation_matrix(1, 0), rotation_matrix(0, 0));
-
-    Eigen::Matrix3d yaw_matrix;
-    yaw_matrix << std::cos(yaw), -std::sin(yaw), 0.0,
-                  std::sin(yaw), std::cos(yaw), 0.0,
-                  0.0, 0.0, 1.0;
-
-    Eigen::Matrix4d new_tf = Eigen::Matrix4d::Identity();
-    new_tf.block<3, 3>(0, 0) = yaw_matrix;
-    new_tf.block<3, 1>(0, 3) = tf.block<3, 1>(0, 3);
-    return new_tf;
-}
-
-Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
-{
-    Eigen::Matrix3d R0 = G0.block(0, 0, 3, 3);
-    Eigen::Vector3d T0 = G0.block(0, 3, 3, 1);
-    Eigen::Matrix3d R1 = G1.block(0, 0, 3, 3);
-    Eigen::Vector3d T1 = G1.block(0, 3, 3, 1);
-
-    double dt = (T1 - T0).norm();
-    double dr = Eigen::Quaterniond(R1).angularDistance(Eigen::Quaterniond(R0));
-    return Eigen::Vector2d(dt, dr);
 }
 
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix)
@@ -1006,6 +752,18 @@ Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix)
     Eigen::JacobiSVD<Eigen::Matrix3d> svd(result, Eigen::ComputeFullU | Eigen::ComputeFullV);
     result = svd.matrixU() * svd.matrixV().transpose();
     return result;
+}
+
+Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
+{
+    Eigen::Matrix3d R0 = G0.block(0, 0, 3, 3);
+    Eigen::Vector3d T0 = G0.block(0, 3, 3, 1);
+    Eigen::Matrix3d R1 = G1.block(0, 0, 3, 3);
+    Eigen::Vector3d T1 = G1.block(0, 3, 3, 1);
+
+    double dt = (T1 - T0).norm();
+    double dr = Eigen::Quaterniond(R1).angularDistance(Eigen::Quaterniond(R0));
+    return Eigen::Vector2d(dt, dr);
 }
 
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size)

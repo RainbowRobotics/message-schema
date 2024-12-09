@@ -54,13 +54,13 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
+    my_utils.cpp \
     task.cpp \
     obsmap.cpp \
     pgo.cpp \
     sim.cpp \
     slam_2d.cpp \
-    unimap.cpp \
-    utils.cpp
+    unimap.cpp
 
 HEADERS += \
     LakiBeamHTTP.h \
@@ -81,6 +81,7 @@ HEADERS += \
     logger.h \
     mainwindow.h \
     mobile.h \
+    my_utils.h \
     task.h \
     nanoflann.hpp \
     obsmap.h \
@@ -88,8 +89,7 @@ HEADERS += \
     sim.h \
     slam_2d.h \
     tinycolormap.hpp \
-    unimap.h \
-    utils.h
+    unimap.h
 
 FORMS += \
     mainwindow.ui
