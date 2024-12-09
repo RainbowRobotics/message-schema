@@ -910,6 +910,9 @@ Stop</string>
               <property name="text">
                <string>looping</string>
               </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskPlay">
               <property name="geometry">

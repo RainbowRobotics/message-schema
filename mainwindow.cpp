@@ -3239,15 +3239,12 @@ void MainWindow::slot_sim_random_init(QString seed)
     if(slam.is_loc)
     {
         slam.localization_stop();
-    }
-
-    Eigen::Matrix4d tf = node->tf;
-    tf(0,3) += 0.01;
-
-    slam.cur_tf = tf;
+    }    
     sim.stop();
 
     // start
+    Eigen::Matrix4d tf = node->tf;
+    slam.cur_tf = tf;
     sim.cur_tf = tf;
     sim.start();
 
