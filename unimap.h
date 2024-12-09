@@ -7,7 +7,7 @@
 // other modules
 #include "config.h"
 #include "logger.h"
-#include "utils.h"
+#include "my_utils.h"
 
 #include <QObject>
 #include <QDir>

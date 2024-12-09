@@ -2,7 +2,7 @@
 #define MOBILE_H
 
 #include "global_defines.h"
-#include "utils.h"
+#include "my_utils.h"
 
 // other modules
 #include "config.h"

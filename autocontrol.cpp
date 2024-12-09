@@ -471,8 +471,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         return PATH();
     }
 
-    // convert metric path
-    std::vector<Eigen::Vector3d> node_pos;
+    // convert metric path    
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
@@ -484,46 +483,40 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
             return PATH();
         }
 
-        Eigen::Vector3d pos = node->tf.block(0,3,3,1);
-        node_pos.push_back(pos);
+        Eigen::Vector3d pos = node->tf.block(0,3,3,1);        
         node_pose.push_back(node->tf);
     }
 
     // add cur pos
-    if(node_pos.size() == 1)
+    if(node_pose.size() == 1)
     {
-        node_pos.insert(node_pos.begin(), cur_pos);
         node_pose.insert(node_pose.begin(), cur_tf);
     }
     else
     {
-        if(check_point_on_segment(node_pos[0], node_pos[1], cur_pos))
+        if(check_point_on_segment(node_pose[0].block(0,3,3,1), node_pose[1].block(0,3,3,1), cur_tf.block(0,3,3,1)))
         {
-            node_pos.erase(node_pos.begin());
             node_pose.erase(node_pose.begin());
-
-            node_pos.insert(node_pos.begin(), cur_pos);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
         else
         {
-            node_pos.insert(node_pos.begin(), cur_pos);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
     }
 
-    // add goal pos    
-    node_pos.push_back(goal_pos);
+    // add goal pos
     node_pose.push_back(goal_tf);
 
     // divide and smooth metric path    
-    std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    //path_pos = path_ccma(path_pos);
+    std::vector<Eigen::Matrix4d> path_pose = path_resampling(node_pose, GLOBAL_PATH_STEP);
+    std::vector<Eigen::Vector3d> path_pos;
+    for(size_t p = 0; p < path_pose.size(); p++)
+    {
+        path_pos.push_back(path_pose[p].block(0,3,3,1));
+    }
 
-    // calc pose
-    std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
-
-    // set ref_v    
+    // set ref_v
     std::vector<double> ref_v;
     calc_ref_v(path_pose, ref_v, params.ST_V, GLOBAL_PATH_STEP);
     ref_v.back() = params.ED_V;
@@ -553,10 +546,8 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
 
     Eigen::Matrix4d ed_tf = ed_node->tf;
-    Eigen::Vector3d ed_pos = ed_tf.block(0,3,3,1);
 
-    // convert metric path
-    std::vector<Eigen::Vector3d> node_pos;
+    // convert metric path    
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
@@ -566,52 +557,43 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
         {
             printf("[AUTO] %s: node null\n", name.toLocal8Bit().data());
             return PATH();
-        }
-
-        Eigen::Vector3d pos = node->tf.block(0,3,3,1);
-        node_pos.push_back(pos);
+        }        
         node_pose.push_back(node->tf);
     }
 
     // add cur pos
     if(add_cur_tf)
     {
-        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();        
 
-        if(node_pos.size() == 1)
+        if(node_pose.size() == 1)
         {
-            node_pos.insert(node_pos.begin(), cur_pos);
             node_pose.insert(node_pose.begin(), cur_tf);
         }
         else
         {
-            if(!check_point_on_segment(node_pos[0], node_pos[1], cur_pos))
+            if(check_point_on_segment(node_pose[0].block(0,3,3,1), node_pose[1].block(0,3,3,1), cur_tf.block(0,3,3,1)))
             {
-                node_pos.insert(node_pos.begin(), cur_pos);
+                node_pose.erase(node_pose.begin());
                 node_pose.insert(node_pose.begin(), cur_tf);
             }
             else
             {
-                node_pos.erase(node_pos.begin());
-                node_pose.erase(node_pose.begin());
-
-                node_pos.insert(node_pos.begin(), cur_pos);
                 node_pose.insert(node_pose.begin(), cur_tf);
             }
         }
     }
 
-    // add ed pos
-    node_pos.push_back(ed_pos);
+    // add ed pos    
     node_pose.push_back(ed_tf);
 
     // divide and smooth metric path
-    std::vector<Eigen::Vector3d> path_pos = path_resampling(node_pos, GLOBAL_PATH_STEP);
-    //path_pos = path_ccma(path_pos);
-
-    // calc pose
-    std::vector<Eigen::Matrix4d> path_pose = calc_path_tf(path_pos);
+    std::vector<Eigen::Matrix4d> path_pose = path_resampling(node_pose, GLOBAL_PATH_STEP);
+    std::vector<Eigen::Vector3d> path_pos;
+    for(size_t p = 0; p < path_pose.size(); p++)
+    {
+        path_pos.push_back(path_pose[p].block(0,3,3,1));
+    }
 
     // set ref_v    
     std::vector<double> ref_v;

@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "global_defines.h"
-#include "utils.h"
+#include "my_utils.h"
 
 // modules
 #include "config.h"

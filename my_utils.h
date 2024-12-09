@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef MY_UTILS_H
+#define MY_UTILS_H
 
 #include "global_defines.h"
 
@@ -31,29 +31,17 @@ Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1);
 std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, double dist_step, double th_step);
 
 void refine_pose(Eigen::Matrix4d& G);
-void refine_zero(Eigen::Matrix4d& G);
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold);
 
-std::vector<Eigen::Vector3d> transform_pts(std::vector<Eigen::Vector3d> &pts, Eigen::Matrix4d tf);
-
-double calc_line_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
 double calc_seg_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
-std::pair<Eigen::Vector3d, double> calc_seg_pt_dist(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
-bool calc_seg_sphere_intersection(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P, double r, Eigen::Vector3d& intersection);
 bool check_point_on_segment(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
-bool check_same_line(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P);
-
 
 double sgn(double val);
 int saturation(int val, int min, int max);
 double saturation(double val, double min, double max);
-double calc_curvature(Eigen::Vector3d P0, Eigen::Vector3d P1, Eigen::Vector3d P2);
 double calc_motion_time(double _s, double _v0, double _v1, double _acc);
 double calc_dist_2d(Eigen::Vector3d P);
-double calc_length(std::vector<Eigen::Vector3d>& src);
 double calc_cte(std::vector<Eigen::Matrix4d>& src, Eigen::Vector3d pos);
-double calc_min_dist(std::vector<Eigen::Vector3d>& src, Eigen::Vector3d pos);
-double calc_similarity(const std::vector<Eigen::Vector3d> &src0, const std::vector<Eigen::Vector3d> &src1);
 double calc_dth(const Eigen::Matrix4d& G0, const Eigen::Matrix4d& G1);
 
 std::vector<cv::Vec2i> line_iterator(cv::Vec2i pt0, cv::Vec2i pt1);
@@ -66,12 +54,9 @@ pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matr
 Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1);
 std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos);
 
-double check_lr(double ref_x, double ref_y, double ref_yaw, double x, double y);
-
-Eigen::Matrix4d reversed_Lidar(Eigen::Matrix4d tf);
-Eigen::Matrix4d elim_rx_ry(Eigen::Matrix4d tf);
-Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
+Eigen::Matrix4d flip_lidar_tf(Eigen::Matrix4d tf);
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);
+Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size);
 
@@ -82,4 +67,4 @@ Eigen::Vector3d array_to_pose(QJsonArray arr);
 QJsonArray links_to_array(std::vector<QString> links);
 std::vector<QString> array_to_links(QJsonArray arr);
 
-#endif // UTILS_H
+#endif // MY_UTILS_H
