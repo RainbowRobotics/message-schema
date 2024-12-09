@@ -184,6 +184,10 @@ void AUTOCONTROL::stop()
     }
 
     clean_up();
+
+    mtx.lock();
+    cur_goal_tf.setIdentity();
+    mtx.unlock();
 }
 
 void AUTOCONTROL::change()
@@ -214,6 +218,7 @@ void AUTOCONTROL::set_goal(QString goal_id)
     cur_goal_tf = node->tf;
     mtx.unlock();
 
+    /*
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
     QString goal_node_id = unimap->get_node_id_edge(node->tf.block(0,3,3,1));
@@ -231,6 +236,7 @@ void AUTOCONTROL::set_goal(QString goal_id)
             logger->write_log("[AUTO] set goal, already goal");
         }
     }
+    */
 
     // set multi state
     mtx.lock();
@@ -488,22 +494,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // add cur pos
-    if(node_pose.size() == 1)
-    {
-        node_pose.insert(node_pose.begin(), cur_tf);
-    }
-    else
-    {
-        if(check_point_on_segment(node_pose[0].block(0,3,3,1), node_pose[1].block(0,3,3,1), cur_tf.block(0,3,3,1)))
-        {
-            node_pose.erase(node_pose.begin());
-            node_pose.insert(node_pose.begin(), cur_tf);
-        }
-        else
-        {
-            node_pose.insert(node_pose.begin(), cur_tf);
-        }
-    }
+    node_pose.insert(node_pose.begin(), cur_tf);
 
     // add goal pos
     node_pose.push_back(goal_tf);
@@ -565,23 +556,12 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     if(add_cur_tf)
     {
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();        
+        if(cur_tf.isApprox(node_pose.front()))
+        {
+            cur_tf(0,3) += 0.001;
+        }
 
-        if(node_pose.size() == 1)
-        {
-            node_pose.insert(node_pose.begin(), cur_tf);
-        }
-        else
-        {
-            if(check_point_on_segment(node_pose[0].block(0,3,3,1), node_pose[1].block(0,3,3,1), cur_tf.block(0,3,3,1)))
-            {
-                node_pose.erase(node_pose.begin());
-                node_pose.insert(node_pose.begin(), cur_tf);
-            }
-            else
-            {
-                node_pose.insert(node_pose.begin(), cur_tf);
-            }
-        }
+        node_pose.insert(node_pose.begin(), cur_tf);
     }
 
     // add ed pos    
@@ -1563,15 +1543,6 @@ void AUTOCONTROL::b_loop_pp()
         Q_EMIT signal_global_path_updated();
     }
 
-    if(global_path.pos.size() == 0)
-    {
-        // no global path
-        clean_up();
-        Q_EMIT signal_move_failed("no global path");
-        logger->write_log("[AUTO] no global path");
-        return;
-    }
-
     // update goal
     Eigen::Matrix4d goal_tf = global_path.ed_tf;
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
@@ -1580,23 +1551,20 @@ void AUTOCONTROL::b_loop_pp()
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
 
-    // check already goal
+    // check already goal    
     Eigen::Vector3d goal_dxi = TF_to_se2(goal_tf.inverse()*slam->get_cur_tf());
-    if(calc_dist_2d(goal_dxi) < 2*config->DRIVE_GOAL_D)
+    if(calc_dist_2d(goal_dxi) < config->DRIVE_GOAL_D)
     {
-        if(std::abs(goal_dxi[2]) < 2*config->DRIVE_GOAL_TH*D2R || !global_path.is_align)
+        fsm_state = AUTO_FSM_DRIVING;
+        if(std::abs(goal_dxi[2]) < config->DRIVE_GOAL_TH*D2R)
         {
-            // already goal
-            clean_up();
-            Q_EMIT signal_move_failed("already goal");
-            logger->write_log("[AUTO] already goal");
-            return;
+            if(global_path.is_align)
+            {
+                fsm_state = AUTO_FSM_FINAL_ALIGN;
+            }
         }
-
-        // else do final align
-        fsm_state = AUTO_FSM_FINAL_ALIGN;
-        logger->write_log("[AUTO] jump to FINAL_ALIGN");
     }
+    logger->write_log("[AUTO] Initial fsm state: %1", AUTO_FSM_STATE_STR[fsm_state]);
 
     // path storage
     PATH local_path;
@@ -1623,6 +1591,11 @@ void AUTOCONTROL::b_loop_pp()
         if(is_good_everything == DRIVING_FAILED)
         {
             clean_up();
+
+            mtx.lock();
+            cur_goal_tf.setIdentity();
+            mtx.unlock();
+
             Q_EMIT signal_move_failed("something wrong");
             logger->write_log("[AUTO] something wrong (failed)");
             return;
@@ -1630,6 +1603,11 @@ void AUTOCONTROL::b_loop_pp()
         else if(is_good_everything == DRIVING_NOT_READY)
         {
             clean_up();
+
+            mtx.lock();
+            cur_goal_tf.setIdentity();
+            mtx.unlock();
+
             Q_EMIT signal_move_failed("something wrong (not ready)");
             logger->write_log("[AUTO] something wrong (not ready)");
             return;
@@ -1926,14 +1904,14 @@ void AUTOCONTROL::b_loop_pp()
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    extend_dt = 0;
-                    pre_err_th = 0;
-                    mobile->move(0, 0, 0);
-
                     if(global_path.is_align)
                     {
-                        fsm_state = AUTO_FSM_FINAL_ALIGN;                        
+                        extend_dt = 0;
+                        pre_err_th = 0;
+
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;
                         logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
+                        continue;
                     }
                     else
                     {
@@ -1968,14 +1946,15 @@ void AUTOCONTROL::b_loop_pp()
                             Q_EMIT signal_local_path_updated();
 
                             // return to first align
-                            fsm_state = AUTO_FSM_FIRST_ALIGN;                            
+                            fsm_state = AUTO_FSM_FIRST_ALIGN;
                             logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
                             continue;
                         }
-                    }
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                    continue;
+                        // just wait
+                        v = 0;
+                        w = 0;
+                    }
                 }
             }
 
@@ -2051,6 +2030,11 @@ void AUTOCONTROL::b_loop_pp()
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
                     clean_up();
+
+                    mtx.lock();
+                    cur_goal_tf.setIdentity();
+                    mtx.unlock();
+
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;                    
@@ -2251,6 +2235,11 @@ void AUTOCONTROL::b_loop_pp()
     else
     {
         clean_up();
+
+        mtx.lock();
+        cur_goal_tf.setIdentity();
+        mtx.unlock();
+
         Q_EMIT signal_move_succeed("stopped");
         logger->write_log("[AUTO] b_loop_pp stop");
     }
@@ -2263,8 +2252,7 @@ void AUTOCONTROL::clean_up()
     is_pause = false;
     clear_path();
 
-    mtx.lock();
-    cur_goal_tf.setIdentity();
+    mtx.lock();    
     multi_req = "none";
     mtx.unlock();
 

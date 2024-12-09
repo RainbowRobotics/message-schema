@@ -882,12 +882,17 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
             QString node_id0 = nodes[p].id;
+            QStringList str_list0 = node_id0.split("_");
+            long long idx0 = str_list0.back().toLongLong();
+
             Eigen::Matrix4d tf0 = nodes[p].tf;
             Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
 
             for(size_t q = 0; q < nodes[p].linked.size(); q++)
             {
                 QString node_id1 = nodes[p].linked[q];
+                QStringList str_list1 = node_id1.split("_");
+                long long idx1 = str_list1.back().toLongLong();
 
                 NODE* node = get_node_by_id(node_id1);
                 if(node == NULL)
@@ -905,8 +910,18 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
                     if(d < min_d)
                     {
                         min_d = d;
-                        _P0 = pos0;
-                        _P1 = pos1;
+
+                        if(idx0 < idx1)
+                        {
+                            _P0 = pos0;
+                            _P1 = pos1;
+                        }
+                        else
+                        {
+                            _P0 = pos1;
+                            _P1 = pos0;
+                        }
+
                         is_found = true;
                     }
                 }
@@ -917,8 +932,8 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     if(is_found)
     {
         double d0 = (_P0-pos).norm();
-        double d1 = (_P1-pos).norm();
-        if(d0 < d1)
+        double d1 = (_P1-pos).norm();        
+        if(d0 < d1*0.5)
         {
             return get_node_id_nn(_P0);
         }
