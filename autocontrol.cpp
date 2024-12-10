@@ -1621,7 +1621,7 @@ void AUTOCONTROL::b_loop_pp()
             }
         }
     }
-    logger->write_log("[AUTO] Initial fsm state: %1", AUTO_FSM_STATE_STR[fsm_state]);
+    logger->write_log(QString("[AUTO] Initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
 
     // path storage
     PATH local_path;
@@ -2053,10 +2053,18 @@ void AUTOCONTROL::b_loop_pp()
                             logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
                             continue;
                         }
+                        else
+                        {
+                            // temporal goal reached
+                            mobile->move(0, 0, 0);
+                            is_moving = false;
+                            is_pause = false;
+                            clear_path();
 
-                        // just wait
-                        v = 0;
-                        w = 0;
+                            fsm_state = AUTO_FSM_COMPLETE;
+                            logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal)"));
+                            return;
+                        }
                     }
                 }
             }
