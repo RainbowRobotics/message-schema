@@ -949,52 +949,43 @@ struct ASTAR_NODE
 struct PATH
 {
     double t;
-    std::vector<QString> nodes;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
     Eigen::Matrix4d ed_tf;
-    int is_align;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
-        is_align = 1; // default do is_align
     }
 
     PATH(const PATH& p)
     {
         t = p.t;
-        nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;                
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
-        is_align = p.is_align;
     }
 
     PATH& operator=(const PATH& p)
     {
         t = p.t;
-        nodes = p.nodes;
         pose = p.pose;
         pos = p.pos;        
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
-        is_align = p.is_align;
         return *this;
     }
 
     bool operator==(const PATH& p) const
     {
-        return t == p.t &&
-               std::equal(nodes.begin(), nodes.end(), p.nodes.begin(), p.nodes.end()) &&
+        return t == p.t &&               
                pose == p.pose &&
                pos == p.pos &&
                ref_v == p.ref_v &&
-               ed_tf.isApprox(p.ed_tf) &&
-               is_align == p.is_align;
+               ed_tf.isApprox(p.ed_tf);
     }
 
     bool operator!=(const PATH& p) const
