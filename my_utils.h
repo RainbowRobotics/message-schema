@@ -53,6 +53,7 @@ std::vector<Eigen::Vector3d> circle_iterator_3d(Eigen::Vector3d center, double r
 pcl::PolygonMesh make_donut(double donut_radius, double tube_radius, Eigen::Matrix4d tf, double r, double g, double b, double a=1.0, int num_segments=30);
 Eigen::Matrix4d calc_tf(Eigen::Vector3d P0, Eigen::Vector3d P1);
 std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos);
+std::vector<Eigen::Matrix4d> reorientation_path(std::vector<Eigen::Matrix4d>& path);
 
 Eigen::Matrix4d flip_lidar_tf(Eigen::Matrix4d tf);
 Eigen::Matrix3d remove_rz(const Eigen::Matrix3d& rotation_matrix);

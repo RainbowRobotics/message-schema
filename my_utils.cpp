@@ -722,6 +722,47 @@ std::vector<Eigen::Matrix4d> calc_path_tf(std::vector<Eigen::Vector3d>& pos)
     return res;
 }
 
+std::vector<Eigen::Matrix4d> reorientation_path(std::vector<Eigen::Matrix4d>& path)
+{
+    if(path.size() < 2)
+    {
+        return path;
+    }
+
+    std::vector<Eigen::Matrix4d> res;
+    for(size_t p = 0; p < path.size()-1; p++)
+    {
+        Eigen::Matrix4d tf0 = path[p];
+        Eigen::Matrix4d tf1 = path[p+1];
+
+        Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
+        Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
+        if(pos0.isApprox(pos1))
+        {
+            if(res.size() == 0)
+            {
+                res.push_back(tf0);
+            }
+            else
+            {
+                Eigen::Matrix4d tf = res.back();
+                tf.block(0,3,3,1) = pos0;
+                res.push_back(tf);
+            }
+        }
+        else
+        {
+            Eigen::Matrix4d tf = calc_tf(pos0, pos1);
+            res.push_back(tf);
+        }
+    }
+
+    Eigen::Matrix4d tf = res.back();
+    tf.block(0,3,3,1) = path.back().block(0,3,3,1);
+    res.push_back(tf);
+    return res;
+}
+
 Eigen::Matrix4d flip_lidar_tf(Eigen::Matrix4d tf)
 {
     Eigen::Matrix4d reverse;

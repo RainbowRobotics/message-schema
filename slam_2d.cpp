@@ -175,6 +175,9 @@ void SLAM_2D::localization_stop()
         obs_thread->join();
         obs_thread = NULL;
     }    
+
+    // clear lidar scan
+    lidar->scan_que.clear();
 }
 
 Eigen::Matrix4d SLAM_2D::get_cur_tf()
