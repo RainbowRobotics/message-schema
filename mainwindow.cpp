@@ -3502,6 +3502,8 @@ void MainWindow::watch_loop()
 
     CPU_USAGE pre_cpu_usage;
 
+    QString pre_node_id = "";
+
     printf("[WATCHDOG] loop start\n");
     while(watch_flag)
     {
@@ -3629,6 +3631,34 @@ void MainWindow::watch_loop()
                     pick_update();
                 }
             }
+        }
+
+        // for 100ms loop
+        if(unimap.is_loaded)
+        {
+            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+            QString cur_node_id = unimap.get_node_id_edge(cur_tf.block(0,3,3,1));
+            if(pre_node_id == "")
+            {
+                pre_node_id = cur_node_id;
+            }
+
+            NODE *node = unimap.get_node_by_id(cur_node_id);
+            if(node != NULL)
+            {
+                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                if(d < 0.3)
+                {
+                    if(pre_node_id != cur_node_id)
+                    {
+                        pre_node_id = cur_node_id;
+                    }
+                }
+            }
+
+            mtx.lock();
+            last_node_id = pre_node_id;
+            mtx.unlock();
         }
 
         // for 1000ms loop
@@ -4050,9 +4080,12 @@ void MainWindow::obs_plot()
 
         cv::Mat obs_map;
         cv::Mat dyn_map;
+        cv::Mat vir_map;
+
         Eigen::Matrix4d obs_tf;
         obsmap.get_obs_map(obs_map, obs_tf);
         obsmap.get_dyn_map(dyn_map, obs_tf);
+        obsmap.get_vir_map(vir_map, obs_tf);
 
         std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
 
@@ -4073,6 +4106,11 @@ void MainWindow::obs_plot()
                     if(dyn_map.ptr<uchar>(i)[j] == 255)
                     {
                         plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                    }
+
+                    if(vir_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
                     }
                 }
             }
@@ -5121,7 +5159,10 @@ void MainWindow::ctrl_plot()
             viewer->removeShape("cur_tf_node");
         }
 
-        QString cur_node_id = unimap.get_node_id_edge(cur_tf.block(0,3,3,1));
+        mtx.lock();
+        QString cur_node_id = last_node_id;
+        mtx.unlock();
+
         if(cur_node_id != "")
         {
             NODE *node = unimap.get_node_by_id(cur_node_id);

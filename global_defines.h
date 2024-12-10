@@ -181,7 +181,7 @@ enum OBS_STATE
 {
     OBS_NONE = 0,
     OBS_DYN = 1,
-    OBS_ROBOT = 2,
+    OBS_VIR = 2,
 };
 
 enum LOCAL_PATH_STATE

@@ -183,7 +183,7 @@ void SIM::a_loop()
             Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> pts;            
-            for(size_t p = 0; p < res_idxs.size(); p++)
+            for(size_t p = 0; p < res_idxs.size(); p+=10)
             {
                 unsigned int idx = res_idxs[p].first;
                 double x = unimap->kdtree_cloud.pts[idx].x;
@@ -195,6 +195,11 @@ void SIM::a_loop()
                 Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
                 pts.push_back(_P);
                 reflects.push_back(r);
+
+                if(pts.size() >= 360)
+                {
+                    break;
+                }
             }
 
             // update
