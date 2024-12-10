@@ -199,6 +199,9 @@ public:
     std::vector<QString> last_plot_tactile;
     std::vector<QString> last_plot_select;
 
+    // for fms
+    QString last_node_id = "";
+
     // jog
     std::atomic<double> vx_target = {0.};
     std::atomic<double> vy_target = {0.};

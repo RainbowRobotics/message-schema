@@ -291,9 +291,14 @@ void COMM_FMS::slot_send_info()
         return;
     }
 
+    MainWindow* _main = (MainWindow*)main;
+    _main->mtx.lock();
+    QString cur_node_id = _main->last_node_id;
+    _main->mtx.unlock();
+
     double time = get_time0();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();    
-    QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+    //QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
     if(goal_tf.isIdentity())

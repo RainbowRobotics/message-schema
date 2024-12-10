@@ -873,6 +873,8 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 
     Eigen::Vector3d _P0(0,0,0);
     Eigen::Vector3d _P1(0,0,0);
+    QString _node_id0 = "";
+    QString _node_id1 = "";
     double min_d = 99999999;
 
     bool is_found = false;
@@ -882,18 +884,12 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
         {
             QString node_id0 = nodes[p].id;
-            QStringList str_list0 = node_id0.split("_");
-            long long idx0 = str_list0.back().toLongLong();
-
             Eigen::Matrix4d tf0 = nodes[p].tf;
             Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
 
             for(size_t q = 0; q < nodes[p].linked.size(); q++)
             {
                 QString node_id1 = nodes[p].linked[q];
-                QStringList str_list1 = node_id1.split("_");
-                long long idx1 = str_list1.back().toLongLong();
-
                 NODE* node = get_node_by_id(node_id1);
                 if(node == NULL)
                 {
@@ -910,18 +906,10 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
                     if(d < min_d)
                     {
                         min_d = d;
-
-                        if(idx0 < idx1)
-                        {
-                            _P0 = pos0;
-                            _P1 = pos1;
-                        }
-                        else
-                        {
-                            _P0 = pos1;
-                            _P1 = pos0;
-                        }
-
+                        _P0 = pos0;
+                        _P1 = pos1;
+                        _node_id0 = node_id0;
+                        _node_id1 = node_id1;
                         is_found = true;
                     }
                 }
@@ -931,15 +919,15 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 
     if(is_found)
     {
-        double d0 = (_P0-pos).norm();
-        double d1 = (_P1-pos).norm();        
-        if(d0 < d1*0.5)
+        double d0 = calc_dist_2d(_P0-pos);
+        double d1 = calc_dist_2d(_P1-pos);
+        if(d0 < d1)
         {
-            return get_node_id_nn(_P0);
+            return _node_id0;
         }
         else
         {
-            return get_node_id_nn(_P1);
+            return _node_id1;
         }
     }
 
@@ -1068,3 +1056,4 @@ QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
 
     return zone_type;
 }
+

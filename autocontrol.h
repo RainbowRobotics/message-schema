@@ -64,6 +64,7 @@ public:
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
     std::vector<std::vector<QString>> symmetric_cut(std::vector<QString> node_path);
     std::vector<std::vector<QString>> loop_cut(std::vector<QString> node_path);
+    Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
     PATH calc_global_path(Eigen::Matrix4d goal);
     PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
