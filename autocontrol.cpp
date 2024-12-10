@@ -1826,6 +1826,8 @@ void AUTOCONTROL::b_loop_pp()
                 int obs_val = obsmap->is_path_collision(traj0, true, -(config->ROBOT_SIZE_X[1]-0.1), -(config->ROBOT_SIZE_Y[1]-0.1));
                 if(obs_val == OBS_VIR)
                 {
+                    mobile->move(0, 0, 0);
+
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
                     logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS(vir), err_th:%1").arg(err_th*R2D));
@@ -1918,6 +1920,8 @@ void AUTOCONTROL::b_loop_pp()
                     int obs_val = obsmap->is_path_collision(traj0, true, -(config->ROBOT_SIZE_X[1]-0.1), -(config->ROBOT_SIZE_Y[1]-0.1));
                     if(obs_val == OBS_VIR)
                     {
+                        mobile->move(0, 0, 0);
+
                         obs_state = AUTO_OBS_CHECK;
                         fsm_state = AUTO_FSM_OBS;
                         printf("[AUTO] DRIVING -> OBS(vir)\n");
@@ -2109,6 +2113,8 @@ void AUTOCONTROL::b_loop_pp()
                 int obs_val = obsmap->is_path_collision(traj0, true, -(config->ROBOT_SIZE_X[1]-0.1), -(config->ROBOT_SIZE_Y[1]-0.1));
                 if(obs_val == OBS_VIR)
                 {
+                    mobile->move(0, 0, 0);
+
                     obs_wait_st_time = get_time();
                     obs_state = AUTO_OBS_WAIT2;
                     fsm_state = AUTO_FSM_OBS;
