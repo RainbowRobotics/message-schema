@@ -5671,16 +5671,18 @@ void MainWindow::pick_plot2()
                 NODE* node1 = unimap.get_node_by_id(pick.cur_node);
                 if(node0 != NULL && node1 != NULL)
                 {
-                    Eigen::Matrix4d dtf = node0->tf.inverse()*node1->tf.inverse();
-                    Eigen::Vector3d dxi = TF_to_se2(dtf);
-                    double d = calc_dist_2d(dxi);
+                    Eigen::Vector3d xi0 = TF_to_se2(node0->tf);
+                    Eigen::Vector3d xi1 = TF_to_se2(node1->tf);
+
+                    double dx = xi1[0] - xi0[0];
+                    double dy = xi1[1] - xi0[1];
+                    double dist = std::sqrt(dx*dx + dy*dy);
 
                     QString str;
-                    str.sprintf("dxi:%.2f, %.2f, %.1f, d:%.2f", dxi[0], dxi[1], dxi[2]*R2D, d);
+                    str.sprintf("dx: %.2f, dy: %.2f, dist: %.2f", dx, dy, dist);
                     ui->lb_NodeAlignInfo->setText(str);
                 }
             }
-
         }
 
         // erase first
