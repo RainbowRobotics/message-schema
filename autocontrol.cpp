@@ -1579,8 +1579,8 @@ void AUTOCONTROL::b_loop_pp()
     int cur_obs_val = OBS_NONE;    
     double obs_wait_st_time = 0;
 
-    int vir_chk_num = 10;
-    double vir_chk_radius = 0.05;
+    int vir_chk_num = 20;
+    double vir_chk_radius = 0.1;
 
     logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
