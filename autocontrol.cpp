@@ -238,6 +238,11 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     // load preset
     params = load_preset(preset);
 
+    // set goal tf
+    mtx.lock();
+    cur_goal_tf = goal_tf;
+    mtx.unlock();
+
     // calc global path
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
@@ -1685,8 +1690,7 @@ void AUTOCONTROL::b_loop_pp()
                 tgt_idx = local_path.pos.size()-1;
             }
 
-            Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];
-            Eigen::Vector3d tgt_xi = TF_to_se2(tgt_tf);
+            Eigen::Matrix4d tgt_tf = local_path.pose[tgt_idx];            
             Eigen::Vector3d tgt_pos = tgt_tf.block(0,3,3,1);
 
             mtx.lock();
@@ -1694,18 +1698,15 @@ void AUTOCONTROL::b_loop_pp()
             last_tgt_pos = tgt_pos;
             mtx.unlock();
 
-            // calc heading error
-            double err_th = 0;
-            if(cur_idx == tgt_idx)
+            // calc heading error            
+            double dx = tgt_pos[0] - cur_pos[0];
+            double dy = tgt_pos[1] - cur_pos[1];
+            double th = std::atan2(dy, dx);
+            double err_th = deltaRad(th, cur_xi[2]);
+            double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
+            if(goal_err_d < config->DRIVE_GOAL_D)
             {
-                err_th = deltaRad(tgt_xi[2], cur_xi[2]);
-            }
-            else
-            {
-                double dx = tgt_pos[0] - cur_pos[0];
-                double dy = tgt_pos[1] - cur_pos[1];
-                double th = std::atan2(dy, dx);
-                err_th = deltaRad(th, cur_xi[2]);
+                err_th = deltaRad(goal_xi[2], cur_xi[2]);
             }
 
             // goal check
@@ -1730,19 +1731,8 @@ void AUTOCONTROL::b_loop_pp()
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
-            double v0 = cur_vel[0];
-            double v = 0;
-            v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
-            v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
-
-            // scaling
-            double scale_v = 1.0 - 0.5*std::abs(w/(params.LIMIT_W*D2R));
-            double scale_w = 1.0 - 0.5*std::abs(v/params.LIMIT_V);
-            v *= scale_v;
-            w *= scale_w;
-
             // obs check
-            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
             cur_obs_val = obsmap->is_path_collision(traj, true);
             if(cur_obs_val == OBS_DYN)
             {
@@ -1757,7 +1747,7 @@ void AUTOCONTROL::b_loop_pp()
             // send control
             if(!is_debug)
             {
-                mobile->move(v, 0, w);
+                mobile->move(0, 0, w);
             }
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
@@ -1768,6 +1758,75 @@ void AUTOCONTROL::b_loop_pp()
             if(tgt_idx > (int)local_path.pos.size()-1)
             {
                 tgt_idx = local_path.pos.size()-1;
+            }
+
+            // goal check
+            double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
+            if(goal_err_d < config->DRIVE_GOAL_D)
+            {
+                // check local sign
+                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                double v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], -params.ED_V, params.ED_V);
+                mobile->move(v, 0, 0);
+
+                extend_dt += dt;
+                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+                    mobile->move(0, 0, 0);
+
+                    // check global path que
+                    logger->write_log(QString("[AUTO] global path que size, size: %1").arg(global_path_que.unsafe_size()));
+
+                    // go to final align
+                    if(global_path_que.unsafe_size() == 0)
+                    {
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;
+                        logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
+                        continue;
+                    }
+
+                    // deque
+                    PATH _global_path;
+                    if(global_path_que.try_pop(_global_path))
+                    {
+                        // update global path
+                        global_path = _global_path;
+                        logger->write_log(QString("[AUTO] deque global path, size: %1").arg(global_path.pos.size()));
+
+                        // update global goal
+                        goal_tf = global_path.ed_tf;
+                        goal_pos = goal_tf.block(0,3,3,1);
+                        goal_xi = TF_to_se2(goal_tf);
+
+                        // clear local path
+                        local_path = calc_local_path(global_path);
+                        avoid_path = PATH();
+
+                        // update global path and goal_tf
+                        mtx.lock();
+                        cur_global_path = global_path;
+                        mtx.unlock();
+                        Q_EMIT signal_global_path_updated();
+
+                        // update local path
+                        mtx.lock();
+                        cur_local_path = local_path;
+                        last_local_goal = local_path.ed_tf.block(0,3,3,1);
+                        mtx.unlock();
+                        Q_EMIT signal_local_path_updated();
+
+                        // return to first align
+                        fsm_state = AUTO_FSM_FIRST_ALIGN;
+                        logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
+                        continue;
+                    }
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                continue;
             }
 
             // obs decel
@@ -1854,8 +1913,7 @@ void AUTOCONTROL::b_loop_pp()
             obs_condition = _obs_condition;
             mtx.unlock();
 
-            // calc ref_v
-            double goal_err_d = calc_dist_2d(goal_pos - cur_pos);
+            // calc ref_v            
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
@@ -1874,7 +1932,7 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc control input
             double v0 = cur_vel[0];
-            double v = ref_v;            
+            double v = ref_v;
             v = saturation(v, 0.0, obs_v);
             v = saturation(v, v0 - config->MOTOR_LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
@@ -1885,8 +1943,8 @@ void AUTOCONTROL::b_loop_pp()
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
-            double w = std::tan(th) / params.DRIVE_L;
             double w0 = cur_vel[2];
+            double w = std::tan(th) / params.DRIVE_L;
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
@@ -1914,71 +1972,6 @@ void AUTOCONTROL::b_loop_pp()
                 w = sgn(w)*(std::abs(w)-d_w);
             }
 
-            // goal check
-            if(goal_err_d < config->DRIVE_GOAL_D || cur_idx == (int)local_path.pos.size()-1)
-            {
-                // check local sign
-                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
-                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
-                v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], -params.ED_V, params.ED_V);
-                w = 0;
-
-                extend_dt += dt;
-                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
-                {
-                    extend_dt = 0;
-                    pre_err_th = 0;
-                    mobile->move(0, 0, 0);
-
-                    // check global path que
-                    logger->write_log(QString("[AUTO] global path que size, size: %1").arg(global_path_que.unsafe_size()));
-
-                    // go to final align
-                    if(global_path_que.unsafe_size() == 0)
-                    {
-                        fsm_state = AUTO_FSM_FINAL_ALIGN;
-                        logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
-                        continue;
-                    }
-
-                    // deque
-                    PATH _global_path;
-                    if(global_path_que.try_pop(_global_path))
-                    {
-                        // update global path
-                        global_path = _global_path;
-                        logger->write_log(QString("[AUTO] deque global path, size: %1").arg(global_path.pos.size()));
-
-                        // update global goal
-                        goal_tf = global_path.ed_tf;
-                        goal_pos = goal_tf.block(0,3,3,1);
-                        goal_xi = TF_to_se2(goal_tf);
-
-                        // clear local path
-                        local_path = calc_local_path(global_path);
-                        avoid_path = PATH();
-
-                        // update global path and goal_tf
-                        mtx.lock();
-                        cur_global_path = global_path;
-                        mtx.unlock();
-                        Q_EMIT signal_global_path_updated();
-
-                        // update local path
-                        mtx.lock();
-                        cur_local_path = local_path;
-                        last_local_goal = local_path.ed_tf.block(0,3,3,1);
-                        mtx.unlock();
-                        Q_EMIT signal_local_path_updated();
-
-                        // return to first align
-                        fsm_state = AUTO_FSM_FIRST_ALIGN;
-                        logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
-                        continue;
-                    }
-                }
-            }
-
             // send control
             if(!is_debug)
             {
@@ -1988,13 +1981,15 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
-            // check temporal goal
-            if(!global_path.ed_tf.isApprox(get_cur_goal_tf()))
+            // check temp goal
+            Eigen::Matrix4d final_goal_tf = get_cur_goal_tf();
+            double final_goal_d = calc_dist_2d(final_goal_tf.block(0,3,3,1) - global_path.ed_tf.block(0,3,3,1));
+            if(final_goal_d > config->DRIVE_GOAL_D)
             {
                 clean_up();
 
                 fsm_state = AUTO_FSM_COMPLETE;
-                logger->write_log("[AUTO] FINAL ALIGN COMPLETE(temp goal)");
+                logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(temp)"));
                 return;
             }
 

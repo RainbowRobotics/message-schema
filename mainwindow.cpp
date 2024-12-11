@@ -1679,8 +1679,10 @@ void MainWindow::bt_SimInit()
     sim.stop();
 
     // start
-    sim.cur_tf = se2_to_TF(pick.r_pose);
-    slam.cur_tf = sim.cur_tf;
+    Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+    sim.cur_tf = tf;
+    slam.cur_tf = tf;
+    mobile.cur_pose.pose = TF_to_se2(tf);
     sim.start();
 
     mobile.is_connected = true;
@@ -3246,6 +3248,7 @@ void MainWindow::slot_sim_random_init(QString seed)
     Eigen::Matrix4d tf = node->tf;
     slam.cur_tf = tf;
     sim.cur_tf = tf;
+    mobile.cur_pose.pose = TF_to_se2(tf);
     sim.start();
 
     mobile.is_connected = true;
