@@ -1695,7 +1695,18 @@ void AUTOCONTROL::b_loop_pp()
             mtx.unlock();
 
             // calc heading error
-            double err_th = deltaRad(tgt_xi[2], cur_xi[2]);
+            double err_th = 0;
+            if(cur_idx == tgt_idx)
+            {
+                err_th = deltaRad(tgt_xi[2], cur_xi[2]);
+            }
+            else
+            {
+                double dx = tgt_pos[0] - cur_pos[0];
+                double dy = tgt_pos[1] - cur_pos[1];
+                double th = std::atan2(dy, dx);
+                err_th = deltaRad(th, cur_xi[2]);
+            }
 
             // goal check
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
