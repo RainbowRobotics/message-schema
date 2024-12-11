@@ -177,7 +177,15 @@ void SLAM_2D::localization_stop()
     }    
 
     // clear lidar scan
+    lidar->mtx.lock();
+
     lidar->scan_que.clear();
+    lidar->cur_scan.clear();
+    lidar->cur_scan_f.clear();
+    lidar->cur_scan_b.clear();
+    lidar->cur_scan_outlier.clear();
+
+    lidar->mtx.unlock();
 }
 
 Eigen::Matrix4d SLAM_2D::get_cur_tf()

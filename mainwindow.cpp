@@ -3373,21 +3373,15 @@ void MainWindow::comm_loop()
         // for 100ms loop
         if(cnt % 1 == 0)
         {
-            if(cms.is_connected)
-            {
-                cms.send_status();
-            }
-
-            if(cui.is_connected)
-            {
-                Q_EMIT signal_send_status();
-            }
-
             if(cfms.is_connected)
             {
                 Q_EMIT signal_send_info();
             }
+        }
 
+        // for 200ms loop
+        if(cnt % 2 == 0)
+        {
             if(config.USE_RTSP && config.USE_CAM)
             {
                 // cam streaming
@@ -3432,6 +3426,20 @@ void MainWindow::comm_loop()
                         }
                     }
                 }
+            }
+        }
+
+        // for 500ms loop
+        if(cnt % 5 == 0)
+        {
+            if(cms.is_connected)
+            {
+                cms.send_status();
+            }
+
+            if(cui.is_connected)
+            {
+                Q_EMIT signal_send_status();
             }
         }
 
@@ -4036,7 +4044,7 @@ void MainWindow::map_plot()
         is_map_update = false;
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+        for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=2) // sampling
         {
             if(unimap.kdtree_mask[p] == 0)
             {
@@ -5652,6 +5660,24 @@ void MainWindow::pick_plot2()
             {
                 ui->lb_CurNodeInfo->setText("[cur_node]");
             }
+
+            // for node align
+            if(pick.pre_node != "" && pick.cur_node != "")
+            {
+                NODE* node0 = unimap.get_node_by_id(pick.pre_node);
+                NODE* node1 = unimap.get_node_by_id(pick.cur_node);
+                if(node0 != NULL && node1 != NULL)
+                {
+                    Eigen::Matrix4d dtf = node0->tf.inverse()*node1->tf.inverse();
+                    Eigen::Vector3d dxi = TF_to_se2(dtf);
+                    double d = calc_dist_2d(dxi);
+
+                    QString str;
+                    str.sprintf("dxi:%.2f, %.2f, %.1f, d:%.2f", dxi[0], dxi[1], dxi[2]*R2D, d);
+                    ui->lb_NodeAlignInfo->setText(str);
+                }
+            }
+
         }
 
         // erase first

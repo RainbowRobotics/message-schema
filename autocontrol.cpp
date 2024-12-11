@@ -1560,7 +1560,7 @@ void AUTOCONTROL::b_loop_pp()
 
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
-    logger->write_log(QString("[AUTO] Initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
+    logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
 
     // path storage
     PATH local_path;
@@ -1579,7 +1579,7 @@ void AUTOCONTROL::b_loop_pp()
     int cur_obs_val = OBS_NONE;    
     double obs_wait_st_time = 0;
 
-    int vir_chk_num = 20;
+    int vir_chk_num = 30;
     double vir_chk_radius = 0.1;
 
     logger->write_log("[AUTO] b_loop_pp start");
