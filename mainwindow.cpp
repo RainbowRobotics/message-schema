@@ -43,17 +43,29 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ckb_PlotEdges2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
     connect(ui->ckb_PlotNames2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
 
-    // for zoom-in/out, panning
+    // for 2d viewer: zoom-in/out, panning
+    ui->bt_ZoomIn->setAutoRepeat(true);
+    ui->bt_ZoomIn->setAutoRepeatDelay(100);
+    ui->bt_ZoomIn->setAutoRepeatInterval(100);
+
+    ui->bt_ZoomOut->setAutoRepeat(true);
+    ui->bt_ZoomOut->setAutoRepeatDelay(100);
+    ui->bt_ZoomOut->setAutoRepeatInterval(100);
+
+    ui->bt_ZoomIn2->setAutoRepeat(true);
+    ui->bt_ZoomIn2->setAutoRepeatDelay(100);
+    ui->bt_ZoomIn2->setAutoRepeatInterval(100);
+
+    ui->bt_ZoomOut2->setAutoRepeat(true);
+    ui->bt_ZoomOut2->setAutoRepeatDelay(100);
+    ui->bt_ZoomOut2->setAutoRepeatInterval(100);
+
     connect(ui->bt_ZoomIn, SIGNAL(clicked()), this, SLOT(bt_ZoomIn()));
     connect(ui->bt_ZoomIn2, SIGNAL(clicked()), this, SLOT(bt_ZoomIn2()));
     connect(ui->bt_ZoomOut, SIGNAL(clicked()), this, SLOT(bt_ZoomOut()));
     connect(ui->bt_ZoomOut2, SIGNAL(clicked()), this, SLOT(bt_ZoomOut2()));
-
-    //connect(ui->ckb_Panning, SIGNAL(stateChanged(int)), this, SLOT(map_update()));
-    //connect(ui->ckb_Panning2, SIGNAL(stateChanged(int)), this, SLOT(map_update()));
     connect(ui->ckb_Panning, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning()));
     connect(ui->ckb_Panning2, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning2()));
-
 
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
@@ -298,125 +310,78 @@ void MainWindow::slot_menu_tab_changed()
 void MainWindow::bt_ZoomIn()
 {
     is_zoom_in = true;
-    qDebug()<<"111111111111111111111111111";
+    double zoomStep = 3.0; // adjust
 
-    double zoomStep = 3.0; // 필요하면 적절히 조정
-
-    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
-    //{
-    //    // 첫 번째 뷰어(3D 뷰)에서 줌인
-    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    //    viewer->getRenderWindow()->Render();
-    //    syncViewerCameras(viewer, viewer2);
-    //}
-    //else
-    //{
-        // 두 번째 뷰어(주로 지도나 어노테이션 뷰)에서 줌인
-        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
-        syncViewerCameras(viewer2, viewer);
-    //}
+    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    viewer->getRenderWindow()->Render();
+    syncViewerCameras(viewer, viewer2);
 }
 
 void MainWindow::bt_ZoomOut()
 {
     is_zoom_out = true;
-    qDebug()<<"33333333333333333333333333";
+    double zoomStep = -3.0; // adjust
 
-    double zoomStep = -3.0; // 필요하면 적절히 조정
-
-
-    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
-    //{
-    //    // 첫 번째 뷰어(3D 뷰)에서 줌아웃
-    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    //    viewer->getRenderWindow()->Render();
-    //    syncViewerCameras(viewer, viewer2);
-    //}
-    //else
-    //{
-        // 두 번째 뷰어(지도/어노테이션 뷰)에서 줌아웃
-        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
-        syncViewerCameras(viewer2, viewer);
-    //}
+    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    viewer->getRenderWindow()->Render();
+    syncViewerCameras(viewer, viewer2);
 }
 
 void MainWindow::bt_ZoomIn2()
 {
     is_zoom_in2 = true;
-    qDebug()<<"2222222222222222222222222222";
+    double zoomStep = 3.0; // need adjust
 
-    double zoomStep = 3.0; // 필요하면 적절히 조정
-
-    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
-    //{
-    //    // 첫 번째 뷰어(3D 뷰)에서 줌인
-    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    //    viewer->getRenderWindow()->Render();
-    //    syncViewerCameras(viewer, viewer2);
-    //}
-    //else
-    //{
-        // 두 번째 뷰어(주로 지도나 어노테이션 뷰)에서 줌인
-        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
-        syncViewerCameras(viewer2, viewer);
-    //}
+    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    viewer2->getRenderWindow()->Render();
+    syncViewerCameras(viewer2, viewer);
 }
 
 void MainWindow::bt_ZoomOut2()
 {
     is_zoom_out2 = true;
-    qDebug()<<"44444444444444444444444444";
+    double zoomStep = -3.0; // need adjust
 
-    double zoomStep = -3.0; // 필요하면 적절히 조정
+    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
+    viewer2->getRenderWindow()->Render();
+    syncViewerCameras(viewer2, viewer);
 
-    //if (ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
-    //{
-    //    // 첫 번째 뷰어(3D 뷰)에서 줌아웃
-    //    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    //    viewer->getRenderWindow()->Render();
-    //    syncViewerCameras(viewer, viewer2);
-    //}
-    //else
-    //{
-        // 두 번째 뷰어(지도/어노테이션 뷰)에서 줌아웃
-        viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
-        syncViewerCameras(viewer2, viewer);
-    //}
 }
 
 void MainWindow::ckb_Panning()
 {
-    if(ui->ckb_Panning->isChecked() == false)
+    bool checked = ui ->ckb_Panning->isChecked();
+
+    if(!checked)
     {
         is_panning1 = false;
-        return;
+        ui->ckb_Panning2->setChecked(false);
+        is_panning2 = false;
     }
-
-    else if(ui->ckb_Panning->isChecked() == true)
+    else
     {
         is_panning1 = true;
-        qDebug()<<"SLAMNAV - panning";
-
+        ui->ckb_Panning2->setChecked(true);
+        is_panning2= true;
     }
 
 }
 
 void MainWindow::ckb_Panning2()
 {
-    if(ui->ckb_Panning2->isChecked() == false)
+    bool checked = ui->ckb_Panning2->isChecked();
+
+    if(!checked)
     {
         is_panning2 = false;
-        return;
+        ui->ckb_Panning->setChecked(false);
+        is_panning1 = false;
     }
-    else if (ui->ckb_Panning2->isChecked() == true)
+    else
     {
-      is_panning2=true;
-      qDebug()<<"ANNOTATION - panning";
-
+        is_panning2 = true;
+        ui->ckb_Panning->setChecked(true);
+        is_panning2 = true;
     }
 }
 
@@ -698,7 +663,6 @@ void MainWindow::setup_vtk()
         ui->qvtkWidget2->grabGesture(Qt::PinchGesture);
         ui->qvtkWidget2->installEventFilter(this);
 
-
         // init drawing
         viewer->addCoordinateSystem(1.0, "O_global");
         ui->qvtkWidget->renderWindow()->Render();
@@ -752,7 +716,32 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         // cam control
         if(ui->cb_ViewType->currentText() == "VIEW_3D")
         {
-            return false;
+            //return false;
+
+            // touch event : panning or click
+            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
+            {
+                if(ui->main_tab)
+                {
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                    if (!touchPoints.isEmpty())
+                    {
+                        if(is_panning1 == true)
+                        {
+                            logger.write_log("[viewer] panning1 - active");
+                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                            handleTouchEvent(touchEvent, object);
+                            return true;
+
+                        }
+                        else if(is_panning1 == false)
+                        {
+                        }
+                    }
+                }
+            }
+
         }
 
         // mouse event
@@ -916,11 +905,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     else if(is_panning1 == false)
                     {
                     }
-
                 }
-
             }
-
         }
     }
     else if(object == ui->qvtkWidget2)
@@ -1468,42 +1454,60 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         else if(is_panning2 == false)
                         {
                         }
-
                     }
-
                 }
-
             }
-
-
         }
     }
 
     return QWidget::eventFilter(object, ev);
 }
 
+
 void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object)
 {
     // Sacle Factor
     static qreal lastScaleFactor = 1.0;
 
+    // To do
     qreal currentScaleFactor = pinchGesture->scaleFactor();
     qreal scaleChange = currentScaleFactor / lastScaleFactor;
 
-    double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
 
-    // scale
-    if (object == ui->qvtkWidget)
+    if(ui->cb_ViewType->currentText() == "VIEW_3D")
     {
-        // viewer zoom in/out
-        viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-        viewer->getRenderWindow()->Render();
+        double zoomAmount = (scaleChange - 1.0)*50.0; // need adjust
+        if (object == ui->qvtkWidget)
+        {
+            viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+            viewer->getRenderWindow()->Render();
+            syncViewerCameras(viewer, viewer2);
+        }
+        else if (object == ui->qvtkWidget2) // annotation
+        {
+            viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+            viewer2->getRenderWindow()->Render();
+            syncViewerCameras(viewer2, viewer);
+        }
     }
-    else if (object == ui->qvtkWidget2) // annotation
+    else if (ui->cb_ViewType->currentText() == "VIEW_2D")
     {
-        // viewer2 zoom in/out
-        viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
+        double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
+        // scale
+        if (object == ui->qvtkWidget)
+        {
+            // viewer zoom in/out
+            viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+            viewer->getRenderWindow()->Render();
+            syncViewerCameras(viewer, viewer2);
+        }
+        else if (object == ui->qvtkWidget2) // annotation
+        {
+            // viewer2 zoom in/out
+            viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+            viewer2->getRenderWindow()->Render();
+            syncViewerCameras(viewer2, viewer);
+        }
     }
 }
 
@@ -1522,7 +1526,6 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             lastTouchPoint = touchPoint.pos();
             isPanning = true;
 
-
         }
         else if (touchEvent->type() == QEvent::TouchUpdate && isPanning)
         {
@@ -1530,18 +1533,57 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             QPointF delta = currentPos - lastTouchPoint;
             lastTouchPoint = currentPos;
 
+            double pos_z = 1.0; // default
+            double scale_factor = 0.5;
+            double min_pos_z = 0.1;
+
             // CALL camera move func
             if (object == ui->qvtkWidget && is_panning1)
             {
-                viewer_camera_pan_control(delta.x(), delta.y());
-                viewer_pan_screen(delta.x(), delta.y(), viewer, ui->qvtkWidget);
+                std::vector<pcl::visualization::Camera> cams;
+                viewer->getCameras(cams);
+                Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+                if (std::abs(pos_z) <min_pos_z)
+                {
+                    pos_z =min_pos_z;
+                }
+                else
+                {
+                    pos_z = pos[2]+1e-06;
+                }
+
+                scale_factor = 1.0/(pos_z*0.1);
+
+                double scaled_x = delta.x() * scale_factor;
+                double scaled_y = delta.y() * scale_factor;
+
+                viewer_camera_pan_control(scaled_x, scaled_y);
+                viewer_pan_screen(scaled_x, scaled_y, viewer, ui->qvtkWidget);
                 viewer->getRenderWindow()->Render();
                 syncViewerCameras(viewer, viewer2);
+
             }
             else if (object == ui->qvtkWidget2 && is_panning2)
             {
-                viewer_camera_pan_control2(delta.x(), delta.y());
-                viewer_pan_screen(delta.x(), delta.y(), viewer2, ui->qvtkWidget2);
+                std::vector<pcl::visualization::Camera> cams;
+                viewer->getCameras(cams);
+                Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+                if (std::abs(pos_z) <min_pos_z)
+                {
+                    pos_z =min_pos_z;
+                }
+                else
+                {
+                    pos_z = pos[2]+1e-06;
+                }
+
+                scale_factor = 1.0/(pos_z*0.1);
+
+                double scaled_x = delta.x() * scale_factor;
+                double scaled_y = delta.y() * scale_factor;
+
+                viewer_camera_pan_control2(scaled_x, scaled_y);
+                viewer_pan_screen(scaled_x, scaled_y, viewer2, ui->qvtkWidget2);
                 viewer2->getRenderWindow()->Render();
                 syncViewerCameras(viewer2, viewer);
             }
@@ -1551,6 +1593,7 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             isPanning = false;
         }
     }
+
 }
 
 void MainWindow::viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget)
@@ -1559,7 +1602,7 @@ void MainWindow::viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::v
     std::vector<pcl::visualization::Camera> cams;
     viewer->getCameras(cams);
     if (cams.empty()) {
-        qDebug() << "No camera information available.";
+        logger.write_log("No camera information available.");
         return;
     }
     pcl::visualization::Camera cam = cams[0];
@@ -1642,6 +1685,7 @@ void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz,
                               focal_new[0], focal_new[1], focal_new[2],
                               up_new[0], up_new[1], up_new[2]);
 
+
     viewer->setCameraClipDistances(2.0, 1000.0);
 }
 
@@ -1680,6 +1724,7 @@ void MainWindow::viewer_camera_relative_control2(double tx, double ty, double tz
                               up_new[0], up_new[1], up_new[2]);
 
     viewer2->setCameraClipDistances(2.0, 1000.0);
+
 }
 
 void MainWindow::viewer_camera_pan_control(double dx, double dy)
