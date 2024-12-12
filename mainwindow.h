@@ -309,6 +309,7 @@ public Q_SLOTS:
     void bt_QuickAnnotStop();
     void bt_QuickAddNode();
     void bt_QuickAddAruco();
+    void bt_QuickAddCloud();
 
     // mapping & localization
     void bt_MapBuild();    

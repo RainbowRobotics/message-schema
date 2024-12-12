@@ -379,7 +379,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
 
     // add vobs robots from fms
-    const double vir_radius = 0.1;
+    const double vir_radius = config->ROBOT_RADIUS*0.5;
     std::vector<Eigen::Vector3d> _vir_pts;
     cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < vobs_list_robots.size(); p++)
@@ -408,7 +408,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // add vobs closures from fms
+    // add vobs closures from fms    
     for(size_t p = 0; p < vobs_list_closures.size(); p++)
     {
         // add global points

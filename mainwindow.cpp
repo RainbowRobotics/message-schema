@@ -121,6 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAnnotStop, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
     connect(ui->bt_QuickAddAruco, SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
+    connect(ui->bt_QuickAddCloud, SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
 
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -2861,6 +2862,28 @@ void MainWindow::qa_loop()
     }
 }
 
+void MainWindow::bt_QuickAddCloud()
+{
+    // snap current lidar and tf
+    std::vector<Eigen::Vector3d> pts = lidar.get_cur_scan();
+    Eigen::Matrix4d tf = slam.get_cur_tf();
+
+    // local to global
+    std::vector<Eigen::Vector3d> global_pts;
+    for(size_t p = 0; p < pts.size(); p++)
+    {
+        Eigen::Vector3d P = tf.block(0,0,3,3)*pts[p] + tf.block(0,3,3,1);
+        global_pts.push_back(P);
+    }
+
+    // add to unimap cloud
+    unimap.mtx.lock();
+    unimap.additional_cloud.insert(unimap.additional_cloud.end(), global_pts.begin(), global_pts.end());
+    unimap.mtx.unlock();
+
+    map_update();
+}
+
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {
@@ -4046,36 +4069,65 @@ void MainWindow::map_plot()
     {
         is_map_update = false;
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=2) // sampling
         {
-            if(unimap.kdtree_mask[p] == 0)
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=2) // sampling
             {
-                continue;
+                if(unimap.kdtree_mask[p] == 0)
+                {
+                    continue;
+                }
+
+                pcl::PointXYZRGB pt;
+                pt.x = unimap.kdtree_cloud.pts[p].x;
+                pt.y = unimap.kdtree_cloud.pts[p].y;
+                pt.z = unimap.kdtree_cloud.pts[p].z;
+
+                double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
+                tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+                pt.r = c.r()*255;
+                pt.g = c.g()*255;
+                pt.b = c.b()*255;
+
+                cloud->push_back(pt);
             }
 
-            pcl::PointXYZRGB pt;
-            pt.x = unimap.kdtree_cloud.pts[p].x;
-            pt.y = unimap.kdtree_cloud.pts[p].y;
-            pt.z = unimap.kdtree_cloud.pts[p].z;
+            if(!viewer->updatePointCloud(cloud, "map_pts"))
+            {
+                viewer->addPointCloud(cloud, "map_pts");
+            }
 
-            double reflect = std::sqrt(unimap.kdtree_cloud.pts[p].r/255);
-            tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
-
-            pt.r = c.r()*255;
-            pt.g = c.g()*255;
-            pt.b = c.b()*255;
-
-            cloud->push_back(pt);
+            // point size
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
         }
 
-        if(!viewer->updatePointCloud(cloud, "map_pts"))
         {
-            viewer->addPointCloud(cloud, "map_pts");
-        }
+            unimap.mtx.lock();
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < unimap.additional_cloud.size(); p++) // sampling
+            {
+                pcl::PointXYZRGB pt;
+                pt.x = unimap.additional_cloud[p][0];
+                pt.y = unimap.additional_cloud[p][1];
+                pt.z = unimap.additional_cloud[p][2];
 
-        // point size
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+                pt.r = 255;
+                pt.g = 0;
+                pt.b = 255;
+
+                cloud->push_back(pt);
+            }
+
+            if(!viewer->updatePointCloud(cloud, "map_pts2"))
+            {
+                viewer->addPointCloud(cloud, "map_pts2");
+            }
+
+            // point size
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts2");
+            unimap.mtx.unlock();
+        }
     }
 }
 void MainWindow::obs_plot()

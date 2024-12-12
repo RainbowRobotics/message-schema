@@ -175,6 +175,7 @@ enum AUTO_OBS_STATE
     AUTO_OBS_AVOID,
     AUTO_OBS_WAIT,
     AUTO_OBS_WAIT2,
+    AUTO_OBS_VIR
 };
 
 enum OBS_STATE
@@ -953,11 +954,13 @@ struct PATH
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
     Eigen::Matrix4d ed_tf;
+    bool is_final;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
+        is_final = false;
     }
 
     PATH(const PATH& p)
@@ -967,6 +970,7 @@ struct PATH
         pos = p.pos;                
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
+        is_final = p.is_final;
     }
 
     PATH& operator=(const PATH& p)
@@ -976,6 +980,7 @@ struct PATH
         pos = p.pos;        
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
+        is_final = p.is_final;
         return *this;
     }
 
@@ -985,7 +990,8 @@ struct PATH
                pose == p.pose &&
                pos == p.pos &&
                ref_v == p.ref_v &&
-               ed_tf.isApprox(p.ed_tf);
+               ed_tf.isApprox(p.ed_tf) &&
+               is_final == p.is_final;
     }
 
     bool operator!=(const PATH& p) const

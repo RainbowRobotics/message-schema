@@ -96,6 +96,9 @@ public:
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
 
+    // additional cloud storage
+    std::vector<Eigen::Vector3d> additional_cloud;
+
     // bounding box
     double map_min_x = 99999999;
     double map_max_x = -99999999;
