@@ -53,6 +53,9 @@ void UNIMAP::load_map(QString path)
             kdtree_mask.clear();
             kdtree_cloud.pts.clear();
 
+            // clear additional cloud
+            additional_cloud.clear();
+
             // csv file format : x,y,z,r
             QFile cloud_csv_file(cloud_csv_path);
             if(cloud_csv_file.open(QIODevice::ReadOnly))
@@ -187,6 +190,7 @@ void UNIMAP::save_map()
     QFile cloud_csv_file(cloud_csv_path);
     if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
     {
+        mtx.lock();
         for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)
         {
             if(kdtree_mask[p] == 0)
@@ -206,8 +210,21 @@ void UNIMAP::save_map()
             cloud_csv_file.write(str.toUtf8());
         }
 
+        for(size_t p = 0; p < additional_cloud.size(); p++)
+        {
+            double x = additional_cloud[p][0];
+            double y = additional_cloud[p][1];
+            double z = additional_cloud[p][2];
+            double r = 128;
+
+            QString str;
+            str.sprintf("%f,%f,%f,%f\n", x, y, z, r);
+            cloud_csv_file.write(str.toUtf8());
+        }
+
         cloud_csv_file.close();
         printf("[UNIMAP] %s saved\n", cloud_csv_path.toLocal8Bit().data());
+        mtx.unlock();
     }
 }
 

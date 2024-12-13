@@ -737,7 +737,7 @@ std::vector<Eigen::Matrix4d> reorientation_path(std::vector<Eigen::Matrix4d>& pa
 
         Eigen::Vector3d pos0 = tf0.block(0,3,3,1);
         Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
-        if(pos0.isApprox(pos1))
+        if(calc_dist_2d(pos1-pos0) < 0.05)
         {
             if(res.size() == 0)
             {

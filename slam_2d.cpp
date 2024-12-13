@@ -1483,7 +1483,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     if(last_err > first_err+0.01 || last_err > config->LOC_ICP_ERROR_THRESHOLD)
     {
         printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
-        return 9999;
+        //return 9999;
     }
 
     return last_err;
@@ -2061,6 +2061,9 @@ void SLAM_2D::semi_auto_init_start()
     std::vector<Eigen::Vector3d> _cur_scan = lidar->get_cur_scan();
     while(_cur_scan.size() == 0)
     {
+        _cur_scan = lidar->get_cur_scan();
+
+        // timeout
         wait_cnt++;
         if(wait_cnt > 30)
         {
@@ -2082,7 +2085,7 @@ void SLAM_2D::semi_auto_init_start()
         Q_EMIT signal_localization_semiautoinit_failed("no INIT nodes");
         return;
     }
-    printf("[AUTOINIT] INIT node num: %d\n", ids.size());
+    printf("[AUTOINIT] INIT node num: %d\n", (int)ids.size());
 
     // find best match
     Eigen::Vector2d min_ieir(1.0, 0.0);
