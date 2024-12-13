@@ -1796,6 +1796,19 @@ Stop</string>
                <string>erase size : </string>
               </property>
              </widget>
+             <widget class="QPushButton" name="bt_SetMapTf">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>120</y>
+                <width>101</width>
+                <height>25</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>set map tf</string>
+              </property>
+             </widget>
             </widget>
             <widget class="QWidget" name="page_edit_topo">
              <attribute name="title">

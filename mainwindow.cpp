@@ -123,6 +123,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAddAruco, SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
     connect(ui->bt_QuickAddCloud, SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
 
+    connect(ui->bt_SetMapTf, SIGNAL(clicked()), this, SLOT(bt_SetMapTf()));
+
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeZ, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -2884,6 +2886,40 @@ void MainWindow::bt_QuickAddCloud()
     map_update();
 }
 
+void MainWindow::bt_SetMapTf()
+{
+    // get tf
+    Eigen::Vector3d xi;
+    xi[0] = ui->dsb_MapPosX->value();
+    xi[1] = ui->dsb_MapPosY->value();
+    xi[2] = ui->dsb_MapPosTh->value()*D2R;
+
+    Eigen::Matrix4d tf = se2_to_TF(xi);
+
+    // update
+    for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+    {
+        if(unimap.kdtree_mask[p] == 0)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d P;
+        P[0] = unimap.kdtree_cloud.pts[p].x;
+        P[1] = unimap.kdtree_cloud.pts[p].y;
+        P[2] = unimap.kdtree_cloud.pts[p].z;
+
+        Eigen::Vector3d _P = tf.block(0,0,3,3)*P + tf.block(0,3,3,1);
+
+        unimap.kdtree_cloud.pts[p].x = _P[0];
+        unimap.kdtree_cloud.pts[p].y = _P[1];
+        unimap.kdtree_cloud.pts[p].z = _P[2];
+    }
+
+    map_update();
+
+}
+
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {
@@ -3397,7 +3433,7 @@ void MainWindow::comm_loop()
         cnt++;
 
         // for 100ms loop
-        if(cnt % 1 == 0)
+        if(cnt % 3 == 0)
         {
             if(cfms.is_connected)
             {
@@ -4784,11 +4820,12 @@ void MainWindow::raw_plot()
 
     // plot auto info
     QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nrequest: %s, multi_state: %s",
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
+                          (bool)ctrl.is_multi ? "1" : "0",
                           ctrl.get_multi_req().toLocal8Bit().data(),
                           cfms.get_multi_state().toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);

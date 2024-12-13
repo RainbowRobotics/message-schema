@@ -175,6 +175,8 @@ void AUTOCONTROL::stop()
     mtx.lock();
     cur_goal_tf.setIdentity();
     mtx.unlock();
+
+    fsm_state = AUTO_FSM_COMPLETE;
 }
 
 void AUTOCONTROL::change()
@@ -1574,6 +1576,54 @@ void AUTOCONTROL::b_loop_pp()
 
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+    // check already goal
+    if(global_path_que.unsafe_size() == 0)
+    {
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*goal_tf);
+        double err_d = calc_dist_2d(dxi);
+        double err_th = std::abs(dxi[2]);
+        if(err_d < config->DRIVE_GOAL_D)
+        {
+            if(!global_path.is_final)
+            {
+                // temp goal reached
+                mobile->move(0, 0, 0);
+
+                clean_up();
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                logger->write_log(QString("[AUTO] COMPLETE(already temp goal), err_d:%1").arg(err_d));
+                return;
+            }
+
+
+            if(err_th < config->DRIVE_GOAL_TH*D2R)
+            {
+                // final goal reached
+                mobile->move(0, 0, 0);
+
+                clean_up();
+
+                mtx.lock();
+                cur_goal_tf.setIdentity();
+                mtx.unlock();
+
+                Q_EMIT signal_move_succeed("already goal");
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                logger->write_log(QString("[AUTO] COMPLETE (already goal), err_d: %1, err_th: %2").arg(err_d).arg(err_th*R2D));
+                return;
+            }
+            else
+            {
+                // do final align
+                fsm_state = AUTO_FSM_FINAL_ALIGN;
+            }
+        }
+    }
+
     logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
 
     // path storage
@@ -1608,6 +1658,7 @@ void AUTOCONTROL::b_loop_pp()
 
             Q_EMIT signal_move_failed("something wrong");
             logger->write_log("[AUTO] something wrong (failed)");
+            fsm_state = AUTO_FSM_COMPLETE;
             return;
         }
         else if(is_good_everything == DRIVING_NOT_READY)
@@ -1620,6 +1671,7 @@ void AUTOCONTROL::b_loop_pp()
 
             Q_EMIT signal_move_failed("something wrong (not ready)");
             logger->write_log("[AUTO] something wrong (not ready)");
+            fsm_state = AUTO_FSM_COMPLETE;
             return;
         }
 
@@ -1741,7 +1793,7 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
             cur_obs_val = obsmap->is_path_collision(traj, true);
-            if(cur_obs_val != OBS_NONE)
+            if(cur_obs_val == OBS_DYN)
             {
                 mobile->move(0, 0, 0);
 
@@ -2003,7 +2055,7 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
             cur_obs_val = obsmap->is_path_collision(traj, true);
-            if(cur_obs_val != OBS_NONE)
+            if(cur_obs_val == OBS_DYN)
             {
                 mobile->move(0, 0, 0);
 
@@ -2200,7 +2252,7 @@ void AUTOCONTROL::b_loop_pp()
 
                 // get min pt
                 double min_d = 99999999;
-                Eigen::Vector3d vir_pt(0,0,0);
+                Eigen::Vector3d vir_pt(0, 0, 0);
                 for(size_t p = 0; p < vir_pts.size(); p++)
                 {
                     double d = calc_dist_2d(vir_pts[p] - cur_pos);
@@ -2215,7 +2267,7 @@ void AUTOCONTROL::b_loop_pp()
                 Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
                 Eigen::Vector3d _vir_pt = cur_tf_inv.block(0,0,3,3)*vir_pt + cur_tf_inv.block(0,3,3,1);
                 double err = _vir_pt[0];
-                if(err > 0 && err < config->ROBOT_RADIUS)
+                if(err >= 0 && err < config->ROBOT_RADIUS)
                 {
                     mobile->move(-0.1, 0, 0);
                 }
@@ -2231,6 +2283,7 @@ void AUTOCONTROL::b_loop_pp()
 
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
                     logger->write_log("[AUTO] OBS_VIR -> FIRST_ALIGN");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
             }
@@ -2266,6 +2319,7 @@ void AUTOCONTROL::b_loop_pp()
 
         Q_EMIT signal_move_succeed("stopped");
         logger->write_log("[AUTO] b_loop_pp stop");
+        fsm_state = AUTO_FSM_COMPLETE;
     }
 }
 
@@ -2281,6 +2335,4 @@ void AUTOCONTROL::clean_up()
     mtx.unlock();
 
     logger->write_log("[AUTO] multi_state: none");
-
-    fsm_state = AUTO_FSM_COMPLETE;
 }
