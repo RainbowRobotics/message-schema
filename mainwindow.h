@@ -79,6 +79,8 @@ public:
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
+    void set_mapping_view();
+
 
     void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
@@ -91,7 +93,6 @@ public:
     void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);
 
     void syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer);
-
 
     void synchronizeViewersIfNeeded(QObject* currentWidget);
     bool wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget);

@@ -332,6 +332,12 @@ void MainWindow::all_update()
     obs_update();
 }
 
+void MainWindow::set_mapping_view()
+{
+    ui->cb_ViewType->setCurrentIndex(2); // mapping view
+    ui->cb_ViewHeight->setCurrentIndex(2); // 60
+}
+
 // for init
 void MainWindow::init_modules()
 {            
@@ -3434,6 +3440,9 @@ void MainWindow::bt_SelectPostNodes()
 // comm
 void MainWindow::comm_loop()
 {
+    const double dt = 0.1; // 10hz
+    double pre_loop_time = get_time();
+
     int cnt = 0;
 
     std::string pipeline0 = "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=30 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://127.0.0.1:8554/cam0";
@@ -3448,10 +3457,8 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        cnt++;
-
-        // for 300ms loop
-        if(cnt % 2 == 0)
+        // for 100ms loop
+        if(cnt % 1 == 0)
         {
             if(cfms.is_connected)
             {
@@ -3574,7 +3581,23 @@ void MainWindow::comm_loop()
                 }
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // increase cnt
+        cnt++;
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            printf("[MAIN] comm_loop loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
     }
     printf("[COMM] loop stop\n");
 }

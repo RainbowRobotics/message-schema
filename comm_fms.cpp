@@ -268,6 +268,8 @@ void COMM_FMS::slot_mapload(double time, QString name)
         _main->map_dir = load_dir;
         unimap->load_map(load_dir);
         _main->all_update();
+
+        _main->set_mapping_view();
     }
 }
 
