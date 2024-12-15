@@ -378,16 +378,38 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
+    // update    
+    obs_pts = _obs_pts;
+    dyn_pts = _dyn_pts;
+    plot_pts = _plot_pts;
+    map_tf = cur_tf;
+    wall_map = _wall_map;
+    static_map = _static_map;
+    dynamic_map = _dynamic_map;
+
+    // signal for redrawing
+    Q_EMIT obs_updated();
+    mtx.unlock();
+}
+
+void OBSMAP::update_vobs_map()
+{
+    mtx.lock();
+    Eigen::Matrix4d cur_tf = map_tf;
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+
     // add vobs robots from fms
-    const double vir_radius = config->ROBOT_RADIUS*0.3;
     std::vector<Eigen::Vector3d> _vir_pts;
+    std::vector<Eigen::Vector3d> _vir_closure_pts;
     cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < vobs_list_robots.size(); p++)
     {
         // add global points
         Eigen::Vector3d center = vobs_list_robots[p];
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, vir_radius);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
+        pts.push_back(center);
+
         for(size_t q = 0; q < pts.size(); q++)
         {
             Eigen::Vector3d P = pts[q];
@@ -408,13 +430,16 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // add vobs closures from fms    
+    // add vobs closures from fms
     for(size_t p = 0; p < vobs_list_closures.size(); p++)
     {
         // add global points
         Eigen::Vector3d center = vobs_list_closures[p];
+        _vir_closure_pts.push_back(center);
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, vir_radius);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.2);
+        pts.push_back(center);
+
         for(size_t q = 0; q < pts.size(); q++)
         {
             Eigen::Vector3d P = pts[q];
@@ -435,15 +460,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // update    
-    obs_pts = _obs_pts;
-    dyn_pts = _dyn_pts;
     vir_pts = _vir_pts;
-    plot_pts = _plot_pts;
-    map_tf = cur_tf;
-    wall_map = _wall_map;
-    static_map = _static_map;
-    dynamic_map = _dynamic_map;
+    vir_closure_pts = _vir_closure_pts;
     virtual_map = _virtual_map;
 
     // signal for redrawing
@@ -497,6 +515,15 @@ std::vector<Eigen::Vector3d> OBSMAP::get_vir_pts()
 {
     mtx.lock();
     std::vector<Eigen::Vector3d> res = vir_pts;
+    mtx.unlock();
+
+    return res;
+}
+
+std::vector<Eigen::Vector3d> OBSMAP::get_vir_closure_pts()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector3d> res = vir_closure_pts;
     mtx.unlock();
 
     return res;

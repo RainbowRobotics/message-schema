@@ -186,6 +186,16 @@ void TASK::a_loop()
             if(ctrl->is_multi)
             {
                 ctrl->set_goal(node->id);
+
+                while(a_flag)
+                {
+                    QString multi_state = ctrl->get_multi_req();
+                    if(multi_state == "recv_path")
+                    {
+                        break;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                }
             }
             else
             {

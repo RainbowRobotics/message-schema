@@ -29,6 +29,7 @@ QString TF_to_string(Eigen::Matrix4d TF);
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1);
 std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, double dist_step, double th_step);
+std::vector<Eigen::Vector3d> intp_pts(Eigen::Vector3d P0, Eigen::Vector3d P1, double step);
 
 void refine_pose(Eigen::Matrix4d& G);
 bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double threshold);

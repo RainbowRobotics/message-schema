@@ -287,6 +287,8 @@ public Q_SLOTS:
     void bt_AddLink2();
     void bt_AutoLink();
     void bt_AutoNode();
+    void bt_AddPoints();
+
     void bt_EditNodePos();
     void bt_EditNodeType();
     void bt_EditNodeInfo();
