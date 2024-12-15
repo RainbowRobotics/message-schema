@@ -66,7 +66,7 @@ private Q_SLOTS:
     void connected();
     void disconnected();
 
-    void recv_message(QString message);
+    void recv_message(const QByteArray &buf);
 
 private Q_SLOTS:
 

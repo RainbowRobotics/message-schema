@@ -28,13 +28,15 @@ public:
     void init();    
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
+    void update_vobs_map();
 
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
-    void get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf);
+    void get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf);    
     std::vector<Eigen::Vector3d> get_obs_pts();
     std::vector<Eigen::Vector3d> get_dyn_pts();
     std::vector<Eigen::Vector3d> get_vir_pts();
+    std::vector<Eigen::Vector3d> get_vir_closure_pts();
 
     // for plot
     void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
@@ -56,6 +58,7 @@ public:
     std::vector<Eigen::Vector3d> obs_pts;
     std::vector<Eigen::Vector3d> dyn_pts;
     std::vector<Eigen::Vector3d> vir_pts;
+    std::vector<Eigen::Vector3d> vir_closure_pts;
     std::vector<Eigen::Vector4d> plot_pts;
 
     // virtual obs for multirobot

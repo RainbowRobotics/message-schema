@@ -85,7 +85,7 @@ void COMM_FMS::connected()
     if(!is_connected)
     {
         is_connected = true;
-        connect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
+        connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
 
         ctrl->is_multi = true;
         printf("[COMM_FMS] connected\n");
@@ -97,7 +97,7 @@ void COMM_FMS::disconnected()
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
+        disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
 
         ctrl->is_multi = false;
         printf("[COMM_FMS] disconnected\n");
@@ -105,10 +105,11 @@ void COMM_FMS::disconnected()
 }
 
 // recv callback
-void COMM_FMS::recv_message(QString message)
+void COMM_FMS::recv_message(const QByteArray &buf)
 {
+    QString message = qUncompress(buf);
     QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
-    if(get_json(data, "robot_id") != robot_id)
+    if(get_json(data, "rid") != robot_id)
     {
         return;
     }
@@ -116,30 +117,30 @@ void COMM_FMS::recv_message(QString message)
     // parsing
     if(get_json(data, "type") == "load")
     {
-        QString map_name = get_json(data, "map_name");
-        double time = get_json(data, "time").toDouble()/1000;
+        QString map_name = get_json(data, "map");
+        double time = get_json(data, "t").toDouble()/1000;
 
         Q_EMIT signal_mapload(time, map_name);
         printf("[COMM_FMS] recv_load, map_name: %s, time: %.3f\n", map_name.toLocal8Bit().data(), time);
     }
     else if(get_json(data, "type") == "init")
     {
-        double time = get_json(data, "time").toDouble()/1000;
+        double time = get_json(data, "t").toDouble()/1000;
 
         Q_EMIT signal_init(time);
         printf("[COMM_FMS] recv_init, time: %.3f\n", time);
     }
-    else if(get_json(data, "type") == "random_init")
+    else if(get_json(data, "type") == "rinit")
     {
         QString seed = get_json(data, "seed");
-        double time = get_json(data, "time").toDouble()/1000;
+        double time = get_json(data, "t").toDouble()/1000;
 
         Q_EMIT signal_random_init(time, seed);
         printf("[COMM_FMS] recv_random_init, seed: %s, time: %.3f\n", seed.toLocal8Bit().data(), time);
     }
-    else if(get_json(data, "type") == "random_seq")
+    else if(get_json(data, "type") == "rseq")
     {
-        double time = get_json(data, "time").toDouble()/1000;
+        double time = get_json(data, "t").toDouble()/1000;
 
         Q_EMIT signal_random_seq(time);
         printf("[COMM_FMS] recv_random_seq, time: %.3f\n", time);
@@ -147,8 +148,8 @@ void COMM_FMS::recv_message(QString message)
     }
     else if(get_json(data, "type") == "goal")
     {
-        QString goal_id = get_json(data, "goal_id");
-        double time = get_json(data, "time").toDouble()/1000;
+        QString goal_id = get_json(data, "gid");
+        double time = get_json(data, "t").toDouble()/1000;
 
         ctrl->set_goal(goal_id);
         printf("[COMM_FMS] recv_goal, goal_id: %s, time: %.3f\n", goal_id.toLocal8Bit().data(), time);
@@ -156,8 +157,8 @@ void COMM_FMS::recv_message(QString message)
     else if(get_json(data, "type") == "path")
     {
         QString path_str = get_json(data, "path");
-        int preset = get_json(data, "preset").toInt();
-        double time = get_json(data, "time").toDouble()/1000;
+        int preset = get_json(data, "pr").toInt();
+        double time = get_json(data, "t").toDouble()/1000;
 
         QStringList path_str_list = path_str.split(",");
 
@@ -172,17 +173,19 @@ void COMM_FMS::recv_message(QString message)
     }
     else if(get_json(data, "type") == "stop")
     {
-        double time = get_json(data, "time").toDouble()/1000;
+        double time = get_json(data, "t").toDouble()/1000;
 
-        ctrl->stop();
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Emergency();
+
         printf("[COMM_FMS] recv_stop, time: %.3f\n", time);
     }
-    else if(get_json(data, "type") == "vobs_robots")
+    else if(get_json(data, "type") == "vobs_r")
     {
         double time = get_json(data, "time").toDouble()/1000;
         std::vector<Eigen::Vector3d> vobs_list;
 
-        QString vobs_str = get_json(data, "vobs_str");
+        QString vobs_str = get_json(data, "vobs");
         QStringList vobs_str_list = vobs_str.split("\n");
         if(vobs_str_list.size() > 0)
         {
@@ -202,8 +205,10 @@ void COMM_FMS::recv_message(QString message)
 
         // update vobs
         obsmap->mtx.lock();
-        obsmap->vobs_list_robots = vobs_list;
+        obsmap->vobs_list_robots = vobs_list;        
         obsmap->mtx.unlock();
+
+        obsmap->update_vobs_map();
 
         /*
         if(vobs_list.size() > 0)
@@ -212,11 +217,11 @@ void COMM_FMS::recv_message(QString message)
         }
         */
     }
-    else if(get_json(data, "type") == "vobs_closures")
+    else if(get_json(data, "type") == "vobs_c")
     {
         double time = get_json(data, "time").toDouble()/1000;
 
-        QString vobs_str = get_json(data, "vobs_str");
+        QString vobs_str = get_json(data, "vobs");
         QStringList vobs_str_list = vobs_str.split(",");
 
         // set vobs
@@ -238,6 +243,8 @@ void COMM_FMS::recv_message(QString message)
         obsmap->mtx.lock();
         obsmap->vobs_list_closures = vobs_list;
         obsmap->mtx.unlock();
+
+        obsmap->update_vobs_map();
 
         /*
         if(vobs_list.size() > 0)
@@ -262,6 +269,8 @@ void COMM_FMS::slot_mapload(double time, QString name)
         _main->map_dir = load_dir;
         unimap->load_map(load_dir);
         _main->all_update();
+
+        _main->set_mapping_view();
     }
 }
 
@@ -297,8 +306,7 @@ void COMM_FMS::slot_send_info()
     _main->mtx.unlock();
 
     double time = get_time0();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();    
-    //QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();        
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
     if(goal_tf.isIdentity())
@@ -334,18 +342,18 @@ void COMM_FMS::slot_send_info()
 
     // Adding the command and time
     rootObj["type"] = "info";
-    rootObj["robot_id"] = robot_id;
-    rootObj["cur_tf"] = TF_to_string(cur_tf);
-    rootObj["goal_tf"] = TF_to_string(goal_tf);
-    rootObj["cur_node_id"] = cur_node_id;
-    rootObj["goal_node_id"] = goal_node_id;    
-    rootObj["request"] = request;
-    rootObj["state"] = state;
-    rootObj["time"] = QString::number((long long)(time*1000), 10);
+    rootObj["rid"] = robot_id;
+    rootObj["ctf"] = TF_to_string(cur_tf);
+    rootObj["gtf"] = TF_to_string(goal_tf);
+    rootObj["cid"] = cur_node_id;
+    rootObj["gid"] = goal_node_id;
+    rootObj["rq"] = request;
+    rootObj["st"] = state;
+    rootObj["t"] = QString::number((long long)(time*1000), 10);
 
     // send
     QJsonDocument doc(rootObj);
-    QString str(doc.toJson(QJsonDocument::Compact));
-    client.sendTextMessage(str);
+    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+    client.sendBinaryMessage(buf);
 }
 

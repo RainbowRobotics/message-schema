@@ -2544,7 +2544,7 @@ Stop</string>
                <string>advance:</string>
               </property>
              </widget>
-             <widget class="QCheckBox" name="cb_UseMeasure">
+             <widget class="QCheckBox" name="ckb_UseMeasure">
               <property name="geometry">
                <rect>
                 <x>10</x>
@@ -2625,6 +2625,19 @@ Select</string>
               </property>
               <property name="text">
                <string>Node align info</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AddPoints">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>160</y>
+                <width>91</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Add points</string>
               </property>
              </widget>
             </widget>

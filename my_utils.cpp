@@ -283,6 +283,24 @@ std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, d
     return res;
 }
 
+std::vector<Eigen::Vector3d> intp_pts(Eigen::Vector3d P0, Eigen::Vector3d P1, double step)
+{
+    double distance = (P1 - P0).norm();
+    Eigen::Vector3d normal = (P1 - P0).normalized();
+
+    std::vector<Eigen::Vector3d> res;
+    res.push_back(P0);
+
+    for(double d = step; d <= distance - step; d += step)
+    {
+        Eigen::Vector3d P = P0 + d*normal;
+        res.push_back(P);
+    }
+
+    res.push_back(P1);
+    return res;
+}
+
 void refine_pose(Eigen::Matrix4d& G)
 {
     G = Sophus::SE3d::fitToSE3(G).matrix();
