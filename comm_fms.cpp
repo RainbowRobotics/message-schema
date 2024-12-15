@@ -85,7 +85,7 @@ void COMM_FMS::connected()
     if(!is_connected)
     {
         is_connected = true;
-        connect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
+        connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
 
         ctrl->is_multi = true;
         printf("[COMM_FMS] connected\n");
@@ -97,7 +97,7 @@ void COMM_FMS::disconnected()
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
+        disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
 
         ctrl->is_multi = false;
         printf("[COMM_FMS] disconnected\n");
@@ -105,8 +105,9 @@ void COMM_FMS::disconnected()
 }
 
 // recv callback
-void COMM_FMS::recv_message(QString message)
+void COMM_FMS::recv_message(const QByteArray &buf)
 {
+    QString message = qUncompress(buf);
     QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
     if(get_json(data, "rid") != robot_id)
     {
@@ -352,7 +353,7 @@ void COMM_FMS::slot_send_info()
 
     // send
     QJsonDocument doc(rootObj);
-    QString str(doc.toJson(QJsonDocument::Compact));
-    client.sendTextMessage(str);
+    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+    client.sendBinaryMessage(buf);
 }
 
