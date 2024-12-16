@@ -71,7 +71,9 @@ void COMM_MS::init()
 {
     if(config->USE_WEB_UI)
     {
-        io->connect("ws://localhost:11337");
+        std::map<std::string, std::string> query;
+        query["name"] = "slamnav";
+        io->connect("ws://localhost:11337",query);
     }
 }
 
