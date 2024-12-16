@@ -42,7 +42,8 @@ public:
     std::atomic<bool> detect_flag1 = {false};
     void detect_loop(int cam_idx);
 
-    const double marker_size = 0.18;
+    //const double marker_size = 0.18;
+    const double marker_size = 0.1; // 10cm
 
     // storage
     TIME_POSE_ID cur_tpi;

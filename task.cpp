@@ -190,7 +190,7 @@ void TASK::a_loop()
                 while(a_flag)
                 {
                     QString multi_state = ctrl->get_multi_req();
-                    if(multi_state == "recv_path")
+                    if(multi_state == "recv_path" && ctrl->is_moving)
                     {
                         break;
                     }
