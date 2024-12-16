@@ -81,7 +81,6 @@ public:
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
     void set_mapping_view();
 
-
     void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
@@ -89,14 +88,7 @@ public:
     void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
     void viewer_camera_pan_control(double dx, double dy);
     void viewer_camera_pan_control2(double dx, double dy);
-
-    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);
-
-    void syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer);
-
-    void synchronizeViewersIfNeeded(QObject* currentWidget);
-    bool wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget);
-    QObject* lastActiveWidget = nullptr;
+    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);    
     
 public:
     Ui::MainWindow *ui;
@@ -218,14 +210,10 @@ public:
     // aruco
     std::atomic<double> aruco_prev_t = {0};
 
-    // viewer
-    std::atomic<bool> is_zoom_in = {false};
-    std::atomic<bool> is_zoom_in2 = {false};
-    std::atomic<bool> is_zoom_out = {false};
-    std::atomic<bool> is_zoom_out2 = {false};
-    std::atomic<bool> is_panning1 = {false};
-    std::atomic<bool> is_panning2 = {false};
-
+    // for touch event
+    double lastScaleFactor = 1.0;
+    QPointF lastTouchPoint;
+    bool isPanning = false;
 
     // 3d plot funcs
     void map_plot();
@@ -271,8 +259,6 @@ public Q_SLOTS:
     void bt_ZoomIn2();
     void bt_ZoomOut();
     void bt_ZoomOut2();
-    void ckb_Panning();
-    void ckb_Panning2();
 
     // timer loops
     void plot_loop();
