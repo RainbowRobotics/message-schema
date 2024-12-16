@@ -891,7 +891,7 @@ void COMM_MS::send_move_target_response(double x, double y, double z, double rz,
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("move", res);
+    io->socket()->emit("moveResponse", res);
 
     printf("[COMM_MS] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
@@ -920,7 +920,7 @@ void COMM_MS::send_move_goal_response(QString node_id, int preset, QString metho
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("move", res);
+    io->socket()->emit("moveResponse", res);
 
     printf("[COMM_MS] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
@@ -945,7 +945,7 @@ void COMM_MS::send_move_pause_response(QString result)
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("move", res);
+    io->socket()->emit("moveResponse", res);
 
     printf("[COMM_MS] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
@@ -970,7 +970,7 @@ void COMM_MS::send_move_resume_response(QString result)
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("move", res);
+    io->socket()->emit("moveResponse", res);
 
     printf("[COMM_MS] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
@@ -995,7 +995,7 @@ void COMM_MS::send_move_stop_response(QString result)
     // send
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("move", res);
+    io->socket()->emit("moveResponse", res);
 
     printf("[COMM_MS] move_stop_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
