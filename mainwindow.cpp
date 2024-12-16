@@ -64,8 +64,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_ZoomIn2, SIGNAL(clicked()), this, SLOT(bt_ZoomIn2()));
     connect(ui->bt_ZoomOut, SIGNAL(clicked()), this, SLOT(bt_ZoomOut()));
     connect(ui->bt_ZoomOut2, SIGNAL(clicked()), this, SLOT(bt_ZoomOut2()));
-    connect(ui->ckb_Panning, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning()));
-    connect(ui->ckb_Panning2, SIGNAL(stateChanged(int)), this, SLOT(ckb_Panning2()));
 
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
@@ -314,82 +312,27 @@ void MainWindow::slot_menu_tab_changed()
 // for viewer
 void MainWindow::bt_ZoomIn()
 {
-    is_zoom_in = true;
     double zoomStep = 3.0; // adjust
-
-    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    viewer->getRenderWindow()->Render();
-    syncViewerCameras(viewer, viewer2);
+    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);    
 }
 
 void MainWindow::bt_ZoomOut()
 {
-    is_zoom_out = true;
     double zoomStep = -3.0; // adjust
-
     viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    viewer->getRenderWindow()->Render();
-    syncViewerCameras(viewer, viewer2);
 }
 
 void MainWindow::bt_ZoomIn2()
 {
-    is_zoom_in2 = true;
     double zoomStep = 3.0; // need adjust
-
-    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    viewer2->getRenderWindow()->Render();
-    syncViewerCameras(viewer2, viewer);
+    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);    
 }
 
 void MainWindow::bt_ZoomOut2()
 {
-    is_zoom_out2 = true;
     double zoomStep = -3.0; // need adjust
-
     viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-    viewer2->getRenderWindow()->Render();
-    syncViewerCameras(viewer2, viewer);
-
 }
-
-void MainWindow::ckb_Panning()
-{
-    bool checked = ui ->ckb_Panning->isChecked();
-
-    if(!checked)
-    {
-        is_panning1 = false;
-        ui->ckb_Panning2->setChecked(false);
-        is_panning2 = false;
-    }
-    else
-    {
-        is_panning1 = true;
-        ui->ckb_Panning2->setChecked(true);
-        is_panning2= true;
-    }
-
-}
-
-void MainWindow::ckb_Panning2()
-{
-    bool checked = ui->ckb_Panning2->isChecked();
-
-    if(!checked)
-    {
-        is_panning2 = false;
-        ui->ckb_Panning->setChecked(false);
-        is_panning1 = false;
-    }
-    else
-    {
-        is_panning2 = true;
-        ui->ckb_Panning->setChecked(true);
-        is_panning2 = true;
-    }
-}
-
 
 // for replot
 void MainWindow::bt_ViewReset()
@@ -556,8 +499,8 @@ void MainWindow::init_modules()
     dctrl.logger = &logger;
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
-//    dctrl.cam = &cam;
-//    dctrl.code = &code;
+    // dctrl.cam = &cam;
+    // dctrl.code = &code;
     dctrl.slam = &slam;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
@@ -627,20 +570,6 @@ void MainWindow::init_modules()
     cui.obsmap = &obsmap;
     cui.ctrl = &ctrl;
     cui.init();
-
-    /*
-    // map auto load
-    if(config.MAP_PATH != "")
-    {
-        QDir dir(config.MAP_PATH);
-        if(dir.exists())
-        {
-            map_dir = config.MAP_PATH;
-            unimap.load_map(map_dir);
-            all_update();
-        }
-    }
-    */
 
     // start jog loop
     jog_flag = true;
@@ -727,32 +656,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
         // cam control
         if(ui->cb_ViewType->currentText() == "VIEW_3D")
         {
-            //return false;
-
-            // touch event : panning or click
-            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
-            {
-                if(ui->main_tab)
-                {
-                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
-                    if (!touchPoints.isEmpty())
-                    {
-                        if(is_panning1 == true)
-                        {
-                            logger.write_log("[viewer] panning1 - active");
-                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                            handleTouchEvent(touchEvent, object);
-                            return true;
-
-                        }
-                        else if(is_panning1 == false)
-                        {
-                        }
-                    }
-                }
-            }
-
+            return false;
         }
 
         // mouse event
@@ -883,39 +787,31 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             }
         }
 
-        // gesture event
-        if (ev->type() == QEvent::Gesture)
+        // for touch screen
+        if(ui->ckb_Panning->isChecked())
         {
-            QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
-            if (QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+            // gesture event
+            if(ev->type() == QEvent::Gesture)
             {
-                QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
-
-                handlePinchGesture(pinchGesture, object); //handle Pin
-                return true;
+                QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
+                if(QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+                {
+                    QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
+                    handlePinchGesture(pinchGesture, object);
+                    return true;
+                }
             }
-        }
 
-        // touch event : panning or click
-        if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
-        {
-            if(ui->main_tab)
+            // touch event : panning or click
+            if(ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
             {
                 QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
                 QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
-                if (!touchPoints.isEmpty())
+                if(!touchPoints.isEmpty())
                 {
-                    if(is_panning1 == true)
-                    {
-                        logger.write_log("[viewer] panning1 - active");
-                        QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                        handleTouchEvent(touchEvent, object);
-                        return true;
-
-                    }
-                    else if(is_panning1 == false)
-                    {
-                    }
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    handleTouchEvent(touchEvent, object);
+                    return true;
                 }
             }
         }
@@ -1068,33 +964,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     pick_update();
                     return true;
                 }
-            }
-
-            // touch event : panning or click
-            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
-            {
-                if(ui->main_tab)
-                {
-                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
-                    if (!touchPoints.isEmpty())
-                    {
-                        if(is_panning2 == true)
-                        {
-                            logger.write_log("[viewer] panning2 - active");
-                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                            handleTouchEvent(touchEvent, object);
-                            return true;
-
-                        }
-                        else if(is_panning2 == false)
-                        {
-                        }
-
-                    }
-
-                }
-
             }
         }
         else if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_TOPO")
@@ -1431,41 +1300,33 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     return true;
                 }
             }
+        }
 
+        // for touch screen
+        if(ui->ckb_Panning2->isChecked())
+        {
             // gesture event
-            if (ev->type() == QEvent::Gesture)
+            if(ev->type() == QEvent::Gesture)
             {
                 QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
-                if (QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+                if(QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
                 {
                     QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
-
-                    handlePinchGesture(pinchGesture, object); //handle Pin
+                    handlePinchGesture(pinchGesture, object);
                     return true;
                 }
             }
 
             // touch event : panning or click
-            if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
+            if(ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
             {
-                if(ui->main_tab)
+                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                if(!touchPoints.isEmpty())
                 {
                     QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
-                    if (!touchPoints.isEmpty())
-                    {
-                        if(is_panning2 == true)
-                        {
-                            logger.write_log("[viewer] panning2 - active");
-                            QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                            handleTouchEvent(touchEvent, object);
-                            return true;
-
-                        }
-                        else if(is_panning2 == false)
-                        {
-                        }
-                    }
+                    handleTouchEvent(touchEvent, object);
+                    return true;
                 }
             }
         }
@@ -1477,68 +1338,51 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
 void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object)
 {
-    // Sacle Factor
-    static qreal lastScaleFactor = 1.0;
-
     // To do
-    qreal currentScaleFactor = pinchGesture->scaleFactor();
-    qreal scaleChange = currentScaleFactor / lastScaleFactor;
-
+    double currentScaleFactor = pinchGesture->scaleFactor();
+    double scaleChange = currentScaleFactor / lastScaleFactor;
 
     if(ui->cb_ViewType->currentText() == "VIEW_3D")
     {
         double zoomAmount = (scaleChange - 1.0)*50.0; // need adjust
-        if (object == ui->qvtkWidget)
+        if(object == ui->qvtkWidget)
         {
             viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-            viewer->getRenderWindow()->Render();
-            syncViewerCameras(viewer, viewer2);
         }
-        else if (object == ui->qvtkWidget2) // annotation
+        else if(object == ui->qvtkWidget2) // annotation
         {
             viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-            viewer2->getRenderWindow()->Render();
-            syncViewerCameras(viewer2, viewer);
         }
     }
-    else if (ui->cb_ViewType->currentText() == "VIEW_2D")
+    else if(ui->cb_ViewType->currentText() == "VIEW_2D")
     {
         double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
         // scale
-        if (object == ui->qvtkWidget)
+        if(object == ui->qvtkWidget)
         {
             // viewer zoom in/out
             viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-            viewer->getRenderWindow()->Render();
-            syncViewerCameras(viewer, viewer2);
         }
-        else if (object == ui->qvtkWidget2) // annotation
+        else if(object == ui->qvtkWidget2) // annotation
         {
             // viewer2 zoom in/out
             viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-            viewer2->getRenderWindow()->Render();
-            syncViewerCameras(viewer2, viewer);
         }
     }
 }
 
 void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
 {
-    static QPointF lastTouchPoint;
-    static bool isPanning = false;
-
     const QList<QTouchEvent::TouchPoint> &touchPoints = touchEvent->touchPoints();
-
-    if (touchPoints.count() == 1)
+    if(touchPoints.count() == 1)
     {
         const QTouchEvent::TouchPoint &touchPoint = touchPoints.first();
-        if (touchEvent->type() == QEvent::TouchBegin)
+        if(touchEvent->type() == QEvent::TouchBegin)
         {
             lastTouchPoint = touchPoint.pos();
             isPanning = true;
-
         }
-        else if (touchEvent->type() == QEvent::TouchUpdate && isPanning)
+        else if(touchEvent->type() == QEvent::TouchUpdate && isPanning)
         {
             QPointF currentPos = touchPoint.pos();
             QPointF delta = currentPos - lastTouchPoint;
@@ -1549,14 +1393,14 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
             double min_pos_z = 0.1;
 
             // CALL camera move func
-            if (object == ui->qvtkWidget && is_panning1)
+            if(object == ui->qvtkWidget)
             {
                 std::vector<pcl::visualization::Camera> cams;
                 viewer->getCameras(cams);
                 Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
                 if (std::abs(pos_z) <min_pos_z)
                 {
-                    pos_z =min_pos_z;
+                    pos_z = min_pos_z;
                 }
                 else
                 {
@@ -1570,18 +1414,15 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
 
                 viewer_camera_pan_control(scaled_x, scaled_y);
                 viewer_pan_screen(scaled_x, scaled_y, viewer, ui->qvtkWidget);
-                viewer->getRenderWindow()->Render();
-                syncViewerCameras(viewer, viewer2);
-
             }
-            else if (object == ui->qvtkWidget2 && is_panning2)
+            else if(object == ui->qvtkWidget2)
             {
                 std::vector<pcl::visualization::Camera> cams;
                 viewer->getCameras(cams);
                 Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
                 if (std::abs(pos_z) <min_pos_z)
                 {
-                    pos_z =min_pos_z;
+                    pos_z = min_pos_z;
                 }
                 else
                 {
@@ -1595,16 +1436,13 @@ void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
 
                 viewer_camera_pan_control2(scaled_x, scaled_y);
                 viewer_pan_screen(scaled_x, scaled_y, viewer2, ui->qvtkWidget2);
-                viewer2->getRenderWindow()->Render();
-                syncViewerCameras(viewer2, viewer);
             }
         }
-        else if (touchEvent->type() == QEvent::TouchEnd)
+        else if(touchEvent->type() == QEvent::TouchEnd)
         {
             isPanning = false;
         }
     }
-
 }
 
 void MainWindow::viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget)
@@ -1764,8 +1602,7 @@ void MainWindow::viewer_camera_pan_control(double dx, double dy)
     // set CameraPosition
     viewer->setCameraPosition(pos[0], pos[1], pos[2],
                               focal[0], focal[1], focal[2],
-                              up[0], up[1], up[2]);
-    syncViewerCameras(viewer, viewer2);
+                              up[0], up[1], up[2]);    
 }
 
 void MainWindow::viewer_camera_pan_control2(double dx, double dy)
@@ -1794,8 +1631,7 @@ void MainWindow::viewer_camera_pan_control2(double dx, double dy)
     // set CameraPosition
     viewer2->setCameraPosition(pos[0], pos[1], pos[2],
                                focal[0], focal[1], focal[2],
-                               up[0], up[1], up[2]);
-    syncViewerCameras(viewer2, viewer);
+                               up[0], up[1], up[2]);    
 }
 
 
@@ -2379,9 +2215,7 @@ void MainWindow::bt_ClearTopo()
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Clear topo", "Do you want to all clear topos?",
-                                  QMessageBox::Yes | QMessageBox::No);
-
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Clear topo", "Do you want to all clear topos?", QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         QMessageBox::information(this, "Clear topo", "clear all topos.");
@@ -2828,11 +2662,7 @@ void MainWindow::bt_MinGapNodeX()
 
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
-
-    Eigen::Vector3d dir = tf0.block(0,0,3,1);
-    Eigen::Vector3d _gap = dir * gap;
-
-    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
+    tf1(0,3) = tf0(0,3) + gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -2858,11 +2688,7 @@ void MainWindow::bt_MinGapNodeY()
 
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
-
-    Eigen::Vector3d dir = tf0.block(0,1,3,1);
-    Eigen::Vector3d _gap = dir * gap;
-
-    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
+    tf1(1,3) = tf0(1,3) + gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -3152,7 +2978,6 @@ void MainWindow::bt_SetMapTf()
     }
 
     map_update();
-
 }
 
 // for autocontrol
@@ -3244,18 +3069,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    std::vector<QString> path;
-    path.push_back("N_0112");
-    path.push_back("N_1729820377638");
-    path.push_back("N_1729820437542");
-    path.push_back("N_1729820446577");
-    path.push_back("N_1729746747992");
-    path.push_back("N_0106");
-    path.push_back("N_1729746747992");
-    path.push_back("N_1729820446577");
-    path.push_back("N_1729820437542");
-    path.push_back("N_1729820461736");
-    ctrl.move_pp(path, 0);
+
 }
 
 void MainWindow::bt_TestLed()
@@ -3565,27 +3379,25 @@ void MainWindow::slot_sim_random_seq()
         return;
     }
 
-    std::vector<QString> nodes_id_goal = unimap.get_nodes("GOAL");
-    std::vector<QString> nodes_id_init = unimap.get_nodes("INIT");
+    std::vector<QString> goal_nodes = unimap.get_nodes("GOAL");
+    std::vector<QString> init_nodes = unimap.get_nodes("INIT");
 
-    std::vector<QString> nodes_id;
-    nodes_id.insert(nodes_id.end(), nodes_id_goal.begin(), nodes_id_goal.end());
-    nodes_id.insert(nodes_id.end(), nodes_id_init.begin(), nodes_id_init.end());
-
-    if(nodes_id.size() == 0)
+    std::vector<QString> nodes = goal_nodes;
+    nodes.insert(nodes.end(), init_nodes.begin(), init_nodes.end());
+    if(nodes.size() == 0)
     {
         printf("check again 2\n");
         return;
     }
 
     std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dist(0, (int)nodes_id.size()-1);
+    std::mt19937 g(rd());
+    std::shuffle(nodes.begin(), nodes.end(), g);
 
     const int seq_size = 10;
     for(int p = 0; p < seq_size; p++)
     {
-        QString id = nodes_id[dist(gen)];
+        QString id = nodes[p];
         NODE* node = unimap.get_node_by_id(id);
         if(node == NULL)
         {
@@ -3597,13 +3409,12 @@ void MainWindow::slot_sim_random_seq()
 
     if(task.task_node_list.empty())
     {
-        printf("check again 2\n");
+        printf("check again 3\n");
         return;
     }
 
     ui_tasks_update();
 
-    //task.save_task(unimap.map_dir);
     task.is_start = true;
     task.use_looping = ui->ckb_Looping->isChecked();
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
@@ -3677,56 +3488,6 @@ void MainWindow::comm_loop()
             }
         }
 
-        // for 200ms loop
-        if(cnt % 2 == 0)
-        {
-            if(config.USE_RTSP && config.USE_CAM)
-            {
-                // cam streaming
-                if(cam.is_connected0)
-                {
-                    if(writer0.isOpened())
-                    {
-                        cv::Mat img = cam.get_img0();
-                        if(!img.empty())
-                        {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer0.write(_img);
-                            }
-                            else
-                            {
-                                writer0.write(img);
-                            }
-                        }
-                    }
-                }
-
-                if(cam.is_connected1)
-                {
-                    if(writer1.isOpened())
-                    {
-                        cv::Mat img = cam.get_img1();
-                        if(!img.empty())
-                        {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer1.write(_img);
-                            }
-                            else
-                            {
-                                writer1.write(img);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         // for 500ms loop
         if(cnt % 5 == 0)
         {
@@ -3788,6 +3549,56 @@ void MainWindow::comm_loop()
                     {
                         writer1.open(pipeline1, 0, (double)10, cv::Size(320,240), true);
                         logger.write_log("[COMM] cam1 rtsp writer try open");
+                    }
+                }
+            }
+        }
+
+        // for 200ms loop
+        if(cnt % 2 == 0)
+        {
+            if(config.USE_RTSP && config.USE_CAM)
+            {
+                // cam streaming
+                if(cam.is_connected0)
+                {
+                    if(writer0.isOpened())
+                    {
+                        cv::Mat img = cam.get_img0();
+                        if(!img.empty())
+                        {
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer0.write(_img);
+                            }
+                            else
+                            {
+                                writer0.write(img);
+                            }
+                        }
+                    }
+                }
+
+                if(cam.is_connected1)
+                {
+                    if(writer1.isOpened())
+                    {
+                        cv::Mat img = cam.get_img1();
+                        if(!img.empty())
+                        {
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer1.write(_img);
+                            }
+                            else
+                            {
+                                writer1.write(img);
+                            }
+                        }
                     }
                 }
             }
@@ -5616,11 +5427,8 @@ void MainWindow::plot_loop()
         viewer->setCameraClipDistances(near, far);
     }
 
-    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
-    {
-        // rendering
-        ui->qvtkWidget->renderWindow()->Render();
-    }
+    // rendering
+    ui->qvtkWidget->renderWindow()->Render();
 
     // check plot drift
     plot_proc_t = get_time() - st_time;
@@ -5630,47 +5438,6 @@ void MainWindow::plot_loop()
     }
 
     plot_timer.start();
-}
-
-void MainWindow::syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer)
-{
-    std::vector<pcl::visualization::Camera> cams;
-    sourceViewer->getCameras(cams);
-
-    targetViewer->setCameraPosition(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2],
-                                    cams[0].focal[0], cams[0].focal[1], cams[0].focal[2],
-                                    cams[0].view[0], cams[0].view[1], cams[0].view[2]);
-
-    targetViewer->setCameraFieldOfView(cams[0].fovy);
-    targetViewer->setCameraClipDistances(cams[0].clip[0], cams[0].clip[1]);
-}
-
-
-bool MainWindow::wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget)
-{
-    static QObject* lastActiveWidget = nullptr;
-
-    if (lastActiveWidget == fromWidget && toWidget == toWidget)
-    {
-        lastActiveWidget = toWidget;
-        return true;
-    }
-    lastActiveWidget = toWidget;
-    return false;
-}
-
-void MainWindow::synchronizeViewersIfNeeded(QObject* currentWidget)
-{
-    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
-    {
-        // qvtkWidget2 -> qvtkWidget
-        syncViewerCameras(viewer2, viewer);
-    }
-    else if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
-    {
-        // qvtkWidget -> qvtkWidget2
-        syncViewerCameras(viewer, viewer2);
-    }
 }
 
 // for plot loop2
@@ -6362,11 +6129,8 @@ void MainWindow::plot_loop2()
     pick_plot2();
     loc_plot2();
 
-    if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
-    {
-        // rendering
-        ui->qvtkWidget2->renderWindow()->Render();
-    }
+    // rendering
+    ui->qvtkWidget2->renderWindow()->Render();
 
     plot_timer2.start();
 }

@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1270</width>
-    <height>774</height>
+    <width>1250</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <pointsize>9</pointsize>
+    <pointsize>8</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -37,6 +37,11 @@
     </property>
     <item row="0" column="0" rowspan="2">
      <widget class="QTabWidget" name="main_tab">
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
@@ -73,7 +78,7 @@
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,1,0">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,1,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -89,10 +94,15 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <property name="spacing">
-             <number>2</number>
+             <number>0</number>
             </property>
             <item>
              <widget class="QLabel" name="label">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>View: </string>
               </property>
@@ -100,6 +110,11 @@
             </item>
             <item>
              <widget class="QComboBox" name="cb_ViewType">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <item>
                <property name="text">
                 <string>VIEW_2D</string>
@@ -119,6 +134,11 @@
             </item>
             <item>
              <widget class="QComboBox" name="cb_ViewHeight">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <item>
                <property name="text">
                 <string>20</string>
@@ -173,6 +193,11 @@
             </item>
             <item>
              <widget class="QPushButton" name="bt_ViewReset">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>View reset</string>
               </property>
@@ -180,66 +205,23 @@
             </item>
             <item>
              <widget class="QPushButton" name="bt_SetTopView">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Set top view</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="ckb_PlotLive">
-              <property name="text">
-               <string>live</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="ckb_PlotNodes">
-              <property name="text">
-               <string>nodes</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="ckb_PlotEdges">
-              <property name="text">
-               <string>edges</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="ckb_PlotNames">
-              <property name="text">
-               <string>names</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QPushButton" name="bt_ZoomIn">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>zoom in</string>
               </property>
@@ -253,6 +235,11 @@
             </item>
             <item>
              <widget class="QPushButton" name="bt_ZoomOut">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>zoom out</string>
               </property>
@@ -265,17 +252,130 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="ckb_Panning">
+             <spacer name="horizontalSpacer">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="lb_RobotID">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
-               <string>Panning</string>
+               <string>[ROBOT ID]</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotLive">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>live</string>
               </property>
               <property name="checked">
-               <bool>false</bool>
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotNodes">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>nodes</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotEdges">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>edges</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_PlotNames">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>names</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QCheckBox" name="ckb_PlotEnable">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Plot enable</string>
               </property>
@@ -285,9 +385,17 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="lb_RobotID">
+             <widget class="QCheckBox" name="ckb_Panning">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
-               <string>[ROBOT ID]</string>
+               <string>Panning</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -295,6 +403,11 @@
           </item>
           <item>
            <widget class="QVTKOpenGLNativeWidget" name="qvtkWidget" native="true">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
             <property name="mouseTracking">
              <bool>false</bool>
             </property>
@@ -309,6 +422,11 @@
                <width>191</width>
                <height>181</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="styleSheet">
               <string notr="true">background-color: rgb(0, 0, 0);</string>
@@ -326,6 +444,11 @@
                <height>90</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="styleSheet">
               <string notr="true">background-color: rgb(0, 0, 0);</string>
              </property>
@@ -341,6 +464,11 @@
                <width>160</width>
                <height>90</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="styleSheet">
               <string notr="true">background-color: rgb(0, 0, 0);</string>
@@ -358,6 +486,11 @@
                <height>90</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="styleSheet">
               <string notr="true">background-color: rgb(0, 0, 0);</string>
              </property>
@@ -373,6 +506,11 @@
                <width>160</width>
                <height>90</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="styleSheet">
               <string notr="true">background-color: rgb(0, 0, 0);</string>
@@ -393,7 +531,7 @@
             </property>
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -454,6 +592,33 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QPushButton" name="bt_ZoomIn2">
+              <property name="text">
+               <string>zoom in</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="bt_ZoomOut2">
+              <property name="text">
+               <string>zoom out</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
              <widget class="QCheckBox" name="ckb_PlotNodes2">
               <property name="text">
                <string>nodes</string>
@@ -480,33 +645,6 @@
               </property>
               <property name="checked">
                <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="bt_ZoomIn2">
-              <property name="text">
-               <string>zoom in</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="bt_ZoomOut2">
-              <property name="text">
-               <string>zoom out</string>
               </property>
              </widget>
             </item>
@@ -546,6 +684,11 @@
     </item>
     <item row="0" column="1">
      <widget class="QTabWidget" name="menu_tab">
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -596,7 +739,7 @@
             </property>
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="currentIndex">
@@ -615,6 +758,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Build</string>
               </property>
@@ -627,6 +775,11 @@
                 <width>71</width>
                 <height>41</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Save</string>
@@ -641,6 +794,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Load</string>
               </property>
@@ -654,6 +812,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Init</string>
               </property>
@@ -666,6 +829,11 @@
                 <width>71</width>
                 <height>41</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Auto init
@@ -681,6 +849,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>LOC start</string>
               </property>
@@ -693,6 +866,11 @@
                 <width>71</width>
                 <height>41</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>LOC stop</string>
@@ -710,6 +888,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Sim init</string>
               </property>
@@ -723,6 +906,11 @@
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>OBS clear</string>
               </property>
@@ -735,6 +923,11 @@
                 <width>71</width>
                 <height>41</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Reload
@@ -750,6 +943,11 @@ config</string>
                 <height>41</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="text">
                <string>Auto init
 (semi)</string>
@@ -763,6 +961,11 @@ config</string>
                 <width>71</width>
                 <height>41</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>Last
@@ -897,7 +1100,7 @@ Stop</string>
                <rect>
                 <x>20</x>
                 <y>110</y>
-                <width>271</width>
+                <width>201</width>
                 <height>41</height>
                </rect>
               </property>
@@ -908,7 +1111,7 @@ Stop</string>
              <widget class="QPushButton" name="bt_Undock">
               <property name="geometry">
                <rect>
-                <x>160</x>
+                <x>230</x>
                 <y>110</y>
                 <width>61</width>
                 <height>41</height>
@@ -1011,7 +1214,7 @@ Stop</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="styleSheet">
@@ -1124,7 +1327,7 @@ Stop</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="styleSheet">
@@ -1170,7 +1373,7 @@ Stop</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="styleSheet">
@@ -1209,7 +1412,7 @@ Stop</string>
                <rect>
                 <x>10</x>
                 <y>10</y>
-                <width>81</width>
+                <width>41</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1220,10 +1423,10 @@ Stop</string>
              <widget class="QPushButton" name="bt_MoveLinear">
               <property name="geometry">
                <rect>
-                <x>222</x>
-                <y>51</y>
+                <x>220</x>
+                <y>50</y>
                 <width>91</width>
-                <height>28</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1233,10 +1436,10 @@ Stop</string>
              <widget class="QPushButton" name="bt_MoveRotate">
               <property name="geometry">
                <rect>
-                <x>222</x>
-                <y>78</y>
+                <x>220</x>
+                <y>80</y>
                 <width>91</width>
-                <height>28</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1246,10 +1449,10 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveLinearDist">
               <property name="geometry">
                <rect>
-                <x>58</x>
-                <y>53</y>
+                <x>50</x>
+                <y>50</y>
                 <width>65</width>
-                <height>26</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="minimum">
@@ -1266,9 +1469,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>150</x>
-                <y>53</y>
+                <y>50</y>
                 <width>65</width>
-                <height>26</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="minimum">
@@ -1284,10 +1487,10 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveRotateDeg">
               <property name="geometry">
                <rect>
-                <x>57</x>
+                <x>50</x>
                 <y>80</y>
                 <width>65</width>
-                <height>26</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="minimum">
@@ -1304,9 +1507,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>150</x>
-                <y>79</y>
+                <y>80</y>
                 <width>65</width>
-                <height>26</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="minimum">
@@ -1322,10 +1525,10 @@ Stop</string>
              <widget class="QLabel" name="label_2">
               <property name="geometry">
                <rect>
-                <x>23</x>
-                <y>57</y>
+                <x>20</x>
+                <y>50</y>
                 <width>31</width>
-                <height>17</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1335,10 +1538,10 @@ Stop</string>
              <widget class="QLabel" name="label_3">
               <property name="geometry">
                <rect>
-                <x>131</x>
-                <y>57</y>
+                <x>130</x>
+                <y>50</y>
                 <width>21</width>
-                <height>17</height>
+                <height>16</height>
                </rect>
               </property>
               <property name="text">
@@ -1348,10 +1551,10 @@ Stop</string>
              <widget class="QLabel" name="label_4">
               <property name="geometry">
                <rect>
-                <x>22</x>
-                <y>84</y>
+                <x>20</x>
+                <y>80</y>
                 <width>31</width>
-                <height>17</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1362,7 +1565,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>84</y>
+                <y>80</y>
                 <width>21</width>
                 <height>17</height>
                </rect>
@@ -1374,9 +1577,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_Test">
               <property name="geometry">
                <rect>
-                <x>100</x>
+                <x>60</x>
                 <y>10</y>
-                <width>81</width>
+                <width>41</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1388,9 +1591,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>132</y>
+                <y>109</y>
                 <width>44</width>
-                <height>26</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="maximum">
@@ -1401,9 +1604,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>60</x>
-                <y>130</y>
+                <y>110</y>
                 <width>71</width>
-                <height>31</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1414,9 +1617,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>220</x>
-                <y>130</y>
+                <y>110</y>
                 <width>92</width>
-                <height>23</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1427,9 +1630,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>130</y>
+                <y>110</y>
                 <width>71</width>
-                <height>31</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1443,7 +1646,7 @@ Stop</string>
            <widget class="QLabel" name="lb_SlamInfo">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="focusPolicy">
@@ -1467,7 +1670,7 @@ Stop</string>
            <widget class="QLabel" name="lb_MobilePoseInfo">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -1488,7 +1691,7 @@ Stop</string>
            <widget class="QLabel" name="lb_MobileStatusInfo">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -1509,7 +1712,7 @@ Stop</string>
            <widget class="QLabel" name="lb_QueInfo">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -1530,7 +1733,7 @@ Stop</string>
            <widget class="QLabel" name="lb_AutoInfo">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="styleSheet">
@@ -1607,6 +1810,11 @@ Stop</string>
                <height>31</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Load</string>
              </property>
@@ -1619,6 +1827,11 @@ Stop</string>
                <width>61</width>
                <height>31</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="text">
               <string>Save</string>
@@ -1633,6 +1846,11 @@ Stop</string>
                <height>31</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Clear</string>
              </property>
@@ -1645,6 +1863,11 @@ Stop</string>
                <width>61</width>
                <height>31</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="text">
               <string>QA start</string>
@@ -1659,6 +1882,11 @@ Stop</string>
                <height>31</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>QA stop</string>
              </property>
@@ -1671,6 +1899,11 @@ Stop</string>
                <width>61</width>
                <height>31</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="text">
               <string>Reload</string>
@@ -1685,6 +1918,11 @@ Stop</string>
                <height>31</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>QA Node</string>
              </property>
@@ -1698,6 +1936,11 @@ Stop</string>
                <height>31</height>
               </rect>
              </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>QA Aruco</string>
              </property>
@@ -1710,6 +1953,11 @@ Stop</string>
                <width>61</width>
                <height>31</height>
               </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
              </property>
              <property name="text">
               <string>QA Cloud</string>
@@ -1727,7 +1975,7 @@ Stop</string>
             </property>
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>8</pointsize>
              </font>
             </property>
             <property name="currentIndex">
@@ -1878,7 +2126,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>110</y>
+                <y>100</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1891,7 +2139,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>110</y>
+                <y>100</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1907,7 +2155,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>70</y>
+                <y>60</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1923,7 +2171,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>70</y>
+                <y>60</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1939,7 +2187,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>90</y>
+                <y>80</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1955,7 +2203,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>50</x>
-                <y>40</y>
+                <y>30</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1993,7 +2241,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>40</x>
-                <y>340</y>
+                <y>310</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2006,7 +2254,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>370</y>
+                <y>330</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2019,7 +2267,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>120</x>
-                <y>370</y>
+                <y>330</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2032,7 +2280,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>40</x>
-                <y>370</y>
+                <y>330</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2057,7 +2305,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>120</x>
-                <y>340</y>
+                <y>310</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2070,7 +2318,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>340</y>
+                <y>310</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2083,7 +2331,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>40</y>
+                <y>30</y>
                 <width>41</width>
                 <height>21</height>
                </rect>
@@ -2101,7 +2349,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>370</y>
+                <y>330</y>
                 <width>31</width>
                 <height>21</height>
                </rect>
@@ -2132,7 +2380,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>50</x>
-                <y>140</y>
+                <y>130</y>
                 <width>151</width>
                 <height>41</height>
                </rect>
@@ -2142,7 +2390,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>90</y>
+                <y>80</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2155,14 +2403,14 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>170</x>
-                <y>220</y>
+                <y>210</y>
                 <width>151</width>
                 <height>81</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="frameShape">
@@ -2182,14 +2430,14 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>220</y>
+                <y>210</y>
                 <width>151</width>
                 <height>81</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <pointsize>9</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="frameShape">
@@ -2209,7 +2457,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>80</x>
-                <y>190</y>
+                <y>180</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2231,7 +2479,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>150</x>
-                <y>190</y>
+                <y>180</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2253,7 +2501,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>220</x>
-                <y>190</y>
+                <y>180</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2275,7 +2523,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>190</y>
+                <y>180</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
@@ -2292,8 +2540,8 @@ Stop</string>
              <widget class="QGroupBox" name="groupBox">
               <property name="geometry">
                <rect>
-                <x>0</x>
-                <y>400</y>
+                <x>10</x>
+                <y>350</y>
                 <width>271</width>
                 <height>111</height>
                </rect>
@@ -2536,7 +2784,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>110</y>
+                <y>100</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2549,7 +2797,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>70</y>
+                <y>60</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2562,7 +2810,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>40</y>
+                <y>30</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2590,7 +2838,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>150</x>
-                <y>40</y>
+                <y>30</y>
                 <width>51</width>
                 <height>21</height>
                </rect>
@@ -2607,10 +2855,10 @@ Stop</string>
              <widget class="QCheckBox" name="ckb_UseMeasure">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>10</y>
+                <x>20</x>
+                <y>5</y>
                 <width>92</width>
-                <height>23</height>
+                <height>16</height>
                </rect>
               </property>
               <property name="text">
@@ -2621,7 +2869,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>90</y>
+                <y>80</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2636,36 +2884,34 @@ Stop</string>
              <widget class="QPushButton" name="bt_SelectPreNodes">
               <property name="geometry">
                <rect>
-                <x>210</x>
-                <y>3</y>
-                <width>41</width>
-                <height>31</height>
+                <x>160</x>
+                <y>0</y>
+                <width>71</width>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
-               <string>Pre
-Select</string>
+               <string>Pre select</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_SelectPostNodes">
               <property name="geometry">
                <rect>
-                <x>260</x>
-                <y>3</y>
-                <width>41</width>
-                <height>31</height>
+                <x>230</x>
+                <y>0</y>
+                <width>71</width>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
-               <string>Post
-Select</string>
+               <string>Post select</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_AutoNode">
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>130</y>
+                <y>120</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2678,7 +2924,7 @@ Select</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>310</y>
+                <y>290</y>
                 <width>311</width>
                 <height>21</height>
                </rect>
@@ -2691,7 +2937,7 @@ Select</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>160</y>
+                <y>150</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -2725,7 +2971,7 @@ Select</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>9</pointsize>
+        <pointsize>8</pointsize>
        </font>
       </property>
       <property name="frameShape">
@@ -2742,6 +2988,11 @@ Select</string>
          <width>41</width>
          <height>41</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
        </property>
        <property name="text">
         <string>F</string>
@@ -2762,6 +3013,11 @@ Select</string>
          <height>41</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>B</string>
        </property>
@@ -2780,6 +3036,11 @@ Select</string>
          <width>41</width>
          <height>41</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
        </property>
        <property name="text">
         <string>L</string>
@@ -2800,6 +3061,11 @@ Select</string>
          <height>41</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>R</string>
        </property>
@@ -2818,6 +3084,11 @@ Select</string>
          <width>101</width>
          <height>20</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
        </property>
        <property name="suffix">
         <string> mps</string>
@@ -2841,6 +3112,11 @@ Select</string>
          <height>21</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="suffix">
         <string> dps</string>
        </property>
@@ -2860,6 +3136,11 @@ Select</string>
          <height>31</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Init</string>
        </property>
@@ -2875,7 +3156,7 @@ Select</string>
        </property>
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
+         <pointsize>8</pointsize>
          <weight>50</weight>
          <bold>false</bold>
         </font>
@@ -2896,6 +3177,11 @@ stop</string>
          <width>51</width>
          <height>21</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
        </property>
        <property name="suffix">
         <string/>
@@ -2922,6 +3208,11 @@ stop</string>
          <height>21</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="suffix">
         <string/>
        </property>
@@ -2947,6 +3238,11 @@ stop</string>
          <height>21</height>
         </rect>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="suffix">
         <string/>
        </property>
@@ -2971,6 +3267,11 @@ stop</string>
          <width>51</width>
          <height>21</height>
         </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
        </property>
        <property name="suffix">
         <string/>
