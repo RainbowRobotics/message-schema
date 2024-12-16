@@ -69,7 +69,7 @@ public:
     double LOC_ICP_ODO_FUSION_RATIO = 0.5;
     double LOC_ARUCO_ODO_FUSION_RATIO = 0.5;
     double LOC_ARUCO_ODO_FUSION_DIST = 2.0;
-    int LOC_ARUCO_MEDIAN_NUM	= 10;
+    int LOC_ARUCO_MEDIAN_NUM = 10;
 
     double ANNOT_QA_STEP = 0.3;
 

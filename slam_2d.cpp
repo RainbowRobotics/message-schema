@@ -4,6 +4,8 @@ SLAM_2D::SLAM_2D(QObject *parent)
     : QObject{parent}
 {
     cur_tf.setIdentity();
+    cur_ieir.setZero();
+
 }
 
 SLAM_2D::~SLAM_2D()
@@ -2079,6 +2081,12 @@ void SLAM_2D::semi_auto_init_start()
 
     // candidates
     std::vector<QString> ids = unimap->get_nodes("INIT");
+
+    #if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+    std::vector<QString> ids2 = unimap->get_nodes("GOAL");
+    ids.insert(ids.end(), ids2.begin(), ids2.end());
+    #endif
+
     if(ids.size() == 0)
     {
         is_busy = false;
