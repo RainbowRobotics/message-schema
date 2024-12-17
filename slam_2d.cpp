@@ -718,6 +718,8 @@ void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
     Eigen::Vector3d pre_mo(0,0,0);
+    TIME_POSE_PTS tpp0;
+    const bool use_old_tpp = true;
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
@@ -744,8 +746,21 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
+            // merge old frame
+            FRAME merge_frm = frm;
+            if(use_old_tpp && tpp0.t > 0)
+            {
+                Eigen::Matrix4d dtf = _cur_tf.inverse()*tpp0.tf;
+                for(size_t p = 0; p < tpp0.pts.size(); p++)
+                {
+                    Eigen::Vector3d P = tpp0.pts[p];
+                    Eigen::Vector3d _P = dtf.block(0,0,3,3)*P + dtf.block(0,3,3,1);
+                    frm.pts.push_back(_P);
+                }
+            }
+
             // pose estimation            
-            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, merge_frm, _cur_tf);
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
@@ -761,6 +776,24 @@ void SLAM_2D::loc_a_loop()
                 tpp.tf = _cur_tf;
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
+
+                // for next icp
+                if(use_old_tpp)
+                {
+                    if(tpp0.t == 0)
+                    {
+                        tpp0 = tpp;
+                    }
+                    else
+                    {
+                        Eigen::Matrix4d dtf = tpp.tf.inverse()*tpp0.tf;
+                        double d = calc_dist_2d(dtf.block(0,3,3,1));
+                        if(d > 10.0)
+                        {
+                            tpp0 = tpp;
+                        }
+                    }
+                }
 
                 // update
                 mtx.lock();
@@ -832,29 +865,63 @@ void SLAM_2D::loc_b_loop()
 
             // icp-odometry fusion
             TIME_POSE tp;
-            if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
+            //if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
+            if(tp_que.try_pop(tp))
             {
-                if(std::abs(mo.t - tp.t) < 0.3)
+                const bool is_time_compensation = true;
+                const bool use_slip_detection = false;
+                if(is_time_compensation)
                 {
                     // time delay compensation
-                    Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
+                    Eigen::Matrix4d tf0 = tp.tf2;
                     Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
                     Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
                     if(is_pivot && std::abs(mo.vel[0]) < 0.05)
                     {
-                        alpha = 0.95;
+                        alpha = 1.0;
                     }
 
                     Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
 
                     // for odometry slip
-                    Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                    if(std::abs(dtdr[1]) > 10.0*D2R)
+                    if(use_slip_detection)
                     {
-                        alpha = 0;
-                        printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                        if(std::abs(dtdr[1]) > 10.0*D2R)
+                        {
+                            alpha = 0;
+                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        }
+                    }
+
+                    // interpolation
+                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                    // update
+                    _cur_tf = fused_tf;
+                }
+                else
+                {
+                    double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+                    if(is_pivot && std::abs(mo.vel[0]) < 0.05)
+                    {
+                        alpha = 1.0;
+                    }
+
+                    Eigen::Matrix4d icp_tf = tp.tf;
+
+                    // for odometry slip
+                    if(use_slip_detection)
+                    {
+                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                        if(std::abs(dtdr[1]) > 10.0*D2R)
+                        {
+                            alpha = 0;
+                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        }
                     }
 
                     // interpolation
@@ -895,6 +962,11 @@ void SLAM_2D::loc_b_loop()
 
                         // interpolation
                         double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                        if(is_pivot && std::abs(mo.vel[0]) < 0.05)
+                        {
+                            alpha = 1.0;
+                        }
+
                         Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
                         Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
