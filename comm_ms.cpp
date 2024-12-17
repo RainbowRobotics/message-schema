@@ -73,6 +73,7 @@ void COMM_MS::init()
     {
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
+        qDebug() << "init connect";
         io->connect("ws://localhost:11337",query);
     }
 }
