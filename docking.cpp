@@ -379,7 +379,7 @@ void DOCKING::a_loop()
 
             else
             {
-                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN+0.025 , 0.05);
+                mobile->move_linear(config->DOCKING_POINTDOCK_MARGIN+0.028 , 0.05);
                 dock = true;
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
