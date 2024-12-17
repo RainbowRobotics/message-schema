@@ -1724,6 +1724,9 @@ void AUTOCONTROL::b_loop_pp()
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
         {
+            // for loc
+            slam->is_pivot = true;
+
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
             int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
@@ -1799,6 +1802,9 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
+            // for loc
+            slam->is_pivot = false;
+
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
             int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
@@ -2016,6 +2022,9 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
+            // for loc
+            slam->is_pivot = true;
+
             // calc heading error
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 
@@ -2315,6 +2324,8 @@ void AUTOCONTROL::clean_up()
     mtx.lock();    
     multi_req = "none";
     mtx.unlock();
+
+    slam->is_pivot = false;
 
     logger->write_log("[AUTO] multi_state: none");
 }
