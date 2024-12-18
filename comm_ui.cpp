@@ -736,8 +736,14 @@ void COMM_UI::send_status()
     if(unimap->is_loaded)
     {
         cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
-        NODE* node = unimap->get_node_by_id(cur_node_id);
-        cur_node_name = node->name;
+        if(cur_node_id != "")
+        {
+            NODE* node = unimap->get_node_by_id(cur_node_id);
+            if(node != NULL)
+            {
+                cur_node_name = node->name;
+            }
+        }
     }
 
     QJsonObject stateObj;
