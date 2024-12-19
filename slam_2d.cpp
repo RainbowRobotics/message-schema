@@ -718,8 +718,6 @@ void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
     Eigen::Vector3d pre_mo(0,0,0);
-    TIME_POSE_PTS tpp0;
-    const bool use_old_tpp = true;
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
@@ -746,21 +744,8 @@ void SLAM_2D::loc_a_loop()
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
-            // merge old frame
-            FRAME merge_frm = frm;
-            if(use_old_tpp && tpp0.t > 0)
-            {
-                Eigen::Matrix4d dtf = _cur_tf.inverse()*tpp0.tf;
-                for(size_t p = 0; p < tpp0.pts.size(); p++)
-                {
-                    Eigen::Vector3d P = tpp0.pts[p];
-                    Eigen::Vector3d _P = dtf.block(0,0,3,3)*P + dtf.block(0,3,3,1);
-                    frm.pts.push_back(_P);
-                }
-            }
-
             // pose estimation            
-            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, merge_frm, _cur_tf);
+            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
@@ -776,24 +761,6 @@ void SLAM_2D::loc_a_loop()
                 tpp.tf = _cur_tf;
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
-
-                // for next icp
-                if(use_old_tpp)
-                {
-                    if(tpp0.t == 0)
-                    {
-                        tpp0 = tpp;
-                    }
-                    else
-                    {
-                        Eigen::Matrix4d dtf = tpp.tf.inverse()*tpp0.tf;
-                        double d = calc_dist_2d(dtf.block(0,3,3,1));
-                        if(d > 10.0)
-                        {
-                            tpp0 = tpp;
-                        }
-                    }
-                }
 
                 // update
                 mtx.lock();
@@ -865,8 +832,7 @@ void SLAM_2D::loc_b_loop()
 
             // icp-odometry fusion
             TIME_POSE tp;
-            //if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
-            if(tp_que.try_pop(tp))
+            if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
             {
                 const bool is_time_compensation = true;
                 const bool use_slip_detection = false;

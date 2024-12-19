@@ -792,6 +792,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             }
         }
 
+
+        /*
         // for touch screen
         if(ui->ckb_Panning->isChecked())
         {
@@ -820,6 +822,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 }
             }
         }
+        */
     }
     else if(object == ui->qvtkWidget2)
     {
@@ -1307,6 +1310,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             }
         }
 
+        /*
         // for touch screen
         if(ui->ckb_Panning2->isChecked())
         {
@@ -1335,6 +1339,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 }
             }
         }
+        */
     }
 
     return QWidget::eventFilter(object, ev);
