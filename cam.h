@@ -29,17 +29,13 @@ public:
     // interface func
     void open();
 
-    cv::Mat get_img0();
-    cv::Mat get_img1();
-
-    TIME_IMG get_time_img0();
-    TIME_IMG get_time_img1();
+    cv::Mat get_img(int cam_idx);
+    TIME_IMG get_time_img(int cam_idx);
+    CAM_INTRINSIC get_intrinsic(int cam_idx);
+    Eigen::Matrix4d get_extrinsic(int cam_idx);
 
     TIME_PTS get_scan0();
     TIME_PTS get_scan1();
-
-    CAM_INTRINSIC get_rgb_intrinsic0();
-    CAM_INTRINSIC get_rgb_intrinsic1();
 
     // loop
     std::atomic<bool> grab_flag;
@@ -47,28 +43,20 @@ public:
     void grab_loop();
 
     // value
-    std::atomic<bool> is_connected0 = {false};
-    std::atomic<bool> is_connected1 = {false};
-
+    std::atomic<bool> is_connected[4] = {false, false, false, false};
     std::atomic<bool> is_param_loaded = {false};
 
     // storage    
     std::mutex mtx;
 
-    cv::Mat cur_img0;
-    cv::Mat cur_img1;
-
-    TIME_IMG cur_time_img0;
-    TIME_IMG cur_time_img1;
+    cv::Mat cur_img[4];
+    TIME_IMG cur_time_img[4];
 
     TIME_PTS cur_scan0;
     TIME_PTS cur_scan1;
 
-    CAM_INTRINSIC rgb_intrinsic0; // color camera intrinsic
-    CAM_INTRINSIC rgb_intrinsic1;
-
-    Eigen::Matrix4d rgb_extrinsic0;
-    Eigen::Matrix4d rgb_extrinsic1;
+    CAM_INTRINSIC intrinsic[4]; // color camera intrinsic
+    Eigen::Matrix4d cam_tf[4];
 
 private:
 

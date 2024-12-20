@@ -69,4 +69,6 @@ Eigen::Vector3d array_to_pose(QJsonArray arr);
 QJsonArray links_to_array(std::vector<QString> links);
 std::vector<QString> array_to_links(QJsonArray arr);
 
+CAM_INTRINSIC string_to_intrinsic(QString str);
+
 #endif // MY_UTILS_H

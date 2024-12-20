@@ -2,6 +2,10 @@
 
 CAM::CAM(QObject *parent) : QObject(parent)
 {
+    for(int p = 0; p < 4; p++)
+    {
+        cam_tf[p].setIdentity();
+    }
 }
 
 CAM::~CAM()
@@ -31,37 +35,19 @@ void CAM::open()
     }    
 }
 
-cv::Mat CAM::get_img0()
+cv::Mat CAM::get_img(int cam_idx)
 {
     mtx.lock();
-    cv::Mat res = cur_img0.clone();
+    cv::Mat res = cur_img[cam_idx].clone();
     mtx.unlock();
 
     return res;
 }
 
-cv::Mat CAM::get_img1()
+TIME_IMG CAM::get_time_img(int cam_idx)
 {
     mtx.lock();
-    cv::Mat res = cur_img1.clone();
-    mtx.unlock();
-
-    return res;
-}
-
-TIME_IMG CAM::get_time_img0()
-{
-    mtx.lock();
-    TIME_IMG res = cur_time_img0;
-    mtx.unlock();
-
-    return res;
-}
-
-TIME_IMG CAM::get_time_img1()
-{
-    mtx.lock();
-    TIME_IMG res = cur_time_img1;
+    TIME_IMG res = cur_time_img[cam_idx];
     mtx.unlock();
 
     return res;
@@ -85,19 +71,19 @@ TIME_PTS CAM::get_scan1()
     return res;
 }
 
-CAM_INTRINSIC CAM::get_rgb_intrinsic0()
+CAM_INTRINSIC CAM::get_intrinsic(int cam_idx)
 {
     mtx.lock();
-    CAM_INTRINSIC res = rgb_intrinsic0;
+    CAM_INTRINSIC res = intrinsic[cam_idx];
     mtx.unlock();
 
     return res;
 }
 
-CAM_INTRINSIC CAM::get_rgb_intrinsic1()
+Eigen::Matrix4d CAM::get_extrinsic(int cam_idx)
 {
     mtx.lock();
-    CAM_INTRINSIC res = rgb_intrinsic1;
+    Eigen::Matrix4d res = cam_tf[cam_idx];
     mtx.unlock();
 
     return res;
@@ -264,9 +250,9 @@ void CAM::grab_loop()
 
             if(fs->colorFrame() != nullptr)
             {
-                if(is_connected0 == false)
+                if(is_connected[0] == false)
                 {
-                    is_connected0 = true;
+                    is_connected[0] = true;
                 }
 
                 uint64_t ts = fs->colorFrame()->systemTimeStamp();
@@ -293,8 +279,8 @@ void CAM::grab_loop()
                     cv::flip(plot_img, plot_img, -1);
 
                     mtx.lock();
-                    cur_img0 = plot_img.clone();
-                    cur_time_img0 = time_img;
+                    cur_img[0] = plot_img.clone();
+                    cur_time_img[0] = time_img;
                     mtx.unlock();
                 }
             }
@@ -398,9 +384,9 @@ void CAM::grab_loop()
 
             if(fs->colorFrame() != nullptr)
             {
-                if(is_connected1 == false)
+                if(is_connected[1] == false)
                 {
-                    is_connected1 = true;
+                    is_connected[1] = true;
                 }
 
                 uint64_t ts = fs->colorFrame()->systemTimeStamp();
@@ -426,8 +412,8 @@ void CAM::grab_loop()
                     cv::resize(img, plot_img, cv::Size(160, 90));
 
                     mtx.lock();
-                    cur_img1 = plot_img.clone();
-                    cur_time_img1 = time_img;
+                    cur_img[1] = plot_img.clone();
+                    cur_time_img[1] = time_img;
                     mtx.unlock();
                 }
             }
@@ -439,65 +425,167 @@ void CAM::grab_loop()
         }
     });
 
-    // get intrinsics
-    auto camera_param0 = pipe0->getCameraParam();
-    mtx.lock();
-    rgb_intrinsic0.fx = camera_param0.rgbIntrinsic.fx; rgb_intrinsic0.fy = camera_param0.rgbIntrinsic.fy;
-    rgb_intrinsic0.cx = camera_param0.rgbIntrinsic.cx; rgb_intrinsic0.cy = camera_param0.rgbIntrinsic.cy;
-
-    rgb_intrinsic0.k1 = camera_param0.rgbDistortion.k1; rgb_intrinsic0.k2 = camera_param0.rgbDistortion.k2;
-    rgb_intrinsic0.k3 = camera_param0.rgbDistortion.k3; rgb_intrinsic0.k4 = camera_param0.rgbDistortion.k4;
-    rgb_intrinsic0.k5 = camera_param0.rgbDistortion.k5; rgb_intrinsic0.k6 = camera_param0.rgbDistortion.k6;
-    rgb_intrinsic0.p1 = camera_param0.rgbDistortion.p1; rgb_intrinsic0.p2 = camera_param0.rgbDistortion.p2;
-
-    rgb_extrinsic0.setIdentity();
-    for(int i = 0; i < 3; i++)
+    // get intrinsic cam 0
     {
-        for(int j = 0; j < 3; j++)
-        {
-            rgb_extrinsic0(i,j) = camera_param0.transform.rot[i*3+j];
-        }
-        rgb_extrinsic0(i,3) = camera_param0.transform.trans[i]/1000.0;
+        mtx.lock();
+        auto camera_param = pipe0->getCameraParam();
+        intrinsic[0].fx = camera_param.rgbIntrinsic.fx;
+        intrinsic[0].fy = camera_param.rgbIntrinsic.fy;
+        intrinsic[0].cx = camera_param.rgbIntrinsic.cx;
+        intrinsic[0].cy = camera_param.rgbIntrinsic.cy;
+
+        intrinsic[0].k1 = camera_param.rgbDistortion.k1;
+        intrinsic[0].k2 = camera_param.rgbDistortion.k2;
+        intrinsic[0].k3 = camera_param.rgbDistortion.k3;
+        intrinsic[0].k4 = camera_param.rgbDistortion.k4;
+        intrinsic[0].k5 = camera_param.rgbDistortion.k5;
+        intrinsic[0].k6 = camera_param.rgbDistortion.k6;
+        intrinsic[0].p1 = camera_param.rgbDistortion.p1;
+        intrinsic[0].p2 = camera_param.rgbDistortion.p2;
+        intrinsic[0].coef_num = 8;
+
+        cam_tf[0] = string_to_TF(config->CAM_TF_0);
+        mtx.unlock();
     }
-    mtx.unlock();
+    printf("[CAM] intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[0].fx, intrinsic[0].fy, intrinsic[0].cx, intrinsic[0].cy);
 
-    printf("[CAM] rgb_intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic0.fx, rgb_intrinsic0.fy, rgb_intrinsic0.cx, rgb_intrinsic0.cy);
-    printf("[CAM] rgb_extrinsic0, x:%f, y:%f, z:%f\n", camera_param0.transform.trans[0], camera_param0.transform.trans[1], camera_param0.transform.trans[2]);
-
-    auto camera_param1 = pipe1->getCameraParam();
-    mtx.lock();
-    rgb_intrinsic1.fx = camera_param1.rgbIntrinsic.fx; rgb_intrinsic1.fy = camera_param1.rgbIntrinsic.fy;
-    rgb_intrinsic1.cx = camera_param1.rgbIntrinsic.cx; rgb_intrinsic1.cy = camera_param1.rgbIntrinsic.cy;
-
-    rgb_intrinsic1.k1 = camera_param1.rgbDistortion.k1; rgb_intrinsic1.k2 = camera_param1.rgbDistortion.k2;
-    rgb_intrinsic1.k3 = camera_param1.rgbDistortion.k3; rgb_intrinsic1.k4 = camera_param1.rgbDistortion.k4;
-    rgb_intrinsic1.k5 = camera_param1.rgbDistortion.k5; rgb_intrinsic1.k6 = camera_param1.rgbDistortion.k6;
-    rgb_intrinsic1.p1 = camera_param1.rgbDistortion.p1; rgb_intrinsic1.p2 = camera_param1.rgbDistortion.p2;
-
-    rgb_extrinsic1.setIdentity();
-    for(int i = 0; i < 3; i++)
+    // get intrinsic cam 1
     {
-        for(int j = 0; j < 3; j++)
-        {
-            rgb_extrinsic1(i,j) = camera_param1.transform.rot[i*3+j];
-        }
-        rgb_extrinsic1(i,3) = camera_param1.transform.trans[i]/1000.0;
-    }
-    mtx.unlock();
+        mtx.lock();
+        auto camera_param = pipe1->getCameraParam();
+        intrinsic[1].fx = camera_param.rgbIntrinsic.fx;
+        intrinsic[1].fy = camera_param.rgbIntrinsic.fy;
+        intrinsic[1].cx = camera_param.rgbIntrinsic.cx;
+        intrinsic[1].cy = camera_param.rgbIntrinsic.cy;
 
-    printf("[CAM] rgb_intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", rgb_intrinsic1.fx, rgb_intrinsic1.fy, rgb_intrinsic1.cx, rgb_intrinsic1.cy);
-    printf("[CAM] rgb_extrinsic1, x:%f, y:%f, z:%f\n", camera_param1.transform.trans[0], camera_param1.transform.trans[1], camera_param1.transform.trans[2]);
+        intrinsic[1].k1 = camera_param.rgbDistortion.k1;
+        intrinsic[1].k2 = camera_param.rgbDistortion.k2;
+        intrinsic[1].k3 = camera_param.rgbDistortion.k3;
+        intrinsic[1].k4 = camera_param.rgbDistortion.k4;
+        intrinsic[1].k5 = camera_param.rgbDistortion.k5;
+        intrinsic[1].k6 = camera_param.rgbDistortion.k6;
+        intrinsic[1].p1 = camera_param.rgbDistortion.p1;
+        intrinsic[1].p2 = camera_param.rgbDistortion.p2;
+        intrinsic[1].coef_num = 8;
+
+        cam_tf[1] = string_to_TF(config->CAM_TF_1);
+        mtx.unlock();
+    }
+    printf("[CAM] intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[1].fx, intrinsic[1].fy, intrinsic[1].cx, intrinsic[1].cy);
+
+    // for usb cam2
+    cv::VideoCapture cap2;
+    QString pipeline_cam2 = "";
+    if(config->CAM_SERIAL_NUMBER_2 != "")
+    {
+        pipeline_cam2.sprintf("v4l2src device=%s ! image/jpeg,framerate=60/1,width=1280,height=720 ! jpegdec ! videoconvert ! appsink",
+                               config->CAM_SERIAL_NUMBER_2.toLocal8Bit().data());
+
+        // get intrinsic cam 2
+        mtx.unlock();
+        intrinsic[2] = string_to_intrinsic(config->CAM_INTRINSIC_2);
+        intrinsic[2].coef_num = 4;
+
+        cam_tf[2] = string_to_TF(config->CAM_TF_2);
+        mtx.unlock();
+        printf("[CAM] intrinsic2, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[2].fx, intrinsic[2].fy, intrinsic[2].cx, intrinsic[2].cy);
+
+        cap2.open(pipeline_cam2.toStdString(), cv::CAP_GSTREAMER);
+    }
+
+    // for usb cam3
+    cv::VideoCapture cap3;
+    QString pipeline_cam3 = "";
+    if(config->CAM_SERIAL_NUMBER_3 != "")
+    {
+        pipeline_cam3.sprintf("v4l2src device=%s ! image/jpeg,framerate=60/1,width=1280,height=720 ! jpegdec ! videoconvert ! appsink",
+                               config->CAM_SERIAL_NUMBER_3.toLocal8Bit().data());
+
+        // get intrinsic cam 3
+        mtx.unlock();
+        intrinsic[3] = string_to_intrinsic(config->CAM_INTRINSIC_3);
+        intrinsic[3].coef_num = 4;
+
+        cam_tf[3] = string_to_TF(config->CAM_TF_3);
+        mtx.unlock();
+        printf("[CAM] intrinsic3, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[3].fx, intrinsic[3].fy, intrinsic[3].cx, intrinsic[3].cy);
+
+        cap3.open(pipeline_cam3.toStdString(), cv::CAP_GSTREAMER);
+    }
 
     is_param_loaded = true;
 
     printf("[CAM] grab loop started\n");
     while(grab_flag)
     {
+        if(cap2.isOpened())
+        {
+            cv::Mat img;
+            cap2 >> img;
+            if(!img.empty())
+            {
+                TIME_IMG time_img;
+                time_img.t = get_time();
+                time_img.img = img.clone();
+
+                cv::Mat plot_img;
+                cv::resize(img, plot_img, cv::Size(160, 90));
+                cv::flip(plot_img, plot_img, -1);
+
+                mtx.lock();
+                cur_img[2] = plot_img.clone();
+                cur_time_img[2] = time_img;
+                mtx.unlock();
+
+                if(is_connected[2] == false)
+                {
+                    is_connected[2] = true;
+                }
+            }
+        }
+
+        if(cap3.isOpened())
+        {
+            cv::Mat img;
+            cap3 >> img;
+            if(!img.empty())
+            {
+                TIME_IMG time_img;
+                time_img.t = get_time();
+                time_img.img = img.clone();
+
+                cv::Mat plot_img;
+                cv::resize(img, plot_img, cv::Size(160, 90));
+
+                mtx.lock();
+                cur_img[3] = plot_img.clone();
+                cur_time_img[3] = time_img;
+                mtx.unlock();
+
+                if(is_connected[3] == false)
+                {
+                    is_connected[3] = true;
+                }
+            }
+        }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     pipe0->stop();
     pipe1->stop();
+
+    if(is_connected[2])
+    {
+        cap2.release();
+        is_connected[2] = false;
+    }
+
+    if(is_connected[3])
+    {
+        cap3.release();
+        is_connected[3] = false;
+    }
 
     printf("[CAM] grab loop stopped\n");
 }

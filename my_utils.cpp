@@ -925,4 +925,27 @@ std::vector<QString> array_to_links(QJsonArray arr)
     return res;
 }
 
+CAM_INTRINSIC string_to_intrinsic(QString str)
+{
+    // w, h, fx, fy, cx, cy, k1, k2, p1, p2
+    QStringList str_list = str.split(",");
+    if(str_list.size() != 10)
+    {
+        return CAM_INTRINSIC();
+    }
+
+    CAM_INTRINSIC res;
+    res.w = str_list[0].toDouble();
+    res.h = str_list[1].toDouble();
+    res.fx = str_list[2].toDouble();
+    res.fy = str_list[3].toDouble();
+    res.cx = str_list[4].toDouble();
+    res.cy = str_list[5].toDouble();
+    res.k1 = str_list[6].toDouble();
+    res.k2 = str_list[7].toDouble();
+    res.p1 = str_list[8].toDouble();
+    res.p2 = str_list[9].toDouble();
+    return res;
+}
+
 #endif // UTILS_CPP

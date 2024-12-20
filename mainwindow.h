@@ -97,6 +97,7 @@ public:
     // vars
     QString map_dir = "";
     std::atomic<double> plot_proc_t = {0};
+    std::atomic<int> test_img_save_cnt = {0};
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
