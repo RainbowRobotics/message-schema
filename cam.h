@@ -11,6 +11,24 @@
 
 #include <libobsensor/ObSensor.hpp>
 
+#ifdef USE_OCAM
+#include "ocam/format_converter/format_converter.hpp"
+#include "ocam/format_converter/ConvertColor.h"
+#include "ocam/withrobot_camera.hpp"
+#include "ocam/withrobot_debug_print.h"
+#include "ocam/camera_thread.h"
+//#include "ocam/image_funcs.hpp"
+
+enum OCAM_CONTROL
+{
+    OCAM_EXPOSURE_TIME_ABS=0,
+    OCAM_EXPOSURE_TIME_AUTO,
+    OCAM_GAIN,
+    OCAM_BLUE_BALANCE,
+    OCAM_RED_BALANCE
+};
+#endif
+
 // qt
 #include <QObject>
 

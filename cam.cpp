@@ -473,6 +473,110 @@ void CAM::grab_loop()
     }
     printf("[CAM] intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[1].fx, intrinsic[1].fy, intrinsic[1].cx, intrinsic[1].cy);
 
+    #ifdef USE_OCAM
+    std::vector<Withrobot::usb_device_info> ocam_dev_list;
+    Withrobot::get_usb_device_info_list(ocam_dev_list);
+
+    GuvcviewFormatConverter* ocam_format_converter0 = NULL; GuvcviewFormatConverter* ocam_format_converter1 = NULL;
+    Withrobot::Camera* ocam_pipe0 = NULL; Withrobot::Camera* ocam_pipe1 = NULL;
+    Withrobot::camera_format ocam_format0; Withrobot::camera_format ocam_format1;
+    unsigned char* ocam_frame_buffer0 = NULL; unsigned char* ocam_frame_buffer1 = NULL;
+    unsigned char* ocam_rgb_buffer0 = NULL; unsigned char* ocam_rgb_buffer1 = NULL;
+    if(ocam_dev_list.size() == 2)
+    {
+        QString ocam_format_name = "8-bit Bayer GRGR/BGBG 1280 x 720 30 fps";
+        ocam_pipe0 = new Withrobot::Camera(ocam_dev_list[0].dev_node.c_str(), &ocam_format0, ocam_format_name.toStdString().c_str());
+        ocam_pipe1 = new Withrobot::Camera(ocam_dev_list[1].dev_node.c_str(), &ocam_format1, ocam_format_name.toStdString().c_str());
+
+        ocam_frame_buffer0 = new unsigned char[ocam_format0.height*ocam_format0.width*2];
+        ocam_frame_buffer1 = new unsigned char[ocam_format1.height*ocam_format1.width*2];
+
+        ocam_rgb_buffer0 = new unsigned char[ocam_format0.height*ocam_format0.width*3];
+        ocam_rgb_buffer1 = new unsigned char[ocam_format1.height*ocam_format1.width*3];
+
+        ocam_format_converter0 = new GuvcviewFormatConverter(ocam_format0.width, ocam_format0.height);
+        ocam_format_converter1 = new GuvcviewFormatConverter(ocam_format1.width, ocam_format1.height);
+    }
+
+    is_param_loaded = true;
+    printf("[CAM] grab loop started\n");
+    while(grab_flag)
+    {
+        if(ocam_pipe0 != NULL)
+        {
+            if(ocam_pipe0->get_frame(ocam_frame_buffer0, ocam_format0.image_size, 1) != 1)
+            {
+                ocam_format_converter0->grey_to_rgb(ocam_rgb_buffer0, ocam_frame_buffer0);
+                cv::Mat img = cv::Mat(ocam_format0.height, ocam_format0.width, CV_8UC3, ocam_rgb_buffer0);
+                if(!img.empty())
+                {
+                    TIME_IMG time_img;
+                    time_img.t = get_time();
+                    time_img.img = img.clone();
+
+                    cv::Mat plot_img;
+                    cv::resize(img, plot_img, cv::Size(160, 90));
+                    cv::flip(plot_img, plot_img, -1);
+
+                    mtx.lock();
+                    cur_img[2] = plot_img.clone();
+                    cur_time_img[2] = time_img;
+                    mtx.unlock();
+
+                    if(is_connected[2] == false)
+                    {
+                        is_connected[2] = true;
+                    }
+                }
+            }
+        }
+
+        if(ocam_pipe1 != NULL)
+        {
+            if(ocam_pipe1->get_frame(ocam_frame_buffer1, ocam_format1.image_size, 1) != 1)
+            {
+                ocam_format_converter1->grey_to_rgb(ocam_rgb_buffer1, ocam_frame_buffer1);
+                cv::Mat img = cv::Mat(ocam_format1.height, ocam_format1.width, CV_8UC3, ocam_rgb_buffer1);
+                if(!img.empty())
+                {
+                    TIME_IMG time_img;
+                    time_img.t = get_time();
+                    time_img.img = img.clone();
+
+                    cv::Mat plot_img;
+                    cv::resize(img, plot_img, cv::Size(160, 90));
+                    cv::flip(plot_img, plot_img, -1);
+
+                    mtx.lock();
+                    cur_img[3] = plot_img.clone();
+                    cur_time_img[3] = time_img;
+                    mtx.unlock();
+
+                    if(is_connected[3] == false)
+                    {
+                        is_connected[3] = true;
+                    }
+                }
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    if(is_connected[2])
+    {
+        ocam_pipe0->stop();
+        is_connected[2] = false;
+    }
+
+    if(is_connected[3])
+    {
+        ocam_pipe1->stop();
+        is_connected[3] = false;
+    }
+    #endif
+
+    #ifndef USE_OCAM
     // for usb cam2
     cv::VideoCapture cap2;
     QString pipeline_cam2 = "";
@@ -572,9 +676,6 @@ void CAM::grab_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    pipe0->stop();
-    pipe1->stop();
-
     if(is_connected[2])
     {
         cap2.release();
@@ -586,6 +687,10 @@ void CAM::grab_loop()
         cap3.release();
         is_connected[3] = false;
     }
+    #endif
+
+    pipe0->stop();
+    pipe1->stop();
 
     printf("[CAM] grab loop stopped\n");
 }

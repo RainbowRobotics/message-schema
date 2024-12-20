@@ -24,6 +24,8 @@ DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
 #DEFINES += USE_AMR_400_LAKI
 
+DEFINES += USE_OCAM
+
 # auto copy config files
 #copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
 #copy_config.target = copy_config
@@ -55,6 +57,12 @@ SOURCES += \
     mainwindow.cpp \
     mobile.cpp \
     my_utils.cpp \
+    ocam/camera_thread.cpp \
+    ocam/format_converter/ConvertColor.cpp \
+    ocam/format_converter/colorspaces.c \
+    ocam/format_converter/jpeg_decoder.c \
+    ocam/withrobot_camera.cpp \
+    ocam/withrobot_utility.cpp \
     task.cpp \
     obsmap.cpp \
     pgo.cpp \
@@ -82,6 +90,15 @@ HEADERS += \
     mainwindow.h \
     mobile.h \
     my_utils.h \
+    ocam/camera_thread.h \
+    ocam/format_converter/ConvertColor.h \
+    ocam/format_converter/colorspaces.h \
+    ocam/format_converter/format_converter.hpp \
+    ocam/format_converter/jpeg_decoder.h \
+    ocam/image_funcs.hpp \
+    ocam/withrobot_camera.hpp \
+    ocam/withrobot_debug_print.h \
+    ocam/withrobot_utility.hpp \
     task.h \
     nanoflann.hpp \
     obsmap.h \
@@ -224,6 +241,11 @@ INCLUDEPATH += /usr/include/boost/beast/
 LIBS += -L/usr/lib/x86_64-linux-gnu/
 LIBS += -lboost_system \
         -lboost_thread
+
+# Ocam
+LIBS += -L/usr/lib/x86_64-linux-gnu/
+LIBS += -lv4l2
+LIBS += -ludev
 
 # sick sdk
 INCLUDEPATH += /usr/local/include/sick_safetyscanners_base/
