@@ -305,12 +305,6 @@ void CONFIG::load()
 
             QJsonObject obj_cam = obj["cam"].toObject();
             {
-                CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
-                printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
-
-                CAM_TF_1 = obj_cam["CAM_TF_1"].toString();
-                printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
-
                 CAM_HEIGHT_MIN = obj_cam["CAM_HEIGHT_MIN"].toString().toDouble();
                 printf("[CONFIG] CAM_HEIGHT_MIN, %s\n", obj_cam["CAM_HEIGHT_MIN"].toString().toLocal8Bit().data());
 
@@ -355,6 +349,38 @@ void CONFIG::load()
 
                 CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
                 printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
+
+                CAM_SERIAL_NUMBER_2 = obj_cam["CAM_SERIAL_NUMBER_2"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_2, %s\n", obj_cam["CAM_SERIAL_NUMBER_2"].toString().toLocal8Bit().data());
+
+                CAM_SERIAL_NUMBER_3 = obj_cam["CAM_SERIAL_NUMBER_3"].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_3, %s\n", obj_cam["CAM_SERIAL_NUMBER_3"].toString().toLocal8Bit().data());
+
+
+                CAM_INTRINSIC_0 = obj_cam["CAM_INTRINSIC_0"].toString();
+                printf("[CONFIG] CAM_INTRINSIC_0, %s\n", obj_cam["CAM_INTRINSIC_0"].toString().toLocal8Bit().data());
+
+                CAM_INTRINSIC_1 = obj_cam["CAM_INTRINSIC_1"].toString();
+                printf("[CONFIG] CAM_INTRINSIC_1, %s\n", obj_cam["CAM_INTRINSIC_1"].toString().toLocal8Bit().data());
+
+                CAM_INTRINSIC_2 = obj_cam["CAM_INTRINSIC_2"].toString();
+                printf("[CONFIG] CAM_INTRINSIC_2, %s\n", obj_cam["CAM_INTRINSIC_2"].toString().toLocal8Bit().data());
+
+                CAM_INTRINSIC_3 = obj_cam["CAM_INTRINSIC_3"].toString();
+                printf("[CONFIG] CAM_INTRINSIC_3, %s\n", obj_cam["CAM_INTRINSIC_3"].toString().toLocal8Bit().data());
+
+
+                CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
+                printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
+
+                CAM_TF_1 = obj_cam["CAM_TF_1"].toString();
+                printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
+
+                CAM_TF_2 = obj_cam["CAM_TF_2"].toString();
+                printf("[CONFIG] CAM_TF_2, %s\n", obj_cam["CAM_TF_2"].toString().toLocal8Bit().data());
+
+                CAM_TF_3 = obj_cam["CAM_TF_3"].toString();
+                printf("[CONFIG] CAM_TF_3, %s\n", obj_cam["CAM_TF_3"].toString().toLocal8Bit().data());
             }
 
             // complete

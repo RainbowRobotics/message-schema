@@ -480,8 +480,8 @@
             <widget class="QLabel" name="lb_Screen4">
              <property name="geometry">
               <rect>
-               <x>193</x>
-               <y>92</y>
+               <x>515</x>
+               <y>1</y>
                <width>160</width>
                <height>90</height>
               </rect>
@@ -501,7 +501,91 @@
             <widget class="QLabel" name="lb_Screen5">
              <property name="geometry">
               <rect>
+               <x>676</x>
+               <y>1</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen6">
+             <property name="geometry">
+              <rect>
+               <x>193</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen7">
+             <property name="geometry">
+              <rect>
                <x>354</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen8">
+             <property name="geometry">
+              <rect>
+               <x>515</x>
+               <y>92</y>
+               <width>160</width>
+               <height>90</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(0, 0, 0);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Screen9">
+             <property name="geometry">
+              <rect>
+               <x>676</x>
                <y>92</y>
                <width>160</width>
                <height>90</height>

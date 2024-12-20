@@ -3095,56 +3095,39 @@ void MainWindow::ckb_TestDebug()
 
 void MainWindow::bt_TestImgSave()
 {
-    cv::Mat cur_img0 = cam.get_img0();
-    cv::Mat cur_img1 = cam.get_img1();
-
-    if(cur_img0.empty())
+    for(int cam_idx = 0; cam_idx < 4; cam_idx++)
     {
-        printf("[MAIN] cur_img0 is empty. Skipping save operation.\n");
-        return;
-    }
-    if(cur_img1.empty())
-    {
-        printf("[MAIN] cur_img1 is empty. Skipping save operation.\n");
-        return;
-    }
-
-    QString home_dir = QDir::homePath();
-    QString img_folder = home_dir + "/Pictures";
-
-    QDir dir;
-    if(!dir.exists(img_folder))
-    {
-        if(!dir.mkpath(img_folder))
+        cv::Mat img = cam.get_img(cam_idx);
+        if(img.empty())
         {
-            printf("[MAIN] Failed to create image directory: %s\n", img_folder.toStdString().c_str());
-            return;
+            continue;
+        }
+
+        QString home_dir = QDir::homePath();
+        QString img_folder = home_dir + QString("/Pictures/cam_%1").arg(cam_idx);
+
+        QDir dir;
+        if(!dir.exists(img_folder))
+        {
+            if(!dir.mkpath(img_folder))
+            {
+                printf("[MAIN] Failed to create image directory: %s\n", img_folder.toStdString().c_str());
+                return;
+            }
+        }
+
+        QString file_path = img_folder + QString("/img_%1.png").arg(test_img_save_cnt);
+        if(!cv::imwrite(file_path.toStdString(), img))
+        {
+            printf("[MAIN] Failed to save img\n");
+        }
+        else
+        {
+            printf("[MAIN] Saved img, %s\n", file_path.toStdString().c_str());
         }
     }
 
-    QString img_path0 = img_folder + "/img0.png";
-    QString img_path1 = img_folder + "/img1.png";
-
-    if(!cv::imwrite(img_path0.toStdString(), cur_img0))
-    {
-        printf("[MAIN] Failed to save img0.png\n");
-    }
-    else
-    {
-        printf("[MAIN] Saved img0.png at %s",img_path0.toStdString().c_str());
-    }
-
-    if(!cv::imwrite(img_path1.toStdString(), cur_img1))
-    {
-         printf("[MAIN] Failed to save img1.png\n");
-    }
-    else
-    {
-         printf("[MAIN] Saved img1.png at %s",img_path1.toStdString().c_str());
-    }
-
-    printf("[MAIN] Img Save test complete.\n");
-
+    test_img_save_cnt++;
 }
 
 // for obsmap
@@ -3544,7 +3527,7 @@ void MainWindow::comm_loop()
             // open video writer
             if(config.USE_RTSP && config.USE_CAM)
             {
-                if(cam.is_connected0)
+                if(cam.is_connected[0])
                 {
                     if(!writer0.isOpened())
                     {
@@ -3553,7 +3536,7 @@ void MainWindow::comm_loop()
                     }
                 }
 
-                if(cam.is_connected1)
+                if(cam.is_connected[1])
                 {
                     if(!writer1.isOpened())
                     {
@@ -3570,11 +3553,11 @@ void MainWindow::comm_loop()
             if(config.USE_RTSP && config.USE_CAM)
             {
                 // cam streaming
-                if(cam.is_connected0)
+                if(cam.is_connected[0])
                 {
                     if(writer0.isOpened())
                     {
-                        cv::Mat img = cam.get_img0();
+                        cv::Mat img = cam.get_img(0);
                         if(!img.empty())
                         {
                             if(img.cols != send_w || img.rows != send_h)
@@ -3591,11 +3574,11 @@ void MainWindow::comm_loop()
                     }
                 }
 
-                if(cam.is_connected1)
+                if(cam.is_connected[1])
                 {
                     if(writer1.isOpened())
                     {
-                        cv::Mat img = cam.get_img1();
+                        cv::Mat img = cam.get_img(1);
                         if(!img.empty())
                         {
                             if(img.cols != send_w || img.rows != send_h)
@@ -4905,9 +4888,9 @@ void MainWindow::raw_plot()
     ui->lb_AutoInfo->setText(auto_info_str);
 
     // plot cam
-    if(cam.is_connected0)
+    if(cam.is_connected[0])
     {
-        cv::Mat plot = cam.get_img0();
+        cv::Mat plot = cam.get_img(0);
         if(!plot.empty())
         {
             ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
@@ -4916,14 +4899,36 @@ void MainWindow::raw_plot()
         }
     }
 
-    if(cam.is_connected1)
+    if(cam.is_connected[1])
     {
-        cv::Mat plot = cam.get_img1();
+        cv::Mat plot = cam.get_img(1);
         if(!plot.empty())
         {
             ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen3->setScaledContents(true);
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    if(cam.is_connected[2])
+    {
+        cv::Mat plot = cam.get_img(2);
+        if(!plot.empty())
+        {
+            ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen4->setScaledContents(true);
+            ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    if(cam.is_connected[3])
+    {
+        cv::Mat plot = cam.get_img(3);
+        if(!plot.empty())
+        {
+            ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen5->setScaledContents(true);
+            ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
 
@@ -4936,21 +4941,39 @@ void MainWindow::raw_plot()
             aruco_prev_t = cur_tpi.t;
 
             // Update screen for camera 0
-            cv::Mat plot0 = aruco.get_plot_img0();
+            cv::Mat plot0 = aruco.get_plot_img(0);
             if(!plot0.empty())
             {
-                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
-                ui->lb_Screen4->setScaledContents(true);
-                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                ui->lb_Screen6->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                ui->lb_Screen6->setScaledContents(true);
+                ui->lb_Screen6->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
 
             // Update screen for camera 1
-            cv::Mat plot1 = aruco.get_plot_img1();
+            cv::Mat plot1 = aruco.get_plot_img(1);
             if(!plot1.empty())
             {
-                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
-                ui->lb_Screen5->setScaledContents(true);
-                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                ui->lb_Screen7->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen7->setScaledContents(true);
+                ui->lb_Screen7->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Update screen for camera 2
+            cv::Mat plot2 = aruco.get_plot_img(2);
+            if(!plot2.empty())
+            {
+                ui->lb_Screen8->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot2)));
+                ui->lb_Screen8->setScaledContents(true);
+                ui->lb_Screen8->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot3 = aruco.get_plot_img(3);
+            if(!plot3.empty())
+            {
+                ui->lb_Screen9->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot3)));
+                ui->lb_Screen9->setScaledContents(true);
+                ui->lb_Screen9->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
 
             // Compute global_to_marker

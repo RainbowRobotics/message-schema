@@ -266,6 +266,8 @@ struct CAM_INTRINSIC
     double p1 = 0;
     double p2 = 0;
 
+    int coef_num = 0;
+
     CAM_INTRINSIC()
     {
 
@@ -289,6 +291,8 @@ struct CAM_INTRINSIC
         k6 = p.k6;
         p1 = p.p1;
         p2 = p.p2;
+
+        coef_num = p.coef_num;
     }
 
     CAM_INTRINSIC& operator=(const CAM_INTRINSIC& p)
@@ -309,6 +313,8 @@ struct CAM_INTRINSIC
         k6 = p.k6;
         p1 = p.p1;
         p2 = p.p2;
+
+        coef_num = p.coef_num;
         return *this;
     }
 };

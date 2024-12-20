@@ -111,9 +111,20 @@ public:
     // cam
     QString CAM_SERIAL_NUMBER_0 = "";
     QString CAM_SERIAL_NUMBER_1 = "";
-    QString CAM_TF_0 = "0,0,0,0,0,0";
+    QString CAM_SERIAL_NUMBER_2 = "";
+    QString CAM_SERIAL_NUMBER_3 = "";
+
+    QString CAM_INTRINSIC_0 = ""; // w, h, fx, fy, cx, cy, k1, k2, p1, p2, k3
+    QString CAM_INTRINSIC_1 = "";
+    QString CAM_INTRINSIC_2 = "";
+    QString CAM_INTRINSIC_3 = "";
+
+    QString CAM_TF_0 = "0,0,0,0,0,0"; // x, y, z, rx, ry, rz (euler xyz)
     QString CAM_TF_1 = "0,0,0,0,0,0";
-    double CAM_HEIGHT_MIN = 0.1;
+    QString CAM_TF_2 = "0,0,0,0,0,0";
+    QString CAM_TF_3 = "0,0,0,0,0,0";
+
+    double CAM_HEIGHT_MIN = 0.1; // for rgbd-cam cloud cropping
     double CAM_HEIGHT_MAX = 1.0;
 
     // fms

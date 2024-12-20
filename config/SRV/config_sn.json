@@ -3,7 +3,17 @@
         "ROBOT_SERIAL_NUMBER": ""
     },
     "cam": {
-        "CAM_SERIAL_NUMBER_0": "AY4W633001A",
-        "CAM_SERIAL_NUMBER_1": "AY4W633000L"
+        "CAM_SERIAL_NUMBER_0": "",
+        "CAM_SERIAL_NUMBER_1": "",
+        "CAM_SERIAL_NUMBER_2": "/dev/video0",
+        "CAM_SERIAL_NUMBER_3": "/dev/video4",
+        "CAM_INTRINSIC_0":"",
+        "CAM_INTRINSIC_1":"",
+        "CAM_INTRINSIC_2":"",
+        "CAM_INTRINSIC_3":"",
+        "CAM_TF_0":"0.2292,0.0875,0.2,62.0,0.0,115.0",
+        "CAM_TF_1":"0.2292,-0.0875,0.2,-62.0,0.0,-115.0",
+        "CAM_TF_2":"0,0,0,0,0,0",
+        "CAM_TF_3":"0,0,0,0,0,0"
     }
 }
