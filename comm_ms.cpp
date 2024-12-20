@@ -28,7 +28,7 @@ COMM_MS::COMM_MS(QObject *parent)
     io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));    
 
     // reconnect twice
-    io->set_reconnect_attempts(1);
+//    io->set_reconnect_attempts(1);
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
@@ -74,7 +74,7 @@ void COMM_MS::init()
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
         qDebug() << "init connect";
-        io->connect("ws://localhost:11337",query);
+        io->connect("ws://192.168.1.88:11337",query);
     }
 }
 
