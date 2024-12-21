@@ -57,10 +57,6 @@ SOURCES += \
     mainwindow.cpp \
     mobile.cpp \
     my_utils.cpp \
-    ocam/camera_thread.cpp \
-    ocam/format_converter/ConvertColor.cpp \
-    ocam/format_converter/colorspaces.c \
-    ocam/format_converter/jpeg_decoder.c \
     ocam/withrobot_camera.cpp \
     ocam/withrobot_utility.cpp \
     task.cpp \
@@ -90,14 +86,7 @@ HEADERS += \
     mainwindow.h \
     mobile.h \
     my_utils.h \
-    ocam/camera_thread.h \
-    ocam/format_converter/ConvertColor.h \
-    ocam/format_converter/colorspaces.h \
-    ocam/format_converter/format_converter.hpp \
-    ocam/format_converter/jpeg_decoder.h \
-    ocam/image_funcs.hpp \
     ocam/withrobot_camera.hpp \
-    ocam/withrobot_debug_print.h \
     ocam/withrobot_utility.hpp \
     task.h \
     nanoflann.hpp \

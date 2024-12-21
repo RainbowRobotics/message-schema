@@ -39,7 +39,6 @@
 #include <stdio.h>
 
 #include "withrobot_utility.hpp"
-#include "withrobot_debug_print.h"
 
 #define WITHROBOT_CAMERA_DEFAULT_WIDTH     640
 #define WITHROBOT_CAMERA_DEFAULT_HEIGHT    480
@@ -116,9 +115,9 @@ namespace Withrobot {
         void clear() { memset(this, 0, sizeof(*this)); }
 
         void dbg_print() {
-            DBG_PRINTF("Pixel format: %c, %c, %c, %c", (pixformat >> 0) & 0xFF, (pixformat >> 8) & 0xFF, (pixformat >> 16) & 0xff, (pixformat >> 24) & 0xFF);
-            DBG_PRINTF("Width: %d, Height: %d, Image size: %d", width, height, image_size);
-            DBG_PRINTF("Frame Rate : %d / %d (%.2f fps)", rate_numerator, rate_denominator, frame_rate);
+            //DBG_PRINTF("Pixel format: %c, %c, %c, %c", (pixformat >> 0) & 0xFF, (pixformat >> 8) & 0xFF, (pixformat >> 16) & 0xff, (pixformat >> 24) & 0xFF);
+            //DBG_PRINTF("Width: %d, Height: %d, Image size: %d", width, height, image_size);
+            //DBG_PRINTF("Frame Rate : %d / %d (%.2f fps)", rate_numerator, rate_denominator, frame_rate);
         }
     };
 
@@ -134,7 +133,7 @@ namespace Withrobot {
         void clear() { memset(this, 0, sizeof(*this)); }
 
         void dbg_print() {
-            DBG_PRINTF("Index: %d, Name: %s, Value: %d", index, name, value);
+            //DBG_PRINTF("Index: %d, Name: %s, Value: %d", index, name, value);
         }
     };
 
@@ -159,12 +158,12 @@ namespace Withrobot {
         void clear() { memset(this, 0, sizeof(*this)); }
 
         void dbg_print() {
-            DBG_PRINTF("Id: %u, Name: %s, Value(default [min, step, max]): %d ( %d [%d, %d, %d] ), Type: %d, Flag: %d",
-                       id, name, value, default_value, minimum, step, maximum, type, flags);
-            for (unsigned int i=0; i < menu_list.size(); i++) {
-                DBG_PRINTF("Menu %d", i);
-                menu_list[i].dbg_print();
-            }
+            //DBG_PRINTF("Id: %u, Name: %s, Value(default [min, step, max]): %d ( %d [%d, %d, %d] ), Type: %d, Flag: %d",
+            //           id, name, value, default_value, minimum, step, maximum, type, flags);
+            //for (unsigned int i=0; i < menu_list.size(); i++) {
+            //    DBG_PRINTF("Menu %d", i);
+            //    menu_list[i].dbg_print();
+            //}
         }
     };
 

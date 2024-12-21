@@ -12,12 +12,7 @@
 #include <libobsensor/ObSensor.hpp>
 
 #ifdef USE_OCAM
-#include "ocam/format_converter/format_converter.hpp"
-#include "ocam/format_converter/ConvertColor.h"
 #include "ocam/withrobot_camera.hpp"
-#include "ocam/withrobot_debug_print.h"
-#include "ocam/camera_thread.h"
-//#include "ocam/image_funcs.hpp"
 
 enum OCAM_CONTROL
 {
