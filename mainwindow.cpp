@@ -4802,7 +4802,7 @@ void MainWindow::loc_plot()
         }
 
         // add cam pts
-        TIME_PTS cam_scan0 = cam.get_scan0();
+        TIME_PTS cam_scan0 = cam.get_scan(0);
         Eigen::Matrix4d tf0 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan0.t);
 
         for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
@@ -4821,7 +4821,7 @@ void MainWindow::loc_plot()
             cloud->push_back(pt);
         }
 
-        TIME_PTS cam_scan1 = cam.get_scan1();
+        TIME_PTS cam_scan1 = cam.get_scan(1);
         Eigen::Matrix4d tf1 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan1.t);
         for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
         {
@@ -4912,70 +4912,28 @@ void MainWindow::raw_plot()
         }
     }
 
-    if(cam.is_connected[2])
-    {
-        cv::Mat plot = cam.get_img(2);
-        if(!plot.empty())
-        {
-            ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen4->setScaledContents(true);
-            ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-    }
-
-    if(cam.is_connected[3])
-    {
-        cv::Mat plot = cam.get_img(3);
-        if(!plot.empty())
-        {
-            ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen5->setScaledContents(true);
-            ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-    }
-
     // plot aruco
     if(config.USE_ARUCO)
     {
         TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
-        if(cur_tpi.t > aruco_prev_t)
+        if(cur_tpi.t > last_plot_aruco_t)
         {
-            aruco_prev_t = cur_tpi.t;
-
             // Update screen for camera 0
             cv::Mat plot0 = aruco.get_plot_img(0);
             if(!plot0.empty())
             {
-                ui->lb_Screen6->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
-                ui->lb_Screen6->setScaledContents(true);
-                ui->lb_Screen6->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                ui->lb_Screen4->setScaledContents(true);
+                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
 
             // Update screen for camera 1
             cv::Mat plot1 = aruco.get_plot_img(1);
             if(!plot1.empty())
             {
-                ui->lb_Screen7->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
-                ui->lb_Screen7->setScaledContents(true);
-                ui->lb_Screen7->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            }
-
-            // Update screen for camera 2
-            cv::Mat plot2 = aruco.get_plot_img(2);
-            if(!plot2.empty())
-            {
-                ui->lb_Screen8->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot2)));
-                ui->lb_Screen8->setScaledContents(true);
-                ui->lb_Screen8->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            }
-
-            // Update screen for camera 1
-            cv::Mat plot3 = aruco.get_plot_img(3);
-            if(!plot3.empty())
-            {
-                ui->lb_Screen9->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot3)));
-                ui->lb_Screen9->setScaledContents(true);
-                ui->lb_Screen9->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
             }
 
             // Compute global_to_marker
@@ -4988,6 +4946,9 @@ void MainWindow::raw_plot()
             }
             viewer->addCoordinateSystem(0.5, "aruco_axis");
             viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+
+            // update for next
+            last_plot_aruco_t = cur_tpi.t;
         }
     }
 
@@ -5012,8 +4973,8 @@ void MainWindow::raw_plot()
         // raw data
         std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
         std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan();
-        std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
-        std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
+        std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan(0).pts;
+        std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan(1).pts;
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(size_t p = 0; p < cur_scan.size(); p++)
@@ -5072,61 +5033,6 @@ void MainWindow::raw_plot()
             cloud->push_back(pt);
         }
 
-        lidar.mtx.lock();
-        std::vector<Eigen::Vector3d> cur_scan_outlier = lidar.cur_scan_outlier;
-        lidar.mtx.unlock();
-
-        for(size_t p = 0; p < cur_scan_outlier.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_outlier[p][0];
-            pt.y = cur_scan_outlier[p][1];
-            pt.z = cur_scan_outlier[p][2];
-            pt.r = 0;
-            pt.g = 0;
-            pt.b = 255;
-
-            cloud->push_back(pt);
-        }
-
-        /*
-        // raw data
-        std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
-        std::vector<Eigen::Vector3d> cur_scan_b = lidar.get_cur_scan_b();
-
-        // front lidar red
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < cur_scan_f.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_f[p][0];
-            pt.y = cur_scan_f[p][1];
-            pt.z = cur_scan_f[p][2];
-            pt.r = 255;
-            pt.g = 0;
-            pt.b = 0;
-
-            cloud->push_back(pt);
-        }
-
-        // rear lidar blue
-        for(size_t p = 0; p < cur_scan_b.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_b[p][0];
-            pt.y = cur_scan_b[p][1];
-            pt.z = cur_scan_b[p][2];
-            pt.r = 0;
-            pt.g = 0;
-            pt.b = 255;
-
-            cloud->push_back(pt);
-        }
-        */
-
         if(!viewer->updatePointCloud(cloud, "raw_pts"))
         {
             viewer->addPointCloud(cloud, "raw_pts");
@@ -5134,7 +5040,7 @@ void MainWindow::raw_plot()
 
         // pose update
         Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-        viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer->updatePointCloudPose("raw_pts", Eigen::Affine3f(cur_tf.cast<float>()));
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }

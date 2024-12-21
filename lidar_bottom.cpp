@@ -160,9 +160,10 @@ void LIDAR_BOTTOM::grab_loop()
             cur_scan = pts;
             cur_tp = tp;
             mtx.unlock();
-        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     #endif
@@ -291,7 +292,7 @@ void LIDAR_BOTTOM::recv_loop()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[BLIDAR] recv loop stop\n");
 

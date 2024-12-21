@@ -186,10 +186,6 @@ void CONFIG::load()
 
                 LOC_ARUCO_ODO_FUSION_DIST = obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toDouble();
                 printf("[CONFIG] LOC_ARUCO_ODO_FUSION_DIST, %s\n", obj_loc["LOC_ARUCO_ODO_FUSION_DIST"].toString().toLocal8Bit().data());
-
-                LOC_ARUCO_MEDIAN_NUM = obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toInt();
-                printf("[CONFIG] LOC_ARUCO_MEDIAN_NUM, %s\n", obj_loc["LOC_ARUCO_MEDIAN_NUM"].toString().toLocal8Bit().data());
-
             }
 
             QJsonObject obj_annot = obj["annotation"].toObject();
@@ -235,9 +231,6 @@ void CONFIG::load()
 
                 USE_ARUCO = obj_debug["USE_ARUCO"].toString().toInt();
                 printf("[CONFIG] USE_ARUCO, %s\n", obj_debug["USE_ARUCO"].toString().toLocal8Bit().data());
-
-                USE_ARUCO_FILTER = obj_debug["USE_ARUCO_FILTER"].toString().toInt();
-                printf("[CONFIG] USE_ARUCO_FILTER, %s\n", obj_debug["USE_ARUCO_FILTER"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();
@@ -310,6 +303,12 @@ void CONFIG::load()
 
                 CAM_HEIGHT_MAX = obj_cam["CAM_HEIGHT_MAX"].toString().toDouble();
                 printf("[CONFIG] CAM_HEIGHT_MAX, %s\n", obj_cam["CAM_HEIGHT_MAX"].toString().toLocal8Bit().data());
+
+                CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
+                printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
+
+                CAM_TF_1 = obj_cam["CAM_TF_1"].toString();
+                printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_fms = obj["fms"].toObject();
@@ -349,38 +348,6 @@ void CONFIG::load()
 
                 CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
                 printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
-
-                CAM_SERIAL_NUMBER_2 = obj_cam["CAM_SERIAL_NUMBER_2"].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER_2, %s\n", obj_cam["CAM_SERIAL_NUMBER_2"].toString().toLocal8Bit().data());
-
-                CAM_SERIAL_NUMBER_3 = obj_cam["CAM_SERIAL_NUMBER_3"].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER_3, %s\n", obj_cam["CAM_SERIAL_NUMBER_3"].toString().toLocal8Bit().data());
-
-
-                CAM_INTRINSIC_0 = obj_cam["CAM_INTRINSIC_0"].toString();
-                printf("[CONFIG] CAM_INTRINSIC_0, %s\n", obj_cam["CAM_INTRINSIC_0"].toString().toLocal8Bit().data());
-
-                CAM_INTRINSIC_1 = obj_cam["CAM_INTRINSIC_1"].toString();
-                printf("[CONFIG] CAM_INTRINSIC_1, %s\n", obj_cam["CAM_INTRINSIC_1"].toString().toLocal8Bit().data());
-
-                CAM_INTRINSIC_2 = obj_cam["CAM_INTRINSIC_2"].toString();
-                printf("[CONFIG] CAM_INTRINSIC_2, %s\n", obj_cam["CAM_INTRINSIC_2"].toString().toLocal8Bit().data());
-
-                CAM_INTRINSIC_3 = obj_cam["CAM_INTRINSIC_3"].toString();
-                printf("[CONFIG] CAM_INTRINSIC_3, %s\n", obj_cam["CAM_INTRINSIC_3"].toString().toLocal8Bit().data());
-
-
-                CAM_TF_0 = obj_cam["CAM_TF_0"].toString();
-                printf("[CONFIG] CAM_TF_0, %s\n", obj_cam["CAM_TF_0"].toString().toLocal8Bit().data());
-
-                CAM_TF_1 = obj_cam["CAM_TF_1"].toString();
-                printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
-
-                CAM_TF_2 = obj_cam["CAM_TF_2"].toString();
-                printf("[CONFIG] CAM_TF_2, %s\n", obj_cam["CAM_TF_2"].toString().toLocal8Bit().data());
-
-                CAM_TF_3 = obj_cam["CAM_TF_3"].toString();
-                printf("[CONFIG] CAM_TF_3, %s\n", obj_cam["CAM_TF_3"].toString().toLocal8Bit().data());
             }
 
             // complete

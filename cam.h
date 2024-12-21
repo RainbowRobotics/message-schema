@@ -11,19 +11,6 @@
 
 #include <libobsensor/ObSensor.hpp>
 
-#ifdef USE_OCAM
-#include "ocam/withrobot_camera.hpp"
-
-enum OCAM_CONTROL
-{
-    OCAM_EXPOSURE_TIME_ABS=0,
-    OCAM_EXPOSURE_TIME_AUTO,
-    OCAM_GAIN,
-    OCAM_BLUE_BALANCE,
-    OCAM_RED_BALANCE
-};
-#endif
-
 // qt
 #include <QObject>
 
@@ -46,9 +33,7 @@ public:
     TIME_IMG get_time_img(int cam_idx);
     CAM_INTRINSIC get_intrinsic(int cam_idx);
     Eigen::Matrix4d get_extrinsic(int cam_idx);
-
-    TIME_PTS get_scan0();
-    TIME_PTS get_scan1();
+    TIME_PTS get_scan(int cam_idx);
 
     // loop
     std::atomic<bool> grab_flag;
@@ -56,20 +41,18 @@ public:
     void grab_loop();
 
     // value
-    std::atomic<bool> is_connected[4] = {false, false, false, false};
+    std::atomic<bool> is_connected[2] = {false, false};
     std::atomic<bool> is_param_loaded = {false};
 
     // storage    
     std::mutex mtx;
 
-    cv::Mat cur_img[4];
-    TIME_IMG cur_time_img[4];
+    cv::Mat cur_img[2];
+    TIME_IMG cur_time_img[2];
+    TIME_PTS cur_scan[2];
 
-    TIME_PTS cur_scan0;
-    TIME_PTS cur_scan1;
-
-    CAM_INTRINSIC intrinsic[4]; // color camera intrinsic
-    Eigen::Matrix4d cam_tf[4];
+    CAM_INTRINSIC intrinsic[2];
+    Eigen::Matrix4d extrinsic[2];
 
 private:
 

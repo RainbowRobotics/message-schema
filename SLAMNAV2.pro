@@ -6,12 +6,6 @@ CONFIG += c++17
 CONFIG += resources_big
 
 QMAKE_CXXFLAGS_RELEASE += -O3
-#QMAKE_CXXFLAGS_RELEASE += -g
-#QMAKE_LFLAGS_RELEASE += -g
-
-# AddressSanitizer
-#QMAKE_CXXFLAGS += -fsanitize=address
-#QMAKE_LFLAGS += -fsanitize=address
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -23,15 +17,6 @@ DEFINES += QT_NO_KEYWORDS
 DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
 #DEFINES += USE_AMR_400_LAKI
-
-DEFINES += USE_OCAM
-
-# auto copy config files
-#copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
-#copy_config.target = copy_config
-#QMAKE_EXTRA_TARGETS += copy_config
-#PRE_TARGETDEPS += copy_config
-#.PHONY: copy_config
 
 # set home dir
 HOME = $$system(echo $HOME)
@@ -57,8 +42,6 @@ SOURCES += \
     mainwindow.cpp \
     mobile.cpp \
     my_utils.cpp \
-    ocam/withrobot_camera.cpp \
-    ocam/withrobot_utility.cpp \
     task.cpp \
     obsmap.cpp \
     pgo.cpp \
@@ -86,8 +69,6 @@ HEADERS += \
     mainwindow.h \
     mobile.h \
     my_utils.h \
-    ocam/withrobot_camera.hpp \
-    ocam/withrobot_utility.hpp \
     task.h \
     nanoflann.hpp \
     obsmap.h \
@@ -230,11 +211,6 @@ INCLUDEPATH += /usr/include/boost/beast/
 LIBS += -L/usr/lib/x86_64-linux-gnu/
 LIBS += -lboost_system \
         -lboost_thread
-
-# Ocam
-LIBS += -L/usr/lib/x86_64-linux-gnu/
-LIBS += -lv4l2
-LIBS += -ludev
 
 # sick sdk
 INCLUDEPATH += /usr/local/include/sick_safetyscanners_base/
