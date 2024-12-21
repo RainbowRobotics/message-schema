@@ -12,6 +12,7 @@ COMM_UI::COMM_UI(QObject *parent)
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     // connect recv signals -> recv slots
+    connect(this, SIGNAL(signal_send_status()), this, SLOT(send_status()));
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
 
     connect(this, SIGNAL(signal_move_jog(double, double, double, double)), this, SLOT(slot_move_jog(double, double, double, double)));
@@ -779,9 +780,13 @@ void COMM_UI::send_status()
     rootObj["condition"] = conditionObj;
 
     // send
-    QJsonDocument doc(rootObj);
-    QString str(doc.toJson());
-    client.sendTextMessage(str);
+    if(time - last_send_time >= 0.05)
+    {
+        QJsonDocument doc(rootObj);
+        QString str(doc.toJson());
+        client.sendTextMessage(str);
+        last_send_time = time;
+    }
 
     //printf("[COMM_UI] status, time: %f\n", time);
 }

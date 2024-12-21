@@ -1759,8 +1759,8 @@ void AUTOCONTROL::b_loop_pp()
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
                 extend_dt = 0;
-                pre_err_th = 0;
-                mobile->move(0, 0, 0);
+                //pre_err_th = 0;
+                //mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
@@ -1778,7 +1778,7 @@ void AUTOCONTROL::b_loop_pp()
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
             // for safe
-            double scale_w = 1.0 - 0.5*std::abs(cur_vel[0]/params.LIMIT_V);
+            double scale_w = 1.0 - 1.0*std::abs(cur_vel[0]/params.LIMIT_V);
             w *= scale_w;
 
             // obs check
@@ -2289,8 +2289,9 @@ void AUTOCONTROL::b_loop_pp()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
         }
         else
         {

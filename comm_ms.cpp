@@ -551,10 +551,13 @@ void COMM_MS::send_status()
     rootObj["setting"] = settingObj;
 
     // send
-    QJsonDocument doc(rootObj);
-    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("status", res);
-
+    if(time - last_send_time > 0.05)
+    {
+        QJsonDocument doc(rootObj);
+        sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+        io->socket()->emit("status", res);
+        last_send_time = time;
+    }
     //printf("[COMM_MS] status, time: %f\n", time);
 }
 

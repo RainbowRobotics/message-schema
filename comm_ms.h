@@ -58,6 +58,7 @@ public:
 
     // flags
     std::atomic<bool> is_connected = {false};
+    std::atomic<double> last_send_time = {0};
 
     // semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
@@ -108,7 +109,7 @@ private Q_SLOTS:
     void recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
-Q_SIGNALS:
+Q_SIGNALS:    
     void signal_motorinit(double time);
 
     void signal_move_jog(double time, double vx, double vy, double wz);

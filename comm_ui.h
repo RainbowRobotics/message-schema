@@ -52,6 +52,7 @@ public:
 
     // vars
     std::atomic<bool> is_connected = {false};
+    std::atomic<double> last_send_time = {0};
     std::atomic<int> last_send_kfrm_idx = {0};
     MOVE_INFO last_move_info;
 
@@ -72,6 +73,8 @@ public Q_SLOTS:
     void recv_message(QString message);
 
 Q_SIGNALS:
+    void signal_send_status();
+
     void signal_motorinit(double time);
 
     void signal_move_jog(double time, double vx, double vy, double wz);

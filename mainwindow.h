@@ -235,8 +235,8 @@ protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
 Q_SIGNALS:
-    void signal_send_status();
-    void signal_send_info();
+    //void signal_send_status();
+    //void signal_send_info();
 
 public Q_SLOTS:
 
