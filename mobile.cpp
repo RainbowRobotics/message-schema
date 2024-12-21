@@ -327,7 +327,7 @@ void MOBILE::recv_loop()
         int num = read(fd, (char*)recv_buf.data(), recv_buf.size());
         if(num == 0)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 
@@ -504,8 +504,10 @@ void MOBILE::recv_loop()
 
             // erase used packet
             buf.erase(buf.begin(), buf.begin() + packet_size);
+
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[MOBILE] recv loop stop\n");
 }
@@ -607,7 +609,7 @@ void MOBILE::recv_loop()
         int num = read(fd, (char*)recv_buf.data(), recv_buf.size());
         if(num == 0)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 
@@ -809,8 +811,10 @@ void MOBILE::recv_loop()
 
             // erase used packet
             buf.erase(buf.begin(), buf.begin() + packet_size);
+
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[MOBILE] recv loop stop\n");
 }
@@ -1193,7 +1197,7 @@ void MOBILE::send_loop()
             std::vector<uchar> msg;
             if(msg_que.try_pop(msg))
             {
-                ::send(fd, msg.data(), msg.size(), 0);
+                ::send(fd, msg.data(), msg.size(), 0);                
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

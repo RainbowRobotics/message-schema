@@ -566,9 +566,10 @@ void SLAM_2D::map_a_loop()
 
             // update processing time
             proc_time_map_a = get_time() - st_time;
-        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] map_a_loop stop\n");
 }
@@ -707,9 +708,9 @@ void SLAM_2D::map_b_loop()
 
             // update processing time
             proc_time_map_b = get_time() - st_time;
+            continue;
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] map_b_loop stop\n");
 }
@@ -726,7 +727,6 @@ void SLAM_2D::loc_a_loop()
         while(lidar->scan_que.try_pop(frm) && loc_a_flag)
         {
             is_new = true;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         if(is_new)
@@ -747,11 +747,7 @@ void SLAM_2D::loc_a_loop()
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
 
-            // calc shifting
-            //double dy = std::abs((_cur_tf0.inverse()*_cur_tf)(1,3));
-
             // check error
-            //if(err < config->LOC_ICP_ERROR_THRESHOLD && dy < 0.1)
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
@@ -787,17 +783,13 @@ void SLAM_2D::loc_a_loop()
                 mtx.lock();
                 cur_ieir[0] = err;
                 mtx.unlock();
-
-                //printf("[LOC_A] map icp failed, err:%f, dy:%f\n", err, dy);
             }
-
-            //lidar->scan_que.clear();
 
             // update processing time
             proc_time_loc_a = get_time() - st_time;
-        }        
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] loc_a_loop stop\n");
 }
@@ -936,10 +928,12 @@ void SLAM_2D::loc_b_loop()
 
                         // interpolation
                         double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                        /*
                         if(is_pivot && std::abs(mo.vel[0]) < 0.05)
                         {
                             alpha = 1.0;
                         }
+                        */
 
                         Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
                         Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
@@ -1014,7 +1008,7 @@ void SLAM_2D::obs_loop()
 
             // add cam pts
             {
-                TIME_PTS cam_scan0 = cam->get_scan0();
+                TIME_PTS cam_scan0 = cam->get_scan(0);
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(cam_scan0.t);
 
                 for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
@@ -1024,7 +1018,7 @@ void SLAM_2D::obs_loop()
                     tpp.pts.push_back(_P);
                 }
 
-                TIME_PTS cam_scan1 = cam->get_scan1();
+                TIME_PTS cam_scan1 = cam->get_scan(1);
                 Eigen::Matrix4d tf1 = tpp.tf.inverse()*get_best_tf(cam_scan1.t);
                 for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
                 {
@@ -1034,10 +1028,13 @@ void SLAM_2D::obs_loop()
                 }
             }
 
+            // update obstacle map
             obsmap->update_obs_map(tpp);
+
+            // for speed
             tpp_que.clear();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] obs_loop stop\n");
 }

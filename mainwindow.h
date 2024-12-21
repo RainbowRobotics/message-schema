@@ -209,7 +209,7 @@ public:
     std::atomic<bool> is_jog_pressed = {false};
 
     // aruco
-    std::atomic<double> aruco_prev_t = {0};
+    std::atomic<double> last_plot_aruco_t = {0};
 
     // for touch event
     double lastScaleFactor = 1.0;

@@ -94,7 +94,7 @@ void ARUCO::a_loop()
         {
             detect(cam_idx);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
     }
     logger->write_log(QString("[ARUCO] stop a_loop"), "Green");
 }

@@ -452,8 +452,9 @@ void LIDAR_2D::a_loop()
                 FRAME temp;
                 scan_que.try_pop(temp);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");
@@ -1013,8 +1014,9 @@ void LIDAR_2D::a_loop()
 
                 storage.erase(storage.begin(), storage.begin()+min_idx);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");
@@ -1494,8 +1496,9 @@ void LIDAR_2D::a_loop()
 
                 storage.erase(storage.begin(), storage.begin()+min_idx);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");
