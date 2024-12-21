@@ -16,18 +16,18 @@
     },
     "debug": {
         "SIM_MODE": "0",
-        "USE_ARUCO": "1",
+        "USE_ARUCO": "0",
         "USE_ARUCO_FILTER": "0",
         "USE_BEEP": "1",
-        "USE_BLIDAR": "0",
+        "USE_BLIDAR": "1",
         "USE_BQR": "0",
         "USE_CAM": "1",
         "USE_EARLYSTOP": "0",
-        "USE_FMS": "1",
+        "USE_FMS": "0",
         "USE_IMU": "0",
-        "USE_QT_UI": "0",
+        "USE_QT_UI": "1",
         "USE_RTSP": "0",
-        "USE_WEB_UI": "1"
+        "USE_WEB_UI": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -35,7 +35,7 @@
         "LIDAR_TF_B": "0.0, 0.0, 0.0, 0.0, 0.0, 0.0",
         "LIDAR_TF_F": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
         "ROBOT_RADIUS": "1.0",
-        "ROBOT_SIZE_MAX_X": "0.4",
+        "ROBOT_SIZE_MAX_X": "0.35",
         "ROBOT_SIZE_MAX_Y": "0.35",
         "ROBOT_SIZE_MAX_Z": "0.22",
         "ROBOT_SIZE_MIN_X": "-0.35",

@@ -948,4 +948,36 @@ CAM_INTRINSIC string_to_intrinsic(QString str)
     return res;
 }
 
+void precise_sleep(double seconds)
+{
+    if(seconds <= 0)
+    {
+        return;
+    }
+
+    int fd = timerfd_create(CLOCK_MONOTONIC, 0);
+    if (fd == -1)
+    {
+        perror("timerfd_create");
+        return;
+    }
+
+    struct itimerspec ts;
+    ts.it_value.tv_sec = static_cast<time_t>(seconds);
+    ts.it_value.tv_nsec = static_cast<long>((seconds - ts.it_value.tv_sec) * 1e9);
+    ts.it_interval.tv_sec = 0;
+    ts.it_interval.tv_nsec = 0;
+
+    if (timerfd_settime(fd, 0, &ts, nullptr) == -1)
+    {
+        perror("timerfd_settime");
+        close(fd);
+        return;
+    }
+
+    uint64_t expirations;
+    read(fd, &expirations, sizeof(expirations));
+    close(fd);
+}
+
 #endif // UTILS_CPP

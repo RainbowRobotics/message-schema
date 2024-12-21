@@ -717,7 +717,6 @@ void SLAM_2D::map_b_loop()
 void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
-    Eigen::Vector3d pre_mo(0,0,0);
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
@@ -741,12 +740,18 @@ void SLAM_2D::loc_a_loop()
             double st_time = get_time();
 
             mtx.lock();
+            Eigen::Matrix4d _cur_tf0 = cur_tf;
             Eigen::Matrix4d _cur_tf = cur_tf;            
             mtx.unlock();
 
             // pose estimation            
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-            if(err < config->LOC_ICP_ERROR_THRESHOLD)
+
+            // calc shifting
+            double dy = std::abs((_cur_tf0.inverse()*_cur_tf)(1,3));
+
+            // check error
+            if(err < config->LOC_ICP_ERROR_THRESHOLD && dy < 0.1)
             {
                 // for loc b loop
                 TIME_POSE tp;
@@ -781,6 +786,8 @@ void SLAM_2D::loc_a_loop()
                 mtx.lock();
                 cur_ieir[0] = err;
                 mtx.unlock();
+
+                printf("[LOC_A] map icp failed, err:%f, dy:%f\n", err, dy);
             }
 
             //lidar->scan_que.clear();
@@ -970,8 +977,9 @@ void SLAM_2D::loc_b_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {

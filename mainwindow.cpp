@@ -196,10 +196,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
     // for websocket ui
-    connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
+    //connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // for fms
-    connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
+    //connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
     connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
@@ -3455,7 +3455,7 @@ void MainWindow::bt_SelectPostNodes()
 // comm
 void MainWindow::comm_loop()
 {
-    const double dt = 0.1; // 10hz
+    const double dt = 0.1; // 100hz
     double pre_loop_time = get_time();
 
     int cnt = 0;
@@ -3472,12 +3472,12 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        // for 100ms loop
+        // for 100ms loop        
         if(cnt % 1 == 0)
         {
             if(cfms.is_connected)
-            {
-                Q_EMIT signal_send_info();
+            {                
+                Q_EMIT cfms.signal_send_info();
             }
         }
 
@@ -3491,7 +3491,7 @@ void MainWindow::comm_loop()
 
             if(cui.is_connected)
             {
-                Q_EMIT signal_send_status();
+                Q_EMIT cui.signal_send_status();
             }
         }
 
@@ -3605,8 +3605,9 @@ void MainWindow::comm_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -3649,7 +3650,7 @@ void MainWindow::watch_loop()
             if(node != NULL)
             {
                 double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config.ROBOT_RADIUS)
+                if(d < config.ROBOT_SIZE_X[1])
                 {
                     if(pre_node_id != cur_node_id)
                     {
@@ -4138,8 +4139,9 @@ void MainWindow::jog_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {

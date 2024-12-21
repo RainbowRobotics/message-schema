@@ -70,5 +70,6 @@ QJsonArray links_to_array(std::vector<QString> links);
 std::vector<QString> array_to_links(QJsonArray arr);
 
 CAM_INTRINSIC string_to_intrinsic(QString str);
+void precise_sleep(double seconds);
 
 #endif // MY_UTILS_H

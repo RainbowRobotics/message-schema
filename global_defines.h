@@ -1,6 +1,9 @@
 #ifndef GLOBAL_DEFINES_H
 #define GLOBAL_DEFINES_H
 
+// linux native
+#include <sys/timerfd.h>
+
 // stl
 #include <stdio.h>
 #include <vector>

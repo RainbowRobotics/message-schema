@@ -10,6 +10,7 @@ COMM_FMS::COMM_FMS(QObject *parent)
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
+    connect(this, SIGNAL(signal_send_info()), this, SLOT(slot_send_info()));
     connect(this, SIGNAL(signal_mapload(double, QString)), this, SLOT(slot_mapload(double, QString)));
     connect(this, SIGNAL(signal_init(double)), this, SLOT(slot_init(double)));
     connect(this, SIGNAL(signal_random_init(double, QString)), this, SLOT(slot_random_init(double, QString)));
@@ -352,8 +353,12 @@ void COMM_FMS::slot_send_info()
     rootObj["t"] = QString::number((long long)(time*1000), 10);
 
     // send
-    QJsonDocument doc(rootObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
+    if(time - last_send_time >= 0.05)
+    {
+        QJsonDocument doc(rootObj);
+        QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+        client.sendBinaryMessage(buf);
+        last_send_time = time;
+    }
 }
 
