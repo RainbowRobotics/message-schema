@@ -748,10 +748,11 @@ void SLAM_2D::loc_a_loop()
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
 
             // calc shifting
-            double dy = std::abs((_cur_tf0.inverse()*_cur_tf)(1,3));
+            //double dy = std::abs((_cur_tf0.inverse()*_cur_tf)(1,3));
 
             // check error
-            if(err < config->LOC_ICP_ERROR_THRESHOLD && dy < 0.1)
+            //if(err < config->LOC_ICP_ERROR_THRESHOLD && dy < 0.1)
+            if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
                 TIME_POSE tp;
@@ -787,7 +788,7 @@ void SLAM_2D::loc_a_loop()
                 cur_ieir[0] = err;
                 mtx.unlock();
 
-                printf("[LOC_A] map icp failed, err:%f, dy:%f\n", err, dy);
+                //printf("[LOC_A] map icp failed, err:%f, dy:%f\n", err, dy);
             }
 
             //lidar->scan_que.clear();
