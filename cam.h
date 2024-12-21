@@ -11,6 +11,19 @@
 
 #include <libobsensor/ObSensor.hpp>
 
+#ifdef USE_OCAM
+#include "ocam/withrobot_camera.hpp"
+
+enum OCAM_CONTROL
+{
+    OCAM_EXPOSURE_TIME_ABS=0,
+    OCAM_EXPOSURE_TIME_AUTO,
+    OCAM_GAIN,
+    OCAM_BLUE_BALANCE,
+    OCAM_RED_BALANCE
+};
+#endif
+
 // qt
 #include <QObject>
 

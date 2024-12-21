@@ -473,6 +473,135 @@ void CAM::grab_loop()
     }
     printf("[CAM] intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[1].fx, intrinsic[1].fy, intrinsic[1].cx, intrinsic[1].cy);
 
+    #ifdef USE_OCAM
+
+    std::vector<Withrobot::usb_device_info> ocam_dev_list;
+    Withrobot::get_usb_device_info_list(ocam_dev_list);
+    Withrobot::Camera* ocam_pipe0 = NULL; Withrobot::Camera* ocam_pipe1 = NULL;
+    Withrobot::camera_format ocam_format0; Withrobot::camera_format ocam_format1;
+    QString ocam_format_name = "8-bit Bayer GRGR/BGBG 1280 x 720 60 fps";
+
+    if(ocam_dev_list.size() >= 1)
+    {
+        for(size_t p=0; p<ocam_dev_list.size(); p++)
+        {
+            if(config->CAM_SERIAL_NUMBER_2 != "")
+            {
+                if(ocam_dev_list[p].dev_node == config->CAM_SERIAL_NUMBER_2.toStdString())
+                {
+                    ocam_pipe0 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format0, ocam_format_name.toStdString().c_str());
+                    ocam_pipe0->product_name = ocam_dev_list[p].product;
+                    ocam_pipe0->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'));
+
+                    // get intrinsic cam 2
+                    mtx.unlock();
+                    intrinsic[2] = string_to_intrinsic(config->CAM_INTRINSIC_2);
+                    intrinsic[2].coef_num = 4;
+
+                    cam_tf[2] = string_to_TF(config->CAM_TF_2);
+                    mtx.unlock();
+                    printf("[CAM] intrinsic2, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[2].fx, intrinsic[2].fy, intrinsic[2].cx, intrinsic[2].cy);
+
+                    ocam_pipe0->start();
+                }
+            }
+
+            if(config->CAM_SERIAL_NUMBER_3 != "")
+            {
+                if(ocam_dev_list[p].dev_node == config->CAM_SERIAL_NUMBER_3.toStdString())
+                {
+                    ocam_pipe1 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format1, ocam_format_name.toStdString().c_str());
+                    ocam_pipe1->product_name = ocam_dev_list[p].product;
+                    ocam_pipe1->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'));
+
+                    // get intrinsic cam 3
+                    mtx.unlock();
+                    intrinsic[3] = string_to_intrinsic(config->CAM_INTRINSIC_3);
+                    intrinsic[3].coef_num = 4;
+
+                    cam_tf[3] = string_to_TF(config->CAM_TF_3);
+                    mtx.unlock();
+                    printf("[CAM] intrinsic3, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[3].fx, intrinsic[3].fy, intrinsic[3].cx, intrinsic[3].cy);
+
+                    ocam_pipe1->start();
+                }
+            }
+        }
+    }
+
+    is_param_loaded = true;
+    printf("[CAM] grab loop started\n");
+    while(grab_flag)
+    {
+        if(ocam_pipe0 != NULL)
+        {
+            cv::Mat img(cv::Size(ocam_format0.width, ocam_format0.height), CV_8UC1);
+            if(ocam_pipe0->get_frame(img.data, ocam_format0.image_size, 1) != 1)
+            {
+                TIME_IMG time_img;
+                time_img.t = get_time();
+                time_img.img = img.clone();
+
+                cv::Mat plot_img;
+                cv::resize(img, plot_img, cv::Size(160, 90));
+                cv::flip(plot_img, plot_img, -1);
+
+                mtx.lock();
+                cur_img[2] = plot_img.clone();
+                cur_time_img[2] = time_img;
+                mtx.unlock();
+
+                if(is_connected[2] == false)
+                {
+                    is_connected[2] = true;
+                }
+            }
+        }
+
+        if(ocam_pipe1 != NULL)
+        {
+            cv::Mat img(cv::Size(ocam_format1.width, ocam_format1.height), CV_8UC1);
+            if(ocam_pipe1->get_frame(img.data, ocam_format1.image_size, 1) != 1)
+            {
+                cv::medianBlur(img, img, 3);
+
+                TIME_IMG time_img;
+                time_img.t = get_time();
+                time_img.img = img.clone();
+
+                cv::Mat plot_img;
+                cv::resize(img, plot_img, cv::Size(160, 90));
+                cv::flip(plot_img, plot_img, -1);
+
+                mtx.lock();
+                cur_img[3] = plot_img.clone();
+                cur_time_img[3] = time_img;
+                mtx.unlock();
+
+                if(is_connected[3] == false)
+                {
+                    is_connected[3] = true;
+                }
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    if(is_connected[2])
+    {
+        ocam_pipe0->stop();
+        is_connected[2] = false;
+    }
+
+    if(is_connected[3])
+    {
+        ocam_pipe1->stop();
+        is_connected[3] = false;
+    }
+    #endif
+
+    #ifndef USE_OCAM
     // for usb cam2
     cv::VideoCapture cap2;
     QString pipeline_cam2 = "";
@@ -572,9 +701,6 @@ void CAM::grab_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    pipe0->stop();
-    pipe1->stop();
-
     if(is_connected[2])
     {
         cap2.release();
@@ -586,6 +712,10 @@ void CAM::grab_loop()
         cap3.release();
         is_connected[3] = false;
     }
+    #endif
+
+    pipe0->stop();
+    pipe1->stop();
 
     printf("[CAM] grab loop stopped\n");
 }
