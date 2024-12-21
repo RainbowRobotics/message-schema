@@ -1,4 +1,4 @@
-#include "cam.h"
+ #include "cam.h"
 
 CAM::CAM(QObject *parent) : QObject(parent)
 {
@@ -478,8 +478,12 @@ void CAM::grab_loop()
     std::vector<Withrobot::usb_device_info> ocam_dev_list;
     Withrobot::get_usb_device_info_list(ocam_dev_list);
     Withrobot::Camera* ocam_pipe0 = NULL; Withrobot::Camera* ocam_pipe1 = NULL;
-    Withrobot::camera_format ocam_format0; Withrobot::camera_format ocam_format1;
-    QString ocam_format_name = "8-bit Bayer GRGR/BGBG 1280 x 720 60 fps";
+    Withrobot::camera_format ocam_format;
+    ocam_format.width = 1280;
+    ocam_format.height = 720;
+    ocam_format.pixformat = Withrobot::fourcc_to_pixformat('G','B','G','R');
+    ocam_format.frame_rate = 15;
+    QString ocam_format_name = "8-bit Bayer GRGR/BGBG 1280 x 720 15 fps";
 
     if(ocam_dev_list.size() >= 1)
     {
@@ -489,9 +493,9 @@ void CAM::grab_loop()
             {
                 if(ocam_dev_list[p].dev_node == config->CAM_SERIAL_NUMBER_2.toStdString())
                 {
-                    ocam_pipe0 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format0, ocam_format_name.toStdString().c_str());
+                    ocam_pipe0 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format, ocam_format_name.toStdString().c_str());
                     ocam_pipe0->product_name = ocam_dev_list[p].product;
-                    ocam_pipe0->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'));
+                    ocam_pipe0->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'), 1, 15);
 
                     // get intrinsic cam 2
                     mtx.unlock();
@@ -502,6 +506,25 @@ void CAM::grab_loop()
                     mtx.unlock();
                     printf("[CAM] intrinsic2, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[2].fx, intrinsic[2].fy, intrinsic[2].cx, intrinsic[2].cy);
 
+                    /*std::vector<const char*> list;
+                    int cnt = ocam_pipe0->get_valid_image_format_list(list);
+                    for(int r=0; r<cnt; r++)
+                    {
+                        std::cout << list[r] << std::endl;
+                        std::vector<const char*> list2;
+                        int cnt2 = ocam_pipe0->get_valid_resolution_list(list[r], list2);
+                        for(int r2=0; r2<cnt2; r2++)
+                        {
+                            std::cout << list2[r2] << std::endl;
+                            std::vector<const char*> list3;
+                            int cnt3 = ocam_pipe0->get_valid_ratio_list(list2[r2], list3);
+                            for(int r3=0; r3<cnt3; r3++)
+                            {
+                                std::cout << list3[r3] << std::endl;
+                            }
+                        }
+                    }*/
+
                     ocam_pipe0->start();
                 }
             }
@@ -510,9 +533,9 @@ void CAM::grab_loop()
             {
                 if(ocam_dev_list[p].dev_node == config->CAM_SERIAL_NUMBER_3.toStdString())
                 {
-                    ocam_pipe1 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format1, ocam_format_name.toStdString().c_str());
+                    ocam_pipe1 = new Withrobot::Camera(ocam_dev_list[p].dev_node.c_str(), &ocam_format, ocam_format_name.toStdString().c_str());
                     ocam_pipe1->product_name = ocam_dev_list[p].product;
-                    ocam_pipe1->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'));
+                    ocam_pipe1->set_format(1280, 720, Withrobot::fourcc_to_pixformat('G','B','G','R'), 1, 15);
 
                     // get intrinsic cam 3
                     mtx.unlock();
@@ -522,6 +545,25 @@ void CAM::grab_loop()
                     cam_tf[3] = string_to_TF(config->CAM_TF_3);
                     mtx.unlock();
                     printf("[CAM] intrinsic3, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[3].fx, intrinsic[3].fy, intrinsic[3].cx, intrinsic[3].cy);
+
+                    /*std::vector<const char*> list;
+                    int cnt = ocam_pipe1->get_valid_image_format_list(list);
+                    for(int r=0; r<cnt; r++)
+                    {
+                        std::cout << list[r] << std::endl;
+                        std::vector<const char*> list2;
+                        int cnt2 = ocam_pipe1->get_valid_resolution_list(list[r], list2);
+                        for(int r2=0; r2<cnt2; r2++)
+                        {
+                            std::cout << list2[r2] << std::endl;
+                            std::vector<const char*> list3;
+                            int cnt3 = ocam_pipe1->get_valid_ratio_list(list2[r2], list3);
+                            for(int r3=0; r3<cnt3; r3++)
+                            {
+                                std::cout << list3[r3] << std::endl;
+                            }
+                        }
+                    }*/
 
                     ocam_pipe1->start();
                 }
@@ -535,16 +577,18 @@ void CAM::grab_loop()
     {
         if(ocam_pipe0 != NULL)
         {
-            cv::Mat img(cv::Size(ocam_format0.width, ocam_format0.height), CV_8UC1);
-            if(ocam_pipe0->get_frame(img.data, ocam_format0.image_size, 1) != 1)
+            cv::Mat img(cv::Size(ocam_format.width, ocam_format.height), CV_8UC1);
+            if(ocam_pipe0->get_frame(img.data, ocam_format.image_size, 1) != 1)
             {
+                cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
+
                 TIME_IMG time_img;
                 time_img.t = get_time();
                 time_img.img = img.clone();
 
                 cv::Mat plot_img;
                 cv::resize(img, plot_img, cv::Size(160, 90));
-                cv::flip(plot_img, plot_img, -1);
+                //cv::flip(plot_img, plot_img, -1);
 
                 mtx.lock();
                 cur_img[2] = plot_img.clone();
@@ -560,10 +604,10 @@ void CAM::grab_loop()
 
         if(ocam_pipe1 != NULL)
         {
-            cv::Mat img(cv::Size(ocam_format1.width, ocam_format1.height), CV_8UC1);
-            if(ocam_pipe1->get_frame(img.data, ocam_format1.image_size, 1) != 1)
+            cv::Mat img(cv::Size(ocam_format.width, ocam_format.height), CV_8UC1);
+            if(ocam_pipe1->get_frame(img.data, ocam_format.image_size, 1) != 1)
             {
-                cv::medianBlur(img, img, 3);
+                cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
 
                 TIME_IMG time_img;
                 time_img.t = get_time();
@@ -571,7 +615,7 @@ void CAM::grab_loop()
 
                 cv::Mat plot_img;
                 cv::resize(img, plot_img, cv::Size(160, 90));
-                cv::flip(plot_img, plot_img, -1);
+                //cv::flip(plot_img, plot_img, -1);
 
                 mtx.lock();
                 cur_img[3] = plot_img.clone();
