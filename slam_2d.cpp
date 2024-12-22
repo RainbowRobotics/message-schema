@@ -739,12 +739,8 @@ void SLAM_2D::loc_a_loop()
 
             double st_time = get_time();
 
-            mtx.lock();
-            Eigen::Matrix4d _cur_tf0 = cur_tf;
-            Eigen::Matrix4d _cur_tf = cur_tf;            
-            mtx.unlock();
-
-            // pose estimation            
+            // pose estimation
+            Eigen::Matrix4d _cur_tf = get_cur_tf();
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
 
             // check error
@@ -820,10 +816,8 @@ void SLAM_2D::loc_b_loop()
             Eigen::Matrix4d pre_mo_tf = se2_to_TF(mo0.pose);
             Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
 
-            // get current tf
-            mtx.lock();
-            Eigen::Matrix4d _cur_tf = cur_tf;
-            mtx.unlock();
+            // get current tf            
+            Eigen::Matrix4d _cur_tf = get_cur_tf();
 
             // update odo_tf
             Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
@@ -927,13 +921,11 @@ void SLAM_2D::loc_b_loop()
                         Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
 
                         // interpolation
-                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
-                        /*
-                        if(is_pivot && std::abs(mo.vel[0]) < 0.05)
+                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf                        
+                        if(std::abs(mo.vel[2]) > 10.0*D2R)
                         {
                             alpha = 1.0;
                         }
-                        */
 
                         Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
                         Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);

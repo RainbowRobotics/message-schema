@@ -216,42 +216,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="bt_ZoomIn">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>zoom in</string>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="bt_ZoomOut">
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>zoom out</string>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
              <spacer name="horizontalSpacer">
               <property name="font">
                <font>
@@ -270,7 +234,7 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="lb_RobotID">
+             <widget class="QLabel" name="lb_RobotId">
               <property name="font">
                <font>
                 <pointsize>8</pointsize>
@@ -438,7 +402,7 @@
             <widget class="QLabel" name="lb_Screen2">
              <property name="geometry">
               <rect>
-               <x>180</x>
+               <x>190</x>
                <y>0</y>
                <width>160</width>
                <height>90</height>
@@ -459,7 +423,7 @@
             <widget class="QLabel" name="lb_Screen3">
              <property name="geometry">
               <rect>
-               <x>340</x>
+               <x>350</x>
                <y>0</y>
                <width>160</width>
                <height>90</height>
@@ -480,7 +444,7 @@
             <widget class="QLabel" name="lb_Screen4">
              <property name="geometry">
               <rect>
-               <x>180</x>
+               <x>190</x>
                <y>90</y>
                <width>160</width>
                <height>90</height>
@@ -501,7 +465,7 @@
             <widget class="QLabel" name="lb_Screen5">
              <property name="geometry">
               <rect>
-               <x>340</x>
+               <x>350</x>
                <y>90</y>
                <width>160</width>
                <height>90</height>
@@ -517,6 +481,236 @@
              </property>
              <property name="text">
               <string/>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewLeft">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>240</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(237, 51, 59);</string>
+             </property>
+             <property name="text">
+              <string>L</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewRight">
+             <property name="geometry">
+              <rect>
+               <x>90</x>
+               <y>240</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(237, 51, 59);</string>
+             </property>
+             <property name="text">
+              <string>R</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewUp">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>200</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(38, 162, 105);</string>
+             </property>
+             <property name="text">
+              <string>Up</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewDown">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>280</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(38, 162, 105);</string>
+             </property>
+             <property name="text">
+              <string>Dn</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewZoomIn">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>200</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(26, 95, 180);</string>
+             </property>
+             <property name="text">
+              <string>zoom
+in</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewZoomOut">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>280</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(26, 95, 180);</string>
+             </property>
+             <property name="text">
+              <string>zoom
+out</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>300</number>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_NodeId">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>230</y>
+               <width>321</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Node id</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_RobotVel">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>260</y>
+               <width>321</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Robot vel</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_PickPose">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>200</y>
+               <width>321</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Pick pose</string>
              </property>
             </widget>
            </widget>
@@ -592,20 +786,6 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QPushButton" name="bt_ZoomIn2">
-              <property name="text">
-               <string>zoom in</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="bt_ZoomOut2">
-              <property name="text">
-               <string>zoom out</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -674,6 +854,200 @@
             <property name="styleSheet">
              <string notr="true">background-color: rgb(255, 255, 255);</string>
             </property>
+            <widget class="QPushButton" name="bt_ViewLeft2">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(237, 51, 59);</string>
+             </property>
+             <property name="text">
+              <string>L</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewRight2">
+             <property name="geometry">
+              <rect>
+               <x>90</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(237, 51, 59);</string>
+             </property>
+             <property name="text">
+              <string>R</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewUp2">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>10</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(38, 162, 105);</string>
+             </property>
+             <property name="text">
+              <string>Up</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewZoomIn2">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>10</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(26, 95, 180);</string>
+             </property>
+             <property name="text">
+              <string>zoom
+in</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewZoomOut2">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>90</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(26, 95, 180);</string>
+             </property>
+             <property name="text">
+              <string>zoom
+out</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_ViewDown2">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>90</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(38, 162, 105);</string>
+             </property>
+             <property name="text">
+              <string>Dn</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_Measure">
+             <property name="geometry">
+              <rect>
+               <x>200</x>
+               <y>10</y>
+               <width>261</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Measure</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_PickPose2">
+             <property name="geometry">
+              <rect>
+               <x>200</x>
+               <y>40</y>
+               <width>261</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Pick pose</string>
+             </property>
+            </widget>
            </widget>
           </item>
          </layout>

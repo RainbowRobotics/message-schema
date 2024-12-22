@@ -2273,7 +2273,7 @@ void AUTOCONTROL::b_loop_pp()
                 }
 
                 // global to local pt
-                if(min_pt[0] > 0)
+                if(min_pt[0] >= 0)
                 {
                     mobile->move(-0.1, 0, 0);
                 }

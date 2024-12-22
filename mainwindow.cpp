@@ -43,27 +43,20 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ckb_PlotEdges2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
     connect(ui->ckb_PlotNames2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
 
-    // for 2d viewer: zoom-in/out, panning
-    ui->bt_ZoomIn->setAutoRepeat(true);
-    ui->bt_ZoomIn->setAutoRepeatDelay(100);
-    ui->bt_ZoomIn->setAutoRepeatInterval(100);
+    // for viewer control
+    connect(ui->bt_ViewLeft, &QPushButton::clicked, this, [this]()      { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewRight, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewUp, &QPushButton::clicked, this, [this]()        { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewDown, &QPushButton::clicked, this, [this]()      { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn, &QPushButton::clicked, this, [this]()    { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut, &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
 
-    ui->bt_ZoomOut->setAutoRepeat(true);
-    ui->bt_ZoomOut->setAutoRepeatDelay(100);
-    ui->bt_ZoomOut->setAutoRepeatInterval(100);
-
-    ui->bt_ZoomIn2->setAutoRepeat(true);
-    ui->bt_ZoomIn2->setAutoRepeatDelay(100);
-    ui->bt_ZoomIn2->setAutoRepeatInterval(100);
-
-    ui->bt_ZoomOut2->setAutoRepeat(true);
-    ui->bt_ZoomOut2->setAutoRepeatDelay(100);
-    ui->bt_ZoomOut2->setAutoRepeatInterval(100);
-
-    connect(ui->bt_ZoomIn, SIGNAL(clicked()), this, SLOT(bt_ZoomIn()));
-    connect(ui->bt_ZoomIn2, SIGNAL(clicked()), this, SLOT(bt_ZoomIn2()));
-    connect(ui->bt_ZoomOut, SIGNAL(clicked()), this, SLOT(bt_ZoomOut()));
-    connect(ui->bt_ZoomOut2, SIGNAL(clicked()), this, SLOT(bt_ZoomOut2()));
+    connect(ui->bt_ViewLeft2, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control2(-2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewRight2, &QPushButton::clicked, this, [this]()    { viewer_camera_relative_control2(+2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewUp2, &QPushButton::clicked, this, [this]()       { viewer_camera_relative_control2(0, +2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewDown2, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control2(0, -2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn2, &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control2(0, 0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut2, &QPushButton::clicked, this, [this]()  { viewer_camera_relative_control2(0, 0, -2, 0, 0, 0);});
 
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
@@ -226,6 +219,9 @@ MainWindow::MainWindow(QWidget *parent)
 
             QTimer::singleShot(2000, [&]()
             {
+                // set effect
+                init_ui_effect();
+
                 // set plot window
                 setup_vtk();
 
@@ -274,6 +270,156 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::init_ui_effect()
+{
+    // set opacity
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen1->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen3->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen4->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen5->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewLeft->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewRight->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewUp->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewDown->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomIn->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomOut->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewLeft2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewRight2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewUp2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewDown2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomIn2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomOut2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_PickPose->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_NodeId->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_RobotVel->setGraphicsEffect(effect);
+    }
+}
+
+// for log
+void MainWindow::slot_write_log(QString user_log, QString color_code)
+{
+    if(color_code == "Red")
+    {
+        color_code = "red";
+    }
+    else if(color_code == "Green")
+    {
+        color_code = "green";
+    }
+    else if(color_code == "Orange")
+    {
+        color_code = "orange";
+    }
+    else if(color_code == "White")
+    {
+        color_code = "black";
+    }
+
+    QString style_code = "QLabel { color : " + color_code + "; }";
+
+    ui->lb_LogInfo->setText(user_log);
+    ui->lb_LogInfo->setStyleSheet(style_code);
+}
+
 // for emergency stop
 void MainWindow::bt_Emergency()
 {
@@ -307,31 +453,6 @@ void MainWindow::slot_menu_tab_changed()
     {
         ui->main_tab->setCurrentWidget(ui->page_annot);
     }
-}
-
-// for viewer
-void MainWindow::bt_ZoomIn()
-{
-    double zoomStep = 3.0; // adjust
-    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);    
-}
-
-void MainWindow::bt_ZoomOut()
-{
-    double zoomStep = -3.0; // adjust
-    viewer_camera_relative_control(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
-}
-
-void MainWindow::bt_ZoomIn2()
-{
-    double zoomStep = 3.0; // need adjust
-    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);    
-}
-
-void MainWindow::bt_ZoomOut2()
-{
-    double zoomStep = -3.0; // need adjust
-    viewer_camera_relative_control2(0.0, 0.0, zoomStep, 0.0, 0.0, 0.0);
 }
 
 // for replot
@@ -3321,7 +3442,7 @@ void MainWindow::bt_SendMap()
 void MainWindow::slot_resist_id(QString id)
 {
     QString str = "[ID] " + id;
-    ui->lb_RobotID->setText(str);
+    ui->lb_RobotId->setText(str);
 }
 
 void MainWindow::slot_sim_random_init(QString seed)
@@ -3382,6 +3503,11 @@ void MainWindow::slot_sim_random_seq()
         printf("check again 2\n");
         return;
     }
+
+    // clear list first
+    task.mtx.lock();
+    task.task_node_list.clear();
+    task.mtx.unlock();
 
     std::random_device rd;
     std::mt19937 g(rd());
@@ -4225,94 +4351,6 @@ void MainWindow::map_plot()
         }
     }
 }
-void MainWindow::obs_plot()
-{
-    if(unimap.is_loaded == false)
-    {
-        return;
-    }
-
-    if(is_obs_update)
-    {
-        is_obs_update = false;
-
-        cv::Mat obs_map;
-        cv::Mat dyn_map;
-        cv::Mat vir_map;
-
-        Eigen::Matrix4d obs_tf;
-        obsmap.get_obs_map(obs_map, obs_tf);
-        obsmap.get_dyn_map(dyn_map, obs_tf);
-        obsmap.get_vir_map(vir_map, obs_tf);
-
-        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
-
-        // plot grid map
-        {
-            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
-            obsmap.draw_robot(plot_obs_map, obs_tf);
-
-            for(int i = 0; i < obs_map.rows; i++)
-            {
-                for(int j = 0; j < obs_map.cols; j++)
-                {
-                    if(obs_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
-                    }
-
-                    if(dyn_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
-                    }
-
-                    if(vir_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
-                    }
-                }
-            }
-
-            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
-            ui->lb_Screen1->setScaledContents(true);
-            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-
-        // plot obs pts
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < plot_pts.size(); p++)
-        {
-            double x = plot_pts[p][0];
-            double y = plot_pts[p][1];
-            double z = plot_pts[p][2];
-            double prob = plot_pts[p][3];
-
-            if(prob <= 0.5)
-            {
-                continue;
-            }
-
-            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
-
-            pcl::PointXYZRGB pt;
-            pt.x = x;
-            pt.y = y;
-            pt.z = z;
-            pt.r = c.r()*255;
-            pt.g = c.g()*255;
-            pt.b = c.b()*255;
-            cloud->push_back(pt);
-        }
-
-        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
-        {
-            viewer->addPointCloud(cloud, "obs_plot_pts");
-        }
-
-        // point size
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
-    }
-}
 void MainWindow::topo_plot()
 {
     if(unimap.is_loaded == false)
@@ -4378,7 +4416,7 @@ void MainWindow::topo_plot()
         {
             if(ui->ckb_PlotNodes->isChecked())
             {
-                // draw nodes                
+                // draw nodes
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;
@@ -4509,29 +4547,6 @@ void MainWindow::topo_plot()
                     }
                 }
             }
-
-            if(ui->ckb_PlotNames->isChecked())
-            {
-                // draw names
-                for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {
-                    if(unimap.nodes[p].type == "ZONE")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-                        QString name = unimap.nodes[p].name;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
-                        viewer->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
-
-                        last_plot_names.push_back(text_id);
-                    }
-                }
-            }
         }
     }
 }
@@ -4553,29 +4568,9 @@ void MainWindow::pick_plot()
             viewer->removeShape("pick_body");
         }
 
-        if(viewer->contains("pick_text"))
-        {
-            viewer->removeShape("pick_text");
-        }
-
         if(viewer->contains("sel_cur"))
         {
             viewer->removeShape("sel_cur");
-        }
-
-        if(viewer->contains("sel_pre"))
-        {
-            viewer->removeShape("sel_pre");
-        }        
-
-        if(viewer->contains("text_cur"))
-        {
-            viewer->removeShape("text_cur");
-        }
-
-        if(viewer->contains("text_pre"))
-        {
-            viewer->removeShape("text_pre");
         }
 
         if(pick.cur_node != "")
@@ -4587,13 +4582,8 @@ void MainWindow::pick_plot()
                 viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString text = node->name;
-
-                pcl::PointXYZ position;
-                position.x = node->tf(0,3);
-                position.y = node->tf(1,3);
-                position.z = node->tf(2,3) + 1.0;
-                viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
+                QString text = "node_id:" + node->name;
+                ui->lb_NodeId->setText(text);
             }
         }
 
@@ -4612,14 +4602,9 @@ void MainWindow::pick_plot()
             viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
 
             // plot text
-            pcl::PointXYZ position;
-            position.x = pick_tf(0,3);
-            position.y = pick_tf(1,3);
-            position.z = pick_tf(2,3) + 1.0;
-
             QString text;
-            text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
+            text.sprintf("x:%.2f, y:%.2f, th:%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            ui->lb_PickPose->setText(text);
         }
     }
 }
@@ -4849,6 +4834,364 @@ void MainWindow::loc_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
+void MainWindow::obs_plot()
+{
+    if(unimap.is_loaded == false)
+    {
+        return;
+    }
+
+    if(is_obs_update)
+    {
+        is_obs_update = false;
+
+        cv::Mat obs_map;
+        cv::Mat dyn_map;
+        cv::Mat vir_map;
+
+        Eigen::Matrix4d obs_tf;
+        obsmap.get_obs_map(obs_map, obs_tf);
+        obsmap.get_dyn_map(dyn_map, obs_tf);
+        obsmap.get_vir_map(vir_map, obs_tf);
+
+        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
+
+        // plot grid map
+        {
+            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
+            obsmap.draw_robot(plot_obs_map, obs_tf);
+
+            for(int i = 0; i < obs_map.rows; i++)
+            {
+                for(int j = 0; j < obs_map.cols; j++)
+                {
+                    if(obs_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
+                    }
+
+                    if(dyn_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                    }
+
+                    if(vir_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
+                    }
+                }
+            }
+
+            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+            ui->lb_Screen1->setScaledContents(true);
+            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+
+        // plot obs pts
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < plot_pts.size(); p+=4)
+        {
+            double x = plot_pts[p][0];
+            double y = plot_pts[p][1];
+            double z = plot_pts[p][2];
+            double prob = plot_pts[p][3];
+
+            if(prob <= 0.5)
+            {
+                continue;
+            }
+
+            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+            pcl::PointXYZRGB pt;
+            pt.x = x;
+            pt.y = y;
+            pt.z = z;
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
+        {
+            viewer->addPointCloud(cloud, "obs_plot_pts");
+        }
+
+        // point size
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
+    }
+}
+void MainWindow::ctrl_plot()
+{
+    // plot global path
+    if(is_global_path_update)
+    {
+        is_global_path_update = false;
+
+        // erase first
+        if(last_plot_global_path.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_global_path.size(); p++)
+            {
+                QString name = last_plot_global_path[p];
+                if(viewer->contains(name.toStdString()))
+                {
+                    viewer->removeShape(name.toStdString());
+                }
+            }
+            last_plot_global_path.clear();
+        }
+
+        // draw
+        PATH global_path = ctrl.get_cur_global_path();
+        if(global_path.pos.size() >= 4)
+        {
+            for(size_t p = 0; p < global_path.pos.size()-3; p+=3)
+            {
+                QString name;
+                name.sprintf("global_path_%d_%d", (int)p, (int)p+3);
+
+                Eigen::Vector3d P0 = global_path.pos[p];
+                Eigen::Vector3d P1 = global_path.pos[p+3];
+
+                pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.01);
+                pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.01);
+
+                viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, name.toStdString());
+                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
+                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
+
+                last_plot_global_path.push_back(name);
+            }
+        }
+    }
+
+    // plot local path
+    if(is_local_path_update)
+    {
+        is_local_path_update = false;
+
+        // erase first
+        for(size_t p = 0; p < last_plot_local_path.size(); p++)
+        {
+            QString name = last_plot_local_path[p];
+            if(viewer->contains(name.toStdString()))
+            {
+                viewer->removeShape(name.toStdString());
+            }
+        }
+        last_plot_local_path.clear();
+
+        // draw local path
+        PATH local_path = ctrl.get_cur_local_path();
+
+        // draw local path
+        if(local_path.pos.size() >= 2)
+        {
+            for(size_t p = 0; p < local_path.pose.size(); p++)
+            {
+                if(p == local_path.pose.size()-1 || p % 50 == 0)
+                {
+                    QString name;
+                    name.sprintf("local_path_%d", (int)p);
+
+                    Eigen::Matrix4d tf = local_path.pose[p];
+                    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0, 1, 0, name.toStdString());
+
+                    viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                        name.toStdString());
+                    last_plot_local_path.push_back(name);
+                }
+            }
+        }
+    }
+
+    // draw control points
+    if(ctrl.is_moving)
+    {
+        // erase first
+        if(viewer->contains("cur_pos"))
+        {
+            viewer->removeShape("cur_pos");
+        }
+
+        if(viewer->contains("tgt_pos"))
+        {
+            viewer->removeShape("tgt_pos");
+        }
+
+        if(viewer->contains("local_goal"))
+        {
+            viewer->removeShape("local_goal");
+        }
+
+        // draw monitoring points
+        {
+            ctrl.mtx.lock();
+            Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
+            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
+            Eigen::Vector3d local_goal = ctrl.last_local_goal;
+            ctrl.mtx.unlock();
+
+            viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
+            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
+            viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
+        }
+    }
+    else
+    {
+        if(viewer->contains("cur_pos"))
+        {
+            viewer->removeShape("cur_pos");
+        }
+
+        if(viewer->contains("tgt_pos"))
+        {
+            viewer->removeShape("tgt_pos");
+        }
+
+        if(viewer->contains("local_goal"))
+        {
+            viewer->removeShape("local_goal");
+        }
+    }
+
+    // cur tf
+    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+
+    // draw robot
+    {
+        // draw axis
+        if(!viewer->contains("robot_axis"))
+        {
+            viewer->addCoordinateSystem(1.0, "robot_axis");
+        }        
+        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(!viewer->contains("robot_body"))
+        {
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+        }
+        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw vel
+        if(viewer->contains("vel_text"))
+        {
+            viewer->removeShape("vel_text");
+        }
+
+        pcl::PointXYZ position;
+        position.x = cur_tf(0,3);
+        position.y = cur_tf(1,3);
+        position.z = cur_tf(2,3) + 1.5;
+
+        // check zone
+        QString zone = "";
+        std::vector<QString> zones = unimap.get_nodes("ZONE");
+        for(size_t p = 0; p < zones.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(zones[p]);
+            if(node != NULL)
+            {
+                QString name = node->name;
+                QString info = node->info;
+
+                NODE_INFO res;
+                if(parse_info(info, "SIZE", res))
+                {
+                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
+
+                    double x = tf(0,3);
+                    double y = tf(1,3);
+                    double z = tf(2,3);
+
+                    if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
+                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
+                       z > -res.sz[2]/2 && z < res.sz[2]/2)
+                    {
+                        // current zone
+                        zone = name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        QString text;
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
+        ui->lb_RobotVel->setText(text);
+
+        // draw cur node
+        if(viewer->contains("cur_tf_node"))
+        {
+            viewer->removeShape("cur_tf_node");
+        }
+
+        mtx.lock();
+        QString cur_node_id = last_node_id;
+        mtx.unlock();
+
+        if(cur_node_id != "")
+        {
+            NODE *node = unimap.get_node_by_id(cur_node_id);
+            if(node != NULL)
+            {
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, node->tf, 0.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "cur_tf_node");
+            }
+        }
+    }
+
+    // plot tactile
+    {
+        // erase first
+        if(last_plot_tactile.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_tactile.size(); p++)
+            {
+                QString name = last_plot_tactile[p];
+                if(viewer->contains(name.toStdString()))
+                {
+                    viewer->removeShape(name.toStdString());
+                }
+            }
+            last_plot_tactile.clear();
+        }
+
+        //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
+        Eigen::Vector3d vel = mobile.get_pose().vel;
+        std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
+        for(size_t p = 0; p < traj.size(); p++)
+        {
+            QString name;
+            name.sprintf("traj_%d", (int)p);
+
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
+
+            viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                name.toStdString());
+            last_plot_tactile.push_back(name);
+        }
+    }
+}
 void MainWindow::raw_plot()
 {
     // plot mobile info
@@ -5044,278 +5387,6 @@ void MainWindow::raw_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
-void MainWindow::ctrl_plot()
-{
-    // plot global path
-    if(is_global_path_update)
-    {
-        is_global_path_update = false;
-
-        // erase first
-        if(last_plot_global_path.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_global_path.size(); p++)
-            {
-                QString name = last_plot_global_path[p];
-                if(viewer->contains(name.toStdString()))
-                {
-                    viewer->removeShape(name.toStdString());
-                }
-            }
-            last_plot_global_path.clear();
-        }
-
-        // draw
-        PATH global_path = ctrl.get_cur_global_path();
-        if(global_path.pos.size() >= 4)
-        {
-            for(size_t p = 0; p < global_path.pos.size()-3; p+=3)
-            {
-                QString name;
-                name.sprintf("global_path_%d_%d", (int)p, (int)p+3);
-
-                Eigen::Vector3d P0 = global_path.pos[p];
-                Eigen::Vector3d P1 = global_path.pos[p+3];
-
-                pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.01);
-                pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.01);
-
-                viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, name.toStdString());
-                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
-                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
-
-                last_plot_global_path.push_back(name);
-            }
-        }
-    }
-
-    // plot local path
-    if(is_local_path_update)
-    {
-        is_local_path_update = false;
-
-        // erase first
-        for(size_t p = 0; p < last_plot_local_path.size(); p++)
-        {
-            QString name = last_plot_local_path[p];
-            if(viewer->contains(name.toStdString()))
-            {
-                viewer->removeShape(name.toStdString());
-            }
-        }
-        last_plot_local_path.clear();
-
-        // draw local path
-        PATH local_path = ctrl.get_cur_local_path();
-
-        // draw local path
-        if(local_path.pos.size() >= 2)
-        {
-            for(size_t p = 0; p < local_path.pose.size(); p++)
-            {
-                if(p == local_path.pose.size()-1 || p % 25 == 0)
-                {
-                    QString name;
-                    name.sprintf("local_path_%d", (int)p);
-
-                    Eigen::Matrix4d tf = local_path.pose[p];
-                    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0, 1, 0, name.toStdString());
-
-                    viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
-                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
-                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
-                                                        name.toStdString());
-                    last_plot_local_path.push_back(name);
-                }
-            }
-        }
-    }
-
-    // draw control points
-    if(ctrl.is_moving)
-    {
-        // erase first
-        if(viewer->contains("cur_pos"))
-        {
-            viewer->removeShape("cur_pos");
-        }
-
-        if(viewer->contains("tgt_pos"))
-        {
-            viewer->removeShape("tgt_pos");
-        }
-
-        if(viewer->contains("local_goal"))
-        {
-            viewer->removeShape("local_goal");
-        }
-
-        // draw monitoring points
-        {
-            ctrl.mtx.lock();
-            Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
-            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
-            Eigen::Vector3d local_goal = ctrl.last_local_goal;
-            ctrl.mtx.unlock();
-
-            viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
-            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
-            viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
-
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
-        }
-    }
-    else
-    {
-        if(viewer->contains("cur_pos"))
-        {
-            viewer->removeShape("cur_pos");
-        }
-
-        if(viewer->contains("tgt_pos"))
-        {
-            viewer->removeShape("tgt_pos");
-        }
-
-        if(viewer->contains("local_goal"))
-        {
-            viewer->removeShape("local_goal");
-        }
-    }
-
-    // cur tf
-    Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-
-    // draw robot
-    {
-        // draw axis
-        if(viewer->contains("robot_axis"))
-        {
-            viewer->removeCoordinateSystem("robot_axis");
-        }
-        viewer->addCoordinateSystem(1.0, "robot_axis");
-        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
-
-        // draw body
-        if(viewer->contains("robot_body"))
-        {
-            viewer->removeShape("robot_body");
-        }
-        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
-        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
-
-        // draw vel
-        if(viewer->contains("vel_text"))
-        {
-            viewer->removeShape("vel_text");
-        }
-
-        pcl::PointXYZ position;
-        position.x = cur_tf(0,3);
-        position.y = cur_tf(1,3);
-        position.z = cur_tf(2,3) + 1.5;
-
-        // check zone
-        QString zone = "";
-        std::vector<QString> zones = unimap.get_nodes("ZONE");
-        for(size_t p = 0; p < zones.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(zones[p]);
-            if(node != NULL)
-            {
-                QString name = node->name;
-                QString info = node->info;
-
-                NODE_INFO res;
-                if(parse_info(info, "SIZE", res))
-                {
-                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
-
-                    double x = tf(0,3);
-                    double y = tf(1,3);
-                    double z = tf(2,3);
-
-                    if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
-                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
-                       z > -res.sz[2]/2 && z < res.sz[2]/2)
-                    {
-                        // current zone
-                        zone = name;
-                        break;
-                    }
-                }
-            }
-        }
-
-        QString text;
-        text.sprintf("%.2f/%.2f/%.2f\n%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
-        viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 1.0, 1.0, "vel_text");
-
-        // draw cur node
-        if(viewer->contains("cur_tf_node"))
-        {
-            viewer->removeShape("cur_tf_node");
-        }
-
-        mtx.lock();
-        QString cur_node_id = last_node_id;
-        mtx.unlock();
-
-        if(cur_node_id != "")
-        {
-            NODE *node = unimap.get_node_by_id(cur_node_id);
-            if(node != NULL)
-            {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, node->tf, 0.0, 1.0, 1.0);
-                viewer->addPolygonMesh(donut, "cur_tf_node");
-            }
-        }
-    }
-
-    // plot tactile
-    {
-        // erase first
-        if(last_plot_tactile.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_tactile.size(); p++)
-            {
-                QString name = last_plot_tactile[p];
-                if(viewer->contains(name.toStdString()))
-                {
-                    viewer->removeShape(name.toStdString());
-                }
-            }
-            last_plot_tactile.clear();
-        }
-
-        //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
-        Eigen::Vector3d vel = mobile.get_pose().vel;
-        std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
-        for(size_t p = 0; p < traj.size(); p++)
-        {
-            QString name;
-            name.sprintf("traj_%d", (int)p);
-
-            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
-
-            viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
-
-            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
-                                                pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
-                                                name.toStdString());
-            last_plot_tactile.push_back(name);
-        }
-    }
-}
 void MainWindow::plot_loop()
 {
     if(ui->ckb_PlotEnable->isChecked() == false)
@@ -5328,14 +5399,13 @@ void MainWindow::plot_loop()
     double st_time = get_time();
 
     map_plot();
-    obs_plot();
     topo_plot();
     pick_plot();
-
     slam_plot();
-    loc_plot();
-    raw_plot();
+    loc_plot();    
+    obs_plot();    
     ctrl_plot();
+    raw_plot();
 
     // camera reset
     if(is_set_top_view)
@@ -5659,28 +5729,6 @@ void MainWindow::topo_plot2()
                 }
             }
 
-            if(ui->ckb_PlotNames2->isChecked())
-            {
-                // draw nodes
-                for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {
-                    if(unimap.nodes[p].type == "ZONE")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-                        QString name = unimap.nodes[p].name;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
-                        viewer2->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
-
-                        last_plot_names2.push_back(text_id);
-                    }
-                }
-            }
         }
     }
 }
@@ -5780,11 +5828,6 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("pick_body");
         }
 
-        if(viewer2->contains("pick_text"))
-        {
-            viewer2->removeShape("pick_text");
-        }
-
         if(viewer2->contains("sel_cur"))
         {
             viewer2->removeShape("sel_cur");
@@ -5793,16 +5836,6 @@ void MainWindow::pick_plot2()
         if(viewer2->contains("sel_pre"))
         {
             viewer2->removeShape("sel_pre");
-        }
-
-        if(viewer2->contains("text_cur"))
-        {
-            viewer2->removeShape("text_cur");
-        }
-
-        if(viewer2->contains("text_pre"))
-        {
-            viewer2->removeShape("text_pre");
         }
 
         // erase first
@@ -5826,11 +5859,6 @@ void MainWindow::pick_plot2()
         if(viewer2->contains("measure"))
         {
             viewer2->removeShape("measure");
-        }
-
-        if(viewer2->contains("measure_text"))
-        {
-            viewer2->removeShape("measure_text");
         }
 
         // different behavior each tab
@@ -5875,8 +5903,8 @@ void MainWindow::pick_plot2()
                 double dist = std::sqrt(dx*dx + dy*dy);
 
                 QString measure_str;
-                measure_str.sprintf("dx:%.3f,dy%.3f,dist:%.3f", dx, dy, dist);
-                viewer2->addText3D(measure_str.toStdString(), pt1, 0.2, 0.0, 0.0, 0.0, "measure_text");
+                measure_str.sprintf("dx:%.3f, dy%.3f, dist:%.3f", dx, dy, dist);
+                ui->lb_Measure->setText(measure_str);
             }
 
             if(select_nodes.size() != 0)
@@ -5916,15 +5944,6 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_pre");
                     }
-
-                    // plot text
-                    QString text = node->name;
-
-                    pcl::PointXYZ position;
-                    position.x = node->tf(0,3);
-                    position.y = node->tf(1,3);
-                    position.z = node->tf(2,3) + 1.0;
-                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_pre");
                 }
             }
 
@@ -5948,15 +5967,6 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_cur");
                     }
-
-                    // plot text
-                    QString text = node->name;
-
-                    pcl::PointXYZ position;
-                    position.x = node->tf(0,3);
-                    position.y = node->tf(1,3);
-                    position.z = node->tf(2,3) + 1.0;
-                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
                 }
             }
 
@@ -6028,8 +6038,8 @@ void MainWindow::pick_plot2()
                 position.z = pick_tf(2,3) + 1.0;
 
                 QString text;
-                text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-                viewer2->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
+                text.sprintf("x:%.2f, y:%.2f, th:%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+                ui->lb_PickPose2->setText(text);
             }
         }
     }
@@ -6076,31 +6086,7 @@ void MainWindow::plot_loop2()
     plot_timer2.start();
 }
 
-void MainWindow::slot_write_log(QString user_log, QString color_code)
-{
-    if(color_code == "Red")
-    {
-        color_code = "red";
-    }
-    else if(color_code == "Green")
-    {
-        color_code = "green";
-    }
-    else if(color_code == "Orange")
-    {
-        color_code = "orange";
-    }
-    else if(color_code == "White")
-    {
-        color_code = "black";
-    }
-
-    QString style_code = "QLabel { color : " + color_code + "; }";
-
-    ui->lb_LogInfo->setText(user_log);
-    ui->lb_LogInfo->setStyleSheet(style_code);
-}
-
+// for docking
 void MainWindow::bt_DockingMove()
 {
     ctrl.is_moving = true;

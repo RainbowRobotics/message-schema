@@ -32,6 +32,7 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGestureEvent>
+#include <QGraphicsOpacityEffect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,7 +71,8 @@ public:
     LOGGER system_logger;
     std::atomic<int> log_cnt = {0};
 
-    // funcs
+    // funcs    
+    void init_ui_effect();
     void init_modules();
     void setup_vtk();
     void all_plot_clear();
@@ -218,27 +220,25 @@ public:
 
     // 3d plot funcs
     void map_plot();
-    void obs_plot();
     void topo_plot();
     void pick_plot();
     void slam_plot();
     void loc_plot();
-    void raw_plot();
+    void obs_plot();
     void ctrl_plot();
+    void raw_plot();
 
     void map_plot2();
     void topo_plot2();
     void pick_plot2();
-    void loc_plot2();    
+    void loc_plot2();
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
-Q_SIGNALS:
-    //void signal_send_status();
-    //void signal_send_info();
-
 public Q_SLOTS:
+    // for log
+    void slot_write_log(QString user_log, QString color_code);
 
     // for tab
     void slot_main_tab_changed();
@@ -254,12 +254,6 @@ public Q_SLOTS:
     // for view control
     void bt_ViewReset();
     void bt_SetTopView();
-
-    // for viewer - BJ
-    void bt_ZoomIn();
-    void bt_ZoomIn2();
-    void bt_ZoomOut();
-    void bt_ZoomOut2();
 
     // timer loops
     void plot_loop();
@@ -375,9 +369,6 @@ public Q_SLOTS:
     void slot_resist_id(QString id);
     void slot_sim_random_init(QString seed);
     void slot_sim_random_seq();
-
-    // for log
-    void slot_write_log(QString user_log, QString color_code);
 
     // for ldock
     void bt_DockingMove();
