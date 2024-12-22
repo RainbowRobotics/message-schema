@@ -2240,27 +2240,9 @@ void AUTOCONTROL::b_loop_pp()
             }
             else if(obs_state == AUTO_OBS_VIR)
             {
-                bool is_found = false;
-                double min_d = 99999999;
-                Eigen::Vector3d min_pt(0, 0, 0);
-
-                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+                // check
                 std::vector<Eigen::Vector3d> vir_pts = obsmap->get_vir_closure_pts();
-                for(size_t p = 0; p < vir_pts.size(); p++)
-                {
-                    Eigen::Vector3d P = vir_pts[p];
-                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-
-                    double d = calc_dist_2d(_P);
-                    if(d < 2.0*config->ROBOT_RADIUS + 0.05 && d < min_d)
-                    {
-                        min_d = d;
-                        min_pt = _P;
-                        is_found = true;
-                    }
-                }
-
-                if(!is_found)
+                if(vir_pts.size() == 0)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2272,14 +2254,68 @@ void AUTOCONTROL::b_loop_pp()
                     continue;
                 }
 
-                // global to local pt
+                // global to local
+                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+                std::vector<Eigen::Vector3d> _vir_pts;
+                for(size_t p = 0; p < vir_pts.size(); p++)
+                {
+                    Eigen::Vector3d P = vir_pts[p];
+                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+                    _vir_pts.push_back(_P);
+                }
+
+                // find min pt
+                double min_d = 99999999;
+                Eigen::Vector3d min_pt(0, 0, 0);
+                for(size_t p = 0; p < _vir_pts.size(); p++)
+                {
+                    Eigen::Vector3d P = _vir_pts[p];
+                    double d = calc_dist_2d(P);
+                    if(d < min_d)
+                    {
+                        min_d = d;
+                        min_pt = P;
+                    }
+                }
+
+                if(min_d > config->ROBOT_RADIUS + 0.05)
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+                    mobile->move(0, 0, 0);
+
+                    obs_wait_st_time = get_time();
+                    obs_state = AUTO_OBS_WAIT;
+                    logger->write_log("[AUTO] OBS_VIR -> OBS_WAIT");
+                    continue;
+                }
+
+                double v = 0;
                 if(min_pt[0] >= 0)
                 {
-                    mobile->move(-0.1, 0, 0);
+                    v = -0.1;
                 }
-                else if(min_pt[0] < 0)
+                else
                 {
-                    mobile->move(0.1, 0, 0);
+                    v = 0.1;
+                }
+
+                // check
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, 0), 0.1, 0.5, cur_tf);
+                if(!obsmap->is_tf_collision(traj.back(), true))
+                {
+                    mobile->move(v, 0, 0);
+                }
+                else
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+                    mobile->move(0, 0, 0);
+
+                    obs_wait_st_time = get_time();
+                    obs_state = AUTO_OBS_WAIT;
+                    logger->write_log("[AUTO] OBS_VIR -> OBS_WAIT");
+                    continue;
                 }
             }
         }
