@@ -180,9 +180,17 @@ void LIDAR_2D::grab_loop_f()
         return;
     }
 
-    //sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 1000000)); // s3
-    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 256000)); // s1
-    if(!channel->open())
+    sl::IChannel* channel = NULL;
+    if(config->USE_S3)
+    {
+        channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 1000000)); // s3
+    }
+    else
+    {
+        channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 256000)); // s1
+    }
+
+    if(channel != NULL && !channel->open())
     {
         logger->write_log("[LIDAR] port open failed", "Red", true, false);
         return;

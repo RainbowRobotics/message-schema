@@ -2108,6 +2108,8 @@ void AUTOCONTROL::b_loop_pp()
                     obs_condition = "vir";
                     mtx.unlock();
 
+                    obs_wait_st_time = get_time();
+
                     // for vobs works
                     obs_state = AUTO_OBS_VIR;
                     logger->write_log("[AUTO] OBS_VIR");
@@ -2278,7 +2280,7 @@ void AUTOCONTROL::b_loop_pp()
                     }
                 }
 
-                if(min_d > config->ROBOT_RADIUS + 0.05)
+                if(min_d > config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 2.0)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2300,22 +2302,9 @@ void AUTOCONTROL::b_loop_pp()
                     v = 0.1;
                 }
 
-                // check
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, 0), 0.1, 0.5, cur_tf);
-                if(!obsmap->is_tf_collision(traj.back(), true))
+                if(!is_debug)
                 {
                     mobile->move(v, 0, 0);
-                }
-                else
-                {
-                    extend_dt = 0;
-                    pre_err_th = 0;
-                    mobile->move(0, 0, 0);
-
-                    obs_wait_st_time = get_time();
-                    obs_state = AUTO_OBS_WAIT;
-                    logger->write_log("[AUTO] OBS_VIR -> OBS_WAIT");
-                    continue;
                 }
             }
         }
