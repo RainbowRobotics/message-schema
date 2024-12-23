@@ -179,9 +179,18 @@ void LIDAR_2D::grab_loop_f()
         logger->write_log("[LIDAR] driver init failed", "Red", true, false);
         return;
     }
+    logger->write_log("[LIDAR] driver init success", "Green", true, false);
 
-    //sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 1000000)); // s3
-    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 256000)); // s1
+    int baudrate = 256000;
+    if(config->USE_S3 == 1)
+    {
+        baudrate = 1000000;
+        logger->write_log("[LIDAR] baud changed success", "Green", true, false);
+    }
+
+    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", baudrate));
+    logger->write_log("[LIDAR] channel init success", "Green", true, false);
+
     if(!channel->open())
     {
         logger->write_log("[LIDAR] port open failed", "Red", true, false);
@@ -199,14 +208,21 @@ void LIDAR_2D::grab_loop_f()
         return;
     }
 
+    logger->write_log("[LIDAR] connect success", "Green", true, false);
+
     std::vector<sl::LidarScanMode> modes;
     drv->getAllSupportedScanModes(modes);
+    if(modes.size() == 0)
+    {
+        logger->write_log("[LIDAR] no mode failed", "Red", true, false);
+        return;
+    }
 
     sl::LidarScanMode mode;
     double per_sample = modes[0].us_per_sample;
     for(size_t p = 0; p < modes.size(); p++)
     {
-        //printf("%s[%d] us_per_sample:%f\n", modes[p].scan_mode, modes[p].id, modes[p].us_per_sample);
+        printf("%s[%d] us_per_sample:%f\n", modes[p].scan_mode, modes[p].id, modes[p].us_per_sample);
         if(modes[p].us_per_sample < per_sample)
         {
             per_sample = modes[p].us_per_sample;

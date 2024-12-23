@@ -350,6 +350,12 @@ void CONFIG::load()
                 printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
             }
 
+            QJsonObject obj_lidar = obj["lidar"].toObject();
+            {
+                USE_S3 = obj_lidar["USE_S3"].toString().toInt();
+                printf("[CONFIG] USE_S3, %s\n", obj_lidar["USE_S3"].toString().toLocal8Bit().data());
+            }
+
             // complete
             is_load = true;
             config_sn_file.close();
