@@ -352,8 +352,8 @@ void CONFIG::load()
 
             QJsonObject obj_lidar = obj["lidar"].toObject();
             {
-                USE_S3 = obj_cam["USE_S3"].toInt();
-                printf("[CONFIG] USE_S3, %s\n", obj_cam["USE_S3"].toString().toLocal8Bit().data());
+                USE_S3 = obj_lidar["USE_S3"].toString().toInt();
+                printf("[CONFIG] USE_S3, %s\n", obj_lidar["USE_S3"].toString().toLocal8Bit().data());
             }
 
             // complete

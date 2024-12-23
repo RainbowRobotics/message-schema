@@ -2280,7 +2280,7 @@ void AUTOCONTROL::b_loop_pp()
                     }
                 }
 
-                if(min_d > config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 2.0)
+                if(min_d > 2.0*config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 2.0)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;

@@ -90,7 +90,7 @@ void ARUCO::a_loop()
     logger->write_log(QString("[ARUCO] start a_loop"), "Green");
     while(a_flag)
     {
-        for(int cam_idx = 0; cam_idx < 4; cam_idx++)
+        for(int cam_idx = 0; cam_idx < 2; cam_idx++)
         {
             detect(cam_idx);
         }
