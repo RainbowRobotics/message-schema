@@ -246,7 +246,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         sl_lidar_response_measurement_node_hq_t nodes[8192];
@@ -501,7 +501,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         if(safety_scanner->isDataAvailable())
@@ -701,7 +701,7 @@ void LIDAR_2D::grab_loop_b()
 
     is_connected_b = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_b)
     {
         if(safety_scanner->isDataAvailable())
@@ -1052,7 +1052,7 @@ void LIDAR_2D::grab_loop_f()
     // gap time each points
     const double point_interval = 32*U2S;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         repark_t temp_pack;
@@ -1213,7 +1213,7 @@ void LIDAR_2D::grab_loop_b()
     // gap time each points
     const double point_interval = 32*U2S;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_b)
     {
         repark_t temp_pack;
