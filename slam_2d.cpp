@@ -838,7 +838,7 @@ void SLAM_2D::loc_b_loop()
                     Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
-                    if(is_pivot && std::abs(mo.vel[0]) < 0.05)
+                    if(is_pivot)
                     {
                         alpha = 1.0;
                     }
@@ -866,7 +866,7 @@ void SLAM_2D::loc_b_loop()
                 else
                 {
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
-                    if(is_pivot && std::abs(mo.vel[0]) < 0.05)
+                    if(is_pivot)
                     {
                         alpha = 1.0;
                     }

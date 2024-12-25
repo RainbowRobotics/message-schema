@@ -28,7 +28,7 @@ COMM_MS::COMM_MS(QObject *parent)
     io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));    
 
     // reconnect twice
-    io->set_reconnect_attempts(1);
+    //io->set_reconnect_attempts(1);
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_motorinit(double)), this, SLOT(slot_motorinit(double)));
