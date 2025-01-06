@@ -160,6 +160,24 @@ QString AUTOCONTROL::get_multi_req()
     return res;
 }
 
+QString AUTOCONTROL::get_cur_goal_node()
+{
+    mtx.lock();
+    QString res = cur_goal_node;
+    mtx.unlock();
+
+    return res;
+}
+
+QString AUTOCONTROL::get_cur_goal_state()
+{
+    mtx.lock();
+    QString res = last_cur_goal_state;
+    mtx.unlock();
+
+    return res;
+}
+
 void AUTOCONTROL::stop()
 {
     // control loop stop
@@ -215,6 +233,7 @@ void AUTOCONTROL::set_goal(QString goal_id)
     // set goal tf
     mtx.lock();
     cur_goal_tf = node->tf;
+    cur_goal_node = goal_id;
     mtx.unlock();
 
     // set multi state
@@ -239,6 +258,11 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
     // set goal tf
     mtx.lock();
     cur_goal_tf = goal_tf;
+    if(cur_goal_node == "")
+    {
+        Eigen::Vector3d pos = goal_tf.block(0,3,3,1);
+        cur_goal_node = unimap->get_node_id_nn(pos);
+    }
     mtx.unlock();
 
     // calc global path
@@ -1573,6 +1597,10 @@ void AUTOCONTROL::b_loop_pp()
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
 
+    mtx.lock();
+    last_cur_goal_state = "moving";
+    mtx.unlock();
+
     // check already goal
     if(global_path_que.unsafe_size() == 0)
     {
@@ -1589,11 +1617,14 @@ void AUTOCONTROL::b_loop_pp()
 
                 clean_up();
 
+                mtx.lock();
+                last_cur_goal_state = "complete";
+                mtx.unlock();
+
                 fsm_state = AUTO_FSM_COMPLETE;
                 logger->write_log(QString("[AUTO] COMPLETE(already temp goal), err_d:%1").arg(err_d));
                 return;
             }
-
 
             if(err_th < config->DRIVE_GOAL_TH*D2R)
             {
@@ -1604,6 +1635,10 @@ void AUTOCONTROL::b_loop_pp()
 
                 Q_EMIT signal_move_succeed("already goal");
 
+                mtx.lock();
+                last_cur_goal_state = "complete";
+                mtx.unlock();
+
                 fsm_state = AUTO_FSM_COMPLETE;
                 logger->write_log(QString("[AUTO] COMPLETE (already goal), err_d: %1, err_th: %2").arg(err_d).arg(err_th*R2D));
                 return;
@@ -1612,6 +1647,10 @@ void AUTOCONTROL::b_loop_pp()
             {
                 // do final align
                 fsm_state = AUTO_FSM_FINAL_ALIGN;
+
+                mtx.lock();
+                last_cur_goal_state = "moving";
+                mtx.unlock();
             }
         }
     }
@@ -1647,6 +1686,11 @@ void AUTOCONTROL::b_loop_pp()
             Q_EMIT signal_move_failed("something wrong");
             logger->write_log("[AUTO] something wrong (failed)");
             fsm_state = AUTO_FSM_COMPLETE;
+
+            mtx.lock();
+            last_cur_goal_state = "fail";
+            mtx.unlock();
+
             return;
         }
         else if(is_good_everything == DRIVING_NOT_READY)
@@ -1656,6 +1700,11 @@ void AUTOCONTROL::b_loop_pp()
             Q_EMIT signal_move_failed("something wrong (not ready)");
             logger->write_log("[AUTO] something wrong (not ready)");
             fsm_state = AUTO_FSM_COMPLETE;
+
+            mtx.lock();
+            last_cur_goal_state = "fail";
+            mtx.unlock();
+
             return;
         }
 
@@ -1763,6 +1812,11 @@ void AUTOCONTROL::b_loop_pp()
                 //mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
+
+                mtx.lock();
+                last_cur_goal_state = "moving";
+                mtx.unlock();
+
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
                 continue;
             }
@@ -1790,6 +1844,11 @@ void AUTOCONTROL::b_loop_pp()
 
                 obs_state = AUTO_OBS_CHECK;
                 fsm_state = AUTO_FSM_OBS;
+
+                mtx.lock();
+                last_cur_goal_state = "obstacle";
+                mtx.unlock();
+
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS, err_th:%1").arg(err_th*R2D));
                 continue;
             }
@@ -1832,6 +1891,11 @@ void AUTOCONTROL::b_loop_pp()
                     if(global_path.is_final)
                     {
                         fsm_state = AUTO_FSM_FINAL_ALIGN;
+
+                        mtx.lock();
+                        last_cur_goal_state = "moving";
+                        mtx.unlock();
+
                         logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
                         continue;
                     }
@@ -1873,6 +1937,11 @@ void AUTOCONTROL::b_loop_pp()
                             mobile->move(0, 0, 0);
 
                             fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+                            mtx.lock();
+                            last_cur_goal_state = "moving";
+                            mtx.unlock();
+
                             logger->write_log(QString("[AUTO] DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
                             continue;
                         }
@@ -1886,6 +1955,11 @@ void AUTOCONTROL::b_loop_pp()
                             clean_up();
 
                             fsm_state = AUTO_FSM_COMPLETE;
+
+                            mtx.lock();
+                            last_cur_goal_state = "complete";
+                            mtx.unlock();
+
                             logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
                             return;
                         }
@@ -1944,6 +2018,11 @@ void AUTOCONTROL::b_loop_pp()
 
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
+
+                    mtx.lock();
+                    last_cur_goal_state = "obstacle";
+                    mtx.unlock();
+
                     printf("[AUTO] DRIVING -> OBS\n");
                     continue;
                 }
@@ -2039,6 +2118,11 @@ void AUTOCONTROL::b_loop_pp()
                     Q_EMIT signal_move_succeed("very good");
 
                     fsm_state = AUTO_FSM_COMPLETE;
+
+                    mtx.lock();
+                    last_cur_goal_state = "complete";
+                    mtx.unlock();
+
                     logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
                     return;
                 }
@@ -2054,6 +2138,11 @@ void AUTOCONTROL::b_loop_pp()
                 obs_wait_st_time = get_time();
                 obs_state = AUTO_OBS_WAIT2;
                 fsm_state = AUTO_FSM_OBS;
+
+                mtx.lock();
+                last_cur_goal_state = "obstacle";
+                mtx.unlock();
+
                 logger->write_log("[AUTO] FINAL ALIGN -> OBS");
                 continue;
             }
@@ -2125,6 +2214,11 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+                    mtx.lock();
+                    last_cur_goal_state = "moving";
+                    mtx.unlock();
+
                     logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
                     continue;
                 }
@@ -2225,6 +2319,11 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+                    mtx.lock();
+                    last_cur_goal_state = "moving";
+                    mtx.unlock();
+
                     logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
                     continue;
                 }
@@ -2236,6 +2335,11 @@ void AUTOCONTROL::b_loop_pp()
                     extend_dt = 0;
                     pre_err_th = 0;
                     fsm_state = AUTO_FSM_FINAL_ALIGN;
+
+                    mtx.lock();
+                    last_cur_goal_state = "moving";
+                    mtx.unlock();
+
                     logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
                     continue;
                 }
@@ -2336,6 +2440,11 @@ void AUTOCONTROL::b_loop_pp()
 
         Q_EMIT signal_move_succeed("stopped");
         logger->write_log("[AUTO] b_loop_pp stop");
+
+        mtx.lock();
+        last_cur_goal_state = "complete";
+        mtx.unlock();
+
         fsm_state = AUTO_FSM_COMPLETE;
     }
 }
