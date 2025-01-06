@@ -454,7 +454,6 @@ void COMM_MS::send_status()
     imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
     rootObj["imu"] = imuObj;
 
-
     // Adding the power object    
     QJsonObject powerObj;
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
@@ -499,26 +498,19 @@ void COMM_MS::send_status()
     stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
     stateObj["charge"] = charge_st_string;
+    stateObj["cur_goal_node_id"] = ctrl->get_cur_goal_node();
+    stateObj["cur_goal_node_state"] = ctrl->get_cur_goal_state();
 
     QString docking_state = "false";
-
-
-    if (dctrl != nullptr) 
+    if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
     {
-        if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
-        {
-            docking_state = "true";
-        }
-        else
-        {
-            docking_state = "false";
-        }
+        docking_state = "true";
     }
     else
     {
-        qDebug() << "null ptr";
-        //To Do list
+        docking_state = "false";
     }
+
     stateObj["dock"] = docking_state; 
     stateObj["map"] = unimap->map_dir.split("/").last();
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"

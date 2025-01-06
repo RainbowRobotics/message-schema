@@ -49,7 +49,9 @@ public:
     PATH get_cur_global_path();
     PATH get_cur_local_path();
     QString get_obs_condition();    
-    QString get_multi_req();    
+    QString get_multi_req();
+    QString get_cur_goal_node();
+    QString get_cur_goal_state();
     void clear_path();
 
     void init();
@@ -92,6 +94,10 @@ public:
 
     // storage        
     Eigen::Matrix4d cur_goal_tf;
+
+    // for last goal
+    QString cur_goal_node = "";
+    QString last_cur_goal_state = "none";
 
     PATH cur_global_path;
     PATH cur_local_path;
