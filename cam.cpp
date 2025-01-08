@@ -17,11 +17,11 @@ CAM::~CAM()
 void CAM::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
-    {
-        printf("[CAM] simulation mode\n");
-        return;
-    }
+//    if(config->SIM_MODE == 1)
+//    {
+//        printf("[CAM] simulation mode\n");
+//        return;
+//    }
 
     // start grab loop
     if(grab_thread == NULL)
@@ -551,7 +551,7 @@ void CAM::grab_loop()
         printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
     }*/
 
-    auto depth_profile = depth_profile_list->getProfile(24)->as<ob::VideoStreamProfile>();
+    auto depth_profile = depth_profile_list->getProfile(3)->as<ob::VideoStreamProfile>();
     QString str_depth;
     str_depth.sprintf("[CAM] depth_profile(24), w:%d, h:%d, fps:%d, format:%d",
                       depth_profile->width(),
@@ -560,7 +560,7 @@ void CAM::grab_loop()
                       depth_profile->format());
     logger->write_log(str_depth, "Green");
 
-    auto color_profile = color_profile_list->getProfile(40)->as<ob::VideoStreamProfile>();
+    auto color_profile = color_profile_list->getProfile(34)->as<ob::VideoStreamProfile>();
     QString str_color;
     str_color.sprintf("[CAM] color_profile(40), w:%d, h:%d, fps:%d, format:%d",
                       color_profile->width(),
