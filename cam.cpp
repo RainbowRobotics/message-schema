@@ -17,11 +17,11 @@ CAM::~CAM()
 void CAM::open()
 {
     // check simulation mode
-//    if(config->SIM_MODE == 1)
-//    {
-//        printf("[CAM] simulation mode\n");
-//        return;
-//    }
+    if(config->SIM_MODE == 1)
+    {
+        printf("[CAM] simulation mode\n");
+        return;
+    }
 
     // start grab loop
     if(grab_thread == NULL)
