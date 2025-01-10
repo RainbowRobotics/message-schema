@@ -542,11 +542,10 @@ void CAM::grab_loop()
     for(pn=0; pn<depth_profile_list->count(); ++pn){
         auto profile = depth_profile_list->getProfile(pn)->as<ob::VideoStreamProfile>();
         printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", pn, profile->width(), profile->height(), profile->fps(), profile->format());
-        if(profile->width() == 320 && profile->height() == 200 && profile->fps() == 5 && profile->format() == 24){
+        if(profile->width() == 320 && profile->height() == 200 && profile->fps() == 5 && profile->format() == OB_FORMAT_Y16){
             break;
         }
     }
-
 
     auto depth_profile = depth_profile_list->getProfile(pn)->as<ob::VideoStreamProfile>();
     QString str_depth;
@@ -558,17 +557,14 @@ void CAM::grab_loop()
                       depth_profile->format());
     logger->write_log(str_depth, "Green");
 
-
     auto color_profile_list = cam_pipe->getStreamProfileList(OB_SENSOR_COLOR);
     for(pn=0; pn<color_profile_list->count(); ++pn){
         auto profile = color_profile_list->getProfile(pn)->as<ob::VideoStreamProfile>();
         printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", pn, profile->width(), profile->height(), profile->fps(), profile->format());
-        if(profile->width() == 640 && profile->height() == 400 && profile->fps() == 5 && profile->format() == 22){
+        if(profile->width() == 640 && profile->height() == 400 && profile->fps() == 5 && profile->format() == OB_FORMAT_RGB){
             break;
         }
     }
-
-
 
     auto color_profile = color_profile_list->getProfile(pn)->as<ob::VideoStreamProfile>();
     QString str_color;
