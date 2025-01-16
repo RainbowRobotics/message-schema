@@ -190,6 +190,10 @@ void AUTOCONTROL::stop()
 
     clean_up();
 
+    mtx.lock();
+    cur_goal_tf.setIdentity();
+    mtx.unlock();
+
     fsm_state = AUTO_FSM_COMPLETE;
 }
 
@@ -1608,7 +1612,7 @@ void AUTOCONTROL::b_loop_pp()
         Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*goal_tf);
         double err_d = calc_dist_2d(dxi);
         double err_th = std::abs(dxi[2]);
-        if(err_d < config->DRIVE_GOAL_D)
+        if(err_d < 2*config->DRIVE_GOAL_D)
         {
             if(!global_path.is_final)
             {
@@ -1626,7 +1630,7 @@ void AUTOCONTROL::b_loop_pp()
                 return;
             }
 
-            if(err_th < config->DRIVE_GOAL_TH*D2R)
+            if(err_th < 2*config->DRIVE_GOAL_TH*D2R)
             {
                 // final goal reached
                 mobile->move(0, 0, 0);
@@ -1689,6 +1693,7 @@ void AUTOCONTROL::b_loop_pp()
 
             mtx.lock();
             last_cur_goal_state = "fail";
+            cur_goal_tf.setIdentity();
             mtx.unlock();
 
             return;
@@ -1703,6 +1708,7 @@ void AUTOCONTROL::b_loop_pp()
 
             mtx.lock();
             last_cur_goal_state = "fail";
+            cur_goal_tf.setIdentity();
             mtx.unlock();
 
             return;
@@ -2037,8 +2043,11 @@ void AUTOCONTROL::b_loop_pp()
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
-            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
-            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            //double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
+            //double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double dx = local_path.pos[tgt_idx][0] - cur_xi[0];
+            double dy = local_path.pos[tgt_idx][1] - cur_xi[1];
+
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);            
 
             // calc cross track error

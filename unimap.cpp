@@ -57,6 +57,8 @@ void UNIMAP::load_map(QString path)
             additional_cloud.clear();
 
             // csv file format : x,y,z,r
+            std::vector<PT_XYZR> pts;
+
             QFile cloud_csv_file(cloud_csv_path);
             if(cloud_csv_file.open(QIODevice::ReadOnly))
             {
@@ -77,10 +79,12 @@ void UNIMAP::load_map(QString path)
                     pt.z = z;
                     pt.r = r;
 
-                    kdtree_cloud.pts.push_back(pt);
-                    kdtree_mask.push_back(1);
+                    pts.push_back(pt);
                 }
                 cloud_csv_file.close();
+
+                kdtree_cloud.pts = voxel_filtering(pts, 0.05);
+                kdtree_mask.resize(kdtree_cloud.pts.size(), 1);
 
                 printf("[UNIMAP] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud.pts.size());                
             }
@@ -188,7 +192,7 @@ void UNIMAP::save_map()
     // save cloud csv
     QString cloud_csv_path = path + "/cloud.csv";
     QFile cloud_csv_file(cloud_csv_path);
-    if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    if(cloud_csv_file.open(QIODevice::WriteOnly))
     {
         mtx.lock();
         for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)

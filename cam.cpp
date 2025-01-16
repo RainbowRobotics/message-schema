@@ -132,10 +132,10 @@ void CAM::grab_loop()
         }
         */
 
-        auto depth_profile0 = depth_profile_list0->getProfile(31)->as<ob::VideoStreamProfile>();
+        auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(31), w:%d, h:%d, fps:%d, format:%d\n", depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
-        auto color_profile0 = color_profile_list0->getProfile(83)->as<ob::VideoStreamProfile>();
+        auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] color_profile(83), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
@@ -330,6 +330,7 @@ void CAM::grab_loop()
         Eigen::Matrix4d TF0 = string_to_TF(config->CAM_TF_0);
 
         auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
+
         /*
         for(size_t p = 0; p < depth_profile_list0->count(); p++)
         {
@@ -338,7 +339,9 @@ void CAM::grab_loop()
         }
         */
 
+
         auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
+
         /*
         for(size_t p = 0; p < color_profile_list0->count(); p++)
         {
@@ -347,10 +350,10 @@ void CAM::grab_loop()
         }
         */
 
-        auto depth_profile0 = depth_profile_list0->getProfile(31)->as<ob::VideoStreamProfile>();
+        auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(31), w:%d, h:%d, fps:%d, format:%d\n", depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
-        auto color_profile0 = color_profile_list0->getProfile(83)->as<ob::VideoStreamProfile>();
+        auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] color_profile(83), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
@@ -483,8 +486,8 @@ void CAM::grab_loop()
         auto depth_profile_list1 = pipe1->getStreamProfileList(OB_SENSOR_DEPTH);
         auto color_profile_list1 = pipe1->getStreamProfileList(OB_SENSOR_COLOR);
 
-        auto depth_profile1 = depth_profile_list1->getProfile(31)->as<ob::VideoStreamProfile>();
-        auto color_profile1 = color_profile_list1->getProfile(83)->as<ob::VideoStreamProfile>();
+        auto depth_profile1 = depth_profile_list1->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
+        auto color_profile1 = color_profile_list1->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
 
         std::shared_ptr<ob::Config> config1 = std::make_shared<ob::Config>();
         config1->disableAllStream();

@@ -2495,6 +2495,7 @@ void MainWindow::bt_NodePoseThUp()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2538,6 +2539,20 @@ void MainWindow::bt_NodePoseThUp()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -2704,6 +2719,7 @@ void MainWindow::bt_NodePoseThDown()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2747,6 +2763,20 @@ void MainWindow::bt_NodePoseThDown()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }

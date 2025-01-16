@@ -838,10 +838,12 @@ void SLAM_2D::loc_b_loop()
                     Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+                    /*
                     if(is_pivot)
                     {
                         alpha = 1.0;
                     }
+                    */
 
                     Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
 
@@ -866,10 +868,13 @@ void SLAM_2D::loc_b_loop()
                 else
                 {
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+
+                    /*
                     if(is_pivot)
                     {
                         alpha = 1.0;
                     }
+                    */
 
                     Eigen::Matrix4d icp_tf = tp.tf;
 
@@ -1394,7 +1399,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight            
-            double weight = 1.0 + 0.02*dist;
+            double weight = 1.0 + 0.05*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1468,8 +1473,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // error
-            //err += std::abs(w*c);
-            err += std::sqrt(std::abs(c));
+            err += std::abs(w*c);
             err_cnt += w;
         }
         err /= err_cnt;
@@ -1746,8 +1750,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // error
-            //err += std::abs(w*c);
-            err += std::sqrt(std::abs(c));
+            err += std::abs(w*c);
+            //err += std::sqrt(std::abs(c));
             err_cnt += w;
         }
         err /= err_cnt;
