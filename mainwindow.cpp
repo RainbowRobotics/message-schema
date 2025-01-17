@@ -3605,6 +3605,10 @@ void MainWindow::comm_loop()
             {                
                 Q_EMIT cfms.signal_send_info();
             }
+            if(cms.is_connected)
+            {
+                cms.quick_send_status();
+            }
         }
 
         // for 500ms loop

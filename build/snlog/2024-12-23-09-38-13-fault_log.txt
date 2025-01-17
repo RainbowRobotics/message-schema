@@ -1,0 +1,11 @@
+Signal (15) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x123a8c) [0x573baaad2a8c]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x715c99a42520]
+/usr/lib/x86_64-linux-gnu/libvtkCommonDataModel-9.1.so.1(_ZN20vtkDataSetAttributes12GetAttributeEi+0x1b) [0x715c9e987a4b]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.1(_ZN17vtkAbstractMapper18GetAbstractScalarsEP10vtkDataSetiiiPKcRi+0x141) [0x715c9e4a2451]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.1(_ZN9vtkMapper31HasTranslucentPolygonalGeometryEv+0x63) [0x715c9e52eda3]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.1(_ZN8vtkActor31HasTranslucentPolygonalGeometryEv+0x88) [0x715c9e4a4978]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingOpenGL2-9.1.so.1(_ZN17vtkOpenGLRenderer14UpdateGeometryEP24vtkFrameBufferObjectBase+0xdd1) [0x715c9e139951]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingOpenGL2-9.1.so.1(_ZN17vtkOpenGLRenderer12DeviceRenderEv+0x2b6) [0x715c9e13b7b6]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.1(_ZN11vtkRenderer6RenderEv+0xa39) [0x715c9e551429]
+/usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.1(_ZN21vtkRendererCollection6RenderEv+0xa1) [0x715c9e5570d1]

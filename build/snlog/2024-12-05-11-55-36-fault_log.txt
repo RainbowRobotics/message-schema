@@ -1,0 +1,11 @@
+Signal (11) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x1dfc8e) [0x5cdba1547c8e]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x79b007a42520]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x19b41a) [0x5cdba150341a]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x196ef5) [0x5cdba14feef5]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x1926e8) [0x5cdba14fa6e8]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x2b3941) [0x5cdba161b941]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x2babed) [0x5cdba1622bed]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x175ca2) [0x5cdba14ddca2]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x175be3) [0x5cdba14ddbe3]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x175b43) [0x5cdba14ddb43]

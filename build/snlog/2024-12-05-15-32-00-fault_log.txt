@@ -1,0 +1,11 @@
+Signal (15) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x1dfc8e) [0x5698e853ec8e]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x743a40442520]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x1ae800) [0x743a405ae800]
+/usr/lib/x86_64-linux-gnu/libpcl_visualization.so.1.12(+0x67f18) [0x743a45164f18]
+/usr/lib/x86_64-linux-gnu/libpcl_visualization.so.1.12(_ZN3pcl13visualization13PCLVisualizer22removeCoordinateSystemERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEi+0x44) [0x743a45181234]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x21450f) [0x5698e857350f]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x214c72) [0x5698e8573c72]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x34721e) [0x5698e86a621e]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(+0x2f17c8) [0x743a40ef17c8]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_ZN6QTimer7timeoutENS_14QPrivateSignalE+0x3e) [0x743a40ef57fe]

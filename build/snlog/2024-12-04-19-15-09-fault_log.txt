@@ -1,0 +1,11 @@
+Signal (11) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x1df898) [0x59bbf0d03898]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x7c4774e42520]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0xf1e62) [0x59bbf0c15e62]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x17d7a6) [0x59bbf0ca17a6]
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x33f358) [0x59bbf0e63358]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_ZN7QObject5eventEP6QEvent+0x2ae) [0x7c47758e741e]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN19QApplicationPrivate13notify_helperEP7QObjectP6QEvent+0x83) [0x7c477656c713]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent+0x13a) [0x7c47758b9e3a]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData+0x187) [0x7c47758bcf27]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(+0x313a67) [0x7c4775913a67]

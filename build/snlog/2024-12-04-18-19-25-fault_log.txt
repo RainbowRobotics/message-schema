@@ -1,0 +1,11 @@
+Signal (15) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x1df898) [0x5bebd8f91898]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x7f0bd6c42520]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN19QApplicationPrivate13notify_helperEP7QObjectP6QEvent+0x87) [0x7f0bd836c717]
+/usr/lib/x86_64-linux-gnu/libQt5Core.so.5(_ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent+0x13a) [0x7f0bd76b9e3a]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate14sendPaintEventERK7QRegion+0x3a) [0x7f0bd83a743a]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate10drawWidgetEP12QPaintDeviceRK7QRegionRK6QPoint6QFlagsINS_14DrawWidgetFlagEEP8QPainterP21QWidgetRepaintManager+0x7d2) [0x7f0bd83a7c62]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate22paintSiblingsRecursiveEP12QPaintDeviceRK5QListIP7QObjectEiRK7QRegionRK6QPoint6QFlagsINS_14DrawWidgetFlagEEP8QPainterP21QWidgetRepaintManager+0x4f0) [0x7f0bd83a90a0]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate22paintSiblingsRecursiveEP12QPaintDeviceRK5QListIP7QObjectEiRK7QRegionRK6QPoint6QFlagsINS_14DrawWidgetFlagEEP8QPainterP21QWidgetRepaintManager+0x31f) [0x7f0bd83a8ecf]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate22paintSiblingsRecursiveEP12QPaintDeviceRK5QListIP7QObjectEiRK7QRegionRK6QPoint6QFlagsINS_14DrawWidgetFlagEEP8QPainterP21QWidgetRepaintManager+0x31f) [0x7f0bd83a8ecf]
+/usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5(_ZN14QWidgetPrivate22paintSiblingsRecursiveEP12QPaintDeviceRK5QListIP7QObjectEiRK7QRegionRK6QPoint6QFlagsINS_14DrawWidgetFlagEEP8QPainterP21QWidgetRepaintManager+0x31f) [0x7f0bd83a8ecf]
