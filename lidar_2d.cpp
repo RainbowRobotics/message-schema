@@ -308,10 +308,16 @@ void LIDAR_2D::grab_loop_f()
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
 
             // get lidar raw data
+            int step = 1;
+            if(config->USE_S3)
+            {
+                step = 4;
+            }
+
             std::vector<double> times;
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;
-            for(size_t p = 0; p < count; p++)
+            for(size_t p = 0; p < count; p+=step)
             {
                 if(nodes[p].dist_mm_q2 == 0)
                 {

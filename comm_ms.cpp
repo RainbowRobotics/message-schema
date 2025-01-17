@@ -25,7 +25,7 @@ COMM_MS::COMM_MS(QObject *parent)
 
     io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
     io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
-    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));    
+    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));
 
     // reconnect twice
     //io->set_reconnect_attempts(1);
@@ -283,87 +283,87 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
 
 void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
-        double time = get_time0();
+    double time = get_time0();
 
-        // check docking available
-        bool is_good = false;
+    // check docking available
+    bool is_good = false;
 
-        int is_good_everything = dctrl->is_everything_fine();
-        if(is_good_everything == DRIVING_FINE) is_good = true;
+    int is_good_everything = dctrl->is_everything_fine();
+    if(is_good_everything == DRIVING_FINE) is_good = true;
 
-        if(is_good)
+    if(is_good)
+    {
+        // accept response
+        Q_EMIT send_docking_dock_response("accept", "");
+
+        // do docking
+        Q_EMIT signal_docking_dock(time);
+    }
+    else
+    {
+        QString reason;
+        if(is_good_everything == DRIVING_FAILED )
         {
-            // accept response
-            Q_EMIT send_docking_dock_response("accept", "");
-
-            // do docking
-            Q_EMIT signal_docking_dock(time);
+            reason = "DRIVING_FAILED";
         }
+
+        else if (is_good_everything == DRIVING_NOT_READY )
+        {
+            reason = "DRIVING_NOT_READY";
+        }
+
         else
         {
-            QString reason;
-            if(is_good_everything == DRIVING_FAILED )
-            {
-                reason = "DRIVING_FAILED";
-            }
-
-            else if (is_good_everything == DRIVING_NOT_READY )
-            {
-                reason = "DRIVING_NOT_READY";
-            }
-            
-            else 
-            {
-                reason = "SOMETHING WRONG";
-            }
-
-            // reject response
-            Q_EMIT send_docking_dock_response("reject",reason);
+            reason = "SOMETHING WRONG";
         }
+
+        // reject response
+        Q_EMIT send_docking_dock_response("reject",reason);
+    }
 
 }
 
 void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
 
-        double time = get_time0();
+    double time = get_time0();
 
-        // check undocking available
-        bool is_good = false;
+    // check undocking available
+    bool is_good = false;
 
 
-        int is_good_everything = dctrl->is_everything_fine();
-        if(is_good_everything == DRIVING_FINE) is_good = true; 
+    int is_good_everything = dctrl->is_everything_fine();
+    if(is_good_everything == DRIVING_FINE) is_good = true;
 
-        if(is_good)
+    if(is_good)
+    {
+        // accept response
+        Q_EMIT send_docking_undock_response("accept", "");
+
+        // do undocking
+        Q_EMIT signal_docking_undock(time);
+    }
+    else
+    {
+        QString reason;
+        if(is_good_everything == DRIVING_FAILED )
         {
-            // accept response
-            Q_EMIT send_docking_undock_response("accept", "");
-
-            // do undocking
-            Q_EMIT signal_docking_undock(time);
+            reason = "DRIVING_FAILED";
         }
+
+        else if (is_good_everything == DRIVING_NOT_READY )
+        {
+            reason = "DRIVING_NOT_READY";
+        }
+
         else
         {
-            QString reason;
-            if(is_good_everything == DRIVING_FAILED )
-            {
-                reason = "DRIVING_FAILED";
-            }
-
-            else if (is_good_everything == DRIVING_NOT_READY )
-            {
-                reason = "DRIVING_NOT_READY";
-            }
-            
-            else 
-            {
-                reason = "SOMETHING WRONG";
-            }
-
-            // reject response
-            Q_EMIT send_docking_undock_response("reject", "some reason");
+            reason = "SOMETHING WRONG";
         }
+
+        // reject response
+        Q_EMIT send_docking_undock_response("reject", "some reason");
+    }
     
 }
 
@@ -454,17 +454,17 @@ void COMM_MS::send_status()
     imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
     rootObj["imu"] = imuObj;
 
-    // Adding the power object    
+    // Adding the power object
     QJsonObject powerObj;
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
     powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
-    #ifdef USE_STATION
+#ifdef USE_STATION
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
-    #endif
+#endif
     rootObj["power"] = powerObj;
 
     // Adding the state object
@@ -511,7 +511,7 @@ void COMM_MS::send_status()
         docking_state = "false";
     }
 
-    stateObj["dock"] = docking_state; 
+    stateObj["dock"] = docking_state;
     stateObj["map"] = unimap->map_dir.split("/").last();
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
@@ -1331,21 +1331,21 @@ void COMM_MS::slot_localization_autoinit(double time)
 
 void COMM_MS::slot_localization_semiautoinit(double time)
 {
-    #ifdef USE_SRV
+#ifdef USE_SRV
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
     {
         send_localization_response("semiautoinit", "fail");
         return;
     }
-    #endif
+#endif
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+#if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     if(unimap->is_loaded == false || lidar->is_connected_f == false || lidar->is_connected_b == false)
     {
         send_localization_response("semiautoinit", "fail");
         return;
     }
-    #endif
+#endif
 
     if(slam->is_busy)
     {

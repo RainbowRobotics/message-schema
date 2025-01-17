@@ -94,7 +94,7 @@ void ARUCO::a_loop()
         {
             detect(cam_idx);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     logger->write_log(QString("[ARUCO] stop a_loop"), "Green");
 }
@@ -110,10 +110,11 @@ void ARUCO::detect(int cam_idx)
     Eigen::Matrix4d extrinsic = cam->get_extrinsic(cam_idx);
     CAM_INTRINSIC intrinsic = cam->get_intrinsic(cam_idx);
     TIME_IMG t_img = cam->get_time_img(cam_idx);
-    if(t_img.t == 0 || t_img.img.empty())
+    if(t_img.t == 0 || t_img.img.empty() || t_img.t == last_t[cam_idx])
     {
         return;
     }
+    last_t[cam_idx] = t_img.t;
 
     cv::Matx33d cm(intrinsic.fx, 0, intrinsic.cx,
                    0, intrinsic.fy, intrinsic.cy,
@@ -142,7 +143,7 @@ void ARUCO::detect(int cam_idx)
     // pre processing
     cv::Mat img;
     cv::cvtColor(t_img.img, img, cv::COLOR_BGR2GRAY);
-    cv::equalizeHist(img, img);
+    //cv::equalizeHist(img, img);
 
     // marker detection
     cv::Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
