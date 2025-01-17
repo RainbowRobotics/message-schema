@@ -9,7 +9,7 @@ cv::Vec3b colors[10] =
     cv::Vec3b(0, 128, 0),     // 진한 녹색
     cv::Vec3b(255, 0, 0),     // 밝은 파란색
     cv::Vec3b(0, 165, 255),   // 주황색
-    cv::Vec3b(128, 0, 128),   // 보라색
+    cv::Vec3b(255, 0, 255),   // 마젠타
     cv::Vec3b(128, 128, 128), // 회색
     cv::Vec3b(0, 255, 255),   // 주황색
     cv::Vec3b(147, 20, 255),  // 핑크색
@@ -828,25 +828,51 @@ Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size)
 {
     // get all points and sampling
-    const uint64_t p1 = 73856093;
-    const uint64_t p2 = 19349669;
-    const uint64_t p3 = 83492791;
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
 
-    std::unordered_map<uint64_t, uint8_t> hash_map;
+    std::unordered_map<int64_t, uint8_t> hash_map;
 
     std::vector<Eigen::Vector3d> res;
     for(size_t p = 0; p < src.size(); p++)
     {
         Eigen::Vector3d P = src[p];
 
-        uint64_t x = P[0]/voxel_size;
-        uint64_t y = P[1]/voxel_size;
-        uint64_t z = P[2]/voxel_size;
-        uint64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+        int64_t x = std::floor(P[0]/voxel_size);
+        int64_t y = std::floor(P[1]/voxel_size);
+        int64_t z = std::floor(P[2]/voxel_size);
+        int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
         if(hash_map.find(key) == hash_map.end())
         {
             hash_map[key] = 1;
             res.push_back(P);
+        }
+    }
+
+    return res;
+}
+
+std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size)
+{
+    // get all points and sampling
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
+
+    std::unordered_map<int64_t, uint8_t> hash_map;
+
+    std::vector<PT_XYZR> res;
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        int64_t x = std::floor(src[p].x/voxel_size);
+        int64_t y = std::floor(src[p].y/voxel_size);
+        int64_t z = std::floor(src[p].z/voxel_size);
+        int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+        if(hash_map.find(key) == hash_map.end())
+        {
+            hash_map[key] = 1;
+            res.push_back(src[p]);
         }
     }
 
@@ -923,6 +949,61 @@ std::vector<QString> array_to_links(QJsonArray arr)
         res.push_back(arr[p].toString());
     }
     return res;
+}
+
+CAM_INTRINSIC string_to_intrinsic(QString str)
+{
+    // w, h, fx, fy, cx, cy, k1, k2, p1, p2
+    QStringList str_list = str.split(",");
+    if(str_list.size() != 10)
+    {
+        return CAM_INTRINSIC();
+    }
+
+    CAM_INTRINSIC res;
+    res.w = str_list[0].toDouble();
+    res.h = str_list[1].toDouble();
+    res.fx = str_list[2].toDouble();
+    res.fy = str_list[3].toDouble();
+    res.cx = str_list[4].toDouble();
+    res.cy = str_list[5].toDouble();
+    res.k1 = str_list[6].toDouble();
+    res.k2 = str_list[7].toDouble();
+    res.p1 = str_list[8].toDouble();
+    res.p2 = str_list[9].toDouble();
+    return res;
+}
+
+void precise_sleep(double seconds)
+{
+    if(seconds <= 0)
+    {
+        return;
+    }
+
+    int fd = timerfd_create(CLOCK_MONOTONIC, 0);
+    if (fd == -1)
+    {
+        perror("timerfd_create");
+        return;
+    }
+
+    struct itimerspec ts;
+    ts.it_value.tv_sec = static_cast<time_t>(seconds);
+    ts.it_value.tv_nsec = static_cast<long>((seconds - ts.it_value.tv_sec) * 1e9);
+    ts.it_interval.tv_sec = 0;
+    ts.it_interval.tv_nsec = 0;
+
+    if (timerfd_settime(fd, 0, &ts, nullptr) == -1)
+    {
+        perror("timerfd_settime");
+        close(fd);
+        return;
+    }
+
+    uint64_t expirations;
+    read(fd, &expirations, sizeof(expirations));
+    close(fd);
 }
 
 #endif // UTILS_CPP

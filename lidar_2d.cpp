@@ -179,9 +179,18 @@ void LIDAR_2D::grab_loop_f()
         logger->write_log("[LIDAR] driver init failed", "Red", true, false);
         return;
     }
+    logger->write_log("[LIDAR] driver init success", "Green", true, false);
 
-    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 256000));
-    //sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyUSB0", 256000));
+    int baudrate = 256000;
+    if(config->USE_S3 == 1)
+    {
+        baudrate = 1000000;
+        logger->write_log("[LIDAR] baud changed success", "Green", true, false);
+    }
+
+    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", baudrate));
+    logger->write_log("[LIDAR] channel init success", "Green", true, false);
+
     if(!channel->open())
     {
         logger->write_log("[LIDAR] port open failed", "Red", true, false);
@@ -199,14 +208,21 @@ void LIDAR_2D::grab_loop_f()
         return;
     }
 
+    logger->write_log("[LIDAR] connect success", "Green", true, false);
+
     std::vector<sl::LidarScanMode> modes;
     drv->getAllSupportedScanModes(modes);
+    if(modes.size() == 0)
+    {
+        logger->write_log("[LIDAR] no mode failed", "Red", true, false);
+        return;
+    }
 
     sl::LidarScanMode mode;
     double per_sample = modes[0].us_per_sample;
     for(size_t p = 0; p < modes.size(); p++)
     {
-        //printf("%s[%d] us_per_sample:%f\n", modes[p].scan_mode, modes[p].id, modes[p].us_per_sample);
+        printf("%s[%d] us_per_sample:%f\n", modes[p].scan_mode, modes[p].id, modes[p].us_per_sample);
         if(modes[p].us_per_sample < per_sample)
         {
             per_sample = modes[p].us_per_sample;
@@ -230,7 +246,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         sl_lidar_response_measurement_node_hq_t nodes[8192];
@@ -292,10 +308,16 @@ void LIDAR_2D::grab_loop_f()
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
 
             // get lidar raw data
+            int step = 1;
+            if(config->USE_S3)
+            {
+                step = 4;
+            }
+
             std::vector<double> times;
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;
-            for(size_t p = 0; p < count; p++)
+            for(size_t p = 0; p < count; p+=step)
             {
                 if(nodes[p].dist_mm_q2 == 0)
                 {
@@ -452,8 +474,9 @@ void LIDAR_2D::a_loop()
                 FRAME temp;
                 scan_que.try_pop(temp);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");
@@ -484,7 +507,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         if(safety_scanner->isDataAvailable())
@@ -684,7 +707,7 @@ void LIDAR_2D::grab_loop_b()
 
     is_connected_b = true;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_b)
     {
         if(safety_scanner->isDataAvailable())
@@ -1013,8 +1036,9 @@ void LIDAR_2D::a_loop()
 
                 storage.erase(storage.begin(), storage.begin()+min_idx);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");
@@ -1034,7 +1058,7 @@ void LIDAR_2D::grab_loop_f()
     // gap time each points
     const double point_interval = 32*U2S;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_f)
     {
         repark_t temp_pack;
@@ -1195,7 +1219,7 @@ void LIDAR_2D::grab_loop_b()
     // gap time each points
     const double point_interval = 32*U2S;
 
-    int drop_cnt = 100;
+    int drop_cnt = 10;
     while(grab_flag_b)
     {
         repark_t temp_pack;
@@ -1494,8 +1518,9 @@ void LIDAR_2D::a_loop()
 
                 storage.erase(storage.begin(), storage.begin()+min_idx);
             }
+            continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     printf("[LIDAR] stop a loop\n");

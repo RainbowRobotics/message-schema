@@ -6,12 +6,6 @@ CONFIG += c++17
 CONFIG += resources_big
 
 QMAKE_CXXFLAGS_RELEASE += -O3
-#QMAKE_CXXFLAGS_RELEASE += -g
-#QMAKE_LFLAGS_RELEASE += -g
-
-# AddressSanitizer
-#QMAKE_CXXFLAGS += -fsanitize=address
-#QMAKE_LFLAGS += -fsanitize=address
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -20,16 +14,9 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-#DEFINES += USE_SRV
+DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
-DEFINES += USE_AMR_400_LAKI
-
-# auto copy config files
-#copy_config.commands = cp -r $$PWD/config $$OUT_PWD/
-#copy_config.target = copy_config
-#QMAKE_EXTRA_TARGETS += copy_config
-#PRE_TARGETDEPS += copy_config
-#.PHONY: copy_config
+#DEFINES += USE_AMR_400_LAKI
 
 # set home dir
 HOME = $$system(echo $HOME)

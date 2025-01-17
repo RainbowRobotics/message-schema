@@ -32,6 +32,7 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGestureEvent>
+#include <QGraphicsOpacityEffect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,7 +71,8 @@ public:
     LOGGER system_logger;
     std::atomic<int> log_cnt = {0};
 
-    // funcs
+    // funcs    
+    void init_ui_effect();
     void init_modules();
     void setup_vtk();
     void all_plot_clear();
@@ -81,7 +83,6 @@ public:
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
     void set_mapping_view();
 
-
     void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
@@ -89,14 +90,7 @@ public:
     void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
     void viewer_camera_pan_control(double dx, double dy);
     void viewer_camera_pan_control2(double dx, double dy);
-
-    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);
-
-    void syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer);
-
-    void synchronizeViewersIfNeeded(QObject* currentWidget);
-    bool wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget);
-    QObject* lastActiveWidget = nullptr;
+    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);    
     
 public:
     Ui::MainWindow *ui;
@@ -105,6 +99,7 @@ public:
     // vars
     QString map_dir = "";
     std::atomic<double> plot_proc_t = {0};
+    std::atomic<int> test_img_save_cnt = {0};
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -216,31 +211,34 @@ public:
     std::atomic<bool> is_jog_pressed = {false};
 
     // aruco
-    std::atomic<double> aruco_prev_t = {0};
+    std::atomic<double> last_plot_aruco_t = {0};
+
+    // for touch event
+    double lastScaleFactor = 1.0;
+    QPointF lastTouchPoint;
+    bool isPanning = false;
 
     // 3d plot funcs
     void map_plot();
-    void obs_plot();
     void topo_plot();
     void pick_plot();
     void slam_plot();
     void loc_plot();
-    void raw_plot();
+    void obs_plot();
     void ctrl_plot();
+    void raw_plot();
 
     void map_plot2();
     void topo_plot2();
     void pick_plot2();
-    void loc_plot2();    
+    void loc_plot2();
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
-Q_SIGNALS:
-    void signal_send_status();
-    void signal_send_info();
-
 public Q_SLOTS:
+    // for log
+    void slot_write_log(QString user_log, QString color_code);
 
     // for tab
     void slot_main_tab_changed();
@@ -371,9 +369,6 @@ public Q_SLOTS:
     void slot_resist_id(QString id);
     void slot_sim_random_init(QString seed);
     void slot_sim_random_seq();
-
-    // for log
-    void slot_write_log(QString user_log, QString color_code);
 
     // for ldock
     void bt_DockingMove();

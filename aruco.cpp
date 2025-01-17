@@ -7,18 +7,11 @@ ARUCO::ARUCO(QObject *parent)
 
 ARUCO::~ARUCO()
 {
-    if(detect_thread0 != NULL)
+    if(a_thread != NULL)
     {
-        detect_flag0 = false;
-        detect_thread0->join();
-        detect_thread0 = NULL;
-    }
-
-    if(detect_thread1 != NULL)
-    {
-        detect_flag1 = false;
-        detect_thread1->join();
-        detect_thread1 = NULL;
+        a_flag = false;
+        a_thread->join();
+        a_thread = NULL;
     }
 }
 
@@ -31,16 +24,10 @@ void ARUCO::init()
         return;
     }
 
-    if(detect_thread0 == NULL)
+    if(a_thread == NULL)
     {
-        detect_flag0 = true;
-        detect_thread0 = new std::thread(&ARUCO::detect_loop, this, 0);
-    }
-
-    if (detect_thread1 == NULL)
-    {
-        detect_flag1 = true;
-        detect_thread1 = new std::thread(&ARUCO::detect_loop, this, 1);
+        a_flag = true;
+        a_thread = new std::thread(&ARUCO::a_loop, this);
     }
 }
 
@@ -53,22 +40,13 @@ TIME_POSE_ID ARUCO::get_cur_tpi()
     return _cur_tpi;
 }
 
-cv::Mat ARUCO::get_plot_img0()
+cv::Mat ARUCO::get_plot_img(int cam_idx)
 {
     mtx.lock();
-    cv::Mat _cur_aruco_img0 = cur_aruco_img0.clone();
+    cv::Mat res = cur_plot_img[cam_idx].clone();
     mtx.unlock();
 
-    return _cur_aruco_img0;
-}
-
-cv::Mat ARUCO::get_plot_img1()
-{
-    mtx.lock();
-    cv::Mat _cur_aruco_img1 = cur_aruco_img1.clone();
-    mtx.unlock();
-
-    return _cur_aruco_img1;
+    return res;
 }
 
 std::vector<cv::Point3f> ARUCO::make_obj_pts()
@@ -107,82 +85,104 @@ Eigen::Matrix4d ARUCO::se3_exp(cv::Vec3d rvec, cv::Vec3d tvec, Eigen::Matrix4d o
     return T;
 }
 
-void ARUCO::detect_loop(int cam_idx)
+void ARUCO::a_loop()
 {
+    logger->write_log(QString("[ARUCO] start a_loop"), "Green");
+    while(a_flag)
+    {
+        for(int cam_idx = 0; cam_idx < 2; cam_idx++)
+        {
+            detect(cam_idx);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    logger->write_log(QString("[ARUCO] stop a_loop"), "Green");
+}
+
+void ARUCO::detect(int cam_idx)
+{
+    // get params
+    if(!cam->is_param_loaded)
+    {
+        return;
+    }
+
+    Eigen::Matrix4d extrinsic = cam->get_extrinsic(cam_idx);
+    CAM_INTRINSIC intrinsic = cam->get_intrinsic(cam_idx);
+    TIME_IMG t_img = cam->get_time_img(cam_idx);
+    if(t_img.t == 0 || t_img.img.empty() || t_img.t == last_t[cam_idx])
+    {
+        return;
+    }
+    last_t[cam_idx] = t_img.t;
+
+    cv::Matx33d cm(intrinsic.fx, 0, intrinsic.cx,
+                   0, intrinsic.fy, intrinsic.cy,
+                   0,  0,  1);
+
+    cv::Mat dc(intrinsic.coef_num, 1, CV_64F, cv::Scalar(0));
+    if(intrinsic.coef_num == 4)
+    {
+        dc.ptr<double>(0)[0] = intrinsic.k1;
+        dc.ptr<double>(1)[0] = intrinsic.k2;
+        dc.ptr<double>(2)[0] = intrinsic.p1;
+        dc.ptr<double>(3)[0] = intrinsic.p2;
+    }
+    else if(intrinsic.coef_num == 8)
+    {
+        dc.ptr<double>(0)[0] = intrinsic.k1;
+        dc.ptr<double>(1)[0] = intrinsic.k2;
+        dc.ptr<double>(2)[0] = intrinsic.p1;
+        dc.ptr<double>(3)[0] = intrinsic.p2;
+        dc.ptr<double>(4)[0] = intrinsic.k3;
+        dc.ptr<double>(5)[0] = intrinsic.k4;
+        dc.ptr<double>(6)[0] = intrinsic.k5;
+        dc.ptr<double>(7)[0] = intrinsic.k6;
+    }
+
+    // pre processing
+    cv::Mat img;
+    cv::cvtColor(t_img.img, img, cv::COLOR_BGR2GRAY);
+    //cv::equalizeHist(img, img);
+
+    // marker detection
     cv::Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
     cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_250);
 
-    logger->write_log(QString("[ARUCO] start detection loop%1.").arg(cam_idx), "Green");
-
-    Eigen::Matrix4d cam_tf = (cam_idx == 0) ? string_to_TF(config->CAM_TF_0) : string_to_TF(config->CAM_TF_1);
-
-    double pre_t = 0;
-    while((cam_idx == 0) ? detect_flag0 : detect_flag1)
+    std::vector<int> detected_id;
+    std::vector<std::vector<cv::Point2f>> detected_uv;
+    cv::aruco::detectMarkers(img, dictionary, detected_uv, detected_id, parameters);
+    if(detected_id.size() == 0)
     {
-        CAM_INTRINSIC intrinsic = (cam_idx == 0) ? cam->get_rgb_intrinsic0() : cam->get_rgb_intrinsic1();
-        if(cam->is_param_loaded == false)
-        {
-            //printf("[ARUCO_%d] failed to load cam params\n", cam_idx);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-            continue;
-        }
+        return;
+    }
 
-        cv::Matx33d cm(intrinsic.fx, 0, intrinsic.cx,
-                       0, intrinsic.fy, intrinsic.cy,
-                       0,  0,  1);
+    // make plot img
+    cv::Mat plot_aruco = t_img.img.clone();
 
-        double d[8] = {intrinsic.k1, intrinsic.k2, intrinsic.p1,intrinsic.p2, intrinsic.k3, intrinsic.k4, intrinsic.k5, intrinsic.k6};
-        cv::Mat dc(8, 1, CV_64F, d);
-
-        TIME_IMG time_img = (cam_idx == 0) ? cam->get_time_img0() : cam->get_time_img1();
-
-        if(time_img.img.empty())
-        {
-            printf("[ARUCO_%d] time_img empty\n", cam_idx);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-            continue;
-        }
-
-        // wait for new image
-        if(time_img.t <= pre_t)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
-        pre_t = time_img.t;
-
-        // pre processing
-        cv::Mat cur_img;        
-        cv::cvtColor(time_img.img, cur_img, cv::COLOR_BGR2GRAY);
-        //cv::equalizeHist(cur_img, cur_img);
-
-        std::vector<std::vector<cv::Point2f>> detected_uv;
-        std::vector<int> detected_id;
-        cv::aruco::detectMarkers(cur_img, dictionary, detected_uv, detected_id, parameters);
-        if(detected_id.size() == 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
-
-        // only use first detected marker
-        cv::Mat plot_aruco;
-        cv::cvtColor(cur_img, plot_aruco, cv::COLOR_GRAY2BGR);
-        cv::circle(plot_aruco, detected_uv[0][0], 30, cv::Scalar(0,0,255), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][1], 30, cv::Scalar(0,255,0), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][2], 30, cv::Scalar(255,0,0), -1, cv::LINE_AA);
-        cv::circle(plot_aruco, detected_uv[0][3], 30, cv::Scalar(0,255,255), -1, cv::LINE_AA);
+    // find nn tf
+    bool is_found = false;
+    int min_id = 0;
+    double min_d = 99999999;
+    Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+    for(size_t id = 0; id < detected_id.size(); id++)
+    {
+        cv::circle(plot_aruco, detected_uv[id][0], 30, cv::Scalar(0,0,255), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[id][1], 30, cv::Scalar(0,255,0), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[id][2], 30, cv::Scalar(255,0,0), -1, cv::LINE_AA);
+        cv::circle(plot_aruco, detected_uv[id][3], 30, cv::Scalar(0,255,255), -1, cv::LINE_AA);
 
         // extract 3d-2d pairs
-        std::vector<cv::Point3f> matched_xyzs = make_obj_pts();        
+        std::vector<cv::Point3f> matched_xyzs = make_obj_pts();
         std::vector<cv::Point2f> matched_uvs;
         for(int p = 0; p < 4; p++)
         {
-            double u = (double)detected_uv[0][p].x;
-            double v = (double)detected_uv[0][p].y;
+            double u = (double)detected_uv[id][p].x;
+            double v = (double)detected_uv[id][p].y;
             matched_uvs.push_back(cv::Point2f(u,v));
         }
 
+        // add dummy pts
         for(int i = -5; i <= 5; i++)
         {
             for(int j = -5; j <= 5; j++)
@@ -194,80 +194,65 @@ void ARUCO::detect_loop(int cam_idx)
 
                 for(int p = 0; p < 4; p++)
                 {
-                    double u = (double)detected_uv[0][p].x + (double)j*0.2;
-                    double v = (double)detected_uv[0][p].y + (double)i*0.2;
+                    double u = (double)detected_uv[id][p].x + (double)j*0.2;
+                    double v = (double)detected_uv[id][p].y + (double)i*0.2;
                     matched_xyzs.push_back(matched_xyzs[p]);
                     matched_uvs.push_back(cv::Point2f(u,v));
                 }
             }
         }
 
-        // not detected uv or no matching points
-        if(matched_xyzs.size() == 0 || matched_uvs.size() == 0 || matched_xyzs.size() != matched_uvs.size())
-        {
-            printf("[ARUCO_%d] not detected uv or no matching points\n", cam_idx);
-            printf("[ARUCO_%d] matched_xyzs.size(): %d, matched_uvs.size(): %d\n)", cam_idx, (int)matched_xyzs.size(), (int)matched_uvs.size());
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
-
         // estimate extrinsic
         cv::Mat rvec, tvec;
         if(cv::solvePnP(matched_xyzs, matched_uvs, cm, dc, rvec, tvec, false, cv::SOLVEPNP_SQPNP))
         {
-            //cv::solvePnPRefineVVS(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::solvePnPRefineLM(matched_xyzs, matched_uvs, cm, dc, rvec, tvec);
             cv::drawFrameAxes(plot_aruco, cm, dc, rvec, tvec, 0.1, 30);
 
-            Eigen::Matrix4d optional_tf;
-            if(cam_idx == 0)
-            {
-                optional_tf = cam->rgb_extrinsic0 * ZYX_to_TF(0,0,0,0,-90.0*D2R,-90.0*D2R);
-            }
-            else if(cam_idx == 1)
-            {
-                optional_tf = cam->rgb_extrinsic1 * ZYX_to_TF(0,0,0,0,-90.0*D2R,-90.0*D2R);
-            }
+            Eigen::Matrix4d optional_tf = ZYX_to_TF(0,0,0,0,-90.0*D2R,-90.0*D2R);
 
             Eigen::Matrix4d cam_to_marker = se3_exp(rvec, tvec, optional_tf);
             refine_pose(cam_to_marker);
 
-            Eigen::Matrix4d robot_to_marker = cam_tf * cam_to_marker;
-
-            TIME_POSE_ID aruco_tpi;
-            aruco_tpi.id = detected_id[0];
-            aruco_tpi.t = time_img.t;
-            aruco_tpi.tf = robot_to_marker;
-
-            // update result
-            mtx.lock();
-            if(aruco_tpi.t > cur_tpi.t)
+            Eigen::Matrix4d robot_to_marker = extrinsic * cam_to_marker;
+            double d = calc_dist_2d(robot_to_marker.block(0,3,3,1));
+            if(d < min_d)
             {
-                cur_tpi = aruco_tpi;
+                min_d = d;
+                min_tf = robot_to_marker;
+                min_id = detected_id[id];
+                is_found = true;
             }
-
-            if(cam_idx == 0)
-            {
-                cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
-                cv::flip(plot_aruco, plot_aruco, -1);
-                cur_aruco_img0 = plot_aruco.clone();
-            }
-            else if(cam_idx == 1)
-            {
-                cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
-                cur_aruco_img1 = plot_aruco.clone();
-            }
-            mtx.unlock();
         }
-        else
-        {
-            printf("[ARUCO_%d] solve pnp failed\n", cam_idx);
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    logger->write_log(QString("[ARUCO] stop detection loop%1.").arg(cam_idx), "Green");
+    if(is_found)
+    {
+        TIME_POSE_ID aruco_tpi;
+        aruco_tpi.t = t_img.t;
+        aruco_tpi.id = min_id;
+        aruco_tpi.tf = min_tf;
+
+        // update result
+        mtx.lock();
+        if(aruco_tpi.t > cur_tpi.t)
+        {
+            cur_tpi = aruco_tpi;
+        }
+
+        if(cam_idx == 0 || cam_idx == 2)
+        {
+            cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
+            cv::flip(plot_aruco, plot_aruco, -1);
+            cur_plot_img[cam_idx]= plot_aruco.clone();
+        }
+        else if(cam_idx == 1 || cam_idx == 3)
+        {
+            cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
+            cur_plot_img[cam_idx]= plot_aruco.clone();
+        }
+        mtx.unlock();
+    }
 }
 
 

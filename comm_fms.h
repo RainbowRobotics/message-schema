@@ -45,6 +45,7 @@ public:
 
     // vars    
     std::atomic<bool> is_connected = {false};
+    std::atomic<double> last_send_time = {0};
     QString robot_id = "";
     QString multi_state = "none"; // none, req_path, recv_path
 
@@ -54,6 +55,8 @@ public:
     QString get_multi_state();
 
 Q_SIGNALS:
+    void signal_send_info();
+
     void signal_mapload(double time, QString name);
     void signal_init(double time);
     void signal_random_init(double time, QString seed);

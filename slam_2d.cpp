@@ -566,9 +566,10 @@ void SLAM_2D::map_a_loop()
 
             // update processing time
             proc_time_map_a = get_time() - st_time;
-        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] map_a_loop stop\n");
 }
@@ -707,9 +708,9 @@ void SLAM_2D::map_b_loop()
 
             // update processing time
             proc_time_map_b = get_time() - st_time;
+            continue;
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] map_b_loop stop\n");
 }
@@ -717,7 +718,6 @@ void SLAM_2D::map_b_loop()
 void SLAM_2D::loc_a_loop()
 {
     lidar->scan_que.clear();
-    Eigen::Vector3d pre_mo(0,0,0);
 
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
@@ -727,7 +727,6 @@ void SLAM_2D::loc_a_loop()
         while(lidar->scan_que.try_pop(frm) && loc_a_flag)
         {
             is_new = true;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         if(is_new)
@@ -740,12 +739,11 @@ void SLAM_2D::loc_a_loop()
 
             double st_time = get_time();
 
-            mtx.lock();
-            Eigen::Matrix4d _cur_tf = cur_tf;            
-            mtx.unlock();
-
-            // pose estimation            
+            // pose estimation
+            Eigen::Matrix4d _cur_tf = get_cur_tf();
             double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+
+            // check error
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
@@ -783,13 +781,11 @@ void SLAM_2D::loc_a_loop()
                 mtx.unlock();
             }
 
-            //lidar->scan_que.clear();
-
             // update processing time
             proc_time_loc_a = get_time() - st_time;
-        }        
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] loc_a_loop stop\n");
 }
@@ -820,10 +816,8 @@ void SLAM_2D::loc_b_loop()
             Eigen::Matrix4d pre_mo_tf = se2_to_TF(mo0.pose);
             Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
 
-            // get current tf
-            mtx.lock();
-            Eigen::Matrix4d _cur_tf = cur_tf;
-            mtx.unlock();
+            // get current tf            
+            Eigen::Matrix4d _cur_tf = get_cur_tf();
 
             // update odo_tf
             Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
@@ -834,22 +828,65 @@ void SLAM_2D::loc_b_loop()
             TIME_POSE tp;
             if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
             {
-                if(std::abs(mo.t - tp.t) < 0.3)
+                const bool is_time_compensation = true;
+                const bool use_slip_detection = false;
+                if(is_time_compensation)
                 {
                     // time delay compensation
-                    Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
+                    Eigen::Matrix4d tf0 = tp.tf2;
                     Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
                     Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                     double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+                    /*
+                    if(is_pivot)
+                    {
+                        alpha = 1.0;
+                    }
+                    */
+
                     Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
 
                     // for odometry slip
-                    Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                    if(std::abs(dtdr[1]) > 10.0*D2R)
+                    if(use_slip_detection)
                     {
-                        alpha = 0;
-                        printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                        if(std::abs(dtdr[1]) > 10.0*D2R)
+                        {
+                            alpha = 0;
+                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        }
+                    }
+
+                    // interpolation
+                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                    // update
+                    _cur_tf = fused_tf;
+                }
+                else
+                {
+                    double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+
+                    /*
+                    if(is_pivot)
+                    {
+                        alpha = 1.0;
+                    }
+                    */
+
+                    Eigen::Matrix4d icp_tf = tp.tf;
+
+                    // for odometry slip
+                    if(use_slip_detection)
+                    {
+                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                        if(std::abs(dtdr[1]) > 10.0*D2R)
+                        {
+                            alpha = 0;
+                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
+                        }
                     }
 
                     // interpolation
@@ -889,7 +926,12 @@ void SLAM_2D::loc_b_loop()
                         Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
 
                         // interpolation
-                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf
+                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf                        
+                        if(std::abs(mo.vel[2]) > 10.0*D2R)
+                        {
+                            alpha = 1.0;
+                        }
+
                         Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
                         Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
@@ -927,8 +969,9 @@ void SLAM_2D::loc_b_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -962,7 +1005,7 @@ void SLAM_2D::obs_loop()
 
             // add cam pts
             {
-                TIME_PTS cam_scan0 = cam->get_scan0();
+                TIME_PTS cam_scan0 = cam->get_scan(0);
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(cam_scan0.t);
 
                 for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
@@ -972,7 +1015,7 @@ void SLAM_2D::obs_loop()
                     tpp.pts.push_back(_P);
                 }
 
-                TIME_PTS cam_scan1 = cam->get_scan1();
+                TIME_PTS cam_scan1 = cam->get_scan(1);
                 Eigen::Matrix4d tf1 = tpp.tf.inverse()*get_best_tf(cam_scan1.t);
                 for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
                 {
@@ -982,10 +1025,13 @@ void SLAM_2D::obs_loop()
                 }
             }
 
+            // update obstacle map
             obsmap->update_obs_map(tpp);
+
+            // for speed
             tpp_que.clear();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] obs_loop stop\n");
 }
@@ -1353,7 +1399,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // additional weight            
-            double weight = 1.0 + 0.02*dist;
+            double weight = 1.0 + 0.05*dist;
 
             // storing cost jacobian
             COST_JACOBIAN cj;
@@ -1427,8 +1473,7 @@ double SLAM_2D::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // error
-            //err += std::abs(w*c);
-            err += std::sqrt(std::abs(c));
+            err += std::abs(w*c);
             err_cnt += w;
         }
         err /= err_cnt;
@@ -1705,8 +1750,8 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // error
-            //err += std::abs(w*c);
-            err += std::sqrt(std::abs(c));
+            err += std::abs(w*c);
+            //err += std::sqrt(std::abs(c));
             err_cnt += w;
         }
         err /= err_cnt;

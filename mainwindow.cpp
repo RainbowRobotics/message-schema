@@ -43,6 +43,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ckb_PlotEdges2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
     connect(ui->ckb_PlotNames2, SIGNAL(stateChanged(int)), this, SLOT(topo_update()));
 
+    // for viewer control
+    connect(ui->bt_ViewLeft, &QPushButton::clicked, this, [this]()      { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewRight, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewUp, &QPushButton::clicked, this, [this]()        { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewDown, &QPushButton::clicked, this, [this]()      { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn, &QPushButton::clicked, this, [this]()    { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut, &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
+
+    connect(ui->bt_ViewLeft2, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control2(-2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewRight2, &QPushButton::clicked, this, [this]()    { viewer_camera_relative_control2(+2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewUp2, &QPushButton::clicked, this, [this]()       { viewer_camera_relative_control2(0, +2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewDown2, &QPushButton::clicked, this, [this]()     { viewer_camera_relative_control2(0, -2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn2, &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control2(0, 0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut2, &QPushButton::clicked, this, [this]()  { viewer_camera_relative_control2(0, 0, -2, 0, 0, 0);});
+
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
@@ -174,10 +189,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
     // for websocket ui
-    connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
+    //connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // for fms
-    connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
+    //connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
     connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
@@ -204,6 +219,9 @@ MainWindow::MainWindow(QWidget *parent)
 
             QTimer::singleShot(2000, [&]()
             {
+                // set effect
+                init_ui_effect();
+
                 // set plot window
                 setup_vtk();
 
@@ -250,6 +268,156 @@ MainWindow::~MainWindow()
     }
 
     delete ui;
+}
+
+void MainWindow::init_ui_effect()
+{
+    // set opacity
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen1->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen3->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen4->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_Screen5->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewLeft->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewRight->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewUp->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewDown->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomIn->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomOut->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewLeft2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewRight2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewUp2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewDown2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomIn2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->bt_ViewZoomOut2->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_PickPose->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_NodeId->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_RobotVel->setGraphicsEffect(effect);
+    }
+}
+
+// for log
+void MainWindow::slot_write_log(QString user_log, QString color_code)
+{
+    if(color_code == "Red")
+    {
+        color_code = "red";
+    }
+    else if(color_code == "Green")
+    {
+        color_code = "green";
+    }
+    else if(color_code == "Orange")
+    {
+        color_code = "orange";
+    }
+    else if(color_code == "White")
+    {
+        color_code = "black";
+    }
+
+    QString style_code = "QLabel { color : " + color_code + "; }";
+
+    ui->lb_LogInfo->setText(user_log);
+    ui->lb_LogInfo->setStyleSheet(style_code);
 }
 
 // for emergency stop
@@ -452,8 +620,8 @@ void MainWindow::init_modules()
     dctrl.logger = &logger;
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
-//    dctrl.cam = &cam;
-//    dctrl.code = &code;
+    // dctrl.cam = &cam;
+    // dctrl.code = &code;
     dctrl.slam = &slam;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
@@ -524,20 +692,6 @@ void MainWindow::init_modules()
     cui.ctrl = &ctrl;
     cui.init();
 
-    /*
-    // map auto load
-    if(config.MAP_PATH != "")
-    {
-        QDir dir(config.MAP_PATH);
-        if(dir.exists())
-        {
-            map_dir = config.MAP_PATH;
-            unimap.load_map(map_dir);
-            all_update();
-        }
-    }
-    */
-
     // start jog loop
     jog_flag = true;
     jog_thread = new std::thread(&MainWindow::jog_loop, this);
@@ -569,7 +723,6 @@ void MainWindow::setup_vtk()
 
         ui->qvtkWidget2->grabGesture(Qt::PinchGesture);
         ui->qvtkWidget2->installEventFilter(this);
-
 
         // init drawing
         viewer->addCoordinateSystem(1.0, "O_global");
@@ -621,6 +774,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
     if(object == ui->qvtkWidget)
     {
+        if(ui->ckb_PlotEnable->isChecked() == false)
+        {
+            return true;
+        }
+
         // cam control
         if(ui->cb_ViewType->currentText() == "VIEW_3D")
         {
@@ -755,66 +913,37 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
             }
         }
 
-        // gesture event
-        if (ev->type() == QEvent::Gesture)
+
+        /*
+        // for touch screen
+        if(ui->ckb_Panning->isChecked())
         {
-            QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
-            if (QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+            // gesture event
+            if(ev->type() == QEvent::Gesture)
             {
-                QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
-
-                handlePinchGesture(pinchGesture, object); //handle Pin
-                return true;
+                QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
+                if(QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+                {
+                    QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
+                    handlePinchGesture(pinchGesture, object);
+                    return true;
+                }
             }
-        }
 
-        // touch event
-        if (ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
-        {
-            if(ui->tabWidget->tabText(ui->tabWidget->currentIndex()) == "Driving")
+            // touch event : panning or click
+            if(ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
             {
                 QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
                 QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
-                if (!touchPoints.isEmpty())
+                if(!touchPoints.isEmpty())
                 {
-                    const QTouchEvent::TouchPoint& touchPoint = touchPoints.first();
-                    QPoint pos = touchPoint.pos().toPoint();
-
-                    if (!touchEvent->isAccepted())
-                    {
-                        if (ev->type() == QEvent::TouchBegin)
-                        {
-                            QMouseEvent pressEvent(QEvent::MouseButtonPress, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &pressEvent);
-                        }
-                        else if (ev->type() == QEvent::TouchUpdate)
-                        {
-                            QMouseEvent moveEvent(QEvent::MouseMove, pos, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &moveEvent);
-                        }
-                        else if (ev->type() == QEvent::TouchEnd)
-                        {
-                            QMouseEvent releaseEvent(QEvent::MouseButtonRelease, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                            QApplication::sendEvent(object, &releaseEvent);
-                        }
-
-                        touchEvent->setAccepted(true);
-                        return true;
-                    }
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    handleTouchEvent(touchEvent, object);
+                    return true;
                 }
-
-                touchEvent->setAccepted(true);
-                return true;
             }
-            else
-            {
-                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-                handleTouchEvent(touchEvent, object);
-                return true;
-            }
-
-
         }
+        */
     }
     else if(object == ui->qvtkWidget2)
     {
@@ -1300,98 +1429,147 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     return true;
                 }
             }
+        }
 
+        /*
+        // for touch screen
+        if(ui->ckb_Panning2->isChecked())
+        {
             // gesture event
-            if (ev->type() == QEvent::Gesture)
+            if(ev->type() == QEvent::Gesture)
             {
                 QGestureEvent* gestureEvent = static_cast<QGestureEvent*>(ev);
-                if (QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
+                if(QGesture* pinch = gestureEvent->gesture(Qt::PinchGesture))
                 {
                     QPinchGesture* pinchGesture = static_cast<QPinchGesture*>(pinch);
-
-                    handlePinchGesture(pinchGesture, object); //handle Pin
+                    handlePinchGesture(pinchGesture, object);
                     return true;
                 }
             }
 
-            // touch event
-            //if (ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd )
-            //{
-            //    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
-            //    handleTouchEvent(touchEvent, object);
-            //    return true;
-            //}
+            // touch event : panning or click
+            if(ev->type() == QEvent::TouchBegin ||ev->type() == QEvent::TouchUpdate ||ev->type() == QEvent::TouchEnd )
+            {
+                QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+                if(!touchPoints.isEmpty())
+                {
+                    QTouchEvent* touchEvent = static_cast<QTouchEvent*>(ev);
+                    handleTouchEvent(touchEvent, object);
+                    return true;
+                }
+            }
         }
+        */
     }
 
     return QWidget::eventFilter(object, ev);
 }
 
+
 void MainWindow::handlePinchGesture(QPinchGesture* pinchGesture, QObject* object)
 {
-    // Sacle Factor
-    static qreal lastScaleFactor = 1.0;
+    // To do
+    double currentScaleFactor = pinchGesture->scaleFactor();
+    double scaleChange = currentScaleFactor / lastScaleFactor;
 
-    qreal currentScaleFactor = pinchGesture->scaleFactor();
-    qreal scaleChange = currentScaleFactor / lastScaleFactor;
-
-    double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
-
-    // scale
-    if (object == ui->qvtkWidget)
+    if(ui->cb_ViewType->currentText() == "VIEW_3D")
     {
-        // viewer zoom in/out
-        viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-        viewer->getRenderWindow()->Render();
+        double zoomAmount = (scaleChange - 1.0)*50.0; // need adjust
+        if(object == ui->qvtkWidget)
+        {
+            viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+        }
+        else if(object == ui->qvtkWidget2) // annotation
+        {
+            viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+        }
     }
-    else if (object == ui->qvtkWidget2) // annotation
+    else if(ui->cb_ViewType->currentText() == "VIEW_2D")
     {
-        // viewer2 zoom in/out
-        viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
-        viewer2->getRenderWindow()->Render();
+        double zoomAmount = (scaleChange - 1.0)*70.0; // need adjust
+        // scale
+        if(object == ui->qvtkWidget)
+        {
+            // viewer zoom in/out
+            viewer_camera_relative_control(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+        }
+        else if(object == ui->qvtkWidget2) // annotation
+        {
+            // viewer2 zoom in/out
+            viewer_camera_relative_control2(0.0, 0.0, zoomAmount, 0.0, 0.0, 0.0);
+        }
     }
 }
 
 void MainWindow::handleTouchEvent(QTouchEvent* touchEvent, QObject* object)
 {
-    static QPointF lastTouchPoint;
-    static bool isPanning = false;
-
     const QList<QTouchEvent::TouchPoint> &touchPoints = touchEvent->touchPoints();
-
-    if (touchPoints.count() == 1)
+    if(touchPoints.count() == 1)
     {
         const QTouchEvent::TouchPoint &touchPoint = touchPoints.first();
-        if (touchEvent->type() == QEvent::TouchBegin)
+        if(touchEvent->type() == QEvent::TouchBegin)
         {
             lastTouchPoint = touchPoint.pos();
             isPanning = true;
-
-
         }
-        else if (touchEvent->type() == QEvent::TouchUpdate && isPanning)
+        else if(touchEvent->type() == QEvent::TouchUpdate && isPanning)
         {
             QPointF currentPos = touchPoint.pos();
             QPointF delta = currentPos - lastTouchPoint;
             lastTouchPoint = currentPos;
 
+            double pos_z = 1.0; // default
+            double scale_factor = 0.5;
+            double min_pos_z = 0.1;
+
             // CALL camera move func
-            if (object == ui->qvtkWidget)
+            if(object == ui->qvtkWidget)
             {
-                viewer_camera_pan_control(delta.x(), delta.y());
-                viewer_pan_screen(delta.x(), delta.y(), viewer, ui->qvtkWidget);
-                viewer->getRenderWindow()->Render();
-                syncViewerCameras(viewer, viewer2);
+                std::vector<pcl::visualization::Camera> cams;
+                viewer->getCameras(cams);
+                Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+                if (std::abs(pos_z) <min_pos_z)
+                {
+                    pos_z = min_pos_z;
+                }
+                else
+                {
+                    pos_z = pos[2]+1e-06;
+                }
+
+                scale_factor = 1.0/(pos_z*0.1);
+
+                double scaled_x = delta.x() * scale_factor;
+                double scaled_y = delta.y() * scale_factor;
+
+                viewer_camera_pan_control(scaled_x, scaled_y);
+                viewer_pan_screen(scaled_x, scaled_y, viewer, ui->qvtkWidget);
             }
-            else if (object == ui->qvtkWidget2)
+            else if(object == ui->qvtkWidget2)
             {
-                viewer_camera_pan_control2(delta.x(), delta.y());
-                viewer_pan_screen(delta.x(), delta.y(), viewer2, ui->qvtkWidget2);
-                viewer2->getRenderWindow()->Render();
-                syncViewerCameras(viewer2, viewer);
+                std::vector<pcl::visualization::Camera> cams;
+                viewer->getCameras(cams);
+                Eigen::Vector3d pos(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2]);
+                if (std::abs(pos_z) <min_pos_z)
+                {
+                    pos_z = min_pos_z;
+                }
+                else
+                {
+                    pos_z = pos[2]+1e-06;
+                }
+
+                scale_factor = 1.0/(pos_z*0.1);
+
+                double scaled_x = delta.x() * scale_factor;
+                double scaled_y = delta.y() * scale_factor;
+
+                viewer_camera_pan_control2(scaled_x, scaled_y);
+                viewer_pan_screen(scaled_x, scaled_y, viewer2, ui->qvtkWidget2);
             }
         }
-        else if (touchEvent->type() == QEvent::TouchEnd)
+        else if(touchEvent->type() == QEvent::TouchEnd)
         {
             isPanning = false;
         }
@@ -1404,7 +1582,7 @@ void MainWindow::viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::v
     std::vector<pcl::visualization::Camera> cams;
     viewer->getCameras(cams);
     if (cams.empty()) {
-        qDebug() << "No camera information available.";
+        logger.write_log("No camera information available.");
         return;
     }
     pcl::visualization::Camera cam = cams[0];
@@ -1487,6 +1665,7 @@ void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz,
                               focal_new[0], focal_new[1], focal_new[2],
                               up_new[0], up_new[1], up_new[2]);
 
+
     viewer->setCameraClipDistances(2.0, 1000.0);
 }
 
@@ -1525,6 +1704,7 @@ void MainWindow::viewer_camera_relative_control2(double tx, double ty, double tz
                               up_new[0], up_new[1], up_new[2]);
 
     viewer2->setCameraClipDistances(2.0, 1000.0);
+
 }
 
 void MainWindow::viewer_camera_pan_control(double dx, double dy)
@@ -1553,8 +1733,7 @@ void MainWindow::viewer_camera_pan_control(double dx, double dy)
     // set CameraPosition
     viewer->setCameraPosition(pos[0], pos[1], pos[2],
                               focal[0], focal[1], focal[2],
-                              up[0], up[1], up[2]);
-    syncViewerCameras(viewer, viewer2);
+                              up[0], up[1], up[2]);    
 }
 
 void MainWindow::viewer_camera_pan_control2(double dx, double dy)
@@ -1583,8 +1762,7 @@ void MainWindow::viewer_camera_pan_control2(double dx, double dy)
     // set CameraPosition
     viewer2->setCameraPosition(pos[0], pos[1], pos[2],
                                focal[0], focal[1], focal[2],
-                               up[0], up[1], up[2]);
-    syncViewerCameras(viewer2, viewer);
+                               up[0], up[1], up[2]);    
 }
 
 
@@ -2168,9 +2346,7 @@ void MainWindow::bt_ClearTopo()
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Clear topo", "Do you want to all clear topos?",
-                                  QMessageBox::Yes | QMessageBox::No);
-
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Clear topo", "Do you want to all clear topos?", QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes)
     {
         QMessageBox::information(this, "Clear topo", "clear all topos.");
@@ -2319,6 +2495,7 @@ void MainWindow::bt_NodePoseThUp()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2362,6 +2539,20 @@ void MainWindow::bt_NodePoseThUp()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -2528,6 +2719,7 @@ void MainWindow::bt_NodePoseThDown()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2571,6 +2763,20 @@ void MainWindow::bt_NodePoseThDown()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -2617,11 +2823,7 @@ void MainWindow::bt_MinGapNodeX()
 
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
-
-    Eigen::Vector3d dir = tf0.block(0,0,3,1);
-    Eigen::Vector3d _gap = dir * gap;
-
-    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
+    tf1(0,3) = tf0(0,3) + gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -2647,11 +2849,7 @@ void MainWindow::bt_MinGapNodeY()
 
     Eigen::Matrix4d tf0 = node0->tf;
     Eigen::Matrix4d tf1 = node1->tf;
-
-    Eigen::Vector3d dir = tf0.block(0,1,3,1);
-    Eigen::Vector3d _gap = dir * gap;
-
-    tf1.block(0,3,3,1) = tf0.block(0,3,3,1) + _gap;
+    tf1(1,3) = tf0(1,3) + gap;
 
     unimap.edit_node_pos(id1, tf1);
     topo_update();
@@ -2941,7 +3139,6 @@ void MainWindow::bt_SetMapTf()
     }
 
     map_update();
-
 }
 
 // for autocontrol
@@ -3033,18 +3230,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    std::vector<QString> path;
-    path.push_back("N_0112");
-    path.push_back("N_1729820377638");
-    path.push_back("N_1729820437542");
-    path.push_back("N_1729820446577");
-    path.push_back("N_1729746747992");
-    path.push_back("N_0106");
-    path.push_back("N_1729746747992");
-    path.push_back("N_1729820446577");
-    path.push_back("N_1729820437542");
-    path.push_back("N_1729820461736");
-    ctrl.move_pp(path, 0);
+
 }
 
 void MainWindow::bt_TestLed()
@@ -3060,56 +3246,39 @@ void MainWindow::ckb_TestDebug()
 
 void MainWindow::bt_TestImgSave()
 {
-    cv::Mat cur_img0 = cam.get_img0();
-    cv::Mat cur_img1 = cam.get_img1();
-
-    if(cur_img0.empty())
+    for(int cam_idx = 0; cam_idx < 4; cam_idx++)
     {
-        printf("[MAIN] cur_img0 is empty. Skipping save operation.\n");
-        return;
-    }
-    if(cur_img1.empty())
-    {
-        printf("[MAIN] cur_img1 is empty. Skipping save operation.\n");
-        return;
-    }
-
-    QString home_dir = QDir::homePath();
-    QString img_folder = home_dir + "/Pictures";
-
-    QDir dir;
-    if(!dir.exists(img_folder))
-    {
-        if(!dir.mkpath(img_folder))
+        cv::Mat img = cam.get_img(cam_idx);
+        if(img.empty())
         {
-            printf("[MAIN] Failed to create image directory: %s\n", img_folder.toStdString().c_str());
-            return;
+            continue;
+        }
+
+        QString home_dir = QDir::homePath();
+        QString img_folder = home_dir + QString("/Pictures/cam_%1").arg(cam_idx);
+
+        QDir dir;
+        if(!dir.exists(img_folder))
+        {
+            if(!dir.mkpath(img_folder))
+            {
+                printf("[MAIN] Failed to create image directory: %s\n", img_folder.toStdString().c_str());
+                return;
+            }
+        }
+
+        QString file_path = img_folder + QString("/img_%1.png").arg(test_img_save_cnt);
+        if(!cv::imwrite(file_path.toStdString(), img))
+        {
+            printf("[MAIN] Failed to save img\n");
+        }
+        else
+        {
+            printf("[MAIN] Saved img, %s\n", file_path.toStdString().c_str());
         }
     }
 
-    QString img_path0 = img_folder + "/img0.png";
-    QString img_path1 = img_folder + "/img1.png";
-
-    if(!cv::imwrite(img_path0.toStdString(), cur_img0))
-    {
-        printf("[MAIN] Failed to save img0.png\n");
-    }
-    else
-    {
-        printf("[MAIN] Saved img0.png at %s",img_path0.toStdString().c_str());
-    }
-
-    if(!cv::imwrite(img_path1.toStdString(), cur_img1))
-    {
-         printf("[MAIN] Failed to save img1.png\n");
-    }
-    else
-    {
-         printf("[MAIN] Saved img1.png at %s",img_path1.toStdString().c_str());
-    }
-
-    printf("[MAIN] Img Save test complete.\n");
-
+    test_img_save_cnt++;
 }
 
 // for obsmap
@@ -3303,7 +3472,7 @@ void MainWindow::bt_SendMap()
 void MainWindow::slot_resist_id(QString id)
 {
     QString str = "[ID] " + id;
-    ui->lb_RobotID->setText(str);
+    ui->lb_RobotId->setText(str);
 }
 
 void MainWindow::slot_sim_random_init(QString seed)
@@ -3354,27 +3523,30 @@ void MainWindow::slot_sim_random_seq()
         return;
     }
 
-    std::vector<QString> nodes_id_goal = unimap.get_nodes("GOAL");
-    std::vector<QString> nodes_id_init = unimap.get_nodes("INIT");
+    std::vector<QString> goal_nodes = unimap.get_nodes("GOAL");
+    std::vector<QString> init_nodes = unimap.get_nodes("INIT");
 
-    std::vector<QString> nodes_id;
-    nodes_id.insert(nodes_id.end(), nodes_id_goal.begin(), nodes_id_goal.end());
-    nodes_id.insert(nodes_id.end(), nodes_id_init.begin(), nodes_id_init.end());
-
-    if(nodes_id.size() == 0)
+    std::vector<QString> nodes = goal_nodes;
+    nodes.insert(nodes.end(), init_nodes.begin(), init_nodes.end());
+    if(nodes.size() == 0)
     {
         printf("check again 2\n");
         return;
     }
 
+    // clear list first
+    task.mtx.lock();
+    task.task_node_list.clear();
+    task.mtx.unlock();
+
     std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dist(0, (int)nodes_id.size()-1);
+    std::mt19937 g(rd());
+    std::shuffle(nodes.begin(), nodes.end(), g);
 
     const int seq_size = 10;
     for(int p = 0; p < seq_size; p++)
     {
-        QString id = nodes_id[dist(gen)];
+        QString id = nodes[p];
         NODE* node = unimap.get_node_by_id(id);
         if(node == NULL)
         {
@@ -3386,13 +3558,12 @@ void MainWindow::slot_sim_random_seq()
 
     if(task.task_node_list.empty())
     {
-        printf("check again 2\n");
+        printf("check again 3\n");
         return;
     }
 
     ui_tasks_update();
 
-    //task.save_task(unimap.map_dir);
     task.is_start = true;
     task.use_looping = ui->ckb_Looping->isChecked();
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
@@ -3440,7 +3611,7 @@ void MainWindow::bt_SelectPostNodes()
 // comm
 void MainWindow::comm_loop()
 {
-    const double dt = 0.1; // 10hz
+    const double dt = 0.1; // 100hz
     double pre_loop_time = get_time();
 
     int cnt = 0;
@@ -3457,62 +3628,12 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        // for 100ms loop
+        // for 100ms loop        
         if(cnt % 1 == 0)
         {
             if(cfms.is_connected)
-            {
-                Q_EMIT signal_send_info();
-            }
-        }
-
-        // for 200ms loop
-        if(cnt % 2 == 0)
-        {
-            if(config.USE_RTSP && config.USE_CAM)
-            {
-                // cam streaming
-                if(cam.is_connected0)
-                {
-                    if(writer0.isOpened())
-                    {
-                        cv::Mat img = cam.get_img0();
-                        if(!img.empty())
-                        {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer0.write(_img);
-                            }
-                            else
-                            {
-                                writer0.write(img);
-                            }
-                        }
-                    }
-                }
-
-                if(cam.is_connected1)
-                {
-                    if(writer1.isOpened())
-                    {
-                        cv::Mat img = cam.get_img1();
-                        if(!img.empty())
-                        {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer1.write(_img);
-                            }
-                            else
-                            {
-                                writer1.write(img);
-                            }
-                        }
-                    }
-                }
+            {                
+                Q_EMIT cfms.signal_send_info();
             }
         }
 
@@ -3526,7 +3647,7 @@ void MainWindow::comm_loop()
 
             if(cui.is_connected)
             {
-                Q_EMIT signal_send_status();
+                Q_EMIT cui.signal_send_status();
             }
         }
 
@@ -3562,7 +3683,7 @@ void MainWindow::comm_loop()
             // open video writer
             if(config.USE_RTSP && config.USE_CAM)
             {
-                if(cam.is_connected0)
+                if(cam.is_connected[0])
                 {
                     if(!writer0.isOpened())
                     {
@@ -3571,12 +3692,62 @@ void MainWindow::comm_loop()
                     }
                 }
 
-                if(cam.is_connected1)
+                if(cam.is_connected[1])
                 {
                     if(!writer1.isOpened())
                     {
                         writer1.open(pipeline1, 0, (double)10, cv::Size(send_w,send_h), true);
                         logger.write_log("[COMM] cam1 rtsp writer try open");
+                    }
+                }
+            }
+        }
+
+        // for 200ms loop
+        if(cnt % 2 == 0)
+        {
+            if(config.USE_RTSP && config.USE_CAM)
+            {
+                // cam streaming
+                if(cam.is_connected[0])
+                {
+                    if(writer0.isOpened())
+                    {
+                        cv::Mat img = cam.get_img(0);
+                        if(!img.empty())
+                        {
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer0.write(_img);
+                            }
+                            else
+                            {
+                                writer0.write(img);
+                            }
+                        }
+                    }
+                }
+
+                if(cam.is_connected[1])
+                {
+                    if(writer1.isOpened())
+                    {
+                        cv::Mat img = cam.get_img(1);
+                        if(!img.empty())
+                        {
+                            if(img.cols != send_w || img.rows != send_h)
+                            {
+                                cv::Mat _img;
+                                cv::resize(img, _img, cv::Size(send_w, send_h));
+                                writer1.write(_img);
+                            }
+                            else
+                            {
+                                writer1.write(img);
+                            }
+                        }
                     }
                 }
             }
@@ -3590,8 +3761,9 @@ void MainWindow::comm_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -3634,7 +3806,7 @@ void MainWindow::watch_loop()
             if(node != NULL)
             {
                 double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config.ROBOT_RADIUS)
+                if(d < config.ROBOT_SIZE_X[1])
                 {
                     if(pre_node_id != cur_node_id)
                     {
@@ -4123,8 +4295,9 @@ void MainWindow::jog_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            precise_sleep(dt-delta_loop_time);
+            //int sleep_ms = (dt-delta_loop_time)*1000;
+            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -4208,94 +4381,6 @@ void MainWindow::map_plot()
         }
     }
 }
-void MainWindow::obs_plot()
-{
-    if(unimap.is_loaded == false)
-    {
-        return;
-    }
-
-    if(is_obs_update)
-    {
-        is_obs_update = false;
-
-        cv::Mat obs_map;
-        cv::Mat dyn_map;
-        cv::Mat vir_map;
-
-        Eigen::Matrix4d obs_tf;
-        obsmap.get_obs_map(obs_map, obs_tf);
-        obsmap.get_dyn_map(dyn_map, obs_tf);
-        obsmap.get_vir_map(vir_map, obs_tf);
-
-        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
-
-        // plot grid map
-        {
-            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
-            obsmap.draw_robot(plot_obs_map, obs_tf);
-
-            for(int i = 0; i < obs_map.rows; i++)
-            {
-                for(int j = 0; j < obs_map.cols; j++)
-                {
-                    if(obs_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
-                    }
-
-                    if(dyn_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
-                    }
-
-                    if(vir_map.ptr<uchar>(i)[j] == 255)
-                    {
-                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
-                    }
-                }
-            }
-
-            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
-            ui->lb_Screen1->setScaledContents(true);
-            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-
-        // plot obs pts
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < plot_pts.size(); p++)
-        {
-            double x = plot_pts[p][0];
-            double y = plot_pts[p][1];
-            double z = plot_pts[p][2];
-            double prob = plot_pts[p][3];
-
-            if(prob <= 0.5)
-            {
-                continue;
-            }
-
-            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
-
-            pcl::PointXYZRGB pt;
-            pt.x = x;
-            pt.y = y;
-            pt.z = z;
-            pt.r = c.r()*255;
-            pt.g = c.g()*255;
-            pt.b = c.b()*255;
-            cloud->push_back(pt);
-        }
-
-        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
-        {
-            viewer->addPointCloud(cloud, "obs_plot_pts");
-        }
-
-        // point size
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
-    }
-}
 void MainWindow::topo_plot()
 {
     if(unimap.is_loaded == false)
@@ -4361,7 +4446,7 @@ void MainWindow::topo_plot()
         {
             if(ui->ckb_PlotNodes->isChecked())
             {
-                // draw nodes                
+                // draw nodes
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;
@@ -4492,29 +4577,6 @@ void MainWindow::topo_plot()
                     }
                 }
             }
-
-            if(ui->ckb_PlotNames->isChecked())
-            {
-                // draw names
-                for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {
-                    if(unimap.nodes[p].type == "ZONE")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-                        QString name = unimap.nodes[p].name;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
-                        viewer->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
-
-                        last_plot_names.push_back(text_id);
-                    }
-                }
-            }
         }
     }
 }
@@ -4536,29 +4598,9 @@ void MainWindow::pick_plot()
             viewer->removeShape("pick_body");
         }
 
-        if(viewer->contains("pick_text"))
-        {
-            viewer->removeShape("pick_text");
-        }
-
         if(viewer->contains("sel_cur"))
         {
             viewer->removeShape("sel_cur");
-        }
-
-        if(viewer->contains("sel_pre"))
-        {
-            viewer->removeShape("sel_pre");
-        }        
-
-        if(viewer->contains("text_cur"))
-        {
-            viewer->removeShape("text_cur");
-        }
-
-        if(viewer->contains("text_pre"))
-        {
-            viewer->removeShape("text_pre");
         }
 
         if(pick.cur_node != "")
@@ -4570,13 +4612,8 @@ void MainWindow::pick_plot()
                 viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString text = node->name;
-
-                pcl::PointXYZ position;
-                position.x = node->tf(0,3);
-                position.y = node->tf(1,3);
-                position.z = node->tf(2,3) + 1.0;
-                viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
+                QString text = "node_id:" + node->name;
+                ui->lb_NodeId->setText(text);
             }
         }
 
@@ -4595,14 +4632,9 @@ void MainWindow::pick_plot()
             viewer->updateCoordinateSystemPose("O_pick", Eigen::Affine3f(pick_tf.cast<float>()));
 
             // plot text
-            pcl::PointXYZ position;
-            position.x = pick_tf(0,3);
-            position.y = pick_tf(1,3);
-            position.z = pick_tf(2,3) + 1.0;
-
             QString text;
-            text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-            viewer->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
+            text.sprintf("x:%.2f, y:%.2f, th:%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+            ui->lb_PickPose->setText(text);
         }
     }
 }
@@ -4785,7 +4817,7 @@ void MainWindow::loc_plot()
         }
 
         // add cam pts
-        TIME_PTS cam_scan0 = cam.get_scan0();
+        TIME_PTS cam_scan0 = cam.get_scan(0);
         Eigen::Matrix4d tf0 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan0.t);
 
         for(size_t p = 0; p < cam_scan0.pts.size(); p+=4)
@@ -4804,7 +4836,7 @@ void MainWindow::loc_plot()
             cloud->push_back(pt);
         }
 
-        TIME_PTS cam_scan1 = cam.get_scan1();
+        TIME_PTS cam_scan1 = cam.get_scan(1);
         Eigen::Matrix4d tf1 = cur_tpp.tf.inverse()*slam.get_best_tf(cam_scan1.t);
         for(size_t p = 0; p < cam_scan1.pts.size(); p+=4)
         {
@@ -4832,253 +4864,92 @@ void MainWindow::loc_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
-void MainWindow::raw_plot()
+void MainWindow::obs_plot()
 {
-    // plot mobile info
-    if(mobile.is_connected)
+    if(unimap.is_loaded == false)
     {
-        // plot mobile pose
-        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
-
-        // plot mobile status
-        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+        return;
     }
 
-    // plot slam info
-    if(slam.is_slam || slam.is_loc)
+    if(is_obs_update)
     {
-        ui->lb_SlamInfo->setText(slam.get_info_text());
-    }
+        is_obs_update = false;
 
-    // plot que info
-    QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%.3f\nlidar_t:%.3f, %.3f",
-                         (int)lidar.scan_que.unsafe_size(),
-                         (int)mobile.msg_que.unsafe_size(),
-                         (int)slam.kfrm_que.unsafe_size(),
-                         (double)plot_proc_t,
-                         (double)lidar.last_t_f, (double)lidar.last_t_b);
-    ui->lb_QueInfo->setText(que_info_str);
+        cv::Mat obs_map;
+        cv::Mat dyn_map;
+        cv::Mat vir_map;
 
-    // plot auto info
-    QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
-                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
-                          (bool)ctrl.is_moving ? "1" : "0",
-                          (bool)ctrl.is_pause ? "1" : "0",
-                          ctrl.get_obs_condition().toLocal8Bit().data(),
-                          (bool)ctrl.is_multi ? "1" : "0",
-                          ctrl.get_multi_req().toLocal8Bit().data(),
-                          cfms.get_multi_state().toLocal8Bit().data());
-    ui->lb_AutoInfo->setText(auto_info_str);
+        Eigen::Matrix4d obs_tf;
+        obsmap.get_obs_map(obs_map, obs_tf);
+        obsmap.get_dyn_map(dyn_map, obs_tf);
+        obsmap.get_vir_map(vir_map, obs_tf);
 
-    // plot cam
-    if(cam.is_connected0)
-    {
-        cv::Mat plot = cam.get_img0();
-        if(!plot.empty())
+        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
+
+        // plot grid map
         {
-            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen2->setScaledContents(true);
-            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-    }
+            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
+            obsmap.draw_robot(plot_obs_map, obs_tf);
 
-    if(cam.is_connected1)
-    {
-        cv::Mat plot = cam.get_img1();
-        if(!plot.empty())
-        {
-            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen3->setScaledContents(true);
-            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-        }
-    }
-
-    // plot aruco
-    if(config.USE_ARUCO)
-    {
-        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
-        if(cur_tpi.t > aruco_prev_t)
-        {
-            aruco_prev_t = cur_tpi.t;
-
-            // Update screen for camera 0
-            cv::Mat plot0 = aruco.get_plot_img0();
-            if(!plot0.empty())
+            for(int i = 0; i < obs_map.rows; i++)
             {
-                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
-                ui->lb_Screen4->setScaledContents(true);
-                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                for(int j = 0; j < obs_map.cols; j++)
+                {
+                    if(obs_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
+                    }
+
+                    if(dyn_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                    }
+
+                    if(vir_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
+                    }
+                }
             }
 
-            // Update screen for camera 1
-            cv::Mat plot1 = aruco.get_plot_img1();
-            if(!plot1.empty())
-            {
-                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
-                ui->lb_Screen5->setScaledContents(true);
-                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            }
-
-            // Compute global_to_marker
-            Eigen::Matrix4d global_to_marker = slam.get_best_tf(cur_tpi.t) * cur_tpi.tf;
-
-            // Draw axis
-            if(viewer->contains("aruco_axis"))
-            {
-                viewer->removeCoordinateSystem("aruco_axis");
-            }
-            viewer->addCoordinateSystem(0.5, "aruco_axis");
-            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
-        }
-    }
-
-    if(!slam.is_slam && !slam.is_loc)
-    {
-        // remove first
-        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
-        {
-            QString id = last_plot_kfrms[p];
-            if(viewer->contains(id.toStdString()))
-            {
-                viewer->removeShape(id.toStdString());
-            }
-        }
-        last_plot_kfrms.clear();
-
-        if(viewer->contains("live_tree_pts"))
-        {
-            viewer->removePointCloud("live_tree_pts");
+            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+            ui->lb_Screen1->setScaledContents(true);
+            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
 
-        // raw data
-        std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
-        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan();
-        std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan0().pts;
-        std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan1().pts;
-
+        // plot obs pts
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < cur_scan.size(); p++)
+        for(size_t p = 0; p < plot_pts.size(); p+=4)
         {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan[p][0];
-            pt.y = cur_scan[p][1];
-            pt.z = cur_scan[p][2];
-            pt.r = 255;
-            pt.g = 0;
-            pt.b = 0;
+            double x = plot_pts[p][0];
+            double y = plot_pts[p][1];
+            double z = plot_pts[p][2];
+            double prob = plot_pts[p][3];
 
+            if(prob <= 0.5)
+            {
+                continue;
+            }
+
+            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+            pcl::PointXYZRGB pt;
+            pt.x = x;
+            pt.y = y;
+            pt.z = z;
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
             cloud->push_back(pt);
         }
 
-        for(size_t p = 0; p < cur_scan_b.size(); p++)
+        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
         {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_b[p][0];
-            pt.y = cur_scan_b[p][1];
-            pt.z = cur_scan_b[p][2];
-            pt.r = 0;
-            pt.g = 255;
-            pt.b = 0;
-
-            cloud->push_back(pt);
+            viewer->addPointCloud(cloud, "obs_plot_pts");
         }
 
-        for(size_t p = 0; p < cam_scan0.size(); p+=4)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cam_scan0[p][0];
-            pt.y = cam_scan0[p][1];
-            pt.z = cam_scan0[p][2];
-            pt.r = 128;
-            pt.g = 128;
-            pt.b = 0;
-
-            cloud->push_back(pt);
-        }
-
-        for(size_t p = 0; p < cam_scan1.size(); p+=4)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cam_scan1[p][0];
-            pt.y = cam_scan1[p][1];
-            pt.z = cam_scan1[p][2];
-            pt.r = 0;
-            pt.g = 128;
-            pt.b = 128;
-
-            cloud->push_back(pt);
-        }
-
-        lidar.mtx.lock();
-        std::vector<Eigen::Vector3d> cur_scan_outlier = lidar.cur_scan_outlier;
-        lidar.mtx.unlock();
-
-        for(size_t p = 0; p < cur_scan_outlier.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_outlier[p][0];
-            pt.y = cur_scan_outlier[p][1];
-            pt.z = cur_scan_outlier[p][2];
-            pt.r = 0;
-            pt.g = 0;
-            pt.b = 255;
-
-            cloud->push_back(pt);
-        }
-
-        /*
-        // raw data
-        std::vector<Eigen::Vector3d> cur_scan_f = lidar.get_cur_scan_f();
-        std::vector<Eigen::Vector3d> cur_scan_b = lidar.get_cur_scan_b();
-
-        // front lidar red
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-        for(size_t p = 0; p < cur_scan_f.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_f[p][0];
-            pt.y = cur_scan_f[p][1];
-            pt.z = cur_scan_f[p][2];
-            pt.r = 255;
-            pt.g = 0;
-            pt.b = 0;
-
-            cloud->push_back(pt);
-        }
-
-        // rear lidar blue
-        for(size_t p = 0; p < cur_scan_b.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_b[p][0];
-            pt.y = cur_scan_b[p][1];
-            pt.z = cur_scan_b[p][2];
-            pt.r = 0;
-            pt.g = 0;
-            pt.b = 255;
-
-            cloud->push_back(pt);
-        }
-        */
-
-        if(!viewer->updatePointCloud(cloud, "raw_pts"))
-        {
-            viewer->addPointCloud(cloud, "raw_pts");
-        }
-
-        // pose update
-        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-        viewer->updatePointCloudPose("raw_pts",Eigen::Affine3f(cur_tf.cast<float>()));
-        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
+        // point size
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
     }
 }
 void MainWindow::ctrl_plot()
@@ -5150,7 +5021,7 @@ void MainWindow::ctrl_plot()
         {
             for(size_t p = 0; p < local_path.pose.size(); p++)
             {
-                if(p == local_path.pose.size()-1 || p % 25 == 0)
+                if(p == local_path.pose.size()-1 || p % 50 == 0)
                 {
                     QString name;
                     name.sprintf("local_path_%d", (int)p);
@@ -5230,23 +5101,21 @@ void MainWindow::ctrl_plot()
     // draw robot
     {
         // draw axis
-        if(viewer->contains("robot_axis"))
+        if(!viewer->contains("robot_axis"))
         {
-            viewer->removeCoordinateSystem("robot_axis");
-        }
-        viewer->addCoordinateSystem(1.0, "robot_axis");
+            viewer->addCoordinateSystem(1.0, "robot_axis");
+        }        
         viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
 
         // draw body
-        if(viewer->contains("robot_body"))
+        if(!viewer->contains("robot_body"))
         {
-            viewer->removeShape("robot_body");
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
         }
-        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
-                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
-                        config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
         viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
-        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
 
         // draw vel
         if(viewer->contains("vel_text"))
@@ -5292,8 +5161,8 @@ void MainWindow::ctrl_plot()
         }
 
         QString text;
-        text.sprintf("%.2f/%.2f/%.2f\n%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
-        viewer->addText3D(text.toStdString(), position, 0.2, 0.0, 1.0, 1.0, "vel_text");
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
+        ui->lb_RobotVel->setText(text);
 
         // draw cur node
         if(viewer->contains("cur_tf_node"))
@@ -5353,21 +5222,220 @@ void MainWindow::ctrl_plot()
         }
     }
 }
+void MainWindow::raw_plot()
+{
+    // plot mobile info
+    if(mobile.is_connected)
+    {
+        // plot mobile pose
+        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
+
+        // plot mobile status
+        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+    }
+
+    // plot slam info
+    if(slam.is_slam || slam.is_loc)
+    {
+        ui->lb_SlamInfo->setText(slam.get_info_text());
+    }
+
+    // plot que info
+    QString que_info_str;
+    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%.3f\nlidar_t:%.3f, %.3f",
+                         (int)lidar.scan_que.unsafe_size(),
+                         (int)mobile.msg_que.unsafe_size(),
+                         (int)slam.kfrm_que.unsafe_size(),
+                         (double)plot_proc_t,
+                         (double)lidar.last_t_f, (double)lidar.last_t_b);
+    ui->lb_QueInfo->setText(que_info_str);
+
+    // plot auto info
+    QString auto_info_str;
+    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
+                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
+                          (bool)ctrl.is_moving ? "1" : "0",
+                          (bool)ctrl.is_pause ? "1" : "0",
+                          ctrl.get_obs_condition().toLocal8Bit().data(),
+                          (bool)ctrl.is_multi ? "1" : "0",
+                          ctrl.get_multi_req().toLocal8Bit().data(),
+                          cfms.get_multi_state().toLocal8Bit().data());
+    ui->lb_AutoInfo->setText(auto_info_str);
+
+    // plot cam
+    if(cam.is_connected[0])
+    {
+        cv::Mat plot = cam.get_img(0);
+        if(!plot.empty())
+        {
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    if(cam.is_connected[1])
+    {
+        cv::Mat plot = cam.get_img(1);
+        if(!plot.empty())
+        {
+            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen3->setScaledContents(true);
+            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+    // plot aruco
+    if(config.USE_ARUCO)
+    {
+        TIME_POSE_ID cur_tpi =  aruco.get_cur_tpi();
+        if(cur_tpi.t > last_plot_aruco_t)
+        {
+            // Update screen for camera 0
+            cv::Mat plot0 = aruco.get_plot_img(0);
+            if(!plot0.empty())
+            {
+                ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot0)));
+                ui->lb_Screen4->setScaledContents(true);
+                ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Update screen for camera 1
+            cv::Mat plot1 = aruco.get_plot_img(1);
+            if(!plot1.empty())
+            {
+                ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot1)));
+                ui->lb_Screen5->setScaledContents(true);
+                ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+
+            // Compute global_to_marker
+            Eigen::Matrix4d global_to_marker = slam.get_best_tf(cur_tpi.t) * cur_tpi.tf;
+
+            // Draw axis
+            if(viewer->contains("aruco_axis"))
+            {
+                viewer->removeCoordinateSystem("aruco_axis");
+            }
+            viewer->addCoordinateSystem(0.5, "aruco_axis");
+            viewer->updateCoordinateSystemPose("aruco_axis", Eigen::Affine3f(global_to_marker.cast<float>()));
+
+            // update for next
+            last_plot_aruco_t = cur_tpi.t;
+        }
+    }
+
+    if(!slam.is_slam && !slam.is_loc)
+    {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+
+        // raw data
+        std::vector<Eigen::Vector3d> cur_scan = lidar.get_cur_scan();
+        std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan();
+        std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan(0).pts;
+        std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan(1).pts;
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < cur_scan.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan[p][0];
+            pt.y = cur_scan[p][1];
+            pt.z = cur_scan[p][2];
+            pt.r = 255;
+            pt.g = 0;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cur_scan_b.size(); p++)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cur_scan_b[p][0];
+            pt.y = cur_scan_b[p][1];
+            pt.z = cur_scan_b[p][2];
+            pt.r = 0;
+            pt.g = 255;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cam_scan0.size(); p+=4)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cam_scan0[p][0];
+            pt.y = cam_scan0[p][1];
+            pt.z = cam_scan0[p][2];
+            pt.r = 128;
+            pt.g = 128;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
+        for(size_t p = 0; p < cam_scan1.size(); p+=4)
+        {
+            // set pos
+            pcl::PointXYZRGB pt;
+            pt.x = cam_scan1[p][0];
+            pt.y = cam_scan1[p][1];
+            pt.z = cam_scan1[p][2];
+            pt.r = 0;
+            pt.g = 128;
+            pt.b = 128;
+
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "raw_pts"))
+        {
+            viewer->addPointCloud(cloud, "raw_pts");
+        }
+
+        // pose update
+        Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+        viewer->updatePointCloudPose("raw_pts", Eigen::Affine3f(cur_tf.cast<float>()));
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
+    }
+}
 void MainWindow::plot_loop()
 {
+    if(ui->ckb_PlotEnable->isChecked() == false)
+    {
+        return;
+    }
+
     plot_timer.stop();
 
     double st_time = get_time();
 
     map_plot();
-    obs_plot();
     topo_plot();
     pick_plot();
-
     slam_plot();
-    loc_plot();
-    raw_plot();
+    loc_plot();    
+    obs_plot();    
     ctrl_plot();
+    raw_plot();
 
     // camera reset
     if(is_set_top_view)
@@ -5405,11 +5473,8 @@ void MainWindow::plot_loop()
         viewer->setCameraClipDistances(near, far);
     }
 
-    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
-    {
-        // rendering
-        ui->qvtkWidget->renderWindow()->Render();
-    }
+    // rendering
+    ui->qvtkWidget->renderWindow()->Render();
 
     // check plot drift
     plot_proc_t = get_time() - st_time;
@@ -5419,47 +5484,6 @@ void MainWindow::plot_loop()
     }
 
     plot_timer.start();
-}
-
-void MainWindow::syncViewerCameras(boost::shared_ptr<pcl::visualization::PCLVisualizer> sourceViewer, boost::shared_ptr<pcl::visualization::PCLVisualizer> targetViewer)
-{
-    std::vector<pcl::visualization::Camera> cams;
-    sourceViewer->getCameras(cams);
-
-    targetViewer->setCameraPosition(cams[0].pos[0], cams[0].pos[1], cams[0].pos[2],
-                                    cams[0].focal[0], cams[0].focal[1], cams[0].focal[2],
-                                    cams[0].view[0], cams[0].view[1], cams[0].view[2]);
-
-    targetViewer->setCameraFieldOfView(cams[0].fovy);
-    targetViewer->setCameraClipDistances(cams[0].clip[0], cams[0].clip[1]);
-}
-
-
-bool MainWindow::wasSwitchedFromWidget(QObject* fromWidget, QObject* toWidget)
-{
-    static QObject* lastActiveWidget = nullptr;
-
-    if (lastActiveWidget == fromWidget && toWidget == toWidget)
-    {
-        lastActiveWidget = toWidget;
-        return true;
-    }
-    lastActiveWidget = toWidget;
-    return false;
-}
-
-void MainWindow::synchronizeViewersIfNeeded(QObject* currentWidget)
-{
-    if (wasSwitchedFromWidget(ui->qvtkWidget2, ui->qvtkWidget))
-    {
-        // qvtkWidget2 -> qvtkWidget
-        syncViewerCameras(viewer2, viewer);
-    }
-    else if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
-    {
-        // qvtkWidget -> qvtkWidget2
-        syncViewerCameras(viewer, viewer2);
-    }
 }
 
 // for plot loop2
@@ -5735,28 +5759,6 @@ void MainWindow::topo_plot2()
                 }
             }
 
-            if(ui->ckb_PlotNames2->isChecked())
-            {
-                // draw nodes
-                for(size_t p = 0; p < unimap.nodes.size(); p++)
-                {
-                    if(unimap.nodes[p].type == "ZONE")
-                    {
-                        // plot text
-                        QString id = unimap.nodes[p].id;
-                        QString name = unimap.nodes[p].name;
-
-                        QString text_id = id + "_text";
-                        pcl::PointXYZ position;
-                        position.x = unimap.nodes[p].tf(0,3);
-                        position.y = unimap.nodes[p].tf(1,3);
-                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
-                        viewer2->addText3D(name.toStdString(), position, 0.2, 1.0, 0.0, 0.0, text_id.toStdString());
-
-                        last_plot_names2.push_back(text_id);
-                    }
-                }
-            }
         }
     }
 }
@@ -5856,11 +5858,6 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("pick_body");
         }
 
-        if(viewer2->contains("pick_text"))
-        {
-            viewer2->removeShape("pick_text");
-        }
-
         if(viewer2->contains("sel_cur"))
         {
             viewer2->removeShape("sel_cur");
@@ -5869,16 +5866,6 @@ void MainWindow::pick_plot2()
         if(viewer2->contains("sel_pre"))
         {
             viewer2->removeShape("sel_pre");
-        }
-
-        if(viewer2->contains("text_cur"))
-        {
-            viewer2->removeShape("text_cur");
-        }
-
-        if(viewer2->contains("text_pre"))
-        {
-            viewer2->removeShape("text_pre");
         }
 
         // erase first
@@ -5902,11 +5889,6 @@ void MainWindow::pick_plot2()
         if(viewer2->contains("measure"))
         {
             viewer2->removeShape("measure");
-        }
-
-        if(viewer2->contains("measure_text"))
-        {
-            viewer2->removeShape("measure_text");
         }
 
         // different behavior each tab
@@ -5951,8 +5933,8 @@ void MainWindow::pick_plot2()
                 double dist = std::sqrt(dx*dx + dy*dy);
 
                 QString measure_str;
-                measure_str.sprintf("dx:%.3f,dy%.3f,dist:%.3f", dx, dy, dist);
-                viewer2->addText3D(measure_str.toStdString(), pt1, 0.2, 0.0, 0.0, 0.0, "measure_text");
+                measure_str.sprintf("dx:%.3f, dy%.3f, dist:%.3f", dx, dy, dist);
+                ui->lb_Measure->setText(measure_str);
             }
 
             if(select_nodes.size() != 0)
@@ -5992,15 +5974,6 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 1.0, 0.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_pre");
                     }
-
-                    // plot text
-                    QString text = node->name;
-
-                    pcl::PointXYZ position;
-                    position.x = node->tf(0,3);
-                    position.y = node->tf(1,3);
-                    position.z = node->tf(2,3) + 1.0;
-                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_pre");
                 }
             }
 
@@ -6024,15 +5997,6 @@ void MainWindow::pick_plot2()
                         pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS, 0.05, node->tf, 0.0, 1.0, 0.0);
                         viewer2->addPolygonMesh(donut, "sel_cur");
                     }
-
-                    // plot text
-                    QString text = node->name;
-
-                    pcl::PointXYZ position;
-                    position.x = node->tf(0,3);
-                    position.y = node->tf(1,3);
-                    position.z = node->tf(2,3) + 1.0;
-                    viewer2->addText3D(text.toStdString(), position, 0.2, 0.0, 0.0, 0.0, "text_cur");
                 }
             }
 
@@ -6104,8 +6068,8 @@ void MainWindow::pick_plot2()
                 position.z = pick_tf(2,3) + 1.0;
 
                 QString text;
-                text.sprintf("%.2f/%.2f/%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-                viewer2->addText3D(text.toStdString(), position, 0.3, 0.0, 0.0, 0.0, "pick_text");
+                text.sprintf("x:%.2f, y:%.2f, th:%.2f", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
+                ui->lb_PickPose2->setText(text);
             }
         }
     }
@@ -6139,11 +6103,6 @@ void MainWindow::loc_plot2()
 }
 void MainWindow::plot_loop2()
 {
-    if(ui->ckb_PlotEnable->isChecked() == false)
-    {
-        return;
-    }
-
     plot_timer2.stop();
 
     map_plot2();
@@ -6151,40 +6110,13 @@ void MainWindow::plot_loop2()
     pick_plot2();
     loc_plot2();
 
-    if (wasSwitchedFromWidget(ui->qvtkWidget, ui->qvtkWidget2))
-    {
-        // rendering
-        ui->qvtkWidget2->renderWindow()->Render();
-    }
+    // rendering
+    ui->qvtkWidget2->renderWindow()->Render();
 
     plot_timer2.start();
 }
 
-void MainWindow::slot_write_log(QString user_log, QString color_code)
-{
-    if(color_code == "Red")
-    {
-        color_code = "red";
-    }
-    else if(color_code == "Green")
-    {
-        color_code = "green";
-    }
-    else if(color_code == "Orange")
-    {
-        color_code = "orange";
-    }
-    else if(color_code == "White")
-    {
-        color_code = "black";
-    }
-
-    QString style_code = "QLabel { color : " + color_code + "; }";
-
-    ui->lb_LogInfo->setText(user_log);
-    ui->lb_LogInfo->setStyleSheet(style_code);
-}
-
+// for docking
 void MainWindow::bt_DockingMove()
 {
     ctrl.is_moving = true;

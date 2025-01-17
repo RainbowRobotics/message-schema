@@ -3,7 +3,10 @@
         "ROBOT_SERIAL_NUMBER": ""
     },
     "cam": {
-        "CAM_SERIAL_NUMBER_0": "AY4W633001A",
-        "CAM_SERIAL_NUMBER_1": "AY4W633000L"
+        "CAM_SERIAL_NUMBER_0": "",
+        "CAM_SERIAL_NUMBER_1": ""
+    },
+    "lidar": {
+    	"USE_S3": "0"
     }
 }

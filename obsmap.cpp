@@ -399,15 +399,14 @@ void OBSMAP::update_vobs_map()
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
     // add vobs robots from fms
-    std::vector<Eigen::Vector3d> _vir_pts;
-    std::vector<Eigen::Vector3d> _vir_closure_pts;
+    std::vector<Eigen::Vector3d> _vir_pts;    
     cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
     for(size_t p = 0; p < vobs_list_robots.size(); p++)
     {
         // add global points
         Eigen::Vector3d center = vobs_list_robots[p];
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_X[1]);
         pts.push_back(center);
 
         for(size_t q = 0; q < pts.size(); q++)
@@ -431,6 +430,7 @@ void OBSMAP::update_vobs_map()
     }
 
     // add vobs closures from fms
+    std::vector<Eigen::Vector3d> _vir_closure_pts;
     for(size_t p = 0; p < vobs_list_closures.size(); p++)
     {
         // add global points
@@ -1253,8 +1253,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 cv::Vec2i OBSMAP::xy_uv(double x, double y)
 {
     // y axis flip
-    int u = x/gs + cx;
-    int v = -y/gs + cy;
+    int u = std::floor(x/gs) + cx;
+    int v = std::floor(-y/gs) + cy;
     return cv::Vec2i(u, v);
 }
 
