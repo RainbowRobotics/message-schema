@@ -1,0 +1,12 @@
+Signal (6) received.
+Signal (6) received.
+/home/rainbow/app_slamnav2/build/SLAMNAV2(+0x12ccec) [0x638f7b42bcec]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x7ee9e0c42520]
+/usr/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c) [0x7ee9e0c969fc]
+/usr/lib/x86_64-linux-gnu/libc.so.6(raise+0x16) [0x7ee9e0c42476]
+/usr/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3) [0x7ee9e0c287f3]
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6(+0xb042a) [0x7ee9e10b042a]
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae20c) [0x7ee9e10ae20c]
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae277) [0x7ee9e10ae277]
+/usr/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae4d8) [0x7ee9e10ae4d8]
+/usr/local/lib/libsick_safetyscanners_base.so(_ZN4sick13communication9TCPClient7connectEN5boost10posix_time13time_durationE+0x22b) [0x7ee9e4bfa0e3]

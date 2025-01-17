@@ -14,7 +14,7 @@ EQ            = =
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DQT_NO_SIGNALS_SLOTS_KEYWORDS -DQT_NO_KEYWORDS -DUSE_SRV -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_NO_SIGNALS_SLOTS_KEYWORDS -DQT_NO_KEYWORDS -DUSE_AMR_400_LAKI -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -O3 -std=gnu++1z -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../../app_slamnav2 -I. -I/usr/include/opencv4 -I/usr/include/vtk-9.1 -I/usr/include/pcl-1.12 -I/usr/include/eigen3 -I/usr/local/include/sophus -I/usr/local/include -I/usr/local/include/gtsam -I/usr/local/include/octomap -I/usr/include/rapidjson -I/usr/include/boost -I/usr/include/boost/beast -I/usr/local/include/sick_safetyscanners_base -I../../OrbbecSDK/SDK/include -I../../rplidar_sdk/sdk/include -I../blidar -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtWebSockets -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
@@ -76,15 +76,7 @@ SOURCES       = ../LakiBeamHTTP.cpp \
 		../pgo.cpp \
 		../sim.cpp \
 		../slam_2d.cpp \
-		../unimap.cpp \
-		../blidar/calibration.cpp \
-		../blidar/lidar_data_processing.cpp \
-		../blidar/lidar_information.cpp \
-		../blidar/mtime.cpp \
-		../blidar/node_lidar.cpp \
-		../blidar/point_cloud_optimize.cpp \
-		../blidar/serial_port.cpp \
-		../blidar/timer.cpp moc_aruco.cpp \
+		../unimap.cpp moc_aruco.cpp \
 		moc_autocontrol.cpp \
 		moc_cam.cpp \
 		moc_code_reader.cpp \
@@ -128,14 +120,6 @@ OBJECTS       = LakiBeamHTTP.o \
 		sim.o \
 		slam_2d.o \
 		unimap.o \
-		calibration.o \
-		lidar_data_processing.o \
-		lidar_information.o \
-		mtime.o \
-		node_lidar.o \
-		point_cloud_optimize.o \
-		serial_port.o \
-		timer.o \
 		moc_aruco.o \
 		moc_autocontrol.o \
 		moc_cam.o \
@@ -279,17 +263,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../sim.h \
 		../slam_2d.h \
 		../tinycolormap.hpp \
-		../unimap.h \
-		../blidar/calibration.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/lidar_information.h \
-		../blidar/locker.h \
-		../blidar/msg_recept.h \
-		../blidar/mtime.h \
-		../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/serial_port.h \
-		../blidar/timer.h ../LakiBeamHTTP.cpp \
+		../unimap.h ../LakiBeamHTTP.cpp \
 		../LakiBeamUDP.cpp \
 		../aruco.cpp \
 		../autocontrol.cpp \
@@ -313,15 +287,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../pgo.cpp \
 		../sim.cpp \
 		../slam_2d.cpp \
-		../unimap.cpp \
-		../blidar/calibration.cpp \
-		../blidar/lidar_data_processing.cpp \
-		../blidar/lidar_information.cpp \
-		../blidar/mtime.cpp \
-		../blidar/node_lidar.cpp \
-		../blidar/point_cloud_optimize.cpp \
-		../blidar/serial_port.cpp \
-		../blidar/timer.cpp
+		../unimap.cpp
 QMAKE_TARGET  = SLAMNAV2
 DESTDIR       = 
 TARGET        = SLAMNAV2
@@ -547,8 +513,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../LakiBeamHTTP.h ../LakiBeamUDP.h ../aruco.h ../autocontrol.h ../cam.h ../code_reader.h ../comm_fms.h ../comm_ms.h ../comm_ui.h ../docking.h ../config.h ../cv_to_qt.h ../global_defines.h ../lidar_2d.h ../lidar_bottom.h ../logger.h ../mainwindow.h ../mobile.h ../my_utils.h ../task.h ../nanoflann.hpp ../obsmap.h ../pgo.h ../sim.h ../slam_2d.h ../tinycolormap.hpp ../unimap.h ../blidar/calibration.h ../blidar/lidar_data_processing.h ../blidar/lidar_information.h ../blidar/locker.h ../blidar/msg_recept.h ../blidar/mtime.h ../blidar/node_lidar.h ../blidar/point_cloud_optimize.h ../blidar/serial_port.h ../blidar/timer.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../LakiBeamHTTP.cpp ../LakiBeamUDP.cpp ../aruco.cpp ../autocontrol.cpp ../cam.cpp ../code_reader.cpp ../comm_fms.cpp ../comm_ms.cpp ../comm_ui.cpp ../docking.cpp ../config.cpp ../cv_to_qt.cpp ../lidar_2d.cpp ../lidar_bottom.cpp ../logger.cpp ../main.cpp ../mainwindow.cpp ../mobile.cpp ../my_utils.cpp ../task.cpp ../obsmap.cpp ../pgo.cpp ../sim.cpp ../slam_2d.cpp ../unimap.cpp ../blidar/calibration.cpp ../blidar/lidar_data_processing.cpp ../blidar/lidar_information.cpp ../blidar/mtime.cpp ../blidar/node_lidar.cpp ../blidar/point_cloud_optimize.cpp ../blidar/serial_port.cpp ../blidar/timer.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../LakiBeamHTTP.h ../LakiBeamUDP.h ../aruco.h ../autocontrol.h ../cam.h ../code_reader.h ../comm_fms.h ../comm_ms.h ../comm_ui.h ../docking.h ../config.h ../cv_to_qt.h ../global_defines.h ../lidar_2d.h ../lidar_bottom.h ../logger.h ../mainwindow.h ../mobile.h ../my_utils.h ../task.h ../nanoflann.hpp ../obsmap.h ../pgo.h ../sim.h ../slam_2d.h ../tinycolormap.hpp ../unimap.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../LakiBeamHTTP.cpp ../LakiBeamUDP.cpp ../aruco.cpp ../autocontrol.cpp ../cam.cpp ../code_reader.cpp ../comm_fms.cpp ../comm_ms.cpp ../comm_ui.cpp ../docking.cpp ../config.cpp ../cv_to_qt.cpp ../lidar_2d.cpp ../lidar_bottom.cpp ../logger.cpp ../main.cpp ../mainwindow.cpp ../mobile.cpp ../my_utils.cpp ../task.cpp ../obsmap.cpp ../pgo.cpp ../sim.cpp ../slam_2d.cpp ../unimap.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../mainwindow.ui $(DISTDIR)/
 
 
@@ -2103,66 +2069,6 @@ unimap.o: ../unimap.cpp ../unimap.h \
 		../logger.h \
 		../my_utils.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o unimap.o ../unimap.cpp
-
-calibration.o: ../blidar/calibration.cpp ../blidar/calibration.h \
-		../blidar/lidar_information.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o calibration.o ../blidar/calibration.cpp
-
-lidar_data_processing.o: ../blidar/lidar_data_processing.cpp ../blidar/msg_recept.h \
-		../blidar/serial_port.h \
-		../blidar/lidar_information.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/mtime.h \
-		../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/locker.h \
-		../blidar/timer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o lidar_data_processing.o ../blidar/lidar_data_processing.cpp
-
-lidar_information.o: ../blidar/lidar_information.cpp ../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/lidar_information.h \
-		../blidar/serial_port.h \
-		../blidar/locker.h \
-		../blidar/timer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o lidar_information.o ../blidar/lidar_information.cpp
-
-mtime.o: ../blidar/mtime.cpp ../blidar/mtime.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mtime.o ../blidar/mtime.cpp
-
-node_lidar.o: ../blidar/node_lidar.cpp ../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/lidar_information.h \
-		../blidar/serial_port.h \
-		../blidar/locker.h \
-		../blidar/timer.h \
-		../blidar/msg_recept.h \
-		../blidar/mtime.h \
-		../blidar/calibration.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o node_lidar.o ../blidar/node_lidar.cpp
-
-point_cloud_optimize.o: ../blidar/point_cloud_optimize.cpp ../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/lidar_information.h \
-		../blidar/serial_port.h \
-		../blidar/locker.h \
-		../blidar/timer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o point_cloud_optimize.o ../blidar/point_cloud_optimize.cpp
-
-serial_port.o: ../blidar/serial_port.cpp ../blidar/serial_port.h \
-		../blidar/lidar_information.h \
-		../blidar/node_lidar.h \
-		../blidar/point_cloud_optimize.h \
-		../blidar/lidar_data_processing.h \
-		../blidar/locker.h \
-		../blidar/timer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o serial_port.o ../blidar/serial_port.cpp
-
-timer.o: ../blidar/timer.cpp ../blidar/timer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o timer.o ../blidar/timer.cpp
 
 moc_aruco.o: moc_aruco.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_aruco.o moc_aruco.cpp
