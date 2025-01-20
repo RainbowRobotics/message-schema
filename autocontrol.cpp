@@ -2047,8 +2047,7 @@ void AUTOCONTROL::b_loop_pp()
             //double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
             double dx = local_path.pos[tgt_idx][0] - cur_xi[0];
             double dy = local_path.pos[tgt_idx][1] - cur_xi[1];
-
-            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);            
+            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2])*2;
 
             // calc cross track error
             double cte = calc_cte(local_path.pose, cur_pos);
