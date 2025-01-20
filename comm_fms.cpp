@@ -271,6 +271,9 @@ void COMM_FMS::slot_mapload(double time, QString name)
         unimap->load_map(load_dir);
         _main->all_update();
 
+        QString path_3d_map = load_dir + "/map.las";
+        lvx->map_load(path_3d_map);
+
         _main->set_mapping_view();
     }
 }

@@ -15,6 +15,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "aruco.h"
+#include "lvx_loc.h"
 
 // third party
 #include "pgo.h"
@@ -42,6 +43,7 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
     ARUCO *aruco = NULL;
+    LVX_LOC *lvx = NULL;
 
     // interface
     void mapping_start();

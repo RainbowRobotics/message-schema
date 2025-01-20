@@ -23,6 +23,7 @@
 #include "comm_fms.h"
 #include "comm_ms.h"
 #include "comm_ui.h"
+#include "lvx_loc.h"
 
 // qt
 #include <QMainWindow>
@@ -66,6 +67,7 @@ public:
     COMM_FMS cfms;
     COMM_MS cms;
     COMM_UI cui;
+    LVX_LOC lvx;
 
     // system logger
     LOGGER system_logger;
@@ -81,16 +83,9 @@ public:
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
-    void set_mapping_view();
-
-    void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
+    void set_mapping_view();    
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
-
-    void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
-    void viewer_camera_pan_control(double dx, double dy);
-    void viewer_camera_pan_control2(double dx, double dy);
-    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);    
     
 public:
     Ui::MainWindow *ui;

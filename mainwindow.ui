@@ -1087,7 +1087,7 @@ out</string>
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1,1,1,1">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -1108,7 +1108,7 @@ out</string>
             <property name="minimumSize">
              <size>
               <width>330</width>
-              <height>200</height>
+              <height>130</height>
              </size>
             </property>
             <property name="font">
@@ -1117,7 +1117,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1126,10 +1126,10 @@ out</string>
              <widget class="QPushButton" name="bt_MapBuild">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>20</y>
-                <width>71</width>
-                <height>41</height>
+                <x>10</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1144,10 +1144,10 @@ out</string>
              <widget class="QPushButton" name="bt_MapSave">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>20</y>
-                <width>71</width>
-                <height>41</height>
+                <x>60</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1162,10 +1162,10 @@ out</string>
              <widget class="QPushButton" name="bt_MapLoad">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>20</y>
-                <width>71</width>
-                <height>41</height>
+                <x>110</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1180,10 +1180,10 @@ out</string>
              <widget class="QPushButton" name="bt_LocInit">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>60</y>
-                <width>71</width>
-                <height>41</height>
+                <x>10</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1198,10 +1198,10 @@ out</string>
              <widget class="QPushButton" name="bt_LocInitAuto">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>60</y>
-                <width>71</width>
-                <height>41</height>
+                <x>110</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1217,10 +1217,10 @@ out</string>
              <widget class="QPushButton" name="bt_LocStart">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>100</y>
-                <width>71</width>
-                <height>41</height>
+                <x>160</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1229,16 +1229,17 @@ out</string>
                </font>
               </property>
               <property name="text">
-               <string>LOC start</string>
+               <string>LOC
+start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_LocStop">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>100</y>
-                <width>71</width>
-                <height>41</height>
+                <x>210</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1247,7 +1248,8 @@ out</string>
                </font>
               </property>
               <property name="text">
-               <string>LOC stop</string>
+               <string>LOC
+stop</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_SimInit">
@@ -1256,10 +1258,10 @@ out</string>
               </property>
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>20</y>
-                <width>71</width>
-                <height>41</height>
+                <x>160</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1268,16 +1270,17 @@ out</string>
                </font>
               </property>
               <property name="text">
-               <string>Sim init</string>
+               <string>Sim
+init</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_ObsClear">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>100</y>
-                <width>71</width>
-                <height>41</height>
+                <x>260</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1286,16 +1289,17 @@ out</string>
                </font>
               </property>
               <property name="text">
-               <string>OBS clear</string>
+               <string>OBS
+clear</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_ConfigLoad">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>100</y>
-                <width>71</width>
-                <height>41</height>
+                <x>260</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1311,10 +1315,10 @@ config</string>
              <widget class="QPushButton" name="bt_LocInitSemiAuto">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>60</y>
-                <width>71</width>
-                <height>41</height>
+                <x>60</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1330,10 +1334,10 @@ config</string>
              <widget class="QPushButton" name="bt_MapLastLc">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>60</y>
-                <width>71</width>
-                <height>41</height>
+                <x>210</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="font">
@@ -1354,10 +1358,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoMove">
               <property name="geometry">
                <rect>
-                <x>20</x>
+                <x>10</x>
                 <y>10</y>
-                <width>61</width>
-                <height>41</height>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1368,10 +1372,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoMove2">
               <property name="geometry">
                <rect>
-                <x>90</x>
+                <x>60</x>
                 <y>10</y>
-                <width>61</width>
-                <height>41</height>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1382,10 +1386,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoMove3">
               <property name="geometry">
                <rect>
-                <x>160</x>
+                <x>110</x>
                 <y>10</y>
-                <width>61</width>
-                <height>41</height>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1396,10 +1400,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoStop">
               <property name="geometry">
                <rect>
-                <x>230</x>
+                <x>160</x>
                 <y>10</y>
-                <width>61</width>
-                <height>41</height>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1409,10 +1413,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoPause">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>60</y>
-                <width>61</width>
-                <height>41</height>
+                <x>210</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1422,10 +1426,10 @@ LC</string>
              <widget class="QPushButton" name="bt_AutoResume">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>60</y>
-                <width>61</width>
-                <height>41</height>
+                <x>260</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1435,10 +1439,10 @@ LC</string>
              <widget class="QPushButton" name="bt_DockingMove">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>60</y>
-                <width>61</width>
-                <height>41</height>
+                <x>10</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -1458,10 +1462,10 @@ run</string>
              <widget class="QPushButton" name="bt_DockingStop">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>60</y>
-                <width>61</width>
-                <height>41</height>
+                <x>60</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1485,10 +1489,10 @@ Stop</string>
              <widget class="QPushButton" name="bt_Undock">
               <property name="geometry">
                <rect>
-                <x>230</x>
-                <y>110</y>
-                <width>61</width>
-                <height>41</height>
+                <x>110</x>
+                <y>40</y>
+                <width>51</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -1513,8 +1517,8 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>30</y>
-                <width>121</width>
+                <y>20</y>
+                <width>101</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1526,8 +1530,8 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>80</y>
-                <width>61</width>
+                <y>60</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1538,10 +1542,10 @@ Stop</string>
              <widget class="QCheckBox" name="ckb_Looping">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>122</y>
-                <width>71</width>
-                <height>23</height>
+                <x>120</x>
+                <y>81</y>
+                <width>61</width>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1554,8 +1558,8 @@ Stop</string>
              <widget class="QPushButton" name="bt_TaskPlay">
               <property name="geometry">
                <rect>
-                <x>150</x>
-                <y>144</y>
+                <x>120</x>
+                <y>58</y>
                 <width>161</width>
                 <height>21</height>
                </rect>
@@ -1568,8 +1572,8 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>10</y>
-                <width>121</width>
+                <y>0</y>
+                <width>101</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1581,8 +1585,8 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>100</y>
-                <width>121</width>
+                <y>80</y>
+                <width>101</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1601,9 +1605,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_TaskLoad">
               <property name="geometry">
                <rect>
-                <x>70</x>
-                <y>50</y>
-                <width>61</width>
+                <x>60</x>
+                <y>40</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1614,9 +1618,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_TaskResume">
               <property name="geometry">
                <rect>
-                <x>70</x>
-                <y>80</y>
-                <width>61</width>
+                <x>60</x>
+                <y>60</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1628,8 +1632,8 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>50</y>
-                <width>61</width>
+                <y>40</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1640,33 +1644,20 @@ Stop</string>
              <widget class="QListWidget" name="lw_TaskList">
               <property name="geometry">
                <rect>
-                <x>150</x>
-                <y>20</y>
+                <x>120</x>
+                <y>-2</y>
                 <width>161</width>
-                <height>121</height>
+                <height>61</height>
                </rect>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_7">
-              <property name="geometry">
-               <rect>
-                <x>150</x>
-                <y>0</y>
-                <width>141</width>
-                <height>20</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>node list</string>
               </property>
              </widget>
              <widget class="QComboBox" name="cb_TaskDrivingMode">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>143</y>
-                <width>121</width>
-                <height>22</height>
+                <x>190</x>
+                <y>80</y>
+                <width>91</width>
+                <height>21</height>
                </rect>
               </property>
               <item>
@@ -1696,7 +1687,7 @@ Stop</string>
                 <x>10</x>
                 <y>10</y>
                 <width>311</width>
-                <height>91</height>
+                <height>61</height>
                </rect>
               </property>
               <property name="font">
@@ -1721,9 +1712,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>110</y>
+                <y>70</y>
                 <width>71</width>
-                <height>41</height>
+                <height>31</height>
                </rect>
               </property>
               <property name="text">
@@ -1740,9 +1731,9 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>8</x>
-                <y>30</y>
+                <y>20</y>
                 <width>311</width>
-                <height>131</height>
+                <height>71</height>
                </rect>
               </property>
               <property name="font">
@@ -1766,10 +1757,10 @@ Stop</string>
              <widget class="QCheckBox" name="ckb_RecordSystemInfo">
               <property name="geometry">
                <rect>
-                <x>12</x>
-                <y>5</y>
+                <x>10</x>
+                <y>1</y>
                 <width>71</width>
-                <height>23</height>
+                <height>20</height>
                </rect>
               </property>
               <property name="text">
@@ -1787,7 +1778,7 @@ Stop</string>
                 <x>10</x>
                 <y>10</y>
                 <width>41</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1797,9 +1788,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_MoveLinear">
               <property name="geometry">
                <rect>
-                <x>220</x>
-                <y>50</y>
-                <width>91</width>
+                <x>230</x>
+                <y>10</y>
+                <width>71</width>
                 <height>20</height>
                </rect>
               </property>
@@ -1810,9 +1801,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_MoveRotate">
               <property name="geometry">
                <rect>
-                <x>220</x>
-                <y>80</y>
-                <width>91</width>
+                <x>230</x>
+                <y>30</y>
+                <width>71</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1823,9 +1814,9 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveLinearDist">
               <property name="geometry">
                <rect>
-                <x>50</x>
-                <y>50</y>
-                <width>65</width>
+                <x>90</x>
+                <y>10</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1842,9 +1833,9 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveLinearV">
               <property name="geometry">
                <rect>
-                <x>150</x>
-                <y>50</y>
-                <width>65</width>
+                <x>170</x>
+                <y>10</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1861,9 +1852,9 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveRotateDeg">
               <property name="geometry">
                <rect>
-                <x>50</x>
-                <y>80</y>
-                <width>65</width>
+                <x>90</x>
+                <y>30</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1880,9 +1871,9 @@ Stop</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveRotateW">
               <property name="geometry">
                <rect>
-                <x>150</x>
-                <y>80</y>
-                <width>65</width>
+                <x>170</x>
+                <y>30</y>
+                <width>51</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1899,8 +1890,8 @@ Stop</string>
              <widget class="QLabel" name="label_2">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>50</y>
+                <x>60</x>
+                <y>10</y>
                 <width>31</width>
                 <height>20</height>
                </rect>
@@ -1912,8 +1903,8 @@ Stop</string>
              <widget class="QLabel" name="label_3">
               <property name="geometry">
                <rect>
-                <x>130</x>
-                <y>50</y>
+                <x>150</x>
+                <y>10</y>
                 <width>21</width>
                 <height>16</height>
                </rect>
@@ -1925,8 +1916,8 @@ Stop</string>
              <widget class="QLabel" name="label_4">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>80</y>
+                <x>60</x>
+                <y>30</y>
                 <width>31</width>
                 <height>21</height>
                </rect>
@@ -1938,8 +1929,8 @@ Stop</string>
              <widget class="QLabel" name="label_5">
               <property name="geometry">
                <rect>
-                <x>130</x>
-                <y>80</y>
+                <x>150</x>
+                <y>30</y>
                 <width>21</width>
                 <height>17</height>
                </rect>
@@ -1951,10 +1942,10 @@ Stop</string>
              <widget class="QPushButton" name="bt_Test">
               <property name="geometry">
                <rect>
-                <x>60</x>
-                <y>10</y>
+                <x>10</x>
+                <y>30</y>
                 <width>41</width>
-                <height>31</height>
+                <height>21</height>
                </rect>
               </property>
               <property name="text">
@@ -1964,8 +1955,8 @@ Stop</string>
              <widget class="QSpinBox" name="spb_Led">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>109</y>
+                <x>90</x>
+                <y>49</y>
                 <width>44</width>
                 <height>21</height>
                </rect>
@@ -1977,9 +1968,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_TestLed">
               <property name="geometry">
                <rect>
-                <x>60</x>
-                <y>110</y>
-                <width>71</width>
+                <x>140</x>
+                <y>50</y>
+                <width>51</width>
                 <height>20</height>
                </rect>
               </property>
@@ -1990,9 +1981,9 @@ Stop</string>
              <widget class="QCheckBox" name="ckb_TestDebug">
               <property name="geometry">
                <rect>
-                <x>220</x>
-                <y>110</y>
-                <width>92</width>
+                <x>10</x>
+                <y>50</y>
+                <width>61</width>
                 <height>20</height>
                </rect>
               </property>
@@ -2003,9 +1994,9 @@ Stop</string>
              <widget class="QPushButton" name="bt_TestImgSave">
               <property name="geometry">
                <rect>
-                <x>140</x>
-                <y>110</y>
-                <width>71</width>
+                <x>190</x>
+                <y>50</y>
+                <width>61</width>
                 <height>20</height>
                </rect>
               </property>
@@ -2180,7 +2171,7 @@ Stop</string>
               <rect>
                <x>10</x>
                <y>10</y>
-               <width>61</width>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2196,9 +2187,9 @@ Stop</string>
             <widget class="QPushButton" name="bt_MapSave2">
              <property name="geometry">
               <rect>
-               <x>70</x>
+               <x>60</x>
                <y>10</y>
-               <width>61</width>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2214,9 +2205,9 @@ Stop</string>
             <widget class="QPushButton" name="bt_ClearTopo">
              <property name="geometry">
               <rect>
-               <x>130</x>
+               <x>110</x>
                <y>10</y>
-               <width>61</width>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2232,9 +2223,9 @@ Stop</string>
             <widget class="QPushButton" name="bt_QuickAnnotStart">
              <property name="geometry">
               <rect>
-               <x>70</x>
-               <y>50</y>
-               <width>61</width>
+               <x>60</x>
+               <y>40</y>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2244,15 +2235,16 @@ Stop</string>
               </font>
              </property>
              <property name="text">
-              <string>QA start</string>
+              <string>QA
+start</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_QuickAnnotStop">
              <property name="geometry">
               <rect>
-               <x>130</x>
-               <y>50</y>
-               <width>61</width>
+               <x>110</x>
+               <y>40</y>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2262,15 +2254,16 @@ Stop</string>
               </font>
              </property>
              <property name="text">
-              <string>QA stop</string>
+              <string>QA
+stop</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_MapReload">
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>50</y>
-               <width>61</width>
+               <y>40</y>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2286,9 +2279,9 @@ Stop</string>
             <widget class="QPushButton" name="bt_QuickAddNode">
              <property name="geometry">
               <rect>
-               <x>190</x>
+               <x>160</x>
                <y>10</y>
-               <width>61</width>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2298,15 +2291,16 @@ Stop</string>
               </font>
              </property>
              <property name="text">
-              <string>QA Node</string>
+              <string>QA
+Node</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_QuickAddAruco">
              <property name="geometry">
               <rect>
-               <x>190</x>
-               <y>50</y>
-               <width>61</width>
+               <x>260</x>
+               <y>10</y>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2316,15 +2310,16 @@ Stop</string>
               </font>
              </property>
              <property name="text">
-              <string>QA Aruco</string>
+              <string>QA
+Aruco</string>
              </property>
             </widget>
             <widget class="QPushButton" name="bt_QuickAddCloud">
              <property name="geometry">
               <rect>
-               <x>250</x>
+               <x>210</x>
                <y>10</y>
-               <width>61</width>
+               <width>51</width>
                <height>31</height>
               </rect>
              </property>
@@ -2334,7 +2329,8 @@ Stop</string>
               </font>
              </property>
              <property name="text">
-              <string>QA Cloud</string>
+              <string>QA
+Cloud</string>
              </property>
             </widget>
            </widget>

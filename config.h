@@ -84,6 +84,7 @@ public:
     int USE_QT_UI = 0;
     int USE_FMS = 0;
     int USE_ARUCO = 0;
+    int USE_LVX = 0;
     int USE_S3 = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
@@ -137,6 +138,16 @@ public:
     double DOCKING_POINTDOCK_MARGIN = 0.15;
     double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
+
+    // livox
+    QString LVX_TF = "0,0,0,0,0,0";
+    double LVX_FRM_DT = 0.1;
+    double LVX_MIN_RANGE = 1.0;
+    double LVX_MAX_RANGE = 40.0;
+    int LVX_MAX_FEATURE_NUM = 500;
+    double LVX_SURFEL_RANGE = 1.0;
+    double LVX_COST_THRESHOLD = 1.0;
+    double LVX_ERROR_THRESHOLD = 0.1;
 
     std::vector<QString> params;
 

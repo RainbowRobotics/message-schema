@@ -13,6 +13,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
+#include "lvx_loc.h"
 
 // qt
 #include <QObject>
@@ -42,6 +43,7 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
+    LVX_LOC *lvx = NULL;
 
     // vars    
     std::atomic<bool> is_connected = {false};

@@ -17,6 +17,8 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "docking.h"
+#include "lvx_loc.h"
+
 // sio
 #include <sio_client.h>
 #define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
@@ -50,6 +52,7 @@ public:
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
     DOCKING *dctrl = NULL;
+    LVX_LOC *lvx = NULL;
 
     // vars
     std::unique_ptr<sio::client> io;    

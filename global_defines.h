@@ -1,6 +1,9 @@
 #ifndef GLOBAL_DEFINES_H
 #define GLOBAL_DEFINES_H
 
+// OpenMP
+#include <omp.h>
+
 // linux native
 #include <sys/timerfd.h>
 
@@ -75,6 +78,16 @@
 
 // pseudo color
 #include "tinycolormap.hpp"
+
+// pdal
+#include <pdal/PointTable.hpp>
+#include <pdal/PointView.hpp>
+#include <pdal/Dimension.hpp>
+#include <pdal/Options.hpp>
+#include <pdal/io/BufferReader.hpp>
+#include <pdal/io/LasWriter.hpp>
+#include <pdal/io/LasReader.hpp>
+#include <pdal/StageFactory.hpp>
 
 // qt
 #include <QApplication>
@@ -1206,5 +1219,145 @@ struct NODE_INFO
 
 // tree typedef
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZR_CLOUD>, XYZR_CLOUD, 3> KD_TREE_XYZR;
+
+// for livox
+struct IMU
+{
+    double t = 0; // sec
+
+    double acc_x = 0; // m/s^2
+    double acc_y = 0;
+    double acc_z = 0;
+
+    double gyr_x = 0; // rad/s
+    double gyr_y = 0;
+    double gyr_z = 0;
+
+    double rx = 0; // so3 vector
+    double ry = 0;
+    double rz = 0;
+
+    IMU(){}
+
+    IMU(const IMU& p)
+    {
+        t = p.t;
+        acc_x = p.acc_x;
+        acc_y = p.acc_y;
+        acc_z = p.acc_z;
+        gyr_x = p.gyr_x;
+        gyr_y = p.gyr_y;
+        gyr_z = p.gyr_z;
+        rx = p.rx;
+        ry = p.ry;
+        rz = p.rz;
+    }
+
+    IMU& operator=(const IMU& p)
+    {
+        t = p.t;
+        acc_x = p.acc_x;
+        acc_y = p.acc_y;
+        acc_z = p.acc_z;
+        gyr_x = p.gyr_x;
+        gyr_y = p.gyr_y;
+        gyr_z = p.gyr_z;
+        rx = p.rx;
+        ry = p.ry;
+        rz = p.rz;
+        return *this;
+    }
+};
+
+struct LVX_PT
+{
+    double t = 0;           // sec
+    double alpha = 0;       // rate in frm
+    double reflect = 0;     // reflect
+    uint8_t tag = 0;        // tag for noise filtering
+
+    float x = 0;            // float for octree
+    float y = 0;
+    float z = 0;
+
+    LVX_PT(){}
+
+    LVX_PT(const LVX_PT& p)
+    {
+        t = p.t;
+        alpha = p.alpha;
+        reflect = p.reflect;
+        tag = p.tag;
+        x = p.x;
+        y = p.y;
+        z = p.z;
+    }
+
+    LVX_PT& operator=(const LVX_PT& p)
+    {
+        t = p.t;
+        alpha = p.alpha;
+        reflect = p.reflect;
+        tag = p.tag;
+        x = p.x;
+        y = p.y;
+        z = p.z;
+        return *this;
+    }
+};
+
+struct LVX_FRM
+{
+    double t;
+    std::vector<LVX_PT> pts;
+
+    LVX_FRM()
+    {
+        t = 0;
+    }
+
+    LVX_FRM(const LVX_FRM& p)
+    {
+        t = p.t;
+        pts = p.pts;
+    }
+
+    LVX_FRM& operator=(const LVX_FRM& p)
+    {
+        t = p.t;
+        pts = p.pts;
+        return *this;
+    }
+};
+
+struct CLOUD
+{
+    std::vector<Eigen::Vector3d> pts;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    inline double kdtree_get_pt(const size_t idx, const size_t dim) const
+    {
+        if(dim == 0)
+        {
+            return pts[idx][0];
+        }
+        else if(dim == 1)
+        {
+            return pts[idx][1];
+        }
+        else
+        {
+            return pts[idx][2];
+        }
+    }
+
+    // Optional: computation of bounding box
+    template <class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+};
+typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, CLOUD>, CLOUD, 3> KD_TREE;
 
 #endif // GLOBAL_DEFINES_H

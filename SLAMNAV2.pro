@@ -7,6 +7,10 @@ CONFIG += resources_big
 
 QMAKE_CXXFLAGS_RELEASE += -O3
 
+# OpenMP
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -35,9 +39,11 @@ SOURCES += \
     docking.cpp \
     config.cpp \
     cv_to_qt.cpp \
+    imu_filter.cpp \
     lidar_2d.cpp \
     lidar_bottom.cpp \
     logger.cpp \
+    lvx_loc.cpp \
     main.cpp \
     mainwindow.cpp \
     mobile.cpp \
@@ -63,9 +69,11 @@ HEADERS += \
     config.h \
     cv_to_qt.h \
     global_defines.h \
+    imu_filter.h \
     lidar_2d.h \
     lidar_bottom.h \
     logger.h \
+    lvx_loc.h \
     mainwindow.h \
     mobile.h \
     my_utils.h \
@@ -229,3 +237,13 @@ LIBS += -lsl_lidar_sdk
 
 # bottom lidar
 INCLUDEPATH += $$PWD/blidar/
+
+# PDAL
+INCLUDEPATH += /usr/include/pdal
+LIBS += -L/usr/lib/
+LIBS += -lpdalcpp
+
+# livox
+INCLUDEPATH += /usr/local/include/
+LIBS += -L/usr/local/lib/
+LIBS += -llivox_lidar_sdk_static

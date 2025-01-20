@@ -10,6 +10,7 @@
 #include "lidar_2d.h"
 #include "slam_2d.h"
 #include "unimap.h"
+#include "lvx_loc.h"
 
 #include <QObject>
 
@@ -28,6 +29,7 @@ public:
     LIDAR_2D *lidar = NULL;
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
+    LVX_LOC *lvx = NULL;
 
     void start();
     void stop();
