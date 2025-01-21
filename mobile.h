@@ -62,6 +62,8 @@ public:
     std::thread* recv_thread = NULL;
     void recv_loop();
 
+    int cal_voltage(float voltage);
+
     // send loop
     std::atomic<bool> send_flag = {false};
     std::thread* send_thread = NULL;

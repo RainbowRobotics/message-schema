@@ -385,9 +385,9 @@ void COMM_MS::send_status()
     rootObj["command"] = "status";
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
-    // Adding the pose object
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+//    // Adding the pose object
+//    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+//    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
 
 //    QJsonObject poseObj;
 //    poseObj["x"] = QString::number(cur_xi[0], 'f', 3);
@@ -459,12 +459,11 @@ void COMM_MS::send_status()
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
     powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
+    powerObj["bat_percent"] = QString::number(ms.bat_percent);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
-    #ifdef USE_STATION
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
-    #endif
     rootObj["power"] = powerObj;
 
     // Adding the state object
@@ -547,6 +546,7 @@ void COMM_MS::send_status()
     {
         QJsonDocument doc(rootObj);
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+//        std::cout<<doc.toJson().toStdString()<<std::endl;
         io->socket()->emit("status", res);
         last_send_time = time;
     }
@@ -568,7 +568,7 @@ void COMM_MS::quick_send_status()
     QJsonObject rootObj;
 
     // Adding the command and time
-    rootObj["command"] = "status";
+    rootObj["command"] = "working_status";
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // Adding the pose object
@@ -729,11 +729,11 @@ void COMM_MS::quick_send_status()
     rootObj["setting"] = settingObj;
 
     // send
-    if(time - last_send_time > 0.05)
+    if(time - last_send_time > 0.0)
     {
         QJsonDocument doc(rootObj);
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-        io->socket()->emit("status", res);
+        io->socket()->emit("working_status", res);
         last_send_time = time;
     }
     //printf("[COMM_MS] status, time: %f\n", time);
