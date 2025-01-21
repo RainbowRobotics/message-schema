@@ -729,7 +729,7 @@ void COMM_MS::quick_send_status()
     rootObj["setting"] = settingObj;
 
     // send
-    if(time - last_send_time > 0.0)
+    if(time - last_send_time > 0.01)
     {
         QJsonDocument doc(rootObj);
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
