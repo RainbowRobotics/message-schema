@@ -1380,10 +1380,11 @@ void COMM_MS::slot_localization_init(double time, double x, double y, double z, 
     }
 
     // manual init
-    slam->mtx.lock();
-    slam->cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
-    slam->mtx.unlock();
-
+    if(config->USE_LVX)
+    {
+        lvx->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
+    }
+    slam->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
     send_localization_response("init", "success");
 }
 

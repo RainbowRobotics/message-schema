@@ -73,6 +73,7 @@ void SLAM_2D::mapping_start()
         }
         live_tree = new KD_TREE_XYZR(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         cur_tf = Eigen::Matrix4d::Identity();
+        pgo = PGO();
         mtx.unlock();
 
         // start loop
@@ -188,6 +189,13 @@ void SLAM_2D::localization_stop()
     lidar->cur_scan_outlier.clear();
 
     lidar->mtx.unlock();
+}
+
+void SLAM_2D::set_cur_tf(Eigen::Matrix4d tf)
+{
+    mtx.lock();
+    cur_tf = tf;
+    mtx.unlock();
 }
 
 Eigen::Matrix4d SLAM_2D::get_cur_tf()
@@ -311,9 +319,7 @@ void SLAM_2D::map_a_loop()
             if(frm_cnt == 0)
             {
                 // get last global tf
-                mtx.lock();
-                Eigen::Matrix4d _cur_tf = cur_tf;
-                mtx.unlock();
+                Eigen::Matrix4d _cur_tf = get_cur_tf();
 
                 // local to global
                 std::vector<PT_XYZR> dsk;
@@ -357,9 +363,7 @@ void SLAM_2D::map_a_loop()
                 mtx.unlock();
 
                 // update global tf
-                mtx.lock();
-                cur_tf = _cur_tf;
-                mtx.unlock();
+                set_cur_tf(_cur_tf);
 
                 // update previous frame
                 frm0 = frm;
@@ -370,9 +374,7 @@ void SLAM_2D::map_a_loop()
             else
             {
                 // get last global tf
-                mtx.lock();
-                Eigen::Matrix4d _cur_tf = cur_tf;
-                mtx.unlock();
+                Eigen::Matrix4d _cur_tf = get_cur_tf();
 
                 // initial guess
                 Eigen::Matrix4d delta_tf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
@@ -521,9 +523,7 @@ void SLAM_2D::map_a_loop()
                         mtx.unlock();
 
                         // update global tf
-                        mtx.lock();
-                        cur_tf = G;
-                        mtx.unlock();
+                        set_cur_tf(G);
 
                         // update previous frame
                         frm0 = frm;
@@ -722,14 +722,8 @@ void SLAM_2D::loc_a_loop()
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {
-        bool is_new = false;
         FRAME frm;
-        while(lidar->scan_que.try_pop(frm) && loc_a_flag)
-        {
-            is_new = true;
-        }
-
-        if(is_new)
+        if(lidar->scan_que.try_pop(frm))
         {
             if(unimap->is_loaded == false)
             {
@@ -741,21 +735,33 @@ void SLAM_2D::loc_a_loop()
 
             // pose estimation
             Eigen::Matrix4d _cur_tf = get_cur_tf();
-            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+
+            double err;
+            double time;
+            if(config->USE_LVX)
+            {
+                err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                time = frm.t;
+            }
+            else
+            {
+                _cur_tf = lvx->get_cur_tf();
+                err = lvx->cur_err;
+                time = lvx->cur_time;
+            }
 
             // check error
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
                 // for loc b loop
                 TIME_POSE tp;
-                tp.t = frm.t;
+                tp.t = time;
                 tp.tf = _cur_tf;
-                tp.tf2 = se2_to_TF(frm.mo.pose);
                 tp_que.push(tp);
 
                 // for obs loop
                 TIME_POSE_PTS tpp;
-                tpp.t = frm.t;
+                tpp.t = time;
                 tpp.tf = _cur_tf;
                 tpp.pts = frm.pts;
                 tpp_que.push(tpp);
@@ -783,119 +789,78 @@ void SLAM_2D::loc_a_loop()
 
             // update processing time
             proc_time_loc_a = get_time() - st_time;
-            continue;
+
+            // for que overflow
+            lidar->scan_que.clear();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("[SLAM] loc_a_loop stop\n");
 }
 
 void SLAM_2D::loc_b_loop()
 {
-    const double dt = 0.02; // 50hz
+    // loop params
+    const double dt = 0.02;
     double pre_loop_time = get_time();
 
+    // clear storage
     mtx.lock();
     tp_storage.clear();
     mtx.unlock();
-
-    MOBILE_POSE mo0 = mobile->get_pose();
 
     // for aruco fusion
     double pre_aruco_t = 0;
     std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
 
+    // params
+    MOBILE_POSE pre_mo = mobile->get_pose();
+
     printf("[SLAM] loc_b_loop start\n");
     while(loc_b_flag)
     {
-        MOBILE_POSE mo = mobile->get_pose();
-        if(mo.t > mo0.t)
+        MOBILE_POSE cur_mo = mobile->get_pose();
+        if(cur_mo.t > pre_mo.t)
         {
             double st_time = get_time();
 
-            Eigen::Matrix4d pre_mo_tf = se2_to_TF(mo0.pose);
-            Eigen::Matrix4d cur_mo_tf = se2_to_TF(mo.pose);
+            Eigen::Matrix4d pre_mo_tf = se2_to_TF(pre_mo.pose);
+            Eigen::Matrix4d cur_mo_tf = se2_to_TF(cur_mo.pose);
 
-            // get current tf            
+            // get current tf
             Eigen::Matrix4d _cur_tf = get_cur_tf();
 
             // update odo_tf
             Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
-            pre_mo_tf = cur_mo_tf;
             Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
+            pre_mo_tf = cur_mo_tf;
 
             // icp-odometry fusion
             TIME_POSE tp;
             if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
             {
-                const bool is_time_compensation = true;
-                const bool use_slip_detection = false;
-                if(is_time_compensation)
+                // time delay compensation
+                Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
+                Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+                Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+                Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
+
+                double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+
+                // for odometry slip
+                Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                if(std::abs(dtdr[1]) > 10.0*D2R)
                 {
-                    // time delay compensation
-                    Eigen::Matrix4d tf0 = tp.tf2;
-                    Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
-                    Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
-
-                    double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
-                    /*
-                    if(is_pivot)
-                    {
-                        alpha = 1.0;
-                    }
-                    */
-
-                    Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
-
-                    // for odometry slip
-                    if(use_slip_detection)
-                    {
-                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                        if(std::abs(dtdr[1]) > 10.0*D2R)
-                        {
-                            alpha = 0;
-                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
-                        }
-                    }
-
-                    // interpolation
-                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
-                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                    // update
-                    _cur_tf = fused_tf;
+                    alpha = 0;
+                    printf("[LOC] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
                 }
-                else
-                {
-                    double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
 
-                    /*
-                    if(is_pivot)
-                    {
-                        alpha = 1.0;
-                    }
-                    */
+                // interpolation
+                Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
-                    Eigen::Matrix4d icp_tf = tp.tf;
-
-                    // for odometry slip
-                    if(use_slip_detection)
-                    {
-                        Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                        if(std::abs(dtdr[1]) > 10.0*D2R)
-                        {
-                            alpha = 0;
-                            printf("[LOC] slip detection, dth: %f\n", dtdr[1]*R2D);
-                        }
-                    }
-
-                    // interpolation
-                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
-                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                    // update
-                    _cur_tf = fused_tf;
-                }
+                // update
+                _cur_tf = fused_tf;
             }
             else
             {
@@ -919,17 +884,17 @@ void SLAM_2D::loc_b_loop()
 
                         // time delay compensation
                         Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
-                        Eigen::Matrix4d tf1 = se2_to_TF(mo.pose);
+                        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
                         Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
 
                         Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
                         Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
 
                         // interpolation
-                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 0.1 means 90% aruco_tf, 10% cur_tf                        
-                        if(std::abs(mo.vel[2]) > 10.0*D2R)
+                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 1.0 mean odometry only
+                        if(std::abs(cur_mo.vel[2]) > 10.0*D2R)
                         {
-                            alpha = 1.0;
+                            alpha = 1.0; // odometry only
                         }
 
                         Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
@@ -937,18 +902,17 @@ void SLAM_2D::loc_b_loop()
 
                         // update
                         _cur_tf = fused_tf;
-
                         pre_aruco_t = aruco_tpi.t;
                     }
                 }
             }
 
             // update
-            mtx.lock();
-            cur_tf = _cur_tf;
+            set_cur_tf(_cur_tf);
 
+            mtx.lock();
             TIME_POSE fused_tp;
-            fused_tp.t = mo.t;
+            fused_tp.t = cur_mo.t;
             fused_tp.tf = _cur_tf;
             tp_storage.push_back(fused_tp);
             if(tp_storage.size() > 300)
@@ -958,7 +922,7 @@ void SLAM_2D::loc_b_loop()
             mtx.unlock();
 
             // for next operation
-            mo0 = mo;
+            pre_mo = cur_mo;
 
             // update processing time
             proc_time_loc_b = get_time() - st_time;
@@ -970,8 +934,6 @@ void SLAM_2D::loc_b_loop()
         if(delta_loop_time < dt)
         {
             precise_sleep(dt-delta_loop_time);
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -2181,9 +2143,12 @@ void SLAM_2D::semi_auto_init_start()
         Eigen::Vector3d min_pose = TF_to_se2(min_tf);
         printf("[AUTOINIT] success auto init. x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, min_cost);
 
-        mtx.lock();
-        cur_tf = min_tf;
-        mtx.unlock();
+        if(config->USE_LVX)
+        {
+            lvx->set_cur_tf(min_tf);
+        }
+
+        set_cur_tf(min_tf);
 
         localization_start();
         Q_EMIT signal_localization_semiautoinit_succeed("success");

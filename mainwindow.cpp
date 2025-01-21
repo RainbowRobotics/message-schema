@@ -226,16 +226,8 @@ MainWindow::MainWindow(QWidget *parent)
                 init_modules();
 
                 // start plot loop
-                if(config.SIM_MODE == 1)
-                {
-                    plot_timer.start(50);
-                    plot_timer2.start(50);
-                }
-                else
-                {
-                    plot_timer.start(100);
-                    plot_timer2.start(100);
-                }
+                plot_timer.start(50);
+                plot_timer2.start(50);
             });
         });
     });
@@ -1586,13 +1578,14 @@ void MainWindow::bt_SimInit()
     {
         slam.localization_stop();
     }
-    slam.cur_tf = Eigen::Matrix4d::Identity();
+
+    // clear cur_tf
     sim.stop();
 
     // start
     Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
     sim.cur_tf = tf;
-    slam.cur_tf = tf;
+    slam.set_cur_tf(tf);
     mobile.cur_pose.pose = TF_to_se2(tf);
     sim.start();
 
@@ -1861,9 +1854,12 @@ void MainWindow::bt_MapLastLc()
 void MainWindow::bt_LocInit()
 {
     // manual init
-    slam.mtx.lock();
-    slam.cur_tf = se2_to_TF(pick.r_pose);
-    slam.mtx.unlock();
+    if(config.USE_LVX)
+    {
+        lvx.set_cur_tf(se2_to_TF(pick.r_pose));
+    }
+
+    slam.set_cur_tf(se2_to_TF(pick.r_pose));
 
     if(config.SIM_MODE)
     {
@@ -1906,12 +1902,22 @@ void MainWindow::bt_LocStart()
         return;
     }
 
+    if(config.USE_LVX)
+    {
+        lvx.loc_start();
+    }
+
     slam.localization_start();
 }
 
 void MainWindow::bt_LocStop()
 {
     slam.localization_stop();
+
+    if(config.USE_LVX)
+    {
+        lvx.loc_stop();
+    }
 }
 
 // for annotation
@@ -3228,7 +3234,7 @@ void MainWindow::slot_sim_random_init(QString seed)
 
     // start
     Eigen::Matrix4d tf = node->tf;
-    slam.cur_tf = tf;
+    slam.set_cur_tf(tf);
     sim.cur_tf = tf;
     mobile.cur_pose.pose = TF_to_se2(tf);
     sim.start();
@@ -4031,8 +4037,6 @@ void MainWindow::jog_loop()
         if(delta_loop_time < dt)
         {
             precise_sleep(dt-delta_loop_time);
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -5152,6 +5156,14 @@ void MainWindow::raw_plot()
         viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "raw_pts");
     }
 }
+void MainWindow::lvx_plot()
+{
+    if(lvx.is_connected)
+    {
+        QString info_str = lvx.get_info_text();
+        ui->lb_LvxInfo->setText(info_str);
+    }
+}
 void MainWindow::plot_loop()
 {
     if(ui->ckb_PlotEnable->isChecked() == false)
@@ -5171,6 +5183,7 @@ void MainWindow::plot_loop()
     obs_plot();    
     ctrl_plot();
     raw_plot();
+    lvx_plot();
 
     // camera reset
     if(is_set_top_view)

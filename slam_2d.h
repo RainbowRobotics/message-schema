@@ -52,6 +52,7 @@ public:
     void localization_start();
     void localization_stop();
 
+    void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
     Eigen::Vector2d get_cur_ieir();
     TIME_POSE_PTS get_cur_tpp();

@@ -222,6 +222,7 @@ public:
     void obs_plot();
     void ctrl_plot();
     void raw_plot();
+    void lvx_plot();
 
     void map_plot2();
     void topo_plot2();

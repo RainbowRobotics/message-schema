@@ -34,14 +34,14 @@ public:
     // interface
     void init();
     void open();
-    void map_load(QString file_path);
-    void loc_init(Eigen::Matrix4d tf);
+    void map_load(QString file_path);    
     void loc_start();
     void loc_stop();
 
-    QString get_info_text();
+    void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
-    IMU get_best_imu(double ref_t);
+    IMU get_best_imu(double ref_t);    
+    QString get_info_text();
 
     // map load
     QString last_map_file_path = "";
@@ -65,11 +65,12 @@ public:
 
     // params
     std::atomic<double> offset_t = {0};
+    std::atomic<double> cur_time = {0};
+    std::atomic<double> cur_err = {0};
     Eigen::Matrix4d lvx_tf;
     Eigen::Matrix4d cur_tf;
 
-    // storage
-    std::atomic<double> pts_storing_st_time = {0};
+    // storage    
     std::vector<LVX_PT> pts_storage;
     tbb::concurrent_queue<LVX_FRM> frm_que;
     std::vector<IMU> imu_storage;

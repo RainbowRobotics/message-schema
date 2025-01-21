@@ -750,28 +750,24 @@ struct COST_JACOBIAN
 struct TIME_POSE
 {
     double t = 0;
-    Eigen::Matrix4d tf;
-    Eigen::Matrix4d tf2; // optional tf
+    Eigen::Matrix4d tf;    
 
     TIME_POSE()
     {
         t = 0;
-        tf.setIdentity();
-        tf2.setIdentity();
+        tf.setIdentity();        
     }
 
     TIME_POSE(const TIME_POSE& p)
     {
         t = p.t;
-        tf = p.tf;
-        tf2 = p.tf2;
+        tf = p.tf;        
     }
 
     TIME_POSE& operator=(const TIME_POSE& p)
     {
         t = p.t;
-        tf = p.tf;
-        tf2 = p.tf2;
+        tf = p.tf;        
         return *this;
     }
 };

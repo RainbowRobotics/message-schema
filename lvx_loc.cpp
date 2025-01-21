@@ -137,13 +137,6 @@ void LVX_LOC::load_func(QString file_path)
     std::cout << "[LVX] Loaded " << pts.size() << " points from " << file_path.toStdString() << std::endl;
 }
 
-void LVX_LOC::loc_init(Eigen::Matrix4d tf)
-{
-    mtx.lock();
-    cur_tf = tf;
-    mtx.unlock();
-}
-
 void LVX_LOC::loc_start()
 {
     if(is_connected == false)
@@ -173,6 +166,13 @@ void LVX_LOC::loc_stop()
         a_thread->join();
         a_thread = NULL;
     }
+}
+
+void LVX_LOC::set_cur_tf(Eigen::Matrix4d tf)
+{
+    mtx.lock();
+    cur_tf = tf;
+    mtx.unlock();
 }
 
 Eigen::Matrix4d LVX_LOC::get_cur_tf()
@@ -205,8 +205,13 @@ IMU LVX_LOC::get_best_imu(double ref_t)
 
 QString LVX_LOC::get_info_text()
 {
-    QString str;
+    Eigen::Matrix4d _cur_tf = get_cur_tf();
+    Eigen::Vector3d xi = TF_to_se2(_cur_tf);
 
+    QString str;
+    str.sprintf("[LVX_INFO]\nt:%.2f, imu:%d, fq:%d\npose: %.2f, %.2f, %.2f",
+                (double)cur_time, (int)imu_storage.size(), (int)frm_que.unsafe_size(),
+                xi[0], xi[1], xi[2]*R2D);
     return str;
 }
 
@@ -313,6 +318,9 @@ void LVX_LOC::grab_loop()
                 frm.t = t0;
                 frm.pts = lidar->pts_storage;
 
+                // save grab time
+                lidar->cur_time = frm.t;
+
                 // set queue
                 lidar->frm_que.push(frm);
 
@@ -392,10 +400,10 @@ void LVX_LOC::grab_loop()
 
         // update storage
         lidar->mtx.lock();
-        if(lidar->offset_t > 0)
+        if(lidar->offset_t != 0)
         {
             lidar->imu_storage.push_back(imu);
-            if(lidar->imu_storage.front().t < imu.t - 3.0)
+            if(lidar->imu_storage.size() > 200)
             {
                 lidar->imu_storage.erase(lidar->imu_storage.begin());
             }
@@ -449,8 +457,8 @@ void LVX_LOC::a_loop()
             // deskewing
             std::vector<Eigen::Vector3d> dsk;
             {
-                IMU imu0 = get_best_imu(imu_storage.front().t);
-                IMU imu1 = get_best_imu(imu_storage.back().t);
+                IMU imu0 = get_best_imu(frm.pts.front().t);
+                IMU imu1 = get_best_imu(frm.pts.back().t);
 
                 Eigen::Matrix3d R0 = Sophus::SO3d::exp(Sophus::Vector3d(imu0.rx, imu0.ry, imu0.rz)).matrix();
                 Eigen::Matrix3d R1 = Sophus::SO3d::exp(Sophus::Vector3d(imu1.rx, imu1.ry, imu1.rz)).matrix();
@@ -467,19 +475,17 @@ void LVX_LOC::a_loop()
                 }
             }
 
-            double err = map_icp(dsk, G);
+            double err = map_icp(dsk, G);            
             if(err < config->LVX_ERROR_THRESHOLD)
             {
                 // update result
-                mtx.lock();
-                cur_tf = G;
-                mtx.unlock();
-
+                set_cur_tf(G);
+                cur_err = err;
                 pre_imu = cur_imu;
+            }
 
-                // for que overflow
-                frm_que.clear();
-            }            
+            // for que overflow
+            frm_que.clear();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
