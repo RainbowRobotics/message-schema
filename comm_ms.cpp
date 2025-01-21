@@ -729,13 +729,13 @@ void COMM_MS::quick_send_status()
     rootObj["setting"] = settingObj;
 
     // send
-    if(time - last_send_time > 0.01)
-    {
+//    if(time - last_send_time > 0.01)
+//    {
         QJsonDocument doc(rootObj);
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
         io->socket()->emit("working_status", res);
-        last_send_time = time;
-    }
+//        last_send_time = time;
+//    }
     //printf("[COMM_MS] status, time: %f\n", time);
 }
 
