@@ -1253,8 +1253,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 cv::Vec2i OBSMAP::xy_uv(double x, double y)
 {
     // y axis flip
-    int u = x/gs + cx;
-    int v = -y/gs + cy;
+    int u = std::floor(x/gs) + cx;
+    int v = std::floor(-y/gs) + cy;
     return cv::Vec2i(u, v);
 }
 

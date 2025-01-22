@@ -849,25 +849,51 @@ Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1)
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size)
 {
     // get all points and sampling
-    const uint64_t p1 = 73856093;
-    const uint64_t p2 = 19349669;
-    const uint64_t p3 = 83492791;
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
 
-    std::unordered_map<uint64_t, uint8_t> hash_map;
+    std::unordered_map<int64_t, uint8_t> hash_map;
 
     std::vector<Eigen::Vector3d> res;
     for(size_t p = 0; p < src.size(); p++)
     {
         Eigen::Vector3d P = src[p];
 
-        uint64_t x = P[0]/voxel_size;
-        uint64_t y = P[1]/voxel_size;
-        uint64_t z = P[2]/voxel_size;
-        uint64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+        int64_t x = std::floor(P[0]/voxel_size);
+        int64_t y = std::floor(P[1]/voxel_size);
+        int64_t z = std::floor(P[2]/voxel_size);
+        int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
         if(hash_map.find(key) == hash_map.end())
         {
             hash_map[key] = 1;
             res.push_back(P);
+        }
+    }
+
+    return res;
+}
+
+std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size)
+{
+    // get all points and sampling
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
+
+    std::unordered_map<int64_t, uint8_t> hash_map;
+
+    std::vector<PT_XYZR> res;
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        int64_t x = std::floor(src[p].x/voxel_size);
+        int64_t y = std::floor(src[p].y/voxel_size);
+        int64_t z = std::floor(src[p].z/voxel_size);
+        int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+        if(hash_map.find(key) == hash_map.end())
+        {
+            hash_map[key] = 1;
+            res.push_back(src[p]);
         }
     }
 

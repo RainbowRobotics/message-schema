@@ -2495,6 +2495,7 @@ void MainWindow::bt_NodePoseThUp()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2538,6 +2539,20 @@ void MainWindow::bt_NodePoseThUp()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -2704,6 +2719,7 @@ void MainWindow::bt_NodePoseThDown()
     }
     else if(select_nodes.size() != 0 )
     {
+        /*
         double cnt = 0.0;
         Eigen::Vector3d center_pose(0, 0, 0);
         for(size_t p = 0; p < select_nodes.size(); p++)
@@ -2747,6 +2763,20 @@ void MainWindow::bt_NodePoseThDown()
             tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
             tf.block(0,3,3,1) = pose;
 
+            unimap.edit_node_pos(id, tf);
+        }
+        */
+        for(size_t p = 0; p < select_nodes.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(select_nodes[p]);
+            if(node == nullptr)
+            {
+                continue;
+            }
+
+            QString id = node->id;
+            Eigen::Matrix4d tf0 = node->tf;
+            Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
         }
     }
@@ -3586,11 +3616,11 @@ void MainWindow::comm_loop()
 
     int cnt = 0;
 
-    std::string pipeline0 = "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=30 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://127.0.0.1:8554/cam0";
-    std::string pipeline1 = "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc speed-preset=ultrafast bitrate=600 key-int-max=30 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://127.0.0.1:8554/cam1";
+    std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
+    std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
 
     const int send_w = 320;
-    const int send_h = 240;
+    const int send_h = 200;
 
     cv::VideoWriter writer0;
     cv::VideoWriter writer1;
@@ -3661,7 +3691,7 @@ void MainWindow::comm_loop()
                 {
                     if(!writer0.isOpened())
                     {
-                        writer0.open(pipeline0, 0, (double)10, cv::Size(320,240), true);
+                        writer0.open(pipeline0, 0, (double)10, cv::Size(send_w,send_h), true);
                         logger.write_log("[COMM] cam0 rtsp writer try open");
                     }
                 }
@@ -3670,7 +3700,7 @@ void MainWindow::comm_loop()
                 {
                     if(!writer1.isOpened())
                     {
-                        writer1.open(pipeline1, 0, (double)10, cv::Size(320,240), true);
+                        writer1.open(pipeline1, 0, (double)10, cv::Size(send_w,send_h), true);
                         logger.write_log("[COMM] cam1 rtsp writer try open");
                     }
                 }

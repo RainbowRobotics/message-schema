@@ -46,6 +46,7 @@ public:
     // storage
     TIME_POSE_ID cur_tpi;
     cv::Mat cur_plot_img[4];
+    double last_t[4] = {0,};
 
 Q_SIGNALS:
 

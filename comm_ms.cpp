@@ -289,7 +289,10 @@ void COMM_MS::recv_docking_dock(std::string const& name, sio::message::ptr const
     bool is_good = false;
 
     int is_good_everything = dctrl->is_everything_fine();
-    if(is_good_everything == DRIVING_FINE) is_good = true;
+    if(is_good_everything == DRIVING_FINE) 
+    {
+        is_good = true;
+    }
 
     if(is_good)
     {
@@ -331,9 +334,17 @@ void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr con
     // check undocking available
     bool is_good = false;
 
+    int is_good_everything = dctrl->is_everything_fine();
+    if(is_good_everything == DRIVING_FINE)
+    {
+        is_good = true;
+    }
 
     int is_good_everything = dctrl->is_everything_fine();
-    if(is_good_everything == DRIVING_FINE) is_good = true;
+    if(is_good_everything == DRIVING_FINE)
+    {
+        is_good = true;
+    }
 
     if(is_good)
     {
