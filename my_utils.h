@@ -3,8 +3,15 @@
 
 #include "global_defines.h"
 
+struct VoltageCapacity
+{
+    float voltage;
+    int capacity;
+};
+
 extern cv::Vec3b colors[10];
 extern QString AUTO_FSM_STATE_STR[7];
+extern std::vector<VoltageCapacity> volt_lookup_data;
 
 bool ping(std::string ip_address);
 

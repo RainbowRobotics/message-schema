@@ -15,7 +15,7 @@ public:
     // unit : meter, degree, second
     // params (initial value ref from AMR200)
     QString PLATFORM_NAME = "TT";
-    QString PLATFORM_TYPE = "SRV";
+    QString PLATFORM_TYPE = "AMR400";
 
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};

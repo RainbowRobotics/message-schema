@@ -69,6 +69,7 @@ public:
     void init();
 
     void send_status();
+    void quick_send_status();
 
     void send_global_path();
     void send_local_path();
