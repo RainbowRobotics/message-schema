@@ -127,10 +127,11 @@ void LVX_LOC::load_func(QString file_path)
 
     // update
     mtx.lock();
-    cloud.pts = pts;
-    tree->buildIndex();
     map_pts = pts;
     map_nor = nor;
+    cloud.pts = pts;
+    tree->buildIndex();
+    printf("[LVX] tree build success\n");
     mtx.unlock();
 
     is_loaded = true;
@@ -209,9 +210,10 @@ QString LVX_LOC::get_info_text()
     Eigen::Vector3d xi = TF_to_se2(_cur_tf);
 
     QString str;
-    str.sprintf("[LVX_INFO]\nt:%.2f, imu:%d, fq:%d\npose: %.2f, %.2f, %.2f",
-                (double)cur_time, (int)imu_storage.size(), (int)frm_que.unsafe_size(),
-                xi[0], xi[1], xi[2]*R2D);
+    str.sprintf("[LVX_INFO]\nt:%.2f, imu:%d, fq:%d (%d)\npose: %.2f, %.2f, %.2f\nie: %.2f, ir: %.2f",
+                (double)sensor_t, (int)imu_storage.size(), (int)frm_que.unsafe_size(), (int)frm_pts_num,
+                xi[0], xi[1], xi[2]*R2D,
+                (double)cur_tf_ie, (double)cur_tf_ir);
     return str;
 }
 
@@ -269,12 +271,14 @@ void LVX_LOC::grab_loop()
                 P[1] = p_point_data[i].y/1000.0;
                 P[2] = p_point_data[i].z/1000.0;
 
-                Eigen::Vector3d _P = lidar->lvx_tf.block(0,0,3,3)*P + lidar->lvx_tf.block(0,3,3,1);
-                double d = _P.norm();
+                double d = P.norm();
                 if(d < lidar->config->LIDAR_MIN_RANGE || d > lidar->config->LIDAR_MAX_RANGE)
                 {
                     continue;
                 }
+
+                //Eigen::Vector3d _P = lidar->lvx_tf.block(0,0,3,3)*P + lidar->lvx_tf.block(0,3,3,1);
+                Eigen::Vector3d _P = lidar->lvx_tf.block(0,0,3,3)*P; // rotation only
 
                 LVX_PT pt;
                 pt.t = (time_base + i * time_interval)*N2S + lidar->offset_t; // nanosec to sec
@@ -283,18 +287,6 @@ void LVX_LOC::grab_loop()
                 pt.z = _P[2];
                 pt.reflect = p_point_data[i].reflectivity;
                 pt.tag = p_point_data[i].tag;
-
-                /*
-                uint8_t group1 = (tag >> 6) & 0b11; // reserved
-                uint8_t group2 = (tag >> 4) & 0b11; // return number(01: is valid)
-                uint8_t group3 = (tag >> 2) & 0b11; // confidence (00:normal, 01:very noise, 10:noise, 11:not used)
-                uint8_t group4 = (tag >> 0) & 0b11; // confidence2 (00:normal, 01:very noise, 10:noise, 11:low noise)
-
-                if(group2 == 0b01 && group3 == 0b00 && group4 == 0b00)
-                {
-                    pts.push_back(pt);
-                }
-                */
 
                 pts.push_back(pt);
             }
@@ -318,13 +310,11 @@ void LVX_LOC::grab_loop()
                 frm.t = t0;
                 frm.pts = lidar->pts_storage;
 
-                // save grab time
-                lidar->cur_time = frm.t;
-
                 // set queue
                 lidar->frm_que.push(frm);
+                lidar->frm_pts_num = frm.pts.size();
 
-                // for save memory
+                // for queue overflow
                 if(lidar->frm_que.unsafe_size() > 10)
                 {
                     LVX_FRM tmp;
@@ -354,6 +344,14 @@ void LVX_LOC::grab_loop()
 
         // parsing
         uint64_t time_base = *reinterpret_cast<const uint64_t*>(data->timestamp); // nanosec
+
+        // time sync
+        if(lidar->offset_t == 0 || lidar->is_sync)
+        {
+            lidar->is_sync = false;
+            lidar->offset_t = get_time() - (time_base * N2S);
+        }
+
         LivoxLidarImuRawPoint *p_point_data = reinterpret_cast<LivoxLidarImuRawPoint *>(data->data);
 
         Eigen::Vector3d acc_vec;
@@ -378,13 +376,6 @@ void LVX_LOC::grab_loop()
         imu.gyr_y = _gyr_vec[1];
         imu.gyr_z = _gyr_vec[2];
 
-        // for time sync
-        if(lidar->offset_t == 0 || lidar->is_sync)
-        {
-            lidar->is_sync = false;
-            lidar->offset_t = get_time() - imu.t;
-        }
-
         //printf("[LVX] imu received, t: %f\n", imu.t);
 
         // get orientation using complementary filter
@@ -402,6 +393,7 @@ void LVX_LOC::grab_loop()
         lidar->mtx.lock();
         if(lidar->offset_t != 0)
         {
+            lidar->sensor_t = imu.t;
             lidar->imu_storage.push_back(imu);
             if(lidar->imu_storage.size() > 200)
             {
@@ -436,14 +428,26 @@ void LVX_LOC::a_loop()
 {
     IMU pre_imu;
 
+    Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+    offset_tf.block(0,3,3,1) = lvx_tf.block(0,3,3,1);
+
+    Eigen::Matrix4d offset_tf_inv = offset_tf.inverse();
+    Eigen::Matrix4d _cur_tf = get_cur_tf()*offset_tf;
+
     printf("[LVX] a_loop start\n");
     while(a_flag)
     {
         LVX_FRM frm;
         if(frm_que.try_pop(frm))
         {
+            if(is_loaded == false)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
             // initial guess
-            Eigen::Matrix4d G = get_cur_tf();
+            Eigen::Matrix4d G = _cur_tf;
 
             // imu
             IMU cur_imu = get_best_imu(frm.t);
@@ -475,22 +479,67 @@ void LVX_LOC::a_loop()
                 }
             }
 
-            double err = map_icp(dsk, G);            
-            if(err < config->LVX_ERROR_THRESHOLD)
-            {
-                // update result
-                set_cur_tf(G);
-                cur_err = err;
-                pre_imu = cur_imu;
-            }
+            // icp
+            double err = map_icp(dsk, G);
+
+            // check ieir
+            Eigen::Vector2d ieir = calc_ieir(dsk, G);
+
+            // update
+            cur_tf_t = frm.t;
+            cur_tf_err = err;
+            cur_tf_ie = ieir[0];
+            cur_tf_ir = ieir[1];
+            set_cur_tf(G*offset_tf_inv);
+
+            // for next
+            _cur_tf = G;
+            pre_imu = cur_imu;
 
             // for que overflow
             frm_que.clear();
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[LVX] a_loop stop\n");
+}
+
+Eigen::Vector2d LVX_LOC::calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
+{
+    if(pts.size() < 100)
+    {
+        return Eigen::Vector2d(1.0, 0);
+    }
+
+    double err_sum = 0;
+    int cnt = 0;
+    int cnt_all = 0;
+    for(size_t p = 0; p < pts.size(); p += 8)
+    {
+        cnt_all++;
+
+        Eigen::Vector3d P = pts[p];
+        Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+        std::vector<int> nn_idxs = knn_search_idx(_P, 1, config->LVX_SURFEL_RANGE);
+        if(nn_idxs.size() == 0)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d nn_pt = map_pts[nn_idxs[0]];
+        double d = (nn_pt - _P).norm();
+        if(d < config->LVX_INLIER_CHECK_DIST)
+        {
+            err_sum += d;
+            cnt++;
+        }
+    }
+
+    Eigen::Vector2d res;    
+    res[0] = err_sum/cnt;
+    res[1] = (double)cnt/cnt_all;
+    return res;
 }
 
 std::vector<int> LVX_LOC::knn_search_idx(Eigen::Vector3d center, int k, double radius)
@@ -510,7 +559,6 @@ std::vector<int> LVX_LOC::knn_search_idx(Eigen::Vector3d center, int k, double r
         double dy = cloud.pts[res_idxs[p]][1] - cloud.pts[res_idxs[0]][1];
         double dz = cloud.pts[res_idxs[p]][2] - cloud.pts[res_idxs[0]][2];
         double sq_d = dx*dx + dy*dy + dz*dz;
-
         if(sq_d < sq_radius)
         {
             res.push_back(res_idxs[p]);
@@ -568,8 +616,9 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
             Eigen::Vector3d P1 = _G.block(0,0,3,3)*P + _G.block(0,3,3,1);
 
             // calc correspondence
-            std::vector<int> nn_idxs = knn_search_idx(P1, nn_num, config->LVX_SURFEL_RANGE);
-            if((int)nn_idxs.size() != nn_num)
+            const int _nn_num = config->LVX_SURFEL_NN_NUM;
+            std::vector<int> nn_idxs = knn_search_idx(P1, _nn_num, config->LVX_SURFEL_RANGE);
+            if((int)nn_idxs.size() != _nn_num)
             {
                 continue;
             }

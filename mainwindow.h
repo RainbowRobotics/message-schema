@@ -27,12 +27,12 @@
 
 // qt
 #include <QMainWindow>
-#include <QMouseEvent>
 #include <QKeyEvent>
+#include <QMouseEvent>
+#include <QTouchEvent>
 #include <QTimer>
 #include <QProcess>
 #include <QMessageBox>
-#include <QGestureEvent>
 #include <QGraphicsOpacityEffect>
 
 QT_BEGIN_NAMESPACE

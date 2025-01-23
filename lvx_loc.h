@@ -65,15 +65,22 @@ public:
 
     // params
     std::atomic<double> offset_t = {0};
-    std::atomic<double> cur_time = {0};
-    std::atomic<double> cur_err = {0};
+    std::atomic<double> sensor_t = {0};
+    std::atomic<double> frm_pts_num = {0};
+
+    std::atomic<double> cur_tf_t = {0};
+    std::atomic<double> cur_tf_err = {0};
+    std::atomic<double> cur_tf_ie = {0};
+    std::atomic<double> cur_tf_ir = {0};
+
+    // tf
     Eigen::Matrix4d lvx_tf;
     Eigen::Matrix4d cur_tf;
 
     // storage    
+    std::vector<IMU> imu_storage;
     std::vector<LVX_PT> pts_storage;
     tbb::concurrent_queue<LVX_FRM> frm_que;
-    std::vector<IMU> imu_storage;
 
     // for localization
     CLOUD cloud;
@@ -82,6 +89,7 @@ public:
     std::vector<Eigen::Vector3d> map_pts;
     std::vector<Eigen::Vector3d> map_nor;
 
+    Eigen::Vector2d calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);
     std::vector<int> knn_search_idx(Eigen::Vector3d center, int k, double radius);
     double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);
 
@@ -93,7 +101,6 @@ private:
     const double t_dist_v0 = 15; // 5~30
     const double rmt_sigma = 0.01; // 0.01 good
     const double sigma_eps = 1e-6; // eps sigma
-    const int nn_num = 3; // 5 ~ 10
 
 Q_SIGNALS:
 

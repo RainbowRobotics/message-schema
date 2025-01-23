@@ -776,6 +776,69 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 {
     if(object == ui->qvtkWidget)
     {
+        // touch to right mouse
+        if(ui->ckb_ViewTouchToRightButton->isChecked())
+        {
+            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
+            {
+                auto touch_event = static_cast<QTouchEvent *>(ev);
+                if(!touch_event->touchPoints().isEmpty())
+                {
+                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
+                    QPointF pos = point.pos(); // touch point position
+
+                    QEvent::Type mouse_event_type;
+                    if(ev->type() == QEvent::TouchBegin)
+                    {
+                        mouse_event_type = QEvent::MouseButtonPress;
+                    }
+                    else if(ev->type() == QEvent::TouchUpdate)
+                    {
+                        mouse_event_type = QEvent::MouseMove;
+                    }
+                    else if(ev->type() == QEvent::TouchEnd)
+                    {
+                        mouse_event_type = QEvent::MouseButtonRelease;
+                    }
+
+                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+                    QApplication::postEvent(ui->qvtkWidget, mouse_event);
+                }
+                return false;
+            }
+        }
+        else
+        {
+            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
+            {
+                auto touch_event = static_cast<QTouchEvent *>(ev);
+                if(!touch_event->touchPoints().isEmpty())
+                {
+                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
+                    QPointF pos = point.pos(); // touch point position
+
+                    QEvent::Type mouse_event_type;
+                    if(ev->type() == QEvent::TouchBegin)
+                    {
+                        mouse_event_type = QEvent::MouseButtonPress;
+                    }
+                    else if(ev->type() == QEvent::TouchUpdate)
+                    {
+                        mouse_event_type = QEvent::MouseMove;
+                    }
+                    else if(ev->type() == QEvent::TouchEnd)
+                    {
+                        mouse_event_type = QEvent::MouseButtonRelease;
+                    }
+
+                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    QApplication::postEvent(ui->qvtkWidget, mouse_event);
+                }
+                return false;
+            }
+        }
+
+        // check plot enabled
         if(ui->ckb_PlotEnable->isChecked() == false)
         {
             return true;
@@ -917,6 +980,68 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
     }
     else if(object == ui->qvtkWidget2)
     {
+        // touch to right mouse
+        if(ui->ckb_ViewTouchToRightButton2->isChecked())
+        {
+            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
+            {
+                auto touch_event = static_cast<QTouchEvent *>(ev);
+                if(!touch_event->touchPoints().isEmpty())
+                {
+                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
+                    QPointF pos = point.pos(); // touch point position
+
+                    QEvent::Type mouse_event_type;
+                    if(ev->type() == QEvent::TouchBegin)
+                    {
+                        mouse_event_type = QEvent::MouseButtonPress;
+                    }
+                    else if(ev->type() == QEvent::TouchUpdate)
+                    {
+                        mouse_event_type = QEvent::MouseMove;
+                    }
+                    else if(ev->type() == QEvent::TouchEnd)
+                    {
+                        mouse_event_type = QEvent::MouseButtonRelease;
+                    }
+
+                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+                    QApplication::postEvent(ui->qvtkWidget2, mouse_event);
+                }
+                return false;
+            }
+        }
+        else
+        {
+            if(ev->type() == QEvent::TouchBegin || ev->type() == QEvent::TouchUpdate || ev->type() == QEvent::TouchEnd)
+            {
+                auto touch_event = static_cast<QTouchEvent *>(ev);
+                if(!touch_event->touchPoints().isEmpty())
+                {
+                    const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
+                    QPointF pos = point.pos(); // touch point position
+
+                    QEvent::Type mouse_event_type;
+                    if(ev->type() == QEvent::TouchBegin)
+                    {
+                        mouse_event_type = QEvent::MouseButtonPress;
+                    }
+                    else if(ev->type() == QEvent::TouchUpdate)
+                    {
+                        mouse_event_type = QEvent::MouseMove;
+                    }
+                    else if(ev->type() == QEvent::TouchEnd)
+                    {
+                        mouse_event_type = QEvent::MouseButtonRelease;
+                    }
+
+                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+                    QApplication::postEvent(ui->qvtkWidget2, mouse_event);
+                }
+                return false;
+            }
+        }
+
         // different behavior each tab
         if(ui->annot_tab->tabText(ui->annot_tab->currentIndex()) == "EDIT_MAP")
         {

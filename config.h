@@ -139,14 +139,15 @@ public:
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
 
     // livox
-    QString LVX_TF = "0,0,0,0,0,0";
+    QString LVX_TF = "0,0,0,0,0,0";    
     double LVX_FRM_DT = 0.1;
     double LVX_MIN_RANGE = 1.0;
     double LVX_MAX_RANGE = 40.0;
     int LVX_MAX_FEATURE_NUM = 500;
+    int LVX_SURFEL_NN_NUM = 1;
     double LVX_SURFEL_RANGE = 1.0;
     double LVX_COST_THRESHOLD = 1.0;
-    double LVX_ERROR_THRESHOLD = 0.1;
+    double LVX_INLIER_CHECK_DIST = 0.3;
 
     std::vector<QString> params;
 

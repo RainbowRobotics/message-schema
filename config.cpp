@@ -348,14 +348,17 @@ void CONFIG::load()
                 LVX_MAX_FEATURE_NUM = obj_lvx["LVX_MAX_FEATURE_NUM"].toString().toInt();
                 printf("[CONFIG] LVX_MAX_FEATURE_NUM, %s\n", obj_lvx["LVX_MAX_FEATURE_NUM"].toString().toLocal8Bit().data());
 
+                LVX_SURFEL_NN_NUM = obj_lvx["LVX_SURFEL_NN_NUM"].toString().toInt();
+                printf("[CONFIG] LVX_SURFEL_NN_NUM, %s\n", obj_lvx["LVX_SURFEL_NN_NUM"].toString().toLocal8Bit().data());
+
                 LVX_SURFEL_RANGE = obj_lvx["LVX_SURFEL_RANGE"].toString().toDouble();
                 printf("[CONFIG] LVX_SURFEL_RANGE, %s\n", obj_lvx["LVX_SURFEL_RANGE"].toString().toLocal8Bit().data());
 
                 LVX_COST_THRESHOLD = obj_lvx["LVX_COST_THRESHOLD"].toString().toDouble();
                 printf("[CONFIG] LVX_COST_THRESHOLD, %s\n", obj_lvx["LVX_COST_THRESHOLD"].toString().toLocal8Bit().data());
 
-                LVX_ERROR_THRESHOLD = obj_lvx["LVX_ERROR_THRESHOLD"].toString().toDouble();
-                printf("[CONFIG] LVX_ERROR_THRESHOLD, %s\n", obj_lvx["LVX_ERROR_THRESHOLD"].toString().toLocal8Bit().data());
+                LVX_INLIER_CHECK_DIST = obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toDouble();
+                printf("[CONFIG] LVX_ERROR_THRESHOLD, %s\n", obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
             }
 
             // complete

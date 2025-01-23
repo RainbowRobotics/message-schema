@@ -2048,11 +2048,16 @@ void AUTOCONTROL::b_loop_pp()
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
-            //double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
-            //double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
+            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
+
+            /*
             double dx = local_path.pos[tgt_idx][0] - cur_xi[0];
             double dy = local_path.pos[tgt_idx][1] - cur_xi[1];
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2])*2;
+            */
+
             if(pre_err_th == 0)
             {
                 pre_err_th = err_th;

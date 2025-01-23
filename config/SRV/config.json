@@ -116,8 +116,9 @@
         "LVX_MIN_RANGE": "1.0",
         "LVX_MAX_RANGE": "40.0",
         "LVX_MAX_FEATURE_NUM": "500",
+        "LVX_SURFEL_NN_NUM": "1",
         "LVX_SURFEL_RANGE": "1.0",
         "LVX_COST_THRESHOLD": "1.0",
-        "LVX_ERROR_THRESHOLD": "0.2"        
+        "LVX_INLIER_CHECK_DIST": "0.3"        
     }
 }

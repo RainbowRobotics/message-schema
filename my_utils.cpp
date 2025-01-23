@@ -244,6 +244,15 @@ QString TF_to_string(Eigen::Matrix4d TF)
 
 Eigen::Matrix4d intp_tf(double alpha, Eigen::Matrix4d tf0, Eigen::Matrix4d tf1)
 {
+    if(alpha == 0.0)
+    {
+        return tf0;
+    }
+    else if(alpha == 1.0)
+    {
+        return tf1;
+    }
+
     alpha = saturation(alpha, 0.0, 1.0);
     return Sophus::interpolate<Sophus::SE3d>(Sophus::SE3d::fitToSE3(tf0), Sophus::SE3d::fitToSE3(tf1), alpha).matrix();
 }

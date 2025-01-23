@@ -727,28 +727,38 @@ void SLAM_2D::loc_a_loop()
         {
             if(unimap->is_loaded == false)
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
 
             double st_time = get_time();
 
-            // pose estimation
-            Eigen::Matrix4d _cur_tf = get_cur_tf();
-
-            double err;
+            Eigen::Matrix4d _cur_tf;
             double time;
-            if(config->USE_LVX)
+            double err;
+            Eigen::Vector2d ieir;
+
+            // pose estimation
+            if(!config->USE_LVX)
             {
-                err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                _cur_tf = get_cur_tf();
                 time = frm.t;
+                err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
             }
             else
             {
                 _cur_tf = lvx->get_cur_tf();
-                err = lvx->cur_err;
-                time = lvx->cur_time;
+                time = lvx->cur_tf_t;
+                err = lvx->cur_tf_err;
+                ieir[0] = lvx->cur_tf_ie;
+                ieir[1] = lvx->cur_tf_ir;
             }
+
+            // update ieir
+            mtx.lock();
+            cur_ieir = ieir;
+            mtx.unlock();
 
             // check error
             if(err < config->LOC_ICP_ERROR_THRESHOLD)
@@ -770,21 +780,6 @@ void SLAM_2D::loc_a_loop()
                 mtx.lock();
                 cur_tpp = tpp;
                 mtx.unlock();
-
-                // check inlier error, inlier ratio
-                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-
-                // update ieir
-                mtx.lock();
-                cur_ieir = ieir;
-                mtx.unlock();
-            }
-            else
-            {
-                // update ieir
-                mtx.lock();
-                cur_ieir[0] = err;
-                mtx.unlock();
             }
 
             // update processing time
@@ -793,7 +788,7 @@ void SLAM_2D::loc_a_loop()
             // for que overflow
             lidar->scan_que.clear();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] loc_a_loop stop\n");
 }

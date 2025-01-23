@@ -1162,6 +1162,7 @@ void COMM_MS::slot_move_goal(double time, QString node_id, int preset, QString m
         }
 
         Eigen::Matrix4d goal_tf = node->tf;
+        ctrl->set_goal(node_id);
 
         // pure pursuit
         ctrl->move_pp(goal_tf, preset);

@@ -94,7 +94,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <property name="spacing">
-             <number>0</number>
+             <number>6</number>
             </property>
             <item>
              <widget class="QLabel" name="label">
@@ -212,6 +212,13 @@
               </property>
               <property name="text">
                <string>Set top view</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="ckb_ViewTouchToRightButton">
+              <property name="text">
+               <string>touch  to right</string>
               </property>
              </widget>
             </item>
@@ -771,6 +778,13 @@ out</string>
              <number>0</number>
             </property>
             <item>
+             <widget class="QCheckBox" name="ckb_ViewTouchToRightButton2">
+              <property name="text">
+               <string>touch to right</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -810,16 +824,6 @@ out</string>
               </property>
               <property name="checked">
                <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="ckb_Panning2">
-              <property name="text">
-               <string>Panning</string>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
               </property>
              </widget>
             </item>
