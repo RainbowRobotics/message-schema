@@ -192,9 +192,9 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
 
     // for fms
-    //connect(this, SIGNAL(signal_send_info()), &cfms, SLOT(slot_send_info()));
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
     connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
+    connect(&cms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
@@ -3638,6 +3638,7 @@ void MainWindow::comm_loop()
             if(cms.is_connected)
             {
                 cms.quick_send_status();
+                cms.send_info();
             }
         }
 
@@ -5255,6 +5256,19 @@ void MainWindow::raw_plot()
     ui->lb_QueInfo->setText(que_info_str);
 
     // plot auto info
+    QString _multi_state = "";
+    if(cfms.is_connected)
+    {
+        _multi_state = cfms.get_multi_state();
+    }
+    else if(cms.is_connected)
+    {
+        _multi_state = cms.get_multi_state();
+    }
+    else
+    {
+        _multi_state = "no connection";
+    }
     QString auto_info_str;
     auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
@@ -5263,8 +5277,9 @@ void MainWindow::raw_plot()
                           ctrl.get_obs_condition().toLocal8Bit().data(),
                           (bool)ctrl.is_multi ? "1" : "0",
                           ctrl.get_multi_req().toLocal8Bit().data(),
-                          cfms.get_multi_state().toLocal8Bit().data());
+                          _multi_state.toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
+
 
     // plot cam
     if(cam.is_connected[0])

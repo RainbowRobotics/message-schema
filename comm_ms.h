@@ -27,6 +27,7 @@
 #include <QWebSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QNetworkInterface>
 #include <QJsonArray>
 
 class COMM_MS : public QObject
@@ -51,6 +52,9 @@ public:
     AUTOCONTROL *ctrl = NULL;
     DOCKING *dctrl = NULL;
 
+    QString robot_id = "";
+    QString multi_state = "";
+
     // vars
     std::unique_ptr<sio::client> io;    
     std::atomic<int> last_send_kfrm_idx = {0};
@@ -68,6 +72,7 @@ public:
     // interface func
     void init();
 
+    void send_info();
     void send_status();
     void quick_send_status();
 
@@ -95,6 +100,8 @@ public:
 
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
+    QString get_multi_state();
+    QString make_robot_id();
 
 private Q_SLOTS:
     void sio_connected();
@@ -111,6 +118,7 @@ private Q_SLOTS:
     void recv_docking_undock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 Q_SIGNALS:    
+    void signal_regist_id(QString id);
     void signal_motorinit(double time);
 
     void signal_move_jog(double time, double vx, double vy, double wz);
