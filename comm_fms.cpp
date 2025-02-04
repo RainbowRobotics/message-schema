@@ -43,6 +43,11 @@ QString COMM_FMS::get_multi_state()
 
 void COMM_FMS::init()
 {
+    if(!config->SIM_MODE)
+    {
+        return;
+    }
+
     // make robot id
     QString _robot_id;
     _robot_id.sprintf("R_%lld", (long long)(get_time0()*1000));
@@ -110,56 +115,56 @@ void COMM_FMS::recv_message(const QByteArray &buf)
 {
     QString message = qUncompress(buf);
     QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
-    if(get_json(data, "rid") != robot_id)
+    if(get_json(data, "robot_id") != robot_id)
     {
         return;
     }
 
     // parsing
-    if(get_json(data, "type") == "load")
+    if(get_json(data, "command") == "mapload")
     {
-        QString map_name = get_json(data, "map");
-        double time = get_json(data, "t").toDouble()/1000;
+        QString map_name = get_json(data, "map_name");
+        double time = get_json(data, "time").toDouble()/1000;
 
         Q_EMIT signal_mapload(time, map_name);
         printf("[COMM_FMS] recv_load, map_name: %s, time: %.3f\n", map_name.toLocal8Bit().data(), time);
     }
-    else if(get_json(data, "type") == "init")
+    else if(get_json(data, "command") == "init")
     {
-        double time = get_json(data, "t").toDouble()/1000;
+        double time = get_json(data, "time").toDouble()/1000;
 
         Q_EMIT signal_init(time);
         printf("[COMM_FMS] recv_init, time: %.3f\n", time);
     }
-    else if(get_json(data, "type") == "rinit")
+    else if(get_json(data, "command") == "randominit")
     {
         QString seed = get_json(data, "seed");
-        double time = get_json(data, "t").toDouble()/1000;
+        double time = get_json(data, "time").toDouble()/1000;
 
         Q_EMIT signal_random_init(time, seed);
         printf("[COMM_FMS] recv_random_init, seed: %s, time: %.3f\n", seed.toLocal8Bit().data(), time);
     }
-    else if(get_json(data, "type") == "rseq")
+    else if(get_json(data, "command") == "randomseq")
     {
-        double time = get_json(data, "t").toDouble()/1000;
+        double time = get_json(data, "time").toDouble()/1000;
 
         Q_EMIT signal_random_seq(time);
         printf("[COMM_FMS] recv_random_seq, time: %.3f\n", time);
 
     }
-    else if(get_json(data, "type") == "goal")
+    else if(get_json(data, "command") == "goal")
     {
-        QString goal_id = get_json(data, "gid");
-        double time = get_json(data, "t").toDouble()/1000;
+        QString goal_id = get_json(data, "goal_id");
+        double time = get_json(data, "time").toDouble()/1000;
 
         ctrl->set_goal(goal_id);
         printf("[COMM_FMS] recv_goal, goal_id: %s, time: %.3f\n", goal_id.toLocal8Bit().data(), time);
     }
-    else if(get_json(data, "type") == "path")
+    else if(get_json(data, "command") == "path")
     {
         QString path_str = get_json(data, "path");
-        int preset = get_json(data, "pr").toInt();
-        double time = get_json(data, "t").toDouble()/1000;
+        int preset = get_json(data, "preset").toInt();
+        double time = get_json(data, "time").toDouble()/1000;
 
         QStringList path_str_list = path_str.split(",");
 
@@ -172,16 +177,16 @@ void COMM_FMS::recv_message(const QByteArray &buf)
         ctrl->move_pp(path, preset);
         printf("[COMM_FMS] recv_path, num: %d, preset: %d, time: %.3f\n", (int)path.size(), preset, time);
     }
-    else if(get_json(data, "type") == "stop")
+    else if(get_json(data, "command") == "stop")
     {
-        double time = get_json(data, "t").toDouble()/1000;
+        double time = get_json(data, "time").toDouble()/1000;
 
         MainWindow* _main = (MainWindow*)main;
         _main->bt_Emergency();
 
         printf("[COMM_FMS] recv_stop, time: %.3f\n", time);
     }
-    else if(get_json(data, "type") == "vobs_r")
+    else if(get_json(data, "command") == "vobs_robots")
     {
         double time = get_json(data, "time").toDouble()/1000;
         std::vector<Eigen::Vector3d> vobs_list;
@@ -218,7 +223,7 @@ void COMM_FMS::recv_message(const QByteArray &buf)
         }
         */
     }
-    else if(get_json(data, "type") == "vobs_c")
+    else if(get_json(data, "command") == "vobs_closures")
     {
         double time = get_json(data, "time").toDouble()/1000;
 
@@ -342,15 +347,15 @@ void COMM_FMS::slot_send_info()
     QJsonObject rootObj;
 
     // Adding the command and time
-    rootObj["type"] = "info";
-    rootObj["rid"] = robot_id;
-    rootObj["ctf"] = TF_to_string(cur_tf);
-    rootObj["gtf"] = TF_to_string(goal_tf);
-    rootObj["cid"] = cur_node_id;
-    rootObj["gid"] = goal_node_id;
-    rootObj["rq"] = request;
-    rootObj["st"] = state;
-    rootObj["t"] = QString::number((long long)(time*1000), 10);
+    rootObj["command"] = "info";
+    rootObj["robot_id"] = robot_id;
+    rootObj["cur_tf"] = TF_to_string(cur_tf);
+    rootObj["goal_tf"] = TF_to_string(goal_tf);
+    rootObj["cur_node_id"] = cur_node_id;
+    rootObj["goal_node_id"] = goal_node_id;
+    rootObj["request"] = request;
+    rootObj["state"] = state;
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     // send
     if(time - last_send_time >= 0.05)

@@ -62,9 +62,36 @@ COMM_MS::~COMM_MS()
     io->close();
 }
 
+QString COMM_MS::make_robot_id()
+{
+    QString _robot_id = "";
+    QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+    for(const QNetworkInterface &iface : interfaces)
+    {
+        if(iface.flags().testFlag(QNetworkInterface::IsUp) &&
+            iface.flags().testFlag(QNetworkInterface::IsRunning) &&
+           !iface.hardwareAddress().isEmpty())
+        {
+            _robot_id = iface.hardwareAddress();
+            break;
+        }
+    }
+
+    return _robot_id;
+}
+
 QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
 {
     return QString::fromStdString(data->get_map()[key.toStdString()]->get_string());
+}
+
+QString COMM_MS::get_multi_state()
+{
+    mtx.lock();
+    QString res = multi_state;
+    mtx.unlock();
+
+    return res;
 }
 
 void COMM_MS::init()
@@ -75,6 +102,12 @@ void COMM_MS::init()
         query["name"] = "slamnav";
         qDebug() << "init connect";
         io->connect("ws://localhost:11337",query);
+
+        // make robot id
+        robot_id = make_robot_id();
+        printf("[COMM_MS] ID: %s\n", robot_id.toLocal8Bit().data());
+
+        Q_EMIT signal_regist_id(robot_id);
     }
 }
 
@@ -340,12 +373,6 @@ void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr con
         is_good = true;
     }
 
-    int is_good_everything = dctrl->is_everything_fine();
-    if(is_good_everything == DRIVING_FINE)
-    {
-        is_good = true;
-    }
-
     if(is_good)
     {
         // accept response
@@ -380,6 +407,74 @@ void COMM_MS::recv_docking_undock(std::string const& name, sio::message::ptr con
 
 
 // send functions
+void COMM_MS::send_info()
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    MainWindow* _main = (MainWindow*)main;
+    _main->mtx.lock();
+    QString cur_node_id = _main->last_node_id;
+    _main->mtx.unlock();
+
+    double time = get_time0();
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
+    QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+    if(goal_tf.isIdentity())
+    {
+        goal_tf = cur_tf;
+        goal_node_id = cur_node_id;
+    }
+
+    QString request = ctrl->get_multi_req(); // none, req_path, recv_path
+
+    QString state = "stop"; // stop, move, pause, error
+    if(ctrl->is_moving)
+    {
+        state = "move";
+    }
+
+    if(mobile->get_cur_pdu_state() != "good")
+    {
+        state = "pause";
+    }
+
+    if(slam->get_cur_loc_state() != "good")
+    {
+        state = "error";
+    }
+
+    mtx.lock();
+    multi_state = state;
+    mtx.unlock();
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    // Adding the command and time
+    rootObj["command"] = "info";
+    rootObj["robot_id"] = robot_id;
+    rootObj["cur_tf"] = TF_to_string(cur_tf);
+    rootObj["goal_tf"] = TF_to_string(goal_tf);
+    rootObj["cur_node_id"] = cur_node_id;
+    rootObj["goal_node_id"] = goal_node_id;
+    rootObj["request"] = request;
+    rootObj["state"] = state;
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
+
+    // send
+    if(time - last_send_time >= 0.05)
+    {
+        QJsonDocument doc(rootObj);
+        sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+        io->socket()->emit("info", res);
+        last_send_time = time;
+    }
+}
+
 void COMM_MS::send_status()
 {
     if(!is_connected)
@@ -395,25 +490,6 @@ void COMM_MS::send_status()
     // Adding the command and time
     rootObj["command"] = "status";
     rootObj["time"] = QString::number((long long)(time*1000), 10);
-
-    //    // Adding the pose object
-    //    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-    //    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-
-    //    QJsonObject poseObj;
-    //    poseObj["x"] = QString::number(cur_xi[0], 'f', 3);
-    //    poseObj["y"] = QString::number(cur_xi[1], 'f', 3);
-    //    poseObj["rz"] = QString::number(cur_xi[2]*R2D, 'f', 3);
-    //    rootObj["pose"] = poseObj;
-
-    //    // Adding the velocity object
-    //    MOBILE_POSE mo = mobile->get_pose();
-
-    //    QJsonObject velObj;
-    //    velObj["vx"] = QString::number(mo.vel[0], 'f', 3);
-    //    velObj["vy"] = QString::number(mo.vel[1], 'f', 3);
-    //    velObj["wz"] = QString::number(mo.vel[2]*R2D, 'f', 3);
-    //    rootObj["vel"] = velObj;
 
     // Adding the motor array
     MOBILE_STATUS ms = mobile->get_status();
@@ -526,41 +602,14 @@ void COMM_MS::send_status()
     stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     rootObj["state"] = stateObj;
 
-    // Adding the condition object
-    //    Eigen::Vector2d ieir = slam->get_cur_ieir();
-
-    //    QString auto_state = "stop";
-    //    if(ctrl->is_pause)
-    //    {
-    //        auto_state = "pause";
-    //    }
-    //    else if(ctrl->is_moving)
-    //    {
-    //        auto_state = "move";
-    //    }
-
-    //    QJsonObject conditionObj;
-    //    conditionObj["inlier_error"] = QString::number(ieir[0], 'f', 3);
-    //    conditionObj["inlier_ratio"] = QString::number(ieir[1], 'f', 3);
-    //    conditionObj["mapping_error"] = QString::number(ieir[0], 'f', 3);
-    //    conditionObj["mapping_ratio"] = QString::number(ieir[1], 'f', 3);
-    //    conditionObj["auto_state"] = auto_state;
-    //    conditionObj["obs_state"] = ctrl->get_obs_condition();
-    //    rootObj["condition"] = conditionObj;
-
     QJsonObject settingObj;
     settingObj["platform_type"] = config->PLATFORM_TYPE;
     rootObj["setting"] = settingObj;
 
-//    // send
-//    if(time - last_send_time > 0.05)
-//    {
-        QJsonDocument doc(rootObj);
-        sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-        //        std::cout<<doc.toJson().toStdString()<<std::endl;
-        io->socket()->emit("status", res);
-        last_send_time = time;
-//    }
+    QJsonDocument doc(rootObj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("status", res);
+    last_send_time = time;
     //printf("[COMM_MS] status, time: %f\n", time);
 }
 
@@ -601,118 +650,6 @@ void COMM_MS::quick_send_status()
     velObj["wz"] = QString::number(mo.vel[2]*R2D, 'f', 3);
     rootObj["vel"] = velObj;
 
-    //    // Adding the motor array
-    //    MOBILE_STATUS ms = mobile->get_status();
-
-    //    QJsonArray motorArray;
-    //    QJsonObject motorObj1;
-    //    motorObj1["connection"] = (ms.connection_m0 == 1) ? "true" : "false";
-    //    motorObj1["status"] = QString::number(ms.status_m0, 10);
-    //    motorObj1["temp"] = QString::number(ms.temp_m0, 'f', 3);
-    //    motorObj1["current"] = QString::number((double)ms.cur_m0/10.0, 'f', 3);
-    //    motorArray.append(motorObj1);
-
-    //    QJsonObject motorObj2;
-    //    motorObj2["connection"] = (ms.connection_m1 == 1) ? "true" : "false";
-    //    motorObj2["status"] = QString::number(ms.status_m1, 10);
-    //    motorObj2["temp"] = QString::number(ms.temp_m1, 'f', 3);
-    //    motorObj2["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
-    //    motorArray.append(motorObj2);
-
-    //    rootObj["motor"] = motorArray;
-
-    //    // Adding the lidar array
-    //    QJsonArray lidarArray;
-    //    QJsonObject lidarObj1;
-    //    lidarObj1["connection"] = lidar->is_connected_f ? "true" : "false";
-    //    lidarObj1["port"] = "LAN";
-    //    lidarObj1["serialnumber"] = "not yet";
-    //    lidarArray.append(lidarObj1);
-
-    //    QJsonObject lidarObj2;
-    //    lidarObj2["connection"] = lidar->is_connected_b ? "true" : "false";
-    //    lidarObj2["port"] = "LAN";
-    //    lidarObj2["serialnumber"] = "not yet";
-    //    lidarArray.append(lidarObj2);
-    //    rootObj["lidar"] = lidarArray;
-
-    //    // Adding the imu object
-    //    Eigen::Vector3d imu = mobile->get_imu();
-
-    //    QJsonObject imuObj;
-    //    imuObj["gyr_x"] = QString::number(ms.imu_gyr_x*R2D, 'f', 3);
-    //    imuObj["gyr_y"] = QString::number(ms.imu_gyr_y*R2D, 'f', 3);
-    //    imuObj["gyr_z"] = QString::number(ms.imu_gyr_z*R2D, 'f', 3);
-    //    imuObj["acc_x"] = QString::number(ms.imu_acc_x, 'f', 3);
-    //    imuObj["acc_y"] = QString::number(ms.imu_acc_y, 'f', 3);
-    //    imuObj["acc_z"] = QString::number(ms.imu_acc_z, 'f', 3);
-    //    imuObj["imu_rx"] = QString::number(imu[0]*R2D, 'f', 3);
-    //    imuObj["imu_ry"] = QString::number(imu[1]*R2D, 'f', 3);
-    //    imuObj["imu_rz"] = QString::number(imu[2]*R2D, 'f', 3);
-    //    rootObj["imu"] = imuObj;
-
-    //    // Adding the power object
-    //    QJsonObject powerObj;
-    //    powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
-    //    powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
-    //    powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
-    //    powerObj["power"] = QString::number(ms.power, 'f', 3);
-    //    powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
-    //    #ifdef USE_STATION
-    //    powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
-    //    powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
-    //    #endif
-    //    rootObj["power"] = powerObj;
-
-    //    // Adding the state object
-    //    QString cur_loc_state = slam->get_cur_loc_state();
-    //    QString charge_st_string = "";
-    //    if(ms.charge_state == CHARGE_STATE_IDLE)
-    //    {
-    //        charge_st_string = "none";
-    //    }
-    //    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_CHARGE)
-    //    {
-    //        charge_st_string = "ready";
-    //    }
-    //    else if(ms.charge_state == CHARGE_STATE_BATTERY_ON)
-    //    {
-    //        charge_st_string = "battery_on";
-    //    }
-    //    else if(ms.charge_state == CHARGE_STATE_CHARGING)
-    //    {
-    //        charge_st_string = "charging";
-    //    }
-    //    else if(ms.charge_state == CHARGE_STATE_TRIG_TO_STOP_CHARGE)
-    //    {
-    //        charge_st_string = "finish";
-    //    }
-    //    else if(ms.charge_state == CHARGE_STATE_FAIL)
-    //    {
-    //        charge_st_string = "faile";
-    //    }
-    //    QJsonObject stateObj;
-    //    stateObj["power"] = (ms.power_state == 1) ? "true" : "false";
-    //    stateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
-    //    stateObj["charge"] = charge_st_string;
-    //    stateObj["cur_goal_node_id"] = ctrl->get_cur_goal_node();
-    //    stateObj["cur_goal_node_state"] = ctrl->get_cur_goal_state();
-
-    //    QString docking_state = "false";
-    //    if (dctrl->fsm_state == DOCKING_FSM_COMPLETE)
-    //    {
-    //        docking_state = "true";
-    //    }
-    //    else
-    //    {
-    //        docking_state = "false";
-    //    }
-
-    //    stateObj["dock"] = docking_state;
-    //    stateObj["map"] = unimap->map_dir.split("/").last();
-    //    stateObj["localization"] = cur_loc_state; // "none", "good", "fail"
-    //    rootObj["state"] = stateObj;
-
     // Adding the condition object
     Eigen::Vector2d ieir = slam->get_cur_ieir();
 
@@ -739,14 +676,9 @@ void COMM_MS::quick_send_status()
     settingObj["platform_type"] = config->PLATFORM_TYPE;
     rootObj["setting"] = settingObj;
 
-    // send
-    //    if(time - last_send_time > 0.01)
-    //    {
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("working_status", res);
-    //        last_send_time = time;
-    //    }
     //printf("[COMM_MS] status, time: %f\n", time);
 }
 
