@@ -56,6 +56,7 @@ HEADERS += \
     autocontrol.h \
     cam.h \
     code_reader.h \
+    comm_data.h \
     comm_fms.h \
     comm_ms.h \
     comm_ui.h \

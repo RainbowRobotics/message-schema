@@ -66,6 +66,20 @@ void signalHandler(int signal)
 // add qt unknown type
 Q_DECLARE_METATYPE(Eigen::Matrix4d)
 
+Q_DECLARE_METATYPE(DATA_MOVE)
+Q_DECLARE_METATYPE(DATA_LOCALIZATION)
+Q_DECLARE_METATYPE(DATA_LOAD)
+Q_DECLARE_METATYPE(DATA_RANDOMSEQ)
+Q_DECLARE_METATYPE(DATA_MAPPING)
+Q_DECLARE_METATYPE(DATA_DOCK)
+Q_DECLARE_METATYPE(DATA_VIEW_LIDAR)
+Q_DECLARE_METATYPE(DATA_VIEW_PATH)
+Q_DECLARE_METATYPE(DATA_LED)
+Q_DECLARE_METATYPE(DATA_MOTOR)
+Q_DECLARE_METATYPE(DATA_PATH)
+Q_DECLARE_METATYPE(DATA_VOBS_R)
+Q_DECLARE_METATYPE(DATA_VOBS_C)
+
 int main(int argc, char *argv[])
 {
     // critical error catcher
@@ -81,6 +95,20 @@ int main(int argc, char *argv[])
 
     // init qt app
     qRegisterMetaType<Eigen::Matrix4d>();
+
+    qRegisterMetaType<DATA_MOVE>();
+    qRegisterMetaType<DATA_LOCALIZATION>();
+    qRegisterMetaType<DATA_LOAD>();
+    qRegisterMetaType<DATA_RANDOMSEQ>();
+    qRegisterMetaType<DATA_MAPPING>();
+    qRegisterMetaType<DATA_DOCK>();
+    qRegisterMetaType<DATA_VIEW_LIDAR>();
+    qRegisterMetaType<DATA_VIEW_PATH>();
+    qRegisterMetaType<DATA_LED>();
+    qRegisterMetaType<DATA_MOTOR>();
+    qRegisterMetaType<DATA_PATH>();
+    qRegisterMetaType<DATA_VOBS_R>();
+    qRegisterMetaType<DATA_VOBS_C>();
     QApplication a(argc, argv);
 
     // set VTK default option

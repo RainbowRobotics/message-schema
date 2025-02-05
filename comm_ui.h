@@ -4,6 +4,7 @@
 // global defines
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // other modules
 #include "config.h"

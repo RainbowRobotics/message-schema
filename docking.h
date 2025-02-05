@@ -4,6 +4,7 @@
 // global headers
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // other modules
 #include "config.h"
@@ -37,6 +38,9 @@ public:
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
+
+    std::atomic<bool> is_pause = {false};
+    std::atomic<bool> is_moving = {false};
 
     // for module
     int is_everything_fine();
@@ -100,10 +104,7 @@ public:
     std::vector<Eigen::Vector3d> debug_frame;
 
 Q_SIGNALS:
-    void signal_dock_succeed(QString message);
-    void signal_dock_failed(QString message);
-    void signal_undock_succeed(QString message);
-    void signal_undock_failed(QString message);
+    void signal_dock(DATA_DOCK ddock);
 };
 
 #endif

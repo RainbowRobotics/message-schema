@@ -157,23 +157,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
-    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &cms, SLOT(slot_move_succeed(QString)));
-    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &cms, SLOT(slot_move_failed(QString)));
 
     // for docking
     connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
     connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
     connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
-    connect(&dctrl, SIGNAL(signal_dock_succeed(QString)), &cms, SLOT(slot_dock_success(QString)));
-    connect(&dctrl, SIGNAL(signal_dock_failed(QString)), &cms, SLOT(slot_dock_failed(QString)));
-    connect(&dctrl, SIGNAL(signal_undock_succeed(QString)), &cms, SLOT(slot_undock_success(QString)));
-    connect(&dctrl, SIGNAL(signal_undock_failed(QString)), &cms, SLOT(slot_undock_failed(QString)));  
 
-    // for slam
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cms, SLOT(slot_localization_semiautoinit_succeed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cms, SLOT(slot_localization_semiautoinit_failed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cui, SLOT(slot_localization_semiautoinit_succeed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cui, SLOT(slot_localization_semiautoinit_failed(QString)));
+    // for response
+    connect(&dctrl, SIGNAL(signal_dock(DATA_DOCK)), &cms, SLOT(slot_dock(DATA_DOCK)));
+    connect(&ctrl, SIGNAL(signal_move(DATA_MOVE)), &cms, SLOT(slot_move(DATA_MOVE)));
+    connect(&slam, SIGNAL(signal_localization(DATA_LOCALIZATION)), &cms, SLOT(slot_localization(DATA_LOCALIZATION)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -188,13 +181,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
-    // for websocket ui
-    //connect(this, SIGNAL(signal_send_status()), &cui, SLOT(send_status()));
-
     // for fms
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
     connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
-    connect(&cms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
@@ -3637,8 +3626,7 @@ void MainWindow::comm_loop()
             }
             if(cms.is_connected)
             {
-                cms.quick_send_status();
-                cms.send_info();
+                cms.send_move_status();
             }
         }
 

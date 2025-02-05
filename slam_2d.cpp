@@ -2100,7 +2100,14 @@ void SLAM_2D::semi_auto_init_start()
     if(unimap->kdtree_cloud.pts.size() == 0)
     {
         is_busy = false;
-        Q_EMIT signal_localization_semiautoinit_failed("kdtree_cloud size 0");
+
+        DATA_LOCALIZATION dloc;
+        dloc.command = "semiautoinit";
+        dloc.result = "fail";
+        dloc.message = "kdtree_cloud size 0";
+        dloc.time = get_time0();
+        Q_EMIT signal_localization(dloc);
+
         return;
     }
 
@@ -2115,7 +2122,14 @@ void SLAM_2D::semi_auto_init_start()
         if(wait_cnt > 30)
         {
             is_busy = false;
-            Q_EMIT signal_localization_semiautoinit_failed("cur scan size 0");
+
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.message = "cur scan size 0";
+            dloc.time = get_time0();
+            Q_EMIT signal_localization(dloc);
+
             return;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -2135,7 +2149,14 @@ void SLAM_2D::semi_auto_init_start()
     if(ids.size() == 0)
     {
         is_busy = false;
-        Q_EMIT signal_localization_semiautoinit_failed("no INIT nodes");
+
+        DATA_LOCALIZATION dloc;
+        dloc.command = "semiautoinit";
+        dloc.result = "fail";
+        dloc.message = "no INIT nodes";
+        dloc.time = get_time0();
+        Q_EMIT signal_localization(dloc);
+
         return;
     }
     printf("[AUTOINIT] INIT node num: %d\n", (int)ids.size());
@@ -2186,11 +2207,21 @@ void SLAM_2D::semi_auto_init_start()
         mtx.unlock();
 
         localization_start();
-        Q_EMIT signal_localization_semiautoinit_succeed("success");
+
+        DATA_LOCALIZATION dloc;
+        dloc.command = "semiautoinit";
+        dloc.result = "success";
+        dloc.time = get_time0();
+        Q_EMIT signal_localization(dloc);
     }
     else
     {
-        Q_EMIT signal_localization_semiautoinit_failed("failed semi-auto init");
+        DATA_LOCALIZATION dloc;
+        dloc.command = "semiautoinit";
+        dloc.result = "fail";
+        dloc.time = get_time0();
+        Q_EMIT signal_localization(dloc);
+
         printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);
     }
 
