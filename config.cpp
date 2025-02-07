@@ -311,22 +311,38 @@ void CONFIG::load()
                 printf("[CONFIG] CAM_TF_1, %s\n", obj_cam["CAM_TF_1"].toString().toLocal8Bit().data());
             }
 
-            QJsonObject obj_fms = obj["fms"].toObject();
+            QJsonObject obj_server = obj["fms"].toObject();
             {
-                SERVER_IP = obj_fms["SERVER_IP"].toString();
-                printf("[CONFIG] SERVER_IP, %s\n", obj_cam["SERVER_IP"].toString().toLocal8Bit().data());
+                SERVER_IP = obj_server["SERVER_IP"].toString();
+                printf("[CONFIG] SERVER_IP, %s\n", obj_server["SERVER_IP"].toString().toLocal8Bit().data());
 
-                SERVER_ID = obj_fms["SERVER_ID"].toString();
-                printf("[CONFIG] SERVER_ID, %s\n", obj_cam["SERVER_ID"].toString().toLocal8Bit().data());
+                SERVER_ID = obj_server["SERVER_ID"].toString();
+                printf("[CONFIG] SERVER_ID, %s\n", obj_server["SERVER_ID"].toString().toLocal8Bit().data());
 
-                SERVER_PW = obj_fms["SERVER_PW"].toString();
-                printf("[CONFIG] SERVER_PW, %s\n", obj_cam["SERVER_PW"].toString().toLocal8Bit().data());
+                SERVER_PW = obj_server["SERVER_PW"].toString();
+                printf("[CONFIG] SERVER_PW, %s\n", obj_server["SERVER_PW"].toString().toLocal8Bit().data());
             }
 
-            QJsonObject obj_docking = obj["docking"].toObject();
+            /*QJsonObject obj_docking = obj["docking"].toObject();
             {
+                DOCKING_GOAL_APPROACH_GAIN = obj_docking["DOCKING_GOAL_APPROACH_GAIN"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GOAL_APPROACH_GAIN, %s\n", obj_docking["DOCKING_GOAL_APPROACH_GAIN"].toString().toLocal8Bit().data());
 
-            }
+                DOCKING_GOAL_D = obj_docking["DOCKING_GOAL_D"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GOAL_D, %s\n", obj_docking["DOCKING_GOAL_D"].toString().toLocal8Bit().data());
+
+                DOCKING_GOAL_TH = obj_docking["DOCKING_GOAL_TH"].toString().toDouble();
+                printf("[CONFIG] DOCKING_GOAL_TH, %s\n", obj_docking["DOCKING_GOAL_TH"].toString().toLocal8Bit().data());
+
+                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toDouble();
+                printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
+
+                DOCKING_V_DEADZONE = obj_docking["DOCKING_V_DEADZONE"].toString().toDouble();
+                printf("[CONFIG] DOCKING_V_DEADZONE, %s\n", obj_docking["DOCKING_V_DEADZONE"].toString().toLocal8Bit().data());
+
+                DOCKING_W_DEADZONE = obj_docking["DOCKING_W_DEADZONE"].toString().toDouble();
+                printf("[CONFIG] DOCKING_W_DEADZONE, %s\n", obj_docking["DOCKING_W_DEADZONE"].toString().toLocal8Bit().data());
+            }*/
 
             // complete
             config_file.close();

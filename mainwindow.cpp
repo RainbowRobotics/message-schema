@@ -166,7 +166,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for response
     connect(&dctrl, SIGNAL(signal_dock(DATA_DOCK)), &cms, SLOT(slot_dock(DATA_DOCK)));
     connect(&ctrl, SIGNAL(signal_move(DATA_MOVE)), &cms, SLOT(slot_move(DATA_MOVE)));
-    connect(&slam, SIGNAL(signal_localization(DATA_LOCALIZATION)), &cms, SLOT(slot_localization(DATA_LOCALIZATION)));
+    connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &cms, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -3219,7 +3219,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-
+    mobile.motor_off();
 }
 
 void MainWindow::bt_TestLed()
@@ -3617,6 +3617,42 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
+        // for variable loop
+        int val1 = (int)(10/(int)lidar_view_hz);
+        if(val1 > 0)
+        {
+            if(cnt % val1 == 0)
+            {
+                if(cms.is_connected)
+                {
+                    cms.send_lidar();
+                }
+            }
+        }
+
+        int val2 = (int)(10/(int)path_view_hz);
+        if(val2 > 0)
+        {
+            if(cnt % val2 == 0)
+            {
+                if(cms.is_connected)
+                {
+                    if(is_global_path_update2)
+                    {
+                        is_global_path_update2 = false;
+                        cms.send_global_path();
+                    }
+
+                    if(is_local_path_update2)
+                    {
+                        is_local_path_update2 = false;
+                        cms.send_local_path();
+                    }
+                }
+
+            }
+        }
+
         // for 100ms loop        
         if(cnt % 1 == 0)
         {
@@ -3651,7 +3687,7 @@ void MainWindow::comm_loop()
             {
                 cms.send_mapping_cloud();
 
-                if(is_global_path_update2)
+                /*if(is_global_path_update2)
                 {
                     is_global_path_update2 = false;
                     cms.send_global_path();
@@ -3661,17 +3697,17 @@ void MainWindow::comm_loop()
                 {
                     is_local_path_update2 = false;
                     cms.send_local_path();
-                }
+                }*/
             }
         }
 
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
-            if(cms.is_connected)
+            /*if(cms.is_connected)
             {
                 cms.send_lidar();
-            }
+            }*/
 
             // open video writer
             if(config.USE_RTSP && config.USE_CAM)
@@ -5429,7 +5465,12 @@ void MainWindow::plot_loop()
     if(ui->ckb_PlotEnable->isChecked() == false)
     {
         return;
-    }
+    }//
+    //
+    //
+    //
+    //
+    //
 
     plot_timer.stop();
 

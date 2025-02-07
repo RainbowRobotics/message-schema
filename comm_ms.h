@@ -85,14 +85,6 @@ public:
     void send_lidar();
     void send_mapping_cloud();
 
-    /* send command response */
-    void send_move_response(DATA_MOVE dmove);
-    void send_localization_response(DATA_LOCALIZATION dloc);
-    void send_load_response(DATA_LOAD dload);
-    void send_randomseq_response(DATA_RANDOMSEQ drandomseq);
-    void send_mapping_response(DATA_MAPPING result);
-    void send_dock_response(DATA_DOCK ddock);
-
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
     QString get_multi_state();
@@ -149,6 +141,14 @@ private Q_SLOTS:
     void slot_path(DATA_PATH dpath);
     void slot_vobs_r(DATA_VOBS_R dvobs_r);
     void slot_vobs_c(DATA_VOBS_C dvobs_c);
+
+    /* send command response */
+    void send_move_response(DATA_MOVE dmove);
+    void send_localization_response(DATA_LOCALIZATION dloc);
+    void send_load_response(DATA_LOAD dload);
+    void send_randomseq_response(DATA_RANDOMSEQ drandomseq);
+    void send_mapping_response(DATA_MAPPING result);
+    void send_dock_response(DATA_DOCK ddock);
 };
 
 #endif // COMM_MS_H

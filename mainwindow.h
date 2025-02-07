@@ -214,6 +214,10 @@ public:
     // aruco
     std::atomic<double> last_plot_aruco_t = {0};
 
+    // for variable loop
+    std::atomic<int> lidar_view_hz = {1};
+    std::atomic<int> path_view_hz = {2};
+
     // for touch event
     double lastScaleFactor = 1.0;
     QPointF lastTouchPoint;

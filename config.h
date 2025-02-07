@@ -93,6 +93,13 @@ public:
     double DRIVE_V_DEADZONE = 0.02;
     double DRIVE_W_DEADZONE = 0.1;
 
+    //double DOCKING_GOAL_APPROACH_GAIN = 1.0;
+    //double DOCKING_GOAL_D = 0.05;
+    //double DOCKING_GOAL_TH = 2.0;
+    //double DOCKING_EXTENDED_CONTROL_TIME = 1.0;
+    //double DOCKING_V_DEADZONE = 0.02;
+    //double DOCKING_W_DEADZONE = 0.1;
+
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
     double OBS_DEADZONE = 0.6;
     double OBS_LOCAL_GOAL_D = 4.0;

@@ -61,6 +61,8 @@ void SLAM_2D::mapping_start()
 
         // clear objects        
         mtx.lock();
+        clear_pose_graph();
+
         kfrm_que.clear();
         kfrm_update_que.clear();
         kfrm_storage.clear();
@@ -2106,7 +2108,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.result = "fail";
         dloc.message = "kdtree_cloud size 0";
         dloc.time = get_time0();
-        Q_EMIT signal_localization(dloc);
+        Q_EMIT signal_localization_response(dloc);
 
         return;
     }
@@ -2128,7 +2130,7 @@ void SLAM_2D::semi_auto_init_start()
             dloc.result = "fail";
             dloc.message = "cur scan size 0";
             dloc.time = get_time0();
-            Q_EMIT signal_localization(dloc);
+            Q_EMIT signal_localization_response(dloc);
 
             return;
         }
@@ -2141,10 +2143,10 @@ void SLAM_2D::semi_auto_init_start()
     // candidates
     std::vector<QString> ids = unimap->get_nodes("INIT");
 
-    #if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+    //#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
     std::vector<QString> ids2 = unimap->get_nodes("GOAL");
     ids.insert(ids.end(), ids2.begin(), ids2.end());
-    #endif
+    //#endif
 
     if(ids.size() == 0)
     {
@@ -2155,7 +2157,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.result = "fail";
         dloc.message = "no INIT nodes";
         dloc.time = get_time0();
-        Q_EMIT signal_localization(dloc);
+        Q_EMIT signal_localization_response(dloc);
 
         return;
     }
@@ -2212,7 +2214,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.command = "semiautoinit";
         dloc.result = "success";
         dloc.time = get_time0();
-        Q_EMIT signal_localization(dloc);
+        Q_EMIT signal_localization_response(dloc);
     }
     else
     {
@@ -2220,7 +2222,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.command = "semiautoinit";
         dloc.result = "fail";
         dloc.time = get_time0();
-        Q_EMIT signal_localization(dloc);
+        Q_EMIT signal_localization_response(dloc);
 
         printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);
     }
@@ -2331,3 +2333,9 @@ Eigen::Vector2d SLAM_2D::calc_ie_ir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME
         return res;
     }
 }
+
+void SLAM_2D::clear_pose_graph()
+{
+    pgo.clear();
+}
+

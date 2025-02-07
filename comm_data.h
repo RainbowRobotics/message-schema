@@ -397,7 +397,7 @@ struct DATA_VIEW_PATH
     {
         time = 0.0;
         command = "";
-        frequency = 0;
+        frequency = -1;
 
         result = "";
         message = "";

@@ -116,6 +116,7 @@ public:
     const double sigma_eps = 1e-6;
 
     // for graph optimization
+    void clear_pose_graph();
     PGO pgo;
 
 public:
@@ -140,7 +141,7 @@ public:
     void obs_loop();
 
 Q_SIGNALS:
-    void signal_localization(DATA_LOCALIZATION dloc);
+    void signal_localization_response(DATA_LOCALIZATION dloc);
 };
 
 #endif // SLAM_2D_H
