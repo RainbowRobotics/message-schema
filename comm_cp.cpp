@@ -11,7 +11,6 @@ COMM_CP::COMM_CP(QObject *parent)
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     connect(this, SIGNAL(signal_send_info()), this, SLOT(slot_send_info()));
-
 }
 
 COMM_CP::~COMM_CP()
