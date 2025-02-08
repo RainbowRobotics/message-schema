@@ -48,67 +48,49 @@ public:
     // vars    
     QWebSocket client;
     QTimer reconnect_timer;
-    int reconnect_cnt = 0;
+    int reconnect_cnt = 0;    
     std::atomic<bool> is_connected = {false};
     std::atomic<double> last_send_time = {0};
-    QString robot_id = "";
-    QString multi_state = "none"; // none, req_path, recv_path
-    MOVE_INFO last_move_info;
 
-    // semi auto init
+    QString robot_id = "";
+    QString multi_state = "none"; // "none", "req_path", "recv_path"
+
+    // for semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
     std::thread *semi_auto_init_thread = NULL;
-
-    DATA_MOVE get_data_move(QJsonObject dataObj);
-    DATA_LOAD get_data_load(QJsonObject dataObj);
-    DATA_LOCALIZATION get_data_localization(QJsonObject dataObj);
-    DATA_RANDOMSEQ get_data_randomseq(QJsonObject dataObj);
-    DATA_PATH get_data_path(QJsonObject dataObj);
-    DATA_VOBS_R get_data_vobs_r(QJsonObject dataObj);
-    DATA_VOBS_C get_data_vobs_c(QJsonObject dataObj);
 
     // funcs
     void init();
     QString get_json(QJsonObject& json, QString key);
     QString get_multi_state();
 
-    void send_move_response(DATA_MOVE dmove);
-    void send_localization_response(DATA_LOCALIZATION dloc);
-    void send_load_response(DATA_LOAD dload);
-    void send_randomseq_response(DATA_RANDOMSEQ drandomseq);
-
-Q_SIGNALS:
-    void signal_send_info();
-
-    void signal_move(DATA_MOVE dmove);
-    void signal_localization(DATA_LOCALIZATION dloc);
-    void signal_load(DATA_LOAD dload);
-    void signal_randomseq(DATA_RANDOMSEQ drandomseq);
-
-    void signal_path(DATA_PATH dpath);
-    void signal_vobs_r(DATA_VOBS_R dvobs_r);
-    void signal_vobs_c(DATA_VOBS_C dvobs_c);
-
 private Q_SLOTS:
-
     void recv_message(const QByteArray &buf);
     void reconnect_loop();
     void connected();
     void disconnected();
 
+Q_SIGNALS:
+    void signal_send_move_status();
+
+    void recv_move(DATA_MOVE msg);
+    void recv_localization(DATA_LOCALIZATION msg);
+    void recv_load(DATA_LOAD msg);
+    void recv_randomseq(DATA_RANDOMSEQ msg);
+    void recv_path(DATA_PATH msg);
+    void recv_vobs_r(DATA_VOBS_R msg);
+    void recv_vobs_c(DATA_VOBS_C msg);
+
 private Q_SLOTS:
+    void slot_send_move_status();
 
-    // send slots
-    void slot_send_info();
-
-    void slot_move(DATA_MOVE dmove);
-    void slot_localization(DATA_LOCALIZATION dloc);
-    void slot_load(DATA_LOAD dload);
-    void slot_randomseq(DATA_RANDOMSEQ drandomseq);
-
-    void slot_path(DATA_PATH dpath);
-    void slot_vobs_r(DATA_VOBS_R dvobs_r);
-    void slot_vobs_c(DATA_VOBS_C dvobs_c);
+    void slot_move(DATA_MOVE msg);
+    void slot_localization(DATA_LOCALIZATION msg);
+    void slot_load(DATA_LOAD msg);
+    void slot_randomseq(DATA_RANDOMSEQ msg);
+    void slot_path(DATA_PATH msg);
+    void slot_vobs_r(DATA_VOBS_R msg);
+    void slot_vobs_c(DATA_VOBS_C msg);
 };
 
 #endif // COMM_FMS_H
