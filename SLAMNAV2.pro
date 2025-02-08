@@ -33,6 +33,7 @@ SOURCES += \
     autocontrol.cpp \
     cam.cpp \
     code_reader.cpp \
+    comm_cp.cpp \
     comm_fms.cpp \
     comm_ms.cpp \
     comm_ui.cpp \
@@ -62,6 +63,7 @@ HEADERS += \
     autocontrol.h \
     cam.h \
     code_reader.h \
+    comm_cp.h \
     comm_fms.h \
     comm_ms.h \
     comm_ui.h \

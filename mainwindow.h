@@ -23,6 +23,7 @@
 #include "comm_fms.h"
 #include "comm_ms.h"
 #include "comm_ui.h"
+#include "comm_cp.h"
 #include "lvx_loc.h"
 
 // qt
@@ -67,6 +68,7 @@ public:
     COMM_FMS cfms;
     COMM_MS cms;
     COMM_UI cui;
+    COMM_CP ccp;
     LVX_LOC lvx;
 
     // system logger

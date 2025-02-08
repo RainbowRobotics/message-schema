@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , cfms(this)
     , cms(this)
     , cui(this)
+    , ccp(this)
     , lvx(this)
     , system_logger(this)
     , ui(new Ui::MainWindow)
@@ -654,6 +655,20 @@ void MainWindow::init_modules()
     task.ctrl = &ctrl;
     task.mobile = &mobile;
 
+    // coop client module init
+    ccp.config = &config;
+    ccp.logger = &logger;
+    ccp.mobile = &mobile;
+    ccp.slam = &slam;
+    ccp.unimap = &unimap;
+    ccp.obsmap = &obsmap;
+    ccp.ctrl = &ctrl;
+    ccp.lvx = &lvx;
+    if(config.USE_COOP)
+    {
+        ccp.init();
+    }
+
     // fms client module init
     cfms.config = &config;
     cfms.logger = &logger;
@@ -663,7 +678,10 @@ void MainWindow::init_modules()
     cfms.obsmap = &obsmap;
     cfms.ctrl = &ctrl;
     cfms.lvx = &lvx;
-    cfms.init();
+    if(config.USE_FMS)
+    {
+        cfms.init();
+    }
 
     // socket.io client init
     cms.config = &config;
@@ -678,7 +696,10 @@ void MainWindow::init_modules()
     cms.ctrl = &ctrl;
     cms.dctrl = &dctrl;
     cms.lvx = &lvx;
-    cms.init();
+    if(config.USE_WEB_UI)
+    {
+        cms.init();
+    }
 
     // websocket ui init
     cui.config = &config;
@@ -692,7 +713,10 @@ void MainWindow::init_modules()
     cui.obsmap = &obsmap;
     cui.ctrl = &ctrl;
     cui.lvx = &lvx;
-    cui.init();
+    if(config.USE_QT_UI)
+    {
+        cui.init();
+    }
 
     // start jog loop
     jog_flag = true;
@@ -1035,7 +1059,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         mouse_event_type = QEvent::MouseButtonRelease;
                     }
 
-                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+                    QMouseEvent *mouse_event = new QMouseEvent(mouse_event_type, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
                     QApplication::postEvent(ui->qvtkWidget2, mouse_event);
                 }
                 return false;
@@ -3472,7 +3496,7 @@ void MainWindow::bt_SelectPostNodes()
 // comm
 void MainWindow::comm_loop()
 {
-    const double dt = 0.1; // 100hz
+    const double dt = 0.01; // 100hz
     double pre_loop_time = get_time();
 
     int cnt = 0;
@@ -3489,8 +3513,17 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
+        // for 50ms loop
+        if(cnt % 10 == 0)
+        {
+            if(ccp.is_connected)
+            {
+                Q_EMIT ccp.signal_send_info();
+            }
+        }
+
         // for 100ms loop        
-        if(cnt % 1 == 0)
+        if(cnt % 10 == 0)
         {
             if(cfms.is_connected)
             {                
@@ -3499,7 +3532,7 @@ void MainWindow::comm_loop()
         }
 
         // for 500ms loop
-        if(cnt % 5 == 0)
+        if(cnt % 50 == 0)
         {
             if(cms.is_connected)
             {
@@ -3513,7 +3546,7 @@ void MainWindow::comm_loop()
         }
 
         // for 500ms loop
-        if(cnt % 5 == 0)
+        if(cnt % 50 == 0)
         {
             if(cms.is_connected)
             {
@@ -3534,7 +3567,7 @@ void MainWindow::comm_loop()
         }
 
         // for 1000ms loop
-        if(cnt % 10 == 0)
+        if(cnt % 100 == 0)
         {
             if(cms.is_connected)
             {
@@ -3565,7 +3598,7 @@ void MainWindow::comm_loop()
         }
 
         // for 200ms loop
-        if(cnt % 2 == 0)
+        if(cnt % 20 == 0)
         {
             if(config.USE_RTSP && config.USE_CAM)
             {

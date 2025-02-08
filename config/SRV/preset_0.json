@@ -1,10 +1,10 @@
 {
     "LIMIT_V": "1.5",
-    "LIMIT_W": "60.0",
+    "LIMIT_W": "45.0",
     "LIMIT_V_ACC": "0.5",
-    "LIMIT_V_DCC": "0.3",
+    "LIMIT_V_DCC": "0.2",
     "LIMIT_W_ACC": "180.0",
-    "LIMIT_PIVOT_W": "60.0",  
+    "LIMIT_PIVOT_W": "90.0",  
     "ST_V": "0.1",
     "ED_V": "0.1",
     "DRIVE_T": "0.0",

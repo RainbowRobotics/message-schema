@@ -234,6 +234,9 @@ void CONFIG::load()
 
                 USE_LVX = obj_debug["USE_LVX"].toString().toInt();
                 printf("[CONFIG] USE_LVX, %s\n", obj_debug["USE_LVX"].toString().toLocal8Bit().data());
+
+                USE_COOP = obj_debug["USE_COOP"].toString().toInt();
+                printf("[CONFIG] USE_COOP, %s\n", obj_debug["USE_COOP"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

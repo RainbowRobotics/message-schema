@@ -85,6 +85,7 @@ public:
     int USE_FMS = 0;
     int USE_ARUCO = 0;
     int USE_LVX = 0;
+    int USE_COOP = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
     double DRIVE_GOAL_D = 0.05;    
