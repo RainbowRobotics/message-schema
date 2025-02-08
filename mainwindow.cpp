@@ -166,8 +166,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
 
     // for response
-    connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(slot_dock_response(DATA_DOCK)));
-    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(slot_move_response(DATA_MOVE)));
+    connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
+    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
@@ -5348,12 +5348,7 @@ void MainWindow::plot_loop()
     if(ui->ckb_PlotEnable->isChecked() == false)
     {
         return;
-    }//
-    //
-    //
-    //
-    //
-    //
+    }
 
     plot_timer.stop();
 
@@ -5407,6 +5402,9 @@ void MainWindow::plot_loop()
 
     // rendering
     ui->qvtkWidget->renderWindow()->Render();
+
+    // id
+    ui->lb_RobotId->setText(comm_fms.robot_id);
 
     // check plot drift
     plot_proc_t = get_time() - st_time;
