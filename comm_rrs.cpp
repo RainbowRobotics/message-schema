@@ -1,8 +1,8 @@
-#include "comm_ms.h"
+#include "comm_rrs.h"
 
 #include "mainwindow.h"
 
-COMM_MS::COMM_MS(QObject *parent)
+COMM_RRS::COMM_RRS(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
@@ -14,25 +14,25 @@ COMM_MS::COMM_MS(QObject *parent)
     using std::placeholders::_4;
 
     sio::socket::ptr sock = io->socket();
-    io->set_open_listener(std::bind(&COMM_MS::sio_connected, this));
-    io->set_close_listener(std::bind(&COMM_MS::sio_disconnected, this, _1));
-    io->set_fail_listener(std::bind(&COMM_MS::sio_error, this));
+    io->set_open_listener(std::bind(&COMM_RRS::sio_connected, this));
+    io->set_close_listener(std::bind(&COMM_RRS::sio_disconnected, this, _1));
+    io->set_fail_listener(std::bind(&COMM_RRS::sio_error, this));
     io->set_reconnect_attempts(-1);
 
     // bind recv callback function this func emit signal
-    BIND_EVENT(sock, "move",            std::bind(&COMM_MS::recv_move,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "localization",    std::bind(&COMM_MS::recv_localization,      this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "load",            std::bind(&COMM_MS::recv_load,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "randomseq",       std::bind(&COMM_MS::recv_randomseq,         this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "mapping",         std::bind(&COMM_MS::recv_mapping,           this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "dock",            std::bind(&COMM_MS::recv_dock,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "lidarOnOff",      std::bind(&COMM_MS::recv_view_lidar_on_off, this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "pathOnOff",       std::bind(&COMM_MS::recv_view_path_on_off,  this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "led",             std::bind(&COMM_MS::recv_led,               this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "motor",           std::bind(&COMM_MS::recv_motor,             this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "path",            std::bind(&COMM_MS::recv_path,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "vobsRobots",      std::bind(&COMM_MS::recv_vobs_robots,       this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "vobsClosures",    std::bind(&COMM_MS::recv_vobs_closures,     this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "move",            std::bind(&COMM_RRS::recv_move,              this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "localization",    std::bind(&COMM_RRS::recv_localization,      this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "load",            std::bind(&COMM_RRS::recv_load,              this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "randomseq",       std::bind(&COMM_RRS::recv_randomseq,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "mapping",         std::bind(&COMM_RRS::recv_mapping,           this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "dock",            std::bind(&COMM_RRS::recv_dock,              this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "lidarOnOff",      std::bind(&COMM_RRS::recv_view_lidar_on_off, this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "pathOnOff",       std::bind(&COMM_RRS::recv_view_path_on_off,  this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "led",             std::bind(&COMM_RRS::recv_led,               this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "motor",           std::bind(&COMM_RRS::recv_motor,             this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "path",            std::bind(&COMM_RRS::recv_path,              this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "vobsRobots",      std::bind(&COMM_RRS::recv_vobs_robots,       this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "vobsClosures",    std::bind(&COMM_RRS::recv_vobs_closures,     this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, SIGNAL(signal_move(DATA_MOVE)),                 this, SLOT(slot_move(DATA_MOVE)));
@@ -50,14 +50,14 @@ COMM_MS::COMM_MS(QObject *parent)
     connect(this, SIGNAL(signal_vobs_c(DATA_VOBS_C)),             this, SLOT(slot_vobs_c(DATA_VOBS_C)));
 }
 
-COMM_MS::~COMM_MS()
+COMM_RRS::~COMM_RRS()
 {
     io->socket()->off_all();
     io->socket()->off_error();
     io->close();
 }
 
-QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
+QString COMM_RRS::get_json(sio::message::ptr const& data, QString key)
 {
     if(!data)
     {
@@ -79,7 +79,7 @@ QString COMM_MS::get_json(sio::message::ptr const& data, QString key)
     return "";
 }
 
-QString COMM_MS::get_multi_state()
+QString COMM_RRS::get_multi_state()
 {
     mtx.lock();
     QString res = multi_state;
@@ -88,9 +88,9 @@ QString COMM_MS::get_multi_state()
     return res;
 }
 
-void COMM_MS::init()
+void COMM_RRS::init()
 {
-    if(config->USE_WEB_UI)
+    if(config->USE_RRS)
     {
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
@@ -99,7 +99,7 @@ void COMM_MS::init()
     }
 }
 
-void COMM_MS::sio_connected()
+void COMM_RRS::sio_connected()
 {
     is_connected = true;
 
@@ -110,7 +110,7 @@ void COMM_MS::sio_connected()
     logger->write_log(str, "Green");
 }
 
-void COMM_MS::sio_disconnected(sio::client::close_reason const& reason)
+void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
 
@@ -121,7 +121,7 @@ void COMM_MS::sio_disconnected(sio::client::close_reason const& reason)
     logger->write_log(str, "Green");
 }
 
-void COMM_MS::sio_error()
+void COMM_RRS::sio_error()
 {
     QString str;
     str.sprintf("[COMM_MS] some error");
@@ -129,7 +129,7 @@ void COMM_MS::sio_error()
 }
 
 // recv parser -> emit recv signals
-void COMM_MS::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -244,7 +244,7 @@ void COMM_MS::recv_move(std::string const& name, sio::message::ptr const& data, 
     }
 }
 
-void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -318,7 +318,7 @@ void COMM_MS::recv_localization(std::string const& name, sio::message::ptr const
     }
 }
 
-void COMM_MS::recv_load(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_load(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -358,7 +358,7 @@ void COMM_MS::recv_load(std::string const& name, sio::message::ptr const& data, 
     }
 }
 
-void COMM_MS::recv_randomseq(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_randomseq(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -387,7 +387,7 @@ void COMM_MS::recv_randomseq(std::string const& name, sio::message::ptr const& d
     }
 }
 
-void COMM_MS::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_mapping(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -432,7 +432,7 @@ void COMM_MS::recv_mapping(std::string const& name, sio::message::ptr const& dat
     }
 }
 
-void COMM_MS::recv_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -466,7 +466,7 @@ void COMM_MS::recv_dock(std::string const& name, sio::message::ptr const& data, 
     }
 }
 
-void COMM_MS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -502,7 +502,7 @@ void COMM_MS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr 
     }
 }
 
-void COMM_MS::recv_view_path_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_view_path_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -547,7 +547,7 @@ void COMM_MS::recv_view_path_on_off(std::string const& name, sio::message::ptr c
     }
 }
 
-void COMM_MS::recv_led(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_led(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -582,7 +582,7 @@ void COMM_MS::recv_led(std::string const& name, sio::message::ptr const& data, b
     }
 }
 
-void COMM_MS::recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -616,7 +616,7 @@ void COMM_MS::recv_motor(std::string const& name, sio::message::ptr const& data,
     }
 }
 
-void COMM_MS::recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -648,7 +648,7 @@ void COMM_MS::recv_path(std::string const& name, sio::message::ptr const& data, 
     }
 }
 
-void COMM_MS::recv_vobs_robots(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_vobs_robots(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -679,7 +679,7 @@ void COMM_MS::recv_vobs_robots(std::string const& name, sio::message::ptr const&
     }
 }
 
-void COMM_MS::recv_vobs_closures(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_vobs_closures(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data->get_flag() == sio::message::flag_object)
     {
@@ -711,14 +711,14 @@ void COMM_MS::recv_vobs_closures(std::string const& name, sio::message::ptr cons
 }
 
 // send functions
-void COMM_MS::send_status()
+void COMM_RRS::send_status()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -858,14 +858,14 @@ void COMM_MS::send_status()
 }
 
 // send functions
-void COMM_MS::send_move_status()
+void COMM_RRS::send_move_status()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -986,7 +986,7 @@ void COMM_MS::send_move_status()
     //printf("[COMM_MS] send_move_status, time: %f\n", time);
 }
 
-void COMM_MS::send_local_path()
+void COMM_RRS::send_local_path()
 {
     if(!is_connected)
     {
@@ -1015,7 +1015,7 @@ void COMM_MS::send_local_path()
     //printf("[COMM_MS] send local_path, num: %d\n", (int)path.pos.size());
 }
 
-void COMM_MS::send_global_path()
+void COMM_RRS::send_global_path()
 {
     if(!is_connected)
     {
@@ -1041,14 +1041,14 @@ void COMM_MS::send_global_path()
     //printf("[COMM_MS] send_global_path, num: %d\n", (int)path.pos.size());
 }
 
-void COMM_MS::send_lidar()
+void COMM_RRS::send_lidar()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     TIME_POSE_PTS tpp = slam->get_cur_tpp();
     if(slam->is_loc && tpp.pts.size() > 0)
@@ -1119,7 +1119,7 @@ void COMM_MS::send_lidar()
     //printf("[COMM_MS] lidar_cloud,  time: %f\n", time);
 }
 
-void COMM_MS::send_mapping_cloud()
+void COMM_RRS::send_mapping_cloud()
 {
     if(!is_connected)
     {
@@ -1129,7 +1129,7 @@ void COMM_MS::send_mapping_cloud()
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
         // send kfrm
-        double time = get_time0();
+        double time = get_time();
 
         slam->mtx.lock();
         KFRAME kfrm = slam->kfrm_storage[last_send_kfrm_idx];
@@ -1166,7 +1166,7 @@ void COMM_MS::send_mapping_cloud()
     }
 }
 
-void COMM_MS::slot_move(DATA_MOVE dmove)
+void COMM_RRS::slot_move(DATA_MOVE dmove)
 {
     QString command = dmove.command;
     if(command == "jog")
@@ -1329,7 +1329,7 @@ void COMM_MS::slot_move(DATA_MOVE dmove)
     }
 }
 
-void COMM_MS::slot_mapping(DATA_MAPPING dmap)
+void COMM_RRS::slot_mapping(DATA_MAPPING dmap)
 {
     QString command = dmap.command;
     if(command == "start")
@@ -1396,7 +1396,7 @@ void COMM_MS::slot_mapping(DATA_MAPPING dmap)
     }
 }
 
-void COMM_MS::slot_load(DATA_LOAD dload)
+void COMM_RRS::slot_load(DATA_LOAD dload)
 {
     QString command = dload.command;
     if(command == "mapload")
@@ -1455,7 +1455,7 @@ void COMM_MS::slot_load(DATA_LOAD dload)
     }
 }
 
-void COMM_MS::slot_randomseq(DATA_RANDOMSEQ drandomseq)
+void COMM_RRS::slot_randomseq(DATA_RANDOMSEQ drandomseq)
 {
     QString command = drandomseq.command;
     if(command == "randomseq")
@@ -1470,7 +1470,7 @@ void COMM_MS::slot_randomseq(DATA_RANDOMSEQ drandomseq)
     }
 }
 
-void COMM_MS::slot_localization(DATA_LOCALIZATION dloc)
+void COMM_RRS::slot_localization(DATA_LOCALIZATION dloc)
 {
     QString command = dloc.command;
     if(command == "semiautoinit")
@@ -1601,7 +1601,7 @@ void COMM_MS::slot_localization(DATA_LOCALIZATION dloc)
     }
 }
 
-void COMM_MS::slot_dock(DATA_DOCK ddock)
+void COMM_RRS::slot_dock(DATA_DOCK ddock)
 {
     QString command = ddock.command;
     if(command == "dock")
@@ -1622,7 +1622,7 @@ void COMM_MS::slot_dock(DATA_DOCK ddock)
     }
 }
 
-void COMM_MS::slot_view_lidar(DATA_VIEW_LIDAR dlidar)
+void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR dlidar)
 {
     QString command = dlidar.command;
     if(command == "on")
@@ -1644,7 +1644,7 @@ void COMM_MS::slot_view_lidar(DATA_VIEW_LIDAR dlidar)
     }
 }
 
-void COMM_MS::slot_view_path(DATA_VIEW_PATH dpath)
+void COMM_RRS::slot_view_path(DATA_VIEW_PATH dpath)
 {
     QString command = dpath.command;
     if(command == "on")
@@ -1666,7 +1666,7 @@ void COMM_MS::slot_view_path(DATA_VIEW_PATH dpath)
     }
 }
 
-void COMM_MS::slot_led(DATA_LED dled)
+void COMM_RRS::slot_led(DATA_LED dled)
 {
     QString command = dled.command;
     if(command == "on")
@@ -1685,7 +1685,7 @@ void COMM_MS::slot_led(DATA_LED dled)
     }
 }
 
-void COMM_MS::slot_motor(DATA_MOTOR dmotor)
+void COMM_RRS::slot_motor(DATA_MOTOR dmotor)
 {
     QString command = dmotor.command;
     if(command == "on")
@@ -1704,7 +1704,7 @@ void COMM_MS::slot_motor(DATA_MOTOR dmotor)
     }
 }
 
-void COMM_MS::slot_path(DATA_PATH dpath)
+void COMM_RRS::slot_path(DATA_PATH dpath)
 {
     QString command = dpath.command;
     if(command == "path")
@@ -1723,7 +1723,7 @@ void COMM_MS::slot_path(DATA_PATH dpath)
     }
 }
 
-void COMM_MS::slot_vobs_r(DATA_VOBS_R dvobs_r)
+void COMM_RRS::slot_vobs_r(DATA_VOBS_R dvobs_r)
 {
     QString command = dvobs_r.command;
     if(command == "dvobs_r")
@@ -1757,7 +1757,7 @@ void COMM_MS::slot_vobs_r(DATA_VOBS_R dvobs_r)
     }
 }
 
-void COMM_MS::slot_vobs_c(DATA_VOBS_C dvobs_c)
+void COMM_RRS::slot_vobs_c(DATA_VOBS_C dvobs_c)
 {
     QString command = dvobs_c.command;
     if(command == "dvobs_c")
@@ -1789,7 +1789,7 @@ void COMM_MS::slot_vobs_c(DATA_VOBS_C dvobs_c)
     }
 }
 
-void COMM_MS::send_move_response(DATA_MOVE dmove)
+void COMM_RRS::send_move_response(DATA_MOVE dmove)
 {
     if(!is_connected)
     {
@@ -1817,7 +1817,7 @@ void COMM_MS::send_move_response(DATA_MOVE dmove)
     io->socket()->emit("moveResponse", res);
 }
 
-void COMM_MS::send_localization_response(DATA_LOCALIZATION dloc)
+void COMM_RRS::send_localization_response(DATA_LOCALIZATION dloc)
 {
     if(!is_connected)
     {
@@ -1840,7 +1840,7 @@ void COMM_MS::send_localization_response(DATA_LOCALIZATION dloc)
     io->socket()->emit("localizationResponse", res);
 }
 
-void COMM_MS::send_load_response(DATA_LOAD dload)
+void COMM_RRS::send_load_response(DATA_LOAD dload)
 {
     if(!is_connected)
     {
@@ -1859,7 +1859,7 @@ void COMM_MS::send_load_response(DATA_LOAD dload)
     io->socket()->emit("loadResponse", res);
 }
 
-void COMM_MS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
+void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
 {
     if(!is_connected)
     {
@@ -1877,7 +1877,7 @@ void COMM_MS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
     io->socket()->emit("randomseqResponse", res);
 }
 
-void COMM_MS::send_mapping_response(DATA_MAPPING dmap)
+void COMM_RRS::send_mapping_response(DATA_MAPPING dmap)
 {
     if(!is_connected)
     {
@@ -1896,7 +1896,7 @@ void COMM_MS::send_mapping_response(DATA_MAPPING dmap)
     io->socket()->emit("mappingResponse", res);
 }
 
-void COMM_MS::send_dock_response(DATA_DOCK ddock)
+void COMM_RRS::send_dock_response(DATA_DOCK ddock)
 {
     if(!is_connected)
     {

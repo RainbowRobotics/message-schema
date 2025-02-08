@@ -16,40 +16,31 @@
         "DRIVE_V_DEADZONE": "0.02",
         "DRIVE_W_DEADZONE": "1.0"
     },
-    "docking": {
-        "DOCKING_EXTENDED_CONTROL_TIME": "1.0",
-        "DOCKING_GOAL_APPROACH_GAIN": "1.0",
-        "DOCKING_GOAL_D": "0.15",
-        "DOCKING_GOAL_TH": "3.0",
-        "DOCKING_V_DEADZONE": "0.02",
-        "DOCKING_W_DEADZONE": "1.0"
-    },
     "debug": {
-        "SIM_MODE": "1",
-        "USE_ARUCO": "1",
-        "USE_BEEP": "1",
+        "USE_SIM": "1",
+        "USE_IMU": "0",
         "USE_BLIDAR": "0",
         "USE_BQR": "0",
-        "USE_CAM": "1",
-        "USE_EARLYSTOP": "0",
-        "USE_FMS": "1",
-        "USE_IMU": "0",
-        "USE_QT_UI": "0",
+        "USE_BEEP": "0",
+        "USE_CAM": "0",
         "USE_RTSP": "0",
-        "USE_WEB_UI": "1"
+        "USE_RRS": "0",
+        "USE_FMS": "1",
+        "USE_QTUI": "0",
+        "USE_ARUCO": "0",
+        "USE_EARLYSTOP": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
         "LIDAR_MIN_RANGE": "0.5",
         "LIDAR_TF_B": "0.0, 0.0, 0.0, 0.0, 0.0, 0.0",
         "LIDAR_TF_F": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
-        "ROBOT_RADIUS": "1.0",
-        "ROBOT_SIZE_MAX_X": "0.4",
-        "ROBOT_SIZE_MAX_Y": "0.35",
-        "ROBOT_SIZE_MAX_Z": "0.22",
         "ROBOT_SIZE_MIN_X": "-0.35",
+        "ROBOT_SIZE_MAX_X": "0.4",
         "ROBOT_SIZE_MIN_Y": "-0.35",
+        "ROBOT_SIZE_MAX_Y": "0.35",
         "ROBOT_SIZE_MIN_Z": "0",
+        "ROBOT_SIZE_MAX_Z": "0.22",
         "ROBOT_WHEEL_BASE": "0.387",
         "ROBOT_WHEEL_RADIUS": "0.0635"
     },
@@ -57,10 +48,6 @@
         "SERVER_ID": "tw",
         "SERVER_IP": "127.0.0.1",
         "SERVER_PW": "rainbow"
-    },
-    "frs": {
-        "SERVER_PORT": "3001",
-        "SERVER_IP": "10.108.10.15",
     },
     "loc": {
         "LOC_ARUCO_ODO_FUSION_DIST": "2.0",

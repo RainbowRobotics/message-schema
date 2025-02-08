@@ -75,7 +75,6 @@ public:
 
 Q_SIGNALS:
     void signal_send_info();
-    void signal_regist_id(QString id);
 
     void signal_move(DATA_MOVE dmove);
     void signal_localization(DATA_LOCALIZATION dloc);

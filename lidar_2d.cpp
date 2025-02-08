@@ -33,7 +33,7 @@ LIDAR_2D::~LIDAR_2D()
 void LIDAR_2D::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[LIDAR] simulation mode\n");
         return;
@@ -181,13 +181,7 @@ void LIDAR_2D::grab_loop_f()
     }
     logger->write_log("[LIDAR] driver init success", "Green", true, false);
 
-    int baudrate = 256000;
-    if(config->USE_S3 == 1)
-    {
-        baudrate = 1000000;
-        logger->write_log("[LIDAR] baud changed success", "Green", true, false);
-    }
-
+    int baudrate = 256000;    
     sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", baudrate));
     logger->write_log("[LIDAR] channel init success", "Green", true, false);
 
@@ -309,11 +303,6 @@ void LIDAR_2D::grab_loop_f()
 
             // get lidar raw data
             int step = 1;
-            if(config->USE_S3)
-            {
-                step = 4;
-            }
-
             std::vector<double> times;
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;

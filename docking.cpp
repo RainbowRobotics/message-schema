@@ -347,7 +347,7 @@ void DOCKING::a_loop()
                     ddock.command = "dock";
                     ddock.result = "fail";
                     ddock.message = failed_reason;
-                    ddock.time = get_time0();
+                    ddock.time = get_time();
 
                     Q_EMIT signal_dock(ddock);
                 }
@@ -408,7 +408,7 @@ void DOCKING::a_loop()
                 ddock.command = "dock";
                 ddock.result = "success";
                 ddock.message = "";
-                ddock.time = get_time0();
+                ddock.time = get_time();
 
                 Q_EMIT signal_dock(ddock);
             }
@@ -433,7 +433,7 @@ void DOCKING::a_loop()
                         ddock.command = "dock";
                         ddock.result = "fail";
                         ddock.message = failed_reason;
-                        ddock.time = get_time0();
+                        ddock.time = get_time();
 
                         Q_EMIT signal_dock(ddock);
                         fsm_state = DOCKING_FSM_FAILED;
@@ -1087,7 +1087,7 @@ void DOCKING::b_loop()
                 ddock.command = "undock";
                 ddock.result = "success";
                 ddock.message = "";
-                ddock.time = get_time0();
+                ddock.time = get_time();
 
                 Q_EMIT signal_dock(ddock);
 
@@ -1108,7 +1108,7 @@ void DOCKING::b_loop()
             ddock.command = "undock";
             ddock.result = "fail";
             ddock.message = failed_reason;
-            ddock.time = get_time0();
+            ddock.time = get_time();
 
             Q_EMIT signal_dock(ddock);
         }

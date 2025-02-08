@@ -828,7 +828,7 @@ void SLAM_2D::loc_b_loop()
 
             // icp-odometry fusion
             TIME_POSE tp;
-            if(tp_que.try_pop(tp) && config->SIM_MODE == 0)
+            if(tp_que.try_pop(tp) && config->USE_SIM == 0)
             {
                 const bool is_time_compensation = true;
                 const bool use_slip_detection = false;
@@ -907,7 +907,7 @@ void SLAM_2D::loc_b_loop()
 
             // aruco fusion
             TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
-            if(aruco_tpi.t > pre_aruco_t && config->SIM_MODE == 0)
+            if(aruco_tpi.t > pre_aruco_t && config->USE_SIM == 0)
             {
                 double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
                 if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
@@ -2107,7 +2107,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.command = "semiautoinit";
         dloc.result = "fail";
         dloc.message = "kdtree_cloud size 0";
-        dloc.time = get_time0();
+        dloc.time = get_time();
         Q_EMIT signal_localization_response(dloc);
 
         return;
@@ -2129,7 +2129,7 @@ void SLAM_2D::semi_auto_init_start()
             dloc.command = "semiautoinit";
             dloc.result = "fail";
             dloc.message = "cur scan size 0";
-            dloc.time = get_time0();
+            dloc.time = get_time();
             Q_EMIT signal_localization_response(dloc);
 
             return;
@@ -2156,7 +2156,7 @@ void SLAM_2D::semi_auto_init_start()
         dloc.command = "semiautoinit";
         dloc.result = "fail";
         dloc.message = "no INIT nodes";
-        dloc.time = get_time0();
+        dloc.time = get_time();
         Q_EMIT signal_localization_response(dloc);
 
         return;
@@ -2213,7 +2213,7 @@ void SLAM_2D::semi_auto_init_start()
         DATA_LOCALIZATION dloc;
         dloc.command = "semiautoinit";
         dloc.result = "success";
-        dloc.time = get_time0();
+        dloc.time = get_time();
         Q_EMIT signal_localization_response(dloc);
     }
     else
@@ -2221,7 +2221,7 @@ void SLAM_2D::semi_auto_init_start()
         DATA_LOCALIZATION dloc;
         dloc.command = "semiautoinit";
         dloc.result = "fail";
-        dloc.time = get_time0();
+        dloc.time = get_time();
         Q_EMIT signal_localization_response(dloc);
 
         printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);

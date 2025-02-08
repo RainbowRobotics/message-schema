@@ -1,5 +1,5 @@
-#ifndef COMM_MS_H
-#define COMM_MS_H
+#ifndef COMM_RRS_H
+#define COMM_RRS_H
 
 // global defines
 #include "global_defines.h"
@@ -31,12 +31,12 @@
 #include <QNetworkInterface>
 #include <QJsonArray>
 
-class COMM_MS : public QObject
+class COMM_RRS : public QObject
 {
     Q_OBJECT
 public:
-    explicit COMM_MS(QObject *parent = nullptr);
-    ~COMM_MS();
+    explicit COMM_RRS(QObject *parent = nullptr);
+    ~COMM_RRS();
     std::mutex mtx;
 
     // other modules
@@ -151,4 +151,4 @@ private Q_SLOTS:
     void send_dock_response(DATA_DOCK ddock);
 };
 
-#endif // COMM_MS_H
+#endif // COMM_RRS_H

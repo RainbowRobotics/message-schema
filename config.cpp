@@ -87,12 +87,10 @@ void CONFIG::load()
                 printf("[CONFIG] ROBOT_SIZE_MAX_Z, %s\n", obj_default["ROBOT_SIZE_MAX_Z"].toString().toLocal8Bit().data());
 
                 // robot radius calculation
-                //ROBOT_RADIUS = obj_default["ROBOT_RADIUS"].toString().toDouble();
-                //printf("[CONFIG] ROBOT_RADIUS, %s\n", obj_default["ROBOT_RADIUS"].toString().toLocal8Bit().data());
                 double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
                 double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
                 ROBOT_RADIUS = std::sqrt(lx*lx + ly*ly);
-                printf("[CONFIG] ROBOT_RADIUS, %.3f\n", ROBOT_RADIUS);
+                printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
 
                 LIDAR_MIN_RANGE = obj_default["LIDAR_MIN_RANGE"].toString().toDouble();
                 printf("[CONFIG] LIDAR_MIN_RANGE, %s\n", obj_default["LIDAR_MIN_RANGE"].toString().toLocal8Bit().data());
@@ -196,17 +194,11 @@ void CONFIG::load()
 
             QJsonObject obj_debug = obj["debug"].toObject();
             {
-                SIM_MODE = obj_debug["SIM_MODE"].toString().toInt();
-                printf("[CONFIG] SIM_MODE, %s\n", obj_debug["SIM_MODE"].toString().toLocal8Bit().data());
+                USE_SIM = obj_debug["USE_SIM"].toString().toInt();
+                printf("[CONFIG] USE_SIM, %s\n", obj_debug["USE_SIM"].toString().toLocal8Bit().data());
 
                 USE_IMU = obj_debug["USE_IMU"].toString().toInt();
                 printf("[CONFIG] USE_IMU, %s\n", obj_debug["USE_IMU"].toString().toLocal8Bit().data());
-
-                USE_BEEP = obj_debug["USE_BEEP"].toString().toInt();
-                printf("[CONFIG] USE_BEEP, %s\n", obj_debug["USE_BEEP"].toString().toLocal8Bit().data());
-
-                USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
-                printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
 
                 USE_BLIDAR = obj_debug["USE_BLIDAR"].toString().toInt();
                 printf("[CONFIG] USE_BLIDAR, %s\n", obj_debug["USE_BLIDAR"].toString().toLocal8Bit().data());
@@ -214,23 +206,29 @@ void CONFIG::load()
                 USE_BQR = obj_debug["USE_BQR"].toString().toInt();
                 printf("[CONFIG] USE_BQR, %s\n", obj_debug["USE_BQR"].toString().toLocal8Bit().data());
 
+                USE_BEEP = obj_debug["USE_BEEP"].toString().toInt();
+                printf("[CONFIG] USE_BEEP, %s\n", obj_debug["USE_BEEP"].toString().toLocal8Bit().data());
+
                 USE_CAM = obj_debug["USE_CAM"].toString().toInt();
                 printf("[CONFIG] USE_CAM, %s\n", obj_debug["USE_CAM"].toString().toLocal8Bit().data());
 
-                USE_EARLYSTOP = obj_debug["USE_EARLYSTOP"].toString().toInt();
-                printf("[CONFIG] USE_EARLYSTOP, %s\n", obj_debug["USE_EARLYSTOP"].toString().toLocal8Bit().data());
+                USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
+                printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
 
-                USE_WEB_UI = obj_debug["USE_WEB_UI"].toString().toInt();
+                USE_RRS = obj_debug["USE_WEB_UI"].toString().toInt();
                 printf("[CONFIG] USE_WEB_UI, %s\n", obj_debug["USE_WEB_UI"].toString().toLocal8Bit().data());
-
-                USE_QT_UI = obj_debug["USE_QT_UI"].toString().toInt();
-                printf("[CONFIG] USE_QT_UI, %s\n", obj_debug["USE_QT_UI"].toString().toLocal8Bit().data());
 
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
 
+                USE_QTUI = obj_debug["USE_QTUI"].toString().toInt();
+                printf("[CONFIG] USE_QTUI, %s\n", obj_debug["USE_QTUI"].toString().toLocal8Bit().data());
+
                 USE_ARUCO = obj_debug["USE_ARUCO"].toString().toInt();
                 printf("[CONFIG] USE_ARUCO, %s\n", obj_debug["USE_ARUCO"].toString().toLocal8Bit().data());
+
+                USE_EARLYSTOP = obj_debug["USE_EARLYSTOP"].toString().toInt();
+                printf("[CONFIG] USE_EARLYSTOP, %s\n", obj_debug["USE_EARLYSTOP"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();
@@ -323,27 +321,6 @@ void CONFIG::load()
                 printf("[CONFIG] SERVER_PW, %s\n", obj_server["SERVER_PW"].toString().toLocal8Bit().data());
             }
 
-            /*QJsonObject obj_docking = obj["docking"].toObject();
-            {
-                DOCKING_GOAL_APPROACH_GAIN = obj_docking["DOCKING_GOAL_APPROACH_GAIN"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GOAL_APPROACH_GAIN, %s\n", obj_docking["DOCKING_GOAL_APPROACH_GAIN"].toString().toLocal8Bit().data());
-
-                DOCKING_GOAL_D = obj_docking["DOCKING_GOAL_D"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GOAL_D, %s\n", obj_docking["DOCKING_GOAL_D"].toString().toLocal8Bit().data());
-
-                DOCKING_GOAL_TH = obj_docking["DOCKING_GOAL_TH"].toString().toDouble();
-                printf("[CONFIG] DOCKING_GOAL_TH, %s\n", obj_docking["DOCKING_GOAL_TH"].toString().toLocal8Bit().data());
-
-                DOCKING_EXTENDED_CONTROL_TIME = obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toDouble();
-                printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_docking["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
-
-                DOCKING_V_DEADZONE = obj_docking["DOCKING_V_DEADZONE"].toString().toDouble();
-                printf("[CONFIG] DOCKING_V_DEADZONE, %s\n", obj_docking["DOCKING_V_DEADZONE"].toString().toLocal8Bit().data());
-
-                DOCKING_W_DEADZONE = obj_docking["DOCKING_W_DEADZONE"].toString().toDouble();
-                printf("[CONFIG] DOCKING_W_DEADZONE, %s\n", obj_docking["DOCKING_W_DEADZONE"].toString().toLocal8Bit().data());
-            }*/
-
             // complete
             config_file.close();
             printf("[CONFIG] %s, load successed\n", config_path.toLocal8Bit().data());
@@ -364,12 +341,6 @@ void CONFIG::load()
 
                 CAM_SERIAL_NUMBER_1 = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
                 printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
-            }
-
-            QJsonObject obj_lidar = obj["lidar"].toObject();
-            {
-                USE_S3 = obj_lidar["USE_S3"].toString().toInt();
-                printf("[CONFIG] USE_S3, %s\n", obj_lidar["USE_S3"].toString().toLocal8Bit().data());
             }
 
             // complete

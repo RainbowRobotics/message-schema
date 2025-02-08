@@ -21,7 +21,7 @@ CAM::~CAM()
 void CAM::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[CAM] simulation mode\n");
         return;
@@ -151,7 +151,7 @@ void CAM::grab_loop()
                 if(fs->depthFrame() != nullptr)
                 {
                     uint64_t ts = fs->depthFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get point cloud
                     ob::PointCloudFilter point_cloud;
@@ -221,7 +221,7 @@ void CAM::grab_loop()
                     }
 
                     uint64_t ts = fs->colorFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get color image
                     std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
@@ -369,7 +369,7 @@ void CAM::grab_loop()
                 if(fs->depthFrame() != nullptr)
                 {
                     uint64_t ts = fs->depthFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get point cloud
                     ob::PointCloudFilter point_cloud;
@@ -439,7 +439,7 @@ void CAM::grab_loop()
                     }
 
                     uint64_t ts = fs->colorFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get color image
                     std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
@@ -502,7 +502,7 @@ void CAM::grab_loop()
                 if(fs->depthFrame() != nullptr)
                 {
                     uint64_t ts = fs->depthFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get point cloud
                     ob::PointCloudFilter point_cloud;
@@ -572,7 +572,7 @@ void CAM::grab_loop()
                     }
 
                     uint64_t ts = fs->colorFrame()->systemTimeStamp();
-                    double t = (double)ts/1000.0 - st_time_for_get_time;
+                    double t = (double)ts/1000.0;
 
                     // get color image
                     std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();

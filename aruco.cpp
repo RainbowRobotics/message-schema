@@ -18,7 +18,7 @@ ARUCO::~ARUCO()
 void ARUCO::init()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[ARUCO] simulation mode\n");
         return;

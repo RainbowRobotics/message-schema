@@ -31,7 +31,7 @@ MOBILE::~MOBILE()
 void MOBILE::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[MOBILE] simulation mode\n");
         return;
@@ -854,7 +854,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &id_l, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -881,7 +881,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &gear_ratio, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -908,7 +908,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &wheel_radius, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -935,7 +935,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -962,7 +962,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w_acc, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -992,7 +992,7 @@ void MOBILE::motor_on()
 
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -1017,7 +1017,7 @@ void MOBILE::motor_off()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1056,7 +1056,7 @@ void MOBILE::move(double vx, double vy, double wz)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1089,7 +1089,7 @@ void MOBILE::move_linear(double d, double v)
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1109,7 +1109,7 @@ void MOBILE::stop_charge()
     send_byte[6] = 0x00;
     send_byte[7] = 130; // cmd stop charge
     send_byte[24] = 0x25;
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1142,7 +1142,7 @@ void MOBILE::move_rotate(double th, double w)
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1164,7 +1164,7 @@ void MOBILE::led(int target, int mode)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1189,7 +1189,7 @@ void MOBILE::time_sync()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }

@@ -1642,7 +1642,7 @@ void AUTOCONTROL::b_loop_pp()
                 dmove.method = "pp";
                 dmove.result = "fail";
                 dmove.message = "already goal";
-                dmove.time = get_time0();
+                dmove.time = get_time();
 
                 Q_EMIT signal_move(dmove);
 
@@ -1699,7 +1699,7 @@ void AUTOCONTROL::b_loop_pp()
             dmove.method = "pp";
             dmove.result = "fail";
             dmove.message = "something wrong";
-            dmove.time = get_time0();
+            dmove.time = get_time();
 
             Q_EMIT signal_move(dmove);
 
@@ -1722,7 +1722,7 @@ void AUTOCONTROL::b_loop_pp()
             dmove.method = "pp";
             dmove.result = "fail";
             dmove.message = "something wrong (not ready)";
-            dmove.time = get_time0();
+            dmove.time = get_time();
 
             Q_EMIT signal_move(dmove);
 
@@ -2151,7 +2151,7 @@ void AUTOCONTROL::b_loop_pp()
                     dmove.method = "pp";
                     dmove.result = "success";
                     dmove.message = "very good";
-                    dmove.time = get_time0();
+                    dmove.time = get_time();
 
                     Q_EMIT signal_move(dmove);
 
@@ -2481,7 +2481,7 @@ void AUTOCONTROL::b_loop_pp()
         dmove.method = "pp";
         dmove.result = "success";
         dmove.message = "stop";
-        dmove.time = get_time0();
+        dmove.time = get_time();
 
         logger->write_log("[AUTO] b_loop_pp stop");
 

@@ -3,8 +3,8 @@
 
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
-    , main(parent)
     , reconnect_timer(this)
+    , main(parent)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
@@ -47,27 +47,17 @@ QString COMM_FMS::get_multi_state()
 
 void COMM_FMS::init()
 {
-    if(!config->SIM_MODE)
-    {
-        return;
-    }
-
     // make robot id
     QString _robot_id;
-    _robot_id.sprintf("R_%lld", (long long)(get_time0()*1000));
+    _robot_id.sprintf("R_%lld", (long long)(get_time()*1000));
 
     // update robot id
     robot_id = _robot_id;
     printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
 
-    Q_EMIT signal_regist_id(_robot_id);
-
     // start reconnect loop
-    if(config->USE_FMS)
-    {
-        reconnect_timer.start(3000);
-        printf("[COMM_FMS] start reconnect timer\n");
-    }
+    reconnect_timer.start(3000);
+    printf("[COMM_FMS] start reconnect timer\n");
 }
 
 void COMM_FMS::reconnect_loop()
@@ -77,16 +67,6 @@ void COMM_FMS::reconnect_loop()
         QString server_addr;
         server_addr.sprintf("ws://%s:12334", config->SERVER_IP.toLocal8Bit().data());
         client.open(QUrl(server_addr));
-
-        reconnect_cnt++;
-
-        /*
-        if(reconnect_cnt > 5)
-        {
-            reconnect_timer.stop();
-            printf("[COMM_FMS] server not opened, give up reconnect\n");
-        }
-        */
     }
 }
 
@@ -853,7 +833,7 @@ void COMM_FMS::slot_send_info()
     QString cur_node_id = _main->last_node_id;
     _main->mtx.unlock();
 
-    double time = get_time0();
+    double time = get_time();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();        
     Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
