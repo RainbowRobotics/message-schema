@@ -86,6 +86,7 @@ public:
     int USE_EARLYSTOP = 0;
     int USE_LVX = 0;
     int USE_COOP = 0;
+    int USE_MULTI = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
     double DRIVE_GOAL_D = 0.05;    

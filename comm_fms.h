@@ -13,6 +13,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
+#include "docking.h"
 #include "lvx_loc.h"
 
 // qt
@@ -30,9 +31,6 @@ public:
     explicit COMM_FMS(QObject *parent = nullptr);
     ~COMM_FMS();
     std::mutex mtx;
-    QWebSocket client;
-    QTimer reconnect_timer;
-    int reconnect_cnt = 0;
 
     // other modules
     QObject *main = NULL;
@@ -44,9 +42,13 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
+    DOCKING *dctrl = NULL;
     LVX_LOC *lvx = NULL;
 
     // vars    
+    QWebSocket client;
+    QTimer reconnect_timer;
+    int reconnect_cnt = 0;
     std::atomic<bool> is_connected = {false};
     std::atomic<double> last_send_time = {0};
     QString robot_id = "";

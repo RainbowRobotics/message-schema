@@ -57,7 +57,7 @@ public:
 
     void init();
     void stop();
-    void change();
+    void change();    
     void set_goal(QString goal_id);
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_pp(std::vector<QString> node_path, int preset);
@@ -121,10 +121,13 @@ public:
     std::atomic<bool> is_multi = {false};
     QString multi_req = "none"; // none, req_path, recv_path
 
+    // for rrs
+    DATA_MOVE last_move_info;
+
 Q_SIGNALS:
     void signal_global_path_updated();
     void signal_local_path_updated();
-    void signal_move(DATA_MOVE dmove);
+    void signal_move_response(DATA_MOVE msg);
 
 };
 

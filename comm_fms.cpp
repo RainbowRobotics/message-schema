@@ -622,7 +622,7 @@ void COMM_FMS::slot_load(DATA_LOAD dload)
         QString map_name = dload.map_name;
         MainWindow* _main = (MainWindow*)main;
 
-        QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + map_name;
+        QString load_dir = QDir::homePath() + "/maps/" + map_name;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())

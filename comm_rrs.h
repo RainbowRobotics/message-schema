@@ -18,6 +18,8 @@
 #include "obsmap.h"
 #include "autocontrol.h"
 #include "docking.h"
+#include "lvx_loc.h"
+
 // sio
 #include <sio_client.h>
 #define BIND_EVENT(IO,EV,FN) IO->on(EV,FN)
@@ -52,15 +54,14 @@ public:
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
     DOCKING *dctrl = NULL;
+    LVX_LOC *lvx = NULL;
 
-    QString multi_state = "";
-
-    // vars
+    // vars    
     std::unique_ptr<sio::client> io;    
     std::atomic<int> last_send_kfrm_idx = {0};
-    MOVE_INFO last_move_info;
 
     // flags
+    QString multi_state = "";
     std::atomic<bool> is_connected = {false};
     std::atomic<double> last_send_status_time = {0};
     std::atomic<double> last_send_move_status_time = {0};
@@ -72,7 +73,6 @@ public:
     // interface func
     void init();
 
-    /* send slamnav status */
     // send status
     void send_status();
     void send_move_status();
@@ -110,45 +110,44 @@ private Q_SLOTS:
     void recv_vobs_closures(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 Q_SIGNALS:
-    void signal_move(DATA_MOVE dmove);
-    void signal_localization(DATA_LOCALIZATION dloc);
-    void signal_load(DATA_LOAD dload);
-    void signal_randomseq(DATA_RANDOMSEQ drandomseq);
-    void signal_mapping(DATA_MAPPING dmap);
-    void signal_dock(DATA_DOCK ddock);
-    void signal_view_lidar(DATA_VIEW_LIDAR dlidar);
-    void signal_view_path(DATA_VIEW_PATH dpath);
-    void signal_led(DATA_LED dled);
-    void signal_motor(DATA_MOTOR dmotor);
+    void signal_move(DATA_MOVE msg);
+    void signal_localization(DATA_LOCALIZATION msg);
+    void signal_load(DATA_LOAD msg);
+    void signal_randomseq(DATA_RANDOMSEQ msg);
+    void signal_mapping(DATA_MAPPING msg);
+    void signal_dock(DATA_DOCK msg);
+    void signal_view_lidar(DATA_VIEW_LIDAR msg);
+    void signal_view_path(DATA_VIEW_PATH msg);
+    void signal_led(DATA_LED msg);
+    void signal_motor(DATA_MOTOR msg);
 
-    void signal_path(DATA_PATH dpath);
-    void signal_vobs_r(DATA_VOBS_R dvobs_r);
-    void signal_vobs_c(DATA_VOBS_C dvobs_c);
+    void signal_path(DATA_PATH msg);
+    void signal_vobs_r(DATA_VOBS_R msg);
+    void signal_vobs_c(DATA_VOBS_C msg);
 
 private Q_SLOTS:
+    void slot_move(DATA_MOVE msg);
+    void slot_localization(DATA_LOCALIZATION msg);
+    void slot_load(DATA_LOAD msg);
+    void slot_randomseq(DATA_RANDOMSEQ msg);
+    void slot_mapping(DATA_MAPPING msg);
+    void slot_dock(DATA_DOCK msg);
+    void slot_view_lidar(DATA_VIEW_LIDAR msg);
+    void slot_view_path(DATA_VIEW_PATH msg);
+    void slot_led(DATA_LED msg);
+    void slot_motor(DATA_MOTOR msg);
 
-    void slot_move(DATA_MOVE dmove);
-    void slot_localization(DATA_LOCALIZATION dloc);
-    void slot_load(DATA_LOAD dload);
-    void slot_randomseq(DATA_RANDOMSEQ drandomseq);
-    void slot_mapping(DATA_MAPPING dmap);
-    void slot_dock(DATA_DOCK ddock);
-    void slot_view_lidar(DATA_VIEW_LIDAR dlidar);
-    void slot_view_path(DATA_VIEW_PATH dpath);
-    void slot_led(DATA_LED dled);
-    void slot_motor(DATA_MOTOR dmotor);
-
-    void slot_path(DATA_PATH dpath);
-    void slot_vobs_r(DATA_VOBS_R dvobs_r);
-    void slot_vobs_c(DATA_VOBS_C dvobs_c);
+    void slot_path(DATA_PATH msg);
+    void slot_vobs_r(DATA_VOBS_R msg);
+    void slot_vobs_c(DATA_VOBS_C msg);
 
     /* send command response */
-    void send_move_response(DATA_MOVE dmove);
-    void send_localization_response(DATA_LOCALIZATION dloc);
-    void send_load_response(DATA_LOAD dload);
-    void send_randomseq_response(DATA_RANDOMSEQ drandomseq);
-    void send_mapping_response(DATA_MAPPING result);
-    void send_dock_response(DATA_DOCK ddock);
+    void send_move_response(DATA_MOVE msg);
+    void send_localization_response(DATA_LOCALIZATION msg);
+    void send_load_response(DATA_LOAD msg);
+    void send_randomseq_response(DATA_RANDOMSEQ msg);
+    void send_mapping_response(DATA_MAPPING msg);
+    void send_dock_response(DATA_DOCK msg);
 };
 
 #endif // COMM_RRS_H
