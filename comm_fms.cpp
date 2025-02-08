@@ -639,6 +639,13 @@ void COMM_FMS::slot_load(DATA_LOAD dload)
 
             _main->map_dir = load_dir;
             unimap->load_map(load_dir);
+
+            if(config->USE_LVX)
+            {
+                QString path_3d_map = load_dir + "/map.las";
+                lvx->map_load(path_3d_map);
+            }
+
             _main->all_update();
             _main->set_mapping_view();
 

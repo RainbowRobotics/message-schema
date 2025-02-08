@@ -11,7 +11,7 @@
     "control": {
         "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
         "DRIVE_GOAL_APPROACH_GAIN": "1.0",
-        "DRIVE_GOAL_D": "0.15",
+        "DRIVE_GOAL_D": "0.1",
         "DRIVE_GOAL_TH": "3.0",
         "DRIVE_V_DEADZONE": "0.02",
         "DRIVE_W_DEADZONE": "1.0"
@@ -25,10 +25,12 @@
         "USE_CAM": "0",
         "USE_RTSP": "0",
         "USE_RRS": "0",
-        "USE_FMS": "1",
+        "USE_FMS": "0",
         "USE_QTUI": "0",
         "USE_ARUCO": "0",
-        "USE_EARLYSTOP": "0"
+        "USE_EARLYSTOP": "0",
+        "USE_LVX": "0",
+        "USE_COOP": "0",
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
@@ -59,7 +61,7 @@
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.2",
         "LOC_ICP_MAX_FEATURE_NUM": "1000",
-        "LOC_ICP_ODO_FUSION_RATIO": "0.8",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5",
         "LOC_SURFEL_NUM": "3",
         "LOC_SURFEL_RANGE": "0.15"
     },
@@ -107,5 +109,16 @@
     "robot": {
         "PLATFORM_NAME": "TT",
         "PLATFORM_TYPE": "SRV"
+    },
+    "lvx": {
+        "LVX_TF": "-0.2079,0.0,1.3079,0.0,0.0,90.0",
+        "LVX_FRM_DT": "0.1",
+        "LVX_MIN_RANGE": "1.0",
+        "LVX_MAX_RANGE": "40.0",
+        "LVX_MAX_FEATURE_NUM": "500",
+        "LVX_SURFEL_NN_NUM": "1",
+        "LVX_SURFEL_RANGE": "1.0",
+        "LVX_COST_THRESHOLD": "1.0",
+        "LVX_INLIER_CHECK_DIST": "0.3"        
     }
 }

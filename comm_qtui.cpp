@@ -52,12 +52,9 @@ QString COMM_QTUI::get_json(QJsonObject& json, QString key)
 }
 
 void COMM_QTUI::init()
-{
-    if(config->USE_QTUI)
-    {
-        reconnect_timer.start(3000);
-        printf("[COMM_UI] start reconnect timer\n");
-    }
+{    
+    reconnect_timer.start(3000);
+    printf("[COMM_UI] start reconnect timer\n");
 }
 
 void COMM_QTUI::reconnect_loop()
@@ -543,6 +540,9 @@ void COMM_QTUI::slot_mapload(double time, QString name)
         unimap->load_map(load_dir);
         _main->all_update();
 
+        QString path_3d_map = load_dir + "/map.las";
+        lvx->map_load(path_3d_map);
+
         if(unimap->is_loaded)
         {
             send_mapload_response(name, "success");
@@ -578,10 +578,11 @@ void COMM_QTUI::slot_localization_init(double time, double x, double y, double z
     }
 
     // manual init
-    slam->mtx.lock();
-    slam->cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
-    slam->mtx.unlock();
-
+    if(config->USE_LVX)
+    {
+        lvx->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
+    }
+    slam->set_cur_tf(se2_to_TF(Eigen::Vector3d(x, y, rz*D2R)));
     send_localization_response("init", "success");
 }
 

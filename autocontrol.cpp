@@ -1833,11 +1833,16 @@ void AUTOCONTROL::b_loop_pp()
                 err_th = deltaRad(tgt_xi[2], cur_xi[2]);
             }
 
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
             // goal check
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
             {
                 extend_dt = 0;
-                //pre_err_th = 0;
+                pre_err_th = 0;
                 //mobile->move(0, 0, 0);
 
                 fsm_state = AUTO_FSM_DRIVING;
@@ -2066,11 +2071,20 @@ void AUTOCONTROL::b_loop_pp()
             double ref_v = local_path.ref_v[cur_idx];
 
             // calc heading error
-            //double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
-            //double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
+            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
+
+            /*
             double dx = local_path.pos[tgt_idx][0] - cur_xi[0];
             double dy = local_path.pos[tgt_idx][1] - cur_xi[1];
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2])*2;
+            */
+
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
 
             // calc cross track error
             double cte = calc_cte(local_path.pose, cur_pos);
@@ -2137,6 +2151,10 @@ void AUTOCONTROL::b_loop_pp()
 
             // calc heading error
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
 
             // goal check
             if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)

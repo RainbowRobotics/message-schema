@@ -21,19 +21,21 @@
 #include "docking.h"
 #include "task.h"
 #include "sim.h"
+#include "lvx_loc.h"
 
 #include "comm_fms.h"
 #include "comm_rrs.h"
 #include "comm_qtui.h"
+#include "comm_coop.h"
 
 // qt
 #include <QMainWindow>
-#include <QMouseEvent>
 #include <QKeyEvent>
+#include <QMouseEvent>
+#include <QTouchEvent>
 #include <QTimer>
 #include <QProcess>
 #include <QMessageBox>
-#include <QGestureEvent>
 #include <QGraphicsOpacityEffect>
 
 QT_BEGIN_NAMESPACE
@@ -65,9 +67,11 @@ public:
     DOCKING dctrl;
     TASK task;    
     SIM sim;
+    LVX_LOC lvx;
     COMM_FMS comm_fms;
     COMM_RRS comm_rrs;
     COMM_QTUI comm_qtui;
+    COMM_COOP comm_coop;
 
     // system logger
     LOGGER system_logger;
@@ -83,16 +87,9 @@ public:
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
-    void set_mapping_view();
-
-    void handlePinchGesture(QPinchGesture* pinchGesture, QObject* object);
+    void set_mapping_view();    
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
-
-    void handleTouchEvent(QTouchEvent* touchEvent, QObject* object);
-    void viewer_camera_pan_control(double dx, double dy);
-    void viewer_camera_pan_control2(double dx, double dy);
-    void viewer_pan_screen(double dx, double dy,boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer,QWidget* widget);    
     
 public:
     Ui::MainWindow *ui;
@@ -233,6 +230,7 @@ public:
     void obs_plot();
     void ctrl_plot();
     void raw_plot();
+    void lvx_plot();
 
     void map_plot2();
     void topo_plot2();
