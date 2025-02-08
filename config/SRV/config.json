@@ -30,7 +30,7 @@
         "USE_ARUCO": "0",
         "USE_EARLYSTOP": "0",
         "USE_LVX": "0",
-        "USE_COOP": "0",
+        "USE_COOP": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
