@@ -255,7 +255,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
                     cv::fillPoly(_wall_map, pts, cv::Scalar(255));
 
-                    if(config->SIM_MODE == 0)
+                    if(config->USE_SIM == 0)
                     {
                         cv::fillPoly(_static_map, pts, cv::Scalar(255));
                     }
@@ -990,7 +990,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
 
     // for debug
     cv::Mat debug_img;
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         cv::cvtColor(obs_map, debug_img, cv::COLOR_GRAY2BGR);
     }
@@ -1054,7 +1054,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         close_set[uv0[1]*w + uv0[0]].push_back(cur);
 
         // for debug
-        if(config->SIM_MODE == 1)
+        if(config->USE_SIM == 1)
         {
             debug_img.ptr<cv::Vec3b>(uv0[1])[uv0[0]] = cv::Vec3b(0,255,0);
 

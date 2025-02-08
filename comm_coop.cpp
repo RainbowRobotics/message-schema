@@ -1,19 +1,19 @@
-#include "comm_cp.h"
+#include "comm_coop.h"
 #include "mainwindow.h"
 
-COMM_CP::COMM_CP(QObject *parent)
+COMM_COOP::COMM_COOP(QObject *parent)
     : QObject{parent}
     , main(parent)
     , reconnect_timer(this)
 {
-    connect(&client, &QWebSocket::connected, this, &COMM_CP::connected);
-    connect(&client, &QWebSocket::disconnected, this, &COMM_CP::disconnected);
+    connect(&client, &QWebSocket::connected, this, &COMM_COOP::connected);
+    connect(&client, &QWebSocket::disconnected, this, &COMM_COOP::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     connect(this, SIGNAL(signal_send_info()), this, SLOT(slot_send_info()));
 }
 
-COMM_CP::~COMM_CP()
+COMM_COOP::~COMM_COOP()
 {
     reconnect_timer.stop();
 
@@ -23,16 +23,16 @@ COMM_CP::~COMM_CP()
     }
 }
 
-QString COMM_CP::get_json(QJsonObject& json, QString key)
+QString COMM_COOP::get_json(QJsonObject& json, QString key)
 {
     return json[key].toString();
 }
 
-void COMM_CP::init()
+void COMM_COOP::init()
 {
     // make robot id
     QString _robot_id;
-    _robot_id.sprintf("R_%lld", (long long)(get_time0()*1000));
+    _robot_id.sprintf("R_%lld", (long long)(get_time()*1000));
 
     // update robot id
     robot_id = _robot_id;
@@ -43,7 +43,7 @@ void COMM_CP::init()
     printf("[COMM_CP] start reconnect timer\n");
 }
 
-void COMM_CP::reconnect_loop()
+void COMM_COOP::reconnect_loop()
 {
     if(is_connected == false)
     {
@@ -55,28 +55,28 @@ void COMM_CP::reconnect_loop()
     }
 }
 
-void COMM_CP::connected()
+void COMM_COOP::connected()
 {
     if(!is_connected)
     {
-        connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_CP::recv_message);
+        connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_COOP::recv_message);
         is_connected = true;
         printf("[COMM_CP] connected\n");
     }
 }
 
-void COMM_CP::disconnected()
+void COMM_COOP::disconnected()
 {
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_CP::recv_message);
+        disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_COOP::recv_message);
         printf("[COMM_CP] disconnected\n");
     }
 }
 
 // recv callback
-void COMM_CP::recv_message(const QByteArray &buf)
+void COMM_COOP::recv_message(const QByteArray &buf)
 {
     QString message = qUncompress(buf);
     QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
@@ -104,14 +104,14 @@ void COMM_CP::recv_message(const QByteArray &buf)
 }
 
 // send slots
-void COMM_CP::slot_send_info()
+void COMM_COOP::slot_send_info()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     QString state = "move";
 

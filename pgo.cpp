@@ -9,6 +9,17 @@ PGO::PGO()
     isam = gtsam::ISAM2(isam_params);
 }
 
+void PGO::clear()
+{
+    isam.clear();
+
+    gtsam::ISAM2Params isam_params;
+    isam_params.relinearizeThreshold = 0.1;
+    isam_params.relinearizeSkip = 1;
+
+    isam = gtsam::ISAM2(isam_params);
+}
+
 void PGO::add_node(int id, Eigen::Matrix4d dG, Eigen::Matrix4d G, double err)
 {
     if(id == 0)

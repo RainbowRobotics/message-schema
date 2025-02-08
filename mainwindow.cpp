@@ -17,11 +17,11 @@ MainWindow::MainWindow(QWidget *parent)
     , dctrl(this)
     , task(this)
     , sim(this)
-    , cfms(this)
-    , cms(this)
-    , cui(this)
-    , ccp(this)
     , lvx(this)
+    , comm_fms(this)
+    , comm_rrs(this)
+    , comm_qtui(this)
+    , comm_coop(this)
     , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -159,23 +159,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
-    connect(&ctrl, SIGNAL(signal_move_succeed(QString)), &cms, SLOT(slot_move_succeed(QString)));
-    connect(&ctrl, SIGNAL(signal_move_failed(QString)), &cms, SLOT(slot_move_failed(QString)));
 
     // for docking
     connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
     connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
     connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
-    connect(&dctrl, SIGNAL(signal_dock_succeed(QString)), &cms, SLOT(slot_dock_success(QString)));
-    connect(&dctrl, SIGNAL(signal_dock_failed(QString)), &cms, SLOT(slot_dock_failed(QString)));
-    connect(&dctrl, SIGNAL(signal_undock_succeed(QString)), &cms, SLOT(slot_undock_success(QString)));
-    connect(&dctrl, SIGNAL(signal_undock_failed(QString)), &cms, SLOT(slot_undock_failed(QString)));  
 
-    // for slam
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cms, SLOT(slot_localization_semiautoinit_succeed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cms, SLOT(slot_localization_semiautoinit_failed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_succeed(QString)), &cui, SLOT(slot_localization_semiautoinit_succeed(QString)));
-    connect(&slam, SIGNAL(signal_localization_semiautoinit_failed(QString)), &cui, SLOT(slot_localization_semiautoinit_failed(QString)));
+    // for response
+    connect(&dctrl, SIGNAL(signal_dock(DATA_DOCK)), &comm_rrs, SLOT(slot_dock(DATA_DOCK)));
+    connect(&ctrl, SIGNAL(signal_move(DATA_MOVE)), &comm_rrs, SLOT(slot_move(DATA_MOVE)));
+    connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
     connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
@@ -190,9 +183,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_TaskPause, SIGNAL(clicked()), this, SLOT(bt_TaskPause()));    
     connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
-    // for fms    
+    // for fms
     connect(ui->bt_SendMap, SIGNAL(clicked()), this, SLOT(bt_SendMap()));
-    connect(&cfms, SIGNAL(signal_regist_id(QString)), this, SLOT(slot_resist_id(QString)));
 
     // for log
     connect(&logger, SIGNAL(signal_write_log(QString, QString)), this, SLOT(slot_write_log(QString, QString)));
@@ -518,7 +510,7 @@ void MainWindow::init_modules()
     config.load();
 
     // simulation check
-    if(config.SIM_MODE == 1)
+    if(config.USE_SIM)
     {
         this->setWindowTitle("SLAMNAV2 (SIMULATION MODE)");
 
@@ -619,8 +611,6 @@ void MainWindow::init_modules()
     dctrl.logger = &logger;
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
-    // dctrl.cam = &cam;
-    // dctrl.code = &code;
     dctrl.slam = &slam;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
@@ -656,66 +646,63 @@ void MainWindow::init_modules()
     task.mobile = &mobile;
 
     // coop client module init
-    ccp.config = &config;
-    ccp.logger = &logger;
-    ccp.mobile = &mobile;
-    ccp.slam = &slam;
-    ccp.unimap = &unimap;
-    ccp.obsmap = &obsmap;
-    ccp.ctrl = &ctrl;
-    ccp.lvx = &lvx;
+    comm_coop.config = &config;
+    comm_coop.logger = &logger;
+    comm_coop.mobile = &mobile;
+    comm_coop.slam = &slam;
+    comm_coop.unimap = &unimap;
+    comm_coop.obsmap = &obsmap;
+    comm_coop.ctrl = &ctrl;
+    comm_coop.lvx = &lvx;
     if(config.USE_COOP)
     {
-        ccp.init();
+        comm_coop.init();
     }
 
     // fms client module init
-    cfms.config = &config;
-    cfms.logger = &logger;
-    cfms.mobile = &mobile;
-    cfms.slam = &slam;
-    cfms.unimap = &unimap;
-    cfms.obsmap = &obsmap;
-    cfms.ctrl = &ctrl;
-    cfms.lvx = &lvx;
+    comm_fms.config = &config;
+    comm_fms.logger = &logger;
+    comm_fms.mobile = &mobile;
+    comm_fms.slam = &slam;
+    comm_fms.unimap = &unimap;
+    comm_fms.obsmap = &obsmap;
+    comm_fms.ctrl = &ctrl;
     if(config.USE_FMS)
     {
-        cfms.init();
+        comm_fms.init();
     }
 
     // socket.io client init
-    cms.config = &config;
-    cms.logger = &logger;
-    cms.mobile = &mobile;
-    cms.lidar = &lidar;
-    cms.cam = &cam;
-    cms.code = &code;
-    cms.slam = &slam;
-    cms.unimap = &unimap;
-    cms.obsmap = &obsmap;
-    cms.ctrl = &ctrl;
-    cms.dctrl = &dctrl;
-    cms.lvx = &lvx;
-    if(config.USE_WEB_UI)
+    comm_rrs.config = &config;
+    comm_rrs.logger = &logger;
+    comm_rrs.mobile = &mobile;
+    comm_rrs.lidar = &lidar;
+    comm_rrs.cam = &cam;
+    comm_rrs.code = &code;
+    comm_rrs.slam = &slam;
+    comm_rrs.unimap = &unimap;
+    comm_rrs.obsmap = &obsmap;
+    comm_rrs.ctrl = &ctrl;
+    comm_rrs.dctrl = &dctrl;
+    if(config.USE_RRS)
     {
-        cms.init();
+        comm_rrs.init();
     }
 
     // websocket ui init
-    cui.config = &config;
-    cui.logger = &logger;
-    cui.mobile = &mobile;
-    cui.lidar = &lidar;
-    cui.cam = &cam;
-    cui.code = &code;
-    cui.slam = &slam;
-    cui.unimap = &unimap;
-    cui.obsmap = &obsmap;
-    cui.ctrl = &ctrl;
-    cui.lvx = &lvx;
-    if(config.USE_QT_UI)
+    comm_qtui.config = &config;
+    comm_qtui.logger = &logger;
+    comm_qtui.mobile = &mobile;
+    comm_qtui.lidar = &lidar;
+    comm_qtui.cam = &cam;
+    comm_qtui.code = &code;
+    comm_qtui.slam = &slam;
+    comm_qtui.unimap = &unimap;
+    comm_qtui.obsmap = &obsmap;
+    comm_qtui.ctrl = &ctrl;
+    if(config.USE_QTUI)
     {
-        cui.init();
+        comm_qtui.init();
     }
 
     // start jog loop
@@ -726,9 +713,9 @@ void MainWindow::init_modules()
     watch_flag = true;
     watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
-    // start watchdog loop
+    // start communication loop
     comm_flag = true;
-    comm_thread = new std::thread(&MainWindow::comm_loop, this);
+    comm_thread = new std::thread(&MainWindow::comm_loop, this);    
 }
 
 void MainWindow::setup_vtk()
@@ -1835,7 +1822,7 @@ void MainWindow::bt_JogReleased()
 // for mapping and localization
 void MainWindow::bt_MapBuild()
 {
-    if(config.SIM_MODE == 1)
+    if(config.USE_SIM == 1)
     {
         logger.write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
         return;
@@ -1860,7 +1847,7 @@ void MainWindow::bt_MapBuild()
 
 void MainWindow::bt_MapSave()
 {
-    if(config.SIM_MODE == 1)
+    if(config.USE_SIM == 1)
     {
         logger.write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
         return;
@@ -2010,7 +1997,7 @@ void MainWindow::bt_LocInit()
 
     slam.set_cur_tf(se2_to_TF(pick.r_pose));
 
-    if(config.SIM_MODE)
+    if(config.USE_SIM)
     {
         bt_SimInit();
     }
@@ -3115,7 +3102,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-
+    mobile.motor_off();
 }
 
 void MainWindow::bt_TestLed()
@@ -3354,12 +3341,6 @@ void MainWindow::bt_SendMap()
     }
 }
 
-void MainWindow::slot_resist_id(QString id)
-{
-    QString str = "[ID] " + id;
-    ui->lb_RobotId->setText(str);
-}
-
 void MainWindow::slot_sim_random_init(QString seed)
 {
     if(unimap.is_loaded == false)
@@ -3513,67 +3494,89 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        // for 50ms loop
+        // for 100ms loop
         if(cnt % 10 == 0)
         {
-            if(ccp.is_connected)
+            if(comm_coop.is_connected)
             {
-                Q_EMIT ccp.signal_send_info();
+                Q_EMIT comm_coop.signal_send_info();
+            }
+        }
+
+        // for variable loop
+        int val1 = (int)(10/(int)lidar_view_hz);
+        if(val1 > 0)
+        {
+            if(cnt % val1 == 0)
+            {
+                if(comm_rrs.is_connected)
+                {
+                    comm_rrs.send_lidar();
+                }
+            }
+        }
+
+        int val2 = (int)(10/(int)path_view_hz);
+        if(val2 > 0)
+        {
+            if(cnt % val2 == 0)
+            {
+                if(comm_rrs.is_connected)
+                {
+                    if(is_global_path_update2)
+                    {
+                        is_global_path_update2 = false;
+                        comm_rrs.send_global_path();
+                    }
+
+                    if(is_local_path_update2)
+                    {
+                        is_local_path_update2 = false;
+                        comm_rrs.send_local_path();
+                    }
+                }
             }
         }
 
         // for 100ms loop        
         if(cnt % 10 == 0)
         {
-            if(cfms.is_connected)
+            if(comm_fms.is_connected)
             {                
-                Q_EMIT cfms.signal_send_info();
+                Q_EMIT comm_fms.signal_send_info();
+            }
+            if(comm_rrs.is_connected)
+            {
+                comm_rrs.send_move_status();
             }
         }
 
         // for 500ms loop
         if(cnt % 50 == 0)
         {
-            if(cms.is_connected)
+            if(comm_rrs.is_connected)
             {
-                cms.send_status();
+                comm_rrs.send_status();
             }
 
-            if(cui.is_connected)
+            if(comm_qtui.is_connected)
             {
-                Q_EMIT cui.signal_send_status();
+                Q_EMIT comm_qtui.signal_send_status();
             }
         }
 
         // for 500ms loop
         if(cnt % 50 == 0)
         {
-            if(cms.is_connected)
+            if(comm_rrs.is_connected)
             {
-                cms.send_mapping_cloud();
-
-                if(is_global_path_update2)
-                {
-                    is_global_path_update2 = false;
-                    cms.send_global_path();
-                }
-
-                if(is_local_path_update2)
-                {
-                    is_local_path_update2 = false;
-                    cms.send_local_path();
-                }
+                comm_rrs.send_mapping_cloud();
             }
         }
 
         // for 1000ms loop
         if(cnt % 100 == 0)
         {
-            if(cms.is_connected)
-            {
-                cms.send_lidar();
-            }
-
             // open video writer
             if(config.USE_RTSP && config.USE_CAM)
             {
@@ -3656,8 +3659,6 @@ void MainWindow::comm_loop()
         if(delta_loop_time < dt)
         {
             precise_sleep(dt-delta_loop_time);
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -3978,11 +3979,11 @@ void MainWindow::watch_loop()
             }
 
             // check multi
-            if(last_fms_connection == true && cfms.is_connected == false)
+            if(last_fms_connection == true && comm_fms.is_connected == false)
             {
                 printf("[WATCH] fms disconnect dectected\n");
             }
-            last_fms_connection = cfms.is_connected;
+            last_fms_connection = comm_fms.is_connected;
 
             QString fms_info_str = "[FMS_INFO]\n" + config.SERVER_ID + "\n" +  config.SERVER_IP;
             ui->lb_FmsInfo->setText(fms_info_str);
@@ -5148,6 +5149,19 @@ void MainWindow::raw_plot()
     ui->lb_QueInfo->setText(que_info_str);
 
     // plot auto info
+    QString _multi_state = "";
+    if(comm_fms.is_connected)
+    {
+        _multi_state = comm_fms.get_multi_state();
+    }
+    else if(comm_rrs.is_connected)
+    {
+        _multi_state = comm_rrs.get_multi_state();
+    }
+    else
+    {
+        _multi_state = "no connection";
+    }
     QString auto_info_str;
     auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
                           AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
@@ -5156,8 +5170,9 @@ void MainWindow::raw_plot()
                           ctrl.get_obs_condition().toLocal8Bit().data(),
                           (bool)ctrl.is_multi ? "1" : "0",
                           ctrl.get_multi_req().toLocal8Bit().data(),
-                          cfms.get_multi_state().toLocal8Bit().data());
+                          _multi_state.toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
+
 
     // plot cam
     if(cam.is_connected[0])
@@ -5327,7 +5342,12 @@ void MainWindow::plot_loop()
     if(ui->ckb_PlotEnable->isChecked() == false)
     {
         return;
-    }
+    }//
+    //
+    //
+    //
+    //
+    //
 
     plot_timer.stop();
 

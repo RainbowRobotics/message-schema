@@ -31,7 +31,7 @@ MOBILE::~MOBILE()
 void MOBILE::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[MOBILE] simulation mode\n");
         return;
@@ -190,11 +190,11 @@ QString MOBILE::get_status_text()
 {
     MOBILE_STATUS mobile_status = get_status();
     QString str;
-    str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
+    str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
                 mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
                 (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
                 mobile_status.charge_state, mobile_status.power_state, mobile_status.emo_state, mobile_status.remote_state,
-                mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
+                mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                 mobile_status.power, mobile_status.total_power,
                 mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
     return str;
@@ -220,11 +220,11 @@ QString MOBILE::get_status_text()
 {
     MOBILE_STATUS mobile_status = get_status();
     QString str;
-    str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
+    str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
                 mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
                 (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
                 mobile_status.charge_state, mobile_status.power_state, mobile_status.emo_state, mobile_status.remote_state,
-                mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
+                mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                 mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                 mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                 mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z);
@@ -426,6 +426,8 @@ void MOBILE::recv_loop()
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
 
+                int bat_percent = cal_voltage(bat_out);
+
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
                 mobile_pose.t = mobile_t + offset_t;
@@ -452,6 +454,7 @@ void MOBILE::recv_loop()
                 mobile_status.bat_in = bat_in;
                 mobile_status.bat_out = bat_out;
                 mobile_status.bat_current = bat_cur;
+                mobile_status.bat_percent = bat_percent;
                 mobile_status.power = power;
                 mobile_status.total_power = total_used_power;
                 mobile_status.recv_tick = recv_tick;
@@ -712,6 +715,9 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
+                int bat_percent = cal_voltage(bat_out);
+//                std::cout<<"bat_percent : "<<bat_percent;
+
                 // calc time offset
                 if(is_sync && get_time() > sync_st_time + 0.1)
                 {
@@ -753,6 +759,7 @@ void MOBILE::recv_loop()
                 mobile_status.bat_in = bat_in;
                 mobile_status.bat_out = bat_out;
                 mobile_status.bat_current = bat_cur;
+                mobile_status.bat_percent = bat_percent;
                 mobile_status.power = power;
                 mobile_status.total_power = total_used_power;
                 mobile_status.charge_current = charge_current;
@@ -784,6 +791,9 @@ void MOBILE::recv_loop()
                 imu.rx = r[0];
                 imu.ry = r[1];
                 imu.rz = r[2];
+
+
+
 
                 // storing
                 mtx.lock();
@@ -844,7 +854,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &id_l, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -871,7 +881,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &gear_ratio, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -898,7 +908,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &wheel_radius, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -925,7 +935,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -952,7 +962,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w_acc, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -982,7 +992,7 @@ void MOBILE::motor_on()
 
         send_byte[24] = 0x25;
 
-        if(is_connected && config->SIM_MODE == 0)
+        if(is_connected && config->USE_SIM == 0)
         {
             msg_que.push(send_byte);
         }
@@ -1007,7 +1017,7 @@ void MOBILE::motor_off()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1046,7 +1056,7 @@ void MOBILE::move(double vx, double vy, double wz)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1079,7 +1089,7 @@ void MOBILE::move_linear(double d, double v)
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1099,7 +1109,7 @@ void MOBILE::stop_charge()
     send_byte[6] = 0x00;
     send_byte[7] = 130; // cmd stop charge
     send_byte[24] = 0x25;
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1132,7 +1142,7 @@ void MOBILE::move_rotate(double th, double w)
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1154,7 +1164,7 @@ void MOBILE::led(int target, int mode)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1179,7 +1189,7 @@ void MOBILE::time_sync()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->SIM_MODE == 0)
+    if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
     }
@@ -1203,4 +1213,43 @@ void MOBILE::send_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("[MOBILE] send loop stop\n");
+}
+
+// 입력된 전압에 대응하는 용량 찾기
+int MOBILE::cal_voltage(float voltage)
+{
+//    float f_voltage = voltage.toFloat();
+
+    // 정확히 일치하는 전압을 찾기
+    float capacity = -1;
+    for (const auto& entry : volt_lookup_data)
+    {
+        if (voltage == entry.voltage)
+        {
+            capacity = entry.capacity;
+            break;
+        }
+    }
+
+    // 정확히 일치하는 값이 없으면 선형 보간법을 사용
+    if (capacity == -1)
+    {
+        for (int i = 0; i < volt_lookup_data.size() - 1; ++i)
+        {
+            if (voltage > volt_lookup_data[i].voltage && voltage < volt_lookup_data[i + 1].voltage)
+            {
+                // 선형 보간법
+                double x1 = volt_lookup_data[i].voltage;
+                double y1 = volt_lookup_data[i].capacity;
+                double x2 = volt_lookup_data[i + 1].voltage;
+                double y2 = volt_lookup_data[i + 1].capacity;
+
+                // 선형 보간 공식으로 용량 계산
+                capacity = static_cast<int>(y1 + (voltage - x1) * (y2 - y1) / (x2 - x1));
+                break;
+            }
+        }
+    }
+
+    return capacity;
 }

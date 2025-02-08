@@ -1,5 +1,5 @@
-#ifndef COMM_CP_H
-#define COMM_CP_H
+#ifndef COMM_COOP_H
+#define COMM_COOP_H
 
 // global defines
 #include "global_defines.h"
@@ -23,12 +23,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class COMM_CP : public QObject
+class COMM_COOP : public QObject
 {
     Q_OBJECT
 public:
-    explicit COMM_CP(QObject *parent = nullptr);
-    ~COMM_CP();
+    explicit COMM_COOP(QObject *parent = nullptr);
+    ~COMM_COOP();
 
     std::mutex mtx;
     QWebSocket client;
@@ -68,4 +68,4 @@ private Q_SLOTS:
 
 };
 
-#endif // COMM_CP_H
+#endif // COMM_COOP_H

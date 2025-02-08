@@ -33,7 +33,7 @@ LIDAR_2D::~LIDAR_2D()
 void LIDAR_2D::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[LIDAR] simulation mode\n");
         return;
@@ -181,8 +181,7 @@ void LIDAR_2D::grab_loop_f()
     }
     logger->write_log("[LIDAR] driver init success", "Green", true, false);
 
-    int baudrate = 256000;
-    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", baudrate));
+    sl::IChannel* channel = (*sl::createSerialPortChannel("/dev/ttyRP0", 256000));
     logger->write_log("[LIDAR] channel init success", "Green", true, false);
 
     if(!channel->open())
@@ -302,10 +301,11 @@ void LIDAR_2D::grab_loop_f()
             std::vector<MOBILE_POSE> pose_storage = mobile->get_pose_storage();
 
             // get lidar raw data
-            const int step = 1;
             std::vector<double> times;
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> raw_pts;
+
+            const int step = 1;
             for(size_t p = 0; p < count; p+=step)
             {
                 if(nodes[p].dist_mm_q2 == 0)

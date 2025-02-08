@@ -3,6 +3,7 @@
 
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // modules
 #include "config.h"
@@ -20,11 +21,12 @@
 #include "docking.h"
 #include "task.h"
 #include "sim.h"
-#include "comm_fms.h"
-#include "comm_ms.h"
-#include "comm_ui.h"
-#include "comm_cp.h"
 #include "lvx_loc.h"
+
+#include "comm_fms.h"
+#include "comm_rrs.h"
+#include "comm_qtui.h"
+#include "comm_coop.h"
 
 // qt
 #include <QMainWindow>
@@ -65,11 +67,11 @@ public:
     DOCKING dctrl;
     TASK task;    
     SIM sim;
-    COMM_FMS cfms;
-    COMM_MS cms;
-    COMM_UI cui;
-    COMM_CP ccp;
     LVX_LOC lvx;
+    COMM_FMS comm_fms;
+    COMM_RRS comm_rrs;
+    COMM_QTUI comm_qtui;
+    COMM_COOP comm_coop;
 
     // system logger
     LOGGER system_logger;
@@ -209,6 +211,10 @@ public:
 
     // aruco
     std::atomic<double> last_plot_aruco_t = {0};
+
+    // for variable loop
+    std::atomic<int> lidar_view_hz = {1};
+    std::atomic<int> path_view_hz = {2};
 
     // for touch event
     double lastScaleFactor = 1.0;
@@ -364,7 +370,6 @@ public Q_SLOTS:
 
     // for fms
     void bt_SendMap();
-    void slot_resist_id(QString id);
     void slot_sim_random_init(QString seed);
     void slot_sim_random_seq();
 

@@ -471,8 +471,12 @@ struct MOBILE_STATUS
     float bat_in = 0;
     float bat_out = 0;
     float bat_current = 0;
+    uint8_t bat_percent = 0;
     float power = 0;
     float total_power = 0;
+
+    float charge_current = 0;
+    float contact_voltage = 0;
 
     float core_temp0 = 0;
     float core_temp1 = 0;
@@ -521,6 +525,7 @@ struct MOBILE_STATUS
     float bat_in = 0;
     float bat_out = 0;
     float bat_current = 0;
+    uint8_t bat_percent = 0;
     float power = 0;
     float total_power = 0;
 

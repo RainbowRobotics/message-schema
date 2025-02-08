@@ -1,9 +1,10 @@
-#ifndef COMM_UI_H
-#define COMM_UI_H
+#ifndef COMM_QTUI_H
+#define COMM_QTUI_H
 
 // global defines
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // other modules
 #include "config.h"
@@ -26,12 +27,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
-class COMM_UI : public QObject
+class COMM_QTUI : public QObject
 {
     Q_OBJECT
 public:
-    explicit COMM_UI(QObject *parent = nullptr);
-    ~COMM_UI();
+    explicit COMM_QTUI(QObject *parent = nullptr);
+    ~COMM_QTUI();
     std::mutex mtx;
 
     // other modules
@@ -149,4 +150,4 @@ public Q_SLOTS:
 
 };
 
-#endif // COMM_UI_H
+#endif // COMM_QTUI_H

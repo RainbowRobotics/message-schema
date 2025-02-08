@@ -38,7 +38,7 @@ void LVX_LOC::init()
 void LVX_LOC::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM)
     {
         printf("[LVX] simulation mode\n");
         return;

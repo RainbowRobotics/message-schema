@@ -343,7 +343,13 @@ void DOCKING::a_loop()
                 qDebug() << "vmark stat time" << vmark_start_time;
                 if(get_time() - vmark_start_time > 10.0)
                 {
-                    Q_EMIT signal_dock_failed(failed_reason);
+                    DATA_DOCK ddock;
+                    ddock.command = "dock";
+                    ddock.result = "fail";
+                    ddock.message = failed_reason;
+                    ddock.time = get_time();
+
+                    Q_EMIT signal_dock(ddock);
                 }
             }
         }
@@ -396,9 +402,15 @@ void DOCKING::a_loop()
             qDebug() << "motor cur" << ms.cur_m0 << ms.cur_m1;
             if (ms.charge_state == 3 && ms.cur_m0 < 60 && ms.cur_m1 < 60)
             {
-                qDebug() << "now dock process done";
                 fsm_state = DOCKING_FSM_COMPLETE;
-                Q_EMIT signal_dock_succeed("success");
+
+                DATA_DOCK ddock;
+                ddock.command = "dock";
+                ddock.result = "success";
+                ddock.message = "";
+                ddock.time = get_time();
+
+                Q_EMIT signal_dock(ddock);
             }
             else if (get_time() - wait_start_time > 8.0)
             {
@@ -416,7 +428,14 @@ void DOCKING::a_loop()
                     {
                         qDebug() << "slamnav2 notconeected";
                         failed_reason = "NOT CONNECTED";
-                        Q_EMIT signal_dock_failed(failed_reason);
+
+                        DATA_DOCK ddock;
+                        ddock.command = "dock";
+                        ddock.result = "fail";
+                        ddock.message = failed_reason;
+                        ddock.time = get_time();
+
+                        Q_EMIT signal_dock(ddock);
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
@@ -1063,7 +1082,15 @@ void DOCKING::b_loop()
             if(get_time() - undock_time > t )
             {
                 printf("[DOCKING] UNDOCK SUCCESS\n");
-                Q_EMIT signal_undock_succeed("");
+
+                DATA_DOCK ddock;
+                ddock.command = "undock";
+                ddock.result = "success";
+                ddock.message = "";
+                ddock.time = get_time();
+
+                Q_EMIT signal_dock(ddock);
+
                 fsm_state == DOCKING_FSM_OFF;
             }
         }
@@ -1076,9 +1103,15 @@ void DOCKING::b_loop()
         else
         {
             printf("[DOCKING] UNDOCK FAILED\n");
-            Q_EMIT signal_undock_failed(failed_reason);
-        }
 
+            DATA_DOCK ddock;
+            ddock.command = "undock";
+            ddock.result = "fail";
+            ddock.message = failed_reason;
+            ddock.time = get_time();
+
+            Q_EMIT signal_dock(ddock);
+        }
 
         // for real time loop
         double cur_loop_time = get_time();
@@ -1095,8 +1128,8 @@ void DOCKING::b_loop()
             printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
         }
     }
-
 }
+
 bool DOCKING::undock()
 {
         int is_good_everything = is_everything_fine();
@@ -1129,6 +1162,4 @@ bool DOCKING::undock()
             undock_time = get_time();
             return true;
         }
-
-
 }

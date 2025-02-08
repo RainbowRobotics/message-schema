@@ -33,10 +33,10 @@ SOURCES += \
     autocontrol.cpp \
     cam.cpp \
     code_reader.cpp \
-    comm_cp.cpp \
+    comm_coop.cpp \
     comm_fms.cpp \
-    comm_ms.cpp \
-    comm_ui.cpp \
+    comm_qtui.cpp \
+    comm_rrs.cpp \
     docking.cpp \
     config.cpp \
     cv_to_qt.cpp \
@@ -63,10 +63,11 @@ HEADERS += \
     autocontrol.h \
     cam.h \
     code_reader.h \
-    comm_cp.h \
+    comm_coop.h \
+    comm_data.h \
     comm_fms.h \
-    comm_ms.h \
-    comm_ui.h \
+    comm_qtui.h \
+    comm_rrs.h \
     docking.h \
     config.h \
     cv_to_qt.h \

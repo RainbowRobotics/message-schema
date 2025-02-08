@@ -25,6 +25,7 @@ class PGO
 public:
     PGO();
 
+    void clear();
     void add_node(int id, Eigen::Matrix4d dG, Eigen::Matrix4d G, double err);
     void add_lc(int id0, int id1, Eigen::Matrix4d dG, double err);
     std::vector<Eigen::Matrix4d> get_optimal_poses();
