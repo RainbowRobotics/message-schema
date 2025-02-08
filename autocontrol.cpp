@@ -1637,7 +1637,14 @@ void AUTOCONTROL::b_loop_pp()
 
                 clean_up();
 
-                Q_EMIT signal_move_succeed("already goal");
+                DATA_MOVE dmove;
+                dmove.command = "goal";
+                dmove.method = "pp";
+                dmove.result = "fail";
+                dmove.message = "already goal";
+                dmove.time = get_time();
+
+                Q_EMIT signal_move(dmove);
 
                 mtx.lock();
                 last_cur_goal_state = "complete";
@@ -1687,8 +1694,16 @@ void AUTOCONTROL::b_loop_pp()
         {
             clean_up();
 
-            Q_EMIT signal_move_failed("something wrong");
-            logger->write_log("[AUTO] something wrong (failed)");
+            DATA_MOVE dmove;
+            dmove.command = "goal";
+            dmove.method = "pp";
+            dmove.result = "fail";
+            dmove.message = "something wrong";
+            dmove.time = get_time();
+
+            Q_EMIT signal_move(dmove);
+
+            logger->write_log("[AUTO] something wrong (fail)");
             fsm_state = AUTO_FSM_COMPLETE;
 
             mtx.lock();
@@ -1702,7 +1717,15 @@ void AUTOCONTROL::b_loop_pp()
         {
             clean_up();
 
-            Q_EMIT signal_move_failed("something wrong (not ready)");
+            DATA_MOVE dmove;
+            dmove.command = "goal";
+            dmove.method = "pp";
+            dmove.result = "fail";
+            dmove.message = "something wrong (not ready)";
+            dmove.time = get_time();
+
+            Q_EMIT signal_move(dmove);
+
             logger->write_log("[AUTO] something wrong (not ready)");
             fsm_state = AUTO_FSM_COMPLETE;
 
@@ -2123,7 +2146,14 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     clean_up();
 
-                    Q_EMIT signal_move_succeed("very good");
+                    DATA_MOVE dmove;
+                    dmove.command = "goal";
+                    dmove.method = "pp";
+                    dmove.result = "success";
+                    dmove.message = "very good";
+                    dmove.time = get_time();
+
+                    Q_EMIT signal_move(dmove);
 
                     fsm_state = AUTO_FSM_COMPLETE;
 
@@ -2446,7 +2476,13 @@ void AUTOCONTROL::b_loop_pp()
     {
         clean_up();
 
-        Q_EMIT signal_move_succeed("stopped");
+        DATA_MOVE dmove;
+        dmove.command = "goal";
+        dmove.method = "pp";
+        dmove.result = "success";
+        dmove.message = "stop";
+        dmove.time = get_time();
+
         logger->write_log("[AUTO] b_loop_pp stop");
 
         mtx.lock();

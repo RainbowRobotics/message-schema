@@ -4,6 +4,7 @@
 // global headers
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // other modules
 #include "config.h"
@@ -123,8 +124,7 @@ public:
 Q_SIGNALS:
     void signal_global_path_updated();
     void signal_local_path_updated();
-    void signal_move_succeed(QString message);
-    void signal_move_failed(QString message);
+    void signal_move(DATA_MOVE dmove);
 
 };
 

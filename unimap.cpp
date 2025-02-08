@@ -769,7 +769,7 @@ int UNIMAP::get_nodes_size()
 QString UNIMAP::gen_node_id()
 {
     QString res;
-    res.sprintf("N_%lld", (long long)(get_time0()*1000));
+    res.sprintf("N_%lld", (long long)(get_time()*1000));
     return res;
 }
 

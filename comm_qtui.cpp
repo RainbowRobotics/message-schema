@@ -1,14 +1,14 @@
-#include "comm_ui.h"
+#include "comm_qtui.h"
 #include "mainwindow.h"
 
-COMM_UI::COMM_UI(QObject *parent)
+COMM_QTUI::COMM_QTUI(QObject *parent)
     : QObject{parent}
     , main(parent)
     , reconnect_timer(this)
 {
     // for websocket
-    connect(&client, &QWebSocket::connected, this, &COMM_UI::connected);
-    connect(&client, &QWebSocket::disconnected, this, &COMM_UI::disconnected);
+    connect(&client, &QWebSocket::connected, this, &COMM_QTUI::connected);
+    connect(&client, &QWebSocket::disconnected, this, &COMM_QTUI::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     // connect recv signals -> recv slots
@@ -36,7 +36,7 @@ COMM_UI::COMM_UI(QObject *parent)
     connect(this, SIGNAL(signal_localization_stop(double)), this, SLOT(slot_localization_stop(double)));
 }
 
-COMM_UI::~COMM_UI()
+COMM_QTUI::~COMM_QTUI()
 {
     reconnect_timer.stop();
 
@@ -46,21 +46,21 @@ COMM_UI::~COMM_UI()
     }
 }
 
-QString COMM_UI::get_json(QJsonObject& json, QString key)
+QString COMM_QTUI::get_json(QJsonObject& json, QString key)
 {
     return json[key].toString();
 }
 
-void COMM_UI::init()
+void COMM_QTUI::init()
 {
-    if(config->USE_QT_UI)
+    if(config->USE_QTUI)
     {
         reconnect_timer.start(3000);
         printf("[COMM_UI] start reconnect timer\n");
     }
 }
 
-void COMM_UI::reconnect_loop()
+void COMM_QTUI::reconnect_loop()
 {
     if(is_connected == false)
     {
@@ -78,27 +78,27 @@ void COMM_UI::reconnect_loop()
     }
 }
 
-void COMM_UI::connected()
+void COMM_QTUI::connected()
 {
     if(!is_connected)
     {
         is_connected = true;
-        connect(&client, &QWebSocket::textMessageReceived, this, &COMM_UI::recv_message);
+        connect(&client, &QWebSocket::textMessageReceived, this, &COMM_QTUI::recv_message);
         printf("[COMM_UI] connected\n");
     }
 }
 
-void COMM_UI::disconnected()
+void COMM_QTUI::disconnected()
 {
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::textMessageReceived, this, &COMM_UI::recv_message);
+        disconnect(&client, &QWebSocket::textMessageReceived, this, &COMM_QTUI::recv_message);
         printf("[COMM_UI] disconnected\n");
     }
 }
 
-void COMM_UI::recv_message(QString message)
+void COMM_QTUI::recv_message(QString message)
 {
     std::cout << "[COMM_UI] recv:\n" << message.toStdString() << std::endl;
 
@@ -281,20 +281,20 @@ void COMM_UI::recv_message(QString message)
 }
 
 // recv slots
-void COMM_UI::slot_motorinit(double time)
+void COMM_QTUI::slot_motorinit(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MotorInit();
 }
 
-void COMM_UI::slot_move_jog(double time, double vx, double vy, double wz)
+void COMM_QTUI::slot_move_jog(double time, double vx, double vy, double wz)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->update_jog_values(vx, vy, wz*D2R);
     //mobile->move(vx, vy, wz*D2R);
 }
 
-void COMM_UI::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
+void COMM_QTUI::slot_move_target(double time, double x, double y, double z, double rz, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -354,7 +354,7 @@ void COMM_UI::slot_move_target(double time, double x, double y, double z, double
     }
 }
 
-void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString method)
+void COMM_QTUI::slot_move_goal(double time, QString node_id, int preset, QString method)
 {
     if(method == "pp")
     {
@@ -425,7 +425,7 @@ void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString m
     }
 }
 
-void COMM_UI::slot_move_pause(double time)
+void COMM_QTUI::slot_move_pause(double time)
 {
     ctrl->is_pause = true;
 
@@ -433,7 +433,7 @@ void COMM_UI::slot_move_pause(double time)
     send_move_pause_response(result);
 }
 
-void COMM_UI::slot_move_resume(double time)
+void COMM_QTUI::slot_move_resume(double time)
 {
     ctrl->is_pause = false;
 
@@ -441,7 +441,7 @@ void COMM_UI::slot_move_resume(double time)
     send_move_resume_response(result);
 }
 
-void COMM_UI::slot_move_stop(double time)
+void COMM_QTUI::slot_move_stop(double time)
 {
     ctrl->stop();
 
@@ -449,7 +449,7 @@ void COMM_UI::slot_move_stop(double time)
     send_move_stop_response(result);
 }
 
-void COMM_UI::slot_move_succeed(QString message)
+void COMM_QTUI::slot_move_succeed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -465,7 +465,7 @@ void COMM_UI::slot_move_succeed(QString message)
     }
 }
 
-void COMM_UI::slot_move_failed(QString message)
+void COMM_QTUI::slot_move_failed(QString message)
 {
     mtx.lock();
     MOVE_INFO _last_move_info = last_move_info;
@@ -481,7 +481,7 @@ void COMM_UI::slot_move_failed(QString message)
     }
 }
 
-void COMM_UI::slot_mapping_start(double time)
+void COMM_QTUI::slot_mapping_start(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     if(lidar->is_connected_f)
@@ -495,14 +495,14 @@ void COMM_UI::slot_mapping_start(double time)
     }
 }
 
-void COMM_UI::slot_mapping_stop(double time)
+void COMM_QTUI::slot_mapping_stop(double time)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
     send_mapping_stop_response();
 }
 
-void COMM_UI::slot_mapping_save(double time, QString name)
+void COMM_QTUI::slot_mapping_save(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
@@ -522,14 +522,14 @@ void COMM_UI::slot_mapping_save(double time, QString name)
     }
 }
 
-void COMM_UI::slot_mapping_reload(double time)
+void COMM_QTUI::slot_mapping_reload(double time)
 {
     last_send_kfrm_idx = 0;
     printf("[COMM_UI] mapping reload\n");
 }
 
 
-void COMM_UI::slot_mapload(double time, QString name)
+void COMM_QTUI::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
@@ -554,22 +554,22 @@ void COMM_UI::slot_mapload(double time, QString name)
     }
 }
 
-void COMM_UI::slot_localization_semiautoinit_succeed(QString message)
+void COMM_QTUI::slot_localization_semiautoinit_succeed(QString message)
 {
     send_localization_response("semiautoinit", "success");
 }
 
-void COMM_UI::slot_localization_semiautoinit_failed(QString message)
+void COMM_QTUI::slot_localization_semiautoinit_failed(QString message)
 {
     send_localization_response("semiautoinit", "fail");
 }
 
-void COMM_UI::slot_localization_autoinit(double time)
+void COMM_QTUI::slot_localization_autoinit(double time)
 {
     send_localization_response("autoinit", "fail");
 }
 
-void COMM_UI::slot_localization_init(double time, double x, double y, double z, double rz)
+void COMM_QTUI::slot_localization_init(double time, double x, double y, double z, double rz)
 {
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
     {
@@ -585,7 +585,7 @@ void COMM_UI::slot_localization_init(double time, double x, double y, double z, 
     send_localization_response("init", "success");
 }
 
-void COMM_UI::slot_localization_semiautoinit(double time)
+void COMM_QTUI::slot_localization_semiautoinit(double time)
 {
     #ifdef USE_SRV
     if(unimap->is_loaded == false || lidar->is_connected_f == false)
@@ -624,25 +624,25 @@ void COMM_UI::slot_localization_semiautoinit(double time)
     return;
 }
 
-void COMM_UI::slot_localization_start(double time)
+void COMM_QTUI::slot_localization_start(double time)
 {
     slam->localization_start();
 }
 
-void COMM_UI::slot_localization_stop(double time)
+void COMM_QTUI::slot_localization_stop(double time)
 {
     slam->localization_stop();
 }
 
 // send functions
-void COMM_UI::send_status()
+void COMM_QTUI::send_status()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -791,7 +791,7 @@ void COMM_UI::send_status()
     //printf("[COMM_UI] status, time: %f\n", time);
 }
 
-void COMM_UI::send_global_path()
+void COMM_QTUI::send_global_path()
 {
     if(!is_connected)
     {
@@ -800,7 +800,7 @@ void COMM_UI::send_global_path()
 
 }
 
-void COMM_UI::send_local_path()
+void COMM_QTUI::send_local_path()
 {
     if(!is_connected)
     {
@@ -809,14 +809,14 @@ void COMM_UI::send_local_path()
 
 }
 
-void COMM_UI::send_mapping_start_response(QString result)
+void COMM_QTUI::send_mapping_start_response(QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -835,14 +835,14 @@ void COMM_UI::send_mapping_start_response(QString result)
     printf("[COMM_UI] mapping_response_start, time: %f\n", time);
 }
 
-void COMM_UI::send_mapping_stop_response()
+void COMM_QTUI::send_mapping_stop_response()
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -861,14 +861,14 @@ void COMM_UI::send_mapping_stop_response()
     printf("[COMM_UI] mapping_response_stop, success, time: %f\n", time);
 }
 
-void COMM_UI::send_mapping_save_response(QString name, QString result)
+void COMM_QTUI::send_mapping_save_response(QString name, QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -888,14 +888,14 @@ void COMM_UI::send_mapping_save_response(QString name, QString result)
     printf("[COMM_UI] mapping_response_save, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_mapload_response(QString name, QString result)
+void COMM_QTUI::send_mapload_response(QString name, QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -914,14 +914,14 @@ void COMM_UI::send_mapload_response(QString name, QString result)
     printf("[COMM_UI] mapload_response, %s, %s, time: %f\n", name.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_localization_response(QString command, QString result)
+void COMM_QTUI::send_localization_response(QString command, QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -940,14 +940,14 @@ void COMM_UI::send_localization_response(QString command, QString result)
     printf("[COMM_UI] localization_response, %s, %s, time: %f\n", command.toLocal8Bit().data(), result.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
+void COMM_QTUI::send_move_target_response(double x, double y, double z, double rz, int preset, QString method, QString result, QString message)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -973,14 +973,14 @@ void COMM_UI::send_move_target_response(double x, double y, double z, double rz,
     printf("[COMM_UI] move_target_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
+void COMM_QTUI::send_move_goal_response(QString node_id, int preset, QString method, QString result, QString message)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -1003,14 +1003,14 @@ void COMM_UI::send_move_goal_response(QString node_id, int preset, QString metho
     printf("[COMM_UI] move_goal_response, %s, %s, time: %f\n", result.toLocal8Bit().data(), message.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_move_pause_response(QString result)
+void COMM_QTUI::send_move_pause_response(QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -1029,14 +1029,14 @@ void COMM_UI::send_move_pause_response(QString result)
     printf("[COMM_UI] move_pause_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_move_resume_response(QString result)
+void COMM_QTUI::send_move_resume_response(QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -1055,14 +1055,14 @@ void COMM_UI::send_move_resume_response(QString result)
     printf("[COMM_UI] move_resume_response, %s, time: %f\n", result.toLocal8Bit().data(), time);
 }
 
-void COMM_UI::send_move_stop_response(QString result)
+void COMM_QTUI::send_move_stop_response(QString result)
 {
     if(!is_connected)
     {
         return;
     }
 
-    double time = get_time0();
+    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;

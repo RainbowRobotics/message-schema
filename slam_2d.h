@@ -4,6 +4,7 @@
 // defines
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
 // module
 #include "config.h"
@@ -115,6 +116,7 @@ public:
     const double sigma_eps = 1e-6;
 
     // for graph optimization
+    void clear_pose_graph();
     PGO pgo;
 
 public:
@@ -139,8 +141,7 @@ public:
     void obs_loop();
 
 Q_SIGNALS:
-    void signal_localization_semiautoinit_succeed(QString message);
-    void signal_localization_semiautoinit_failed(QString message);
+    void signal_localization_response(DATA_LOCALIZATION dloc);
 };
 
 #endif // SLAM_2D_H

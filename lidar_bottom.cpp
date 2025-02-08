@@ -38,7 +38,7 @@ LIDAR_BOTTOM::~LIDAR_BOTTOM()
 void LIDAR_BOTTOM::open()
 {
     // check simulation mode
-    if(config->SIM_MODE == 1)
+    if(config->USE_SIM == 1)
     {
         printf("[LIDAR] simulation mode\n");
         return;

@@ -72,19 +72,18 @@ public:
 
     double ANNOT_QA_STEP = 0.3;
 
-    int SIM_MODE = 1; // 0: real mode, 1: simulation mode
+    int USE_SIM = 1; // 0: real mode, 1: simulation mode
     int USE_IMU = 0;
-    int USE_BEEP = 0;
-    int USE_RTSP = 0;
     int USE_BLIDAR = 0;
     int USE_BQR = 0;
+    int USE_BEEP = 0;
     int USE_CAM = 0;
-    int USE_EARLYSTOP = 0;
-    int USE_WEB_UI = 0;
-    int USE_QT_UI = 0;
+    int USE_RTSP = 0;
+    int USE_RRS = 0;
     int USE_FMS = 0;
+    int USE_QTUI = 0;
     int USE_ARUCO = 0;
-    int USE_S3 = 0;
+    int USE_EARLYSTOP = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
     double DRIVE_GOAL_D = 0.05;    
