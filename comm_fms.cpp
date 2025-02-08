@@ -10,15 +10,15 @@ COMM_FMS::COMM_FMS(QObject *parent)
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
-    connect(this, SIGNAL(signal_send_info()), this, SLOT(slot_send_info()));
+    connect(this, SIGNAL(signal_send_move_status()), this, SLOT(slot_send_move_status()));
 
-    connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_load(DATA_LOAD)), this, SLOT(slot_load(DATA_LOAD)));
-    connect(this, SIGNAL(signal_localization(DATA_LOCALIZATION)), this, SLOT(slot_localization(DATA_LOCALIZATION)));
-    connect(this, SIGNAL(signal_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_randomseq(DATA_RANDOMSEQ)));
-    connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
-    connect(this, SIGNAL(signal_vobs_r(DATA_VOBS_R)), this, SLOT(slot_vobs_r(DATA_VOBS_R)));
-    connect(this, SIGNAL(signal_vobs_c(DATA_VOBS_C)), this, SLOT(slot_vobs_c(DATA_VOBS_C)));
+    connect(this, SIGNAL(recv_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
+    connect(this, SIGNAL(recv_load(DATA_LOAD)), this, SLOT(slot_load(DATA_LOAD)));
+    connect(this, SIGNAL(recv_localization(DATA_LOCALIZATION)), this, SLOT(slot_localization(DATA_LOCALIZATION)));
+    connect(this, SIGNAL(recv_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_randomseq(DATA_RANDOMSEQ)));
+    connect(this, SIGNAL(recv_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
+    connect(this, SIGNAL(recv_vobs_r(DATA_VOBS_R)), this, SLOT(slot_vobs_r(DATA_VOBS_R)));
+    connect(this, SIGNAL(recv_vobs_c(DATA_VOBS_C)), this, SLOT(slot_vobs_c(DATA_VOBS_C)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -94,166 +94,116 @@ void COMM_FMS::disconnected()
     }
 }
 
+// send status
+void COMM_FMS::slot_send_move_status()
+{
+
+}
+
 // recv callback
 void COMM_FMS::recv_message(const QByteArray &buf)
 {
     QString message = qUncompress(buf);
-    QJsonObject obj = QJsonDocument::fromJson(message.toUtf8()).object();
-    if(get_json(obj, "robotSerial") != robot_id)
+    QJsonObject root_obj = QJsonDocument::fromJson(message.toUtf8()).object();
+    if(get_json(root_obj, "robotSerial") != robot_id)
     {
         return;
     }
 
-    QString body = get_json(obj, "body");
-    QString data_str = get_json(obj, "data");
-    QJsonObject dataObj = QJsonDocument::fromJson(data_str.toUtf8()).object();
+    QString topic = get_json(root_obj, "topic");
+    QString data_str = get_json(root_obj, "data");
+    QJsonObject data_obj = QJsonDocument::fromJson(data_str.toUtf8()).object();
 
     // parsing
-    if(body == "load")
+    if(topic == "load")
     {
-        DATA_LOAD dload = get_data_load(dataObj);
-        Q_EMIT signal_load(dload);
+        DATA_LOAD msg;
+        msg.command = get_json(data_obj, "command");
+        msg.map_name = get_json(data_obj, "name");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
+        Q_EMIT recv_load(msg);
     }
-    else if(body == "localization")
+    else if(topic == "localization")
     {
-        DATA_LOCALIZATION dloc = get_data_localization(dataObj);
-        Q_EMIT signal_localization(dloc);
+        DATA_LOCALIZATION msg;
+        msg.command = get_json(data_obj, "command");
+        msg.tgt_pose_vec[0] = get_json(data_obj, "x").toDouble();
+        msg.tgt_pose_vec[1] = get_json(data_obj, "y").toDouble();
+        msg.tgt_pose_vec[2] = get_json(data_obj, "z").toDouble();
+        msg.tgt_pose_vec[3] = get_json(data_obj, "rz").toDouble();
+        msg.seed = get_json(data_obj, "seed");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
+        Q_EMIT recv_localization(msg);
     }
-    else if(body == "randomseq")
+    else if(topic == "randomseq")
     {
-        DATA_RANDOMSEQ drandomseq = get_data_randomseq(dataObj);
-        Q_EMIT signal_randomseq(drandomseq);
+        DATA_RANDOMSEQ msg;
+
+        Q_EMIT recv_randomseq(msg);
     }
-    else if(body == "move")
+    else if(topic == "move")
     {
-        DATA_MOVE dmove = get_data_move(dataObj);
-        Q_EMIT signal_move(dmove);
+        DATA_MOVE msg;
+
+        Q_EMIT recv_move(msg);
     }
-    else if(body == "path")
+    else if(topic == "path")
     {
-        DATA_PATH dpath = get_data_path(dataObj);
-        Q_EMIT signal_path(dpath);
+        DATA_PATH msg;
+
+        Q_EMIT recv_path(msg);
     }
-    else if(body == "vobsRobots")
+    else if(topic == "vobsRobots")
     {
-        DATA_VOBS_R dvobs_r = get_data_vobs_r(dataObj);
-        Q_EMIT signal_vobs_r(dvobs_r);
+        DATA_VOBS_R msg;
+
+        Q_EMIT recv_vobs_r(msg);
     }
-    else if(body == "vobsClosures")
+    else if(topic == "vobsClosures")
     {
-        DATA_VOBS_C dvobs_c = get_data_vobs_c(dataObj);
-        Q_EMIT signal_vobs_c(dvobs_c);
+        DATA_VOBS_C msg;
+
+        Q_EMIT recv_vobs_c(msg);
     }
 }
 
-DATA_MOVE COMM_FMS::get_data_move(QJsonObject dataObj)
+void COMM_FMS::slot_move(DATA_MOVE msg)
 {
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
 
-    DATA_MOVE dmove;
-    dmove.command = get_json(dataObj, "command");
-    if(dmove.command == "goal")
-    {
-        dmove.method = get_json(dataObj, "method");
-        dmove.goal_node_id = get_json(dataObj, "goal_id");
-        dmove.preset = get_json(dataObj, "preset").toInt();
-        dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dmove.jog_val = Eigen::Vector3d(0,0,0);
-        dmove.time = time;
-
-        // for response
-        MOVE_INFO _last_move_info;
-        _last_move_info.command = dmove.command;
-        _last_move_info.node_id = dmove.goal_node_id;
-        _last_move_info.preset = dmove.preset;
-        _last_move_info.method = dmove.method;
-
-        mtx.lock();
-        last_move_info = _last_move_info;
-        mtx.unlock();
-    }
-    else if(dmove.command == "jog")
-    {
-        double vx = get_json(dataObj, "vx").toDouble();
-        double vy = get_json(dataObj, "vy").toDouble();
-        double wz = get_json(dataObj, "wz").toDouble();
-
-        dmove.method = "";
-        dmove.goal_node_id = "";
-        dmove.preset = 0;
-        dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dmove.jog_val = Eigen::Vector3d(vx,vy,wz);
-        dmove.time = time;
-    }
-    else if(dmove.command == "target")
-    {
-        double x = get_json(dataObj, "x").toDouble();
-        double y = get_json(dataObj, "y").toDouble();
-        double z = get_json(dataObj, "z").toDouble();
-        double rz = get_json(dataObj, "rz").toDouble();
-
-        dmove.method = get_json(dataObj, "method");
-        dmove.goal_node_id = "";
-        dmove.preset = get_json(dataObj, "preset").toInt();
-        dmove.tgt_pose_vec = Eigen::Vector4d(x,y,z,rz);
-        dmove.jog_val = Eigen::Vector3d(0,0,0);
-        dmove.time = time;
-
-        // for response
-        MOVE_INFO _last_move_info;
-        _last_move_info.command = dmove.command;
-        _last_move_info.x = dmove.tgt_pose_vec[0];
-        _last_move_info.y = dmove.tgt_pose_vec[1];
-        _last_move_info.z = dmove.tgt_pose_vec[2];
-        _last_move_info.rz = dmove.tgt_pose_vec[3];
-        _last_move_info.preset = dmove.preset;
-        _last_move_info.method = dmove.method;
-
-        mtx.lock();
-        last_move_info = _last_move_info;
-        mtx.unlock();
-    }
-    else if(dmove.command == "pause")
-    {
-        dmove.method = "";
-        dmove.goal_node_id = "";
-        dmove.preset = 0;
-        dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dmove.jog_val = Eigen::Vector3d(0,0,0);
-        dmove.time = time;
-    }
-    else if(dmove.command == "resume")
-    {
-        dmove.method = "";
-        dmove.goal_node_id = "";
-        dmove.preset = 0;
-        dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dmove.jog_val = Eigen::Vector3d(0,0,0);
-        dmove.time = time;
-    }
-    else if(dmove.command == "stop")
-    {
-        dmove.method = "";
-        dmove.goal_node_id = "";
-        dmove.preset = 0;
-        dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dmove.jog_val = Eigen::Vector3d(0,0,0);
-        dmove.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_move, not support command:%s, time:%.3f\n", dmove.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_MOVE();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_move, command:%s, time: %.3f\n", dmove.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
 }
 
+void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
+{
+
+}
+
+void COMM_FMS::slot_load(DATA_LOAD msg)
+{
+
+}
+
+void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
+{
+
+}
+
+void COMM_FMS::slot_path(DATA_PATH msg)
+{
+
+}
+
+void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
+{
+
+}
+
+void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
+{
+
+}
+
+
+/*
 DATA_LOAD COMM_FMS::get_data_load(QJsonObject dataObj)
 {
     // parsing
@@ -1048,3 +998,4 @@ void COMM_FMS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
     QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
     client.sendBinaryMessage(buf);
 }
+*/
