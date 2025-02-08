@@ -504,7 +504,7 @@ void COMM_QTUI::slot_mapping_save(double time, QString name)
     MainWindow* _main = (MainWindow*)main;
     _main->bt_MapSave();
 
-    QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    QString save_dir = QDir::homePath() + "/maps/" + name;
     std::string command = "cp -r " + _main->map_dir.toStdString() + " " + save_dir.toStdString();
     int result = std::system(command.c_str());
     if(result == 0)
@@ -530,7 +530,7 @@ void COMM_QTUI::slot_mapload(double time, QString name)
 {
     MainWindow* _main = (MainWindow*)main;
 
-    QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + name;
+    QString load_dir = QDir::homePath() + "/maps/" + name;
     if(!load_dir.isNull())
     {
         slam->localization_stop();

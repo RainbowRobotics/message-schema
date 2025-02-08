@@ -1634,17 +1634,19 @@ void AUTOCONTROL::b_loop_pp()
             {
                 // final goal reached
                 mobile->move(0, 0, 0);
-
                 clean_up();
 
-                DATA_MOVE dmove;
-                dmove.command = "goal";
-                dmove.method = "pp";
-                dmove.result = "fail";
-                dmove.message = "already goal";
-                dmove.time = get_time();
-
-                Q_EMIT signal_move(dmove);
+                // response
+                if(config->USE_RRS)
+                {
+                    mtx.lock();
+                    DATA_MOVE _last_move_info = last_move_info;
+                    mtx.unlock();
+                    _last_move_info.result = "fail";
+                    _last_move_info.message = "already goal";
+                    _last_move_info.time = get_time();
+                    Q_EMIT signal_move_response(_last_move_info);
+                }
 
                 mtx.lock();
                 last_cur_goal_state = "complete";
@@ -1694,14 +1696,17 @@ void AUTOCONTROL::b_loop_pp()
         {
             clean_up();
 
-            DATA_MOVE dmove;
-            dmove.command = "goal";
-            dmove.method = "pp";
-            dmove.result = "fail";
-            dmove.message = "something wrong";
-            dmove.time = get_time();
-
-            Q_EMIT signal_move(dmove);
+            // response
+            if(config->USE_RRS)
+            {
+                mtx.lock();
+                DATA_MOVE _last_move_info = last_move_info;
+                mtx.unlock();
+                _last_move_info.result = "fail";
+                _last_move_info.message = "something wrong";
+                _last_move_info.time = get_time();
+                Q_EMIT signal_move_response(_last_move_info);
+            }
 
             logger->write_log("[AUTO] something wrong (fail)");
             fsm_state = AUTO_FSM_COMPLETE;
@@ -1717,14 +1722,17 @@ void AUTOCONTROL::b_loop_pp()
         {
             clean_up();
 
-            DATA_MOVE dmove;
-            dmove.command = "goal";
-            dmove.method = "pp";
-            dmove.result = "fail";
-            dmove.message = "something wrong (not ready)";
-            dmove.time = get_time();
-
-            Q_EMIT signal_move(dmove);
+            // response
+            if(config->USE_RRS)
+            {
+                mtx.lock();
+                DATA_MOVE _last_move_info = last_move_info;
+                mtx.unlock();
+                _last_move_info.result = "fail";
+                _last_move_info.message = "something wrong (not ready)";
+                _last_move_info.time = get_time();
+                Q_EMIT signal_move_response(_last_move_info);
+            }
 
             logger->write_log("[AUTO] something wrong (not ready)");
             fsm_state = AUTO_FSM_COMPLETE;
@@ -2164,14 +2172,17 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     clean_up();
 
-                    DATA_MOVE dmove;
-                    dmove.command = "goal";
-                    dmove.method = "pp";
-                    dmove.result = "success";
-                    dmove.message = "very good";
-                    dmove.time = get_time();
-
-                    Q_EMIT signal_move(dmove);
+                    // response
+                    if(config->USE_RRS)
+                    {
+                        mtx.lock();
+                        DATA_MOVE _last_move_info = last_move_info;
+                        mtx.unlock();
+                        _last_move_info.result = "success";
+                        _last_move_info.message = "very good";
+                        _last_move_info.time = get_time();
+                        Q_EMIT signal_move_response(_last_move_info);
+                    }
 
                     fsm_state = AUTO_FSM_COMPLETE;
 
@@ -2474,8 +2485,6 @@ void AUTOCONTROL::b_loop_pp()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
             precise_sleep(dt-delta_loop_time);
         }
         else
@@ -2494,12 +2503,17 @@ void AUTOCONTROL::b_loop_pp()
     {
         clean_up();
 
-        DATA_MOVE dmove;
-        dmove.command = "goal";
-        dmove.method = "pp";
-        dmove.result = "success";
-        dmove.message = "stop";
-        dmove.time = get_time();
+        // response
+        if(config->USE_RRS)
+        {
+            mtx.lock();
+            DATA_MOVE _last_move_info = last_move_info;
+            mtx.unlock();
+            _last_move_info.result = "fail";
+            _last_move_info.message = "manual stopped";
+            _last_move_info.time = get_time();
+            Q_EMIT signal_move_response(_last_move_info);
+        }
 
         logger->write_log("[AUTO] b_loop_pp stop");
 

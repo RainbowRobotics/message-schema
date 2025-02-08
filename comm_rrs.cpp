@@ -17,7 +17,6 @@ COMM_RRS::COMM_RRS(QObject *parent)
     io->set_open_listener(std::bind(&COMM_RRS::sio_connected, this));
     io->set_close_listener(std::bind(&COMM_RRS::sio_disconnected, this, _1));
     io->set_fail_listener(std::bind(&COMM_RRS::sio_error, this));
-    io->set_reconnect_attempts(-1);
 
     // bind recv callback function this func emit signal
     BIND_EVENT(sock, "move",            std::bind(&COMM_RRS::recv_move,              this, _1, _2, _3, _4));
@@ -54,7 +53,7 @@ COMM_RRS::~COMM_RRS()
 {
     io->socket()->off_all();
     io->socket()->off_error();
-    io->close();
+    io->sync_close();
 }
 
 QString COMM_RRS::get_json(sio::message::ptr const& data, QString key)
@@ -102,30 +101,20 @@ void COMM_RRS::init()
 void COMM_RRS::sio_connected()
 {
     is_connected = true;
-
     ctrl->is_multi = true;
-
-    QString str;
-    str.sprintf("[COMM_MS] connected");
-    logger->write_log(str, "Green");
+    logger->write_log("[COMM_RRS] connected", "Green");
 }
 
 void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
-
     ctrl->is_multi = false;
-
-    QString str;
-    str.sprintf("[COMM_MS] disconnected");
-    logger->write_log(str, "Green");
+    logger->write_log("[COMM_RRS] disconnected", "Green");
 }
 
 void COMM_RRS::sio_error()
 {
-    QString str;
-    str.sprintf("[COMM_MS] some error");
-    logger->write_log(str, "Red");
+    logger->write_log("[COMM_RRS] some error", "Red");
 }
 
 // recv parser -> emit recv signals
@@ -134,113 +123,27 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
+        DATA_MOVE msg;
+        msg.command = get_json(data, "command"); // "goal", "jog", "target", "pause", "resume", "stop"
+        msg.method = get_json(data, "method");
+        msg.goal_node_id = get_json(data, "goal_id");
+        msg.preset = get_json(data, "preset").toInt();
+        msg.tgt_pose_vec[0] = get_json(data, "x").toDouble();
+        msg.tgt_pose_vec[1] = get_json(data, "y").toDouble();
+        msg.tgt_pose_vec[2] = get_json(data, "z").toDouble();
+        msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble();
+        msg.jog_val[0] = get_json(data, "vx").toDouble();
+        msg.jog_val[1] = get_json(data, "vy").toDouble();
+        msg.jog_val[2] = get_json(data, "wz").toDouble();
+        msg.time = get_json(data, "time").toDouble()/1000;
 
-        DATA_MOVE dmove;
-        dmove.command = get_json(data, "command");
-        if(dmove.command == "goal")
-        {
-            dmove.method = get_json(data, "method");
-            dmove.goal_node_id = get_json(data, "goal_id");
-            dmove.preset = get_json(data, "preset").toInt();
-            dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dmove.jog_val = Eigen::Vector3d(0,0,0);
-            dmove.time = time;
+        // for response
+        ctrl->mtx.lock();
+        ctrl->last_move_info = msg;
+        ctrl->mtx.unlock();
 
-            // for response
-            MOVE_INFO _last_move_info;
-            _last_move_info.command = dmove.command;
-            _last_move_info.node_id = dmove.goal_node_id;
-            _last_move_info.preset = dmove.preset;
-            _last_move_info.method = dmove.method;
-
-            mtx.lock();
-            last_move_info = _last_move_info;
-            mtx.unlock();
-        }
-        else if(dmove.command == "jog")
-        {
-            double vx = get_json(data, "vx").toDouble();
-            double vy = get_json(data, "vy").toDouble();
-            double wz = get_json(data, "wz").toDouble();
-
-            dmove.method = "";
-            dmove.goal_node_id = "";
-            dmove.preset = 0;
-            dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dmove.jog_val = Eigen::Vector3d(vx,vy,wz);
-            dmove.time = time;
-        }
-        else if(dmove.command == "target")
-        {
-            double x = get_json(data, "x").toDouble();
-            double y = get_json(data, "y").toDouble();
-            double z = get_json(data, "z").toDouble();
-            double rz = get_json(data, "rz").toDouble();
-
-            dmove.method = get_json(data, "method");
-            dmove.goal_node_id = "";
-            dmove.preset = get_json(data, "preset").toInt();
-            dmove.tgt_pose_vec = Eigen::Vector4d(x,y,z,rz);
-            dmove.jog_val = Eigen::Vector3d(0,0,0);
-            dmove.time = time;
-
-            // for response
-            MOVE_INFO _last_move_info;
-            _last_move_info.command = dmove.command;
-            _last_move_info.x = dmove.tgt_pose_vec[0];
-            _last_move_info.y = dmove.tgt_pose_vec[1];
-            _last_move_info.z = dmove.tgt_pose_vec[2];
-            _last_move_info.rz = dmove.tgt_pose_vec[3];
-            _last_move_info.preset = dmove.preset;
-            _last_move_info.method = dmove.method;
-
-            mtx.lock();
-            last_move_info = _last_move_info;
-            mtx.unlock();
-        }
-        else if(dmove.command == "pause")
-        {
-            dmove.method = "";
-            dmove.goal_node_id = "";
-            dmove.preset = 0;
-            dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dmove.jog_val = Eigen::Vector3d(0,0,0);
-            dmove.time = time;
-        }
-        else if(dmove.command == "resume")
-        {
-            dmove.method = "";
-            dmove.goal_node_id = "";
-            dmove.preset = 0;
-            dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dmove.jog_val = Eigen::Vector3d(0,0,0);
-            dmove.time = time;
-        }
-        else if(dmove.command == "stop")
-        {
-            dmove.method = "";
-            dmove.goal_node_id = "";
-            dmove.preset = 0;
-            dmove.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dmove.jog_val = Eigen::Vector3d(0,0,0);
-            dmove.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_move, not support command:%s, time:%.3f", dmove.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-
-            dmove.result = "reject";
-            dmove.message = str;
-        }
-
-        Q_EMIT signal_move(dmove);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_move, command:%s, time: %.3f", dmove.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_move(msg);
     }
 }
 
@@ -249,72 +152,17 @@ void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr cons
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
+        DATA_LOCALIZATION msg;
+        msg.command = get_json(data, "command"); // "autoinit", "semiautoinit", "init", "start", "stop", "randominit"
+        msg.seed = get_json(data, "seed");
+        msg.tgt_pose_vec[0] = get_json(data, "x").toDouble();
+        msg.tgt_pose_vec[1] = get_json(data, "y").toDouble();
+        msg.tgt_pose_vec[2] = get_json(data, "z").toDouble();
+        msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble();
+        msg.time = get_json(data, "time").toDouble()/1000;
 
-        DATA_LOCALIZATION dloc;
-        dloc.command = get_json(data, "command");
-        if(dloc.command == "autoinit")
-        {
-            dloc.seed = "";
-            dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dloc.time = time;
-        }
-        else if(dloc.command == "semiautoinit")
-        {
-            dloc.seed = "";
-            dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dloc.time = time;
-        }
-        else if(dloc.command == "init")
-        {
-            double x = get_json(data, "x").toDouble();
-            double y = get_json(data, "y").toDouble();
-            double z = get_json(data, "z").toDouble();
-            double rz = get_json(data, "rz").toDouble();
-
-            dloc.seed = "";
-            dloc.tgt_pose_vec = Eigen::Vector4d(x,y,z,rz);
-            dloc.time = time;
-        }
-        else if(dloc.command == "start")
-        {
-            dloc.seed = "";
-            dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dloc.time = time;
-        }
-        else if(dloc.command == "stop")
-        {
-            dloc.seed = "";
-            dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dloc.time = time;
-        }
-        else if(dloc.command == "randominit")
-        {
-            QString str0;
-            str0.sprintf("dloc.start");
-            logger->write_log(str0, "Green");
-
-            QString str;
-            dloc.seed = get_json(data, "seed");
-            str.sprintf("dloc.seed:%s", dloc.seed.toLocal8Bit().data());
-            logger->write_log(str, "Green");
-
-            dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-            dloc.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_localization, command:%s, time:%.3f", dloc.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
-
-        Q_EMIT signal_localization(dloc);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_localization, command:%s, time: %.3f", dloc.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_localization(msg);
     }
 }
 
@@ -323,38 +171,13 @@ void COMM_RRS::recv_load(std::string const& name, sio::message::ptr const& data,
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
+        DATA_LOAD msg;
+        msg.command = get_json(data, "command"); // "mapload", "topoload", "configload"
+        msg.map_name = get_json(data, "name");
+        msg.time = get_json(data, "time").toDouble()/1000;
 
-        DATA_LOAD dload;
-        dload.command = get_json(data, "command");
-        if(dload.command == "mapload")
-        {
-            dload.map_name = get_json(data, "name");
-            dload.time = time;
-        }
-        else if(dload.command == "topoload")
-        {
-            dload.map_name = get_json(data, "name");
-            dload.time = time;
-        }
-        else if(dload.command == "configload")
-        {
-            dload.map_name = "";
-            dload.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_load, not support command:%s, time:%.3f", dload.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
-
-        Q_EMIT signal_load(dload);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_load, command:%s, time: %.3f", dload.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_load(msg);
     }
 }
 
@@ -363,27 +186,12 @@ void COMM_RRS::recv_randomseq(std::string const& name, sio::message::ptr const& 
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
+        DATA_RANDOMSEQ msg;
+        msg.command = get_json(data, "command"); // "randomseq"
+        msg.time = get_json(data, "time").toDouble()/1000;
 
-        DATA_RANDOMSEQ drandomseq;
-        drandomseq.command = get_json(data, "command");
-        if(drandomseq.command == "randomseq")
-        {
-            drandomseq.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_randomseq, command:%s, time:%.3f", drandomseq.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
-
-        Q_EMIT signal_randomseq(drandomseq);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_randomseq, command:%s, time: %.3f", drandomseq.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_randomseq(msg);
     }
 }
 
@@ -392,43 +200,12 @@ void COMM_RRS::recv_mapping(std::string const& name, sio::message::ptr const& da
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
+        DATA_MAPPING msg;
+        msg.command = get_json(data, "command"); // "start", "stop", "save", "name", "reload"
+        msg.time = get_json(data, "time").toDouble()/1000;
 
-        DATA_MAPPING dmap;
-        dmap.command = get_json(data, "command");
-        if(dmap.command == "start")
-        {
-            dmap.map_name = "";
-            dmap.time = time;
-        }
-        else if(dmap.command == "stop")
-        {
-            dmap.map_name = "";
-            dmap.time = time;
-        }
-        else if(dmap.command == "save")
-        {
-            dmap.map_name = get_json(data, "name");
-            dmap.time = time;
-        }
-        else if(dmap.command == "reload")
-        {
-            dmap.map_name = "";
-            dmap.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_mapping, command:%s, time:%.3f", dmap.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
-
-        Q_EMIT signal_mapping(dmap);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_mapping, command:%s, time: %.3f", dmap.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_mapping(msg);
     }
 }
 
@@ -437,32 +214,13 @@ void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data,
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_DOCK ddock;
-        ddock.command = get_json(data, "command");
-        if(ddock.command == "dock")
-        {
-            ddock.time = time;
-        }
-        else if(ddock.command == "undock")
-        {
-            ddock.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_dock, command:%s, time:%.3f", ddock.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_DOCK msg;
+        msg.command = get_json(data, "command"); // "dock", "undock"
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_dock(ddock);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_dock, command:%s, time: %.3f", ddock.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_dock(msg);
     }
 }
 
@@ -471,34 +229,14 @@ void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_VIEW_LIDAR dlidar;
-        dlidar.command = get_json(data, "command");
-        if(dlidar.command == "on")
-        {
-            dlidar.frequency = get_json(data, "frequency").toInt();
-            dlidar.time = time;
-        }
-        else if(dlidar.command == "off")
-        {
-            dlidar.command = "off";
-            dlidar.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_view_lidar_on_off, command:%s, time:%.3f", dlidar.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_VIEW_LIDAR msg;
+        msg.command = get_json(data, "command"); // "on", "off"
+        msg.frequency = get_json(data, "frequency").toInt();
+        msg.time = get_json(data, "time").toDouble()/1000;;
 
         // action
-        Q_EMIT signal_view_lidar(dlidar);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_view_lidar_on_off, command:%s, time: %.3f", dlidar.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, lidar_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_view_lidar(msg);
     }
 }
 
@@ -507,43 +245,14 @@ void COMM_RRS::recv_view_path_on_off(std::string const& name, sio::message::ptr 
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_VIEW_PATH dpath;
-        dpath.command = get_json(data, "command");
-        if(dpath.command == "on")
-        {
-            bool is_conversion;
-            int frequency = get_json(data, "frequency").toInt(&is_conversion);
-            if(is_conversion)
-            {
-                dpath.frequency = frequency;
-                dpath.time = time;
-            }
-            else
-            {
-                dpath.frequency = -1;
-                dpath.time = time;
-            }
-        }
-        else if(dpath.command == "off")
-        {
-            dpath.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_view_path_on_off, command:%s, time:%.3f", dpath.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_VIEW_PATH msg;
+        msg.command = get_json(data, "command"); // "on", "off"
+        msg.frequency = get_json(data, "frequency").toInt();
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_view_path(dpath);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_path_on_off, command:%s, time: %.3f", dpath.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, path_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_view_path(msg);
     }
 }
 
@@ -552,33 +261,14 @@ void COMM_RRS::recv_led(std::string const& name, sio::message::ptr const& data, 
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_LED dled;
-        dled.command = get_json(data, "command");
-        if(dled.command == "on")
-        {
-            dled.led = get_json(data, "led");
-            dled.time = time;
-        }
-        else if(dled.command == "off")
-        {
-            dled.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_led, command:%s, time:%.3f", dled.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_LED msg;
+        msg.command = get_json(data, "command"); // "on", "off"
+        msg.led = get_json(data, "led");
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_led(dled);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_led, command:%s, time: %.3f", dled.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, led_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_led(msg);
     }
 }
 
@@ -587,32 +277,13 @@ void COMM_RRS::recv_motor(std::string const& name, sio::message::ptr const& data
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_MOTOR dmotor;
-        dmotor.command = get_json(data, "command");
-        if(dmotor.command == "on")
-        {
-            dmotor.time = time;
-        }
-        else if(dmotor.command == "off")
-        {
-            dmotor.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_motor, command:%s, time:%.3f", dmotor.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_MOTOR msg;
+        msg.command = get_json(data, "command"); // "on", "off"
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_motor(dmotor);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_motor, command:%s, time: %.3f", dmotor.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, motor_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_motor(msg);
     }
 }
 
@@ -621,30 +292,14 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_PATH dpath;
-        dpath.command = get_json(data, "command");
-        if(dpath.command == "path")
-        {
-            dpath.path = get_json(data, "path");
-            dpath.preset = get_json(data, "preset").toInt();
-            dpath.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_path, command:%s, time:%.3f", dpath.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_PATH msg;
+        msg.command = get_json(data, "command"); // "path"
+        msg.preset = get_json(data, "preset").toInt();
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_path(dpath);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_path, command:%s, time: %.3f", dpath.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_path(msg);
     }
 }
 
@@ -653,29 +308,14 @@ void COMM_RRS::recv_vobs_robots(std::string const& name, sio::message::ptr const
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_VOBS_R dvobs_r;
-        dvobs_r.command = get_json(data, "command");
-        if(dvobs_r.command == "vobs_robots")
-        {
-            dvobs_r.vobs = get_json(data, "vobs");
-            dvobs_r.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_vobs_r, command:%s, time:%.3f", dvobs_r.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_VOBS_R msg;
+        msg.command = get_json(data, "command"); // "vobs_robots"
+        msg.vobs = get_json(data, "vobs");
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_vobs_r(dvobs_r);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_vobs_r, command:%s, time: %.3f", dvobs_r.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_vobs_r(msg);
     }
 }
 
@@ -684,29 +324,14 @@ void COMM_RRS::recv_vobs_closures(std::string const& name, sio::message::ptr con
     if(data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        double time = get_json(data, "time").toDouble()/1000;
-
-        DATA_VOBS_C dvobs_c;
-        dvobs_c.command = get_json(data, "command");
-        if(dvobs_c.command == "vobs_closures")
-        {
-            dvobs_c.vobs = get_json(data, "vobs");
-            dvobs_c.time = time;
-        }
-        else
-        {
-            QString str;
-            str.sprintf("[COMM_MS] fail recv_vobs_c, command:%s, time:%.3f", dvobs_c.command.toLocal8Bit().data(), time);
-            logger->write_log(str, "Red");
-            return;
-        }
+        DATA_VOBS_C msg;
+        msg.command = get_json(data, "command"); // "vobs_closures"
+        msg.vobs = get_json(data, "vobs");
+        msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        Q_EMIT signal_vobs_c(dvobs_c);
-
-        QString str;
-        str.sprintf("[COMM_MS] success recv_vobs_c, command:%s, time: %.3f", dvobs_c.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        Q_EMIT signal_vobs_c(msg);
     }
 }
 
@@ -717,8 +342,6 @@ void COMM_RRS::send_status()
     {
         return;
     }
-
-    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -848,13 +471,14 @@ void COMM_RRS::send_status()
     rootObj["map"] = mapObj;
 
     // Adding the time object
-    rootObj["time"] = time;
+    double time = get_time();
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("status", res);
-    last_send_status_time = time;
-    //printf("[COMM_MS] send_status, time: %f\n", time);
+
+    last_send_status_time = time;    
 }
 
 // send functions
@@ -864,8 +488,6 @@ void COMM_RRS::send_move_status()
     {
         return;
     }
-
-    double time = get_time();
 
     // Creating the JSON object
     QJsonObject rootObj;
@@ -898,7 +520,7 @@ void COMM_RRS::send_move_status()
     moveStateObj["dock_move"] = dock_state;
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
-    moveStateObj["path"] = ctrl->get_multi_req(); // none, req_path, recv_path
+    moveStateObj["path"] = ctrl->get_multi_req(); // "none", "req_path", "recv_path"
     rootObj["move_state"] = moveStateObj;
 
     // Adding the pose object
@@ -923,7 +545,11 @@ void COMM_RRS::send_move_status()
     QString cur_node_name = "";
     if(unimap->is_loaded)
     {
-        cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+        MainWindow* _main = (MainWindow*)main;
+        _main->mtx.lock();
+        QString cur_node_id = _main->last_node_id;
+        _main->mtx.unlock();
+
         if(cur_node_id != "")
         {
             NODE* node = unimap->get_node_by_id(cur_node_id);
@@ -977,13 +603,14 @@ void COMM_RRS::send_move_status()
     rootObj["goal_node"] = goalNodeObj;
 
     // Adding the time object
-    rootObj["time"] = time;
+    double time = get_time();
+    rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("moveStatus", res);
+
     last_send_move_status_time = time;
-    //printf("[COMM_MS] send_move_status, time: %f\n", time);
 }
 
 void COMM_RRS::send_local_path()
@@ -1011,8 +638,7 @@ void COMM_RRS::send_local_path()
     }
 
     // send
-    io->socket()->emit("localPath", jsonArray);
-    //printf("[COMM_MS] send local_path, num: %d\n", (int)path.pos.size());
+    io->socket()->emit("localPath", jsonArray);    
 }
 
 void COMM_RRS::send_global_path()
@@ -1038,7 +664,6 @@ void COMM_RRS::send_global_path()
 
     // send
     io->socket()->emit("globalPath", jsonArray);
-    //printf("[COMM_MS] send_global_path, num: %d\n", (int)path.pos.size());
 }
 
 void COMM_RRS::send_lidar()
@@ -1115,8 +740,6 @@ void COMM_RRS::send_lidar()
         // send
         io->socket()->emit("lidarCloud", rootObject);
     }
-
-    //printf("[COMM_MS] lidar_cloud,  time: %f\n", time);
 }
 
 void COMM_RRS::send_mapping_cloud()
@@ -1129,8 +752,6 @@ void COMM_RRS::send_mapping_cloud()
     if(slam->is_slam && last_send_kfrm_idx < (int)slam->kfrm_storage.size())
     {
         // send kfrm
-        double time = get_time();
-
         slam->mtx.lock();
         KFRAME kfrm = slam->kfrm_storage[last_send_kfrm_idx];
         slam->mtx.unlock();
@@ -1158,117 +779,133 @@ void COMM_RRS::send_mapping_cloud()
 
         // send
         io->socket()->emit("mappingCloud", jsonArray);
-
-        //QString str;
-        //str.sprintf("[COMM_MS] mapping_cloud, time: %f\n", time);
-        //logger->write_log(str, "Green");
         last_send_kfrm_idx++;
     }
 }
 
-void COMM_RRS::slot_move(DATA_MOVE dmove)
+void COMM_RRS::slot_move(DATA_MOVE msg)
 {
-    QString command = dmove.command;
+    QString command = msg.command;
     if(command == "jog")
     {
-        double vx = dmove.jog_val[0];
-        double vy = dmove.jog_val[1];
-        double wz = dmove.jog_val[2];
+        // action
+        double vx = msg.jog_val[0];
+        double vy = msg.jog_val[1];
+        double wz = msg.jog_val[2];
 
         MainWindow* _main = (MainWindow*)main;
         _main->update_jog_values(vx, vy, wz*D2R);
 
-        dmove.result = "accept";
-        dmove.message = "";
+        // response
+        msg.result = "accept";
+        msg.message = "";
+
+        // no response?
+        //send_move_response(msg);
     }
     else if(command == "target")
     {
-        QString method = dmove.method;
+        QString method = msg.method;
         if(method == "pp")
         {
+            // action
             if(unimap->is_loaded == false)
             {
-                dmove.result = "reject";
-                dmove.message = "map not loaded";
+                msg.result = "reject";
+                msg.message = "map not loaded";
 
-                send_move_response(dmove);
+                send_move_response(msg);
                 return;
             }
 
             if(slam->is_loc == false)
             {
-                dmove.result = "reject";
-                dmove.message = "no localization";
+                msg.result = "reject";
+                msg.message = "no localization";
 
-                send_move_response(dmove);
+                send_move_response(msg);
                 return;
             }
 
-            double x = dmove.tgt_pose_vec[0]; double y = dmove.tgt_pose_vec[1];
+            double x = msg.tgt_pose_vec[0];
+            double y = msg.tgt_pose_vec[1];
             if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
             {
-                dmove.result = "reject";
-                dmove.message = "target location out of range";
+                msg.result = "reject";
+                msg.message = "target location out of range";
 
-                send_move_response(dmove);
+                send_move_response(msg);
                 return;
             }
 
-            Eigen::Vector4d pose_vec = dmove.tgt_pose_vec;
+            Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
             Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0],pose_vec[1],pose_vec[3]*D2R));
             goal_tf(2,3) = pose_vec[2];
-
             if(obsmap->is_tf_collision(goal_tf))
             {
-                dmove.result = "reject";
-                dmove.message = "target location occupied";
+                msg.result = "reject";
+                msg.message = "target location occupied(static obs)";
 
-                send_move_response(dmove);
+                send_move_response(msg);
                 return;
             }
 
-            // pure pursuit
-            int preset = dmove.preset;
+            if(config->USE_MULTI)
+            {
+                msg.result = "reject";
+                msg.message = "target command not supported by multi. use goal_id";
+
+                send_move_response(msg);
+                return;
+            }
+
+            // pure pursuit            
+            int preset = msg.preset;
             ctrl->move_pp(goal_tf, preset);
 
-            dmove.result = "accept";
-            dmove.message = "";
-            send_move_response(dmove);
+            msg.result = "accept";
+            msg.message = "";
+
+            send_move_response(msg);
         }
         else
         {
-            dmove.result = "reject";
-            dmove.message = "not supported";
-            send_move_response(dmove);
+            msg.result = "reject";
+            msg.message = "not supported";
+
+            send_move_response(msg);
         }
     }
     else if(command == "goal")
     {
-        QString method = dmove.method;
+        QString method = msg.method;
         if(method == "pp")
         {
             if(unimap->is_loaded == false)
             {
-                dmove.result = "reject";
-                dmove.message = "map not loaded";
-                send_move_response(dmove);
+                msg.result = "reject";
+                msg.message = "map not loaded";
+
+                send_move_response(msg);
                 return;
             }
 
             if(slam->is_loc == false)
             {
-                dmove.result = "reject";
-                dmove.message = "no localization";
-                send_move_response(dmove);
+                msg.result = "reject";
+                msg.message = "no localization";
+
+                send_move_response(msg);
                 return;
             }
 
-            QString goal_id = dmove.goal_node_id;
+            QString goal_id = msg.goal_node_id;
             if(goal_id == "")
             {
-                dmove.result = "reject";
-                dmove.message = "empty node id";
-                send_move_response(dmove);
+                msg.result = "reject";
+                msg.message = "empty node id";
+
+                send_move_response(msg);
                 return;
             }
 
@@ -1278,241 +915,271 @@ void COMM_RRS::slot_move(DATA_MOVE dmove)
                 node = unimap->get_node_by_name(goal_id);
                 if(node == NULL)
                 {
-                    dmove.result = "reject";
-                    dmove.message = "invalid node id";
-                    send_move_response(dmove);
+                    msg.result = "reject";
+                    msg.message = "invalid node id";
+
+                    send_move_response(msg);
                     return;
                 }
             }
 
-            Eigen::Matrix4d goal_tf = node->tf;
-            ctrl->set_goal(goal_id);
-
             // pure pursuit
-            int preset = dmove.preset;
-            ctrl->move_pp(goal_tf, preset);
+            if(config->USE_MULTI)
+            {
+                ctrl->set_goal(goal_id);
+            }
+            else
+            {
+                int preset = msg.preset;
+                Eigen::Matrix4d goal_tf = node->tf;
+                ctrl->move_pp(goal_tf, preset);
+            }
 
-            dmove.result = "accept";
-            dmove.message = "";
-            send_move_response(dmove);
+            msg.result = "accept";
+            msg.message = "";
+
+            send_move_response(msg);
         }
         else
         {
-            dmove.result = "reject";
-            dmove.message = "not supported";
-            send_move_response(dmove);
+            msg.result = "reject";
+            msg.message = "not supported";
+
+            send_move_response(msg);
         }
     }
     else if(command == "pause")
     {
         ctrl->is_pause = true;
 
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_move_response(msg);
     }
     else if(command == "resume")
     {
         ctrl->is_pause = false;
 
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_move_response(msg);
     }
     else if(command == "stop")
     {
         ctrl->stop();
 
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_move_response(msg);
     }
 }
 
-void COMM_RRS::slot_mapping(DATA_MAPPING dmap)
+void COMM_RRS::slot_mapping(DATA_MAPPING msg)
 {
-    QString command = dmap.command;
+    QString command = msg.command;
     if(command == "start")
     {
-        last_send_kfrm_idx = 0;
-        MainWindow* _main = (MainWindow*)main;
         if(lidar->is_connected_f)
         {
+            last_send_kfrm_idx = 0;
+            MainWindow* _main = (MainWindow*)main;
             _main->bt_MapBuild();
 
-            dmap.result = "accept";
-            dmap.message = "";
+            msg.result = "accept";
+            msg.message = "";
+
+            send_mapping_response(msg);
         }
         else
         {
-            dmap.result = "reject";
-            dmap.message = "lidar not connected";
-        }
+            msg.result = "reject";
+            msg.message = "lidar not connected";
 
-        send_mapping_response(dmap);
+            send_mapping_response(msg);
+        }
     }
     else if(command == "stop")
     {
         MainWindow* _main = (MainWindow*)main;
         _main->bt_MapSave();
 
-        dmap.result = "accept";
-        dmap.message = "";
+        msg.result = "accept";
+        msg.message = "";
 
-        send_mapping_response(dmap);
+        send_mapping_response(msg);
     }
     else if(command == "save")
     {
         MainWindow* _main = (MainWindow*)main;
         _main->bt_MapSave();
 
-        QString map_name = dmap.map_name;
-        QString save_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + map_name;
+        QString map_name = msg.map_name;
+        QString save_dir = QDir::homePath() + "/maps/" + map_name;
+
         std::string command = "cp -r " + _main->map_dir.toStdString() + " '" + save_dir.toStdString() + "'";
         int result = std::system(command.c_str());
         if(result == 0)
         {
-            dmap.result = "success";
-            dmap.message = "";
+            msg.result = "success";
+            msg.message = "";
 
-            send_mapping_response(dmap);
+            send_mapping_response(msg);
         }
         else
         {
-            dmap.result = "fail";
-            dmap.message = "";
+            msg.result = "fail";
+            msg.message = "copy failed, check auto created folder";
 
-            send_mapping_response(dmap);
+            send_mapping_response(msg);
         }
     }
     else if(command == "reload")
     {
         last_send_kfrm_idx = 0;
 
-        dmap.result = "accept";
-        dmap.message = "";
+        msg.result = "accept";
+        msg.message = "";
 
-        send_mapping_response(dmap);
+        send_mapping_response(msg);
     }
 }
 
-void COMM_RRS::slot_load(DATA_LOAD dload)
+void COMM_RRS::slot_load(DATA_LOAD msg)
 {
-    QString command = dload.command;
+    QString command = msg.command;
     if(command == "mapload")
     {
-        QString map_name = dload.map_name;
-        MainWindow* _main = (MainWindow*)main;
-
-        QString load_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/maps/" + map_name;
+        QString map_name = msg.map_name;
+        QString load_dir = QDir::homePath() + "/maps/" + map_name;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
             {
-                dload.result = "reject";
-                dload.message = "invalid map dir";
+                msg.result = "reject";
+                msg.message = "invalid map dir";
 
-                send_load_response(dload);
+                send_load_response(msg);
                 return;
             }
 
             slam->localization_stop();
             obsmap->clear();
 
+            MainWindow* _main = (MainWindow*)main;
             _main->map_dir = load_dir;
             unimap->load_map(load_dir);
             _main->all_update();
 
+            if(config->USE_LVX)
+            {
+                QString path_3d_map = load_dir + "/map.las";
+                lvx->map_load(path_3d_map);
+            }
+
             if(unimap->is_loaded)
             {
-                dload.result = "success";
-                dload.message = "";
+                msg.result = "success";
+                msg.message = "";
 
-                send_load_response(dload);
+                send_load_response(msg);
             }
             else
             {
-                dload.result = "fail";
-                dload.message = "map not load";
+                msg.result = "fail";
+                msg.message = "map not load";
 
-                send_load_response(dload);
+                send_load_response(msg);
             }
         }
     }
     else if(command == "topoload")
     {
-        dload.result = "reject";
-        dload.message = "not support yet";
+        msg.result = "reject";
+        msg.message = "not support yet";
 
-        send_load_response(dload);
+        send_load_response(msg);
     }
     else if(command == "configload")
     {
-        dload.result = "reject";
-        dload.message = "not support yet";
+        msg.result = "reject";
+        msg.message = "not support yet";
 
-        send_load_response(dload);
+        send_load_response(msg);
     }
 }
 
-void COMM_RRS::slot_randomseq(DATA_RANDOMSEQ drandomseq)
+void COMM_RRS::slot_randomseq(DATA_RANDOMSEQ msg)
 {
-    QString command = drandomseq.command;
+    QString command = msg.command;
     if(command == "randomseq")
     {
         MainWindow* _main = (MainWindow*)main;
         _main->slot_sim_random_seq();
 
-        drandomseq.result = "accept";
-        drandomseq.message = "";
+        msg.result = "accept";
+        msg.message = "";
 
-        send_randomseq_response(drandomseq);
+        send_randomseq_response(msg);
     }
 }
 
-void COMM_RRS::slot_localization(DATA_LOCALIZATION dloc)
+void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 {
-    QString command = dloc.command;
+    QString command = msg.command;
     if(command == "semiautoinit")
     {
         if(unimap->is_loaded == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not loaded map";
+            msg.result = "reject";
+            msg.message = "not loaded map";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
+
         if(lidar->is_connected_f == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected front lidar";
+            msg.result = "reject";
+            msg.message = "not connected front lidar";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
 
         #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected back lidar";
+            msg.result = "reject";
+            msg.message = "not connected back lidar";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
         #endif
 
         if(slam->is_busy)
         {
-            dloc.result = "reject";
-            dloc.message = "already running";
+            msg.result = "reject";
+            msg.message = "already running";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
 
+        msg.result = "accept";
+        msg.message = "";
+        send_localization_response(msg);
+
+        // do process
         logger->write_log("[AUTO_INIT] recv_loc, try semi-auto init", "Green", true, false);
+
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
         slam->localization_stop();
 
         // semi auto init
@@ -1523,118 +1190,138 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION dloc)
             semi_auto_init_thread = NULL;
         }
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
-
-        semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, slam);
+        semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, slam);        
     }
     else if(command == "init")
     {
         if(unimap->is_loaded == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not loaded map";
+            msg.result = "reject";
+            msg.message = "not loaded map";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
         if(lidar->is_connected_f == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected front lidar";
+            msg.result = "reject";
+            msg.message = "not connected front lidar";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
 
         #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected back lidar";
+            msg.result = "reject";
+            msg.message = "not connected back lidar";
 
-            send_localization_response(dloc);
+            send_localization_response(msg);
             return;
         }
         #endif
 
-        double x = dloc.tgt_pose_vec[0];
-        double y = dloc.tgt_pose_vec[1];
-        double rz = dloc.tgt_pose_vec[3];
-
         // manual init
-        slam->mtx.lock();
-        slam->cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
-        slam->mtx.unlock();
+        double x = msg.tgt_pose_vec[0];
+        double y = msg.tgt_pose_vec[1];
+        double rz = msg.tgt_pose_vec[3];
+        Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
+        slam->localization_stop();
+
+        if(config->USE_LVX)
+        {
+            lvx->set_cur_tf(tf);
+        }
+        slam->set_cur_tf(tf);
+
+        if(config->USE_LVX)
+        {
+            lvx->loc_start();
+        }
+        slam->localization_start();
+
+        msg.result = "accept";
+        msg.message = "";
+        send_localization_response(msg);
     }
     else if(command == "start")
     {
+        if(config->USE_LVX)
+        {
+            lvx->loc_start();
+        }
         slam->localization_start();
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_localization_response(msg);
     }
     else if(command == "stop")
     {
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
         slam->localization_stop();
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_localization_response(msg);
     }
     else if(command == "randominit")
     {
-        QString seed = dloc.seed;
+        QString seed = msg.seed;
 
         MainWindow* _main = (MainWindow*)main;
         _main->slot_sim_random_init(seed);
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_localization_response(msg);
     }
 }
 
-void COMM_RRS::slot_dock(DATA_DOCK ddock)
+void COMM_RRS::slot_dock(DATA_DOCK msg)
 {
-    QString command = ddock.command;
+    QString command = msg.command;
     if(command == "dock")
     {
         dctrl->move();
 
-        ddock.result = "accept";
-        ddock.message = "";
-        send_dock_response(ddock);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_dock_response(msg);
     }
     else if(command == "undock")
     {
         dctrl->undock();
 
-        ddock.result = "accept";
-        ddock.message = "";
-        send_dock_response(ddock);
+        msg.result = "accept";
+        msg.message = "";
+
+        send_dock_response(msg);
     }
 }
 
-void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR dlidar)
+void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR msg)
 {
-    QString command = dlidar.command;
+    QString command = msg.command;
     if(command == "on")
     {
-        QString str;
-        str.sprintf("dlidar.frequency: %d", dlidar.frequency);
-        logger->write_log(str, "white");
-
-        MainWindow* _main = (MainWindow*)main;
-        if(dlidar.frequency > 0)
+        if(msg.frequency > 0)
         {
-            _main->lidar_view_hz = dlidar.frequency;
+            MainWindow* _main = (MainWindow*)main;
+            _main->lidar_view_hz = msg.frequency;
         }
     }
     else if(command == "off")
@@ -1644,19 +1331,15 @@ void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR dlidar)
     }
 }
 
-void COMM_RRS::slot_view_path(DATA_VIEW_PATH dpath)
+void COMM_RRS::slot_view_path(DATA_VIEW_PATH msg)
 {
-    QString command = dpath.command;
+    QString command = msg.command;
     if(command == "on")
     {
-        QString str;
-        str.sprintf("dpath.frequency: %d", dpath.frequency);
-        logger->write_log(str, "white");
-
-        MainWindow* _main = (MainWindow*)main;
-        if(dpath.frequency > 0)
+        if(msg.frequency > 0)
         {
-            _main->path_view_hz = dpath.frequency;
+            MainWindow* _main = (MainWindow*)main;
+            _main->path_view_hz = msg.frequency;
         }
     }
     else if(command == "off")
@@ -1666,50 +1349,50 @@ void COMM_RRS::slot_view_path(DATA_VIEW_PATH dpath)
     }
 }
 
-void COMM_RRS::slot_led(DATA_LED dled)
+void COMM_RRS::slot_led(DATA_LED msg)
 {
-    QString command = dled.command;
+    QString command = msg.command;
     if(command == "on")
     {
         // do something
 
-        dled.result = "accept";
-        dled.message = "";
+        msg.result = "accept";
+        msg.message = "";
     }
-    else if(command == "undock")
+    else if(command == "off")
     {
         // do something
 
-        dled.result = "accept";
-        dled.message = "";
+        msg.result = "accept";
+        msg.message = "";
     }
 }
 
-void COMM_RRS::slot_motor(DATA_MOTOR dmotor)
+void COMM_RRS::slot_motor(DATA_MOTOR msg)
 {
-    QString command = dmotor.command;
+    QString command = msg.command;
     if(command == "on")
     {
         mobile->motor_on();
 
-        dmotor.result = "accept";
-        dmotor.message = "";
+        msg.result = "accept";
+        msg.message = "";
     }
     else if(command == "off")
     {
         mobile->motor_off();
 
-        dmotor.result = "accept";
-        dmotor.message = "";
+        msg.result = "accept";
+        msg.message = "";
     }
 }
 
-void COMM_RRS::slot_path(DATA_PATH dpath)
+void COMM_RRS::slot_path(DATA_PATH msg)
 {
-    QString command = dpath.command;
+    QString command = msg.command;
     if(command == "path")
     {
-        QString path_str = dpath.path;
+        QString path_str = msg.path;
         QStringList path_str_list = path_str.split(",");
 
         std::vector<QString> path;
@@ -1718,19 +1401,19 @@ void COMM_RRS::slot_path(DATA_PATH dpath)
             path.push_back(path_str_list[p]);
         }
 
-        int preset = dpath.preset;
+        int preset = msg.preset;
         ctrl->move_pp(path, preset);
     }
 }
 
-void COMM_RRS::slot_vobs_r(DATA_VOBS_R dvobs_r)
+void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
 {
-    QString command = dvobs_r.command;
+    QString command = msg.command;
     if(command == "dvobs_r")
     {
         std::vector<Eigen::Vector3d> vobs_list;
 
-        QString vobs_str = dvobs_r.vobs;
+        QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split("\n");
         if(vobs_str_list.size() > 0)
         {
@@ -1757,12 +1440,12 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R dvobs_r)
     }
 }
 
-void COMM_RRS::slot_vobs_c(DATA_VOBS_C dvobs_c)
+void COMM_RRS::slot_vobs_c(DATA_VOBS_C msg)
 {
-    QString command = dvobs_c.command;
+    QString command = msg.command;
     if(command == "dvobs_c")
     {
-        QString vobs_str = dvobs_c.vobs;
+        QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split(",");
 
         // set vobs
@@ -1789,127 +1472,127 @@ void COMM_RRS::slot_vobs_c(DATA_VOBS_C dvobs_c)
     }
 }
 
-void COMM_RRS::send_move_response(DATA_MOVE dmove)
+void COMM_RRS::send_move_response(DATA_MOVE msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject moveResponseObj;
-    moveResponseObj["command"] = dmove.command;
-    moveResponseObj["result"] = dmove.result;
-    moveResponseObj["message"] = dmove.message;
-    moveResponseObj["preset"] = QString::number(dmove.preset, 10);
-    moveResponseObj["method"] = dmove.method;
-    moveResponseObj["goal_id"] = dmove.goal_node_id;
-    moveResponseObj["x"] = QString::number(dmove.tgt_pose_vec[0], 'f', 3);
-    moveResponseObj["y"] = QString::number(dmove.tgt_pose_vec[1], 'f', 3);
-    moveResponseObj["z"] = QString::number(dmove.tgt_pose_vec[2], 'f', 3);
-    moveResponseObj["rz"] = QString::number(dmove.tgt_pose_vec[3], 'f', 3);
-    moveResponseObj["vx"] = QString::number(dmove.jog_val[0], 'f', 3);
-    moveResponseObj["vy"] = QString::number(dmove.jog_val[1], 'f', 3);
-    moveResponseObj["wz"] = QString::number(dmove.jog_val[2], 'f', 3);
-    moveResponseObj["time"] = QString::number((long long)(dmove.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["preset"] = QString::number(msg.preset, 10);
+    obj["method"] = msg.method;
+    obj["goal_id"] = msg.goal_node_id;
+    obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
+    obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
+    obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
+    obj["rz"] = QString::number(msg.tgt_pose_vec[3], 'f', 3);
+    obj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
+    obj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
+    obj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(moveResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("moveResponse", res);
 }
 
-void COMM_RRS::send_localization_response(DATA_LOCALIZATION dloc)
+void COMM_RRS::send_localization_response(DATA_LOCALIZATION msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject locResponseObj;
-    locResponseObj["command"] = dloc.command;
-    locResponseObj["result"] = dloc.result;
-    locResponseObj["message"] = dloc.message;
-    locResponseObj["x"] = QString::number(dloc.tgt_pose_vec[0], 'f', 3);
-    locResponseObj["y"] = QString::number(dloc.tgt_pose_vec[1], 'f', 3);
-    locResponseObj["z"] = QString::number(dloc.tgt_pose_vec[2], 'f', 3);
-    locResponseObj["rz"] = QString::number(dloc.tgt_pose_vec[3], 'f', 3);
-    locResponseObj["seed"] = dloc.seed;
-    locResponseObj["time"] = QString::number((long long)(dloc.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
+    obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
+    obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
+    obj["rz"] = QString::number(msg.tgt_pose_vec[3], 'f', 3);
+    obj["seed"] = msg.seed;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(locResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("localizationResponse", res);
 }
 
-void COMM_RRS::send_load_response(DATA_LOAD dload)
+void COMM_RRS::send_load_response(DATA_LOAD msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject loadResponseObj;
-    loadResponseObj["command"] = dload.command;
-    loadResponseObj["result"] = dload.result;
-    loadResponseObj["message"] = dload.message;
-    loadResponseObj["name"] = dload.map_name;
-    loadResponseObj["time"] = QString::number((long long)(dload.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["name"] = msg.map_name;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(loadResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("loadResponse", res);
 }
 
-void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
+void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject randomseqResponseObj;
-    randomseqResponseObj["command"] = drandomseq.command;
-    randomseqResponseObj["result"] = drandomseq.result;
-    randomseqResponseObj["message"] = drandomseq.message;
-    randomseqResponseObj["time"] = QString::number((long long)(drandomseq.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(randomseqResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("randomseqResponse", res);
 }
 
-void COMM_RRS::send_mapping_response(DATA_MAPPING dmap)
+void COMM_RRS::send_mapping_response(DATA_MAPPING msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject mapResponseObj;
-    mapResponseObj["command"] = dmap.command;
-    mapResponseObj["result"] = dmap.result;
-    mapResponseObj["message"] = dmap.message;
-    mapResponseObj["name"] = dmap.map_name;
-    mapResponseObj["time"] = QString::number((long long)(dmap.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["name"] = msg.map_name;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(mapResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mappingResponse", res);
 }
 
-void COMM_RRS::send_dock_response(DATA_DOCK ddock)
+void COMM_RRS::send_dock_response(DATA_DOCK msg)
 {
     if(!is_connected)
     {
         return;
     }
 
-    QJsonObject dockResponseObj;
-    dockResponseObj["command"] = ddock.command;
-    dockResponseObj["result"] = ddock.result;
-    dockResponseObj["message"] = ddock.message;
-    dockResponseObj["time"] = QString::number((long long)(ddock.time*1000), 10);
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(dockResponseObj);
+    QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("dockResponse", res);
 }

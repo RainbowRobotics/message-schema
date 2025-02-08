@@ -25,12 +25,13 @@
         "USE_CAM": "0",
         "USE_RTSP": "0",
         "USE_RRS": "0",
-        "USE_FMS": "0",
+        "USE_FMS": "1",
         "USE_QTUI": "0",
         "USE_ARUCO": "0",
         "USE_EARLYSTOP": "0",
         "USE_LVX": "0",
-        "USE_COOP": "0"
+        "USE_COOP": "0",
+        "USE_MULTI": "1"
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",

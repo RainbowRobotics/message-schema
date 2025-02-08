@@ -235,6 +235,9 @@ void CONFIG::load()
 
                 USE_COOP = obj_debug["USE_COOP"].toString().toInt();
                 printf("[CONFIG] USE_COOP, %s\n", obj_debug["USE_COOP"].toString().toLocal8Bit().data());
+
+                USE_MULTI = obj_debug["USE_MULTI"].toString().toInt();
+                printf("[CONFIG] USE_MULTI, %s\n", obj_debug["USE_MULTI"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_control = obj["control"].toObject();

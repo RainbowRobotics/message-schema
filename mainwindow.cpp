@@ -166,8 +166,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
 
     // for response
-    connect(&dctrl, SIGNAL(signal_dock(DATA_DOCK)), &comm_rrs, SLOT(slot_dock(DATA_DOCK)));
-    connect(&ctrl, SIGNAL(signal_move(DATA_MOVE)), &comm_rrs, SLOT(slot_move(DATA_MOVE)));
+    connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(slot_dock_response(DATA_DOCK)));
+    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(slot_move_response(DATA_MOVE)));
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
@@ -667,6 +667,8 @@ void MainWindow::init_modules()
     comm_fms.unimap = &unimap;
     comm_fms.obsmap = &obsmap;
     comm_fms.ctrl = &ctrl;
+    comm_fms.dctrl = &dctrl;
+    comm_fms.lvx = &lvx;
     if(config.USE_FMS)
     {
         comm_fms.init();
@@ -684,6 +686,7 @@ void MainWindow::init_modules()
     comm_rrs.obsmap = &obsmap;
     comm_rrs.ctrl = &ctrl;
     comm_rrs.dctrl = &dctrl;
+    comm_rrs.lvx = &lvx;
     if(config.USE_RRS)
     {
         comm_rrs.init();
@@ -1944,8 +1947,11 @@ void MainWindow::bt_MapLoad()
         unimap.load_map(path);
         all_update();
 
-        QString path_3d_map = path + "/map.las";
-        lvx.map_load(path_3d_map);
+        if(config.USE_LVX)
+        {
+            QString path_3d_map = path + "/map.las";
+            lvx.map_load(path_3d_map);
+        }
     }
 }
 

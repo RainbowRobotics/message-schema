@@ -104,7 +104,7 @@ public:
     std::vector<Eigen::Vector3d> debug_frame;
 
 Q_SIGNALS:
-    void signal_dock(DATA_DOCK ddock);
+    void signal_dock_response(DATA_DOCK msg);
 };
 
 #endif

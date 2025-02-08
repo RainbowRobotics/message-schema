@@ -49,7 +49,7 @@ void DOCKING::stop()
     }
     undock_flag = false;
     path_flag = false;
-//    fsm_state = DOCKING_FSM_OFF;
+    //fsm_state = DOCKING_FSM_OFF;
     mobile->move(0, 0, 0);
 }
 
@@ -57,13 +57,16 @@ void DOCKING::move()
 {
     // stop first
     stop();
+
     // obs clear
     obsmap->clear();
+
     // start control loop
     a_flag = true;
     undock_flag = false;
     path_flag = false;
     dock = false ; //dock flag init
+
     //generate V
     Vfrm = generateVKframe();
     frm1_center = calculateCenter(Vfrm);
@@ -143,9 +146,9 @@ bool DOCKING::find_Vmark()
                     flag = false;
                 }
             }
-        ++nclus.back();
+            ++nclus.back();
         }
-    i++;
+        i++;
     }
 
     if(clustered1[c_points-1]== true and clustered2[c_points-1] == false)
@@ -161,7 +164,7 @@ bool DOCKING::find_Vmark()
         }
     }
 
-    polar.pop_back(); 
+    polar.pop_back();
     int len = polar.size();
     std::vector<std::vector<Eigen::Vector3d>> g_clusters;
 
@@ -326,15 +329,15 @@ void DOCKING::a_loop()
                 }
                 dockControl(cur_pos,cmd_v,cmd_w);
 
-//                if(obsmap->is_tf_collision(cur_pos, 0.1, 0.1))
-//                {
-//                    obs_wait_st_time = get_time();
-//                    mobile->move(0,0,0);
-//                    fsm_state = DOCKING_FSM_OBS;
+                //                if(obsmap->is_tf_collision(cur_pos, 0.1, 0.1))
+                //                {
+                //                    obs_wait_st_time = get_time();
+                //                    mobile->move(0,0,0);
+                //                    fsm_state = DOCKING_FSM_OBS;
 
-//                    printf("[DOCKING] DRIVING -> OBS_WAIT\n");
-//                    continue;
-//                }
+                //                    printf("[DOCKING] DRIVING -> OBS_WAIT\n");
+                //                    continue;
+                //                }
                 mobile->move(cmd_v,0,cmd_w);
             }
 
@@ -349,7 +352,7 @@ void DOCKING::a_loop()
                     ddock.message = failed_reason;
                     ddock.time = get_time();
 
-                    Q_EMIT signal_dock(ddock);
+                    Q_EMIT signal_dock_response(ddock);
                 }
             }
         }
@@ -397,7 +400,7 @@ void DOCKING::a_loop()
         {
             MOBILE_STATUS ms = mobile->get_status();
 
-            mobile->move(0, 0, 0); 
+            mobile->move(0, 0, 0);
             qDebug() << "wait start time" << wait_start_time;
             qDebug() << "motor cur" << ms.cur_m0 << ms.cur_m1;
             if (ms.charge_state == 3 && ms.cur_m0 < 60 && ms.cur_m1 < 60)
@@ -410,7 +413,7 @@ void DOCKING::a_loop()
                 ddock.message = "";
                 ddock.time = get_time();
 
-                Q_EMIT signal_dock(ddock);
+                Q_EMIT signal_dock_response(ddock);
             }
             else if (get_time() - wait_start_time > 8.0)
             {
@@ -435,7 +438,7 @@ void DOCKING::a_loop()
                         ddock.message = failed_reason;
                         ddock.time = get_time();
 
-                        Q_EMIT signal_dock(ddock);
+                        Q_EMIT signal_dock_response(ddock);
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
@@ -607,18 +610,18 @@ KFRAME DOCKING::generateVKframe()
     XYZR_CLOUD res4;
 
     //vdock
-//    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
-//    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
-//    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
-//    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
-//    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
-//    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
-//    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
+    //    Eigen::Vector3d p1(config->ROBOT_SIZE_X[1] + config->DOCKING_DOCK_SIZE_X[1] + config->DOCKING_POINTDOCK_MARGIN, 0.0, 0.0);
+    //    Eigen::Vector3d p2(p1.x() - 0.05, p1.y() + 0.16248, 0.0);
+    //    Eigen::Vector3d p4(p2.x(), p2.y() + 0.03, 0.0);
+    //    Eigen::Vector3d p6(p4.x() + 0.18, p4.y(), 0.0);
+    //    Eigen::Vector3d p3(p1.x() - 0.05, p1.y() - 0.16248, 0.0);
+    //    Eigen::Vector3d p5(p3.x(), p3.y() - 0.03, 0.0);
+    //    Eigen::Vector3d p7(p5.x() + 0.18, p5.y(), 0.0);
 
-//    res1 = generateSamplePoints(p4,p2,40);
-//    res2 = generateSamplePoints(p2,p1,80);
-//    res3 = generateSamplePoints(p1,p3,80);
-//    res4 = generateSamplePoints(p3,p5,40);
+    //    res1 = generateSamplePoints(p4,p2,40);
+    //    res2 = generateSamplePoints(p2,p1,80);
+    //    res3 = generateSamplePoints(p1,p3,80);
+    //    res4 = generateSamplePoints(p3,p5,40);
 
     Eigen::Vector3d p1(config->ROBOT_SIZE_X[1]+config->DOCKING_POINTDOCK_MARGIN, 0.225, 0.0);
     Eigen::Vector3d p2(p1.x(), p1.y() - 0.125 ,0.0);
@@ -647,12 +650,12 @@ KFRAME DOCKING::generateVKframe()
         Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
         debug_frame.push_back(debug_pt);
     }
-//    for (const auto& pt : res4.pts)
-//    {
-//        frame.pts.push_back(pt);
-//        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-//        debug_frame.push_back(debug_pt);
-//    }
+    //    for (const auto& pt : res4.pts)
+    //    {
+    //        frame.pts.push_back(pt);
+    //        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+    //        debug_frame.push_back(debug_pt);
+    //    }
 
     return frame;
 }
@@ -1089,9 +1092,9 @@ void DOCKING::b_loop()
                 ddock.message = "";
                 ddock.time = get_time();
 
-                Q_EMIT signal_dock(ddock);
+                Q_EMIT signal_dock_response(ddock);
 
-                fsm_state == DOCKING_FSM_OFF;
+                fsm_state = DOCKING_FSM_OFF;
             }
         }
 
@@ -1110,7 +1113,7 @@ void DOCKING::b_loop()
             ddock.message = failed_reason;
             ddock.time = get_time();
 
-            Q_EMIT signal_dock(ddock);
+            Q_EMIT signal_dock_response(ddock);
         }
 
         // for real time loop
@@ -1120,8 +1123,6 @@ void DOCKING::b_loop()
         if(delta_loop_time < dt)
         {
             precise_sleep(dt-delta_loop_time);
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
@@ -1132,34 +1133,34 @@ void DOCKING::b_loop()
 
 bool DOCKING::undock()
 {
-        int is_good_everything = is_everything_fine();
+    int is_good_everything = is_everything_fine();
 
-        if(is_good_everything == DRIVING_FAILED)
-        {
-            mobile->move(0, 0, 0);
-            printf("[DOCKING] something wrong (failed)\n");
-            return false;
-        }
+    if(is_good_everything == DRIVING_FAILED)
+    {
+        mobile->move(0, 0, 0);
+        printf("[DOCKING] something wrong (failed)\n");
+        return false;
+    }
 
-        else if(is_good_everything == DRIVING_NOT_READY)
-        {
-            mobile->move(0, 0, 0);
-            printf("[DOCKING] something wrong (not ready)\n");
-            return false;
-        }
+    else if(is_good_everything == DRIVING_NOT_READY)
+    {
+        mobile->move(0, 0, 0);
+        printf("[DOCKING] something wrong (not ready)\n");
+        return false;
+    }
 
-        else
-        {    
-            // obs clear
-            obsmap->clear();
-            // start control loop
-            b_flag = true;
-            // start docking control loop
-            fsm_state = DOCKING_FSM_UNDOCK;
-            b_thread = new std::thread(&DOCKING::b_loop, this);
-            mobile->stop_charge();
-            mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN +0.3), 0.05);
-            undock_time = get_time();
-            return true;
-        }
+    else
+    {
+        // obs clear
+        obsmap->clear();
+        // start control loop
+        b_flag = true;
+        // start docking control loop
+        fsm_state = DOCKING_FSM_UNDOCK;
+        b_thread = new std::thread(&DOCKING::b_loop, this);
+        mobile->stop_charge();
+        mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN +0.3), 0.05);
+        undock_time = get_time();
+        return true;
+    }
 }
