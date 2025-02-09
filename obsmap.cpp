@@ -406,7 +406,7 @@ void OBSMAP::update_vobs_map()
         // add global points
         Eigen::Vector3d center = vobs_list_robots[p];
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_X[1]);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
         pts.push_back(center);
 
         for(size_t q = 0; q < pts.size(); q++)
@@ -437,7 +437,7 @@ void OBSMAP::update_vobs_map()
         Eigen::Vector3d center = vobs_list_closures[p];
         _vir_closure_pts.push_back(center);
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.2);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.1);
         pts.push_back(center);
 
         for(size_t q = 0; q < pts.size(); q++)

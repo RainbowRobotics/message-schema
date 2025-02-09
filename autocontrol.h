@@ -51,6 +51,7 @@ public:
     PATH get_cur_local_path();
     QString get_obs_condition();    
     QString get_multi_req();
+    void set_multi_req(QString str);
     QString get_cur_goal_node();
     QString get_cur_goal_state();
     void clear_path();

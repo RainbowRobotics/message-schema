@@ -150,6 +150,16 @@ void COMM_FMS::send_move_status()
         auto_state = "move";
     }
 
+    if(mobile->get_cur_pdu_state() != "good")
+    {
+        auto_state = "pause";
+    }
+
+    if(slam->get_cur_loc_state() != "good")
+    {
+        auto_state = "error";
+    }
+
     // convert
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
@@ -664,7 +674,8 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
     }
     else if(command == "stop")
     {
-        ctrl->stop();
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Emergency();
 
         msg.result = "accept";
         msg.message = "";
@@ -697,7 +708,7 @@ void COMM_FMS::slot_path(DATA_PATH msg)
 void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
 {
     QString command = msg.command;
-    if(command == "dvobs_r")
+    if(command == "vobs_robots")
     {
         std::vector<Eigen::Vector3d> vobs_list;
 
@@ -731,7 +742,7 @@ void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
 void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
 {
     QString command = msg.command;
-    if(command == "dvobs_c")
+    if(command == "vobs_closures")
     {
         QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split(",");

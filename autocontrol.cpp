@@ -160,6 +160,15 @@ QString AUTOCONTROL::get_multi_req()
     return res;
 }
 
+void AUTOCONTROL::set_multi_req(QString str)
+{
+    mtx.lock();
+    multi_req = str;
+    mtx.unlock();
+
+    logger->write_log(QString("[AUTO] multi_state: %1").arg(str));
+}
+
 QString AUTOCONTROL::get_cur_goal_node()
 {
     mtx.lock();
@@ -188,13 +197,13 @@ void AUTOCONTROL::stop()
         b_thread = NULL;
     }
 
-    clean_up();
-
     mtx.lock();
     cur_goal_tf.setIdentity();
     mtx.unlock();
 
     fsm_state = AUTO_FSM_COMPLETE;
+    clean_up();    
+    set_multi_req("none");
 }
 
 void AUTOCONTROL::change()
@@ -241,11 +250,7 @@ void AUTOCONTROL::set_goal(QString goal_id)
     mtx.unlock();
 
     // set multi state
-    mtx.lock();
-    multi_req = "req_path";
-    mtx.unlock();
-
-    logger->write_log("[AUTO] multi_state: req_path");
+    set_multi_req("req_path");
 }
 
 void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
@@ -321,21 +326,24 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         PATH path = calc_global_path(path_list2[p], p == 0);
 
         // check final path
-        double d = calc_dist_2d(final_tf.block(0,3,3,1) - path.ed_tf.block(0,3,3,1));
-        if(d < config->DRIVE_GOAL_D)
+        if(final_tf.isIdentity())
         {
             path.is_final = true;
+        }
+        else
+        {
+            double d = calc_dist_2d(final_tf.block(0,3,3,1) - path.ed_tf.block(0,3,3,1));
+            if(d < config->DRIVE_GOAL_D)
+            {
+                path.is_final = true;
+            }
         }
 
         global_path_que.push(path);
     }
 
     // set flag
-    mtx.lock();
-    multi_req = "recv_path";
-    mtx.unlock();
-
-    logger->write_log("[AUTO] multi_state: recv_path");
+    set_multi_req("recv_path");
 
     // start control loop
     b_flag = true;
@@ -1612,7 +1620,7 @@ void AUTOCONTROL::b_loop_pp()
         Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*goal_tf);
         double err_d = calc_dist_2d(dxi);
         double err_th = std::abs(dxi[2]);
-        if(err_d < 2*config->DRIVE_GOAL_D)
+        if(err_d < config->DRIVE_GOAL_D)
         {
             if(!global_path.is_final)
             {
@@ -1620,9 +1628,10 @@ void AUTOCONTROL::b_loop_pp()
                 mobile->move(0, 0, 0);
 
                 clean_up();
+                set_multi_req("req_path");
 
                 mtx.lock();
-                last_cur_goal_state = "complete";
+                last_cur_goal_state = "moving";
                 mtx.unlock();
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -1630,11 +1639,13 @@ void AUTOCONTROL::b_loop_pp()
                 return;
             }
 
-            if(err_th < 2*config->DRIVE_GOAL_TH*D2R)
+            if(err_th < config->DRIVE_GOAL_TH*D2R)
             {
                 // final goal reached
                 mobile->move(0, 0, 0);
+
                 clean_up();
+                set_multi_req("none");
 
                 // response
                 if(config->USE_RRS)
@@ -1695,6 +1706,7 @@ void AUTOCONTROL::b_loop_pp()
         if(is_good_everything == DRIVING_FAILED)
         {
             clean_up();
+            set_multi_req("none");
 
             // response
             if(config->USE_RRS)
@@ -1721,6 +1733,7 @@ void AUTOCONTROL::b_loop_pp()
         else if(is_good_everything == DRIVING_NOT_READY)
         {
             clean_up();
+            set_multi_req("none");
 
             // response
             if(config->USE_RRS)
@@ -1810,9 +1823,6 @@ void AUTOCONTROL::b_loop_pp()
         // finite state machine
         if(fsm_state == AUTO_FSM_FIRST_ALIGN)
         {
-            // for loc
-            slam->is_pivot = true;
-
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
             int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
@@ -1880,7 +1890,7 @@ void AUTOCONTROL::b_loop_pp()
             // obs check
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
             cur_obs_val = obsmap->is_path_collision(traj, true);
-            if(cur_obs_val == OBS_DYN)
+            if(cur_obs_val != OBS_NONE)
             {
                 mobile->move(0, 0, 0);
 
@@ -1903,9 +1913,6 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_DRIVING)
         {
-            // for loc
-            slam->is_pivot = false;
-
             // find tgt            
             int cur_idx = get_nn_idx(local_path.pos, cur_pos);
             int tgt_idx = cur_idx + params.DRIVE_L/LOCAL_PATH_STEP;
@@ -1995,11 +2002,12 @@ void AUTOCONTROL::b_loop_pp()
                             mobile->move(0, 0, 0);
 
                             clean_up();
+                            set_multi_req("req_path");
 
                             fsm_state = AUTO_FSM_COMPLETE;
 
                             mtx.lock();
-                            last_cur_goal_state = "complete";
+                            last_cur_goal_state = "moving";
                             mtx.unlock();
 
                             logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
@@ -2154,9 +2162,6 @@ void AUTOCONTROL::b_loop_pp()
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
-            // for loc
-            slam->is_pivot = true;
-
             // calc heading error
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
             if(pre_err_th == 0)
@@ -2171,6 +2176,7 @@ void AUTOCONTROL::b_loop_pp()
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
                     clean_up();
+                    set_multi_req("none");
 
                     // response
                     if(config->USE_RRS)
@@ -2451,7 +2457,7 @@ void AUTOCONTROL::b_loop_pp()
                     }
                 }
 
-                if(min_d > 2.0*config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 2.0)
+                if(min_d > 2*config->ROBOT_RADIUS || get_time() - obs_wait_st_time > 2.0)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2502,6 +2508,7 @@ void AUTOCONTROL::b_loop_pp()
     else
     {
         clean_up();
+        set_multi_req("none");
 
         // response
         if(config->USE_RRS)
@@ -2518,7 +2525,7 @@ void AUTOCONTROL::b_loop_pp()
         logger->write_log("[AUTO] b_loop_pp stop");
 
         mtx.lock();
-        last_cur_goal_state = "complete";
+        last_cur_goal_state = "fail";
         mtx.unlock();
 
         fsm_state = AUTO_FSM_COMPLETE;
@@ -2530,13 +2537,6 @@ void AUTOCONTROL::clean_up()
     mobile->move(0, 0, 0);
     is_moving = false;
     is_pause = false;
+
     clear_path();
-
-    mtx.lock();    
-    multi_req = "none";
-    mtx.unlock();
-
-    slam->is_pivot = false;
-
-    logger->write_log("[AUTO] multi_state: none");
 }

@@ -79,7 +79,6 @@ public:
     std::atomic<bool> is_loc = {false};
     std::atomic<bool> is_busy = {false};    
     std::atomic<bool> is_qa = {false};
-    std::atomic<bool> is_pivot = {false};
 
     // live kd_tree
     XYZR_CLOUD live_cloud;
