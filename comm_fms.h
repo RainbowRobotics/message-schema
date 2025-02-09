@@ -70,7 +70,7 @@ private Q_SLOTS:
     void connected();
     void disconnected();
 
-Q_SIGNALS:
+Q_SIGNALS:    
     void signal_send_move_status();
 
     void recv_move(DATA_MOVE msg);
@@ -82,7 +82,7 @@ Q_SIGNALS:
     void recv_vobs_c(DATA_VOBS_C msg);
 
 private Q_SLOTS:
-    void slot_send_move_status();
+    void send_move_status();
 
     void slot_move(DATA_MOVE msg);
     void slot_localization(DATA_LOCALIZATION msg);

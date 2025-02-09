@@ -10,7 +10,7 @@ COMM_FMS::COMM_FMS(QObject *parent)
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
-    connect(this, SIGNAL(signal_send_move_status()), this, SLOT(slot_send_move_status()));
+    connect(this, SIGNAL(signal_send_move_status()), this, SLOT(send_move_status()));
 
     connect(this, SIGNAL(recv_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
     connect(this, SIGNAL(recv_load(DATA_LOAD)), this, SLOT(slot_load(DATA_LOAD)));
@@ -95,9 +95,98 @@ void COMM_FMS::disconnected()
 }
 
 // send status
-void COMM_FMS::slot_send_move_status()
+void COMM_FMS::send_move_status()
 {
+    if(!is_connected)
+    {
+        return;
+    }
 
+    // get time
+    double time = get_time();
+
+    // get cur_tf
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+
+    // get goal_tf
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
+
+    // get cur_node_id
+    QString cur_node_id = "";
+    if(unimap->is_loaded)
+    {
+        MainWindow* _main = (MainWindow*)main;
+        _main->mtx.lock();
+        cur_node_id = _main->last_node_id;
+        _main->mtx.unlock();
+    }
+
+    // get goal_node_id
+    QString goal_node_id = "";
+    if(unimap->is_loaded)
+    {
+        if(goal_tf.isIdentity())
+        {
+            goal_tf = cur_tf;
+            goal_node_id = cur_node_id;
+        }
+        else
+        {
+            goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+        }
+    }
+
+    // get path request
+    QString multi_req = ctrl->get_multi_req(); // "none", "req_path", "recv_path"
+
+    // get state
+    QString auto_state = "stop";
+    if(ctrl->is_pause)
+    {
+        auto_state = "pause";
+    }
+    else if(ctrl->is_moving)
+    {
+        auto_state = "move";
+    }
+
+    // convert
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
+
+    // Creating the JSON object
+    QJsonObject rootObj;
+
+    QJsonObject robotObj;
+    robotObj["robotSerial"] = robot_id;
+    rootObj["robot"] = robotObj;
+
+    QJsonObject dataObj;
+    dataObj["time"] = QString::number((long long)(time*1000), 10);
+
+    QJsonObject curObj;
+    curObj["id"] = cur_node_id;
+    curObj["x"] = QString::number(cur_xi[0], 'f', 3);
+    curObj["y"] = QString::number(cur_xi[1], 'f', 3);
+    curObj["rz"] = QString::number(cur_xi[2]*R2D, 'f', 3);
+    dataObj["cur_node"] = curObj;
+
+    QJsonObject goalObj;
+    goalObj["id"] = goal_node_id;
+    goalObj["x"] = QString::number(goal_xi[0], 'f', 3);
+    goalObj["y"] = QString::number(goal_xi[1], 'f', 3);
+    goalObj["rz"] = QString::number(goal_xi[2]*R2D, 'f', 3);
+    dataObj["goal_node"] = goalObj;
+
+    QJsonObject moveObj;
+    moveObj["path"] = multi_req;
+    moveObj["auto_move"] = auto_state;
+    dataObj["move_state"] = moveObj;
+    rootObj["data"] = dataObj;
+
+    QJsonDocument doc(rootObj);
+    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+    client.sendBinaryMessage(buf);
 }
 
 // recv callback
@@ -110,9 +199,8 @@ void COMM_FMS::recv_message(const QByteArray &buf)
         return;
     }
 
-    QString topic = get_json(root_obj, "topic");
-    QString data_str = get_json(root_obj, "data");
-    QJsonObject data_obj = QJsonDocument::fromJson(data_str.toUtf8()).object();
+    QString topic = get_json(root_obj, "topic");    
+    QJsonObject data_obj = root_obj.value("data").toObject();
 
     // parsing
     if(topic == "load")
@@ -138,457 +226,81 @@ void COMM_FMS::recv_message(const QByteArray &buf)
     else if(topic == "randomseq")
     {
         DATA_RANDOMSEQ msg;
-
+        msg.command = get_json(data_obj, "command");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_randomseq(msg);
     }
     else if(topic == "move")
     {
         DATA_MOVE msg;
-
+        msg.command = get_json(data_obj, "command");
+        msg.preset = get_json(data_obj, "preset").toInt();
+        msg.method = get_json(data_obj, "method");
+        msg.goal_node_id = get_json(data_obj, "goal_id");
+        msg.tgt_pose_vec[0] = get_json(data_obj, "x").toDouble();
+        msg.tgt_pose_vec[1] = get_json(data_obj, "y").toDouble();
+        msg.tgt_pose_vec[2] = get_json(data_obj, "z").toDouble();
+        msg.tgt_pose_vec[3] = get_json(data_obj, "rz").toDouble()*D2R;
+        msg.jog_val[0] = get_json(data_obj, "vx").toDouble();
+        msg.jog_val[1] = get_json(data_obj, "vy").toDouble();
+        msg.jog_val[2] = get_json(data_obj, "wz").toDouble();
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_move(msg);
     }
     else if(topic == "path")
     {
         DATA_PATH msg;
-
+        msg.command = get_json(data_obj, "command");
+        msg.path = get_json(data_obj, "path");
+        msg.preset = get_json(data_obj, "preset").toInt();
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_path(msg);
     }
     else if(topic == "vobsRobots")
     {
         DATA_VOBS_R msg;
-
+        msg.command = get_json(data_obj, "command");
+        msg.vobs = get_json(data_obj, "vobs");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_vobs_r(msg);
     }
     else if(topic == "vobsClosures")
     {
         DATA_VOBS_C msg;
-
+        msg.command = get_json(data_obj, "command");
+        msg.vobs = get_json(data_obj, "vobs");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_vobs_c(msg);
     }
 }
 
-void COMM_FMS::slot_move(DATA_MOVE msg)
-{
-
-}
-
-void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
-{
-
-}
-
 void COMM_FMS::slot_load(DATA_LOAD msg)
 {
-
-}
-
-void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
-{
-
-}
-
-void COMM_FMS::slot_path(DATA_PATH msg)
-{
-
-}
-
-void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
-{
-
-}
-
-void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
-{
-
-}
-
-
-/*
-DATA_LOAD COMM_FMS::get_data_load(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_LOAD dload;
-    dload.command = get_json(dataObj, "command");
-    if(dload.command == "mapload")
-    {
-        dload.map_name = get_json(dataObj, "name");
-        dload.time = time;
-    }
-    else if(dload.command == "topoload")
-    {
-        dload.map_name = get_json(dataObj, "name");
-        dload.time = time;
-    }
-    else if(dload.command == "configload")
-    {
-        dload.map_name = "";
-        dload.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_load, not support command:%s, time:%.3f\n", dload.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_LOAD();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_load, command:%s, time: %.3f\n", dload.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-DATA_LOCALIZATION COMM_FMS::get_data_localization(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_LOCALIZATION dloc;
-    dloc.command = get_json(dataObj, "command");
-    if(dloc.command == "autoinit")
-    {
-        dloc.seed = "";
-        dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dloc.time = time;
-    }
-    else if(dloc.command == "semiautoinit")
-    {
-        dloc.seed = "";
-        dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dloc.time = time;
-    }
-    else if(dloc.command == "init")
-    {
-        double x = get_json(dataObj, "x").toDouble();
-        double y = get_json(dataObj, "y").toDouble();
-        double z = get_json(dataObj, "z").toDouble();
-        double rz = get_json(dataObj, "rz").toDouble();
-
-        dloc.seed = "";
-        dloc.tgt_pose_vec = Eigen::Vector4d(x,y,z,rz);
-        dloc.time = time;
-    }
-    else if(dloc.command == "start")
-    {
-        dloc.seed = "";
-        dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dloc.time = time;
-    }
-    else if(dloc.command == "stop")
-    {
-        dloc.seed = "";
-        dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dloc.time = time;
-    }
-    else if(dloc.command == "randominit")
-    {
-        dloc.seed = get_json(dataObj, "seed");
-        dloc.tgt_pose_vec = Eigen::Vector4d(0,0,0,0);
-        dloc.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_localization, command:%s, time:%.3f\n", dloc.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_LOCALIZATION();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_localization, command:%s, time: %.3f\n", dloc.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-DATA_RANDOMSEQ COMM_FMS::get_data_randomseq(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_RANDOMSEQ drandomseq;
-    drandomseq.command = get_json(dataObj, "command");
-    if(drandomseq.command == "randomseq")
-    {
-        drandomseq.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_randomseq, command:%s, time:%.3f\n", drandomseq.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_RANDOMSEQ();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_randomseq, command:%s, time: %.3f\n", drandomseq.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-DATA_PATH COMM_FMS::get_data_path(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_PATH dpath;
-    dpath.command = get_json(dataObj, "command");
-    if(dpath.command == "path")
-    {
-        dpath.path = get_json(dataObj, "path");
-        dpath.preset = get_json(dataObj, "preset").toInt();
-        dpath.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_path, command:%s, time:%.3f\n", dpath.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_PATH();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_dpath, command:%s, time: %.3f\n", dpath.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-DATA_VOBS_R COMM_FMS::get_data_vobs_r(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_VOBS_R dvobs_r;
-    dvobs_r.command = get_json(dataObj, "command");
-    if(dvobs_r.command == "vobs_robots")
-    {
-        dvobs_r.vobs = get_json(dataObj, "vobs");
-        dvobs_r.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_vobs_r, command:%s, time:%.3f\n", dvobs_r.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_VOBS_R();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_vobs_r, command:%s, time: %.3f\n", dvobs_r.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-DATA_VOBS_C COMM_FMS::get_data_vobs_c(QJsonObject dataObj)
-{
-    // parsing
-    double time = get_json(dataObj, "time").toDouble()/1000;
-
-    DATA_VOBS_C dvobs_c;
-    dvobs_c.command = get_json(dataObj, "command");
-    if(dvobs_c.command == "vobs_closures")
-    {
-        dvobs_c.vobs = get_json(dataObj, "vobs");
-        dvobs_c.time = time;
-    }
-    else
-    {
-        QString str;
-        str.sprintf("[COMM_FMS] fail recv_vobs_c, command:%s, time:%.3f\n", dvobs_c.command.toLocal8Bit().data(), time);
-        logger->write_log(str, "Red");
-        return DATA_VOBS_C();
-    }
-
-    QString str;
-    str.sprintf("[COMM_FMS] success recv_vobs_c, command:%s, time: %.3f\n", dvobs_c.command.toLocal8Bit().data(), time);
-    logger->write_log(str, "Green");
-}
-
-// recv slots
-void COMM_FMS::slot_move(DATA_MOVE dmove)
-{
-    QString command = dmove.command;
-    if(command == "jog")
-    {
-        double vx = dmove.jog_val[0];
-        double vy = dmove.jog_val[1];
-        double wz = dmove.jog_val[2];
-
-        MainWindow* _main = (MainWindow*)main;
-        _main->update_jog_values(vx, vy, wz*D2R);
-
-        dmove.result = "accept";
-        dmove.message = "";
-    }
-    else if(command == "target")
-    {
-        QString method = dmove.method;
-        if(method == "pp")
-        {
-            if(unimap->is_loaded == false)
-            {
-                dmove.result = "reject";
-                dmove.message = "map not loaded";
-
-                send_move_response(dmove);
-                return;
-            }
-
-            if(slam->is_loc == false)
-            {
-                dmove.result = "reject";
-                dmove.message = "no localization";
-
-                send_move_response(dmove);
-                return;
-            }
-
-            double x = dmove.tgt_pose_vec[0]; double y = dmove.tgt_pose_vec[1];
-            if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
-            {
-                dmove.result = "reject";
-                dmove.message = "target location out of range";
-
-                send_move_response(dmove);
-                return;
-            }
-
-            Eigen::Vector4d pose_vec = dmove.tgt_pose_vec;
-            Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0],pose_vec[1],pose_vec[3]*D2R));
-            goal_tf(2,3) = pose_vec[2];
-
-            if(obsmap->is_tf_collision(goal_tf))
-            {
-                dmove.result = "reject";
-                dmove.message = "target location occupied";
-
-                send_move_response(dmove);
-                return;
-            }
-
-            // pure pursuit
-            int preset = dmove.preset;
-            ctrl->move_pp(goal_tf, preset);
-
-            dmove.result = "accept";
-            dmove.message = "";
-            send_move_response(dmove);
-        }
-        else
-        {
-            dmove.result = "reject";
-            dmove.message = "not supported";
-            send_move_response(dmove);
-        }
-    }
-    else if(command == "goal")
-    {
-        QString method = dmove.method;
-        if(method == "pp")
-        {
-            if(unimap->is_loaded == false)
-            {
-                dmove.result = "reject";
-                dmove.message = "map not loaded";
-                send_move_response(dmove);
-                return;
-            }
-
-            if(slam->is_loc == false)
-            {
-                dmove.result = "reject";
-                dmove.message = "no localization";
-                send_move_response(dmove);
-                return;
-            }
-
-            QString goal_id = dmove.goal_node_id;
-            if(goal_id == "")
-            {
-                dmove.result = "reject";
-                dmove.message = "empty node id";
-                send_move_response(dmove);
-                return;
-            }
-
-            NODE* node = unimap->get_node_by_id(goal_id);
-            if(node == NULL)
-            {
-                node = unimap->get_node_by_name(goal_id);
-                if(node == NULL)
-                {
-                    dmove.result = "reject";
-                    dmove.message = "invalid node id";
-                    send_move_response(dmove);
-                    return;
-                }
-            }
-
-            Eigen::Matrix4d goal_tf = node->tf;
-            ctrl->set_goal(goal_id);
-
-            // pure pursuit
-            int preset = dmove.preset;
-            ctrl->move_pp(goal_tf, preset);
-
-            dmove.result = "accept";
-            dmove.message = "";
-            send_move_response(dmove);
-        }
-        else
-        {
-            dmove.result = "reject";
-            dmove.message = "not supported";
-            send_move_response(dmove);
-        }
-    }
-    else if(command == "pause")
-    {
-        ctrl->is_pause = true;
-
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
-    }
-    else if(command == "resume")
-    {
-        ctrl->is_pause = false;
-
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
-    }
-    else if(command == "stop")
-    {
-        ctrl->stop();
-
-        dmove.result = "accept";
-        dmove.message = "";
-        send_move_response(dmove);
-    }
-}
-
-void COMM_FMS::slot_load(DATA_LOAD dload)
-{
-    QString command = dload.command;
+    QString command = msg.command;
     if(command == "mapload")
     {
-        QString map_name = dload.map_name;
-        MainWindow* _main = (MainWindow*)main;
-
+        QString map_name = msg.map_name;
         QString load_dir = QDir::homePath() + "/maps/" + map_name;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
             {
-                dload.result = "reject";
-                dload.message = "invalid map dir";
+                msg.result = "reject";
+                msg.message = "invalid map dir";
 
-                send_load_response(dload);
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
                 return;
             }
 
             slam->localization_stop();
             obsmap->clear();
 
+            MainWindow* _main = (MainWindow*)main;
             _main->map_dir = load_dir;
             unimap->load_map(load_dir);
+            _main->all_update();
 
             if(config->USE_LVX)
             {
@@ -596,84 +308,127 @@ void COMM_FMS::slot_load(DATA_LOAD dload)
                 lvx->map_load(path_3d_map);
             }
 
-            _main->all_update();
-            _main->set_mapping_view();
-
             if(unimap->is_loaded)
             {
-                dload.result = "success";
-                dload.message = "";
+                msg.result = "success";
+                msg.message = "";
 
-                send_load_response(dload);
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
             }
             else
             {
-                dload.result = "fail";
-                dload.message = "map not load";
+                msg.result = "fail";
+                msg.message = "map not load";
 
-                send_load_response(dload);
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
             }
         }
     }
     else if(command == "topoload")
     {
-        dload.result = "reject";
-        dload.message = "not support yet";
+        msg.result = "reject";
+        msg.message = "not support yet";
 
-        send_load_response(dload);
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
     else if(command == "configload")
     {
-        dload.result = "reject";
-        dload.message = "not support yet";
+        msg.result = "reject";
+        msg.message = "not support yet";
 
-        send_load_response(dload);
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
 }
 
-void COMM_FMS::slot_localization(DATA_LOCALIZATION dloc)
+void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
 {
-    QString command = dloc.command;
+    QString command = msg.command;
+    if(command == "randomseq")
+    {
+        MainWindow* _main = (MainWindow*)main;
+        _main->slot_sim_random_seq();
+
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
+    }
+}
+
+void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
+{
+    QString command = msg.command;
     if(command == "semiautoinit")
     {
         if(unimap->is_loaded == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not loaded map";
+            msg.result = "reject";
+            msg.message = "not loaded map";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
+
         if(lidar->is_connected_f == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected front lidar";
+            msg.result = "reject";
+            msg.message = "not connected front lidar";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
 
         #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected back lidar";
+            msg.result = "reject";
+            msg.message = "not connected back lidar";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
         #endif
 
         if(slam->is_busy)
         {
-            dloc.result = "reject";
-            dloc.message = "already running";
+            msg.result = "reject";
+            msg.message = "already running";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
 
+        msg.result = "accept";
+        msg.message = "";
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
+
+        // do process
         logger->write_log("[AUTO_INIT] recv_loc, try semi-auto init", "Green", true, false);
+
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
         slam->localization_stop();
 
         // semi auto init
@@ -684,174 +439,248 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION dloc)
             semi_auto_init_thread = NULL;
         }
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
-
         semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, slam);
     }
     else if(command == "init")
     {
         if(unimap->is_loaded == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not loaded map";
+            msg.result = "reject";
+            msg.message = "not loaded map";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
         if(lidar->is_connected_f == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected front lidar";
+            msg.result = "reject";
+            msg.message = "not connected front lidar";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
 
         #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
-            dloc.result = "reject";
-            dloc.message = "not connected back lidar";
+            msg.result = "reject";
+            msg.message = "not connected back lidar";
 
-            send_localization_response(dloc);
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
             return;
         }
         #endif
 
-        double x = dloc.tgt_pose_vec[0];
-        double y = dloc.tgt_pose_vec[1];
-        double rz = dloc.tgt_pose_vec[3];
-
         // manual init
-        slam->mtx.lock();
-        slam->cur_tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
-        slam->mtx.unlock();
+        double x = msg.tgt_pose_vec[0];
+        double y = msg.tgt_pose_vec[1];
+        double rz = msg.tgt_pose_vec[3];
+        Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
+        slam->localization_stop();
+
+        if(config->USE_LVX)
+        {
+            lvx->set_cur_tf(tf);
+        }
+        slam->set_cur_tf(tf);
+
+        if(config->USE_LVX)
+        {
+            lvx->loc_start();
+        }
+        slam->localization_start();
+
+        msg.result = "accept";
+        msg.message = "";
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
     else if(command == "start")
     {
+        if(config->USE_LVX)
+        {
+            lvx->loc_start();
+        }
         slam->localization_start();
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
     else if(command == "stop")
     {
+        if(config->USE_LVX)
+        {
+            lvx->loc_stop();
+        }
         slam->localization_stop();
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
     else if(command == "randominit")
     {
-        QString seed = dloc.seed;
+        QString seed = msg.seed;
 
         MainWindow* _main = (MainWindow*)main;
         _main->slot_sim_random_init(seed);
 
-        dloc.result = "accept";
-        dloc.message = "";
-        send_localization_response(dloc);
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
 }
 
-void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ drandomseq)
+void COMM_FMS::slot_move(DATA_MOVE msg)
 {
-    QString command = drandomseq.command;
-    if(command == "randomseq")
+    QString command = msg.command;
+    if(command == "goal")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->slot_sim_random_seq();
+        QString method = msg.method;
+        if(method == "pp")
+        {
+            if(unimap->is_loaded == false)
+            {
+                msg.result = "reject";
+                msg.message = "map not loaded";
 
-        drandomseq.result = "accept";
-        drandomseq.message = "";
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
+                return;
+            }
 
-        send_randomseq_response(drandomseq);
+            if(slam->is_loc == false)
+            {
+                msg.result = "reject";
+                msg.message = "no localization";
+
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
+                return;
+            }
+
+            QString goal_id = msg.goal_node_id;
+            if(goal_id == "")
+            {
+                msg.result = "reject";
+                msg.message = "empty node id";
+
+                printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                            msg.result.toLocal8Bit().data(),
+                                                                            msg.message.toLocal8Bit().data());
+                return;
+            }
+
+            NODE* node = unimap->get_node_by_id(goal_id);
+            if(node == NULL)
+            {
+                node = unimap->get_node_by_name(goal_id);
+                if(node == NULL)
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid node id";
+
+                    printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                                msg.result.toLocal8Bit().data(),
+                                                                                msg.message.toLocal8Bit().data());
+                    return;
+                }
+            }
+
+            // pure pursuit
+            if(config->USE_MULTI)
+            {
+                ctrl->set_goal(goal_id);
+            }
+            else
+            {
+                int preset = msg.preset;
+                Eigen::Matrix4d goal_tf = node->tf;
+                ctrl->move_pp(goal_tf, preset);
+            }
+
+            msg.result = "accept";
+            msg.message = "";
+
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
+        }
+        else
+        {
+            msg.result = "reject";
+            msg.message = "not supported";
+
+            printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                        msg.result.toLocal8Bit().data(),
+                                                                        msg.message.toLocal8Bit().data());
+        }
+    }
+    else if(command == "pause")
+    {
+        ctrl->is_pause = true;
+
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
+    }
+    else if(command == "resume")
+    {
+        ctrl->is_pause = false;
+
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
+    }
+    else if(command == "stop")
+    {
+        ctrl->stop();
+
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
     }
 }
 
-// send slots
-void COMM_FMS::slot_send_info()
+void COMM_FMS::slot_path(DATA_PATH msg)
 {
-    if(!is_connected)
-    {
-        return;
-    }
-
-    MainWindow* _main = (MainWindow*)main;
-    _main->mtx.lock();
-    QString cur_node_id = _main->last_node_id;
-    _main->mtx.unlock();
-
-    double time = get_time();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();        
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
-    QString goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-    if(goal_tf.isIdentity())
-    {
-        goal_tf = cur_tf;
-        goal_node_id = cur_node_id;
-    }
-
-    QString request = ctrl->get_multi_req(); // none, req_path, recv_path
-
-    QString state = "stop"; // stop, move, pause, error
-    if(ctrl->is_moving)
-    {
-        state = "move";
-    }
-
-    if(mobile->get_cur_pdu_state() != "good")
-    {
-        state = "pause";
-    }
-
-    if(slam->get_cur_loc_state() != "good")
-    {
-        state = "error";
-    }
-
-    mtx.lock();
-    multi_state = state;
-    mtx.unlock();
-
-    // Creating the JSON object
-    QJsonObject rootObj;
-
-    // Adding the command and time
-    rootObj["command"] = "info";
-    rootObj["robot_id"] = robot_id;
-    rootObj["cur_tf"] = TF_to_string(cur_tf);
-    rootObj["goal_tf"] = TF_to_string(goal_tf);
-    rootObj["cur_node_id"] = cur_node_id;
-    rootObj["goal_node_id"] = goal_node_id;
-    rootObj["request"] = request;
-    rootObj["state"] = state;
-    rootObj["time"] = QString::number((long long)(time*1000), 10);
-
-    // send
-    if(time - last_send_time >= 0.05)
-    {
-        QJsonDocument doc(rootObj);
-        QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-        client.sendBinaryMessage(buf);
-        last_send_time = time;
-    }
-}
-
-void COMM_FMS::slot_path(DATA_PATH dpath)
-{
-    QString command = dpath.command;
+    QString command = msg.command;
     if(command == "path")
     {
-        QString path_str = dpath.path;
+        QString path_str = msg.path;
         QStringList path_str_list = path_str.split(",");
 
         std::vector<QString> path;
@@ -860,19 +689,19 @@ void COMM_FMS::slot_path(DATA_PATH dpath)
             path.push_back(path_str_list[p]);
         }
 
-        int preset = dpath.preset;
+        int preset = msg.preset;
         ctrl->move_pp(path, preset);
     }
 }
 
-void COMM_FMS::slot_vobs_r(DATA_VOBS_R dvobs_r)
+void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
 {
-    QString command = dvobs_r.command;
+    QString command = msg.command;
     if(command == "dvobs_r")
     {
         std::vector<Eigen::Vector3d> vobs_list;
 
-        QString vobs_str = dvobs_r.vobs;
+        QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split("\n");
         if(vobs_str_list.size() > 0)
         {
@@ -899,12 +728,12 @@ void COMM_FMS::slot_vobs_r(DATA_VOBS_R dvobs_r)
     }
 }
 
-void COMM_FMS::slot_vobs_c(DATA_VOBS_C dvobs_c)
+void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
 {
-    QString command = dvobs_c.command;
+    QString command = msg.command;
     if(command == "dvobs_c")
     {
-        QString vobs_str = dvobs_c.vobs;
+        QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split(",");
 
         // set vobs
@@ -930,72 +759,3 @@ void COMM_FMS::slot_vobs_c(DATA_VOBS_C dvobs_c)
         obsmap->update_vobs_map();
     }
 }
-
-void COMM_FMS::send_move_response(DATA_MOVE dmove)
-{
-    QJsonObject moveResponseObj;
-    moveResponseObj["command"] = dmove.command;
-    moveResponseObj["result"] = dmove.result;
-    moveResponseObj["message"] = dmove.message;
-    moveResponseObj["preset"] = QString::number(dmove.preset, 10);
-    moveResponseObj["method"] = dmove.method;
-    moveResponseObj["goal_id"] = dmove.goal_node_id;
-    moveResponseObj["x"] = QString::number(dmove.tgt_pose_vec[0], 'f', 3);
-    moveResponseObj["y"] = QString::number(dmove.tgt_pose_vec[1], 'f', 3);
-    moveResponseObj["z"] = QString::number(dmove.tgt_pose_vec[2], 'f', 3);
-    moveResponseObj["rz"] = QString::number(dmove.tgt_pose_vec[3], 'f', 3);
-    moveResponseObj["vx"] = QString::number(dmove.jog_val[0], 'f', 3);
-    moveResponseObj["vy"] = QString::number(dmove.jog_val[1], 'f', 3);
-    moveResponseObj["wz"] = QString::number(dmove.jog_val[2], 'f', 3);
-    moveResponseObj["time"] = QString::number((long long)(dmove.time*1000), 10);
-
-    QJsonDocument doc(moveResponseObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
-}
-
-void COMM_FMS::send_localization_response(DATA_LOCALIZATION dloc)
-{
-    QJsonObject locResponseObj;
-    locResponseObj["command"] = dloc.command;
-    locResponseObj["result"] = dloc.result;
-    locResponseObj["message"] = dloc.message;
-    locResponseObj["x"] = QString::number(dloc.tgt_pose_vec[0], 'f', 3);
-    locResponseObj["y"] = QString::number(dloc.tgt_pose_vec[1], 'f', 3);
-    locResponseObj["z"] = QString::number(dloc.tgt_pose_vec[2], 'f', 3);
-    locResponseObj["rz"] = QString::number(dloc.tgt_pose_vec[3], 'f', 3);
-    locResponseObj["seed"] = dloc.seed;
-    locResponseObj["time"] = QString::number((long long)(dloc.time*1000), 10);
-
-    QJsonDocument doc(locResponseObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
-}
-
-void COMM_FMS::send_load_response(DATA_LOAD dload)
-{
-    QJsonObject loadResponseObj;
-    loadResponseObj["command"] = dload.command;
-    loadResponseObj["result"] = dload.result;
-    loadResponseObj["message"] = dload.message;
-    loadResponseObj["name"] = dload.map_name;
-    loadResponseObj["time"] = QString::number((long long)(dload.time*1000), 10);
-
-    QJsonDocument doc(loadResponseObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
-}
-
-void COMM_FMS::send_randomseq_response(DATA_RANDOMSEQ drandomseq)
-{
-    QJsonObject randomseqResponseObj;
-    randomseqResponseObj["command"] = drandomseq.command;
-    randomseqResponseObj["result"] = drandomseq.result;
-    randomseqResponseObj["message"] = drandomseq.message;
-    randomseqResponseObj["time"] = QString::number((long long)(drandomseq.time*1000), 10);
-
-    QJsonDocument doc(randomseqResponseObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
-}
-*/
