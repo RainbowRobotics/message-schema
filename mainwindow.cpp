@@ -3549,7 +3549,7 @@ void MainWindow::comm_loop()
         {
             if(comm_fms.is_connected)
             {                
-                Q_EMIT comm_fms.signal_send_info();
+                Q_EMIT comm_fms.signal_send_move_status();
             }
             if(comm_rrs.is_connected)
             {

@@ -63,8 +63,6 @@ public:
     // flags
     QString multi_state = "";
     std::atomic<bool> is_connected = {false};
-    std::atomic<double> last_send_status_time = {0};
-    std::atomic<double> last_send_move_status_time = {0};
 
     // semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};

@@ -476,9 +476,7 @@ void COMM_RRS::send_status()
 
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("status", res);
-
-    last_send_status_time = time;    
+    io->socket()->emit("status", res); 
 }
 
 // send functions
@@ -501,6 +499,16 @@ void COMM_RRS::send_move_status()
     else if(ctrl->is_moving)
     {
         auto_state = "move";
+    }
+
+    if(mobile->get_cur_pdu_state() != "good")
+    {
+        auto_state = "pause";
+    }
+
+    if(slam->get_cur_loc_state() != "good")
+    {
+        auto_state = "error";
     }
 
     QString dock_state = "stop";
@@ -547,7 +555,7 @@ void COMM_RRS::send_move_status()
     {
         MainWindow* _main = (MainWindow*)main;
         _main->mtx.lock();
-        QString cur_node_id = _main->last_node_id;
+        cur_node_id = _main->last_node_id;
         _main->mtx.unlock();
 
         if(cur_node_id != "")
@@ -564,42 +572,57 @@ void COMM_RRS::send_move_status()
     curNodeObj["id"] = cur_node_id;
     curNodeObj["name"] = cur_node_name;
     curNodeObj["state"] = "";
-    curNodeObj["x"] = cur_xi[0];
-    curNodeObj["y"] = cur_xi[1];
-    curNodeObj["rz"] = cur_xi[2]*R2D;
+    curNodeObj["x"] = QString::number(cur_xi[0], 'f', 3);
+    curNodeObj["y"] = QString::number(cur_xi[1], 'f', 3);
+    curNodeObj["rz"] = QString::number(cur_xi[2]*R2D, 'f', 3);
     rootObj["cur_node"] = curNodeObj;
 
     // Adding the goal_node object
+    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = "";
     QString goal_node_name = "";
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
-    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
     if(unimap->is_loaded)
     {
-        goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-        if(goal_node_id != "")
-        {
-            NODE* node = unimap->get_node_by_id(goal_node_id);
-            if(node != NULL)
-            {
-                goal_node_name = node->name;
-            }
-        }
-
         if(goal_tf.isIdentity())
         {
             goal_tf = cur_tf;
             goal_node_id = cur_node_id;
+            goal_node_name = cur_node_name;
+        }
+        else
+        {
+            goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+            if(goal_node_id != "")
+            {
+                NODE* node = unimap->get_node_by_id(goal_node_id);
+                if(node != NULL)
+                {
+                    goal_node_name = node->name;
+                }
+                else
+                {
+                    goal_tf = cur_tf;
+                    goal_node_id = cur_node_id;
+                    goal_node_name = cur_node_name;
+                }
+            }
+            else
+            {
+                goal_tf = cur_tf;
+                goal_node_id = cur_node_id;
+                goal_node_name = cur_node_name;
+            }
         }
     }
+    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
     QJsonObject goalNodeObj;
     goalNodeObj["id"] = goal_node_id;
     goalNodeObj["name"] = goal_node_name;
     goalNodeObj["state"] = ctrl->get_cur_goal_state();
-    goalNodeObj["x"] = goal_xi[0];
-    goalNodeObj["y"] = goal_xi[1];
-    goalNodeObj["rz"] = goal_xi[2]*R2D;
+    goalNodeObj["x"] = QString::number(goal_xi[0], 'f', 3);
+    goalNodeObj["y"] = QString::number(goal_xi[1], 'f', 3);
+    goalNodeObj["rz"] = QString::number(goal_xi[2]*R2D, 'f', 3);
     rootObj["goal_node"] = goalNodeObj;
 
     // Adding the time object
@@ -608,9 +631,7 @@ void COMM_RRS::send_move_status()
 
     QJsonDocument doc(rootObj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("moveStatus", res);
-
-    last_send_move_status_time = time;
+    io->socket()->emit("moveStatus", res);    
 }
 
 void COMM_RRS::send_local_path()
@@ -968,7 +989,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     }
     else if(command == "stop")
     {
-        ctrl->stop();
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Emergency();
 
         msg.result = "accept";
         msg.message = "";
@@ -1409,7 +1431,7 @@ void COMM_RRS::slot_path(DATA_PATH msg)
 void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
 {
     QString command = msg.command;
-    if(command == "dvobs_r")
+    if(command == "vobs_robots")
     {
         std::vector<Eigen::Vector3d> vobs_list;
 
@@ -1443,7 +1465,7 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
 void COMM_RRS::slot_vobs_c(DATA_VOBS_C msg)
 {
     QString command = msg.command;
-    if(command == "dvobs_c")
+    if(command == "vobs_closures")
     {
         QString vobs_str = msg.vobs;
         QStringList vobs_str_list = vobs_str.split(",");
