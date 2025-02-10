@@ -23,7 +23,7 @@
         "USE_BQR": "0",
         "USE_BEEP": "0",
         "USE_CAM": "1",
-        "USE_RTSP": "1",
+        "USE_RTSP": "0",
         "USE_RRS": "1",
         "USE_FMS": "0",
         "USE_QTUI": "0",
