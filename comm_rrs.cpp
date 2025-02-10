@@ -512,6 +512,11 @@ void COMM_RRS::send_move_status()
         auto_state = "error";
     }
 
+    if(ctrl->get_obs_condition() == "vir")
+    {
+        auto_state = "vir";
+    }
+
     QString dock_state = "stop";
     if(dctrl->is_pause)
     {

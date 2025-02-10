@@ -160,6 +160,11 @@ void COMM_FMS::send_move_status()
         auto_state = "error";
     }
 
+    if(ctrl->get_obs_condition() == "vir")
+    {
+        auto_state = "vir";
+    }
+
     // convert
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
