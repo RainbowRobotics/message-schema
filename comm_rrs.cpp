@@ -524,7 +524,7 @@ void COMM_RRS::send_move_status()
     QString jog_state = "none";
 
     QJsonObject moveStateObj;
-    moveStateObj["auto_move"] = auto_state;
+    moveStateObj["auto_move"] = auto_state; // "stop", "move", "pause", "error"
     moveStateObj["dock_move"] = dock_state;
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
