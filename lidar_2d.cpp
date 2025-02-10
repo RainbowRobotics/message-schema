@@ -269,7 +269,7 @@ void LIDAR_2D::grab_loop_f()
 
                 is_synced_f = true;
 
-                logger->write_log(QString("[LIDAR] sync, offset_t_f: %1").arg((double)offset_t_f, 'f'));
+                logger->write_log(QString("[LIDAR] sync, offset_t_f: %1").arg(offset_t_f));
             }
 
             // check lidar, mobile sync
@@ -344,38 +344,6 @@ void LIDAR_2D::grab_loop_f()
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
-
-            /*
-            // get boundary mobile pose
-            int idx0 = -1;
-            for(int p = (int)pose_storage.size()-1; p >= 0; p--)
-            {
-                if(pose_storage[p].t < t0)
-                {
-                    idx0 = p;
-                    break;
-                }
-            }
-
-            int idx1 = -1;
-            for(int p = 0; p < (int)pose_storage.size(); p++)
-            {
-                if(pose_storage[p].t > times[times.size()-1])
-                {
-                    idx1 = p;
-                    break;
-                }
-            }
-
-            // check
-            if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
-            {
-                // drop                
-                logger->write_log("[LIDAR] sync drop");
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
-            }
-            */
 
             Eigen::Vector3d min_pose = pose_storage.back().pose;
             double min_dt = 99999999;
