@@ -54,7 +54,13 @@ void OBSMAP::clear()
 
     obs_pts.clear();
     dyn_pts.clear();
+    vir_pts.clear();
+    vir_closure_pts.clear();
     plot_pts.clear();
+
+    vobs_list_robots.clear();
+    vobs_list_closures.clear();
+
     wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
@@ -437,7 +443,7 @@ void OBSMAP::update_vobs_map()
         Eigen::Vector3d center = vobs_list_closures[p];
         _vir_closure_pts.push_back(center);
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.1);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.15);
         pts.push_back(center);
 
         for(size_t q = 0; q < pts.size(); q++)

@@ -2776,7 +2776,7 @@ Cloud</string>
                </rect>
               </property>
               <property name="text">
-               <string>Edit type</string>
+               <string>Edit type[T]</string>
               </property>
              </widget>
              <widget class="QLabel" name="lb_PreNodeInfo">
@@ -3170,7 +3170,10 @@ Cloud</string>
                </rect>
               </property>
               <property name="text">
-               <string>Edit name</string>
+               <string>Edit name[Y]</string>
+              </property>
+              <property name="shortcut">
+               <string>Y</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_AutoLink">
