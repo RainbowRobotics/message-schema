@@ -294,11 +294,12 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         // parsing
         DATA_PATH msg;
         msg.command = get_json(data, "command"); // "path"
+        msg.path = get_json(data, "path");
         msg.preset = get_json(data, "preset").toInt();
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
         Q_EMIT signal_path(msg);
     }
 }
