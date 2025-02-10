@@ -1753,7 +1753,11 @@ void MainWindow::bt_Sync()
     mobile.sync();
     lidar.sync_f();
     lidar.sync_b();
-    lvx.is_sync = true;
+
+    if(config.USE_LVX)
+    {
+        lvx.is_sync = true;
+    }
 }
 
 void MainWindow::bt_MoveLinear()
