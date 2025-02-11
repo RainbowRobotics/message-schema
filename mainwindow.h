@@ -25,7 +25,6 @@
 
 #include "comm_fms.h"
 #include "comm_rrs.h"
-#include "comm_qtui.h"
 #include "comm_coop.h"
 
 // qt
@@ -70,7 +69,6 @@ public:
     LVX_LOC lvx;
     COMM_FMS comm_fms;
     COMM_RRS comm_rrs;
-    COMM_QTUI comm_qtui;
     COMM_COOP comm_coop;
 
     // system logger

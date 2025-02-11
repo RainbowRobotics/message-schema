@@ -35,7 +35,6 @@ SOURCES += \
     code_reader.cpp \
     comm_coop.cpp \
     comm_fms.cpp \
-    comm_qtui.cpp \
     comm_rrs.cpp \
     docking.cpp \
     config.cpp \
@@ -66,7 +65,6 @@ HEADERS += \
     comm_coop.h \
     comm_data.h \
     comm_fms.h \
-    comm_qtui.h \
     comm_rrs.h \
     docking.h \
     config.h \

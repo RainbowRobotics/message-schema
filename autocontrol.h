@@ -45,21 +45,18 @@ public:
     CTRL_PARAM params;
     CTRL_PARAM load_preset(int preset);
 
-    // interface funcs    
-    Eigen::Matrix4d get_cur_goal_tf();
+    // interface funcs
     PATH get_cur_global_path();
     PATH get_cur_local_path();
-    QString get_obs_condition();    
+    QString get_obs_condition();
     QString get_multi_req();
     void set_multi_req(QString str);
-    QString get_cur_goal_node();
-    QString get_cur_goal_state();
     void clear_path();
 
     void init();
     void stop();
-    void change();    
-    void set_goal(QString goal_id);
+    void change();
+    void move(DATA_MOVE msg);
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_pp(std::vector<QString> node_path, int preset);
     void clean_up();
@@ -94,13 +91,11 @@ public:
     std::thread *b_thread = NULL;
     void b_loop_pp();
 
-    // storage        
-    Eigen::Matrix4d cur_goal_tf;
-
     // for last goal
-    QString cur_goal_node = "";
-    QString last_cur_goal_state = "none";
+    DATA_MOVE move_info;
+    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
 
+    // for path plot
     PATH cur_global_path;
     PATH cur_local_path;
 
@@ -121,9 +116,6 @@ public:
     // flags for multi
     std::atomic<bool> is_multi = {false};
     QString multi_req = "none"; // none, req_path, recv_path
-
-    // for rrs
-    DATA_MOVE last_move_info;
 
 Q_SIGNALS:
     void signal_global_path_updated();

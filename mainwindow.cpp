@@ -20,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent)
     , lvx(this)
     , comm_fms(this)
     , comm_rrs(this)
-    , comm_qtui(this)
     , comm_coop(this)
     , system_logger(this)
     , ui(new Ui::MainWindow)
@@ -690,22 +689,6 @@ void MainWindow::init_modules()
     if(config.USE_RRS)
     {
         comm_rrs.init();
-    }
-
-    // websocket ui init
-    comm_qtui.config = &config;
-    comm_qtui.logger = &logger;
-    comm_qtui.mobile = &mobile;
-    comm_qtui.lidar = &lidar;
-    comm_qtui.cam = &cam;
-    comm_qtui.code = &code;
-    comm_qtui.slam = &slam;
-    comm_qtui.unimap = &unimap;
-    comm_qtui.obsmap = &obsmap;
-    comm_qtui.ctrl = &ctrl;
-    if(config.USE_QTUI)
-    {
-        comm_qtui.init();
     }
 
     // start jog loop
@@ -3032,42 +3015,40 @@ void MainWindow::bt_AutoMove()
         return;
     }
 
-    if(ctrl.is_multi)
+    if(pick.cur_node != "")
     {
-        if(pick.cur_node != "")
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node != NULL)
         {
-            ctrl.set_goal(pick.cur_node);
-        }
-    }
-    else
-    {
-        // get goal
-        Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-        if(pick.cur_node != "")
-        {
-            NODE* node = unimap.get_node_by_id(pick.cur_node);
-            if(node != NULL)
-            {
-                goal_tf = node->tf;
-                printf("[MAIN] clicked goal, %s\n", pick.cur_node.toLocal8Bit().data());
-            }
-        }
-        else
-        {
-            if(pick.last_btn == 1)
-            {
-                goal_tf = se2_to_TF(pick.r_pose);
-                printf("[MAIN] clicked goal pose, %.2f, %.2f, %.2f\n", pick.r_pose[0], pick.r_pose[1], pick.r_pose[2]*R2D);
-            }
-            else
-            {
-                printf("[MAIN] goal empty\n");
-                return;
-            }
-        }
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
 
-        // pure pursuit
-        ctrl.move_pp(goal_tf, 0);
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "pp";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+            ctrl.move(msg);
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+        ctrl.move(msg);
+
+        return;
     }
 }
 
@@ -3403,7 +3384,11 @@ void MainWindow::slot_sim_random_seq()
     std::vector<QString> init_nodes = unimap.get_nodes("INIT");
 
     std::vector<QString> nodes = goal_nodes;
-    nodes.insert(nodes.end(), init_nodes.begin(), init_nodes.end());
+    if(init_nodes.size() > 0)
+    {
+        nodes.insert(nodes.end(), init_nodes.begin(), init_nodes.end());
+    }
+
     if(nodes.size() == 0)
     {
         printf("check again 2\n");
@@ -3567,11 +3552,6 @@ void MainWindow::comm_loop()
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_status();
-            }
-
-            if(comm_qtui.is_connected)
-            {
-                Q_EMIT comm_qtui.signal_send_status();
             }
         }
 
