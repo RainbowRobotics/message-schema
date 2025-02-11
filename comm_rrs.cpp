@@ -131,16 +131,11 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         msg.tgt_pose_vec[0] = get_json(data, "x").toDouble();
         msg.tgt_pose_vec[1] = get_json(data, "y").toDouble();
         msg.tgt_pose_vec[2] = get_json(data, "z").toDouble();
-        msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble();
+        msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble()*D2R;
         msg.jog_val[0] = get_json(data, "vx").toDouble();
         msg.jog_val[1] = get_json(data, "vy").toDouble();
         msg.jog_val[2] = get_json(data, "wz").toDouble();
         msg.time = get_json(data, "time").toDouble()/1000;
-
-        // for response
-        ctrl->mtx.lock();
-        ctrl->last_move_info = msg;
-        ctrl->mtx.unlock();
 
         logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         Q_EMIT signal_move(msg);
@@ -504,7 +499,7 @@ void COMM_RRS::send_move_status()
 
     if(mobile->get_cur_pdu_state() != "good")
     {
-        auto_state = "pause";
+        auto_state = "not ready";
     }
 
     if(slam->get_cur_loc_state() != "good")
@@ -530,7 +525,7 @@ void COMM_RRS::send_move_status()
     QString jog_state = "none";
 
     QJsonObject moveStateObj;
-    moveStateObj["auto_move"] = auto_state; // "stop", "move", "pause", "error"
+    moveStateObj["auto_move"] = auto_state; // "stop", "move", "pause", "error", "not ready", "vir"
     moveStateObj["dock_move"] = dock_state;
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
@@ -584,48 +579,40 @@ void COMM_RRS::send_move_status()
     rootObj["cur_node"] = curNodeObj;
 
     // Adding the goal_node object
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
     QString goal_node_id = "";
     QString goal_node_name = "";
+    QString goal_state = "";
+    Eigen::Vector3d goal_xi(0,0,0);
     if(unimap->is_loaded)
     {
-        if(goal_tf.isIdentity())
+        ctrl->mtx.lock();
+        goal_state = ctrl->cur_goal_state;
+        if(ctrl->move_info.command == "goal")
         {
-            goal_tf = cur_tf;
-            goal_node_id = cur_node_id;
-            goal_node_name = cur_node_name;
-        }
-        else
-        {
-            goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
+            goal_node_id = ctrl->move_info.goal_node_id;
             if(goal_node_id != "")
             {
                 NODE* node = unimap->get_node_by_id(goal_node_id);
                 if(node != NULL)
                 {
                     goal_node_name = node->name;
+                    goal_xi = TF_to_se2(node->tf);
                 }
                 else
                 {
-                    goal_tf = cur_tf;
-                    goal_node_id = cur_node_id;
-                    goal_node_name = cur_node_name;
+                    goal_node_id = "";
+                    goal_node_name = "";
+                    goal_xi.setZero();
                 }
             }
-            else
-            {
-                goal_tf = cur_tf;
-                goal_node_id = cur_node_id;
-                goal_node_name = cur_node_name;
-            }
         }
+        ctrl->mtx.unlock();
     }
-    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
     QJsonObject goalNodeObj;
     goalNodeObj["id"] = goal_node_id;
     goalNodeObj["name"] = goal_node_name;
-    goalNodeObj["state"] = ctrl->get_cur_goal_state();
+    goalNodeObj["state"] = goal_state; // "", "move", "complete", "fail", "obstacle", "cancel"
     goalNodeObj["x"] = QString::number(goal_xi[0], 'f', 3);
     goalNodeObj["y"] = QString::number(goal_xi[1], 'f', 3);
     goalNodeObj["rz"] = QString::number(goal_xi[2]*R2D, 'f', 3);
@@ -951,17 +938,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             }
 
             // pure pursuit
-            if(config->USE_MULTI)
-            {
-                ctrl->set_goal(goal_id);
-            }
-            else
-            {
-                int preset = msg.preset;
-                Eigen::Matrix4d goal_tf = node->tf;
-                ctrl->move_pp(goal_tf, preset);
-            }
-
+            ctrl->move(msg);
             msg.result = "accept";
             msg.message = "";
 
@@ -1517,7 +1494,7 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
     obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
     obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
-    obj["rz"] = QString::number(msg.tgt_pose_vec[3], 'f', 3);
+    obj["rz"] = QString::number(msg.tgt_pose_vec[3]*R2D, 'f', 3);
     obj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
     obj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
     obj["wz"] = QString::number(msg.jog_val[2], 'f', 3);

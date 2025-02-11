@@ -108,9 +108,6 @@ void COMM_FMS::send_move_status()
     // get cur_tf
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
 
-    // get goal_tf
-    Eigen::Matrix4d goal_tf = ctrl->get_cur_goal_tf();
-
     // get cur_node_id
     QString cur_node_id = "";
     if(unimap->is_loaded)
@@ -123,17 +120,28 @@ void COMM_FMS::send_move_status()
 
     // get goal_node_id
     QString goal_node_id = "";
+    Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
     if(unimap->is_loaded)
     {
-        if(goal_tf.isIdentity())
+        ctrl->mtx.lock();
+        if(ctrl->move_info.command == "goal")
         {
-            goal_tf = cur_tf;
-            goal_node_id = cur_node_id;
+            goal_node_id = ctrl->move_info.goal_node_id;
+            if(goal_node_id != "")
+            {
+                NODE* node = unimap->get_node_by_id(goal_node_id);
+                if(node != NULL)
+                {
+                    goal_tf =  node->tf;
+                }
+                else
+                {
+                    goal_node_id = "";
+                    goal_tf.setIdentity();
+                }
+            }
         }
-        else
-        {
-            goal_node_id = unimap->get_node_id_edge(goal_tf.block(0,3,3,1));
-        }
+        ctrl->mtx.unlock();
     }
 
     // get path request
@@ -152,7 +160,7 @@ void COMM_FMS::send_move_status()
 
     if(mobile->get_cur_pdu_state() != "good")
     {
-        auto_state = "pause";
+        auto_state = "not ready";
     }
 
     if(slam->get_cur_loc_state() != "good")
@@ -627,16 +635,7 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
             }
 
             // pure pursuit
-            if(config->USE_MULTI)
-            {
-                ctrl->set_goal(goal_id);
-            }
-            else
-            {
-                int preset = msg.preset;
-                Eigen::Matrix4d goal_tf = node->tf;
-                ctrl->move_pp(goal_tf, preset);
-            }
+            ctrl->move(msg);
 
             msg.result = "accept";
             msg.message = "";

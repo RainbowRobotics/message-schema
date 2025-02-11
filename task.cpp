@@ -183,24 +183,18 @@ void TASK::a_loop()
                 continue;
             }
 
-            if(config->USE_MULTI)
-            {
-                ctrl->set_goal(node->id);
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
 
-                while(a_flag)
-                {
-                    QString multi_state = ctrl->get_multi_req();
-                    if(multi_state == "recv_path")
-                    {
-                        break;
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                }
-            }
-            else
-            {
-                ctrl->move_pp(node->tf, 0);
-            }
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "pp";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+            ctrl->move(msg);
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;
