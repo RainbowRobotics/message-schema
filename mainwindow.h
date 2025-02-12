@@ -315,6 +315,7 @@ public Q_SLOTS:
     void bt_QuickAddCloud();
 
     void bt_SetMapTf();
+    void bt_CheckNodes();
 
     // mapping & localization
     void bt_MapBuild();    

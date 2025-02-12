@@ -141,6 +141,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_QuickAddCloud, SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
 
     connect(ui->bt_SetMapTf, SIGNAL(clicked()), this, SLOT(bt_SetMapTf()));
+    connect(ui->bt_CheckNodes, SIGNAL(clicked()), this, SLOT(bt_CheckNodes()));
 
     connect(ui->spb_NodeSizeX, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
     connect(ui->spb_NodeSizeY, SIGNAL(valueChanged(double)), this, SLOT(pick_update()));
@@ -372,6 +373,12 @@ void MainWindow::init_ui_effect()
         QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
         effect->setOpacity(0.75);
         ui->lb_RobotVel->setGraphicsEffect(effect);
+    }
+
+    {
+        QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(this);
+        effect->setOpacity(0.75);
+        ui->lb_RobotGoal->setGraphicsEffect(effect);
     }
 }
 
@@ -2070,8 +2077,11 @@ void MainWindow::bt_MapReload()
     unimap.load_map(map_dir);
     all_update();
 
-    QString path_3d_map = map_dir + "/map.las";
-    lvx.map_load(path_3d_map);
+    if(config.USE_LVX)
+    {
+        QString path_3d_map = map_dir + "/map.las";
+        lvx.map_load(path_3d_map);
+    }
 }
 
 void MainWindow::bt_AddNode()
@@ -3004,6 +3014,91 @@ void MainWindow::bt_SetMapTf()
     }
 
     map_update();
+}
+
+void MainWindow::bt_CheckNodes()
+{
+    std::unordered_set<QString> id_set;
+    std::unordered_set<QString> name_set;
+    for(const NODE& node : unimap.nodes)
+    {
+        if(id_set.find(node.id) != id_set.end() || name_set.find(node.name) != name_set.end())
+        {
+            printf("nodes duplicate!!\n");
+            break;
+        }
+
+        id_set.insert(node.id);
+        name_set.insert(node.name);
+    }
+    printf("nodes no duplication!!\n");
+
+    for(const NODE& node : unimap.nodes)
+    {
+        if(node.linked.size() == 0)
+        {
+            printf("no linked node!!\n");
+        }
+    }
+    printf("all nodes linked!!\n");
+
+    for(const NODE& node : unimap.nodes)
+    {
+        std::unordered_set<QString> link_set;
+        for(const QString& link : node.linked)
+        {
+            if(link_set.find(link) != link_set.end())
+            {
+                printf("link duplicate!!\n");
+                break;
+            }
+
+            link_set.insert(link);
+        }
+    }
+    printf("all link no duplication!!\n");
+
+    for(const NODE& node : unimap.nodes)
+    {
+        for(const QString& link : node.linked)
+        {
+            if(id_set.find(link) == id_set.end())
+            {
+                printf("link not matched\n");
+                break;
+            }
+        }
+    }
+    printf("all link matched!!\n");
+
+    std::vector<QString> id_list;
+    std::vector<QString> id_list2;
+    for(size_t p = 0; p < unimap.nodes.size(); p++)
+    {
+        id_list.push_back(unimap.nodes[p].id);
+        id_list2.push_back(QString("N_%1").arg(p));
+
+        unimap.nodes[p].id = QString("N_%1").arg(p);
+        if(unimap.nodes[p].type != "GOAL")
+        {
+            unimap.nodes[p].name = QString("N_%1").arg(p);
+        }
+    }
+
+    for(size_t p = 0; p < unimap.nodes.size(); p++)
+    {
+        for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
+        {
+            for(size_t i = 0; i < id_list.size(); i++)
+            {
+                if(unimap.nodes[p].linked[q] == id_list[i])
+                {
+                    unimap.nodes[p].linked[q] = id_list2[i];
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // for autocontrol
@@ -4338,6 +4433,11 @@ void MainWindow::topo_plot()
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;
+                    if(viewer->contains(id.toStdString()))
+                    {
+                        printf("duplicate: %s\n", id.toStdString().data());
+                    }
+
                     if(unimap.nodes[p].type == "ROUTE")
                     {
                         const double size = 0.15;
@@ -4500,7 +4600,7 @@ void MainWindow::pick_plot()
                 viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString text = "node_id:" + node->name;
+                QString text = "id: " + node->id + ", name: " + node->name;
                 ui->lb_NodeId->setText(text);
             }
         }
@@ -5109,6 +5209,12 @@ void MainWindow::ctrl_plot()
             last_plot_tactile.push_back(name);
         }
     }
+
+    // plot goal info
+    ctrl.mtx.lock();
+    ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(ctrl.move_info.goal_node_id).arg(ctrl.cur_goal_state));
+    ctrl.mtx.unlock();
+
 }
 void MainWindow::raw_plot()
 {
@@ -5544,7 +5650,12 @@ void MainWindow::topo_plot2()
                 // draw nodes
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    QString id = unimap.nodes[p].id;
+                    QString id = unimap.nodes[p].id;                    
+                    if(viewer2->contains(id.toStdString()))
+                    {
+                        printf("duplicate: %s\n", id.toStdString().data());
+                    }
+
                     if(unimap.nodes[p].type == "ROUTE")
                     {
                         const double size = 0.15;

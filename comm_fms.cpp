@@ -8,6 +8,8 @@ COMM_FMS::COMM_FMS(QObject *parent)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
+    connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
+
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
     connect(this, SIGNAL(signal_send_move_status()), this, SLOT(send_move_status()));
@@ -75,8 +77,6 @@ void COMM_FMS::connected()
     if(!is_connected)
     {
         is_connected = true;
-        connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
-
         ctrl->is_multi = true;
         printf("[COMM_FMS] connected\n");
     }
@@ -87,8 +87,6 @@ void COMM_FMS::disconnected()
     if(is_connected)
     {
         is_connected = false;
-        disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
-
         ctrl->is_multi = false;
         printf("[COMM_FMS] disconnected\n");
     }
@@ -625,13 +623,15 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
                 if(node == NULL)
                 {
                     msg.result = "reject";
-                    msg.message = "invalid node id";
+                    msg.message = "can not find node";
 
                     printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
                                                                                 msg.result.toLocal8Bit().data(),
                                                                                 msg.message.toLocal8Bit().data());
                     return;
                 }
+
+                msg.goal_node_id = node->id;
             }
 
             // pure pursuit
