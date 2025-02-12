@@ -29,7 +29,7 @@
         "USE_QTUI": "0",
         "USE_ARUCO": "0",
         "USE_EARLYSTOP": "0",
-        "USE_LVX": "0",
+        "USE_LVX": "1",
         "USE_COOP": "0",
         "USE_MULTI": "1"
     },
@@ -112,7 +112,7 @@
         "PLATFORM_TYPE": "SRV"
     },
     "lvx": {
-        "LVX_TF": "-0.2079,0.0,1.3079,0.0,0.0,90.0",
+        "LVX_TF": "-0.2079,0.0,1.34,0.0,0.0,90.0",
         "LVX_FRM_DT": "0.1",
         "LVX_MIN_RANGE": "1.0",
         "LVX_MAX_RANGE": "40.0",

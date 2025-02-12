@@ -133,10 +133,10 @@ void CAM::grab_loop()
         */
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[CAM] depth_profile(31), w:%d, h:%d, fps:%d, format:%d\n", depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
+        printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[CAM] color_profile(83), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+        printf("[CAM] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
@@ -351,10 +351,10 @@ void CAM::grab_loop()
         */
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[CAM] depth_profile(31), w:%d, h:%d, fps:%d, format:%d\n", depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
+        printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[CAM] color_profile(83), w:%d, h:%d, fps:%d, format:%d\n", color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+        printf("[CAM] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
