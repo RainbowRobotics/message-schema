@@ -50,6 +50,9 @@ public:
     std::vector<QString> get_linked_nodes(QString id);
     std::vector<QString> get_nodes(QString type);    
     std::vector<QString> get_nodes();
+
+    std::vector<int> get_init_candidates(std::vector<QString> prefix_list);
+
     int get_nodes_size();
 
     QString gen_node_id();

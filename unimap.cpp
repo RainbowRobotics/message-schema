@@ -761,6 +761,29 @@ std::vector<QString> UNIMAP::get_nodes()
     return res;
 }
 
+std::vector<int> UNIMAP::get_init_candidates(std::vector<QString> prefix_list)
+{
+    std::vector<int> res;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        if(nodes[p].type == "INIT")
+        {
+            res.push_back(p);
+            continue;
+        }
+
+        for(size_t q = 0; q < prefix_list.size(); q++)
+        {
+            if(nodes[p].name.contains(prefix_list[q]))
+            {
+                res.push_back(p);
+                break;
+            }
+        }
+    }
+    return res;
+}
+
 int UNIMAP::get_nodes_size()
 {
     return (int)nodes.size();
