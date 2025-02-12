@@ -2056,134 +2056,258 @@ void SLAM_2D::semi_auto_init_start()
 {
     is_busy = true;
 
-    if(unimap->kdtree_cloud.pts.size() == 0)
+    if(config->USE_LVX)
     {
-        is_busy = false;
-
-        DATA_LOCALIZATION dloc;
-        dloc.command = "semiautoinit";
-        dloc.result = "fail";
-        dloc.message = "kdtree_cloud size 0";
-        dloc.time = get_time();
-        Q_EMIT signal_localization_response(dloc);
-
-        return;
-    }
-
-    int wait_cnt = 0;
-    std::vector<Eigen::Vector3d> _cur_scan = lidar->get_cur_scan();
-    while(_cur_scan.size() == 0)
-    {
-        _cur_scan = lidar->get_cur_scan();
-
-        // timeout
-        wait_cnt++;
-        if(wait_cnt > 30)
+        // semi-auto init using 3d lidar
+        if(unimap->is_loaded == false || lvx->map_pts.size() == 0)
         {
             is_busy = false;
 
             DATA_LOCALIZATION dloc;
             dloc.command = "semiautoinit";
             dloc.result = "fail";
-            dloc.message = "cur scan size 0";
+            dloc.message = "kdtree_cloud size 0";
             dloc.time = get_time();
             Q_EMIT signal_localization_response(dloc);
 
             return;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
 
-    FRAME frm;
-    frm.pts = _cur_scan;
-
-    // candidates
-    std::vector<QString> ids = unimap->get_nodes("INIT");
-    std::vector<QString> ids2 = unimap->get_nodes("GOAL");
-    ids.insert(ids.end(), ids2.begin(), ids2.end());
-    if(ids.size() == 0)
-    {
-        is_busy = false;
-
-        DATA_LOCALIZATION dloc;
-        dloc.command = "semiautoinit";
-        dloc.result = "fail";
-        dloc.message = "no INIT nodes";
-        dloc.time = get_time();
-        Q_EMIT signal_localization_response(dloc);
-
-        return;
-    }
-    printf("[AUTOINIT] INIT node num: %d\n", (int)ids.size());
-
-    // find best match
-    Eigen::Vector2d min_ieir(1.0, 0.0);
-    Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
-    double min_cost = std::numeric_limits<double>::max();
-    for(size_t p = 0; p < ids.size(); p++)
-    {
-        NODE* node = unimap->get_node_by_id(ids[p]);
-        if(node == NULL)
+        int wait_cnt = 0;
+        LVX_FRM frm;
+        while(!lvx->frm_que.try_pop(frm))
         {
-            continue;
+            // timeout
+            wait_cnt++;
+            if(wait_cnt > 30)
+            {
+                is_busy = false;
+
+                DATA_LOCALIZATION dloc;
+                dloc.command = "semiautoinit";
+                dloc.result = "fail";
+                dloc.message = "cur scan size 0";
+                dloc.time = get_time();
+                Q_EMIT signal_localization_response(dloc);
+
+                return;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        printf("[AUTOINIT] get lvx frm\n");
+
+        std::vector<Eigen::Vector3d> pts;
+        for(size_t p = 0; p < frm.pts.size(); p++)
+        {
+            Eigen::Vector3d P(frm.pts[p].x, frm.pts[p].y, frm.pts[p].z);
+            pts.push_back(P);
         }
 
-        Eigen::Matrix4d tf = node->tf;
-        for(double th = -180.0; th < 180.0; th += 10.0)
-        {
-            Eigen::Matrix4d rot = se2_to_TF(Eigen::Vector3d(0, 0, th*D2R));
-            Eigen::Matrix4d _tf = tf*rot;
+        // lvx offset
+        Eigen::Matrix4d offset_tf = Eigen::Matrix4d::Identity();
+        offset_tf.block(0,3,3,1) = lvx->lvx_tf.block(0,3,3,1);
+        Eigen::Matrix4d offset_tf_inv = offset_tf.inverse();
 
-            double err = map_icp0(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
-            if(err < config->LOC_ICP_ERROR_THRESHOLD)
+        // candidates
+        std::vector<QString> prefix_list;
+        prefix_list.push_back("CHARGING");
+        prefix_list.push_back("PACKING");
+        prefix_list.push_back("WAITING");
+        prefix_list.push_back("CONTAINER");
+
+        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
+        if(idxs.size() == 0)
+        {
+            is_busy = false;
+
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.message = "no init candidate node";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            return;
+        }
+        printf("[AUTOINIT] init candidates num: %d\n", (int)idxs.size());
+
+        // find best match
+        Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+        double min_err = std::numeric_limits<double>::max();
+        for(size_t p = 0; p < idxs.size(); p++)
+        {
+            int i = idxs[p];
+            Eigen::Matrix4d tf = unimap->nodes[i].tf;
+            for(double th = -180.0; th < 180.0; th += 45.0)
             {
-                Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
-                double cost = (ieir[0]/config->LOC_ICP_ERROR_THRESHOLD) + (1.0 - ieir[1]);
-                if(cost < min_cost)
+                Eigen::Matrix4d rot = se2_to_TF(Eigen::Vector3d(0, 0, th*D2R));
+                Eigen::Matrix4d candidate_tf = tf*rot;
+                Eigen::Matrix4d _tf = candidate_tf*offset_tf;
+
+                double err = lvx->map_icp(pts, _tf);
+                if(err < min_err)
                 {
-                    min_ieir = ieir;
-                    min_cost = cost;
+                    min_err = err;
                     min_tf = _tf;
 
-                    Eigen::Vector3d min_pose = TF_to_se2(min_tf);
-                    printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
+                    Eigen::Vector3d min_xi = TF_to_se2(min_tf);
+                    printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_xi[0], min_xi[1], min_xi[2]*R2D, err);
                 }
             }
         }
-    }
 
-    if(min_ieir[0] < config->LOC_CHECK_IE && min_ieir[1] > config->LOC_CHECK_IR)
-    {
-        Eigen::Vector3d min_pose = TF_to_se2(min_tf);
-        printf("[AUTOINIT] success auto init. x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, min_cost);
-
-        if(config->USE_LVX)
+        Eigen::Vector2d ieir = lvx->calc_ieir(pts, min_tf);
+        if(ieir[0] < config->LOC_CHECK_IE && ieir[1] > config->LOC_CHECK_IR)
         {
-            lvx->set_cur_tf(min_tf);
-        }
-        set_cur_tf(min_tf);
+            Eigen::Matrix4d res_tf = min_tf*offset_tf_inv;
 
-        if(config->USE_LVX)
-        {
+            lvx->set_cur_tf(res_tf);
+            set_cur_tf(res_tf);
+
             lvx->loc_start();
-        }
-        localization_start();
+            localization_start();
 
-        DATA_LOCALIZATION dloc;
-        dloc.command = "semiautoinit";
-        dloc.result = "success";
-        dloc.time = get_time();
-        Q_EMIT signal_localization_response(dloc);
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "success";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+        }
+        else
+        {
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            printf("[AUTOINIT] failed auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+        }
     }
     else
     {
-        DATA_LOCALIZATION dloc;
-        dloc.command = "semiautoinit";
-        dloc.result = "fail";
-        dloc.time = get_time();
-        Q_EMIT signal_localization_response(dloc);
+        // semi-auto init using 2d lidar
+        if(unimap->is_loaded == false || unimap->kdtree_cloud.pts.size() == 0)
+        {
+            is_busy = false;
 
-        printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.message = "kdtree_cloud size 0";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            return;
+        }
+
+        int wait_cnt = 0;
+        std::vector<Eigen::Vector3d> _cur_scan = lidar->get_cur_scan();
+        while(_cur_scan.size() == 0)
+        {
+            _cur_scan = lidar->get_cur_scan();
+
+            // timeout
+            wait_cnt++;
+            if(wait_cnt > 30)
+            {
+                is_busy = false;
+
+                DATA_LOCALIZATION dloc;
+                dloc.command = "semiautoinit";
+                dloc.result = "fail";
+                dloc.message = "cur scan size 0";
+                dloc.time = get_time();
+                Q_EMIT signal_localization_response(dloc);
+
+                return;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        FRAME frm;
+        frm.pts = _cur_scan;
+
+        // candidates
+        std::vector<QString> prefix_list;
+        prefix_list.push_back("CHARGING");
+        prefix_list.push_back("PACKING");
+        prefix_list.push_back("WAITING");
+        prefix_list.push_back("CONTAINER");
+
+        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
+        if(idxs.size() == 0)
+        {
+            is_busy = false;
+
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.message = "no init candidate node";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            return;
+        }
+        printf("[AUTOINIT] init candidates num: %d\n", (int)idxs.size());
+
+        // find best match
+        Eigen::Vector2d min_ieir(1.0, 0.0);
+        Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+        double min_cost = std::numeric_limits<double>::max();
+        for(size_t p = 0; p < idxs.size(); p++)
+        {
+            int i = idxs[p];
+            Eigen::Matrix4d tf = unimap->nodes[i].tf;
+            for(double th = -180.0; th < 180.0; th += 20.0)
+            {
+                Eigen::Matrix4d rot = se2_to_TF(Eigen::Vector3d(0, 0, th*D2R));
+                Eigen::Matrix4d _tf = tf*rot;
+
+                double err = map_icp0(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
+                if(err < config->LOC_ICP_ERROR_THRESHOLD)
+                {
+                    Eigen::Vector2d ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _tf);
+                    double cost = (ieir[0]/config->LOC_ICP_ERROR_THRESHOLD) + (1.0 - ieir[1]);
+                    if(cost < min_cost)
+                    {
+                        min_ieir = ieir;
+                        min_cost = cost;
+                        min_tf = _tf;
+
+                        Eigen::Vector3d min_pose = TF_to_se2(min_tf);
+                        printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, cost);
+                    }
+                }
+            }
+        }
+
+        if(min_ieir[0] < config->LOC_CHECK_IE && min_ieir[1] > config->LOC_CHECK_IR)
+        {
+            Eigen::Vector3d min_pose = TF_to_se2(min_tf);
+            printf("[AUTOINIT] success auto init. x:%f, y:%f, th:%f, cost:%f\n", min_pose[0], min_pose[1], min_pose[2]*R2D, min_cost);
+
+            set_cur_tf(min_tf);
+            localization_start();
+
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "success";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+        }
+        else
+        {
+            DATA_LOCALIZATION dloc;
+            dloc.command = "semiautoinit";
+            dloc.result = "fail";
+            dloc.time = get_time();
+            Q_EMIT signal_localization_response(dloc);
+
+            printf("[AUTOINIT] failed auto init. min_ieir: %f, %f\n", min_ieir[0], min_ieir[1]);
+        }
     }
 
     is_busy = false;

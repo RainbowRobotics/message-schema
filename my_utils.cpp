@@ -1028,4 +1028,23 @@ void precise_sleep(double seconds)
     close(fd);
 }
 
+void remove_duplicates_nodes(std::vector<QString>& src)
+{
+    if(src.size() < 2)
+    {
+        return;
+    }
+
+    std::unordered_set<QString> seen;
+    std::vector<QString> unique_list;
+    for(const QString& str : src)
+    {
+        if(seen.insert(str).second) // insert가 성공하면 true
+        {
+            unique_list.push_back(str);
+        }
+    }
+    src = unique_list;
+}
+
 #endif // UTILS_CPP

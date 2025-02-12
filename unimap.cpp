@@ -390,6 +390,29 @@ void UNIMAP::del_node(QString id)
     }
 }
 
+void UNIMAP::del_link(QString id0, QString id1)
+{
+    NODE* node0 = get_node_by_id(id0);
+    if(node0 != NULL)
+    {
+        auto it = std::find(node0->linked.begin(), node0->linked.end(), id1);
+        if(it != node0->linked.end())
+        {
+            node0->linked.erase(it);
+        }
+    }
+
+    NODE* node1 = get_node_by_id(id1);
+    if(node1 != NULL)
+    {
+        auto it = std::find(node1->linked.begin(), node1->linked.end(), id0);
+        if(it != node1->linked.end())
+        {
+            node1->linked.erase(it);
+        }
+    }
+}
+
 void UNIMAP::edit_node_pos(PICKING pick)
 {
     if(pick.cur_node == "" || pick.r_pose == Eigen::Vector3d(0, 0, 0))
@@ -757,6 +780,29 @@ std::vector<QString> UNIMAP::get_nodes()
     for(auto& it: nodes)
     {
         res.push_back(it.id);
+    }
+    return res;
+}
+
+std::vector<int> UNIMAP::get_init_candidates(std::vector<QString> prefix_list)
+{
+    std::vector<int> res;
+    for(size_t p = 0; p < nodes.size(); p++)
+    {
+        if(nodes[p].type == "INIT")
+        {
+            res.push_back(p);
+            continue;
+        }
+
+        for(size_t q = 0; q < prefix_list.size(); q++)
+        {
+            if(nodes[p].name.contains(prefix_list[q]))
+            {
+                res.push_back(p);
+                break;
+            }
+        }
     }
     return res;
 }

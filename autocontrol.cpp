@@ -1841,8 +1841,8 @@ void AUTOCONTROL::b_loop_pp()
             w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
 
             // for safe
-            double scale_w = 1.0 - 1.0*std::abs(cur_vel[0]/params.LIMIT_V);
-            w *= scale_w;
+            //double scale_w = 1.0 - 1.0*std::abs(cur_vel[0]/params.LIMIT_V);
+            //w *= scale_w;
 
             // obs check
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);

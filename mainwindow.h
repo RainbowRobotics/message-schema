@@ -284,6 +284,7 @@ public Q_SLOTS:
     void bt_MapSave2();
     void bt_AddNode();
     void bt_DelNode();
+    void bt_DelLink();
     void bt_AddLink1();
     void bt_AddLink2();
     void bt_AutoLink();

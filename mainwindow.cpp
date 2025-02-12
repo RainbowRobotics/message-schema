@@ -111,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MapSave2, SIGNAL(clicked()), this, SLOT(bt_MapSave2()));
     connect(ui->bt_AddNode, SIGNAL(clicked()), this, SLOT(bt_AddNode()));
     connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
+    connect(ui->bt_DelLink, SIGNAL(clicked()), this, SLOT(bt_DelLink()));
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
@@ -2107,6 +2108,32 @@ void MainWindow::bt_DelNode()
     pick_update();
 }
 
+void MainWindow::bt_DelLink()
+{
+    if(select_nodes.size() == 0)
+    {
+        return;
+    }
+
+    for(size_t p = 0; p < select_nodes.size(); p++)
+    {
+        for(size_t q = 0; q < select_nodes.size(); q++)
+        {
+            if(p == q)
+            {
+                continue;
+            }
+
+            QString id0 = select_nodes[p];
+            QString id1 = select_nodes[q];
+            unimap.del_link(id0, id1);
+        }
+    }
+
+    topo_update();
+    pick_update();
+}
+
 void MainWindow::bt_EditNodePos()
 {
     unimap.edit_node_pos(pick);
@@ -3099,6 +3126,16 @@ void MainWindow::bt_CheckNodes()
             }
         }
     }
+
+    // check link
+    for(size_t p = 0; p < unimap.nodes.size(); p++)
+    {
+        remove_duplicates_nodes(unimap.nodes[p].linked);
+    }
+
+    topo_update();
+
+    printf("check topo complete\n");
 }
 
 // for autocontrol
@@ -5780,6 +5817,16 @@ void MainWindow::topo_plot2()
 
                         last_plot_edges2.push_back(id0);
                         last_plot_edges2.push_back(id1);
+
+                        QString chk_id;
+                        chk_id.sprintf("%s_%f_%f_%f", node->id.toLocal8Bit().data(), P_mid[0], P_mid[1], P_mid[2]);
+
+                        Eigen::Matrix4d chk_tf = Eigen::Matrix4d::Identity();
+                        chk_tf.block(0,3,3,1) = P_mid;
+
+                        viewer2->addCube(-0.05, 0.05, -0.05, 0.05, 0, 0.1, 0.0, 0.0, 0.0, chk_id.toStdString());
+                        viewer2->updateShapePose(chk_id.toStdString(), Eigen::Affine3f(chk_tf.cast<float>()));
+                        last_plot_edges2.push_back(chk_id);
                     }
                 }
             }
