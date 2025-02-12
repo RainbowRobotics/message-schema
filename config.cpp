@@ -215,8 +215,8 @@ void CONFIG::load()
                 USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
                 printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
 
-                USE_RRS = obj_debug["USE_WEB_UI"].toString().toInt();
-                printf("[CONFIG] USE_WEB_UI, %s\n", obj_debug["USE_WEB_UI"].toString().toLocal8Bit().data());
+                USE_RRS = obj_debug["USE_RRS"].toString().toInt();
+                printf("[CONFIG] USE_RRS, %s\n", obj_debug["USE_RRS"].toString().toLocal8Bit().data());
 
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());

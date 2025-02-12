@@ -587,23 +587,14 @@ void COMM_RRS::send_move_status()
     {
         ctrl->mtx.lock();
         goal_state = ctrl->cur_goal_state;
-        if(ctrl->move_info.command == "goal")
+        goal_node_id = ctrl->move_info.goal_node_id;
+        if(goal_node_id != "")
         {
-            goal_node_id = ctrl->move_info.goal_node_id;
-            if(goal_node_id != "")
+            NODE* node = unimap->get_node_by_id(goal_node_id);
+            if(node != NULL)
             {
-                NODE* node = unimap->get_node_by_id(goal_node_id);
-                if(node != NULL)
-                {
-                    goal_node_name = node->name;
-                    goal_xi = TF_to_se2(node->tf);
-                }
-                else
-                {
-                    goal_node_id = "";
-                    goal_node_name = "";
-                    goal_xi.setZero();
-                }
+                goal_node_name = node->name;
+                goal_xi = TF_to_se2(node->tf);
             }
         }
         ctrl->mtx.unlock();
@@ -873,10 +864,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 return;
             }
 
-            // pure pursuit            
-            int preset = msg.preset;
-            ctrl->move_pp(goal_tf, preset);
-
+            // pure pursuit
+            ctrl->move(msg);
             msg.result = "accept";
             msg.message = "";
 
@@ -930,11 +919,14 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 if(node == NULL)
                 {
                     msg.result = "reject";
-                    msg.message = "invalid node id";
+                    msg.message = "can not find node";
 
                     send_move_response(msg);
                     return;
                 }
+
+                // convert name to id
+                msg.goal_node_id = node->id;
             }
 
             // pure pursuit

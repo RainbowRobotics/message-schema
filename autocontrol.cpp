@@ -2494,6 +2494,7 @@ void AUTOCONTROL::clean_up()
     mobile->move(0, 0, 0);
     is_moving = false;
     is_pause = false;
+
     clear_path();
     fsm_state = AUTO_FSM_COMPLETE;
 }

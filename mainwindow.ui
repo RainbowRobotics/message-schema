@@ -656,7 +656,7 @@ out</string>
               <rect>
                <x>200</x>
                <y>130</y>
-               <width>311</width>
+               <width>651</width>
                <height>21</height>
               </rect>
              </property>
@@ -674,7 +674,7 @@ out</string>
               <rect>
                <x>200</x>
                <y>160</y>
-               <width>311</width>
+               <width>651</width>
                <height>21</height>
               </rect>
              </property>
@@ -692,7 +692,7 @@ out</string>
               <rect>
                <x>200</x>
                <y>100</y>
-               <width>311</width>
+               <width>651</width>
                <height>21</height>
               </rect>
              </property>
@@ -703,6 +703,24 @@ out</string>
              </property>
              <property name="text">
               <string>Pick pose</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="lb_RobotGoal">
+             <property name="geometry">
+              <rect>
+               <x>200</x>
+               <y>190</y>
+               <width>651</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Robot goal</string>
              </property>
             </widget>
            </widget>
@@ -2341,6 +2359,25 @@ Aruco</string>
              <property name="text">
               <string>QA
 Cloud</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_CheckNodes">
+             <property name="geometry">
+              <rect>
+               <x>160</x>
+               <y>50</y>
+               <width>51</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Check
+Nodes</string>
              </property>
             </widget>
            </widget>
