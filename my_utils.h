@@ -77,4 +77,6 @@ std::vector<QString> array_to_links(QJsonArray arr);
 CAM_INTRINSIC string_to_intrinsic(QString str);
 void precise_sleep(double seconds);
 
+void remove_duplicates_nodes(std::vector<QString>& src);
+
 #endif // MY_UTILS_H

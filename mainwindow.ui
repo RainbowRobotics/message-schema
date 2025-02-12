@@ -2658,7 +2658,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>40</x>
-                <y>310</y>
+                <y>350</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2671,7 +2671,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>330</y>
+                <y>370</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2684,7 +2684,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>120</x>
-                <y>330</y>
+                <y>370</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2697,7 +2697,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>40</x>
-                <y>330</y>
+                <y>370</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2722,7 +2722,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>120</x>
-                <y>310</y>
+                <y>350</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2735,7 +2735,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>310</y>
+                <y>350</y>
                 <width>71</width>
                 <height>21</height>
                </rect>
@@ -2766,7 +2766,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>330</y>
+                <y>370</y>
                 <width>31</width>
                 <height>21</height>
                </rect>
@@ -2820,7 +2820,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>170</x>
-                <y>210</y>
+                <y>250</y>
                 <width>151</width>
                 <height>81</height>
                </rect>
@@ -2847,7 +2847,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>210</y>
+                <y>250</y>
                 <width>151</width>
                 <height>81</height>
                </rect>
@@ -2874,7 +2874,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>80</x>
-                <y>180</y>
+                <y>220</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2896,7 +2896,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>150</x>
-                <y>180</y>
+                <y>220</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2918,7 +2918,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>220</x>
-                <y>180</y>
+                <y>220</y>
                 <width>65</width>
                 <height>21</height>
                </rect>
@@ -2940,7 +2940,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>180</y>
+                <y>220</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
@@ -2958,7 +2958,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>350</y>
+                <y>390</y>
                 <width>271</width>
                 <height>111</height>
                </rect>
@@ -3201,7 +3201,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>100</y>
+                <y>130</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -3331,7 +3331,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>120</y>
+                <y>150</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -3344,7 +3344,7 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>290</y>
+                <y>330</y>
                 <width>311</width>
                 <height>21</height>
                </rect>
@@ -3357,13 +3357,26 @@ Nodes</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>150</y>
+                <y>170</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="text">
                <string>Add points</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DelLink">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>100</y>
+                <width>91</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Del link</string>
               </property>
              </widget>
             </widget>
