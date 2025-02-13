@@ -79,4 +79,6 @@ void precise_sleep(double seconds);
 
 void remove_duplicates_nodes(std::vector<QString>& src);
 
+std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P1, double step);
+
 #endif // MY_UTILS_H

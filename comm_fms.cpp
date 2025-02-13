@@ -632,11 +632,24 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
                 }
 
                 msg.goal_node_id = node->id;
+                msg.goal_node_name = node->name;
             }
+            else
+            {
+                msg.goal_node_name = node->name;
+            }
+
+            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+            msg.cur_pos = cur_tf.block(0,3,3,1);
+
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
 
             // pure pursuit
             ctrl->move(msg);
-
             msg.result = "accept";
             msg.message = "";
 

@@ -1047,4 +1047,21 @@ void remove_duplicates_nodes(std::vector<QString>& src)
     src = unique_list;
 }
 
+std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P1, double step)
+{
+    double d = (P1-P0).norm();
+    Eigen::Vector3d dir = (P1-P0).normalized();
+
+    std::vector<Eigen::Vector3d> res;
+    res.push_back(P0);
+    for(double t = step; t < d; t+=step)
+    {
+        Eigen::Vector3d P = P0 + t*dir;
+        res.push_back(P);
+    }
+    res.push_back(P1);
+
+    return res;
+}
+
 #endif // UTILS_CPP
