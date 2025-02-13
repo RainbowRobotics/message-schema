@@ -12,6 +12,7 @@ struct DATA_MOVE
     QString goal_node_name;
 
     int preset;
+    Eigen::Vector3d cur_pos; // x, y, z
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
 
@@ -27,8 +28,9 @@ struct DATA_MOVE
         goal_node_name = "";
 
         preset = 0;
-        tgt_pose_vec.setIdentity();
-        jog_val.setIdentity();
+        cur_pos.setZero();
+        tgt_pose_vec.setZero();
+        jog_val.setZero();
 
         result = "";
         message = "";
@@ -43,6 +45,7 @@ struct DATA_MOVE
         goal_node_name = p.goal_node_name;
 
         preset = p.preset;
+        cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 
@@ -59,6 +62,7 @@ struct DATA_MOVE
         goal_node_name = p.goal_node_name;
 
         preset = p.preset;
+        cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 

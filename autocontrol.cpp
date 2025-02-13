@@ -1608,7 +1608,11 @@ void AUTOCONTROL::b_loop_pp()
                 // response
                 if(config->USE_RRS)
                 {
+                    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+                    Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
                     mtx.lock();
+                    move_info.cur_pos = cur_pos;
                     move_info.result = "success";
                     move_info.message = "already goal";
                     move_info.time = get_time();
@@ -1659,6 +1663,12 @@ void AUTOCONTROL::b_loop_pp()
     logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
     {
+        // get current status
+        Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
         // check everything
         int is_good_everything = is_everything_fine();
         if(is_good_everything == DRIVING_FAILED)
@@ -1671,6 +1681,7 @@ void AUTOCONTROL::b_loop_pp()
             if(config->USE_RRS)
             {
                 mtx.lock();
+                move_info.cur_pos = cur_pos;
                 move_info.result = "fail";
                 move_info.message = "something wrong";
                 move_info.time = get_time();
@@ -1697,6 +1708,7 @@ void AUTOCONTROL::b_loop_pp()
             if(config->USE_RRS)
             {
                 mtx.lock();
+                move_info.cur_pos = cur_pos;
                 move_info.result = "fail";
                 move_info.message = "not ready";
                 move_info.time = get_time();
@@ -1722,12 +1734,6 @@ void AUTOCONTROL::b_loop_pp()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
-
-        // get current status
-        Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
-        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
         // calc local path
         if(fsm_state != AUTO_FSM_FINAL_ALIGN)
@@ -2138,7 +2144,8 @@ void AUTOCONTROL::b_loop_pp()
                     // response
                     if(config->USE_RRS)
                     {
-                        mtx.lock();                        
+                        mtx.lock();
+                        move_info.cur_pos = cur_pos;
                         move_info.result = "success";
                         move_info.message = "very good";
                         move_info.time = get_time();
@@ -2471,7 +2478,11 @@ void AUTOCONTROL::b_loop_pp()
         // response
         if(config->USE_RRS)
         {
+            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
             mtx.lock();
+            move_info.cur_pos = cur_pos;
             move_info.result = "fail";
             move_info.message = "manual stopped";
             move_info.time = get_time();
