@@ -42,6 +42,13 @@ std::string getCurrentDate()
 
 void signalHandler(int signal)
 {
+    if(signal == SIGINT)
+    {
+        printf("[MAIN] SIGINT received\n");
+        QCoreApplication::quit();
+        return;
+    }
+
     std::string date_and_time = getCurrentDate();
     std::string full_path = getExecutableDir() + "/snlog/" + date_and_time + "-fault_log.txt";
 
