@@ -2111,9 +2111,6 @@ void SLAM_2D::semi_auto_init_start()
         // candidates
         std::vector<QString> prefix_list;
         prefix_list.push_back("CHARGING");
-        prefix_list.push_back("PACKING");
-        prefix_list.push_back("WAITING");
-        prefix_list.push_back("CONTAINER");
 
         std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
         if(idxs.size() == 0)
@@ -2138,7 +2135,7 @@ void SLAM_2D::semi_auto_init_start()
         {
             int i = idxs[p];
             Eigen::Matrix4d tf = unimap->nodes[i].tf;
-            for(double th = -180.0; th < 180.0; th += 45.0)
+            for(double th = -180.0; th < 180.0; th += 90.0)
             {
                 Eigen::Matrix4d rot = se2_to_TF(Eigen::Vector3d(0, 0, th*D2R));
                 Eigen::Matrix4d candidate_tf = tf*rot;
@@ -2233,9 +2230,6 @@ void SLAM_2D::semi_auto_init_start()
         // candidates
         std::vector<QString> prefix_list;
         prefix_list.push_back("CHARGING");
-        prefix_list.push_back("PACKING");
-        prefix_list.push_back("WAITING");
-        prefix_list.push_back("CONTAINER");
 
         std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
         if(idxs.size() == 0)
