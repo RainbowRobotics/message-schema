@@ -4342,7 +4342,7 @@ void MainWindow::map_plot()
 
         {
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=2) // sampling
+            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=4) // sampling
             {
                 if(unimap.kdtree_mask[p] == 0)
                 {
@@ -4423,28 +4423,8 @@ void MainWindow::topo_plot()
                 {
                     viewer->removeShape(id.toStdString());
                 }
-
-                QString axis_id = id + "_axis";
-                if(viewer->contains(axis_id.toStdString()))
-                {
-                    viewer->removeShape(axis_id.toStdString());
-                }
             }
             last_plot_nodes.clear();
-        }
-
-        // remove edges
-        if(last_plot_edges.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_edges.size(); p++)
-            {
-                QString id = last_plot_edges[p];
-                if(viewer->contains(id.toStdString()))
-                {
-                    viewer->removeShape(id.toStdString());
-                }
-            }
-            last_plot_edges.clear();
         }
 
         // remove names
@@ -4467,6 +4447,7 @@ void MainWindow::topo_plot()
             if(ui->ckb_PlotNodes->isChecked())
             {
                 // draw nodes
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;
@@ -4480,13 +4461,19 @@ void MainWindow::topo_plot()
                         const double size = 0.15;
                         viewer->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = size - size2;
-                        QString axis_id = id + "_axis";
-                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(size - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + size;
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "INIT")
                     {
@@ -4494,13 +4481,19 @@ void MainWindow::topo_plot()
                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                         0.0, 0.1, 0.0, 1.0, 1.0, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = config.ROBOT_SIZE_X[1] - size2;
-                        QString axis_id = id + "_axis";
-                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
@@ -4508,13 +4501,19 @@ void MainWindow::topo_plot()
                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = config.ROBOT_SIZE_X[1] - size2;
-                        QString axis_id = id + "_axis";
-                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
@@ -4551,26 +4550,38 @@ void MainWindow::topo_plot()
                         const double size = 0.15;
                         viewer->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 1.0, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = size - size2;
-                        QString axis_id = id + "_axis";
-                        viewer->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(size - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + size;
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
 
                     // for erase
                     last_plot_nodes.push_back(id);
                 }
+
+                if(!viewer->updatePointCloud(cloud, "front_dots"))
+                {
+                    viewer->addPointCloud(cloud, "front_dots");
+                }
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "front_dots");
             }
 
             if(ui->ckb_PlotEdges->isChecked())
             {
                 // draw edges
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
                         NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
@@ -4579,28 +4590,56 @@ void MainWindow::topo_plot()
                             continue;
                         }
 
+                        Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
                         Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 
-                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
-                        pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
-                        pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+                        std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
+                        for(size_t i = 0; i < pts0.size(); i++)
+                        {
+                            pcl::PointXYZRGB pt;
+                            pt.x = pts0[i][0];
+                            pt.y = pts0[i][1];
+                            pt.z = pts0[i][2];
+                            pt.r = 255;
+                            pt.g = 0;
+                            pt.b = 0;
 
-                        QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
-                        QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
+                            cloud->push_back(pt);
+                        }
 
-                        viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
-                        viewer->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
+                        std::vector<Eigen::Vector3d> pts1 = sampling_line(P1, P_mid, 0.05);
+                        for(size_t i = 0; i < pts1.size(); i++)
+                        {
+                            pcl::PointXYZRGB pt;
+                            pt.x = pts1[i][0];
+                            pt.y = pts1[i][1];
+                            pt.z = pts1[i][2];
+                            pt.r = 0;
+                            pt.g = 255;
+                            pt.b = 0;
 
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
-                        viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
+                            cloud->push_back(pt);
+                        }
 
-                        last_plot_edges.push_back(id0);
-                        last_plot_edges.push_back(id1);
+                        pcl::PointXYZRGB pt;
+                        pt.x = P_mid[0];
+                        pt.y = P_mid[1];
+                        pt.z = P_mid[2] + 0.05;
+                        pt.r = 0;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                 }
+
+                if(!viewer->updatePointCloud(cloud, "edge_dots"))
+                {
+                    viewer->addPointCloud(cloud, "edge_dots");
+                }
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "edge_dots");
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "edge_dots");
             }
         }
     }
@@ -5477,6 +5516,12 @@ void MainWindow::plot_loop()
         return;
     }
 
+    QWidget *cur_tab = ui->main_tab->currentWidget();
+    if(cur_tab !=  ui->page_slamnav)
+    {
+        return;
+    }
+
     plot_timer.stop();
 
     double st_time = get_time();
@@ -5558,7 +5603,7 @@ void MainWindow::map_plot2()
 
         {
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p++)
+            for(size_t p = 0; p < unimap.kdtree_cloud.pts.size(); p+=4)
             {
                 pcl::PointXYZRGB pt;
                 pt.x = unimap.kdtree_cloud.pts[p].x;
@@ -5641,28 +5686,8 @@ void MainWindow::topo_plot2()
                 {
                     viewer2->removeShape(id.toStdString());
                 }
-
-                QString axis_id = id + "_axis";
-                if(viewer2->contains(axis_id.toStdString()))
-                {
-                    viewer2->removeShape(axis_id.toStdString());
-                }
             }
             last_plot_nodes2.clear();
-        }
-
-        // remove edges
-        if(last_plot_edges2.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_edges2.size(); p++)
-            {
-                QString id = last_plot_edges2[p];
-                if(viewer2->contains(id.toStdString()))
-                {
-                    viewer2->removeShape(id.toStdString());
-                }
-            }
-            last_plot_edges2.clear();
         }
 
         // remove names
@@ -5685,6 +5710,7 @@ void MainWindow::topo_plot2()
             if(ui->ckb_PlotNodes2->isChecked())
             {
                 // draw nodes
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     QString id = unimap.nodes[p].id;                    
@@ -5698,13 +5724,19 @@ void MainWindow::topo_plot2()
                         const double size = 0.15;
                         viewer2->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = size - size2;
-                        QString axis_id = id + "_axis";
-                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(size - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + size;
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "INIT")
                     {
@@ -5712,13 +5744,19 @@ void MainWindow::topo_plot2()
                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                         0.0, 0.1, 0.0, 1.0, 1.0, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = config.ROBOT_SIZE_X[1] - size2;
-                        QString axis_id = id + "_axis";
-                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "GOAL")
                     {
@@ -5726,13 +5764,19 @@ void MainWindow::topo_plot2()
                                         config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
                                         0, 0.1, 0.5, 1.0, 0.0, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = config.ROBOT_SIZE_X[1] - size2;
-                        QString axis_id = id + "_axis";
-                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
                     else if(unimap.nodes[p].type == "OBS")
                     {
@@ -5769,26 +5813,38 @@ void MainWindow::topo_plot2()
                         const double size = 0.15;
                         viewer2->addCube(-size, size, -size, size, -size, size, 0.0, 1.0, 1.0, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+                        //viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
-                        const double size2 = 0.05;
-                        const double offset = size - size2;
-                        QString axis_id = id + "_axis";
-                        viewer2->addCube(-size2 + offset, size2 + offset, -size2, size2, -size2, size2, 1.0, 0.0, 0.0, axis_id.toStdString());
-                        viewer2->updateShapePose(axis_id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(size - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + size;
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
                     }
 
                     // for erase
                     last_plot_nodes2.push_back(id);
                 }
+
+                if(!viewer2->updatePointCloud(cloud, "front_dots"))
+                {
+                    viewer2->addPointCloud(cloud, "front_dots");
+                }
+                viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "front_dots");
             }
 
             if(ui->ckb_PlotEdges2->isChecked())
             {
                 // draw edges
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
-                    Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
                     {
                         NODE* node = unimap.get_node_by_id(unimap.nodes[p].linked[q]);
@@ -5797,38 +5853,56 @@ void MainWindow::topo_plot2()
                             continue;
                         }
 
+                        Eigen::Vector3d P0 = unimap.nodes[p].tf.block(0,3,3,1);
                         Eigen::Vector3d P1 = node->tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 
-                        pcl::PointXYZ pt0(P0[0], P0[1], P0[2]);
-                        pcl::PointXYZ pt1(P_mid[0], P_mid[1], P_mid[2]);
-                        pcl::PointXYZ pt2(P1[0], P1[1], P1[2]);
+                        std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
+                        for(size_t i = 0; i < pts0.size(); i++)
+                        {
+                            pcl::PointXYZRGB pt;
+                            pt.x = pts0[i][0];
+                            pt.y = pts0[i][1];
+                            pt.z = pts0[i][2];
+                            pt.r = 255;
+                            pt.g = 0;
+                            pt.b = 0;
 
-                        QString id0 = unimap.nodes[p].id + "_" + node->id + "_0";
-                        QString id1 = unimap.nodes[p].id + "_" + node->id + "_1";
+                            cloud->push_back(pt);
+                        }
 
-                        viewer2->addLine(pt0, pt1, 1.0, 0.0, 0.0, id0.toStdString());
-                        viewer2->addLine(pt1, pt2, 0.0, 1.0, 0.0, id1.toStdString());
+                        std::vector<Eigen::Vector3d> pts1 = sampling_line(P1, P_mid, 0.05);
+                        for(size_t i = 0; i < pts1.size(); i++)
+                        {
+                            pcl::PointXYZRGB pt;
+                            pt.x = pts1[i][0];
+                            pt.y = pts1[i][1];
+                            pt.z = pts1[i][2];
+                            pt.r = 0;
+                            pt.g = 255;
+                            pt.b = 0;
 
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id0.toStdString());
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, id1.toStdString());
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id0.toStdString());
-                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.8, id1.toStdString());
+                            cloud->push_back(pt);
+                        }
 
-                        last_plot_edges2.push_back(id0);
-                        last_plot_edges2.push_back(id1);
+                        pcl::PointXYZRGB pt;
+                        pt.x = P_mid[0];
+                        pt.y = P_mid[1];
+                        pt.z = P_mid[2] + 0.05;
+                        pt.r = 0;
+                        pt.g = 0;
+                        pt.b = 0;
 
-                        QString chk_id;
-                        chk_id.sprintf("%s_%f_%f_%f", node->id.toLocal8Bit().data(), P_mid[0], P_mid[1], P_mid[2]);
-
-                        Eigen::Matrix4d chk_tf = Eigen::Matrix4d::Identity();
-                        chk_tf.block(0,3,3,1) = P_mid;
-
-                        viewer2->addCube(-0.05, 0.05, -0.05, 0.05, 0, 0.1, 0.0, 0.0, 0.0, chk_id.toStdString());
-                        viewer2->updateShapePose(chk_id.toStdString(), Eigen::Affine3f(chk_tf.cast<float>()));
-                        last_plot_edges2.push_back(chk_id);
+                        cloud->push_back(pt);
                     }
                 }
+
+                if(!viewer2->updatePointCloud(cloud, "edge_dots"))
+                {
+                    viewer2->addPointCloud(cloud, "edge_dots");
+                }
+                viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "edge_dots");
+                viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "edge_dots");
             }
 
         }
@@ -6175,6 +6249,17 @@ void MainWindow::loc_plot2()
 }
 void MainWindow::plot_loop2()
 {
+    if(ui->ckb_PlotEnable->isChecked() == false)
+    {
+        return;
+    }
+
+    QWidget *cur_tab = ui->main_tab->currentWidget();
+    if(cur_tab !=  ui->page_annot)
+    {
+        return;
+    }
+
     plot_timer2.stop();
 
     map_plot2();
