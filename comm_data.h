@@ -9,6 +9,7 @@ struct DATA_MOVE
     QString command; // goal, jog, target, pause, resume, stop
     QString method; // pp, hpp, tng
     QString goal_node_id;
+    QString goal_node_name;
 
     int preset;
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
@@ -23,6 +24,7 @@ struct DATA_MOVE
         command = "";
         method = "";
         goal_node_id = "";
+        goal_node_name = "";
 
         preset = 0;
         tgt_pose_vec.setIdentity();
@@ -38,6 +40,7 @@ struct DATA_MOVE
         command = p.command;
         method = p.method;
         goal_node_id = p.goal_node_id;
+        goal_node_name = p.goal_node_name;
 
         preset = p.preset;
         tgt_pose_vec = p.tgt_pose_vec;
@@ -53,6 +56,7 @@ struct DATA_MOVE
         command = p.command;
         method = p.method;
         goal_node_id = p.goal_node_id;
+        goal_node_name = p.goal_node_name;
 
         preset = p.preset;
         tgt_pose_vec = p.tgt_pose_vec;
