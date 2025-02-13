@@ -929,6 +929,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 msg.goal_node_id = node->id;
                 msg.goal_node_name = node->name;
             }
+            else
+            {
+                msg.goal_node_name = node->name;
+            }
 
             // pure pursuit
             ctrl->move(msg);
