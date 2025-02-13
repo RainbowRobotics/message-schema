@@ -934,6 +934,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 msg.goal_node_name = node->name;
             }
 
+            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+            msg.cur_pos = cur_pos;
+
             // pure pursuit
             ctrl->move(msg);
             msg.result = "accept";
@@ -1489,6 +1493,9 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
     obj["goal_name"] = msg.goal_node_name;
+    obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
+    obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
+    obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
     obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
     obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
     obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
