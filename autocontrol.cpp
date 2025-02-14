@@ -1605,6 +1605,10 @@ void AUTOCONTROL::b_loop_pp()
                 clean_up();
                 set_multi_req("none");
 
+                mtx.lock();
+                cur_goal_state = "complete";
+                mtx.unlock();
+
                 // response
                 if(config->USE_RRS)
                 {
@@ -1620,10 +1624,6 @@ void AUTOCONTROL::b_loop_pp()
 
                     Q_EMIT signal_move_response(move_info);
                 }
-
-                mtx.lock();
-                cur_goal_state = "complete";
-                mtx.unlock();
 
                 fsm_state = AUTO_FSM_COMPLETE;
                 logger->write_log(QString("[AUTO] COMPLETE (already goal), err_d: %1, err_th: %2").arg(err_d).arg(err_th*R2D));
@@ -1677,6 +1677,10 @@ void AUTOCONTROL::b_loop_pp()
             clean_up();
             set_multi_req("none");
 
+            mtx.lock();
+            cur_goal_state = "fail";
+            mtx.unlock();
+
             // response
             if(config->USE_RRS)
             {
@@ -1691,11 +1695,6 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             fsm_state = AUTO_FSM_COMPLETE;
-
-            mtx.lock();
-            cur_goal_state = "fail";
-            mtx.unlock();
-
             logger->write_log("[AUTO] something wrong (fail)");
             return;
         }
@@ -1703,6 +1702,10 @@ void AUTOCONTROL::b_loop_pp()
         {
             clean_up();
             set_multi_req("none");
+
+            mtx.lock();
+            cur_goal_state = "fail";
+            mtx.unlock();
 
             // response
             if(config->USE_RRS)
@@ -1718,11 +1721,6 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             fsm_state = AUTO_FSM_COMPLETE;
-
-            mtx.lock();
-            cur_goal_state = "fail";
-            mtx.unlock();
-
             logger->write_log("[AUTO] something wrong (not ready)");
             return;
         }
@@ -1967,12 +1965,11 @@ void AUTOCONTROL::b_loop_pp()
                             clean_up();
                             set_multi_req("req_path");
 
-                            fsm_state = AUTO_FSM_COMPLETE;
-
                             mtx.lock();
                             cur_goal_state = "move";
                             mtx.unlock();
 
+                            fsm_state = AUTO_FSM_COMPLETE;
                             logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
                             return;
                         }
@@ -2141,6 +2138,10 @@ void AUTOCONTROL::b_loop_pp()
                     clean_up();
                     set_multi_req("none");
 
+                    mtx.lock();
+                    cur_goal_state = "complete";
+                    mtx.unlock();
+
                     // response
                     if(config->USE_RRS)
                     {
@@ -2155,11 +2156,6 @@ void AUTOCONTROL::b_loop_pp()
                     }
 
                     fsm_state = AUTO_FSM_COMPLETE;
-
-                    mtx.lock();
-                    cur_goal_state = "complete";
-                    mtx.unlock();
-
                     logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
                     return;
                 }
@@ -2475,6 +2471,10 @@ void AUTOCONTROL::b_loop_pp()
         clean_up();
         set_multi_req("none");
 
+        mtx.lock();
+        cur_goal_state = "cancel";
+        mtx.unlock();
+
         // response
         if(config->USE_RRS)
         {
@@ -2491,10 +2491,6 @@ void AUTOCONTROL::b_loop_pp()
             Q_EMIT signal_move_response(move_info);
         }
 
-        mtx.lock();
-        cur_goal_state = "cancel";
-        mtx.unlock();
-
         fsm_state = AUTO_FSM_COMPLETE;
         logger->write_log("[AUTO] b_loop_pp stop");
     }
@@ -2505,7 +2501,5 @@ void AUTOCONTROL::clean_up()
     mobile->move(0, 0, 0);
     is_moving = false;
     is_pause = false;
-
     clear_path();
-    fsm_state = AUTO_FSM_COMPLETE;
 }
