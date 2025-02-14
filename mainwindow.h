@@ -180,12 +180,7 @@ public:
     std::vector<QString> last_plot_kfrms;
 
     std::vector<QString> last_plot_nodes;
-    std::vector<QString> last_plot_edges;
-    std::vector<QString> last_plot_names;
-
     std::vector<QString> last_plot_nodes2;
-    std::vector<QString> last_plot_edges2;
-    std::vector<QString> last_plot_names2;
 
     std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;

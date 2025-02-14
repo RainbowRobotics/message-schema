@@ -1071,7 +1071,7 @@ out</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -2827,7 +2827,7 @@ Nodes</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>7</pointsize>
                </font>
               </property>
               <property name="frameShape">
@@ -2854,7 +2854,7 @@ Nodes</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>7</pointsize>
                </font>
               </property>
               <property name="frameShape">

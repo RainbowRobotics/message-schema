@@ -4427,20 +4427,6 @@ void MainWindow::topo_plot()
             last_plot_nodes.clear();
         }
 
-        // remove names
-        if(last_plot_names.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_names.size(); p++)
-            {
-                QString id = last_plot_names[p];
-                if(viewer->contains(id.toStdString()))
-                {
-                    viewer->removeShape(id.toStdString());
-                }
-            }
-            last_plot_names.clear();
-        }
-
         // draw
         if(unimap.nodes.size() > 0)
         {
@@ -5688,20 +5674,6 @@ void MainWindow::topo_plot2()
                 }
             }
             last_plot_nodes2.clear();
-        }
-
-        // remove names
-        if(last_plot_names2.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_names2.size(); p++)
-            {
-                QString id = last_plot_names2[p];
-                if(viewer2->contains(id.toStdString()))
-                {
-                    viewer2->removeShape(id.toStdString());
-                }
-            }
-            last_plot_names2.clear();
         }
 
         // draw
