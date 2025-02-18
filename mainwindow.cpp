@@ -3225,7 +3225,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    mobile.motor_off();
+    logger.write_log("[TEST] test 2025", "Green");
 }
 
 void MainWindow::bt_TestLed()
