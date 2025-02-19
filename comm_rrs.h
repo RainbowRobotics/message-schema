@@ -39,7 +39,7 @@ class COMM_RRS : public QObject
 public:
     explicit COMM_RRS(QObject *parent = nullptr);
     ~COMM_RRS();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     QObject *main = NULL;

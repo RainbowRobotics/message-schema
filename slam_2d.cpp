@@ -745,8 +745,19 @@ void SLAM_2D::loc_a_loop()
             {
                 _cur_tf = get_cur_tf();
                 time = frm.t;
-                err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-                ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+
+                if(!config->USE_SIM)
+                {
+                    err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                    ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                }
+                else
+                {
+                    _cur_tf = se2_to_TF(mobile->get_pose().pose);
+                    err = 0.0;
+                    ieir[0] = 0.01;
+                    ieir[1] = 0.99;
+                }
             }
             else
             {
@@ -930,11 +941,12 @@ void SLAM_2D::loc_b_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            precise_sleep(dt-delta_loop_time);
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
-            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -949,6 +961,11 @@ void SLAM_2D::obs_loop()
         TIME_POSE_PTS tpp;
         if(tpp_que.try_pop(tpp))
         {            
+            if(tpp.pts.size() == 0)
+            {
+                continue;
+            }
+
             // add blidar pts
             {
                 TIME_PTS blidar_scan = blidar->get_cur_tp();

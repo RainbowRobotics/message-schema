@@ -250,6 +250,8 @@ int Point_cloud_optimize::UltrasonicSimRanging(LaserPoint &pScan)
 	}else{
 		pScan.range_check = 0;
 	}
+
+    return 0;
 }
 
 /*********************************************************************

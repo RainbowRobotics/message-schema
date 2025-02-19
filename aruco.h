@@ -19,7 +19,7 @@ class ARUCO : public QObject
 public:
     explicit ARUCO(QObject *parent = nullptr);
     ~ARUCO();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;

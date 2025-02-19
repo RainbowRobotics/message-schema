@@ -5,7 +5,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 CONFIG += resources_big
 
-QMAKE_CXXFLAGS_RELEASE += -O3
+# Optimize
+QMAKE_CXXFLAGS_RELEASE += -O2
+QMAKE_CXXFLAGS += -Werror=return-type
 
 # OpenMP
 QMAKE_CXXFLAGS += -fopenmp

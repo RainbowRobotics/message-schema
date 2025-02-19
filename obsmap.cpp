@@ -393,9 +393,10 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     static_map = _static_map;
     dynamic_map = _dynamic_map;
 
+    mtx.unlock();
+
     // signal for redrawing
     Q_EMIT obs_updated();
-    mtx.unlock();
 }
 
 void OBSMAP::update_vobs_map()
@@ -443,7 +444,7 @@ void OBSMAP::update_vobs_map()
         Eigen::Vector3d center = vobs_list_closures[p];
         _vir_closure_pts.push_back(center);
 
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.15);
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.05);
         pts.push_back(center);
 
         for(size_t q = 0; q < pts.size(); q++)
@@ -470,9 +471,10 @@ void OBSMAP::update_vobs_map()
     vir_closure_pts = _vir_closure_pts;
     virtual_map = _virtual_map;
 
+    mtx.unlock();
+
     // signal for redrawing
     Q_EMIT obs_updated();
-    mtx.unlock();
 }
 
 void OBSMAP::get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf)
@@ -544,12 +546,8 @@ std::vector<Eigen::Vector4d> OBSMAP::get_plot_pts()
     return res;
 }
 
-void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
+void OBSMAP::draw_robot(cv::Mat& img)
 {
-    mtx.lock();
-    Eigen::Matrix4d G = map_tf.inverse()*robot_tf;
-    mtx.unlock();
-
     // draw rect
     const double x_min = config->ROBOT_SIZE_X[0];
     const double x_max = config->ROBOT_SIZE_X[1];
@@ -561,15 +559,10 @@ void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
     Eigen::Vector3d P2(x_min, y_min, 0);
     Eigen::Vector3d P3(x_min, y_max, 0);
 
-    Eigen::Vector3d _P0 = G.block(0,0,3,3)*P0 + G.block(0,3,3,1);
-    Eigen::Vector3d _P1 = G.block(0,0,3,3)*P1 + G.block(0,3,3,1);
-    Eigen::Vector3d _P2 = G.block(0,0,3,3)*P2 + G.block(0,3,3,1);
-    Eigen::Vector3d _P3 = G.block(0,0,3,3)*P3 + G.block(0,3,3,1);
-
-    cv::Vec2i uv0 = xy_uv(_P0[0], _P0[1]);
-    cv::Vec2i uv1 = xy_uv(_P1[0], _P1[1]);
-    cv::Vec2i uv2 = xy_uv(_P2[0], _P2[1]);
-    cv::Vec2i uv3 = xy_uv(_P3[0], _P3[1]);
+    cv::Vec2i uv0 = xy_uv(P0[0], P0[1]);
+    cv::Vec2i uv1 = xy_uv(P1[0], P1[1]);
+    cv::Vec2i uv2 = xy_uv(P2[0], P2[1]);
+    cv::Vec2i uv3 = xy_uv(P3[0], P3[1]);
 
     std::vector<std::vector<cv::Point>> pts(1);
     pts[0].push_back(cv::Point(uv0[0], uv0[1]));
@@ -584,13 +577,9 @@ void OBSMAP::draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf)
     Eigen::Vector3d P_x(x_max, 0, 0);
     Eigen::Vector3d P_y(0, y_max, 0);
 
-    Eigen::Vector3d _P_c = G.block(0,0,3,3)*P_c + G.block(0,3,3,1);
-    Eigen::Vector3d _P_x = G.block(0,0,3,3)*P_x + G.block(0,3,3,1);
-    Eigen::Vector3d _P_y = G.block(0,0,3,3)*P_y + G.block(0,3,3,1);
-
-    cv::Vec2i uv_c = xy_uv(_P_c[0], _P_c[1]);
-    cv::Vec2i uv_x = xy_uv(_P_x[0], _P_x[1]);
-    cv::Vec2i uv_y = xy_uv(_P_y[0], _P_y[1]);
+    cv::Vec2i uv_c = xy_uv(P_c[0], P_c[1]);
+    cv::Vec2i uv_x = xy_uv(P_x[0], P_x[1]);
+    cv::Vec2i uv_y = xy_uv(P_y[0], P_y[1]);
 
     cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_y[0], uv_y[1]), cv::Scalar(0,255,0), 1, cv::LINE_AA);
     cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_x[0], uv_x[1]), cv::Scalar(0,0,255), 1, cv::LINE_AA);

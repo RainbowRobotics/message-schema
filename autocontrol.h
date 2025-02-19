@@ -27,7 +27,7 @@ class AUTOCONTROL : public QObject
 public:
     explicit AUTOCONTROL(QObject *parent = nullptr);
     ~AUTOCONTROL();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -51,12 +51,13 @@ public:
     QString get_obs_condition();
     QString get_multi_req();
     void set_multi_req(QString str);
+    void set_obs_condition(QString str);
+
     void clear_path();
 
     void init();
     void stop();
-    void change();
-    void move(DATA_MOVE msg);
+    void change();    
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_pp(std::vector<QString> node_path, int preset);
     void clean_up();
@@ -107,7 +108,7 @@ public:
 
     // flags
     std::atomic<bool> is_debug = {false};
-    std::atomic<bool> is_change = {false};
+    std::atomic<bool> is_path_overlap = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};    
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
@@ -118,9 +119,13 @@ public:
     QString multi_req = "none"; // none, req_path, recv_path
 
 Q_SIGNALS:
+    void signal_move(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();
     void signal_move_response(DATA_MOVE msg);
+
+public Q_SLOTS:
+    void move(DATA_MOVE msg);
 
 };
 

@@ -19,7 +19,7 @@ class CODE_READER : public QObject
 public:
     explicit CODE_READER(QObject *parent = nullptr);
     ~CODE_READER();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     void open();
     void load_codes();

@@ -35,7 +35,7 @@ public:
     void clear();
 
     // mutex
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // map dir
     QString map_dir;

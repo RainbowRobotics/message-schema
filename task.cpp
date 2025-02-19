@@ -167,7 +167,7 @@ void TASK::a_loop()
                 state = TASK_MOVE;
                 last_task_state = state;
                 printf("[TASK] TASK_IDLE -> TASK_MOVE\n");
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
             }
         }
@@ -179,7 +179,7 @@ void TASK::a_loop()
                 state = TASK_WAIT;
                 last_task_state = state;
                 printf("[TASK] TASK_MOVE -> TASK_WAIT(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
             }
 
@@ -194,31 +194,44 @@ void TASK::a_loop()
             msg.tgt_pose_vec[1] = xi[1];
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
-            ctrl->move(msg);
+            Q_EMIT ctrl->signal_move(msg);
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;
             printf("[TASK] TASK_MOVE -> TASK_CHECK_MOVE(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
         else if(state == TASK_CHECK_MOVE)
         {
             QString multi_state = ctrl->get_multi_req();
-            if(ctrl->fsm_state == AUTO_FSM_COMPLETE && multi_state == "none")
+            if(multi_state == "recv_path")
             {
                 printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
 
+                state = TASK_PROGRESS;
+                last_task_state = state;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+        }
+        else if(state == TASK_PROGRESS)
+        {
+            QString multi_state = ctrl->get_multi_req();
+            if(multi_state == "none")
+            {
+                printf("[TASK] TASK_PROGRESS -> TASK_WAIT\n");
+
                 state = TASK_WAIT;
                 last_task_state = state;
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
             }
         }
         else if(state == TASK_WAIT)
         {
             // obs clear
-            obsmap->clear();
+            //obsmap->clear();
 
             // increase idx
             state = TASK_MOVE;
@@ -235,7 +248,7 @@ void TASK::a_loop()
                     last_task_state = state;
 
                     printf("[TASK] TASK RESTART -> TASK_MOVE\n");
-                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     continue;
                 }
                 else
@@ -245,15 +258,16 @@ void TASK::a_loop()
                     state = TASK_IDLE;
                     last_task_state = state;
                     printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     break;
                 }
             }
 
             printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     printf("[TASK] task_loop stop\n");
