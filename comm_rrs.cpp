@@ -550,22 +550,14 @@ void COMM_RRS::send_move_status()
     rootObj["vel"] = velObj;
 
     // Adding the cur_node object
-    QString cur_node_id = "";
+    QString cur_node_id = ctrl->get_cur_node_id();
     QString cur_node_name = "";
-    if(unimap->is_loaded)
+    if(unimap->is_loaded && cur_node_id != "")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->mtx.lock();
-        cur_node_id = _main->last_node_id;
-        _main->mtx.unlock();
-
-        if(cur_node_id != "")
+        NODE* node = unimap->get_node_by_id(cur_node_id);
+        if(node != NULL)
         {
-            NODE* node = unimap->get_node_by_id(cur_node_id);
-            if(node != NULL)
-            {
-                cur_node_name = node->name;
-            }
+            cur_node_name = node->name;
         }
     }
 
@@ -579,25 +571,18 @@ void COMM_RRS::send_move_status()
     rootObj["cur_node"] = curNodeObj;
 
     // Adding the goal_node object
-    QString goal_node_id = "";
+    QString goal_state = ctrl->get_cur_goal_state();
+    QString goal_node_id = ctrl->move_info.goal_node_id;
     QString goal_node_name = "";
-    QString goal_state = "";
     Eigen::Vector3d goal_xi(0,0,0);
-    if(unimap->is_loaded)
+    if(unimap->is_loaded && goal_node_id != "")
     {
-        ctrl->mtx.lock();
-        goal_state = ctrl->cur_goal_state;
-        goal_node_id = ctrl->move_info.goal_node_id;
-        if(goal_node_id != "")
+        NODE* node = unimap->get_node_by_id(goal_node_id);
+        if(node != NULL)
         {
-            NODE* node = unimap->get_node_by_id(goal_node_id);
-            if(node != NULL)
-            {
-                goal_node_name = node->name;
-                goal_xi = TF_to_se2(node->tf);
-            }
+            goal_node_name = node->name;
+            goal_xi = TF_to_se2(node->tf);
         }
-        ctrl->mtx.unlock();
     }
 
     QJsonObject goalNodeObj;
