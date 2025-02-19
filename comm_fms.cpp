@@ -108,39 +108,18 @@ void COMM_FMS::send_move_status()
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
 
     // get cur_node_id
-    QString cur_node_id = "";
-    if(unimap->is_loaded)
-    {
-        MainWindow* _main = (MainWindow*)main;
-        _main->mtx.lock();
-        cur_node_id = _main->last_node_id;
-        _main->mtx.unlock();
-    }
+    QString cur_node_id = ctrl->get_cur_node_id();
 
     // get goal_node_id
-    QString goal_node_id = "";
+    QString goal_node_id = ctrl->move_info.goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(unimap->is_loaded)
+    if(unimap->is_loaded && goal_node_id != "")
     {
-        ctrl->mtx.lock();
-        if(ctrl->move_info.command == "goal")
+        NODE* node = unimap->get_node_by_id(goal_node_id);
+        if(node != NULL)
         {
-            goal_node_id = ctrl->move_info.goal_node_id;
-            if(goal_node_id != "")
-            {
-                NODE* node = unimap->get_node_by_id(goal_node_id);
-                if(node != NULL)
-                {
-                    goal_tf =  node->tf;
-                }
-                else
-                {
-                    goal_node_id = "";
-                    goal_tf.setIdentity();
-                }
-            }
+            goal_tf =  node->tf;
         }
-        ctrl->mtx.unlock();
     }
 
     // get path request

@@ -3808,8 +3808,6 @@ void MainWindow::watch_loop()
 
     CPU_USAGE pre_cpu_usage;
 
-    QString pre_node_id = "";
-
     printf("[WATCHDOG] loop start\n");
     while(watch_flag)
     {
@@ -3822,34 +3820,6 @@ void MainWindow::watch_loop()
             {
                 qDebug() << "Main thread is unresponsive!";
             }
-        }
-
-        // calc current node
-        if(unimap.is_loaded)
-        {
-            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-            QString cur_node_id = unimap.get_node_id_edge(cur_tf.block(0,3,3,1));
-            if(pre_node_id == "")
-            {
-                pre_node_id = cur_node_id;
-            }
-
-            NODE *node = unimap.get_node_by_id(cur_node_id);
-            if(node != NULL)
-            {
-                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config.DRIVE_GOAL_D*2)
-                {
-                    if(pre_node_id != cur_node_id)
-                    {
-                        pre_node_id = cur_node_id;
-                    }
-                }
-            }
-
-            mtx.lock();
-            last_node_id = pre_node_id;
-            mtx.unlock();
         }
 
         // annotation works
@@ -5129,11 +5099,9 @@ void MainWindow::ctrl_plot()
 
         // draw monitoring points
         {
-            ctrl.mtx.lock();
             Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
             Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
             Eigen::Vector3d local_goal = ctrl.last_local_goal;
-            ctrl.mtx.unlock();
 
             viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
             viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
@@ -5237,10 +5205,7 @@ void MainWindow::ctrl_plot()
             viewer->removeShape("cur_tf_node");
         }
 
-        mtx.lock();
-        QString cur_node_id = last_node_id;
-        mtx.unlock();
-
+        QString cur_node_id = ctrl.get_cur_node_id();
         if(cur_node_id != "")
         {
             NODE *node = unimap.get_node_by_id(cur_node_id);
@@ -5290,10 +5255,7 @@ void MainWindow::ctrl_plot()
     }
 
     // plot goal info
-    ctrl.mtx.lock();
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(ctrl.move_info.goal_node_id).arg(ctrl.cur_goal_state));
-    ctrl.mtx.unlock();
-
 }
 void MainWindow::raw_plot()
 {

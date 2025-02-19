@@ -48,10 +48,15 @@ public:
     // interface funcs
     PATH get_cur_global_path();
     PATH get_cur_local_path();
+
     QString get_obs_condition();
     QString get_multi_req();
-    void set_multi_req(QString str);
+    QString get_cur_goal_state();
+    QString get_cur_node_id();
+
     void set_obs_condition(QString str);
+    void set_multi_req(QString str);
+    void set_cur_goal_state(QString str);
 
     void clear_path();
 
@@ -87,6 +92,11 @@ public:
     // for control
     int is_everything_fine();
 
+    // calc current node
+    std::atomic<bool> a_flag = {false};
+    std::thread *a_thread = NULL;
+    void a_loop();
+
     // control loop
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
@@ -100,6 +110,7 @@ public:
     PATH cur_global_path;
     PATH cur_local_path;
 
+    QString last_node_id = "";
     Eigen::Vector3d last_cur_pos;
     Eigen::Vector3d last_tgt_pos;
     Eigen::Vector3d last_local_goal;
