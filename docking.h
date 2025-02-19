@@ -27,7 +27,7 @@ public:
     ~DOCKING();
 
     //mtx
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;

@@ -91,7 +91,7 @@ public:
     
 public:
     Ui::MainWindow *ui;
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // vars
     QString map_dir = "";
@@ -182,7 +182,6 @@ public:
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_nodes2;
 
-    std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
     std::vector<QString> last_plot_select;

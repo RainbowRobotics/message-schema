@@ -16,7 +16,7 @@ public:
     explicit LOGGER(QObject *parent = nullptr);
     ~LOGGER();
 
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     void init();
     inline void SetLogFileName(QString filename) { log_file_name = filename + ".html"; }

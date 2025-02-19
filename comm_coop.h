@@ -30,7 +30,7 @@ public:
     explicit COMM_COOP(QObject *parent = nullptr);
     ~COMM_COOP();
 
-    std::mutex mtx;
+    std::recursive_mutex mtx;
     QWebSocket client;
     QTimer reconnect_timer;
 

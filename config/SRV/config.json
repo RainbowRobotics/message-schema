@@ -21,7 +21,7 @@
         "USE_IMU": "0",
         "USE_BLIDAR": "0",
         "USE_BQR": "0",
-        "USE_BEEP": "0",
+        "USE_BEEP": "1",
         "USE_CAM": "1",
         "USE_RTSP": "0",
         "USE_RRS": "1",
@@ -88,13 +88,13 @@
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
         "MOTOR_LIMIT_V": "2.0",
-        "MOTOR_LIMIT_V_ACC": "1.0",
+        "MOTOR_LIMIT_V_ACC": "2.0",
         "MOTOR_LIMIT_W": "180",
-        "MOTOR_LIMIT_W_ACC": "180"
+        "MOTOR_LIMIT_W_ACC": "360"
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.7",
+        "OBS_DEADZONE": "0.6",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",

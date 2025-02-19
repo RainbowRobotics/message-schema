@@ -18,7 +18,7 @@ class OBSMAP : public QObject
 public:
     explicit OBSMAP(QObject *parent = nullptr);
     ~OBSMAP();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -39,7 +39,7 @@ public:
     std::vector<Eigen::Vector3d> get_vir_closure_pts();
 
     // for plot
-    void draw_robot(cv::Mat& img, Eigen::Matrix4d robot_tf);
+    void draw_robot(cv::Mat& img);
     std::vector<Eigen::Vector4d> get_plot_pts(); // x, y, z, prob
 
     // check collision

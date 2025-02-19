@@ -32,7 +32,7 @@ public:
     ~SLAM_2D();
 
     // mutex
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;

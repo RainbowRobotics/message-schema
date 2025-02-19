@@ -499,7 +499,7 @@ void COMM_RRS::send_move_status()
 
     if(mobile->get_cur_pdu_state() != "good")
     {
-        auto_state = "not ready";
+        auto_state = "not ready";        
     }
 
     if(slam->get_cur_loc_state() != "good")
@@ -865,7 +865,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             }
 
             // pure pursuit
-            ctrl->move(msg);
+            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 
@@ -927,7 +927,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
                 // convert name to id
                 msg.goal_node_id = node->id;
-                msg.goal_node_name = node->name;
+                msg.goal_node_name = node->name;                
             }
             else
             {
@@ -944,7 +944,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[3] = xi[2];
 
             // pure pursuit
-            ctrl->move(msg);
+            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 

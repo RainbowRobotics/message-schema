@@ -23,7 +23,7 @@ class LVX_LOC : public QObject
 public:
     explicit LVX_LOC(QObject *parent = nullptr);
     ~LVX_LOC();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // imu filter
     imu_tools::ComplementaryFilter imu_filter;

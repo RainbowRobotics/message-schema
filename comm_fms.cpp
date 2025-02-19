@@ -8,7 +8,8 @@ COMM_FMS::COMM_FMS(QObject *parent)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
-    connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
+    //connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
+    connect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
 
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
@@ -206,14 +207,18 @@ void COMM_FMS::send_move_status()
     rootObj["data"] = dataObj;
 
     QJsonDocument doc(rootObj);
-    QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    client.sendBinaryMessage(buf);
+    //QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+    //client.sendBinaryMessage(buf);
+    QString buf = doc.toJson(QJsonDocument::Compact);
+    client.sendTextMessage(buf);
 }
 
 // recv callback
-void COMM_FMS::recv_message(const QByteArray &buf)
+//void COMM_FMS::recv_message(const QByteArray &buf)
+void COMM_FMS::recv_message(const QString &buf)
 {
-    QString message = qUncompress(buf);
+    //QString message = qUncompress(buf);
+    QString message = buf;
     QJsonObject root_obj = QJsonDocument::fromJson(message.toUtf8()).object();
     if(get_json(root_obj, "robotSerial") != robot_id)
     {
@@ -649,9 +654,9 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[3] = xi[2];
 
             // pure pursuit
-            ctrl->move(msg);
+            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
-            msg.message = "";
+            msg.message = "move: " + msg.goal_node_id + ", " + msg.goal_node_name;
 
             printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
                                                                         msg.result.toLocal8Bit().data(),
@@ -716,6 +721,8 @@ void COMM_FMS::slot_path(DATA_PATH msg)
         {
             path.push_back(path_str_list[p]);
         }
+
+        printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
 
         int preset = msg.preset;
         ctrl->move_pp(path, preset);

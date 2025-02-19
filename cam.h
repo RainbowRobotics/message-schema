@@ -45,7 +45,7 @@ public:
     std::atomic<bool> is_param_loaded = {false};
 
     // storage    
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     cv::Mat cur_img[2];
     TIME_IMG cur_time_img[2];

@@ -20,7 +20,7 @@ class SIM : public QObject
 public:
     explicit SIM(QObject *parent = nullptr);
     ~SIM();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -39,6 +39,8 @@ public:
     void a_loop();
 
     Eigen::Matrix4d cur_tf;
+    void set_cur_tf(Eigen::Matrix4d tf);
+    Eigen::Matrix4d get_cur_tf();
 
 Q_SIGNALS:
 
