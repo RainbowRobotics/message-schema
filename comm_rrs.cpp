@@ -310,7 +310,7 @@ void COMM_RRS::recv_vobs_robots(std::string const& name, sio::message::ptr const
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        //logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         Q_EMIT signal_vobs_r(msg);
     }
 }
@@ -326,7 +326,7 @@ void COMM_RRS::recv_vobs_closures(std::string const& name, sio::message::ptr con
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        //logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         Q_EMIT signal_vobs_c(msg);
     }
 }
@@ -1482,7 +1482,29 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["preset"] = QString::number(msg.preset, 10);
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
-    obj["goal_name"] = msg.goal_node_name;
+
+
+    // temporal patch
+    QString response_goal_node_name = msg.goal_node_name;
+    if(msg.goal_node_name.contains("AMR-WAITING-01"))
+    {
+        response_goal_node_name = "AMR-WAITING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CHARGING-01"))
+    {
+        response_goal_node_name = "AMR-CHARGING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-PACKING-01"))
+    {
+        response_goal_node_name = "AMR-PACKING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CONTAINER-01"))
+    {
+        response_goal_node_name = "AMR-CONTAINER-01";
+    }
+    obj["goal_name"] = response_goal_node_name;
+
+    //obj["goal_name"] = msg.goal_node_name;
     obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
     obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
     obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
