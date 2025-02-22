@@ -49,23 +49,20 @@ public:
     PATH get_cur_global_path();
     PATH get_cur_local_path();
 
-    QString get_obs_condition();
-    QString get_multi_req();
-    QString get_cur_goal_state();
     QString get_cur_node_id();
+    QString get_multi_req();
+    QString get_obs_condition();
+    QString get_cur_goal_state();
 
-    void set_obs_condition(QString str);
     void set_multi_req(QString str);
+    void set_obs_condition(QString str);   
     void set_cur_goal_state(QString str);
 
-    void clear_path();
-
     void init();
-    void stop();
-    void change();    
-    void move_pp(Eigen::Matrix4d goal_tf, int preset);
-    void move_pp(std::vector<QString> node_path, int preset);
-    void clean_up();
+    void stop();  
+    void move_pp(Eigen::Matrix4d goal_tf, int preset); // single
+    void move_pp(std::vector<QString> node_path, int preset); // multi
+    void clear_path();
 
     // global path planning (using topo)
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
@@ -102,10 +99,6 @@ public:
     std::thread *b_thread = NULL;
     void b_loop_pp();
 
-    // for last goal
-    DATA_MOVE move_info;
-    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
-
     // for path plot
     PATH cur_global_path;
     PATH cur_local_path;
@@ -123,11 +116,14 @@ public:
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};    
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
-    QString obs_condition = "none";
 
-    // flags for multi
+    // params for rrs
     std::atomic<bool> is_multi = {false};
     QString multi_req = "none"; // none, req_path, recv_path
+    QString obs_condition = "none";
+    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
+
+    DATA_MOVE move_info;
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

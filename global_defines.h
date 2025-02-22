@@ -973,6 +973,7 @@ struct ASTAR_NODE
 struct PATH
 {
     double t;
+    std::vector<Eigen::Matrix4d> pose0;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
@@ -989,6 +990,7 @@ struct PATH
     PATH(const PATH& p)
     {
         t = p.t;
+        pose0 = p.pose0;
         pose = p.pose;
         pos = p.pos;                
         ref_v = p.ref_v;        
@@ -999,6 +1001,7 @@ struct PATH
     PATH& operator=(const PATH& p)
     {
         t = p.t;
+        pose0 = p.pose0;
         pose = p.pose;
         pos = p.pos;        
         ref_v = p.ref_v;        
@@ -1009,12 +1012,20 @@ struct PATH
 
     bool operator==(const PATH& p) const
     {
-        return t == p.t &&               
-               pose == p.pose &&
-               pos == p.pos &&
-               ref_v == p.ref_v &&
-               ed_tf.isApprox(p.ed_tf) &&
-               is_final == p.is_final;
+        if(pose.size() != p.pose.size())
+        {
+            return false;
+        }
+
+        for(size_t i = 0; i < pose.size(); i++)
+        {
+            if(!pose[i].isApprox(p.pose[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool operator!=(const PATH& p) const
