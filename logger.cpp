@@ -1,19 +1,9 @@
 #include "logger.h"
 
-#include <iostream>
-#include <QDebug>
-
-#ifdef _WIN64
-#include <filesystem>
-#elif __linux__
-#include <QDir>
-#endif
-
 LOGGER::LOGGER(QObject *parent)
     : QObject{parent}
 {
 }
-
 
 LOGGER::~LOGGER()
 {
@@ -25,40 +15,6 @@ LOGGER::~LOGGER()
     }
 }
 
-#ifdef _WIN64
-void LOGGER::init()
-{
-    experimental::filesystem::path log_path("./_log");
-    if (!experimental::filesystem::exists(log_path)) {
-        create_directory(log_path);
-    }
-
-    QString date_and_time = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    string log_file_name = date_and_time.toStdString();
-    log_file_name_ = "_log/" + log_file_name + "-log-list.html";
-
-    //css 파일 생성
-    if(!experimental::filesystem::exists("_log/log_styles.css")){
-        qDebug()<<"not exist";
-        FILE* pFile;
-        pFile = fopen("_log/log_styles.css", "a");
-        fprintf(pFile, "*{margin:0px}");
-        fprintf(pFile,"p{font-family: 'Spoqa Han Sans', snan-serif;}");
-        fclose(pFile);
-    }
-
-    //로그 파일 첫 생성 시 스타일 옵션
-    if(!experimental::filesystem::exists(log_file_name_)){
-        qDebug()<<"not exist";
-        FILE* pFile;
-        pFile = fopen(log_file_name_.c_str(), "a");
-        fprintf(pFile, "<link rel=\"stylesheet\" href=\"log_styles.css\"><link>");
-        fprintf(pFile, "<body bgcolor=\"#252831\"></body>");
-
-        fclose(pFile);
-    }
-}
-#elif __linux__
 void LOGGER::init()
 {
     mtx.lock();
@@ -107,7 +63,6 @@ void LOGGER::init()
         log_thread = new std::thread(&LOGGER::log_loop, this);
     }
 }
-#endif
 
 void LOGGER::log_loop()
 {
@@ -121,7 +76,11 @@ void LOGGER::log_loop()
             bool is_time = log_info.is_time;
             bool is_hide = log_info.is_hide;
 
-            logWithHtml(user_log, color_code, is_time, is_hide);
+            if(pre_user_log != user_log)
+            {
+                log_with_html(user_log, color_code, is_time, is_hide);
+            }
+            pre_user_log = user_log;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -135,11 +94,9 @@ void LOGGER::write_log(QString user_log, QString color_code, bool time, bool hid
     log_info.is_time = time;
     log_info.is_hide = hide;
     log_que.push(log_info);
-
-    //logWithHtml(user_log, color_code, time, hide);
 }
 
-void LOGGER::PrintLogList(std::vector<QString> user_log_list, QString color_code, bool time, bool hide)
+void LOGGER::write_log_list(std::vector<QString> user_log_list, QString color_code, bool time, bool hide)
 {
     for (auto ele : user_log_list)
     {
@@ -149,17 +106,15 @@ void LOGGER::PrintLogList(std::vector<QString> user_log_list, QString color_code
         log_info.is_time = time;
         log_info.is_hide = hide;
         log_que.push(log_info);
-
-        //logWithHtml(ele, color_code, time, hide);
     }
 }
 
-void LOGGER::logWithHtml(QString msg, QString color_code, bool time, bool hide)
+void LOGGER::log_with_html(QString msg, QString color_code, bool time, bool hide)
 {
     QString log_for_write;
     if(time == true)
     {
-        log_for_write = logWithTime(msg);
+        log_for_write = log_with_time(msg);
     }
     else
     {
@@ -167,7 +122,7 @@ void LOGGER::logWithHtml(QString msg, QString color_code, bool time, bool hide)
     }
 
     QString style_font = "<font color=" + color_code + ">" + log_for_write + "</font>";
-    writeLogFile("<p>" + style_font + "</p>");
+    write_log_file("<p>" + style_font + "</p>");
 
     if(hide == false)
     {
@@ -177,10 +132,12 @@ void LOGGER::logWithHtml(QString msg, QString color_code, bool time, bool hide)
     Q_EMIT signal_write_log(log_for_write, color_code);
 }
 
-void LOGGER::writeLogFile(QString log)
+void LOGGER::write_log_file(QString log)
 {
     mtx.lock();
     {
+        check_system_time(log_file_name);
+
         FILE* pFile;
         pFile = fopen(log_file_name.toStdString().c_str(), "a");
         fprintf(pFile, log.toStdString().c_str());
@@ -189,10 +146,29 @@ void LOGGER::writeLogFile(QString log)
     mtx.unlock();
 }
 
-QString LOGGER::logWithTime(QString msg)
+QString LOGGER::log_with_time(QString msg)
 {
     QString time = QTime::currentTime().toString("hh:mm:ss");;
     QString log = "[" + time + "] " + msg;
 
     return log;
+}
+
+void LOGGER::check_system_time(QString& _log_file_name)
+{
+    QString date_and_time = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    QString res = log_path + date_and_time + "-log-list.html";
+    if(res != _log_file_name)
+    {
+        _log_file_name = res;
+
+        QDir log_file_path(_log_file_name);
+        if (!log_file_path.exists())
+        {
+            FILE* pFile = fopen(_log_file_name.toStdString().c_str(), "a");
+            fprintf(pFile, "<link rel=\"stylesheet\" href=\"log_styles.css\"><link>");
+            fprintf(pFile, "<body bgcolor=\"#252831\"></body>");
+            fclose(pFile);
+        }
+    }
 }
