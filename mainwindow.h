@@ -12,13 +12,13 @@
 #include "lidar_2d.h"
 #include "lidar_bottom.h"
 #include "cam.h"
-#include "code_reader.h"
+#include "bqr_sensor.h"
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
 #include "aruco.h"
 #include "autocontrol.h"
-#include "docking.h"
+#include "dockcontrol.h"
 #include "task.h"
 #include "sim.h"
 #include "lvx_loc.h"
@@ -57,13 +57,13 @@ public:
     LIDAR_2D lidar;
     LIDAR_BOTTOM blidar;
     CAM cam;
-    CODE_READER code;    
+    BQR_SENSOR bqr;
     UNIMAP unimap;
     OBSMAP obsmap;
     SLAM_2D slam;
     ARUCO aruco;
     AUTOCONTROL ctrl;
-    DOCKING dctrl;
+    DOCKCONTROL dctrl;
     TASK task;    
     SIM sim;
     LVX_LOC lvx;
@@ -369,9 +369,9 @@ public Q_SLOTS:
     void slot_sim_random_seq();
 
     // for ldock
-    void bt_DockingMove();
-    void bt_DockingStop();
-    void bt_Undock();
+    void bt_DockStart();
+    void bt_DockStop();
+    void bt_UndockStart();
 };
 #endif // MAINWINDOW_H
 

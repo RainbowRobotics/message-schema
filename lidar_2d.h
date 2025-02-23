@@ -96,6 +96,9 @@ public:
     std::atomic<bool> grab_flag_b;
     std::thread* grab_thread_b = NULL;
     void grab_loop_b();
+
+Q_SIGNALS:
+    void signal_found_obs();
 };
 
 #endif // LIDAR_2D_H

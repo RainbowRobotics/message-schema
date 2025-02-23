@@ -18,9 +18,12 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-DEFINES += USE_SRV
+#DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
 #DEFINES += USE_AMR_400_LAKI
+
+DEFINES += USE_MECANUM_OLD
+#DEFINES += USE_MECANUM
 
 # set home dir
 HOME = $$system(echo $HOME)
@@ -31,14 +34,15 @@ SOURCES += \
     LakiBeamUDP.cpp \
     aruco.cpp \
     autocontrol.cpp \
+    bqr_sensor.cpp \
     cam.cpp \
-    code_reader.cpp \
     comm_coop.cpp \
     comm_fms.cpp \
+    comm_old.cpp \
     comm_rrs.cpp \
-    docking.cpp \
     config.cpp \
     cv_to_qt.cpp \
+    dockcontrol.cpp \
     imu_filter.cpp \
     lidar_2d.cpp \
     lidar_bottom.cpp \
@@ -60,15 +64,16 @@ HEADERS += \
     LakiBeamUDP.h \
     aruco.h \
     autocontrol.h \
+    bqr_sensor.h \
     cam.h \
-    code_reader.h \
     comm_coop.h \
     comm_data.h \
     comm_fms.h \
+    comm_old.h \
     comm_rrs.h \
-    docking.h \
     config.h \
     cv_to_qt.h \
+    dockcontrol.h \
     global_defines.h \
     imu_filter.h \
     lidar_2d.h \

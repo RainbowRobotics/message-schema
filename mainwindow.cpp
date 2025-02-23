@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent)
     , lidar(this)
     , blidar(this)
     , cam(this)
-    , code(this)
+    , bqr(this)
     , unimap(this)
     , obsmap(this)
     , slam(this)
@@ -162,9 +162,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
 
     // for docking
-    connect(ui->bt_DockingMove, SIGNAL(clicked()), this, SLOT(bt_DockingMove()));
-    connect(ui->bt_DockingStop, SIGNAL(clicked()), this, SLOT(bt_DockingStop()));
-    connect(ui->bt_Undock, SIGNAL(clicked()), this,SLOT(bt_Undock()));
+    connect(ui->bt_DockStart, SIGNAL(clicked()), this, SLOT(bt_DockStart()));
+    connect(ui->bt_DockStop, SIGNAL(clicked()), this, SLOT(bt_DockStop()));
+    connect(ui->bt_UndockStart, SIGNAL(clicked()), this,SLOT(bt_UndockStart()));
 
     // for response
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
@@ -514,7 +514,23 @@ void MainWindow::init_modules()
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
     #endif
 
+    #ifdef USE_MECANUM_OLD
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config.json";
+    QString code_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config_code.json";
+    QString ext_path = QDir::homePath() + "/Desktop/KAI_CONFIG.json";
+    #endif
+
+    #ifdef USE_MECANUM
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
+    #endif
+
     config.load();
+
+    #ifdef USE_MECANUM_OLD
+    config.load_code_info(code_path);
+    config.load_ext(ext_path);
+    #endif
 
     // simulation check
     if(config.USE_SIM)
@@ -566,13 +582,13 @@ void MainWindow::init_modules()
         blidar.open();
     }
 
-    // code reader module init
-    code.config = &config;
-    code.logger = &logger;
-    code.unimap = &unimap;
+    // bottom qr sensor module init
+    bqr.config = &config;
+    bqr.logger = &logger;
+    bqr.unimap = &unimap;
     if(config.USE_BQR)
     {
-        code.open();
+        bqr.init();
     }
 
     // cam module init
@@ -629,7 +645,6 @@ void MainWindow::init_modules()
     ctrl.mobile = &mobile;
     ctrl.lidar = &lidar;
     ctrl.cam = &cam;
-    ctrl.code = &code;
     ctrl.slam = &slam;
     ctrl.unimap = &unimap;
     ctrl.obsmap = &obsmap;    
@@ -687,7 +702,7 @@ void MainWindow::init_modules()
     comm_rrs.mobile = &mobile;
     comm_rrs.lidar = &lidar;
     comm_rrs.cam = &cam;
-    comm_rrs.code = &code;
+    comm_rrs.bqr = &bqr;
     comm_rrs.slam = &slam;
     comm_rrs.unimap = &unimap;
     comm_rrs.obsmap = &obsmap;
@@ -4008,14 +4023,14 @@ void MainWindow::watch_loop()
                 if(ms.t != 0)
                 {
                     // when motor status 0, emo released, no charging
-                    if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.emo_state == 1 && ms.charge_state == 0)
+                    if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
                         mobile.motor_on();
                     }
 
                     if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
                        ms.status_m0 == 1 && ms.status_m1 == 1 &&
-                       ms.emo_state == 1 && ms.charge_state == 0)
+                       ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
                         mobile.set_cur_pdu_state("good");
                     }
@@ -6246,22 +6261,22 @@ void MainWindow::plot_loop2()
 }
 
 // for docking
-void MainWindow::bt_DockingMove()
+void MainWindow::bt_DockStart()
 {
     ctrl.is_moving = true;
     dctrl.move();
 }
 
-void MainWindow::bt_DockingStop()
+void MainWindow::bt_DockStop()
 {
     dctrl.stop();
     ctrl.is_moving = false;
 }
 
-void MainWindow::bt_Undock()
+void MainWindow::bt_UndockStart()
 {
     ctrl.is_moving = true;
-    dctrl.undock();
+    //dctrl.undock();
 
     double t = std::abs(config.DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
     QTimer::singleShot(t*1000, [&]()

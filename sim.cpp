@@ -165,6 +165,22 @@ void SIM::a_loop()
         status.remote_state = 1;
         #endif
 
+        #if defined (USE_MECANUM_OLD) || defined (USE_MECANUM)
+        status.t = sim_t;
+        status.connection_m0 = 1;
+        status.connection_m1 = 1;
+        status.connection_m2 = 1;
+        status.connection_m3 = 1;
+        status.status_m0 = 1;
+        status.status_m1 = 1;
+        status.status_m2 = 1;
+        status.status_m3 = 1;
+        status.charge_state = 0;
+        status.motor_stop_state = 1;
+        status.power_state = 1;
+        status.remote_state = 1;
+        #endif
+
         // storing
         mobile->mtx.lock();
         mobile->cur_pose = pose;

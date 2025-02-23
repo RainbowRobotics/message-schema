@@ -95,6 +95,10 @@ public:
     double DRIVE_V_DEADZONE = 0.02;
     double DRIVE_W_DEADZONE = 0.1;
 
+    double DOCK_GOAL_D = 0.05;
+    double DOCK_GOAL_TH = 2.0;
+    double DOCK_EXTENDED_CONTROL_TIME = 10.0;
+
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
     double OBS_DEADZONE = 0.6;
     double OBS_LOCAL_GOAL_D = 4.0;
@@ -153,12 +157,38 @@ public:
 
     std::vector<QString> params;
 
+    // bqr code info (only use mecanum old)
+    double CODE_A1_X = -27.0; double CODE_A1_Y = -27.0;
+    double CODE_A2_X = -27.0; double CODE_A2_Y = -9.0;
+    double CODE_A3_X = -27.0; double CODE_A3_Y = 9.0;
+    double CODE_A4_X = -27.0; double CODE_A4_Y = 27.0;
+
+    double CODE_B1_X = -9.0;  double CODE_B1_Y = -27.0;
+    double CODE_B2_X = -9.0;  double CODE_B2_Y = -9.0;
+    double CODE_B3_X = -9.0;  double CODE_B3_Y = 9.0;
+    double CODE_B4_X = -9.0;  double CODE_B4_Y = 27.0;
+
+    double CODE_C1_X = 9.0;   double CODE_C1_Y = -27.0;
+    double CODE_C2_X = 9.0;   double CODE_C2_Y = -9.0;
+    double CODE_C3_X = 9.0;   double CODE_C3_Y = 9.0;
+    double CODE_C4_X = 9.0;   double CODE_C4_Y = 27.0;
+
+    double CODE_D1_X = 27.0;  double CODE_D1_Y = -27.0;
+    double CODE_D2_X = 27.0;  double CODE_D2_Y = -9.0;
+    double CODE_D3_X = 27.0;  double CODE_D3_Y = 9.0;
+    double CODE_D4_X = 27.0;  double CODE_D4_Y = 27.0;
+
 public:
     // interface
     void load();
     QString config_path = "";
     QString config_sn_path = "";
     std::atomic<bool> is_load = {false};    
+
+    #if defined(USE_MECANUM_OLD)
+    void load_code_info(QString path);
+    void load_ext(QString path);
+    #endif
 
 Q_SIGNALS:
 

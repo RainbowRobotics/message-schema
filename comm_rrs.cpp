@@ -431,7 +431,7 @@ void COMM_RRS::send_status()
     QJsonObject robotStateObj;
     robotStateObj["charge"] = charge_st_string;
     robotStateObj["dock"] = (is_dock == true) ? "true" : "false";
-    robotStateObj["emo"] = (ms.emo_state == 1) ? "true" : "false";
+    robotStateObj["emo"] = (ms.motor_stop_state == 1) ? "true" : "false";
     robotStateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     robotStateObj["power"] = (ms.power_state == 1) ? "true" : "false";
     rootObj["robot_state"] = robotStateObj;
@@ -441,11 +441,24 @@ void COMM_RRS::send_status()
     powerObj["bat_in"] = QString::number(ms.bat_in, 'f', 3);
     powerObj["bat_out"] = QString::number(ms.bat_out, 'f', 3);
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
-    powerObj["bat_percent"] = QString::number(ms.bat_percent);
-    powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
+    powerObj["power"] = QString::number(ms.power, 'f', 3);
+
+    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    powerObj["bat_percent"] = QString::number(ms.bat_percent);
+    #endif
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    powerObj["bat_percent"] = QString::number(0);
+    #endif
+
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM)
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
+    #endif
+    #if defined(USE_SRV) || defined(USE_MECANUM_OLD)
+    powerObj["charge_current"] = QString::number(0.0, 'f', 3);
+    powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
+    #endif
     rootObj["power"] = powerObj;
 
     QJsonObject settingObj;
@@ -1315,7 +1328,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     }
     else if(command == "undock")
     {
-        dctrl->undock();
+        //dctrl->undock();
 
         msg.result = "accept";
         msg.message = "";
