@@ -50,6 +50,7 @@ public:
     PATH get_cur_local_path();
 
     QString get_cur_node_id();
+
     QString get_multi_req();
     QString get_obs_condition();
     QString get_cur_goal_state();

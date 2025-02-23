@@ -616,8 +616,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         return PATH();
     }
 
-    // convert metric path
-    std::vector<Eigen::Matrix4d> path_pose0;
+    // convert metric path    
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
@@ -627,8 +626,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         {
             logger->write_log(QString("[AUTO] %s: node null").arg(node_id));
             return PATH();
-        }      
-        path_pose0.push_back(node->tf);
+        }
         node_pose.push_back(node->tf);
     }
 
@@ -673,7 +671,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     // set result
     PATH res;
     res.t = get_time();
-    res.pose0 = path_pose0;
+    res.node = node_path;
     res.pose = path_pose;
     res.pos = path_pos;
     res.ref_v = ref_v;    
@@ -692,8 +690,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 
     Eigen::Matrix4d ed_tf = ed_node->tf;
 
-    // convert metric path    
-    std::vector<Eigen::Matrix4d> path_pose0;
+    // convert metric path
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
@@ -704,7 +701,6 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
             logger->write_log(QString("[AUTO] %1: node null").arg(node_id));
             return PATH();
         }
-        path_pose0.push_back(node->tf);
         node_pose.push_back(node->tf);
     }
 
@@ -759,7 +755,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     // set result
     PATH res;
     res.t = get_time();
-    res.pose0 = path_pose0;
+    res.node = node_path;
     res.pose = path_pose;
     res.pos = path_pos;
     res.ref_v = ref_v;
@@ -1701,7 +1697,6 @@ void AUTOCONTROL::a_loop()
     // loop params
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
-
     QString pre_node_id = "";
 
     logger->write_log("[AUTO] a loop start");
@@ -1709,30 +1704,38 @@ void AUTOCONTROL::a_loop()
     {
         if(unimap->is_loaded)
         {
-            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+            Eigen::Matrix4d cur_tf = slam->get_cur_tf();            
             QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
             if(pre_node_id == "")
             {
                 pre_node_id = cur_node_id;
-            }
 
-            NODE *node = unimap->get_node_by_id(cur_node_id);
-            if(node != NULL)
+                // update
+                mtx.lock();
+                last_node_id = pre_node_id;
+                mtx.unlock();
+            }
+            else
             {
-                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config->ROBOT_RADIUS)
+                // calc pre node id
+                NODE *node = unimap->get_node_by_id(cur_node_id);
+                if(node != NULL)
                 {
-                    if(pre_node_id != cur_node_id)
+                    double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                    if(d < config->ROBOT_RADIUS)
                     {
-                        pre_node_id = cur_node_id;
+                        if(pre_node_id != cur_node_id)
+                        {
+                            pre_node_id = cur_node_id;
+
+                            // update
+                            mtx.lock();
+                            last_node_id = pre_node_id;
+                            mtx.unlock();
+                        }
                     }
                 }
             }
-
-            // update
-            mtx.lock();
-            last_node_id = pre_node_id;
-            mtx.unlock();
         }
 
         // for real time loop
@@ -1878,9 +1881,16 @@ void AUTOCONTROL::b_loop_pp()
     int cur_obs_val = OBS_NONE;
     double obs_wait_st_time = 0;
 
+    int loop_cnt = 0;
     logger->write_log("[AUTO] b_loop_pp start");
     while(b_flag)
     {
+        loop_cnt++;
+        if(loop_cnt % 20 == 0)
+        {
+            qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << get_time();
+        }
+
         // get current status
         Eigen::Vector3d cur_vel(mobile->vx0, mobile->vy0, mobile->wz0);
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -2122,7 +2132,7 @@ void AUTOCONTROL::b_loop_pp()
                 double v = saturation(3.0*dx, -params.ED_V, params.ED_V);
                 double w = sgn(v)*saturation(3.0*dy, -5.0*D2R, 5.0*D2R);
                 mobile->move(v, 0, w);
-                logger->write_log(QString("[AUTO] DRIVING -> EXTENDED CONTROL, err:%1, %2").arg(v).arg(w*R2D));
+                //logger->write_log(QString("[AUTO] DRIVING -> EXTENDED CONTROL, err:%1, %2").arg(v).arg(w*R2D));
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
@@ -2261,6 +2271,7 @@ void AUTOCONTROL::b_loop_pp()
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
                     logger->write_log(QString("[AUTO] DRIVING -> OBS, cur_obs_val:%1, fsm_state:%2").arg(cur_obs_val).arg((int)fsm_state));
+                    qDebug() << "driving -> obs";
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }
@@ -2339,7 +2350,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 mobile->move(v, 0, w);
             }
-            printf("v:%f, w:%f, err_th:%f, cte:%f, ref_v:%f, obs_v:%f\n", v, w*R2D, err_th*R2D, cte, ref_v, obs_v);
+            //printf("v:%f, w:%f, err_th:%f, cte:%f, ref_v:%f, obs_v:%f\n", v, w*R2D, err_th*R2D, cte, ref_v, obs_v);
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
@@ -2423,6 +2434,8 @@ void AUTOCONTROL::b_loop_pp()
         {
             if(obs_state == AUTO_OBS_CHECK)
             {
+                qDebug() << "obs check";
+
                 if(cur_obs_val == OBS_DYN)
                 {
                     // for mobile server
@@ -2463,7 +2476,7 @@ void AUTOCONTROL::b_loop_pp()
                     // just wait
                     obs_wait_st_time = get_time();
                     obs_state = AUTO_OBS_WAIT;
-                    logger->write_log("[AUTO] OBS_WAIT");
+                    logger->write_log("[AUTO] OBS_WAIT");                    
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }

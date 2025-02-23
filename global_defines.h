@@ -973,7 +973,7 @@ struct ASTAR_NODE
 struct PATH
 {
     double t;
-    std::vector<Eigen::Matrix4d> pose0;
+    std::vector<QString> node;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
@@ -990,7 +990,7 @@ struct PATH
     PATH(const PATH& p)
     {
         t = p.t;
-        pose0 = p.pose0;
+        node = p.node;
         pose = p.pose;
         pos = p.pos;                
         ref_v = p.ref_v;        
@@ -1001,7 +1001,7 @@ struct PATH
     PATH& operator=(const PATH& p)
     {
         t = p.t;
-        pose0 = p.pose0;
+        node = p.node;
         pose = p.pose;
         pos = p.pos;        
         ref_v = p.ref_v;        

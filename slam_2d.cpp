@@ -958,6 +958,17 @@ void SLAM_2D::obs_loop()
     printf("[SLAM] obs_loop start\n");
     while(obs_flag)
     {
+        if(config->USE_SIM)
+        {
+            if(unimap->is_loaded)
+            {
+                Eigen::Matrix4d _cur_tf = get_cur_tf();
+                obsmap->update_obs_map_sim(_cur_tf);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
         TIME_POSE_PTS tpp;
         if(tpp_que.try_pop(tpp))
         {            
