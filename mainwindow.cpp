@@ -3820,6 +3820,13 @@ void MainWindow::watch_loop()
             {
                 qDebug() << "Main thread is unresponsive!";
             }
+            else
+            {
+                if(config.USE_FMS)
+                {
+                    qDebug() << comm_fms.robot_id;
+                }
+            }
         }
 
         // annotation works
@@ -5299,13 +5306,16 @@ void MainWindow::raw_plot()
     {
         _multi_state = "no connection";
     }
+
+    int fsm_state = ctrl.fsm_state;
+
     QString auto_info_str;
     auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
-                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
+                          AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
-                          (bool)ctrl.is_multi ? "1" : "0",
+                          (bool)ctrl.is_rrs ? "1" : "0",
                           ctrl.get_multi_req().toLocal8Bit().data(),
                           _multi_state.toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);

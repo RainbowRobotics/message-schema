@@ -81,4 +81,6 @@ void remove_duplicates_nodes(std::vector<QString>& src);
 
 std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P1, double step);
 
+int get_major_axis(Eigen::Vector3d& N);
+
 #endif // MY_UTILS_H

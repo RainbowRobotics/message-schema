@@ -78,7 +78,7 @@ void COMM_FMS::connected()
     if(!is_connected)
     {
         is_connected = true;
-        ctrl->is_multi = true;
+        ctrl->is_rrs = true;
         printf("[COMM_FMS] connected\n");
     }
 }
@@ -88,7 +88,7 @@ void COMM_FMS::disconnected()
     if(is_connected)
     {
         is_connected = false;
-        ctrl->is_multi = false;
+        ctrl->is_rrs = false;
         printf("[COMM_FMS] disconnected\n");
     }
 }

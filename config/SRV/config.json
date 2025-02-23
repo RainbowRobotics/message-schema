@@ -10,7 +10,7 @@
     },
     "control": {
         "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
-        "DRIVE_GOAL_APPROACH_GAIN": "0.5",
+        "DRIVE_GOAL_APPROACH_GAIN": "1.0",
         "DRIVE_GOAL_D": "0.1",
         "DRIVE_GOAL_TH": "5.0",
         "DRIVE_V_DEADZONE": "0.0",
@@ -88,13 +88,13 @@
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
         "MOTOR_LIMIT_V": "2.0",
-        "MOTOR_LIMIT_V_ACC": "2.0",
+        "MOTOR_LIMIT_V_ACC": "1.0",
         "MOTOR_LIMIT_W": "180",
         "MOTOR_LIMIT_W_ACC": "360"
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.7",
+        "OBS_DEADZONE": "0.5",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
@@ -119,6 +119,7 @@
         "LVX_MAX_FEATURE_NUM": "500",
         "LVX_SURFEL_NN_NUM": "1",
         "LVX_SURFEL_RANGE": "1.0",
+        "LVX_SURFEL_BALANCE": "0.4",
         "LVX_COST_THRESHOLD": "2.0",
         "LVX_INLIER_CHECK_DIST": "0.3"        
     }

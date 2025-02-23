@@ -104,6 +104,7 @@ public:
     PATH cur_local_path;
 
     QString last_node_id = "";
+
     Eigen::Vector3d last_cur_pos;
     Eigen::Vector3d last_tgt_pos;
     Eigen::Vector3d last_local_goal;
@@ -118,7 +119,7 @@ public:
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
 
     // params for rrs
-    std::atomic<bool> is_multi = {false};
+    std::atomic<bool> is_rrs = {false};
     QString multi_req = "none"; // none, req_path, recv_path
     QString obs_condition = "none";
     QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
