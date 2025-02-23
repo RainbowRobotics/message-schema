@@ -70,6 +70,55 @@ void OBSMAP::clear()
     mtx.unlock();
 }
 
+void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
+{
+    mtx.lock();
+
+    Eigen::Matrix4d cur_tf = tf;
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+
+    // add static map
+    double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
+    double sq_radius = config->OBS_MAP_RANGE*config->OBS_MAP_RANGE;
+    std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
+    nanoflann::SearchParameters params;
+    unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+
+    cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
+    for(size_t p = 0; p < res_idxs.size(); p++)
+    {
+        int idx = res_idxs[p].first;
+        double x = unimap->kdtree_cloud.pts[idx].x;
+        double y = unimap->kdtree_cloud.pts[idx].y;
+        double z = unimap->kdtree_cloud.pts[idx].z;
+
+        // global to local
+        Eigen::Vector3d P(x,y,z);
+        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+        if(_P[2] < config->OBS_MAP_MIN_Z*0.5 || _P[2] > config->OBS_MAP_MAX_Z)
+        {
+            continue;
+        }
+
+        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+        int u = uv[0];
+        int v = uv[1];
+        if(u < 0 || u >= w || v < 0 || v >= h)
+        {
+            continue;
+        }
+
+        _wall_map.ptr<uchar>(v)[u] = 255;
+    }
+
+    map_tf = cur_tf;
+    wall_map = _wall_map;
+    mtx.unlock();
+
+    // signal for redrawing
+    Q_EMIT obs_updated();
+}
+
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
     mtx.lock();    

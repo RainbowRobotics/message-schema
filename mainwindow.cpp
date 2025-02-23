@@ -5207,9 +5207,9 @@ void MainWindow::ctrl_plot()
         ui->lb_RobotVel->setText(text);
 
         // draw cur node
-        if(viewer->contains("cur_tf_node"))
+        if(viewer->contains("cur_node"))
         {
-            viewer->removeShape("cur_tf_node");
+            viewer->removeShape("cur_node");
         }
 
         QString cur_node_id = ctrl.get_cur_node_id();
@@ -5218,8 +5218,10 @@ void MainWindow::ctrl_plot()
             NODE *node = unimap.get_node_by_id(cur_node_id);
             if(node != NULL)
             {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, node->tf, 0.0, 1.0, 1.0);
-                viewer->addPolygonMesh(donut, "cur_tf_node");
+                Eigen::Matrix4d tf = node->tf;
+                tf(2,3) += config.ROBOT_SIZE_Z[1];
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, tf, 0.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "cur_node");
             }
         }
     }

@@ -28,6 +28,7 @@ public:
     void init();    
     void clear();
     void update_obs_map(TIME_POSE_PTS& tpp);
+    void update_obs_map_sim(Eigen::Matrix4d tf);
     void update_vobs_map();
 
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
