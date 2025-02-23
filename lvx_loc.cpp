@@ -433,6 +433,7 @@ void LVX_LOC::a_loop()
 
     Eigen::Matrix4d offset_tf_inv = offset_tf.inverse();
     Eigen::Matrix4d _cur_tf = get_cur_tf()*offset_tf;
+    Eigen::Matrix4d _pre_tf = _cur_tf;
 
     printf("[LVX] a_loop start\n");
     while(a_flag)
@@ -447,7 +448,8 @@ void LVX_LOC::a_loop()
             }
 
             // initial guess
-            Eigen::Matrix4d G = _cur_tf;
+            double dx = (_pre_tf.inverse()*_cur_tf)(0,3);
+            Eigen::Matrix4d G = _cur_tf*ZYX_to_TF(dx, 0, 0, 0, 0, 0);
 
             // imu
             IMU cur_imu = get_best_imu(frm.t);
@@ -493,6 +495,7 @@ void LVX_LOC::a_loop()
             set_cur_tf(G*offset_tf_inv);
 
             // for next
+            _pre_tf = _cur_tf;
             _cur_tf = G;
             pre_imu = cur_imu;
 
@@ -602,6 +605,7 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
         // shuffle
         std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
         const int num_feature = std::min<int>(idx_list.size(), config->LVX_MAX_FEATURE_NUM);
+        std::vector<int> surfel_cnt(3,0);
 
         // calc cost jacobian
         std::vector<double> costs;
@@ -636,6 +640,14 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
             P0 /= nn_idxs.size();
             N0 /= nn_idxs.size();
             N0.normalize();
+
+            // balance filter
+            int axis_idx = get_major_axis(N0);
+            if(surfel_cnt[axis_idx] > num_feature*config->LVX_SURFEL_BALANCE)
+            {
+                continue;
+            }
+            surfel_cnt[axis_idx]++;
 
             // rmt
             double rmt = 1.0;

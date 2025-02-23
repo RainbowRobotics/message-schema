@@ -353,6 +353,9 @@ void CONFIG::load()
                 LVX_SURFEL_RANGE = obj_lvx["LVX_SURFEL_RANGE"].toString().toDouble();
                 printf("[CONFIG] LVX_SURFEL_RANGE, %s\n", obj_lvx["LVX_SURFEL_RANGE"].toString().toLocal8Bit().data());
 
+                LVX_SURFEL_BALANCE = obj_lvx["LVX_SURFEL_BALANCE"].toString().toDouble();
+                printf("[CONFIG] LVX_SURFEL_BALANCE, %s\n", obj_lvx["LVX_SURFEL_BALANCE"].toString().toLocal8Bit().data());
+
                 LVX_COST_THRESHOLD = obj_lvx["LVX_COST_THRESHOLD"].toString().toDouble();
                 printf("[CONFIG] LVX_COST_THRESHOLD, %s\n", obj_lvx["LVX_COST_THRESHOLD"].toString().toLocal8Bit().data());
 

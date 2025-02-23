@@ -101,14 +101,14 @@ void COMM_RRS::init()
 void COMM_RRS::sio_connected()
 {
     is_connected = true;
-    ctrl->is_multi = true;
+    ctrl->is_rrs = true;
     logger->write_log("[COMM_RRS] connected", "Green");
 }
 
 void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
 {
     is_connected = false;
-    ctrl->is_multi = false;
+    ctrl->is_rrs = false;
     logger->write_log("[COMM_RRS] disconnected", "Green");
 }
 

@@ -148,6 +148,7 @@ public:
     int LVX_MAX_FEATURE_NUM = 500;
     int LVX_SURFEL_NN_NUM = 1;
     double LVX_SURFEL_RANGE = 1.0;
+    double LVX_SURFEL_BALANCE = 0.4; // 0.35 ~ 1.0(off)
     double LVX_COST_THRESHOLD = 1.0;
     double LVX_INLIER_CHECK_DIST = 0.3;
 

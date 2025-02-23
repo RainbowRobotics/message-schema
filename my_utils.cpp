@@ -1083,4 +1083,20 @@ std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P
     return res;
 }
 
+int get_major_axis(Eigen::Vector3d& N)
+{
+    int max_idx = 0;
+    double max = std::abs(N[0]);
+    for (int p = 1; p < 3; p++)
+    {
+        double val = std::abs(N[p]);
+        if (val > max)
+        {
+            max_idx = p;
+            max = val;
+        }
+    }
+    return max_idx;
+}
+
 #endif // UTILS_CPP
