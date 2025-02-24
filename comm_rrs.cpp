@@ -454,7 +454,7 @@ void COMM_RRS::send_status()
 
     QJsonObject mapObj;
     QString map_name = "";
-    if(unimap->is_loaded)
+    if(unimap->is_loaded == MAP_LOADED)
     {
         QString map_dir = unimap->map_dir;
         QStringList map_dir_list = map_dir.split("/");
@@ -463,7 +463,43 @@ void COMM_RRS::send_status()
             map_name = unimap->map_dir.split("/").last();
         }
     }
+
+    QString map_status = "";
+    if(config->USE_LVX == 1)
+    {
+        int is_loaded = (int)lvx->is_loaded;
+        if(is_loaded == MAP_NOT_LOADED)
+        {
+            map_status = "none";
+        }
+        else if(is_loaded == MAP_LOADING)
+        {
+            map_status = "loading";
+        }
+        else if(is_loaded == MAP_LOADED)
+        {
+            map_status = "loaded";
+        }
+    }
+    else
+    {
+        int is_loaded = (int)unimap->is_loaded;
+        if(is_loaded == MAP_NOT_LOADED)
+        {
+            map_status = "none";
+        }
+        else if(is_loaded == MAP_LOADING)
+        {
+            map_status = "loading";
+        }
+        else if(is_loaded == MAP_LOADED)
+        {
+            map_status = "loaded";
+        }
+    }
+
     mapObj["map_name"] = map_name;
+    mapObj["map_status"] = map_status;
     rootObj["map"] = mapObj;
 
     // Adding the time object
@@ -552,7 +588,7 @@ void COMM_RRS::send_move_status()
     // Adding the cur_node object
     QString cur_node_id = ctrl->get_cur_node_id();
     QString cur_node_name = "";
-    if(unimap->is_loaded && cur_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && cur_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(cur_node_id);
         if(node != NULL)
@@ -575,7 +611,7 @@ void COMM_RRS::send_move_status()
     QString goal_node_id = ctrl->move_info.goal_node_id;
     QString goal_node_name = "";
     Eigen::Vector3d goal_xi(0,0,0);
-    if(unimap->is_loaded && goal_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(goal_node_id);
         if(node != NULL)
@@ -799,7 +835,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         if(method == "pp")
         {
             // action
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
@@ -869,7 +905,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         QString method = msg.method;
         if(method == "pp")
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
@@ -1075,7 +1111,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 lvx->map_load(path_3d_map);
             }
 
-            if(unimap->is_loaded)
+            if(unimap->is_loaded == MAP_LOADED)
             {
                 msg.result = "success";
                 msg.message = "";
@@ -1127,7 +1163,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     QString command = msg.command;
     if(command == "semiautoinit")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -1190,7 +1226,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     }
     else if(command == "init")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";

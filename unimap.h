@@ -112,7 +112,7 @@ public:
     double map_max_z = -99999999;
 
     // flags
-    std::atomic<bool> is_loaded = {false};    
+    std::atomic<int> is_loaded = {MAP_NOT_LOADED};
 
     // other modules
     CONFIG* config = NULL;

@@ -727,7 +727,7 @@ void SLAM_2D::loc_a_loop()
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
@@ -960,7 +960,7 @@ void SLAM_2D::obs_loop()
     {
         if(config->USE_SIM)
         {
-            if(unimap->is_loaded)
+            if(unimap->is_loaded == MAP_LOADED)
             {
                 Eigen::Matrix4d _cur_tf = get_cur_tf();
                 obsmap->update_obs_map_sim(_cur_tf);
@@ -2087,7 +2087,7 @@ void SLAM_2D::semi_auto_init_start()
     if(config->USE_LVX)
     {
         // semi-auto init using 3d lidar
-        if(unimap->is_loaded == false || lvx->map_pts.size() == 0)
+        if(unimap->is_loaded != MAP_LOADED || lvx->map_pts.size() == 0)
         {
             is_busy = false;
 
@@ -2214,7 +2214,7 @@ void SLAM_2D::semi_auto_init_start()
     else
     {
         // semi-auto init using 2d lidar
-        if(unimap->is_loaded == false || unimap->kdtree_cloud.pts.size() == 0)
+        if(unimap->is_loaded != MAP_LOADED || unimap->kdtree_cloud.pts.size() == 0)
         {
             is_busy = false;
 

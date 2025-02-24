@@ -113,7 +113,7 @@ void COMM_FMS::send_move_status()
     // get goal_node_id
     QString goal_node_id = ctrl->move_info.goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(unimap->is_loaded && goal_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(goal_node_id);
         if(node != NULL)
@@ -313,7 +313,7 @@ void COMM_FMS::slot_load(DATA_LOAD msg)
                 lvx->map_load(path_3d_map);
             }
 
-            if(unimap->is_loaded)
+            if(unimap->is_loaded == MAP_LOADED)
             {
                 msg.result = "success";
                 msg.message = "";
@@ -375,7 +375,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
     QString command = msg.command;
     if(command == "semiautoinit")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -448,7 +448,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
     }
     else if(command == "init")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -566,7 +566,7 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
         QString method = msg.method;
         if(method == "pp")
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
