@@ -263,7 +263,6 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     {
         if(is_rrs && config->USE_MULTI)
         {
-            // send req_path
             set_multi_req("req_path");
             set_cur_goal_state("move");
         }
@@ -2583,7 +2582,7 @@ void AUTOCONTROL::b_loop_pp()
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {
-                if(get_time() - obs_wait_st_time > 0.1)
+                if(get_time() - obs_wait_st_time > 0.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2599,7 +2598,7 @@ void AUTOCONTROL::b_loop_pp()
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
-                if(get_time() - obs_wait_st_time > 0.1)
+                if(get_time() - obs_wait_st_time > 0.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2654,7 +2653,7 @@ void AUTOCONTROL::b_loop_pp()
                 double v = -0.1*sgn(min_pt[0]);
 
                 // check
-                if(min_d >= config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 1.0)
+                if(min_d >= config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 0.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
