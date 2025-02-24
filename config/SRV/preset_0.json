@@ -9,9 +9,9 @@
     "ED_V": "0.2",
     "DRIVE_T": "0.0",
     "DRIVE_H": "4.0",
-    "DRIVE_A": "0.9",
+    "DRIVE_A": "1.0",
     "DRIVE_B": "0.03",
     "DRIVE_L": "0.3",
-    "DRIVE_K": "0.9",
+    "DRIVE_K": "1.0",
     "DRIVE_EPS": "0.3"
 }
