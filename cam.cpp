@@ -115,22 +115,22 @@ void CAM::grab_loop()
         Eigen::Matrix4d TF0 = string_to_TF(config->CAM_TF_0);
 
         auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
-        /*
+
         for(size_t p = 0; p < depth_profile_list0->count(); p++)
         {
             auto profile = depth_profile_list0->getProfile(p)->as<ob::VideoStreamProfile>();
             printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
         }
-        */
+
 
         auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
-        /*
+
         for(size_t p = 0; p < color_profile_list0->count(); p++)
         {
             auto profile = color_profile_list0->getProfile(p)->as<ob::VideoStreamProfile>();
             printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
         }
-        */
+
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
@@ -331,24 +331,24 @@ void CAM::grab_loop()
 
         auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
 
-        /*
+
         for(size_t p = 0; p < depth_profile_list0->count(); p++)
         {
             auto profile = depth_profile_list0->getProfile(p)->as<ob::VideoStreamProfile>();
             printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
         }
-        */
+
 
 
         auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
 
-        /*
+
         for(size_t p = 0; p < color_profile_list0->count(); p++)
         {
             auto profile = color_profile_list0->getProfile(p)->as<ob::VideoStreamProfile>();
             printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
         }
-        */
+
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());

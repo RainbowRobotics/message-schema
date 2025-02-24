@@ -17,18 +17,21 @@
         "DRIVE_W_DEADZONE": "1.0"
     },
     "debug": {
-        "SIM_MODE": "0",
-        "USE_ARUCO": "0",
-        "USE_BEEP": "1",
+        "USE_SIM": "0",
+        "USE_IMU": "0",
         "USE_BLIDAR": "0",
         "USE_BQR": "0",
+        "USE_BEEP": "1",
         "USE_CAM": "1",
-        "USE_EARLYSTOP": "0",
-        "USE_FMS": "0",
-        "USE_IMU": "0",
-        "USE_QT_UI": "0",
         "USE_RTSP": "0",
-        "USE_WEB_UI": "1"
+        "USE_RRS": "1",
+        "USE_FMS": "0",
+        "USE_QTUI": "0",
+        "USE_ARUCO": "0",
+        "USE_EARLYSTOP": "0",
+        "USE_LVX": "0",
+        "USE_COOP": "0",
+        "USE_MULTI": "0"
     },
     "default": {
         "LIDAR_MIN_RANGE": "1.0",
@@ -60,7 +63,7 @@
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.2",
         "LOC_ICP_MAX_FEATURE_NUM": "1000",
-        "LOC_ICP_ODO_FUSION_RATIO": "0.8",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5",
         "LOC_SURFEL_NUM": "3",
         "LOC_SURFEL_RANGE": "0.15"
     },
@@ -92,7 +95,7 @@
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.6",
+        "OBS_DEADZONE": "0.5",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",

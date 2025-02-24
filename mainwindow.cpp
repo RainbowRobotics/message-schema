@@ -1750,10 +1750,10 @@ void MainWindow::bt_Sync()
     lidar.sync_f();
     lidar.sync_b();
 
-    if(config.USE_LVX)
-    {
-        lvx.is_sync = true;
-    }
+    //if(config.USE_LVX)
+    //{
+    //    lvx.is_sync = true;
+    //}
 }
 
 void MainWindow::bt_MoveLinear()
