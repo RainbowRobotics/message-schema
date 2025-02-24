@@ -197,7 +197,7 @@ void SIM::a_loop()
         mobile->mtx.unlock();
 
         /*
-        if(unimap->is_loaded && sim_t - last_lidar_t > 0.1)
+        if(unimap->is_loaded == MAP_LOADED && sim_t - last_lidar_t > 0.1)
         {
             // generate lidar frame
             double query_pt[3] = {cur_xi[0], cur_xi[1], 0};

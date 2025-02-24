@@ -60,7 +60,7 @@ public:
 
     // flag
     std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_loaded = {false};
+    std::atomic<int> is_loaded = {MAP_NOT_LOADED};
     std::atomic<bool> is_sync = {false};
 
     // params

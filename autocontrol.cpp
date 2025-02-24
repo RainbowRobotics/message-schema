@@ -1702,7 +1702,7 @@ void AUTOCONTROL::a_loop()
     logger->write_log("[AUTO] a loop start");
     while(a_flag)
     {
-        if(unimap->is_loaded)
+        if(unimap->is_loaded == MAP_LOADED)
         {
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();            
             QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
