@@ -649,7 +649,6 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
             {
                 continue;
             }
-            surfel_cnt[axis_idx]++;
 
             // rmt
             double rmt = 1.0;
@@ -697,6 +696,9 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
 
             cj_set.push_back(cj);
             costs.push_back(cost);
+
+            // update surfel count
+            surfel_cnt[axis_idx]++;
 
             // check num
             if((int)cj_set.size() == num_feature)
@@ -817,8 +819,7 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
     G = _G;
 
     // for debug
-    printf("[LVX] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n",
-           iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    //printf("[LVX] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

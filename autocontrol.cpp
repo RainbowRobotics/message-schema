@@ -1888,7 +1888,10 @@ void AUTOCONTROL::b_loop_pp()
         loop_cnt++;
         if(loop_cnt % 20 == 0)
         {
-            qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << get_time();
+            if(config->USE_SIM)
+            {
+                qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << get_time();
+            }
         }
 
         // get current status
@@ -2123,21 +2126,18 @@ void AUTOCONTROL::b_loop_pp()
             // goal check
             int max_idx = global_path.pos.size()-1;
             int goal_idx = get_nn_idx(global_path.pos, cur_pos);
-            if(max_idx - goal_idx <= 1)
+            if(max_idx - goal_idx < 1)
             {
-                Eigen::Matrix4d _goal_tf = cur_tf_inv*goal_tf;
-                double dx = _goal_tf(0,3);
-                double dy = _goal_tf(1,3);
-
-                double v = saturation(3.0*dx, -params.ED_V, params.ED_V);
-                double w = sgn(v)*saturation(3.0*dy, -5.0*D2R, 5.0*D2R);
-                mobile->move(v, 0, w);
-                //logger->write_log(QString("[AUTO] DRIVING -> EXTENDED CONTROL, err:%1, %2").arg(v).arg(w*R2D));
+                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                double v0 = cur_vel[0];
+                double v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
+                v = saturation(v, -params.ED_V, params.ED_V);
+                mobile->move(v, 0, 0);
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    double goal_err_d = std::sqrt(dx*dx + dy*dy);
+                    double goal_err_d = calc_dist_2d(_goal_pos);
 
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2285,13 +2285,6 @@ void AUTOCONTROL::b_loop_pp()
             double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
             double err_d = std::sqrt(dx*dx + dy*dy);
             double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
-            if(goal_idx > (int)global_path.pose.size()-10)
-            {
-                dx = local_path.pos[tgt_idx][0] - cur_pos[0];
-                dy = local_path.pos[tgt_idx][1] - cur_pos[1];
-                err_th = deltaRad(std::atan2(dy,dx), cur_xi[2])*2;
-            }
-
             if(pre_err_th == 0)
             {
                 pre_err_th = err_th;
