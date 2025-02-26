@@ -169,6 +169,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for response
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
     connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
+    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_fms, SLOT(send_move_response(DATA_MOVE)));
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap

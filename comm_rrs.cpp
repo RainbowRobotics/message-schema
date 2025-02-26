@@ -885,12 +885,13 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 return;
             }
 
-            // pure pursuit
-            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 
             send_move_response(msg);
+
+            // pure pursuit
+            Q_EMIT ctrl->signal_move(msg);
         }
         else
         {
@@ -964,12 +965,13 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            // pure pursuit
-            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 
             send_move_response(msg);
+
+            // pure pursuit
+            Q_EMIT ctrl->signal_move(msg);
         }
         else
         {
@@ -981,31 +983,31 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     }
     else if(command == "pause")
     {
-        ctrl->is_pause = true;
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        ctrl->is_pause = true;
     }
     else if(command == "resume")
     {
-        ctrl->is_pause = false;
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        ctrl->is_pause = false;
     }
     else if(command == "stop")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->bt_Emergency();
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Emergency();
     }
 }
 
@@ -1016,14 +1018,14 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     {
         if(lidar->is_connected_f)
         {
-            last_send_kfrm_idx = 0;
-            MainWindow* _main = (MainWindow*)main;
-            _main->bt_MapBuild();
-
             msg.result = "accept";
             msg.message = "";
 
             send_mapping_response(msg);
+
+            last_send_kfrm_idx = 0;
+            MainWindow* _main = (MainWindow*)main;
+            _main->bt_MapBuild();
         }
         else
         {
@@ -1035,13 +1037,13 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     }
     else if(command == "stop")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->bt_MapSave();
-
         msg.result = "accept";
         msg.message = "";
 
         send_mapping_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_MapSave();
     }
     else if(command == "save")
     {
@@ -1070,12 +1072,12 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     }
     else if(command == "reload")
     {
-        last_send_kfrm_idx = 0;
-
         msg.result = "accept";
         msg.message = "";
 
         send_mapping_response(msg);
+
+        last_send_kfrm_idx = 0;
     }
 }
 
@@ -1148,13 +1150,13 @@ void COMM_RRS::slot_randomseq(DATA_RANDOMSEQ msg)
     QString command = msg.command;
     if(command == "randomseq")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->slot_sim_random_seq();
-
         msg.result = "accept";
         msg.message = "";
 
         send_randomseq_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->slot_sim_random_seq();
     }
 }
 
@@ -1254,6 +1256,10 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         }
         #endif
 
+        msg.result = "accept";
+        msg.message = "";
+        send_localization_response(msg);
+
         // manual init
         double x = msg.tgt_pose_vec[0];
         double y = msg.tgt_pose_vec[1];
@@ -1277,48 +1283,44 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             lvx->loc_start();
         }
         slam->localization_start();
-
-        msg.result = "accept";
-        msg.message = "";
-        send_localization_response(msg);
     }
     else if(command == "start")
     {
+        msg.result = "accept";
+        msg.message = "";
+
+        send_localization_response(msg);
+
         if(config->USE_LVX)
         {
             lvx->loc_start();
         }
         slam->localization_start();
-
+    }
+    else if(command == "stop")
+    {
         msg.result = "accept";
         msg.message = "";
 
         send_localization_response(msg);
-    }
-    else if(command == "stop")
-    {
+
         if(config->USE_LVX)
         {
             lvx->loc_stop();
         }
         slam->localization_stop();
-
+    }
+    else if(command == "randominit")
+    {
         msg.result = "accept";
         msg.message = "";
 
         send_localization_response(msg);
-    }
-    else if(command == "randominit")
-    {
+
         QString seed = msg.seed;
 
         MainWindow* _main = (MainWindow*)main;
         _main->slot_sim_random_init(seed);
-
-        msg.result = "accept";
-        msg.message = "";
-
-        send_localization_response(msg);
     }
 }
 
@@ -1327,21 +1329,21 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     QString command = msg.command;
     if(command == "dock")
     {
-        dctrl->move();
-
         msg.result = "accept";
         msg.message = "";
 
         send_dock_response(msg);
+
+        dctrl->move();
     }
     else if(command == "undock")
     {
-        dctrl->undock();
-
         msg.result = "accept";
         msg.message = "";
 
         send_dock_response(msg);
+
+        dctrl->undock();
     }
 }
 
