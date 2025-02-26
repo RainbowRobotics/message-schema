@@ -344,6 +344,13 @@ void MOBILE::recv_loop()
         // parsing
         while((int)buf.size() >= packet_size && recv_flag)
         {
+            // drop broken packet
+            if(buf.size() % packet_size != 0)
+            {
+                buf.clear();
+                continue;
+            }
+
             uchar *_buf = (uchar*)buf.data();
             if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
             {

@@ -773,3 +773,56 @@ void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
         obsmap->update_vobs_map();
     }
 }
+
+void COMM_FMS::send_move_response(DATA_MOVE msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["preset"] = QString::number(msg.preset, 10);
+    obj["method"] = msg.method;
+    obj["goal_id"] = msg.goal_node_id;
+
+    // temporal patch
+    QString response_goal_node_name = msg.goal_node_name;
+    if(msg.goal_node_name.contains("AMR-WAITING-01"))
+    {
+        response_goal_node_name = "AMR-WAITING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CHARGING-01"))
+    {
+        response_goal_node_name = "AMR-CHARGING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-PACKING-01"))
+    {
+        response_goal_node_name = "AMR-PACKING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CONTAINER-01"))
+    {
+        response_goal_node_name = "AMR-CONTAINER-01";
+    }
+    obj["goal_name"] = response_goal_node_name;
+
+    //obj["goal_name"] = msg.goal_node_name;
+    obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
+    obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
+    obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
+    obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
+    obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
+    obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
+    obj["rz"] = QString::number(msg.tgt_pose_vec[3]*R2D, 'f', 3);
+    obj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
+    obj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
+    obj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    QString buf = doc.toJson(QJsonDocument::Compact);
+    qDebug() << buf;
+}

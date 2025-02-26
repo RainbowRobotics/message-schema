@@ -10,7 +10,7 @@
     },
     "control": {
         "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
-        "DRIVE_GOAL_APPROACH_GAIN": "1.0",
+        "DRIVE_GOAL_APPROACH_GAIN": "0.5",
         "DRIVE_GOAL_D": "0.1",
         "DRIVE_GOAL_TH": "5.0",
         "DRIVE_V_DEADZONE": "0.0",
