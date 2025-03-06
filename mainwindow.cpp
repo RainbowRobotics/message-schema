@@ -3609,16 +3609,16 @@ void MainWindow::bt_SelectPostNodes()
 // comm
 void MainWindow::comm_loop()
 {
-    const double dt = 0.01; // 100hz
+    const double dt = 0.01; // 100Hz loop
     double pre_loop_time = get_time();
-
     int cnt = 0;
 
-    std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
-    std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
+    // CAM 모듈의 color_profile (43)에 맞춘 해상도: 640x400, fps:5, BGR 포맷 지정
+    std::string pipeline0 = "appsrc is-live=true block=true format=time do-timestamp=true ! queue max-size-buffers=1 leaky=downstream ! video/x-raw,format=BGR,width=640,height=400,framerate=5/1 ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
+    std::string pipeline1 = "appsrc is-live=true block=true format=time do-timestamp=true ! queue max-size-buffers=1 leaky=downstream ! video/x-raw,format=BGR,width=640,height=400,framerate=5/1 ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
 
-    const int send_w = 320;
-    const int send_h = 200;
+    const int send_w = 640;
+    const int send_h = 400;
 
     cv::VideoWriter writer0;
     cv::VideoWriter writer1;
@@ -3626,176 +3626,149 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        // for 100ms loop
+        // 100ms 주기 작업
         if(cnt % 10 == 0)
         {
             if(comm_coop.is_connected)
-            {
                 Q_EMIT comm_coop.signal_send_info();
-            }
         }
 
-        // for variable loop
-        int val1 = (int)(10/(int)lidar_view_hz);
-        if(val1 > 0)
+        // 가변 주기 작업 (lidar)
+        int val1 = (int)(10 / (int)lidar_view_hz);
+        if(val1 > 0 && (cnt % val1 == 0))
         {
-            if(cnt % val1 == 0)
+            if(comm_rrs.is_connected)
+                comm_rrs.send_lidar();
+        }
+
+        // 가변 주기 작업 (path)
+        int val2 = (int)(10 / (int)path_view_hz);
+        if(val2 > 0 && (cnt % val2 == 0))
+        {
+            if(comm_rrs.is_connected)
             {
-                if(comm_rrs.is_connected)
+                if(is_global_path_update2)
                 {
-                    comm_rrs.send_lidar();
+                    is_global_path_update2 = false;
+                    comm_rrs.send_global_path();
+                }
+                if(is_local_path_update2)
+                {
+                    is_local_path_update2 = false;
+                    comm_rrs.send_local_path();
                 }
             }
         }
 
-        int val2 = (int)(10/(int)path_view_hz);
-        if(val2 > 0)
-        {
-            if(cnt % val2 == 0)
-            {
-                if(comm_rrs.is_connected)
-                {
-                    if(is_global_path_update2)
-                    {
-                        is_global_path_update2 = false;
-                        comm_rrs.send_global_path();
-                    }
-
-                    if(is_local_path_update2)
-                    {
-                        is_local_path_update2 = false;
-                        comm_rrs.send_local_path();
-                    }
-                }
-            }
-        }
-
-        // for 100ms loop        
+        // 100ms 주기 작업 (move status)
         if(cnt % 10 == 0)
         {
             if(comm_fms.is_connected)
-            {                
                 Q_EMIT comm_fms.signal_send_move_status();
-            }
             if(comm_rrs.is_connected)
-            {
                 comm_rrs.send_move_status();
-            }
         }
 
-        // for 500ms loop
+        // 500ms 주기 작업: status 및 mapping cloud 전송
         if(cnt % 50 == 0)
         {
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_status();
-            }
-        }
-
-        // for 500ms loop
-        if(cnt % 50 == 0)
-        {
-            if(comm_rrs.is_connected)
-            {
                 comm_rrs.send_mapping_cloud();
             }
         }
 
-        // for 1000ms loop
+        // 1000ms 주기: 비디오 writer open 시도
         if(cnt % 100 == 0)
         {
-            // open video writer
             if(config.USE_RTSP && config.USE_CAM)
             {
-                if(cam.is_connected[0])
+                if(cam.is_connected[0] && !writer0.isOpened())
                 {
-                    if(!writer0.isOpened())
-                    {
-                        writer0.open(pipeline0, 0, (double)10, cv::Size(send_w,send_h), true);
-                        logger.write_log("[COMM] cam0 rtsp writer try open");
-                    }
+                    writer0.open(pipeline0, 0, 5, cv::Size(send_w, send_h), true);
+                    logger.write_log("[COMM] cam0 rtsp writer try open");
                 }
-
-                if(cam.is_connected[1])
+                if(cam.is_connected[1] && !writer1.isOpened())
                 {
-                    if(!writer1.isOpened())
-                    {
-                        writer1.open(pipeline1, 0, (double)10, cv::Size(send_w,send_h), true);
-                        logger.write_log("[COMM] cam1 rtsp writer try open");
-                    }
+                    writer1.open(pipeline1, 0, 5, cv::Size(send_w, send_h), true);
+                    logger.write_log("[COMM] cam1 rtsp writer try open");
                 }
             }
         }
 
-        // for 200ms loop
+        // 200ms 주기: 카메라 이미지 가져와 스트리밍
         if(cnt % 20 == 0)
         {
             if(config.USE_RTSP && config.USE_CAM)
             {
-                // cam streaming
-                if(cam.is_connected[0])
+                // cam0 스트리밍
+                if(cam.is_connected[0] && writer0.isOpened())
                 {
-                    if(writer0.isOpened())
+                    cv::Mat img = cam.get_img(0);
+                    if(!img.empty())
                     {
-                        cv::Mat img = cam.get_img(0);
-                        if(!img.empty())
+                        cv::Mat frame;
+                        if(img.channels() == 4)
+                            cv::cvtColor(img, frame, cv::COLOR_BGRA2BGR);
+                        else
+                            frame = img;
+
+                        if(frame.cols != send_w || frame.rows != send_h)
                         {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer0.write(_img);
-                            }
-                            else
-                            {
-                                writer0.write(img);
-                            }
+                            cv::Mat resized;
+                            cv::resize(frame, resized, cv::Size(send_w, send_h));
+                            writer0.write(resized);
+                        }
+                        else
+                        {
+                            writer0.write(frame);
                         }
                     }
                 }
 
-                if(cam.is_connected[1])
+                // cam1 스트리밍
+                if(cam.is_connected[1] && writer1.isOpened())
                 {
-                    if(writer1.isOpened())
+                    cv::Mat img = cam.get_img(1);
+                    if(!img.empty())
                     {
-                        cv::Mat img = cam.get_img(1);
-                        if(!img.empty())
+                        cv::Mat frame;
+                        if(img.channels() == 4)
+                            cv::cvtColor(img, frame, cv::COLOR_BGRA2BGR);
+                        else
+                            frame = img;
+
+                        if(frame.cols != send_w || frame.rows != send_h)
                         {
-                            if(img.cols != send_w || img.rows != send_h)
-                            {
-                                cv::Mat _img;
-                                cv::resize(img, _img, cv::Size(send_w, send_h));
-                                writer1.write(_img);
-                            }
-                            else
-                            {
-                                writer1.write(img);
-                            }
+                            cv::Mat resized;
+                            cv::resize(frame, resized, cv::Size(send_w, send_h));
+                            writer1.write(resized);
+                        }
+                        else
+                        {
+                            writer1.write(frame);
                         }
                     }
                 }
             }
         }
 
-        // increase cnt
         cnt++;
 
-        // for real time loop
+        // 루프 주기 유지
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
+            int sleep_ms = (dt - delta_loop_time) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-        }
-        else
-        {
-            //printf("[MAIN] comm_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
     printf("[COMM] loop stop\n");
 }
+
 
 // watchdog
 void MainWindow::watch_loop()

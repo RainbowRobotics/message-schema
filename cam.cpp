@@ -240,7 +240,8 @@ void CAM::grab_loop()
 
                         // flip for plot
                         cv::Mat plot_img;
-                        cv::resize(img, plot_img, cv::Size(160, 90));
+                        //cv::resize(img, plot_img, cv::Size(160, 100));
+                        cv::resize(img, plot_img, cv::Size(320, 200));
 
                         mtx.lock();
                         cur_img[0] = plot_img.clone();
