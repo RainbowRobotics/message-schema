@@ -202,13 +202,17 @@ public:
     std::atomic<double> last_plot_aruco_t = {0};
 
     // for variable loop
-    std::atomic<int> lidar_view_hz = {1};
-    std::atomic<int> path_view_hz = {2};
+    std::atomic<int> lidar_view_frequency = {1};
+    std::atomic<int> path_view_frequency = {2};
 
     // for touch event
     double lastScaleFactor = 1.0;
     QPointF lastTouchPoint;
     bool isPanning = false;
+
+    // for user led
+    std::atomic<bool> is_user_led = {false};
+    std::atomic<int> user_led_color = {LED_OFF};
 
     // 3d plot funcs
     void map_plot();

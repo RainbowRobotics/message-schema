@@ -249,7 +249,22 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
     {
         NODE* node = unimap->get_node_by_id(msg.goal_node_id);
-        if(node != NULL)
+        if(node == NULL)
+        {
+            Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+            mtx.lock();
+            move_info.cur_pos = cur_pos;
+            move_info.result = "fail";
+            move_info.message = "node is empty";
+            move_info.time = get_time();
+            mtx.unlock();
+            Q_EMIT signal_move_response(move_info);
+
+            return;
+        }
+        else
         {
             msg.goal_node_name = node->name;
         }
@@ -263,7 +278,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     {
         if(is_rrs && config->USE_MULTI)
         {
-            qDebug() << "[AUTO] req_path, move";
+            logger->write_log("[AUTO] req_path, move", "Green");
             set_multi_req("req_path");
             set_cur_goal_state("move");
         }
@@ -275,7 +290,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     }
     else
     {
-        qDebug() << "[AUTO] just change goal";
+        logger->write_log("[AUTO] just change goal", "Green");
     }
 }
 

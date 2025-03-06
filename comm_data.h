@@ -15,6 +15,7 @@ struct DATA_MOVE
     Eigen::Vector3d cur_pos; // x, y, z
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
+    double eta; // estimated time of arrival
 
     QString result;
     QString message;
@@ -31,6 +32,7 @@ struct DATA_MOVE
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
+        eta = 9999.0;
 
         result = "";
         message = "";
@@ -48,6 +50,7 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        eta = p.eta;
 
         result = p.result;
         message = p.message;
@@ -65,6 +68,7 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        eta = p.eta;
 
         result = p.result;
         message = p.message;

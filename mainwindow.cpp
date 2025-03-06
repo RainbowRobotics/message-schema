@@ -3614,6 +3614,8 @@ void MainWindow::comm_loop()
     double pre_loop_time = get_time();
 
     int cnt = 0;
+    int lidar_view_cnt = 0;
+    int path_view_cnt = 0;
 
     std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
     std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
@@ -3637,11 +3639,13 @@ void MainWindow::comm_loop()
         }
 
         // for variable loop
-        int val1 = (int)(10/(int)lidar_view_hz);
-        if(val1 > 0)
+        double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
+        time_lidar_view *= 10.0;
+        if(time_lidar_view > 0)
         {
-            if(cnt % val1 == 0)
+            if(lidar_view_cnt > time_lidar_view)
             {
+                lidar_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
                     comm_rrs.send_lidar();
@@ -3649,11 +3653,13 @@ void MainWindow::comm_loop()
             }
         }
 
-        int val2 = (int)(10/(int)path_view_hz);
-        if(val2 > 0)
+        double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
+        time_path_view *= 10.0;
+        if(time_path_view > 0)
         {
-            if(cnt % val2 == 0)
+            if(path_view_cnt > time_path_view)
             {
+                path_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
                     if(is_global_path_update2)
@@ -4268,7 +4274,14 @@ void MainWindow::watch_loop()
             }
 
             // set led
-            mobile.led(0, led_color);
+            if(is_user_led)
+            {
+                mobile.led(0, (int)user_led_color);
+            }
+            else
+            {
+                mobile.led(0, led_color);
+            }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
