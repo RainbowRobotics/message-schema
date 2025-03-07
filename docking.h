@@ -39,6 +39,7 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
 
+
     std::atomic<bool> is_pause = {false};
     std::atomic<bool> is_moving = {false};
 

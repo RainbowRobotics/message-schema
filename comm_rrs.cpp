@@ -1291,7 +1291,9 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     QString command = msg.command;
     if(command == "dock")
     {
-        dctrl->move();
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_DockingMove();
+//        dctrl->move();
 
         msg.result = "accept";
         msg.message = "";
@@ -1300,7 +1302,10 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     }
     else if(command == "undock")
     {
-        dctrl->undock();
+        MainWindow* _main = (MainWindow*)main;
+        //_main->bt_DockingStop();
+        _main->bt_Undock();
+//        dctrl->undock();
 
         msg.result = "accept";
         msg.message = "";

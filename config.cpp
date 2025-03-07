@@ -362,7 +362,11 @@ void CONFIG::load()
                 LVX_INLIER_CHECK_DIST = obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toDouble();
                 printf("[CONFIG] LVX_ERROR_THRESHOLD, %s\n", obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
             }
-
+            QJsonObject obj_docking = obj["docking"].toObject();
+            {
+                DOCKING_POINTDOCK_MARGIN = obj_docking["DOCKING_POINTDOCK_MARGIN"].toString().toDouble();
+                printf("[CONFIG] DOCKING_POINTDOCK_MARGIN, %s\n", obj_lvx["DOCKING_POINTDOCK_MARGIN"].toString().toLocal8Bit().data());
+            }
             // complete
             config_file.close();
             printf("[CONFIG] %s, load successed\n", config_path.toLocal8Bit().data());
