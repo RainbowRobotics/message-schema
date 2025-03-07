@@ -111,5 +111,8 @@
     "robot": {
         "PLATFORM_NAME": "400_LAKI",
         "PLATFORM_TYPE": "AMR_400_LAKI"
+    },
+    "docking": {
+    	"DOCKING_POINTDOCK_MARGIN": "0.18"
     }
 }

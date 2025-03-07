@@ -108,5 +108,8 @@
     "robot": {
         "PLATFORM_NAME": "400",
         "PLATFORM_TYPE": "AMR_400"
+    },
+    "docking": {
+    	"DOCKING_POINTDOCK_MARGIN": "0.18"
     }
 }
