@@ -3845,13 +3845,13 @@ void MainWindow::watch_loop()
         {
             if(!QCoreApplication::instance()->thread()->isRunning())
             {
-                qDebug() << "Main thread is unresponsive!";
+                logger.write_log("[MAIN] Main thread is unresponsive!", "Red");
             }
             else
             {
                 if(config.USE_FMS)
                 {
-                    qDebug() << comm_fms.robot_id;
+                    printf("[MAIN] robot id: %s\n", comm_fms.robot_id.toLocal8Bit().data());
                 }
             }
         }

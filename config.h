@@ -100,7 +100,8 @@ public:
     double DRIVE_W_DEADZONE = 0.1;
 
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
-    double OBS_DEADZONE = 0.6;
+    double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
+    double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
     double OBS_LOCAL_GOAL_D = 4.0;
     double OBS_SAFE_MARGIN_X = 0.1;
     double OBS_SAFE_MARGIN_Y = 0.1;

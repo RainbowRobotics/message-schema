@@ -266,8 +266,11 @@ void CONFIG::load()
                 OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
                 printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
 
-                OBS_DEADZONE = obj_obs["OBS_DEADZONE"].toString().toDouble();
-                printf("[CONFIG] OBS_DEADZONE, %s\n", obj_obs["OBS_DEADZONE"].toString().toLocal8Bit().data());
+                OBS_DEADZONE_DYN = obj_obs["OBS_DEADZONE_DYN"].toString().toDouble();
+                printf("[CONFIG] OBS_DEADZONE_DYN, %s\n", obj_obs["OBS_DEADZONE_DYN"].toString().toLocal8Bit().data());
+
+                OBS_DEADZONE_VIR = obj_obs["OBS_DEADZONE_VIR"].toString().toDouble();
+                printf("[CONFIG] OBS_DEADZONE_VIR, %s\n", obj_obs["OBS_DEADZONE_VIR"].toString().toLocal8Bit().data());
 
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());

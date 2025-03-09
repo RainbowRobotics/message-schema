@@ -1571,7 +1571,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
             for(int q = 0; q <= range; q++)
             {
                 int i = p + q;
-                if(obsmap->is_tf_collision(global_path.pose[i], false, config->OBS_PATH_MARGIN_X, config->OBS_PATH_MARGIN_Y))
+                if(obsmap->is_tf_collision(global_path.pose[i], config->OBS_PATH_MARGIN_X, config->OBS_PATH_MARGIN_Y))
                 {
                     is_collision = true;
                     break;
@@ -1904,7 +1904,7 @@ void AUTOCONTROL::b_loop_pp()
 
     // for obs
     int obs_state = AUTO_OBS_CHECK;
-    int cur_obs_val = OBS_NONE;
+    int cur_obs_val = OBS_DETECT_NONE;
     double obs_wait_st_time = 0;
 
     int loop_cnt = 0;
@@ -2109,8 +2109,8 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs check
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
-            cur_obs_val = obsmap->is_path_collision(traj, true);
-            if(cur_obs_val != OBS_NONE)
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj);
+            if(cur_obs_val == OBS_DETECT_DYN || cur_obs_val == OBS_DETECT_VIR)
             {
                 mobile->move(0, 0, 0);
 
@@ -2253,8 +2253,8 @@ void AUTOCONTROL::b_loop_pp()
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
-                    if(cur_obs_val != OBS_NONE)
+                    cur_obs_val = obsmap->is_tf_collision_dyn(traj[p], config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
+                    if(cur_obs_val != OBS_DETECT_NONE)
                     {
                         is_collision = true;
                         break;
@@ -2272,20 +2272,35 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs stop
             {
-                int chk_idx = cur_idx + config->OBS_DEADZONE/LOCAL_PATH_STEP;
-                if(chk_idx > (int)local_path.pos.size()-1)
+                // calc dynamic obstale check trajectory
+                int chk_idx_dyn = cur_idx + config->OBS_DEADZONE_DYN/LOCAL_PATH_STEP;
+                if(chk_idx_dyn > (int)local_path.pos.size()-1)
                 {
-                    chk_idx = local_path.pos.size()-1;
+                    chk_idx_dyn = local_path.pos.size()-1;
                 }
 
-                std::vector<Eigen::Matrix4d> traj;
-                for(int p = cur_idx; p <= chk_idx; p++)
+                std::vector<Eigen::Matrix4d> traj_dyn;
+                for(int p = cur_idx; p <= chk_idx_dyn; p++)
                 {
-                    traj.push_back(local_path.pose[p]);
+                    traj_dyn.push_back(local_path.pose[p]);
                 }
 
-                cur_obs_val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
-                if(cur_obs_val != OBS_NONE)
+                // calc virtual obstale check trajectory
+                int chk_idx_vir = cur_idx + config->OBS_DEADZONE_VIR/LOCAL_PATH_STEP;
+                if(chk_idx_vir > (int)local_path.pos.size()-1)
+                {
+                    chk_idx_vir = local_path.pos.size()-1;
+                }
+
+                std::vector<Eigen::Matrix4d> traj_vir;
+                for(int p = cur_idx; p <= chk_idx_vir; p++)
+                {
+                    traj_vir.push_back(local_path.pose[p]);
+                }
+
+                cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, 0, 0, 0, 10);
+                std::cout << "[AUTO] cur_obs_val: " << cur_obs_val << std::endl;
+                if(cur_obs_val == OBS_DETECT_DYN || cur_obs_val == OBS_DETECT_VIR)
                 {
                     mobile->move(0, 0, 0);
 
@@ -2294,7 +2309,6 @@ void AUTOCONTROL::b_loop_pp()
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
                     logger->write_log(QString("[AUTO] DRIVING -> OBS, cur_obs_val:%1, fsm_state:%2").arg(cur_obs_val).arg((int)fsm_state));
-                    qDebug() << "driving -> obs";
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }
@@ -2414,8 +2428,8 @@ void AUTOCONTROL::b_loop_pp()
 
             // obs check
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-            cur_obs_val = obsmap->is_path_collision(traj, true);
-            if(cur_obs_val == OBS_DYN)
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj, true);
+            if(cur_obs_val == OBS_DETECT_DYN || cur_obs_val == OBS_DETECT_VIR)
             {
                 mobile->move(0, 0, 0);
 
@@ -2452,7 +2466,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 qDebug() << "obs check";
 
-                if(cur_obs_val == OBS_DYN)
+                if(cur_obs_val == OBS_DETECT_DYN)
                 {
                     // for mobile server
                     set_obs_condition("near");
@@ -2475,7 +2489,7 @@ void AUTOCONTROL::b_loop_pp()
                         continue;
                     }
                 }
-                else if(cur_obs_val == OBS_VIR)
+                else if(cur_obs_val == OBS_DETECT_VIR)
                 {
                     // for mobile server
                     set_obs_condition("vir");
@@ -2612,7 +2626,7 @@ void AUTOCONTROL::b_loop_pp()
                     pre_err_th = 0;
                     set_cur_goal_state("move");
 
-                    cur_obs_val = OBS_NONE;
+                    cur_obs_val = OBS_DETECT_NONE;
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
                     logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
