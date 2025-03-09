@@ -169,6 +169,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for response
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
     connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
+    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_fms, SLOT(send_move_response(DATA_MOVE)));
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
@@ -1466,7 +1467,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     pick.l_drag = false;
                     if(is_grab == true)
                     {
-                        if(unimap.is_loaded)
+                        if(unimap.is_loaded == MAP_LOADED)
                         {
                             std::vector<QString> _select_nodes;
                             std::vector<QString> nodes = unimap.get_nodes();
@@ -1699,7 +1700,7 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         logger.write_log("[SIM] map load first", "Red", true, false);
         return;
@@ -2066,7 +2067,7 @@ void MainWindow::bt_MapSave2()
 
 void MainWindow::bt_MapReload()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[MAIN] check map load\n");
         return;
@@ -2243,7 +2244,7 @@ void MainWindow::cb_NodeType(QString type)
 
 void MainWindow::bt_ClearTopo()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -2835,7 +2836,7 @@ void MainWindow::bt_AlignNodeTh()
 
 void MainWindow::bt_QuickAnnotStart()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA] check map load\n");
         return;
@@ -2902,7 +2903,7 @@ void MainWindow::bt_QuickAnnotStop()
 
 void MainWindow::bt_QuickAddNode()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA_Node] check map load\n");
         return;
@@ -2923,7 +2924,7 @@ void MainWindow::bt_QuickAddNode()
 
 void MainWindow::bt_QuickAddAruco()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA_Aruco] check map load\n");
         return;
@@ -3141,7 +3142,7 @@ void MainWindow::bt_CheckNodes()
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[MAIN] check map load\n");
         return;
@@ -3359,7 +3360,7 @@ void MainWindow::bt_TaskDel()
 
 void MainWindow::bt_TaskSave()
 {
-    if(unimap.is_loaded == false || task.task_node_list.empty())
+    if(unimap.is_loaded != MAP_LOADED || task.task_node_list.empty())
     {
         printf("no task list\n");
         return;
@@ -3371,7 +3372,7 @@ void MainWindow::bt_TaskSave()
 void MainWindow::bt_TaskLoad()
 {
     // pcd map load
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("no map\n");
         return;
@@ -3399,7 +3400,7 @@ void MainWindow::bt_TaskLoad()
 
 void MainWindow::bt_TaskPlay()
 {
-    if(unimap.is_loaded == false || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
+    if(unimap.is_loaded != MAP_LOADED || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
     {
         printf("check again\n");
         return;
@@ -3432,7 +3433,7 @@ void MainWindow::bt_TaskCancel()
 // for fms
 void MainWindow::bt_SendMap()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[SEND_MAP] check map load\n");
         return;
@@ -3468,7 +3469,7 @@ void MainWindow::bt_SendMap()
 
 void MainWindow::slot_sim_random_init(QString seed)
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         logger.write_log("[SIM] map load first", "Red", true, false);
         return;
@@ -3511,7 +3512,7 @@ void MainWindow::slot_sim_random_init(QString seed)
 
 void MainWindow::slot_sim_random_seq()
 {
-    if(unimap.is_loaded == false || slam.is_loc == false || task.is_tasking)
+    if(unimap.is_loaded != MAP_LOADED || slam.is_loc == false || task.is_tasking)
     {
         printf("check again\n");
         return;
@@ -4332,7 +4333,7 @@ void MainWindow::jog_loop()
 // for plot loop
 void MainWindow::map_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -4404,7 +4405,7 @@ void MainWindow::map_plot()
 }
 void MainWindow::topo_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -4922,7 +4923,7 @@ void MainWindow::loc_plot()
 }
 void MainWindow::obs_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5569,7 +5570,7 @@ void MainWindow::plot_loop()
 // for plot loop2
 void MainWindow::map_plot2()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5644,7 +5645,7 @@ void MainWindow::map_plot2()
 }
 void MainWindow::topo_plot2()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5887,7 +5888,7 @@ void MainWindow::pick_plot2()
         is_pick_update2 = false;
 
         // plot node picking text
-        if(unimap.is_loaded)
+        if(unimap.is_loaded == MAP_LOADED)
         {
             if(pick.pre_node != "")
             {

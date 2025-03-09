@@ -454,7 +454,7 @@ void COMM_RRS::send_status()
 
     QJsonObject mapObj;
     QString map_name = "";
-    if(unimap->is_loaded)
+    if(unimap->is_loaded == MAP_LOADED)
     {
         QString map_dir = unimap->map_dir;
         QStringList map_dir_list = map_dir.split("/");
@@ -463,7 +463,43 @@ void COMM_RRS::send_status()
             map_name = unimap->map_dir.split("/").last();
         }
     }
+
+    QString map_status = "";
+    if(config->USE_LVX == 1)
+    {
+        int is_loaded = (int)lvx->is_loaded;
+        if(is_loaded == MAP_NOT_LOADED)
+        {
+            map_status = "none";
+        }
+        else if(is_loaded == MAP_LOADING)
+        {
+            map_status = "loading";
+        }
+        else if(is_loaded == MAP_LOADED)
+        {
+            map_status = "loaded";
+        }
+    }
+    else
+    {
+        int is_loaded = (int)unimap->is_loaded;
+        if(is_loaded == MAP_NOT_LOADED)
+        {
+            map_status = "none";
+        }
+        else if(is_loaded == MAP_LOADING)
+        {
+            map_status = "loading";
+        }
+        else if(is_loaded == MAP_LOADED)
+        {
+            map_status = "loaded";
+        }
+    }
+
     mapObj["map_name"] = map_name;
+    mapObj["map_status"] = map_status;
     rootObj["map"] = mapObj;
 
     // Adding the time object
@@ -552,7 +588,7 @@ void COMM_RRS::send_move_status()
     // Adding the cur_node object
     QString cur_node_id = ctrl->get_cur_node_id();
     QString cur_node_name = "";
-    if(unimap->is_loaded && cur_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && cur_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(cur_node_id);
         if(node != NULL)
@@ -575,7 +611,7 @@ void COMM_RRS::send_move_status()
     QString goal_node_id = ctrl->move_info.goal_node_id;
     QString goal_node_name = "";
     Eigen::Vector3d goal_xi(0,0,0);
-    if(unimap->is_loaded && goal_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(goal_node_id);
         if(node != NULL)
@@ -799,7 +835,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         if(method == "pp")
         {
             // action
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
@@ -849,12 +885,13 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 return;
             }
 
-            // pure pursuit
-            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 
             send_move_response(msg);
+
+            // pure pursuit
+            Q_EMIT ctrl->signal_move(msg);
         }
         else
         {
@@ -869,7 +906,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         QString method = msg.method;
         if(method == "pp")
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
@@ -928,12 +965,13 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            // pure pursuit
-            Q_EMIT ctrl->signal_move(msg);
             msg.result = "accept";
             msg.message = "";
 
             send_move_response(msg);
+
+            // pure pursuit
+            Q_EMIT ctrl->signal_move(msg);
         }
         else
         {
@@ -945,31 +983,31 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     }
     else if(command == "pause")
     {
-        ctrl->is_pause = true;
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        ctrl->is_pause = true;
     }
     else if(command == "resume")
     {
-        ctrl->is_pause = false;
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        ctrl->is_pause = false;
     }
     else if(command == "stop")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->bt_Emergency();
-
         msg.result = "accept";
         msg.message = "";
 
         send_move_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Emergency();
     }
 }
 
@@ -980,14 +1018,14 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     {
         if(lidar->is_connected_f)
         {
-            last_send_kfrm_idx = 0;
-            MainWindow* _main = (MainWindow*)main;
-            _main->bt_MapBuild();
-
             msg.result = "accept";
             msg.message = "";
 
             send_mapping_response(msg);
+
+            last_send_kfrm_idx = 0;
+            MainWindow* _main = (MainWindow*)main;
+            _main->bt_MapBuild();
         }
         else
         {
@@ -999,13 +1037,13 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     }
     else if(command == "stop")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->bt_MapSave();
-
         msg.result = "accept";
         msg.message = "";
 
         send_mapping_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_MapSave();
     }
     else if(command == "save")
     {
@@ -1034,12 +1072,12 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
     }
     else if(command == "reload")
     {
-        last_send_kfrm_idx = 0;
-
         msg.result = "accept";
         msg.message = "";
 
         send_mapping_response(msg);
+
+        last_send_kfrm_idx = 0;
     }
 }
 
@@ -1075,7 +1113,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 lvx->map_load(path_3d_map);
             }
 
-            if(unimap->is_loaded)
+            if(unimap->is_loaded == MAP_LOADED)
             {
                 msg.result = "success";
                 msg.message = "";
@@ -1112,13 +1150,13 @@ void COMM_RRS::slot_randomseq(DATA_RANDOMSEQ msg)
     QString command = msg.command;
     if(command == "randomseq")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->slot_sim_random_seq();
-
         msg.result = "accept";
         msg.message = "";
 
         send_randomseq_response(msg);
+
+        MainWindow* _main = (MainWindow*)main;
+        _main->slot_sim_random_seq();
     }
 }
 
@@ -1127,7 +1165,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     QString command = msg.command;
     if(command == "semiautoinit")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -1190,7 +1228,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     }
     else if(command == "init")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -1218,6 +1256,10 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         }
         #endif
 
+        msg.result = "accept";
+        msg.message = "";
+        send_localization_response(msg);
+
         // manual init
         double x = msg.tgt_pose_vec[0];
         double y = msg.tgt_pose_vec[1];
@@ -1241,48 +1283,44 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             lvx->loc_start();
         }
         slam->localization_start();
-
-        msg.result = "accept";
-        msg.message = "";
-        send_localization_response(msg);
     }
     else if(command == "start")
     {
+        msg.result = "accept";
+        msg.message = "";
+
+        send_localization_response(msg);
+
         if(config->USE_LVX)
         {
             lvx->loc_start();
         }
         slam->localization_start();
-
+    }
+    else if(command == "stop")
+    {
         msg.result = "accept";
         msg.message = "";
 
         send_localization_response(msg);
-    }
-    else if(command == "stop")
-    {
+
         if(config->USE_LVX)
         {
             lvx->loc_stop();
         }
         slam->localization_stop();
-
+    }
+    else if(command == "randominit")
+    {
         msg.result = "accept";
         msg.message = "";
 
         send_localization_response(msg);
-    }
-    else if(command == "randominit")
-    {
+
         QString seed = msg.seed;
 
         MainWindow* _main = (MainWindow*)main;
         _main->slot_sim_random_init(seed);
-
-        msg.result = "accept";
-        msg.message = "";
-
-        send_localization_response(msg);
     }
 }
 
@@ -1291,25 +1329,22 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     QString command = msg.command;
     if(command == "dock")
     {
-        MainWindow* _main = (MainWindow*)main;
-        _main->bt_DockingMove();
-//        dctrl->move();
-
         msg.result = "accept";
         msg.message = "";
-
+      
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_DockingMove();
+      
         send_dock_response(msg);
     }
     else if(command == "undock")
     {
-        MainWindow* _main = (MainWindow*)main;
-        //_main->bt_DockingStop();
-        _main->bt_Undock();
-//        dctrl->undock();
-
         msg.result = "accept";
         msg.message = "";
 
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Undock();
+      
         send_dock_response(msg);
     }
 }

@@ -263,7 +263,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     {
         if(is_rrs && config->USE_MULTI)
         {
-            // send req_path
+            qDebug() << "[AUTO] req_path, move";
             set_multi_req("req_path");
             set_cur_goal_state("move");
         }
@@ -272,6 +272,10 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
             move_pp(tf, msg.preset);
         }
+    }
+    else
+    {
+        qDebug() << "[AUTO] just change goal";
     }
 }
 
@@ -1492,6 +1496,13 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
             path_pos.push_back(path_pose[p].block(0,3,3,1));
         }
 
+        // ccma
+        path_pos = path_ccma(path_pos);
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pose[p].block(0,3,3,1) = path_pos[p];
+        }
+
         // calc ref_v
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, LOCAL_PATH_STEP);
@@ -1702,7 +1713,7 @@ void AUTOCONTROL::a_loop()
     logger->write_log("[AUTO] a loop start");
     while(a_flag)
     {
-        if(unimap->is_loaded)
+        if(unimap->is_loaded == MAP_LOADED)
         {
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();            
             QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
@@ -1837,7 +1848,7 @@ void AUTOCONTROL::b_loop_pp()
                 clear_path();
 
                 // move response
-                if(config->USE_RRS)
+                //if(config->USE_RRS)
                 {
                     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -1888,7 +1899,7 @@ void AUTOCONTROL::b_loop_pp()
         loop_cnt++;
         if(loop_cnt % 20 == 0)
         {
-            qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << get_time();
+            qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << QString::number(get_time(), 'f', 3);
         }
 
         // get current status
@@ -1919,7 +1930,7 @@ void AUTOCONTROL::b_loop_pp()
             clear_path();
 
             // move response
-            if(config->USE_RRS)
+            //if(config->USE_RRS)
             {
                 mtx.lock();
                 move_info.cur_pos = cur_pos;
@@ -1949,7 +1960,7 @@ void AUTOCONTROL::b_loop_pp()
             clear_path();
 
             // move response
-            if(config->USE_RRS)
+            //if(config->USE_RRS)
             {
                 mtx.lock();
                 move_info.cur_pos = cur_pos;
@@ -2123,21 +2134,18 @@ void AUTOCONTROL::b_loop_pp()
             // goal check
             int max_idx = global_path.pos.size()-1;
             int goal_idx = get_nn_idx(global_path.pos, cur_pos);
-            if(max_idx - goal_idx <= 1)
+            if(max_idx - goal_idx < 2)
             {
-                Eigen::Matrix4d _goal_tf = cur_tf_inv*goal_tf;
-                double dx = _goal_tf(0,3);
-                double dy = _goal_tf(1,3);
-
-                double v = saturation(3.0*dx, -params.ED_V, params.ED_V);
-                double w = sgn(v)*saturation(3.0*dy, -5.0*D2R, 5.0*D2R);
-                mobile->move(v, 0, w);
-                //logger->write_log(QString("[AUTO] DRIVING -> EXTENDED CONTROL, err:%1, %2").arg(v).arg(w*R2D));
+                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                double v0 = cur_vel[0];
+                double v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
+                v = saturation(v, -params.ED_V, params.ED_V);
+                mobile->move(v, 0, 0);
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
                 {
-                    double goal_err_d = std::sqrt(dx*dx + dy*dy);
+                    double goal_err_d = calc_dist_2d(_goal_pos);
 
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2281,17 +2289,10 @@ void AUTOCONTROL::b_loop_pp()
             set_obs_condition(_obs_condition);
 
             // calc heading error
-            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
-            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
-            double err_d = std::sqrt(dx*dx + dy*dy);
-            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
-            if(goal_idx > (int)global_path.pose.size()-10)
-            {
-                dx = local_path.pos[tgt_idx][0] - cur_pos[0];
-                dy = local_path.pos[tgt_idx][1] - cur_pos[1];
-                err_th = deltaRad(std::atan2(dy,dx), cur_xi[2])*2;
-            }
-
+            Eigen::Matrix4d _tgt_tf = cur_tf_inv*tgt_tf;
+            Eigen::Vector3d _tgt_xi = TF_to_se2(_tgt_tf);
+            double err_d = calc_dist_2d(_tgt_xi);
+            double err_th = _tgt_xi[2];
             if(pre_err_th == 0)
             {
                 pre_err_th = err_th;
@@ -2378,7 +2379,7 @@ void AUTOCONTROL::b_loop_pp()
                     clear_path();
 
                     // response
-                    if(config->USE_RRS)
+                    //if(config->USE_RRS)
                     {
                         mtx.lock();
                         move_info.cur_pos = cur_pos;
@@ -2590,7 +2591,7 @@ void AUTOCONTROL::b_loop_pp()
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {
-                if(get_time() - obs_wait_st_time > 0.1)
+                if(get_time() - obs_wait_st_time > 1.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2606,7 +2607,7 @@ void AUTOCONTROL::b_loop_pp()
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
-                if(get_time() - obs_wait_st_time > 0.1)
+                if(get_time() - obs_wait_st_time > 1.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2661,7 +2662,7 @@ void AUTOCONTROL::b_loop_pp()
                 double v = -0.1*sgn(min_pt[0]);
 
                 // check
-                if(min_d >= config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 1.0)
+                if(min_d >= config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 0.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2716,7 +2717,7 @@ void AUTOCONTROL::b_loop_pp()
     clear_path();
 
     // response
-    if(config->USE_RRS)
+    //if(config->USE_RRS)
     {
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);

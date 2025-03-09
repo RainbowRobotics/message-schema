@@ -71,12 +71,14 @@ void LVX_LOC::map_load(QString file_path)
 
 void LVX_LOC::load_func(QString file_path)
 {
+    is_loaded = MAP_LOADING;
     printf("[LVX] map load, %s\n", file_path.toLocal8Bit().data());
 
     pdal::StageFactory factory;
     pdal::Stage *reader = factory.createStage("readers.las");
     if(reader == NULL)
     {
+        is_loaded = MAP_NOT_LOADED;
         printf("[LVX] map read failed\n");
         return;
     }
@@ -134,7 +136,7 @@ void LVX_LOC::load_func(QString file_path)
     printf("[LVX] tree build success\n");
     mtx.unlock();
 
-    is_loaded = true;
+    is_loaded = MAP_LOADED;
     std::cout << "[LVX] Loaded " << pts.size() << " points from " << file_path.toStdString() << std::endl;
 }
 
@@ -146,7 +148,7 @@ void LVX_LOC::loc_start()
         return;
     }
 
-    if(is_loaded == false)
+    if(is_loaded != MAP_LOADED)
     {
         printf("[LVX] map not loaded\n");
         return;
@@ -441,7 +443,7 @@ void LVX_LOC::a_loop()
         LVX_FRM frm;
         if(frm_que.try_pop(frm))
         {
-            if(is_loaded == false)
+            if(is_loaded != MAP_LOADED)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
@@ -647,7 +649,6 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
             {
                 continue;
             }
-            surfel_cnt[axis_idx]++;
 
             // rmt
             double rmt = 1.0;
@@ -695,6 +696,9 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
 
             cj_set.push_back(cj);
             costs.push_back(cost);
+
+            // update surfel count
+            surfel_cnt[axis_idx]++;
 
             // check num
             if((int)cj_set.size() == num_feature)
@@ -815,8 +819,7 @@ double LVX_LOC::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
     G = _G;
 
     // for debug
-    printf("[LVX] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n",
-           iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    //printf("[LVX] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

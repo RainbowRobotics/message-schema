@@ -113,7 +113,7 @@ void COMM_FMS::send_move_status()
     // get goal_node_id
     QString goal_node_id = ctrl->move_info.goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
-    if(unimap->is_loaded && goal_node_id != "")
+    if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
         NODE* node = unimap->get_node_by_id(goal_node_id);
         if(node != NULL)
@@ -313,7 +313,7 @@ void COMM_FMS::slot_load(DATA_LOAD msg)
                 lvx->map_load(path_3d_map);
             }
 
-            if(unimap->is_loaded)
+            if(unimap->is_loaded == MAP_LOADED)
             {
                 msg.result = "success";
                 msg.message = "";
@@ -375,7 +375,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
     QString command = msg.command;
     if(command == "semiautoinit")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -448,7 +448,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
     }
     else if(command == "init")
     {
-        if(unimap->is_loaded == false)
+        if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
             msg.message = "not loaded map";
@@ -566,7 +566,7 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
         QString method = msg.method;
         if(method == "pp")
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
                 msg.message = "map not loaded";
@@ -772,4 +772,57 @@ void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
 
         obsmap->update_vobs_map();
     }
+}
+
+void COMM_FMS::send_move_response(DATA_MOVE msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["preset"] = QString::number(msg.preset, 10);
+    obj["method"] = msg.method;
+    obj["goal_id"] = msg.goal_node_id;
+
+    // temporal patch
+    QString response_goal_node_name = msg.goal_node_name;
+    if(msg.goal_node_name.contains("AMR-WAITING-01"))
+    {
+        response_goal_node_name = "AMR-WAITING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CHARGING-01"))
+    {
+        response_goal_node_name = "AMR-CHARGING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-PACKING-01"))
+    {
+        response_goal_node_name = "AMR-PACKING-01";
+    }
+    else if(msg.goal_node_name.contains("AMR-CONTAINER-01"))
+    {
+        response_goal_node_name = "AMR-CONTAINER-01";
+    }
+    obj["goal_name"] = response_goal_node_name;
+
+    //obj["goal_name"] = msg.goal_node_name;
+    obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
+    obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
+    obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
+    obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
+    obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
+    obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
+    obj["rz"] = QString::number(msg.tgt_pose_vec[3]*R2D, 'f', 3);
+    obj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
+    obj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
+    obj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    QString buf = doc.toJson(QJsonDocument::Compact);
+    qDebug() << buf;
 }

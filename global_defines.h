@@ -238,6 +238,13 @@ enum MOTOR_ERROR_STATE
     MOTOR_ERR_NON = 128,
 };
 
+enum MAP_LOAD_STATE
+{
+    MAP_NOT_LOADED = 0,
+    MAP_LOADING = 1,
+    MAP_LOADED = 2,
+};
+
 // structure
 struct TIME_IMG
 {

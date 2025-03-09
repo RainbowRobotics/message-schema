@@ -92,6 +92,9 @@ private Q_SLOTS:
     void slot_path(DATA_PATH msg);
     void slot_vobs_r(DATA_VOBS_R msg);
     void slot_vobs_c(DATA_VOBS_C msg);
+
+    /* send command response */
+    void send_move_response(DATA_MOVE msg);
 };
 
 #endif // COMM_FMS_H
