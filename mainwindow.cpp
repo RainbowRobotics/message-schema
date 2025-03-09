@@ -1950,8 +1950,28 @@ void MainWindow::bt_MapLoad()
 
         if(config.USE_LVX)
         {
-            QString path_3d_map = path + "/map.las";
-            lvx.map_load(path_3d_map);
+            // load laz first
+            QString path_3d_map = path + "/map.laz";
+            QFileInfo mapFileInfo(path_3d_map);
+            if(mapFileInfo.exists() && mapFileInfo.isFile())
+            {
+                lvx.map_load(path_3d_map);
+            }
+            else
+            {
+                // load las
+                path_3d_map = path + "/map.las";
+                QFileInfo mapFileInfo2(path_3d_map);
+                if(mapFileInfo2.exists() && mapFileInfo2.isFile())
+                {
+                    lvx.map_load(path_3d_map);
+                }
+                else
+                {
+                    logger.write_log("[LVX] map file extension not invaild. load fail", "Red");
+                }
+            }
+
         }
     }
 }

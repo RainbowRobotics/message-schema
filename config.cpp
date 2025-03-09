@@ -397,3 +397,37 @@ void CONFIG::load()
     }
 }
 
+void CONFIG::set_map_path(QString path)
+{
+    if (config_path.isEmpty())
+    {
+        return;
+    }
+
+    AUTO_LOAD_MAP_PATH = path;
+
+    QMutexLocker locker(&mtx);
+    QFile config_file(config_path);
+
+    if (!config_file.open(QIODevice::ReadWrite))
+    {
+        printf("[config] failed to open config file for reading and writing.\n");
+        return;
+    }
+
+    QByteArray data = config_file.readAll();
+    config_file.seek(0);
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    QJsonObject rootObj = doc.object();
+
+    QJsonObject mapObj = rootObj["map"].toObject();
+    mapObj["AUTO_LOAD_MAP_PATH"] = path;
+    rootObj["map"] = mapObj;
+
+    doc.setObject(rootObj);
+    config_file.resize(0);
+    config_file.write(doc.toJson());
+    config_file.close();
+}
+

@@ -85,7 +85,7 @@ void LVX_LOC::load_func(QString file_path)
 
     pdal::Options options;
     options.add("filename", file_path.toStdString());
-    options.add("extra_dims", "NormalX=double,NormalY=double,NormalZ=double");
+    //options.add("extra_dims", "NormalX=double,NormalY=double,NormalZ=double");
     reader->setOptions(options);
 
     pdal::PointTable point_table;
