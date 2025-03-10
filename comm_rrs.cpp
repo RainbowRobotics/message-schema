@@ -838,7 +838,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "map not loaded";
+                msg.message = "[R0Mx1800]map not loaded";
 
                 send_move_response(msg);
                 return;
@@ -847,7 +847,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(slam->is_loc == false)
             {
                 msg.result = "reject";
-                msg.message = "no localization";
+                msg.message = "[R0Px1800]no localization";
 
                 send_move_response(msg);
                 return;
@@ -858,7 +858,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
             {
                 msg.result = "reject";
-                msg.message = "target location out of range";
+                msg.message = "[R0Tx1800]target location out of range";
 
                 send_move_response(msg);
                 return;
@@ -870,7 +870,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(obsmap->is_tf_collision(goal_tf))
             {
                 msg.result = "reject";
-                msg.message = "target location occupied(static obs)";
+                msg.message = "[R0Tx1801]target location occupied(static obs)";
 
                 send_move_response(msg);
                 return;
@@ -879,7 +879,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(config->USE_MULTI)
             {
                 msg.result = "reject";
-                msg.message = "target command not supported by multi. use goal_id";
+                msg.message = "[R0Tx1802]target command not supported by multi. use goal_id";
 
                 send_move_response(msg);
                 return;
@@ -896,7 +896,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         else
         {
             msg.result = "reject";
-            msg.message = "not supported";
+            msg.message = "[R0Sx1800]not supported";
 
             send_move_response(msg);
         }
@@ -909,7 +909,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "map not loaded";
+                msg.message = "[R0Mx2000]map not loaded";
 
                 send_move_response(msg);
                 return;
@@ -918,7 +918,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(slam->is_loc == false)
             {
                 msg.result = "reject";
-                msg.message = "no localization";
+                msg.message = "[R0Px2000]no localization";
 
                 send_move_response(msg);
                 return;
@@ -928,7 +928,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(goal_id == "")
             {
                 msg.result = "reject";
-                msg.message = "empty node id";
+                msg.message = "[R0Nx2000]empty node id";
 
                 send_move_response(msg);
                 return;
@@ -941,7 +941,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 if(node == NULL)
                 {
                     msg.result = "reject";
-                    msg.message = "can not find node";
+                    msg.message = "[R0Nx2001]can not find node";
 
                     send_move_response(msg);
                     return;
@@ -976,7 +976,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         else
         {
             msg.result = "reject";
-            msg.message = "not supported";
+            msg.message = "[R0Sx2000]not supported";
 
             send_move_response(msg);
         }
@@ -1030,7 +1030,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "reject";
-            msg.message = "lidar not connected";
+            msg.message = "[R0Lx0800]lidar not connected";
 
             send_mapping_response(msg);
         }
@@ -1065,7 +1065,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "fail";
-            msg.message = "copy failed, check auto created folder";
+            msg.message = "[R1Cx2100]copy failed, check auto created folder";
 
             send_mapping_response(msg);
         }
@@ -1093,7 +1093,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             if(!QDir(load_dir).exists())
             {
                 msg.result = "reject";
-                msg.message = "invalid map dir";
+                msg.message = "[R0Mx0201]invalid map dir";
 
                 send_load_response(msg);
                 return;
@@ -1123,7 +1123,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             else
             {
                 msg.result = "fail";
-                msg.message = "map not load";
+                msg.message = "[R0Mx0200]map not load";
 
                 send_load_response(msg);
             }
@@ -1132,14 +1132,14 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     else if(command == "topoload")
     {
         msg.result = "reject";
-        msg.message = "not support yet";
+        msg.message = "[R0Sx0301]not support yet";
 
         send_load_response(msg);
     }
     else if(command == "configload")
     {
         msg.result = "reject";
-        msg.message = "not support yet";
+        msg.message = "[R0Sx0401]not support yet";
 
         send_load_response(msg);
     }
@@ -1168,7 +1168,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "not loaded map";
+            msg.message = "[R0Mx0602]not loaded map";
 
             send_localization_response(msg);
             return;
@@ -1177,7 +1177,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_f == false)
         {
             msg.result = "reject";
-            msg.message = "not connected front lidar";
+            msg.message = "[R0Lx0601]not connected front lidar";
 
             send_localization_response(msg);
             return;
@@ -1187,7 +1187,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
-            msg.message = "not connected back lidar";
+            msg.message = "[R0Lx0602]not connected back lidar";
 
             send_localization_response(msg);
             return;
@@ -1197,7 +1197,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(slam->is_busy)
         {
             msg.result = "reject";
-            msg.message = "already running";
+            msg.message = "[R0Rx0600]already running";
 
             send_localization_response(msg);
             return;
@@ -1231,7 +1231,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "not loaded map";
+            msg.message = "[R0Mx0702]not loaded map";
 
             send_localization_response(msg);
             return;
@@ -1239,7 +1239,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_f == false)
         {
             msg.result = "reject";
-            msg.message = "not connected front lidar";
+            msg.message = "[R0Lx0701]not connected front lidar";
 
             send_localization_response(msg);
             return;
@@ -1249,7 +1249,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
-            msg.message = "not connected back lidar";
+            msg.message = "[R0Lx0702]not connected back lidar";
 
             send_localization_response(msg);
             return;
