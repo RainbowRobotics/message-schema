@@ -16,7 +16,6 @@
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
-#include "docking.h"
 
 // qt
 #include <QObject>
@@ -39,7 +38,7 @@ public:
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
-    DOCKING *dctrl = NULL;
+
 
     // params
     CTRL_PARAM params;

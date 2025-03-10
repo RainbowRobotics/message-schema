@@ -648,6 +648,7 @@ void MOBILE::recv_loop()
                 uint32_t tick;
                 memcpy(&tick, &_buf[index], dlc_f);     index=index+dlc_f;
                 double mobile_t = tick*0.002;
+                double pc_t = get_time();
 
                 uint32_t recv_tick;
                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
@@ -722,11 +723,11 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                int bat_percent = cal_voltage(bat_out);
+                int bat_percent = 0;//cal_voltage(bat_out);
 //                std::cout<<"bat_percent : "<<bat_percent;
 
                 // calc time offset
-                if(is_sync && get_time() > sync_st_time + 0.1)
+                /*if(is_sync && get_time() > sync_st_time + 0.1)
                 {
                     is_sync = false;
 
@@ -736,6 +737,18 @@ void MOBILE::recv_loop()
                     is_synced = true;
                     QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
                     logger->write_log(str);
+                }*/
+
+                if(is_sync && pc_t > sync_st_time + 0.1)
+                {
+                    is_sync = false;
+
+                    double _mobile_t = recv_tick*0.002;
+                    double _offset_t = pc_t - _mobile_t;
+                    offset_t = _offset_t;
+
+                    is_synced = true;
+                    printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
 
                 // received mobile pose update
@@ -775,12 +788,12 @@ void MOBILE::recv_loop()
                 mobile_status.return_time = return_time;
 
                 // imu
-                mobile_status.imu_gyr_x = imu_gyr_x * D2R;
-                mobile_status.imu_gyr_y = imu_gyr_y * D2R;
-                mobile_status.imu_gyr_z = imu_gyr_z * D2R;
-                mobile_status.imu_acc_x = imu_acc_x * ACC_G;
-                mobile_status.imu_acc_y = imu_acc_y * ACC_G;
-                mobile_status.imu_acc_z = imu_acc_z * ACC_G;
+                //mobile_status.imu_gyr_x = imu_gyr_x * D2R;
+                //mobile_status.imu_gyr_y = imu_gyr_y * D2R;
+                //mobile_status.imu_gyr_z = imu_gyr_z * D2R;
+                //mobile_status.imu_acc_x = imu_acc_x * ACC_G;
+                //mobile_status.imu_acc_y = imu_acc_y * ACC_G;
+                //mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
                 // get orientation
                 Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
@@ -798,9 +811,6 @@ void MOBILE::recv_loop()
                 imu.rx = r[0];
                 imu.ry = r[1];
                 imu.rz = r[2];
-
-
-
 
                 // storing
                 mtx.lock();

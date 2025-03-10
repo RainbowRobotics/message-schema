@@ -1751,10 +1751,10 @@ void MainWindow::bt_Sync()
     lidar.sync_f();
     lidar.sync_b();
 
-    if(config.USE_LVX)
-    {
-        lvx.is_sync = true;
-    }
+    //if(config.USE_LVX)
+    //{
+    //    lvx.is_sync = true;
+    //}
 }
 
 void MainWindow::bt_MoveLinear()
@@ -3618,6 +3618,7 @@ void MainWindow::comm_loop()
     std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
     std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
 
+
     const int send_w = 320;
     const int send_h = 200;
 
@@ -3671,11 +3672,11 @@ void MainWindow::comm_loop()
             }
         }
 
-        // for 100ms loop        
+        // for 100ms loop
         if(cnt % 10 == 0)
         {
             if(comm_fms.is_connected)
-            {                
+            {
                 Q_EMIT comm_fms.signal_send_move_status();
             }
             if(comm_rrs.is_connected)

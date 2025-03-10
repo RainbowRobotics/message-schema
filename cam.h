@@ -54,9 +54,16 @@ public:
     CAM_INTRINSIC intrinsic[2];
     Eigen::Matrix4d extrinsic[2];
 
-    const int depth_profile_idx = 25; // depth_profile(25), w:320, h:180, fps:5, format:11
+    //SRV
+    /*
+    const int depth_profile_idx = 0; // depth_profile(25), w:320, h:180, fps:5, format:11
     //const int color_profile_idx = 88; // color_profile(88), w:1920, h:1080, fps:5, format:22
-    const int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
+    const int color_profile_idx = 0; // color_profile(124), w:320, h:180, fps:5, format:22
+    */
+
+    //D400
+    const int depth_profile_idx = 20; // depth_profile(20), w:640, h:400, fps:5, format:21
+    const int color_profile_idx = 43; // color_profile(43), w:640, h:400, fps:5, format:22
 
 private:
 

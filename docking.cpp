@@ -55,6 +55,7 @@ void DOCKING::stop()
 
 void DOCKING::move()
 {
+
     // stop first
     stop();
 
@@ -313,7 +314,6 @@ void DOCKING::a_loop()
 
         if(fsm_state == DOCKING_FSM_POINTDOCK)
         {
-
             double cmd_v =0.0;
             double cmd_w =0.0;
             find_Vmark();
@@ -1133,6 +1133,7 @@ void DOCKING::b_loop()
 
 bool DOCKING::undock()
 {
+
     int is_good_everything = is_everything_fine();
 
     if(is_good_everything == DRIVING_FAILED)
@@ -1159,7 +1160,7 @@ bool DOCKING::undock()
         fsm_state = DOCKING_FSM_UNDOCK;
         b_thread = new std::thread(&DOCKING::b_loop, this);
         mobile->stop_charge();
-        mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN +0.3), 0.05);
+        mobile->move_linear(-1*(config->DOCKING_POINTDOCK_MARGIN), 0.05);
         undock_time = get_time();
         return true;
     }

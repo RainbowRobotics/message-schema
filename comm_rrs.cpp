@@ -1331,19 +1331,21 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     {
         msg.result = "accept";
         msg.message = "";
-
+      
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_DockingMove();
+      
         send_dock_response(msg);
-
-        dctrl->move();
     }
     else if(command == "undock")
     {
         msg.result = "accept";
         msg.message = "";
 
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_Undock();
+      
         send_dock_response(msg);
-
-        dctrl->undock();
     }
 }
 
