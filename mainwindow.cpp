@@ -4019,6 +4019,8 @@ void MainWindow::watch_loop()
                         led_color = LED_MAGENTA;
                     }
                 }
+
+
             }
 
             // check lidar
@@ -4253,6 +4255,42 @@ void MainWindow::watch_loop()
                         cpu_usage_str.sprintf("[CPU]: 0.0");
                     }
                 }
+
+                // check emo
+                {
+                    if(ms.emo_state == 0)
+                    {
+                        led_color = LED_YELLOW;
+                        if(ms.emo_state == 1)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                // check battery
+                {
+                    if(ms.bat_out<43.0) // low battery
+                    {
+                        led_color = LED_OFF;
+                        logger.write_log("[BATTERY] Neeed Charge\n");
+                    }
+                    else if(ms.charge_state == 1) // charge
+                    {
+                        led_color = LED_RED;
+                        if(ms.bat_out>54.0)
+                        {
+                            led_color = LED_BLUE;
+                        }
+                        else if (ms.charge_state == 0 || ms.bat_out>54.0)
+                        {
+                            return;
+                        }
+                    }
+
+                }
+
+
 
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
