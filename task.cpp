@@ -165,7 +165,7 @@ void TASK::a_loop()
         {
             QTextStream out(&file);
             out << "timestamp,actual_x,actual_y,actual_theta,target_id,target_name,target_type,target_info,"
-                               "planned_x,planned_y,planned_theta,error_distance,error_angle\n";
+                               "planned_x,planned_y,planned_theta,error_distance,error_angle,cur_ie,cur_ir\n";
                         file.close();
             printf("[TASK] Make ccuracy log file: %s\n", accuracyLogFileName.toLocal8Bit().data());
         }
@@ -278,9 +278,17 @@ void TASK::a_loop()
                     planned_y = target_node->tf(1,3);
                     planned_theta = TF_to_se2(target_node->tf)[2];
                 }
+
+                // err calc
                 double error_distance = std::sqrt(std::pow(actual_x - planned_x, 2) + std::pow(actual_y - planned_y, 2));
                 double error_angle_deg = std::abs((actual_theta - planned_theta) * R2D);
 
+                // ieir - slam
+                Eigen::Vector2d cur_ieir = slam->get_cur_ieir();
+                double cur_ie = cur_ieir[0];
+                double cur_ir = cur_ieir[1];
+
+                // logging time
                 QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
                 QFile file(accuracyLogFileName);
                 if (file.open(QIODevice::Append | QIODevice::Text))
@@ -291,14 +299,13 @@ void TASK::a_loop()
                         << actual_x << "," << actual_y << "," << actual_theta_deg << ","
                         << target_id << "," << target_name << "," << target_type << "," << target_info << ","
                         << planned_x << "," << planned_y << "," << planned_theta * R2D << ","
-                        << error_distance << "," << error_angle_deg << "\n";
+                        << error_distance << "," << error_angle_deg << ","<< cur_ie << "," << cur_ir << "\n";
+
                     file.close();
-                    printf("[TASK] LOG: %s, actual: (%.2f, %.2f, %.2f), target: (%s, %s, %s), planned: (%.2f, %.2f, %.2f), error: (%.2f, %.2f)\n",
-                           timeStr.toLocal8Bit().data(),
-                           actual_x, actual_y, actual_theta_deg,
-                           target_id.toLocal8Bit().data(), target_name.toLocal8Bit().data(), target_type.toLocal8Bit().data(),
-                           planned_x, planned_y, planned_theta * R2D,
-                           error_distance, error_angle_deg);
+                    printf("[TASK] LOG: %s, actual: (%.2f, %.2f, %.2f), target: (%s, %s, %s), planned: (%.2f, %.2f, %.2f), error: (%.2f, %.2f), cur_ie: %.3f, cur_ir: %.3f\n",
+                                       timeStr.toLocal8Bit().data(),
+                                       actual_x, actual_y, actual_theta_deg,target_id.toLocal8Bit().data(), target_name.toLocal8Bit().data(), target_type.toLocal8Bit().data(),
+                                       planned_x, planned_y, planned_theta * R2D,error_distance, error_angle_deg,cur_ie, cur_ir);
                 }
                 else
                 {
