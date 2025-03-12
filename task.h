@@ -61,6 +61,11 @@ public:
 
     std::atomic<int> last_task_state = {0};
 
+    //accuracy
+    bool accuracy_save_enabled = false;
+    std::vector<Eigen::Matrix4d> recorded_positions;
+    QString accuracyLogFileName;
+
 };
 
 #endif // TASK_H
