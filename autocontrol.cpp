@@ -2318,6 +2318,7 @@ void AUTOCONTROL::b_loop_pp()
             pre_err_th = err_th;
 
             double w0 = cur_vel[2];
+            //double w = std::tan(th)*v / params.DRIVE_L;
             double w = std::tan(th) / params.DRIVE_L;
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
