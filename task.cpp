@@ -152,7 +152,7 @@ void TASK::a_loop()
     if (accuracy_save_enabled)
     {
         printf("[TASK] accuracy_save_enabled\n");
-        QString logFolder = QCoreApplication::applicationDirPath();// + "/home/rainbow/slamnav2/snlog";
+        QString logFolder = QCoreApplication::applicationDirPath()+snlog;// + "/home/rainbow/slamnav2/snlog";
         QDir dir(logFolder);
         if (!dir.exists())
         {
