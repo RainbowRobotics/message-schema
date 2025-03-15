@@ -1099,19 +1099,12 @@ void MOBILE::recv_loop()
                 {
                     is_sync = false;
 
-                    double _offset_t = return_time - recv_tick*0.002;
-                    double pre_offset_t = offset_t;
+                    double _mobile_t = recv_tick*0.002;
+                    double _offset_t = pc_t - _mobile_t;
                     offset_t = _offset_t;
-
-                    mtx.lock();
-                    for(size_t p = 0; p < pose_storage.size(); p++)
-                    {
-                        pose_storage[p].t = (pose_storage[p].t - pre_offset_t) + offset_t;
-                    }
-                    mtx.unlock();
-
                     is_synced = true;
-                    printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
+                    QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
+                    logger->write_log(str);
                 }
 
                 // received mobile pose update
@@ -1779,7 +1772,7 @@ void MOBILE::move(double vx, double vy, double wz)
     }
 }
 
-void MOBILE::move_linear(double d, double v)
+void MOBILE::move_linear_x(double d, double v)
 {
     // set last v,w
     vx0 = v;
@@ -1800,7 +1793,40 @@ void MOBILE::move_linear(double d, double v)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    send_byte[7] = 117; // cmd move linear
+    send_byte[7] = 117; // cmd move linear x
+
+    memcpy(&send_byte[8], &_d, 4); // param1 dist
+    memcpy(&send_byte[12], &_v, 4); // param2 linear vel
+    send_byte[24] = 0x25;
+
+    if(is_connected && config->USE_SIM == 0)
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::move_linear_y(double d, double v)
+{
+    // set last v,w
+    vx0 = 0;
+    vy0 = 0;
+    wz0 = 0;
+
+    // packet
+    float _d = d;
+    float _v = v;
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00;
+    send_byte[7] = 118; // cmd move linear y
 
     memcpy(&send_byte[8], &_d, 4); // param1 dist
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
@@ -1826,6 +1852,7 @@ void MOBILE::stop_charge()
     send_byte[6] = 0x00;
     send_byte[7] = 130; // cmd stop charge
     send_byte[24] = 0x25;
+
     if(is_connected && config->USE_SIM == 0)
     {
         msg_que.push(send_byte);
@@ -1853,7 +1880,7 @@ void MOBILE::move_rotate(double th, double w)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    send_byte[7] = 118; // cmd move rotate
+    send_byte[7] = 119; // cmd move rotate
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
@@ -1861,6 +1888,33 @@ void MOBILE::move_rotate(double th, double w)
 
     if(is_connected && config->USE_SIM == 0)
     {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::stop()
+{
+    // set last v,w
+    vx0 = 0;
+    vy0 = 0;
+    wz0 = 0;
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00;
+    send_byte[7] = 20; // cmd stop
+    send_byte[24] = 0x25;
+
+    if(is_connected && config->USE_SIM == 0)
+    {
+        msg_que.clear();
         msg_que.push(send_byte);
     }
 }

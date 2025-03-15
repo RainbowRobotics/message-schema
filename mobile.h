@@ -52,8 +52,10 @@ public:
     void motor_on();
     void motor_off();
     void move(double vx, double vy, double wz);
-    void move_linear(double d, double v);
+    void move_linear_x(double d, double v);
+    void move_linear_y(double d, double v);
     void move_rotate(double th, double w);
+    void stop();
     void led(int target, int mode);
     void time_sync();
     void stop_charge();

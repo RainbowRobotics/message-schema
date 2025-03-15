@@ -98,6 +98,7 @@ public:
     double DOCK_GOAL_D = 0.05;
     double DOCK_GOAL_TH = 2.0;
     double DOCK_EXTENDED_CONTROL_TIME = 10.0;
+    double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
 
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
     double OBS_DEADZONE = 0.6;

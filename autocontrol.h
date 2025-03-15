@@ -61,13 +61,8 @@ public:
     void clean_up();
 
     /* hpp */
-    #ifdef USE_MECANUM_OLD
-    void move_hpp(Eigen::Matrix4d goal_tf, int perent);
-    #endif
-    #ifdef USE_MECANUM
-    void move_hpp(Eigen::Matrix4d goal_tf, int preset);
-    #endif
-    void move_hpp(std::vector<QString> node_path, int preset);
+    void move_hpp(Eigen::Matrix4d goal_tf, int val);
+    void move_hpp(std::vector<QString> node_path, int val);
 
     // global path planning (using topo)
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
@@ -76,8 +71,6 @@ public:
     Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
     PATH calc_global_path(Eigen::Matrix4d goal);
     PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
-    PATH calc_global_path_hpp(Eigen::Matrix4d goal);
-    PATH calc_global_path_hpp(std::vector<QString> node_path, bool add_cur_tf);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
     std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);    
@@ -92,8 +85,6 @@ public:
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
     PATH calc_local_path(PATH& global_path);
     PATH calc_avoid_path(PATH& global_path);
-    PATH calc_local_path_hpp(PATH& global_path);
-    PATH calc_avoid_path_hpp(PATH& global_path);
 
     // for control
     int is_everything_fine();
@@ -123,7 +114,7 @@ public:
     std::atomic<bool> is_change = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};    
-    std::atomic<bool> is_station = {false};
+    std::atomic<bool> is_undock = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
     QString obs_condition = "none";
 

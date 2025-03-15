@@ -180,7 +180,7 @@ void DOCKCONTROL::a_loop()
         else if(fsm_state == DOCK_FSM_DRIVING_FOR_CHRGE)
         {
             double t = station_linear_move_d / (station_linear_move_v + 1e-6);
-            mobile->move_linear(station_linear_move_d, station_linear_move_v);
+            mobile->move_linear_x(station_linear_move_d, station_linear_move_v);
 
             fsm_state = DOCK_FSM_WAIT_FOR_CHRGE;
             int wait_t = int((t+1.5)*1000);
@@ -356,7 +356,7 @@ DCTRL_PARAM DOCKCONTROL::load_preset(int preset)
     #endif
 
     #ifdef USE_MECANUM_OLD
-    preset_path = QCoreApplication::applicationDirPath() + "/preset/" + "preset_" + QString::number(preset) + ".json";
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
     #ifdef USE_MECANUM

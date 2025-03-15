@@ -264,13 +264,16 @@ void CONFIG::load()
             QJsonObject obj_dock = obj["docking"].toObject();
             {
                 DOCK_GOAL_D = obj_dock["DOCK_GOAL_D"].toString().toDouble();
-                printf("[CONFIG] DOCK_GOAL_D, %s\n", obj_control["DOCK_GOAL_D"].toString().toLocal8Bit().data());
+                printf("[CONFIG] DOCK_GOAL_D, %s\n", obj_dock["DOCK_GOAL_D"].toString().toLocal8Bit().data());
 
                 DOCK_GOAL_TH = obj_dock["DOCK_GOAL_TH"].toString().toDouble();
-                printf("[CONFIG] DOCK_GOAL_TH, %s\n", obj_control["DOCK_GOAL_TH"].toString().toLocal8Bit().data());
+                printf("[CONFIG] DOCK_GOAL_TH, %s\n", obj_dock["DOCK_GOAL_TH"].toString().toLocal8Bit().data());
 
                 DOCK_EXTENDED_CONTROL_TIME = obj_dock["DOCK_EXTENDED_CONTROL_TIME"].toString().toDouble();
-                printf("[CONFIG] DOCK_EXTENDED_CONTROL_TIME, %s\n", obj_control["DOCK_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
+                printf("[CONFIG] DOCK_EXTENDED_CONTROL_TIME, %s\n", obj_dock["DOCK_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
+
+                DOCK_UNDOCK_REVERSING_DISTANCE = obj_dock["DOCK_UNDOCK_REVERSING_DISTANCE"].toString().toDouble();
+                printf("[CONFIG] DOCK_UNDOCK_REVERSING_DISTANCE, %s\n", obj_dock["DOCK_UNDOCK_REVERSING_DISTANCE"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_obs = obj["obs"].toObject();

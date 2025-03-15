@@ -124,9 +124,8 @@ void COMM_OLD::cmd_connected()
 
 void COMM_OLD::data_connected()
 {
-
     QTcpSocket *_data_client = data_server.nextPendingConnection();
-    if(_data_client)
+    if(!_data_client)
     {
         logger->write_log("[KAI] data socket connection failed", "Red");
         return;
@@ -569,6 +568,62 @@ void COMM_OLD::processing_command(QString data_str)
         else
         {
             log_fail(FAIL_LOC_INVALID_PARAMS_SIZE, "[KAI][LOC] wrong params_list size:" + QString::number(params_list.size()));
+            return;
+        }
+    }
+    else if(cmd == "dead_reckoning")
+    {
+        Q_EMIT signal_cmd_recv("CMD_RECV\n");
+
+        // method(x,y,deg,stop), dist(m,deg), velocity(m/s,deg/s)
+        QStringList params = params_list.split(",");
+        if(params.size() == 3)
+        {
+            QString method = params[0];
+            if(method == "x")
+            {
+                double d = params[1].toDouble();
+                double v = params[2].toDouble();
+
+                if(!isfinite(d) || !isfinite(v))
+                {
+                    return;
+                }
+
+                mobile->move_linear_x(d, v);
+            }
+            else if(method == "y")
+            {
+                double d = params[1].toDouble();
+                double v = params[2].toDouble();
+
+                if(!isfinite(d) || !isfinite(v))
+                {
+                    return;
+                }
+
+                mobile->move_linear_y(d, v);
+            }
+            else if(method == "deg")
+            {
+                double th = params[1].toDouble()*D2R;
+                double w = params[2].toDouble()*D2R;
+
+                if(!isfinite(th) || !isfinite(w))
+                {
+                    return;
+                }
+
+                mobile->move_rotate(th, w);
+            }
+            else if(method == "stop")
+            {
+                mobile->stop();
+            }
+        }
+        else
+        {
+            log_fail(FAIL_RECKONING_INVALID_PARAMS_SIZE, "[KAI] cmd:dead_reckoning. wrong params_list size:" + QString::number(params_list.size()));
             return;
         }
     }

@@ -26,6 +26,7 @@
 #include "comm_fms.h"
 #include "comm_rrs.h"
 #include "comm_coop.h"
+#include "comm_old.h"
 
 // qt
 #include <QMainWindow>
@@ -70,6 +71,7 @@ public:
     COMM_FMS comm_fms;
     COMM_RRS comm_rrs;
     COMM_COOP comm_coop;
+    COMM_OLD comm_old;
 
     // system logger
     LOGGER system_logger;
@@ -265,7 +267,9 @@ public Q_SLOTS:
     void bt_Emergency();
 
     void bt_Sync();
-    void bt_MoveLinear();
+    void bt_MoveStop();
+    void bt_MoveLinearX();
+    void bt_MoveLinearY();
     void bt_MoveRotate();
 
     void bt_JogF();

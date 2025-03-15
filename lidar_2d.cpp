@@ -506,14 +506,10 @@ void LIDAR_2D::grab_loop_f()
             std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
             int num_scan_point = sp.size();
             double scan_time = data.getDerivedValuesPtr()->getScanTime()*M2S;
-            //double time_increment = data.getDerivedValuesPtr()->getInterbeamPeriod()*U2S;
             double time_increment = scan_time/num_scan_point;
 
             double t0 = lidar_t + offset_t_f;
             double t1 = t0 + scan_time;
-
-            //double t1 = lidar_t + offset_t_f;
-            //double t0 = t1 - scan_time;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)

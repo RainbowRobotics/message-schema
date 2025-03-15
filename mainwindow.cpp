@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     , comm_fms(this)
     , comm_rrs(this)
     , comm_coop(this)
+    , comm_old(this)
     , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
@@ -75,7 +76,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // test
     connect(ui->bt_Sync, SIGNAL(clicked()), this, SLOT(bt_Sync()));
-    connect(ui->bt_MoveLinear, SIGNAL(clicked()), this, SLOT(bt_MoveLinear()));
+    connect(ui->bt_MoveLinearX, SIGNAL(clicked()), this, SLOT(bt_MoveLinearX()));
+    connect(ui->bt_MoveLinearY, SIGNAL(clicked()), this, SLOT(bt_MoveLinearY()));
     connect(ui->bt_MoveRotate, SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
@@ -516,6 +518,7 @@ void MainWindow::init_modules()
 
     #ifdef USE_MECANUM_OLD
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config_sn.json";
     QString code_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config_code.json";
     QString ext_path = QDir::homePath() + "/Desktop/KAI_CONFIG.json";
     #endif
@@ -635,6 +638,7 @@ void MainWindow::init_modules()
     dctrl.mobile = &mobile;
     dctrl.lidar = &lidar;
     dctrl.slam = &slam;
+    dctrl.bqr = &bqr;
     dctrl.unimap = &unimap;
     dctrl.obsmap = &obsmap;
     dctrl.init();
@@ -712,6 +716,21 @@ void MainWindow::init_modules()
     if(config.USE_RRS)
     {
         comm_rrs.init();
+    }
+
+    // (MECANUM_OLD) tcp/ip server init
+    comm_old.config = &config;
+    comm_old.logger = &logger;
+    comm_old.mobile = &mobile;
+    comm_old.lidar = &lidar;
+    comm_old.bqr = &bqr;
+    comm_old.slam = &slam;
+    comm_old.unimap = &unimap;
+    comm_old.obsmap = &obsmap;
+    comm_old.ctrl = &ctrl;
+    comm_old.dctrl = &dctrl;
+    {
+        comm_old.open();
     }
 
     // start jog loop
@@ -1766,7 +1785,7 @@ void MainWindow::bt_Sync()
     }
 }
 
-void MainWindow::bt_MoveLinear()
+void MainWindow::bt_MoveLinearX()
 {
     ctrl.is_moving = true;
     QTimer::singleShot(1000, [&]()
@@ -1775,7 +1794,25 @@ void MainWindow::bt_MoveLinear()
         double v = ui->dsb_MoveLinearV->value();
         double t = std::abs(d/v) + 0.5;
 
-        mobile.move_linear(d, v);
+        mobile.move_linear_x(d, v);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
+}
+
+void MainWindow::bt_MoveLinearY()
+{
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double d = ui->dsb_MoveLinearDist->value();
+        double v = ui->dsb_MoveLinearV->value();
+        double t = std::abs(d/v) + 0.5;
+
+        mobile.move_linear_y(d, v);
 
         QTimer::singleShot(t*1000, [&]()
         {
@@ -1800,6 +1837,12 @@ void MainWindow::bt_MoveRotate()
             ctrl.is_moving = false;
         });
     });
+}
+
+void MainWindow::bt_MoveStop()
+{
+    ctrl.is_moving = false;
+    mobile.stop();
 }
 
 void MainWindow::bt_JogF()
@@ -3201,7 +3244,52 @@ void MainWindow::bt_AutoMove()
 
 void MainWindow::bt_AutoMove2()
 {
+    if(unimap.is_loaded == false)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
 
+    if(pick.cur_node != "")
+    {
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node != NULL)
+        {
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "hpp";
+            #if defined(USE_MECANUM_OLD)
+            msg.preset = 100;
+            #endif
+            #if defined (USE_MECANUM)
+            msg.preset = 0;
+            #endif
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+            ctrl.move(msg);
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+        ctrl.move(msg);
+
+        return;
+    }
 }
 
 void MainWindow::bt_AutoMove3()

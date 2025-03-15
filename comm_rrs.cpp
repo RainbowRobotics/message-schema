@@ -134,7 +134,7 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         msg.tgt_pose_vec[3] = get_json(data, "rz").toDouble()*D2R;
         msg.jog_val[0] = get_json(data, "vx").toDouble();
         msg.jog_val[1] = get_json(data, "vy").toDouble();
-        msg.jog_val[2] = get_json(data, "wz").toDouble();
+        msg.jog_val[2] = get_json(data, "wz").toDouble()*D2R;
         msg.time = get_json(data, "time").toDouble()/1000;
 
         logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
