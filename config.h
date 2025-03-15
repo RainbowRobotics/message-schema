@@ -4,6 +4,8 @@
 #include "global_defines.h"
 
 #include <QObject>
+#include <QMutex>
+#include <QMutexLocker>
 
 class CONFIG : public QObject
 {
@@ -12,6 +14,8 @@ public:
     explicit CONFIG(QObject *parent = nullptr);
 
 public:
+    QMutex mtx;
+
     // unit : meter, degree, second
     // params (initial value ref from AMR200)
     QString PLATFORM_NAME = "TT";
@@ -96,7 +100,8 @@ public:
     double DRIVE_W_DEADZONE = 0.1;
 
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
-    double OBS_DEADZONE = 0.6;
+    double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
+    double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
     double OBS_LOCAL_GOAL_D = 4.0;
     double OBS_SAFE_MARGIN_X = 0.1;
     double OBS_SAFE_MARGIN_Y = 0.1;
@@ -152,6 +157,9 @@ public:
     double LVX_COST_THRESHOLD = 1.0;
     double LVX_INLIER_CHECK_DIST = 0.3;
 
+    // map
+    QString AUTO_LOAD_MAP_PATH = "";
+
     std::vector<QString> params;
 
 public:
@@ -160,6 +168,8 @@ public:
     QString config_path = "";
     QString config_sn_path = "";
     std::atomic<bool> is_load = {false};    
+
+    void set_map_path(QString path);
 
 Q_SIGNALS:
 

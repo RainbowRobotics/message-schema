@@ -838,7 +838,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "map not loaded";
+                msg.message = "[R0Mx1800]map not loaded";
 
                 send_move_response(msg);
                 return;
@@ -847,7 +847,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(slam->is_loc == false)
             {
                 msg.result = "reject";
-                msg.message = "no localization";
+                msg.message = "[R0Px1800]no localization";
 
                 send_move_response(msg);
                 return;
@@ -858,7 +858,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
             {
                 msg.result = "reject";
-                msg.message = "target location out of range";
+                msg.message = "[R0Tx1800]target location out of range";
 
                 send_move_response(msg);
                 return;
@@ -870,7 +870,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(obsmap->is_tf_collision(goal_tf))
             {
                 msg.result = "reject";
-                msg.message = "target location occupied(static obs)";
+                msg.message = "[R0Tx1801]target location occupied(static obs)";
 
                 send_move_response(msg);
                 return;
@@ -879,7 +879,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(config->USE_MULTI)
             {
                 msg.result = "reject";
-                msg.message = "target command not supported by multi. use goal_id";
+                msg.message = "[R0Tx1802]target command not supported by multi. use goal_id";
 
                 send_move_response(msg);
                 return;
@@ -896,7 +896,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         else
         {
             msg.result = "reject";
-            msg.message = "not supported";
+            msg.message = "[R0Sx1800]not supported";
 
             send_move_response(msg);
         }
@@ -909,7 +909,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "map not loaded";
+                msg.message = "[R0Mx2000]map not loaded";
 
                 send_move_response(msg);
                 return;
@@ -918,7 +918,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(slam->is_loc == false)
             {
                 msg.result = "reject";
-                msg.message = "no localization";
+                msg.message = "[R0Px2000]no localization";
 
                 send_move_response(msg);
                 return;
@@ -928,7 +928,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(goal_id == "")
             {
                 msg.result = "reject";
-                msg.message = "empty node id";
+                msg.message = "[R0Nx2000]empty node id";
 
                 send_move_response(msg);
                 return;
@@ -941,7 +941,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 if(node == NULL)
                 {
                     msg.result = "reject";
-                    msg.message = "can not find node";
+                    msg.message = "[R0Nx2001]can not find node";
 
                     send_move_response(msg);
                     return;
@@ -957,7 +957,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             }
 
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-            msg.cur_pos = cur_tf.block(0,3,3,1);
+            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+            msg.cur_pos = cur_pos;
 
             Eigen::Vector3d xi = TF_to_se2(node->tf);
             msg.tgt_pose_vec[0] = xi[0];
@@ -965,18 +966,86 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            msg.result = "accept";
-            msg.message = "";
+            // calc eta (estimate time of arrival)
+            QString cur_node_id = unimap->get_node_id_nn(cur_pos);
+            QString goal_node_id = msg.goal_node_id;
+            std::vector<QString> topo_path = ctrl->topo_path_finding(cur_node_id, goal_node_id);
+            if(topo_path.size() == 0)
+            {
+                msg.result = "reject";
+                msg.message = "no topo path";
+                msg.eta = 9999.0;
+            }
+            else if(topo_path.size() == 1)
+            {
+                NODE* node0 = unimap->get_node_by_id(topo_path.back());
+                if(node0 == NULL)
+                {
+                    msg.result = "reject";
+                    msg.message = "no topo path";
+                    msg.eta = 9999.0;
+                }
+                else
+                {
+                    msg.result = "accept";
+                    msg.message = "";
+                    msg.eta = (cur_pos - node0->tf.block(0,3,3,1)).norm();
+                }
+            }
+            else
+            {
+                bool is_calc_success = true;
+                double eta = 0.0;
+                for(size_t p = 0; p < topo_path.size()-1; p++)
+                {
+                    QString node_id0 = topo_path[p];
+                    QString node_id1 = topo_path[p+1];
+
+                    NODE* node0 = unimap->get_node_by_id(node_id0);
+                    NODE* node1 = unimap->get_node_by_id(node_id1);
+                    if(node0 == NULL || node1 == NULL)
+                    {
+                        is_calc_success = false;
+                        msg.result = "reject";
+                        msg.message = "no topo path";
+                        msg.eta = 9999.0;
+                        break;
+                    }
+
+                    eta += (node0->tf.block(0,3,3,1) - node1->tf.block(0,3,3,1)).norm();
+                }
+
+                if(is_calc_success)
+                {
+                    msg.result = "accept";
+                    msg.message = "";
+                    msg.eta = eta;
+                }
+            }
 
             send_move_response(msg);
 
             // pure pursuit
             Q_EMIT ctrl->signal_move(msg);
         }
+        else if(method == "hpp")
+        {
+            msg.result = "reject";
+            msg.message = "not supported yet";
+
+            send_move_response(msg);
+        }
+        else if(method == "tng")
+        {
+            msg.result = "reject";
+            msg.message = "not supported yet";
+
+            send_move_response(msg);
+        }
         else
         {
             msg.result = "reject";
-            msg.message = "not supported";
+            msg.message = "[R0Sx2000]not supported";
 
             send_move_response(msg);
         }
@@ -1030,7 +1099,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "reject";
-            msg.message = "lidar not connected";
+            msg.message = "[R0Lx0800]lidar not connected";
 
             send_mapping_response(msg);
         }
@@ -1065,7 +1134,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "fail";
-            msg.message = "copy failed, check auto created folder";
+            msg.message = "[R1Cx2100]copy failed, check auto created folder";
 
             send_mapping_response(msg);
         }
@@ -1093,7 +1162,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             if(!QDir(load_dir).exists())
             {
                 msg.result = "reject";
-                msg.message = "invalid map dir";
+                msg.message = "[R0Mx0201]invalid map dir";
 
                 send_load_response(msg);
                 return;
@@ -1123,7 +1192,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             else
             {
                 msg.result = "fail";
-                msg.message = "map not load";
+                msg.message = "[R0Mx0200]map not load";
 
                 send_load_response(msg);
             }
@@ -1132,14 +1201,14 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     else if(command == "topoload")
     {
         msg.result = "reject";
-        msg.message = "not support yet";
+        msg.message = "[R0Sx0301]not support yet";
 
         send_load_response(msg);
     }
     else if(command == "configload")
     {
         msg.result = "reject";
-        msg.message = "not support yet";
+        msg.message = "[R0Sx0401]not support yet";
 
         send_load_response(msg);
     }
@@ -1168,7 +1237,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "not loaded map";
+            msg.message = "[R0Mx0602]not loaded map";
 
             send_localization_response(msg);
             return;
@@ -1177,7 +1246,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_f == false)
         {
             msg.result = "reject";
-            msg.message = "not connected front lidar";
+            msg.message = "[R0Lx0601]not connected front lidar";
 
             send_localization_response(msg);
             return;
@@ -1187,7 +1256,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
-            msg.message = "not connected back lidar";
+            msg.message = "[R0Lx0602]not connected back lidar";
 
             send_localization_response(msg);
             return;
@@ -1197,7 +1266,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(slam->is_busy)
         {
             msg.result = "reject";
-            msg.message = "already running";
+            msg.message = "[R0Rx0600]already running";
 
             send_localization_response(msg);
             return;
@@ -1231,7 +1300,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(unimap->is_loaded != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "not loaded map";
+            msg.message = "[R0Mx0702]not loaded map";
 
             send_localization_response(msg);
             return;
@@ -1239,7 +1308,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_f == false)
         {
             msg.result = "reject";
-            msg.message = "not connected front lidar";
+            msg.message = "[R0Lx0701]not connected front lidar";
 
             send_localization_response(msg);
             return;
@@ -1249,7 +1318,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
-            msg.message = "not connected back lidar";
+            msg.message = "[R0Lx0702]not connected back lidar";
 
             send_localization_response(msg);
             return;
@@ -1357,13 +1426,13 @@ void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR msg)
         if(msg.frequency > 0)
         {
             MainWindow* _main = (MainWindow*)main;
-            _main->lidar_view_hz = msg.frequency;
+            _main->lidar_view_frequency = msg.frequency;
         }
     }
     else if(command == "off")
     {
         MainWindow* _main = (MainWindow*)main;
-        _main->lidar_view_hz = -1;
+        _main->lidar_view_frequency = -1;
     }
 }
 
@@ -1375,13 +1444,13 @@ void COMM_RRS::slot_view_path(DATA_VIEW_PATH msg)
         if(msg.frequency > 0)
         {
             MainWindow* _main = (MainWindow*)main;
-            _main->path_view_hz = msg.frequency;
+            _main->path_view_frequency = msg.frequency;
         }
     }
     else if(command == "off")
     {
         MainWindow* _main = (MainWindow*)main;
-        _main->path_view_hz = -1;
+        _main->path_view_frequency = -1;
     }
 }
 
@@ -1390,14 +1459,70 @@ void COMM_RRS::slot_led(DATA_LED msg)
     QString command = msg.command;
     if(command == "on")
     {
-        // do something
+        MainWindow* _main = (MainWindow*)main;
+        _main->is_user_led = true;
+
+        QString led = msg.led;
+        if(led == "none")
+        {
+            _main->user_led_color = LED_OFF;
+        }
+        else if(led == "red")
+        {
+            _main->user_led_color = LED_RED;
+        }
+        else if(led == "blue")
+        {
+            _main->user_led_color = LED_BLUE;
+        }
+        else if(led == "white")
+        {
+            _main->user_led_color = LED_WHITE;
+        }
+        else if(led == "green")
+        {
+            _main->user_led_color = LED_GREEN;
+        }
+        else if(led == "magenta")
+        {
+            _main->user_led_color = LED_MAGENTA;
+        }
+        else if(led == "yellow")
+        {
+            _main->user_led_color = LED_YELLOW;
+        }
+        else if(led == "red blink")
+        {
+            _main->user_led_color = LED_RED_BLINK;
+        }
+        else if(led == "blue blink")
+        {
+            _main->user_led_color = LED_BLUE_BLINK;
+        }
+        else if(led == "white blink")
+        {
+            _main->user_led_color = LED_WHITE_BLINK;
+        }
+        else if(led == "green blink")
+        {
+            _main->user_led_color = LED_GREEN_BLINK;
+        }
+        else if(led == "magenta blink")
+        {
+            _main->user_led_color = LED_MAGENTA_BLINK;
+        }
+        else if(led == "yellow blink")
+        {
+            _main->user_led_color = LED_YELLOW_BLINK;
+        }
 
         msg.result = "accept";
         msg.message = "";
     }
     else if(command == "off")
     {
-        // do something
+        MainWindow* _main = (MainWindow*)main;
+        _main->is_user_led = false;
 
         msg.result = "accept";
         msg.message = "";
@@ -1522,7 +1647,7 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["preset"] = QString::number(msg.preset, 10);
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
-
+    obj["eta"] = QString::number(msg.eta, 'f', 3);
 
     // temporal patch
     QString response_goal_node_name = msg.goal_node_name;

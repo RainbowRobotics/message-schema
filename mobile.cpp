@@ -571,6 +571,7 @@ void MOBILE::recv_loop()
         ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
     }
 
+
     // set non-blocking
     int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
@@ -595,6 +596,26 @@ void MOBILE::recv_loop()
     if (status <= 0) // timeout or error
     {
         logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
+        close(fd);
+        return;
+    }
+
+    // socket error check after select()
+    int so_error = 0;
+    socklen_t len = sizeof(so_error);
+    if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) <0)
+    {
+        QString errStr;
+        errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
+        logger->write_log(errStr, "Red", true, false);
+        close(fd);
+        return;
+    }
+    if(so_error!=0)
+    {
+        QString errStr;
+        errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
+        logger->write_log(errStr, "Red", true, false);
         close(fd);
         return;
     }
@@ -638,6 +659,13 @@ void MOBILE::recv_loop()
         // parsing
         while((int)buf.size() >= packet_size && recv_flag)
         {
+            // drop broken packet
+            if(buf.size() % packet_size != 0)
+            {
+                buf.clear();
+                continue;
+            }
+
             uchar *_buf = (uchar*)buf.data();
             if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
             {
@@ -723,8 +751,7 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                int bat_percent = 0;//cal_voltage(bat_out);
-//                std::cout<<"bat_percent : "<<bat_percent;
+
 
                 // calc time offset
                 /*if(is_sync && get_time() > sync_st_time + 0.1)
@@ -750,6 +777,7 @@ void MOBILE::recv_loop()
                     is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
+                int bat_percent = cal_voltage(bat_out);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -788,12 +816,12 @@ void MOBILE::recv_loop()
                 mobile_status.return_time = return_time;
 
                 // imu
-                //mobile_status.imu_gyr_x = imu_gyr_x * D2R;
-                //mobile_status.imu_gyr_y = imu_gyr_y * D2R;
-                //mobile_status.imu_gyr_z = imu_gyr_z * D2R;
-                //mobile_status.imu_acc_x = imu_acc_x * ACC_G;
-                //mobile_status.imu_acc_y = imu_acc_y * ACC_G;
-                //mobile_status.imu_acc_z = imu_acc_z * ACC_G;
+                mobile_status.imu_gyr_x = imu_gyr_x * D2R;
+                mobile_status.imu_gyr_y = imu_gyr_y * D2R;
+                mobile_status.imu_gyr_z = imu_gyr_z * D2R;
+                mobile_status.imu_acc_x = imu_acc_x * ACC_G;
+                mobile_status.imu_acc_y = imu_acc_y * ACC_G;
+                mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
                 // get orientation
                 Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
