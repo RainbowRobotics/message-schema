@@ -23,7 +23,7 @@ class LVX_LOC : public QObject
 public:
     explicit LVX_LOC(QObject *parent = nullptr);
     ~LVX_LOC();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // imu filter
     imu_tools::ComplementaryFilter imu_filter;
@@ -60,7 +60,7 @@ public:
 
     // flag
     std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_loaded = {false};
+    std::atomic<int> is_loaded = {MAP_NOT_LOADED};
     std::atomic<bool> is_sync = {false};
 
     // params

@@ -16,6 +16,22 @@ SIM::~SIM()
     }
 }
 
+void SIM::set_cur_tf(Eigen::Matrix4d tf)
+{
+    mtx.lock();
+    cur_tf = tf;
+    mtx.unlock();
+}
+
+Eigen::Matrix4d SIM::get_cur_tf()
+{
+    mtx.lock();
+    Eigen::Matrix4d res = cur_tf;
+    mtx.unlock();
+
+    return res;
+}
+
 void SIM::start()
 {
     if(a_thread == NULL)
@@ -37,7 +53,7 @@ void SIM::stop()
 
 void SIM::a_loop()
 {
-    const double dt = 0.01; // 50hz
+    const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
     double vx0 = 0;
@@ -46,9 +62,19 @@ void SIM::a_loop()
 
     double last_lidar_t = 0;
 
+    Eigen::Matrix4d _cur_tf = get_cur_tf();
+
     printf("[SIM] a_loop start\n");
+
+    int cnt = 0;
     while(a_flag)
     {
+        cnt++;
+        if(cnt % 500 == 0)
+        {
+            qDebug() << "sim alive";
+        }
+
         double sim_t = get_time();
 
         // get input
@@ -137,9 +163,10 @@ void SIM::a_loop()
         double dy = vx*std::sin(dth)*dt + vy*std::cos(dth)*dt;
         Eigen::Matrix4d dG = se2_to_TF(Eigen::Vector3d(dx, dy, dth));
 
-        // update tf
-        cur_tf = cur_tf*dG;
-        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+        // update pose
+        _cur_tf = _cur_tf*dG;
+        Eigen::Vector3d cur_xi = TF_to_se2(_cur_tf);
+        Eigen::Matrix4d cur_tf_inv = _cur_tf.inverse();
 
         // update vel
         vx0 = vx;
@@ -152,8 +179,7 @@ void SIM::a_loop()
         pose.pose = cur_xi;
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
-        MOBILE_STATUS status;
-        #if defined (USE_SRV) || defined (USE_AMR_400) || (USE_AMR_400_LAKI)
+        MOBILE_STATUS status;        
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;
@@ -163,7 +189,6 @@ void SIM::a_loop()
         status.emo_state = 1;
         status.power_state = 1;
         status.remote_state = 1;
-        #endif
 
         #if defined (USE_MECANUM_OLD) || defined (USE_MECANUM)
         status.t = sim_t;
@@ -187,72 +212,76 @@ void SIM::a_loop()
         mobile->cur_status = status;
         mobile->mtx.unlock();
 
-        if(unimap->is_loaded && sim_t - last_lidar_t > 0.1)
+        /*
+        if(unimap->is_loaded == MAP_LOADED && sim_t - last_lidar_t > 0.1)
         {
             // generate lidar frame
             double query_pt[3] = {cur_xi[0], cur_xi[1], 0};
-            double sq_radius = config->LIDAR_MAX_RANGE*config->LIDAR_MAX_RANGE;
+            //double sq_radius = config->LIDAR_MAX_RANGE*config->LIDAR_MAX_RANGE;
+
+            double radius = std::min<double>(10.0, config->LIDAR_MAX_RANGE);
+            double sq_radius = radius*radius;
             std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
             nanoflann::SearchParameters params;
             unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
-
-            Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
-            std::vector<double> reflects;
-            std::vector<Eigen::Vector3d> pts;            
-            for(size_t p = 0; p < res_idxs.size(); p+=10)
+            if(res_idxs.size() > 0)
             {
-                unsigned int idx = res_idxs[p].first;
-                double x = unimap->kdtree_cloud.pts[idx].x;
-                double y = unimap->kdtree_cloud.pts[idx].y;
-                double z = unimap->kdtree_cloud.pts[idx].z;
-                double r = unimap->kdtree_cloud.pts[idx].r;
-
-                Eigen::Vector3d P(x,y,z);
-                Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-                pts.push_back(_P);
-                reflects.push_back(r);
-
-                if(pts.size() >= 360)
+                std::vector<double> reflects;
+                std::vector<Eigen::Vector3d> pts;
+                for(size_t p = 0; p < res_idxs.size(); p+=10)
                 {
-                    break;
+                    unsigned int idx = res_idxs[p].first;
+                    double x = unimap->kdtree_cloud.pts[idx].x;
+                    double y = unimap->kdtree_cloud.pts[idx].y;
+                    double z = unimap->kdtree_cloud.pts[idx].z;
+                    double r = unimap->kdtree_cloud.pts[idx].r;
+
+                    Eigen::Vector3d P(x,y,z);
+                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+                    pts.push_back(_P);
+                    reflects.push_back(r);
+
+                    if(pts.size() >= 360)
+                    {
+                        break;
+                    }
                 }
+
+                // update
+                FRAME frm;
+                frm.t = sim_t;
+                frm.mo = pose;
+                frm.pts = pts;
+                frm.reflects = reflects;
+
+                lidar->scan_que.push(frm);
+                if(lidar->scan_que.unsafe_size() > 50)
+                {
+                    FRAME dummy;
+                    lidar->scan_que.try_pop(dummy);
+                }
+
+                lidar->mtx.lock();
+                lidar->cur_scan = pts;
+                lidar->cur_scan_f = pts;
+                lidar->cur_scan_b = pts;
+                lidar->mtx.unlock();
             }
-
-            // update
-            FRAME frm;
-            frm.t = sim_t;
-            frm.mo = pose;
-            frm.pts = pts;
-            frm.reflects = reflects;
-
-            lidar->mtx.lock();
-            lidar->scan_que.push(frm);
-            if(lidar->scan_que.unsafe_size() > 50)
-            {
-                FRAME dummy;
-                lidar->scan_que.try_pop(dummy);
-            }
-
-            lidar->cur_scan = pts;
-            lidar->cur_scan_f = pts;
-            lidar->cur_scan_b = pts;
-            lidar->mtx.unlock();
-
             last_lidar_t = sim_t;
         }
+        */
 
         // for real time loop
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            precise_sleep(dt-delta_loop_time);
-            //int sleep_ms = (dt-delta_loop_time)*1000;
-            //std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
-            printf("[SIM] a_loop loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[SIM] a_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }

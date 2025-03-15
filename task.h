@@ -20,7 +20,7 @@ public:
     ~TASK();
 
     // mutex
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config    = NULL;
@@ -60,6 +60,11 @@ public:
     std::atomic<bool> use_looping = {false};
 
     std::atomic<int> last_task_state = {0};
+
+    //accuracy
+    bool accuracy_save_enabled = false;
+    std::vector<Eigen::Matrix4d> recorded_positions;
+    QString accuracyLogFileName;
 
 };
 

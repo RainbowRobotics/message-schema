@@ -413,6 +413,13 @@ void MOBILE::recv_loop()
         // parsing
         while((int)buf.size() >= packet_size && recv_flag)
         {
+            // drop broken packet
+            if(buf.size() % packet_size != 0)
+            {
+                buf.clear();
+                continue;
+            }
+
             uchar *_buf = (uchar*)buf.data();
             if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
             {
@@ -633,6 +640,7 @@ void MOBILE::recv_loop()
         ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
     }
 
+
     // set non-blocking
     int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
@@ -657,6 +665,26 @@ void MOBILE::recv_loop()
     if (status <= 0) // timeout or error
     {
         logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
+        close(fd);
+        return;
+    }
+
+    // socket error check after select()
+    int so_error = 0;
+    socklen_t len = sizeof(so_error);
+    if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) <0)
+    {
+        QString errStr;
+        errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
+        logger->write_log(errStr, "Red", true, false);
+        close(fd);
+        return;
+    }
+    if(so_error!=0)
+    {
+        QString errStr;
+        errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
+        logger->write_log(errStr, "Red", true, false);
         close(fd);
         return;
     }
@@ -700,6 +728,13 @@ void MOBILE::recv_loop()
         // parsing
         while((int)buf.size() >= packet_size && recv_flag)
         {
+            // drop broken packet
+            if(buf.size() % packet_size != 0)
+            {
+                buf.clear();
+                continue;
+            }
+
             uchar *_buf = (uchar*)buf.data();
             if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
             {
@@ -710,6 +745,7 @@ void MOBILE::recv_loop()
                 uint32_t tick;
                 memcpy(&tick, &_buf[index], dlc_f);     index=index+dlc_f;
                 double mobile_t = tick*0.002;
+                double pc_t = get_time();
 
                 uint32_t recv_tick;
                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
@@ -784,11 +820,10 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                int bat_percent = cal_voltage(bat_out);
-//                std::cout<<"bat_percent : "<<bat_percent;
+
 
                 // calc time offset
-                if(is_sync && get_time() > sync_st_time + 0.1)
+                /*if(is_sync && get_time() > sync_st_time + 0.1)
                 {
                     is_sync = false;
 
@@ -798,7 +833,20 @@ void MOBILE::recv_loop()
                     is_synced = true;
                     QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
                     logger->write_log(str);
+                }*/
+
+                if(is_sync && pc_t > sync_st_time + 0.1)
+                {
+                    is_sync = false;
+
+                    double _mobile_t = recv_tick*0.002;
+                    double _offset_t = pc_t - _mobile_t;
+                    offset_t = _offset_t;
+
+                    is_synced = true;
+                    printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
+                int bat_percent = cal_voltage(bat_out);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -860,9 +908,6 @@ void MOBILE::recv_loop()
                 imu.rx = r[0];
                 imu.ry = r[1];
                 imu.rz = r[2];
-
-
-
 
                 // storing
                 mtx.lock();

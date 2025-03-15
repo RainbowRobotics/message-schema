@@ -1072,6 +1072,7 @@ out</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -2055,6 +2056,9 @@ start</string>
                 <width>31</width>
                 <height>20</height>
                </rect>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(246, 97, 81);</string>
               </property>
               <property name="text">
                <string>dist:</string>

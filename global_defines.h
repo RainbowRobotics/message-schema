@@ -121,7 +121,7 @@
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
-#define MO_STORAGE_NUM 300
+#define MO_STORAGE_NUM 400
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3
 
@@ -190,11 +190,19 @@ enum AUTO_OBS_STATE
     AUTO_OBS_VIR
 };
 
-enum OBS_STATE
+enum OBS_INFO_STATE
 {
-    OBS_NONE = 0,
-    OBS_DYN = 1,
-    OBS_VIR = 2,
+    OBS_STATIC = 0,
+    OBS_DYNAMIC = 1,
+    OBS_VIRTUAL = 2,
+};
+
+enum OBS_DETECT_STATE
+{
+    OBS_DETECT_NONE = 0,
+    OBS_DETECT_STA = 1,
+    OBS_DETECT_DYN = 2,
+    OBS_DETECT_VIR = 3,
 };
 
 enum LOCAL_PATH_STATE
@@ -248,6 +256,13 @@ enum CHARGING_STATION_STATE
     CHARGING_STATION_CHARGING = 3,
     CHARGING_STATION_TRIG_TO_STOP_CHARGE= 4,
     CHARGING_STATION_FAIL = 5,
+};
+
+enum MAP_LOAD_STATE
+{
+    MAP_NOT_LOADED = 0,
+    MAP_LOADING = 1,
+    MAP_LOADED = 2,
 };
 
 // structure
@@ -1110,6 +1125,7 @@ struct ASTAR_NODE
 struct PATH
 {
     double t;
+    std::vector<QString> node;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
@@ -1126,6 +1142,7 @@ struct PATH
     PATH(const PATH& p)
     {
         t = p.t;
+        node = p.node;
         pose = p.pose;
         pos = p.pos;                
         ref_v = p.ref_v;        
@@ -1136,6 +1153,7 @@ struct PATH
     PATH& operator=(const PATH& p)
     {
         t = p.t;
+        node = p.node;
         pose = p.pose;
         pos = p.pos;        
         ref_v = p.ref_v;        
@@ -1146,12 +1164,20 @@ struct PATH
 
     bool operator==(const PATH& p) const
     {
-        return t == p.t &&               
-               pose == p.pose &&
-               pos == p.pos &&
-               ref_v == p.ref_v &&
-               ed_tf.isApprox(p.ed_tf) &&
-               is_final == p.is_final;
+        if(pose.size() != p.pose.size())
+        {
+            return false;
+        }
+
+        for(size_t i = 0; i < pose.size(); i++)
+        {
+            if(!pose[i].isApprox(p.pose[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool operator!=(const PATH& p) const

@@ -284,21 +284,40 @@ std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, d
     Eigen::Quaterniond q0(tf0.block<3,3>(0,0));
     Eigen::Quaterniond q1(tf1.block<3,3>(0,0));
 
+    if (q0.dot(q1) < 0.0)
+    {
+        q1.coeffs() = - q1.coeffs();
+    }
+
     Eigen::Vector3d t0 = tf0.block<3,1>(0,3);
     Eigen::Vector3d t1 = tf1.block<3,1>(0,3);
 
     double distance = (t1 - t0).norm();
     double theta = q0.angularDistance(q1);
 
-    int dist_steps = std::max(1, static_cast<int>(distance / dist_step));
-    int rot_steps = std::max(1, static_cast<int>(theta / th_step));
-    int steps = std::max(dist_steps, rot_steps);
+    int steps = 1;
+    if(dist_step == 0)
+    {
+        int rot_steps = std::max<int>(1, std::ceil(theta/th_step));
+        steps = rot_steps;
+    }
+    else if(th_step == 0)
+    {
+        int dist_steps = std::max<int>(1, std::ceil(distance/dist_step));
+        steps = dist_steps;
+    }
+    else
+    {
+        int rot_steps = std::max<int>(1, std::ceil(theta/th_step));
+        int dist_steps = std::max<int>(1, std::ceil(distance/dist_step));
+        steps = std::max(dist_steps, rot_steps);
+    }
 
     std::vector<Eigen::Matrix4d> res;
     res.push_back(tf0);
-    for(int i = 0; i < steps; ++i)
+    for (int i = 1; i < steps; i++)
     {
-        double alpha = static_cast<double>(i) / steps;
+        double alpha = (double)i/steps;
 
         Eigen::Vector3d t_interpolated = (1.0 - alpha) * t0 + alpha * t1;
         Eigen::Quaterniond q_interpolated = q0.slerp(alpha, q1);
@@ -1071,6 +1090,22 @@ std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P
     res.push_back(P1);
 
     return res;
+}
+
+int get_major_axis(Eigen::Vector3d& N)
+{
+    int max_idx = 0;
+    double max = std::abs(N[0]);
+    for (int p = 1; p < 3; p++)
+    {
+        double val = std::abs(N[p]);
+        if (val > max)
+        {
+            max_idx = p;
+            max = val;
+        }
+    }
+    return max_idx;
 }
 
 #endif // UTILS_CPP

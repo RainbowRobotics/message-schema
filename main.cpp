@@ -89,6 +89,9 @@ Q_DECLARE_METATYPE(DATA_VOBS_C)
 
 int main(int argc, char *argv[])
 {
+    // Disable buffering for stdout (apply globally)
+    setbuf(stdout, NULL);
+
     // critical error catcher
     std::signal(SIGINT, signalHandler);
     std::signal(SIGSEGV, signalHandler);
@@ -116,6 +119,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<DATA_PATH>();
     qRegisterMetaType<DATA_VOBS_R>();
     qRegisterMetaType<DATA_VOBS_C>();
+
     QApplication a(argc, argv);
 
     // set VTK default option

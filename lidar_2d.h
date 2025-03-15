@@ -36,7 +36,7 @@ class LIDAR_2D : public QObject
 public:
     explicit LIDAR_2D(QObject *parent = nullptr);
     ~LIDAR_2D();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;

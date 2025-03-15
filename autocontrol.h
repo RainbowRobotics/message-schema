@@ -27,7 +27,7 @@ class AUTOCONTROL : public QObject
 public:
     explicit AUTOCONTROL(QObject *parent = nullptr);
     ~AUTOCONTROL();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -47,10 +47,16 @@ public:
     // interface funcs
     PATH get_cur_global_path();
     PATH get_cur_local_path();
-    QString get_obs_condition();
+
+    QString get_cur_node_id();
+
     QString get_multi_req();
+    QString get_obs_condition();
+    QString get_cur_goal_state();
+
     void set_multi_req(QString str);
-    void clear_path();
+    void set_obs_condition(QString str);   
+    void set_cur_goal_state(QString str);
 
     void init();
     void stop();
@@ -89,6 +95,11 @@ public:
     // for control
     int is_everything_fine();
 
+    // calc current node
+    std::atomic<bool> a_flag = {false};
+    std::thread *a_thread = NULL;
+    void a_loop();
+
     // control loop
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
@@ -103,6 +114,8 @@ public:
     PATH cur_global_path;
     PATH cur_local_path;
 
+    QString last_node_id = "";
+
     Eigen::Vector3d last_cur_pos;
     Eigen::Vector3d last_tgt_pos;
     Eigen::Vector3d last_local_goal;
@@ -111,22 +124,30 @@ public:
 
     // flags
     std::atomic<bool> is_debug = {false};
-    std::atomic<bool> is_change = {false};
+    std::atomic<bool> is_path_overlap = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};    
     std::atomic<bool> is_undock = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
-    QString obs_condition = "none";
 
-    // flags for multi
-    std::atomic<bool> is_multi = {false};
+    // params for rrs
+    std::atomic<bool> is_rrs = {false};
     QString multi_req = "none"; // none, req_path, recv_path
+    QString obs_condition = "none";
+    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
+
+    DATA_MOVE move_info;
 
 Q_SIGNALS:
+    void signal_move(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();
     void signal_move_response(DATA_MOVE msg);
     void signal_check_docking();
+
+public Q_SLOTS:
+    void move(DATA_MOVE msg);
+
 };
 
 #endif // AUTOCONTROL_H

@@ -1070,7 +1070,7 @@ void LIDAR_2D::a_loop()
 #if defined(USE_AMR_400_LAKI)
 void LIDAR_2D::grab_loop_f()
 {
-    printf("[LIDAR] start grab loop, front\n");
+    printf("[LIDAR][grab_f] start grab loop, front\n");
 
     // init lidar (host pc should be set ip 192.168.2.2)
     std::unique_ptr<LakiBeamUDP> lidar(new LakiBeamUDP("192.168.2.2", "2367", "192.168.2.10", "8888"));
@@ -1096,13 +1096,20 @@ void LIDAR_2D::grab_loop_f()
 
             if(temp_pack.maxdots == 0 || temp_pack.maxdots > 3599)
             {
-                logger->write_log("[LIDAR] invalid data from front lidar\n");
+                logger->write_log("[LIDAR][grab_f] invalid data from front lidar\n");
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
+            //////////////////////////////////////////////////////////////////////
             double lidar_t = get_time();
 
+
+
+
+
+
+            //////////////////////////////////////////////////////////////////////
             // lidar frame synced ref time
             double t0 = lidar_t - (temp_pack.maxdots * point_interval);
             double t1 = lidar_t;
@@ -1159,6 +1166,7 @@ void LIDAR_2D::grab_loop_f()
                 raw_pts.push_back(Eigen::Vector3d(x, y, 0));
             }
 
+
             // get boundary mobile pose
             int idx0 = -1;
             for(int p = (int)pose_storage.size()-1; p >= 0; p--)
@@ -1184,13 +1192,15 @@ void LIDAR_2D::grab_loop_f()
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop                
-                printf("[LIDAR] front sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
+                printf("[LIDAR][grab_f] front sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
+
             Eigen::Vector3d min_pose = pose_storage[idx1].pose;
             double min_dt = 99999999;
+
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
                 double dt = std::abs(pose_storage[p].t - t1);
@@ -1231,7 +1241,7 @@ void LIDAR_2D::grab_loop_f()
 
 void LIDAR_2D::grab_loop_b()
 {
-    printf("[LIDAR] start grab loop, back\n");
+    printf("[LIDAR][grab_b] start grab loop, back\n");
 
     // init lidar
     std::unique_ptr<LakiBeamUDP> lidar(new LakiBeamUDP("192.168.2.2", "2368", "192.168.2.11", "8888"));
@@ -1256,7 +1266,7 @@ void LIDAR_2D::grab_loop_b()
 
             if(temp_pack.maxdots == 0 || temp_pack.maxdots > 3599)
             {
-                logger->write_log("[LIDAR] no data from back lidar\n");
+                logger->write_log("[LIDAR][grab_b] no data from back lidar\n");
                 continue;
             }
 
@@ -1318,6 +1328,7 @@ void LIDAR_2D::grab_loop_b()
                 raw_pts.push_back(Eigen::Vector3d(x, y, 0));
             }
 
+
             // get boundary mobile pose
             int idx0 = -1;
             for(int p = (int)pose_storage.size()-1; p >= 0; p--)
@@ -1343,13 +1354,15 @@ void LIDAR_2D::grab_loop_b()
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop
-                printf("[LIDAR] back sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
+                printf("[LIDAR][grab_b] back sync drop, t_first:%f, t_last:%f, t0:%f, t1:%f\n", pose_storage.front().t, pose_storage.back().t, t0, t1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
 
+
             Eigen::Vector3d min_pose = pose_storage[idx1].pose;
             double min_dt = 99999999;
+
             for(size_t p = 0; p < pose_storage.size(); p++)
             {
                 double dt = std::abs(pose_storage[p].t - t1);
@@ -1385,7 +1398,7 @@ void LIDAR_2D::grab_loop_b()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    printf("[LIDAR] stop, back\n");
+    printf("[LIDAR][grab_b] stop, back\n");
 }
 
 void LIDAR_2D::a_loop()

@@ -171,6 +171,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for response
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
     connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
+    connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_fms, SLOT(send_move_response(DATA_MOVE)));
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
@@ -416,6 +417,8 @@ void MainWindow::bt_Emergency()
 {
     task.cancel();
     ctrl.stop();
+    ctrl.set_multi_req("none");
+    ctrl.set_obs_condition("none");
     dctrl.stop();
     mobile.move(0,0,0);
 }
@@ -1498,7 +1501,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     pick.l_drag = false;
                     if(is_grab == true)
                     {
-                        if(unimap.is_loaded)
+                        if(unimap.is_loaded == MAP_LOADED)
                         {
                             std::vector<QString> _select_nodes;
                             std::vector<QString> nodes = unimap.get_nodes();
@@ -1731,28 +1734,27 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         logger.write_log("[SIM] map load first", "Red", true, false);
         return;
     }
 
-    // stop first
-    if(slam.is_loc)
-    {
-        slam.localization_stop();
-    }
+    // loc stop
+    slam.localization_stop();
 
-    // clear cur_tf
+    // stop first
     sim.stop();
 
-    // start
+    // set
     Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
-    sim.cur_tf = tf;
+    sim.set_cur_tf(tf);
     slam.set_cur_tf(tf);
-    mobile.cur_pose.pose = TF_to_se2(tf);
+
+    // start    
     sim.start();
 
+    // make dummy
     mobile.is_connected = true;
     mobile.is_synced = true;
 
@@ -1761,6 +1763,10 @@ void MainWindow::bt_SimInit()
 
     lidar.is_synced_f = true;
     lidar.is_synced_b = true;
+
+    // loc start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    slam.localization_start();    
 }
 
 void MainWindow::bt_ConfigLoad()
@@ -1779,10 +1785,10 @@ void MainWindow::bt_Sync()
     lidar.sync_f();
     lidar.sync_b();
 
-    if(config.USE_LVX)
-    {
-        lvx.is_sync = true;
-    }
+    //if(config.USE_LVX)
+    //{
+    //    lvx.is_sync = true;
+    //}
 }
 
 void MainWindow::bt_MoveLinearX()
@@ -2002,8 +2008,28 @@ void MainWindow::bt_MapLoad()
 
         if(config.USE_LVX)
         {
-            QString path_3d_map = path + "/map.las";
-            lvx.map_load(path_3d_map);
+            // load laz first
+            QString path_3d_map = path + "/map.laz";
+            QFileInfo mapFileInfo(path_3d_map);
+            if(mapFileInfo.exists() && mapFileInfo.isFile())
+            {
+                lvx.map_load(path_3d_map);
+            }
+            else
+            {
+                // load las
+                path_3d_map = path + "/map.las";
+                QFileInfo mapFileInfo2(path_3d_map);
+                if(mapFileInfo2.exists() && mapFileInfo2.isFile())
+                {
+                    lvx.map_load(path_3d_map);
+                }
+                else
+                {
+                    logger.write_log("[LVX] map file extension not invaild. load fail", "Red");
+                }
+            }
+
         }
     }
 }
@@ -2055,11 +2081,6 @@ void MainWindow::bt_LocInit()
     }
 
     slam.set_cur_tf(se2_to_TF(pick.r_pose));
-
-    if(config.USE_SIM)
-    {
-        bt_SimInit();
-    }
 }
 
 void MainWindow::bt_LocInitSemiAuto()
@@ -2124,7 +2145,7 @@ void MainWindow::bt_MapSave2()
 
 void MainWindow::bt_MapReload()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[MAIN] check map load\n");
         return;
@@ -2301,7 +2322,7 @@ void MainWindow::cb_NodeType(QString type)
 
 void MainWindow::bt_ClearTopo()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -2893,7 +2914,7 @@ void MainWindow::bt_AlignNodeTh()
 
 void MainWindow::bt_QuickAnnotStart()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA] check map load\n");
         return;
@@ -2960,7 +2981,7 @@ void MainWindow::bt_QuickAnnotStop()
 
 void MainWindow::bt_QuickAddNode()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA_Node] check map load\n");
         return;
@@ -2981,7 +3002,7 @@ void MainWindow::bt_QuickAddNode()
 
 void MainWindow::bt_QuickAddAruco()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[QA_Aruco] check map load\n");
         return;
@@ -3199,7 +3220,7 @@ void MainWindow::bt_CheckNodes()
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[MAIN] check map load\n");
         return;
@@ -3221,7 +3242,8 @@ void MainWindow::bt_AutoMove()
             msg.tgt_pose_vec[1] = xi[1];
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
-            ctrl.move(msg);
+
+            Q_EMIT ctrl.signal_move(msg);
         }
         return;
     }
@@ -3236,7 +3258,8 @@ void MainWindow::bt_AutoMove()
         msg.tgt_pose_vec[1] = xi[1];
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
-        ctrl.move(msg);
+
+        Q_EMIT ctrl.signal_move(msg);
 
         return;
     }
@@ -3328,7 +3351,7 @@ void MainWindow::slot_global_path_updated()
 // for test
 void MainWindow::bt_Test()
 {
-    mobile.motor_off();
+    logger.write_log("[TEST] test 2025", "Green");
 }
 
 void MainWindow::bt_TestLed()
@@ -3460,7 +3483,7 @@ void MainWindow::bt_TaskDel()
 
 void MainWindow::bt_TaskSave()
 {
-    if(unimap.is_loaded == false || task.task_node_list.empty())
+    if(unimap.is_loaded != MAP_LOADED || task.task_node_list.empty())
     {
         printf("no task list\n");
         return;
@@ -3472,7 +3495,7 @@ void MainWindow::bt_TaskSave()
 void MainWindow::bt_TaskLoad()
 {
     // pcd map load
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("no map\n");
         return;
@@ -3500,11 +3523,13 @@ void MainWindow::bt_TaskLoad()
 
 void MainWindow::bt_TaskPlay()
 {
-    if(unimap.is_loaded == false || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
+    if(unimap.is_loaded != MAP_LOADED || slam.is_loc == false || task.task_node_list.empty() || task.is_tasking)
     {
         printf("check again\n");
         return;
     }
+
+    task.accuracy_save_enabled = ui->ckb_AccuracySave->isChecked();
 
     task.is_start = true;
     task.use_looping = ui->ckb_Looping->isChecked();
@@ -3517,6 +3542,7 @@ void MainWindow::bt_TaskPlay()
         mode = "basic";
     }
     #endif
+
     task.play(mode);
 }
 
@@ -3533,7 +3559,7 @@ void MainWindow::bt_TaskCancel()
 // for fms
 void MainWindow::bt_SendMap()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         printf("[SEND_MAP] check map load\n");
         return;
@@ -3569,7 +3595,7 @@ void MainWindow::bt_SendMap()
 
 void MainWindow::slot_sim_random_init(QString seed)
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         logger.write_log("[SIM] map load first", "Red", true, false);
         return;
@@ -3581,20 +3607,21 @@ void MainWindow::slot_sim_random_init(QString seed)
         return;
     }
 
-    // stop first
-    if(slam.is_loc)
-    {
-        slam.localization_stop();
-    }    
+    // loc stop
+    slam.localization_stop();
+
+    // stop first    
     sim.stop();
 
-    // start
+    // set
     Eigen::Matrix4d tf = node->tf;
+    sim.set_cur_tf(tf);
     slam.set_cur_tf(tf);
-    sim.cur_tf = tf;
-    mobile.cur_pose.pose = TF_to_se2(tf);
+
+    // start    
     sim.start();
 
+    // make dummy
     mobile.is_connected = true;
     mobile.is_synced = true;
 
@@ -3604,12 +3631,14 @@ void MainWindow::slot_sim_random_init(QString seed)
     lidar.is_synced_f = true;
     lidar.is_synced_b = true;
 
+    // loc start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     slam.localization_start();
 }
 
 void MainWindow::slot_sim_random_seq()
 {
-    if(unimap.is_loaded == false || slam.is_loc == false || task.is_tasking)
+    if(unimap.is_loaded != MAP_LOADED || slam.is_loc == false || task.is_tasking)
     {
         printf("check again\n");
         return;
@@ -3711,9 +3740,12 @@ void MainWindow::comm_loop()
     double pre_loop_time = get_time();
 
     int cnt = 0;
+    int lidar_view_cnt = 0;
+    int path_view_cnt = 0;
 
     std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
     std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
+
 
     const int send_w = 320;
     const int send_h = 200;
@@ -3734,11 +3766,13 @@ void MainWindow::comm_loop()
         }
 
         // for variable loop
-        int val1 = (int)(10/(int)lidar_view_hz);
-        if(val1 > 0)
+        double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
+        time_lidar_view *= 10.0;
+        if(time_lidar_view > 0)
         {
-            if(cnt % val1 == 0)
+            if(lidar_view_cnt > time_lidar_view)
             {
+                lidar_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
                     comm_rrs.send_lidar();
@@ -3746,11 +3780,13 @@ void MainWindow::comm_loop()
             }
         }
 
-        int val2 = (int)(10/(int)path_view_hz);
-        if(val2 > 0)
+        double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
+        time_path_view *= 10.0;
+        if(time_path_view > 0)
         {
-            if(cnt % val2 == 0)
+            if(path_view_cnt > time_path_view)
             {
+                path_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
                     if(is_global_path_update2)
@@ -3768,11 +3804,11 @@ void MainWindow::comm_loop()
             }
         }
 
-        // for 100ms loop        
+        // for 100ms loop
         if(cnt % 10 == 0)
         {
             if(comm_fms.is_connected)
-            {                
+            {
                 Q_EMIT comm_fms.signal_send_move_status();
             }
             if(comm_rrs.is_connected)
@@ -3883,11 +3919,12 @@ void MainWindow::comm_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            precise_sleep(dt-delta_loop_time);
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
-            printf("[MAIN] comm_loop loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[MAIN] comm_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -3905,39 +3942,25 @@ void MainWindow::watch_loop()
 
     CPU_USAGE pre_cpu_usage;
 
-    QString pre_node_id = "";
-
     printf("[WATCHDOG] loop start\n");
     while(watch_flag)
     {
         cnt++;
 
-        // calc current node
-        if(unimap.is_loaded)
+        // every 10 sec
+        if(cnt%100 == 0)
         {
-            Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-            QString cur_node_id = unimap.get_node_id_edge(cur_tf.block(0,3,3,1));
-            if(pre_node_id == "")
+            if(!QCoreApplication::instance()->thread()->isRunning())
             {
-                pre_node_id = cur_node_id;
+                logger.write_log("[MAIN] Main thread is unresponsive!", "Red");
             }
-
-            NODE *node = unimap.get_node_by_id(cur_node_id);
-            if(node != NULL)
+            else
             {
-                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config.ROBOT_SIZE_X[1])
+                if(config.USE_FMS)
                 {
-                    if(pre_node_id != cur_node_id)
-                    {
-                        pre_node_id = cur_node_id;
-                    }
+                    printf("[MAIN] robot id: %s\n", comm_fms.robot_id.toLocal8Bit().data());
                 }
             }
-
-            mtx.lock();
-            last_node_id = pre_node_id;
-            mtx.unlock();
         }
 
         // annotation works
@@ -4128,6 +4151,8 @@ void MainWindow::watch_loop()
                         led_color = LED_MAGENTA;
                     }
                 }
+
+
             }
 
             // check lidar
@@ -4178,28 +4203,35 @@ void MainWindow::watch_loop()
             }
 
             // check loc
-            if(slam.is_loc == false)
+            if(config.USE_SIM)
             {
-                loc_fail_cnt = 0;
-                slam.set_cur_loc_state("none");
-                led_color = LED_MAGENTA;
+                slam.set_cur_loc_state("good");
             }
             else
             {
-                Eigen::Vector2d ieir = slam.get_cur_ieir();
-                if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
+                if(slam.is_loc == false)
                 {
-                    loc_fail_cnt++;
-                    if(loc_fail_cnt > 3)
-                    {
-                        slam.set_cur_loc_state("fail");
-                        led_color = LED_MAGENTA_BLINK;
-                    }
+                    loc_fail_cnt = 0;
+                    slam.set_cur_loc_state("none");
+                    led_color = LED_MAGENTA;
                 }
                 else
                 {
-                    loc_fail_cnt = 0;
-                    slam.set_cur_loc_state("good");
+                    Eigen::Vector2d ieir = slam.get_cur_ieir();
+                    if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
+                    {
+                        loc_fail_cnt++;
+                        if(loc_fail_cnt > 3)
+                        {
+                            slam.set_cur_loc_state("fail");
+                            led_color = LED_MAGENTA_BLINK;
+                        }
+                    }
+                    else
+                    {
+                        loc_fail_cnt = 0;
+                        slam.set_cur_loc_state("good");
+                    }
                 }
             }
 
@@ -4356,6 +4388,42 @@ void MainWindow::watch_loop()
                     }
                 }
 
+                // check emo
+                {
+                    if(ms.emo_state == 0)
+                    {
+                        led_color = LED_YELLOW;
+                        if(ms.emo_state == 1)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                // check battery
+                {
+                    if(ms.bat_out<43.0) // low battery
+                    {
+                        led_color = LED_OFF;
+                        logger.write_log("[BATTERY] Neeed Charge\n");
+                    }
+                    else if(ms.charge_state == 1) // charge
+                    {
+                        led_color = LED_RED;
+                        if(ms.bat_out>54.0)
+                        {
+                            led_color = LED_BLUE;
+                        }
+                        else if (ms.charge_state == 0 || ms.bat_out>54.0)
+                        {
+                            return;
+                        }
+                    }
+
+                }
+
+
+
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
 
@@ -4371,7 +4439,14 @@ void MainWindow::watch_loop()
             }
 
             // set led
-            mobile.led(0, led_color);
+            if(is_user_led)
+            {
+                mobile.led(0, (int)user_led_color);
+            }
+            else
+            {
+                mobile.led(0, led_color);
+            }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -4420,11 +4495,12 @@ void MainWindow::jog_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            precise_sleep(dt-delta_loop_time);
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
-            printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -4434,7 +4510,7 @@ void MainWindow::jog_loop()
 // for plot loop
 void MainWindow::map_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -4506,7 +4582,7 @@ void MainWindow::map_plot()
 }
 void MainWindow::topo_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -4547,8 +4623,8 @@ void MainWindow::topo_plot()
 
                     if(unimap.nodes[p].type == "ROUTE")
                     {
-                        const double size = 0.15;
-                        viewer->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
+                        const double size = 0.1;
+                        viewer->addCube(-size, size, -size, size, 0, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
@@ -4669,6 +4745,7 @@ void MainWindow::topo_plot()
             {
                 // draw edges
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
@@ -4717,9 +4794,9 @@ void MainWindow::topo_plot()
                         pt.z = P_mid[2] + 0.05;
                         pt.r = 0;
                         pt.g = 0;
-                        pt.b = 0;
+                        pt.b = 255;
 
-                        cloud->push_back(pt);
+                        cloud2->push_back(pt);
                     }
                 }
 
@@ -4729,6 +4806,12 @@ void MainWindow::topo_plot()
                 }
                 viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "edge_dots");
                 viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "edge_dots");
+
+                if(!viewer->updatePointCloud(cloud2, "edge_chk_dots"))
+                {
+                    viewer->addPointCloud(cloud2, "edge_chk_dots");
+                }
+                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2.5, "edge_chk_dots");
             }
         }
     }
@@ -4795,122 +4878,120 @@ void MainWindow::slam_plot()
 {
     if(slam.is_slam)
     {
-        // mapping
-        if(slam.mtx.try_lock())
+        slam.mtx.lock();
+
+        // remove first
+        if(viewer->contains("raw_pts"))
         {
-            // remove first
-            if(viewer->contains("raw_pts"))
-            {
-                viewer->removePointCloud("raw_pts");
-            }
-
-            // plot live cloud
-            if(ui->ckb_PlotLive->isChecked())
-            {
-                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-                for(size_t p = 0; p < slam.live_cloud.pts.size(); p++)
-                {
-                    // set pos
-                    pcl::PointXYZRGB pt;
-                    pt.x = slam.live_cloud.pts[p].x;
-                    pt.y = slam.live_cloud.pts[p].y;
-                    pt.z = slam.live_cloud.pts[p].z;
-
-                    // set color
-                    double reflect = std::sqrt(slam.live_cloud.pts[p].r/255);
-                    tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
-
-                    pt.r = c.r()*255;
-                    pt.g = c.g()*255;
-                    pt.b = c.b()*255;
-
-                    // dynamic object
-                    if(slam.live_cloud.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
-                    {
-                        pt.r = 255;
-                        pt.g = 0;
-                        pt.b = 0;
-                    }
-
-                    cloud->push_back(pt);
-                }
-
-                if(!viewer->updatePointCloud(cloud, "live_tree_pts"))
-                {
-                    viewer->addPointCloud(cloud, "live_tree_pts");
-                }
-
-                // point size
-                viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "live_tree_pts");
-            }
-            else
-            {
-                // remove realtime slam pts
-                if(viewer->contains("live_tree_pts"))
-                {
-                    viewer->removePointCloud("live_tree_pts");
-                }
-            }
-
-            // plot keyframe pts
-            {
-                int kfrm_id;
-                if(slam.kfrm_update_que.try_pop(kfrm_id))
-                {
-                    QString name;
-                    name.sprintf("kfrm_%d", kfrm_id);
-                    if(!viewer->contains(name.toStdString()))
-                    {
-                        KFRAME kfrm = slam.kfrm_storage[kfrm_id];
-
-                        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-                        for(size_t p = 0; p < kfrm.pts.size(); p++)
-                        {
-                            // no drawing dynamic object
-                            if(kfrm.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
-                            {
-                                continue;
-                            }
-
-                            // set pos
-                            pcl::PointXYZRGB pt;
-                            pt.x = kfrm.pts[p].x;
-                            pt.y = kfrm.pts[p].y;
-                            pt.z = kfrm.pts[p].z;
-
-                            // set color
-                            double reflect = std::sqrt(kfrm.pts[p].r/255);
-                            tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
-
-                            pt.r = c.r()*255;
-                            pt.g = c.g()*255;
-                            pt.b = c.b()*255;
-
-                            cloud->push_back(pt);
-                        }
-
-                        if(!viewer->updatePointCloud(cloud, name.toStdString()))
-                        {
-                            viewer->addPointCloud(cloud, name.toStdString());
-                            viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(slam.kfrm_storage[kfrm_id].opt_G.cast<float>()));
-                            last_plot_kfrms.push_back(name);
-                        }
-
-                        // point size
-                        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
-                    }
-                    else
-                    {
-                        viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(slam.kfrm_storage[kfrm_id].opt_G.cast<float>()));
-
-                        // point size
-                        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
-                    }
-                }
-            }
-
-            slam.mtx.unlock();
+            viewer->removePointCloud("raw_pts");
         }
+
+        // plot live cloud
+        if(ui->ckb_PlotLive->isChecked())
+        {
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < slam.live_cloud.pts.size(); p++)
+            {
+                // set pos
+                pcl::PointXYZRGB pt;
+                pt.x = slam.live_cloud.pts[p].x;
+                pt.y = slam.live_cloud.pts[p].y;
+                pt.z = slam.live_cloud.pts[p].z;
+
+                // set color
+                double reflect = std::sqrt(slam.live_cloud.pts[p].r/255);
+                tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+                pt.r = c.r()*255;
+                pt.g = c.g()*255;
+                pt.b = c.b()*255;
+
+                // dynamic object
+                if(slam.live_cloud.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
+                {
+                    pt.r = 255;
+                    pt.g = 0;
+                    pt.b = 0;
+                }
+
+                cloud->push_back(pt);
+            }
+
+            if(!viewer->updatePointCloud(cloud, "live_tree_pts"))
+            {
+                viewer->addPointCloud(cloud, "live_tree_pts");
+            }
+
+            // point size
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "live_tree_pts");
+        }
+        else
+        {
+            // remove realtime slam pts
+            if(viewer->contains("live_tree_pts"))
+            {
+                viewer->removePointCloud("live_tree_pts");
+            }
+        }
+
+        // plot keyframe pts
+        {
+            int kfrm_id;
+            if(slam.kfrm_update_que.try_pop(kfrm_id))
+            {
+                QString name;
+                name.sprintf("kfrm_%d", kfrm_id);
+                if(!viewer->contains(name.toStdString()))
+                {
+                    KFRAME kfrm = slam.kfrm_storage[kfrm_id];
+
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                    for(size_t p = 0; p < kfrm.pts.size(); p++)
+                    {
+                        // no drawing dynamic object
+                        if(kfrm.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
+                        {
+                            continue;
+                        }
+
+                        // set pos
+                        pcl::PointXYZRGB pt;
+                        pt.x = kfrm.pts[p].x;
+                        pt.y = kfrm.pts[p].y;
+                        pt.z = kfrm.pts[p].z;
+
+                        // set color
+                        double reflect = std::sqrt(kfrm.pts[p].r/255);
+                        tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+                        pt.r = c.r()*255;
+                        pt.g = c.g()*255;
+                        pt.b = c.b()*255;
+
+                        cloud->push_back(pt);
+                    }
+
+                    if(!viewer->updatePointCloud(cloud, name.toStdString()))
+                    {
+                        viewer->addPointCloud(cloud, name.toStdString());
+                        viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(slam.kfrm_storage[kfrm_id].opt_G.cast<float>()));
+                        last_plot_kfrms.push_back(name);
+                    }
+
+                    // point size
+                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                }
+                else
+                {
+                    viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(slam.kfrm_storage[kfrm_id].opt_G.cast<float>()));
+
+                    // point size
+                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                }
+            }
+        }
+
+        slam.mtx.unlock();
     }
     else
     {
@@ -5019,7 +5100,7 @@ void MainWindow::loc_plot()
 }
 void MainWindow::obs_plot()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5042,7 +5123,7 @@ void MainWindow::obs_plot()
         // plot grid map
         {
             cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
-            obsmap.draw_robot(plot_obs_map, obs_tf);
+            obsmap.draw_robot(plot_obs_map);
 
             for(int i = 0; i < obs_map.rows; i++)
             {
@@ -5112,41 +5193,30 @@ void MainWindow::ctrl_plot()
     {
         is_global_path_update = false;
 
-        // erase first
-        if(last_plot_global_path.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_global_path.size(); p++)
-            {
-                QString name = last_plot_global_path[p];
-                if(viewer->contains(name.toStdString()))
-                {
-                    viewer->removeShape(name.toStdString());
-                }
-            }
-            last_plot_global_path.clear();
-        }
-
         // draw
         PATH global_path = ctrl.get_cur_global_path();
-        if(global_path.pos.size() >= 4)
         {
-            for(size_t p = 0; p < global_path.pos.size()-3; p+=3)
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < global_path.pos.size(); p++)
             {
-                QString name;
-                name.sprintf("global_path_%d_%d", (int)p, (int)p+3);
+                Eigen::Vector3d P = global_path.pos[p];
 
-                Eigen::Vector3d P0 = global_path.pos[p];
-                Eigen::Vector3d P1 = global_path.pos[p+3];
+                pcl::PointXYZRGB pt;
+                pt.x = P[0];
+                pt.y = P[1];
+                pt.z = P[2]+0.1;
+                pt.r = 255;
+                pt.g = 0;
+                pt.b = 0;
 
-                pcl::PointXYZ pt0(P0[0], P0[1], P0[2] + 0.01);
-                pcl::PointXYZ pt1(P1[0], P1[1], P1[2] + 0.01);
-
-                viewer->addLine(pt0, pt1, 1.0, 0.0, 0.0, name.toStdString());
-                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 10, name.toStdString());
-                viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 1.0, name.toStdString());
-
-                last_plot_global_path.push_back(name);
+                cloud->push_back(pt);
             }
+
+            if(!viewer->updatePointCloud(cloud, "global_path"))
+            {
+                viewer->addPointCloud(cloud, "global_path");
+            }
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*3, "global_path");
         }
     }
 
@@ -5215,11 +5285,9 @@ void MainWindow::ctrl_plot()
 
         // draw monitoring points
         {
-            ctrl.mtx.lock();
             Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
             Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
             Eigen::Vector3d local_goal = ctrl.last_local_goal;
-            ctrl.mtx.unlock();
 
             viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
             viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
@@ -5318,22 +5386,21 @@ void MainWindow::ctrl_plot()
         ui->lb_RobotVel->setText(text);
 
         // draw cur node
-        if(viewer->contains("cur_tf_node"))
+        if(viewer->contains("cur_node"))
         {
-            viewer->removeShape("cur_tf_node");
+            viewer->removeShape("cur_node");
         }
 
-        mtx.lock();
-        QString cur_node_id = last_node_id;
-        mtx.unlock();
-
+        QString cur_node_id = ctrl.get_cur_node_id();
         if(cur_node_id != "")
         {
             NODE *node = unimap.get_node_by_id(cur_node_id);
             if(node != NULL)
             {
-                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, node->tf, 0.0, 1.0, 1.0);
-                viewer->addPolygonMesh(donut, "cur_tf_node");
+                Eigen::Matrix4d tf = node->tf;
+                tf(2,3) += config.ROBOT_SIZE_Z[1];
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, tf, 0.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "cur_node");
             }
         }
     }
@@ -5376,10 +5443,7 @@ void MainWindow::ctrl_plot()
     }
 
     // plot goal info
-    ctrl.mtx.lock();
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(ctrl.move_info.goal_node_id).arg(ctrl.cur_goal_state));
-    ctrl.mtx.unlock();
-
 }
 void MainWindow::raw_plot()
 {
@@ -5423,13 +5487,16 @@ void MainWindow::raw_plot()
     {
         _multi_state = "no connection";
     }
+
+    int fsm_state = ctrl.fsm_state;
+
     QString auto_info_str;
     auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
-                          AUTO_FSM_STATE_STR[(int)ctrl.fsm_state].toLocal8Bit().data(),                          
+                          AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
                           (bool)ctrl.is_moving ? "1" : "0",
                           (bool)ctrl.is_pause ? "1" : "0",
                           ctrl.get_obs_condition().toLocal8Bit().data(),
-                          (bool)ctrl.is_multi ? "1" : "0",
+                          (bool)ctrl.is_rrs ? "1" : "0",
                           ctrl.get_multi_req().toLocal8Bit().data(),
                           _multi_state.toLocal8Bit().data());
     ui->lb_AutoInfo->setText(auto_info_str);
@@ -5671,7 +5738,7 @@ void MainWindow::plot_loop()
     plot_proc_t = get_time() - st_time;
     if(plot_proc_t > 0.1)
     {
-        printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
+        //printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
     }
 
     plot_timer.start();
@@ -5680,7 +5747,7 @@ void MainWindow::plot_loop()
 // for plot loop2
 void MainWindow::map_plot2()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5755,7 +5822,7 @@ void MainWindow::map_plot2()
 }
 void MainWindow::topo_plot2()
 {
-    if(unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
     {
         return;
     }
@@ -5796,8 +5863,8 @@ void MainWindow::topo_plot2()
 
                     if(unimap.nodes[p].type == "ROUTE")
                     {
-                        const double size = 0.15;
-                        viewer2->addCube(-size, size, -size, size, -size, size, 0.8, 0.8, 0.8, id.toStdString());
+                        const double size = 0.1;
+                        viewer2->addCube(-size, size, -size, size, 0, size, 0.8, 0.8, 0.8, id.toStdString());
                         viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
                         //viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
 
@@ -5918,6 +5985,7 @@ void MainWindow::topo_plot2()
             {
                 // draw edges
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
                 for(size_t p = 0; p < unimap.nodes.size(); p++)
                 {
                     for(size_t q = 0; q < unimap.nodes[p].linked.size(); q++)
@@ -5966,9 +6034,9 @@ void MainWindow::topo_plot2()
                         pt.z = P_mid[2] + 0.05;
                         pt.r = 0;
                         pt.g = 0;
-                        pt.b = 0;
+                        pt.b = 255;
 
-                        cloud->push_back(pt);
+                        cloud2->push_back(pt);
                     }
                 }
 
@@ -5978,6 +6046,12 @@ void MainWindow::topo_plot2()
                 }
                 viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "edge_dots");
                 viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "edge_dots");
+
+                if(!viewer2->updatePointCloud(cloud2, "edge_chk_dots"))
+                {
+                    viewer2->addPointCloud(cloud2, "edge_chk_dots");
+                }
+                viewer2->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2.5, "edge_chk_dots");
             }
 
         }
@@ -5991,7 +6065,7 @@ void MainWindow::pick_plot2()
         is_pick_update2 = false;
 
         // plot node picking text
-        if(unimap.is_loaded)
+        if(unimap.is_loaded == MAP_LOADED)
         {
             if(pick.pre_node != "")
             {

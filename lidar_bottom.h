@@ -33,7 +33,7 @@ class LIDAR_BOTTOM : public QObject
 public:
     explicit LIDAR_BOTTOM(QObject *parent = nullptr);
     ~LIDAR_BOTTOM();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;

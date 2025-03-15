@@ -240,7 +240,8 @@ void CAM::grab_loop()
 
                         // flip for plot
                         cv::Mat plot_img;
-                        cv::resize(img, plot_img, cv::Size(160, 90));
+                        //cv::resize(img, plot_img, cv::Size(160, 100));
+                        cv::resize(img, plot_img, cv::Size(320, 200));
 
                         mtx.lock();
                         cur_img[0] = plot_img.clone();
@@ -349,6 +350,7 @@ void CAM::grab_loop()
             printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
         }
         */
+
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());

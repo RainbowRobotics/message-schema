@@ -93,7 +93,7 @@ public:
     
 public:
     Ui::MainWindow *ui;
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // vars
     QString map_dir = "";
@@ -184,13 +184,9 @@ public:
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_nodes2;
 
-    std::vector<QString> last_plot_global_path;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
     std::vector<QString> last_plot_select;
-
-    // for fms
-    QString last_node_id = "";
 
     // jog
     std::atomic<double> vx_target = {0.};
@@ -208,13 +204,17 @@ public:
     std::atomic<double> last_plot_aruco_t = {0};
 
     // for variable loop
-    std::atomic<int> lidar_view_hz = {1};
-    std::atomic<int> path_view_hz = {2};
+    std::atomic<int> lidar_view_frequency = {1};
+    std::atomic<int> path_view_frequency = {2};
 
     // for touch event
     double lastScaleFactor = 1.0;
     QPointF lastTouchPoint;
     bool isPanning = false;
+
+    // for user led
+    std::atomic<bool> is_user_led = {false};
+    std::atomic<int> user_led_color = {LED_OFF};
 
     // 3d plot funcs
     void map_plot();

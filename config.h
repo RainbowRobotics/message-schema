@@ -4,6 +4,8 @@
 #include "global_defines.h"
 
 #include <QObject>
+#include <QMutex>
+#include <QMutexLocker>
 
 class CONFIG : public QObject
 {
@@ -12,6 +14,8 @@ public:
     explicit CONFIG(QObject *parent = nullptr);
 
 public:
+    QMutex mtx;
+
     // unit : meter, degree, second
     // params (initial value ref from AMR200)
     QString PLATFORM_NAME = "TT";
@@ -101,7 +105,8 @@ public:
     double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
 
     int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
-    double OBS_DEADZONE = 0.6;
+    double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
+    double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
     double OBS_LOCAL_GOAL_D = 4.0;
     double OBS_SAFE_MARGIN_X = 0.1;
     double OBS_SAFE_MARGIN_Y = 0.1;
@@ -141,7 +146,7 @@ public:
     double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.0;
     double DOCKING_CLUST_ANGLE_THRESHOLD = 45.0*D2R;
     double DOCKING_DOCK_SIZE_X[2] = {-0.025, 0.025};
-    double DOCKING_POINTDOCK_MARGIN = 0.15;
+    double DOCKING_POINTDOCK_MARGIN = 0.18;
     double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
 
@@ -153,8 +158,12 @@ public:
     int LVX_MAX_FEATURE_NUM = 500;
     int LVX_SURFEL_NN_NUM = 1;
     double LVX_SURFEL_RANGE = 1.0;
+    double LVX_SURFEL_BALANCE = 0.4; // 0.35 ~ 1.0(off)
     double LVX_COST_THRESHOLD = 1.0;
     double LVX_INLIER_CHECK_DIST = 0.3;
+
+    // map
+    QString AUTO_LOAD_MAP_PATH = "";
 
     std::vector<QString> params;
 
@@ -190,6 +199,8 @@ public:
     void load_code_info(QString path);
     void load_ext(QString path);
     #endif
+
+    void set_map_path(QString path);
 
 Q_SIGNALS:
 

@@ -30,7 +30,7 @@ class COMM_FMS : public QObject
 public:
     explicit COMM_FMS(QObject *parent = nullptr);
     ~COMM_FMS();
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     QObject *main = NULL;
@@ -65,7 +65,8 @@ public:
     QString get_multi_state();
 
 private Q_SLOTS:
-    void recv_message(const QByteArray &buf);
+    //void recv_message(const QByteArray &buf);
+    void recv_message(const QString &buf);
     void reconnect_loop();
     void connected();
     void disconnected();
@@ -91,6 +92,9 @@ private Q_SLOTS:
     void slot_path(DATA_PATH msg);
     void slot_vobs_r(DATA_VOBS_R msg);
     void slot_vobs_c(DATA_VOBS_C msg);
+
+    /* send command response */
+    void send_move_response(DATA_MOVE msg);
 };
 
 #endif // COMM_FMS_H

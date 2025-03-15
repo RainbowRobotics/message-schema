@@ -25,7 +25,7 @@ public:
     ~MOBILE();
 
     // mutex
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // socket
     int fd = 0;

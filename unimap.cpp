@@ -12,7 +12,7 @@ UNIMAP::~UNIMAP()
 
 void UNIMAP::clear()
 {
-    is_loaded = false;
+    is_loaded = MAP_NOT_LOADED;
 
     kdtree_mask.clear();
     kdtree_cloud.pts.clear();
@@ -38,7 +38,7 @@ void UNIMAP::clear()
 void UNIMAP::load_map(QString path)
 {
     // clear flag
-    is_loaded = false;
+    is_loaded = MAP_LOADING;
 
     // set load map dir
     map_dir = path;
@@ -92,6 +92,7 @@ void UNIMAP::load_map(QString path)
         else
         {
             printf("[UNIMAP] load failed\n");
+            is_loaded = MAP_NOT_LOADED;
             return;
         }
     }
@@ -181,7 +182,7 @@ void UNIMAP::load_map(QString path)
     }
 
     // set flag
-    is_loaded = true;
+    is_loaded = MAP_LOADED;
 }
 
 void UNIMAP::save_map()
@@ -265,7 +266,7 @@ void UNIMAP::save_annotation()
 
 void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
 {
-    if(is_loaded == false || kdtree_mask.size() == 0)
+    if(is_loaded != MAP_LOADED || kdtree_mask.size() == 0)
     {
         return;
     }

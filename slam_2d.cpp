@@ -727,7 +727,7 @@ void SLAM_2D::loc_a_loop()
         FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
-            if(unimap->is_loaded == false)
+            if(unimap->is_loaded != MAP_LOADED)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
@@ -745,8 +745,19 @@ void SLAM_2D::loc_a_loop()
             {
                 _cur_tf = get_cur_tf();
                 time = frm.t;
-                err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
-                ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+
+                if(!config->USE_SIM)
+                {
+                    err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                    ieir = calc_ie_ir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, _cur_tf);
+                }
+                else
+                {
+                    _cur_tf = se2_to_TF(mobile->get_pose().pose);
+                    err = 0.0;
+                    ieir[0] = 0.01;
+                    ieir[1] = 0.99;
+                }
             }
             else
             {
@@ -930,11 +941,12 @@ void SLAM_2D::loc_b_loop()
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            precise_sleep(dt-delta_loop_time);
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
-            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -946,9 +958,25 @@ void SLAM_2D::obs_loop()
     printf("[SLAM] obs_loop start\n");
     while(obs_flag)
     {
+        if(config->USE_SIM)
+        {
+            if(unimap->is_loaded == MAP_LOADED)
+            {
+                Eigen::Matrix4d _cur_tf = get_cur_tf();
+                obsmap->update_obs_map_sim(_cur_tf);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
         TIME_POSE_PTS tpp;
         if(tpp_que.try_pop(tpp))
         {            
+            if(tpp.pts.size() == 0)
+            {
+                continue;
+            }
+
             // add blidar pts
             {
                 TIME_PTS blidar_scan = blidar->get_cur_tp();
@@ -2059,7 +2087,7 @@ void SLAM_2D::semi_auto_init_start()
     if(config->USE_LVX)
     {
         // semi-auto init using 3d lidar
-        if(unimap->is_loaded == false || lvx->map_pts.size() == 0)
+        if(unimap->is_loaded != MAP_LOADED || lvx->map_pts.size() == 0)
         {
             is_busy = false;
 
@@ -2186,7 +2214,7 @@ void SLAM_2D::semi_auto_init_start()
     else
     {
         // semi-auto init using 2d lidar
-        if(unimap->is_loaded == false || unimap->kdtree_cloud.pts.size() == 0)
+        if(unimap->is_loaded != MAP_LOADED || unimap->kdtree_cloud.pts.size() == 0)
         {
             is_busy = false;
 
