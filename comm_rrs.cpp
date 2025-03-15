@@ -957,7 +957,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             }
 
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-            msg.cur_pos = cur_tf.block(0,3,3,1);
+            Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+            msg.cur_pos = cur_pos;
 
             Eigen::Vector3d xi = TF_to_se2(node->tf);
             msg.tgt_pose_vec[0] = xi[0];
@@ -965,13 +966,81 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            msg.result = "accept";
-            msg.message = "";
+            // calc eta (estimate time of arrival)
+            QString cur_node_id = unimap->get_node_id_nn(cur_pos);
+            QString goal_node_id = msg.goal_node_id;
+            std::vector<QString> topo_path = ctrl->topo_path_finding(cur_node_id, goal_node_id);
+            if(topo_path.size() == 0)
+            {
+                msg.result = "reject";
+                msg.message = "no topo path";
+                msg.eta = 9999.0;
+            }
+            else if(topo_path.size() == 1)
+            {
+                NODE* node0 = unimap->get_node_by_id(topo_path.back());
+                if(node0 == NULL)
+                {
+                    msg.result = "reject";
+                    msg.message = "no topo path";
+                    msg.eta = 9999.0;
+                }
+                else
+                {
+                    msg.result = "accept";
+                    msg.message = "";
+                    msg.eta = (cur_pos - node0->tf.block(0,3,3,1)).norm();
+                }
+            }
+            else
+            {
+                bool is_calc_success = true;
+                double eta = 0.0;
+                for(size_t p = 0; p < topo_path.size()-1; p++)
+                {
+                    QString node_id0 = topo_path[p];
+                    QString node_id1 = topo_path[p+1];
+
+                    NODE* node0 = unimap->get_node_by_id(node_id0);
+                    NODE* node1 = unimap->get_node_by_id(node_id1);
+                    if(node0 == NULL || node1 == NULL)
+                    {
+                        is_calc_success = false;
+                        msg.result = "reject";
+                        msg.message = "no topo path";
+                        msg.eta = 9999.0;
+                        break;
+                    }
+
+                    eta += (node0->tf.block(0,3,3,1) - node1->tf.block(0,3,3,1)).norm();
+                }
+
+                if(is_calc_success)
+                {
+                    msg.result = "accept";
+                    msg.message = "";
+                    msg.eta = eta;
+                }
+            }
 
             send_move_response(msg);
 
             // pure pursuit
             Q_EMIT ctrl->signal_move(msg);
+        }
+        else if(method == "hpp")
+        {
+            msg.result = "reject";
+            msg.message = "not supported yet";
+
+            send_move_response(msg);
+        }
+        else if(method == "tng")
+        {
+            msg.result = "reject";
+            msg.message = "not supported yet";
+
+            send_move_response(msg);
         }
         else
         {
@@ -1357,13 +1426,13 @@ void COMM_RRS::slot_view_lidar(DATA_VIEW_LIDAR msg)
         if(msg.frequency > 0)
         {
             MainWindow* _main = (MainWindow*)main;
-            _main->lidar_view_hz = msg.frequency;
+            _main->lidar_view_frequency = msg.frequency;
         }
     }
     else if(command == "off")
     {
         MainWindow* _main = (MainWindow*)main;
-        _main->lidar_view_hz = -1;
+        _main->lidar_view_frequency = -1;
     }
 }
 
@@ -1375,13 +1444,13 @@ void COMM_RRS::slot_view_path(DATA_VIEW_PATH msg)
         if(msg.frequency > 0)
         {
             MainWindow* _main = (MainWindow*)main;
-            _main->path_view_hz = msg.frequency;
+            _main->path_view_frequency = msg.frequency;
         }
     }
     else if(command == "off")
     {
         MainWindow* _main = (MainWindow*)main;
-        _main->path_view_hz = -1;
+        _main->path_view_frequency = -1;
     }
 }
 
@@ -1390,14 +1459,70 @@ void COMM_RRS::slot_led(DATA_LED msg)
     QString command = msg.command;
     if(command == "on")
     {
-        // do something
+        MainWindow* _main = (MainWindow*)main;
+        _main->is_user_led = true;
+
+        QString led = msg.led;
+        if(led == "none")
+        {
+            _main->user_led_color = LED_OFF;
+        }
+        else if(led == "red")
+        {
+            _main->user_led_color = LED_RED;
+        }
+        else if(led == "blue")
+        {
+            _main->user_led_color = LED_BLUE;
+        }
+        else if(led == "white")
+        {
+            _main->user_led_color = LED_WHITE;
+        }
+        else if(led == "green")
+        {
+            _main->user_led_color = LED_GREEN;
+        }
+        else if(led == "magenta")
+        {
+            _main->user_led_color = LED_MAGENTA;
+        }
+        else if(led == "yellow")
+        {
+            _main->user_led_color = LED_YELLOW;
+        }
+        else if(led == "red blink")
+        {
+            _main->user_led_color = LED_RED_BLINK;
+        }
+        else if(led == "blue blink")
+        {
+            _main->user_led_color = LED_BLUE_BLINK;
+        }
+        else if(led == "white blink")
+        {
+            _main->user_led_color = LED_WHITE_BLINK;
+        }
+        else if(led == "green blink")
+        {
+            _main->user_led_color = LED_GREEN_BLINK;
+        }
+        else if(led == "magenta blink")
+        {
+            _main->user_led_color = LED_MAGENTA_BLINK;
+        }
+        else if(led == "yellow blink")
+        {
+            _main->user_led_color = LED_YELLOW_BLINK;
+        }
 
         msg.result = "accept";
         msg.message = "";
     }
     else if(command == "off")
     {
-        // do something
+        MainWindow* _main = (MainWindow*)main;
+        _main->is_user_led = false;
 
         msg.result = "accept";
         msg.message = "";
@@ -1522,7 +1647,7 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["preset"] = QString::number(msg.preset, 10);
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
-
+    obj["eta"] = QString::number(msg.eta, 'f', 3);
 
     // temporal patch
     QString response_goal_node_name = msg.goal_node_name;

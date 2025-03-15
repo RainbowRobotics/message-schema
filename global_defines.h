@@ -194,11 +194,19 @@ enum AUTO_OBS_STATE
     AUTO_OBS_VIR
 };
 
-enum OBS_STATE
+enum OBS_INFO_STATE
 {
-    OBS_NONE = 0,
-    OBS_DYN = 1,
-    OBS_VIR = 2,
+    OBS_STATIC = 0,
+    OBS_DYNAMIC = 1,
+    OBS_VIRTUAL = 2,
+};
+
+enum OBS_DETECT_STATE
+{
+    OBS_DETECT_NONE = 0,
+    OBS_DETECT_STA = 1,
+    OBS_DETECT_DYN = 2,
+    OBS_DETECT_VIR = 3,
 };
 
 enum LOCAL_PATH_STATE
