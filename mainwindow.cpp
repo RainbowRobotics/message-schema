@@ -3426,6 +3426,8 @@ void MainWindow::bt_TaskPlay()
         return;
     }
 
+    task.accuracy_save_enabled = ui->ckb_AccuracySave->isChecked();
+
     task.is_start = true;
     task.use_looping = ui->ckb_Looping->isChecked();
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
@@ -3437,6 +3439,7 @@ void MainWindow::bt_TaskPlay()
         mode = "basic";
     }
     #endif
+
     task.play(mode);
 }
 

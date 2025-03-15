@@ -2011,17 +2011,17 @@ Stop</string>
                <string>IMG save</string>
               </property>
              </widget>
-             <widget class="QCheckBox" name="ckb_TestAccuracy">
+             <widget class="QCheckBox" name="ckb_AccuracySave">
               <property name="geometry">
                <rect>
                 <x>10</x>
                 <y>70</y>
-                <width>121</width>
+                <width>131</width>
                 <height>20</height>
                </rect>
               </property>
               <property name="text">
-               <string>Accuracy logging</string>
+               <string>Accuracy test logging</string>
               </property>
              </widget>
             </widget>
