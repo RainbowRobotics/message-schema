@@ -13,7 +13,7 @@ LIDAR_2D::~LIDAR_2D()
         grab_thread_f = NULL;
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(grab_thread_b != NULL)
     {
         grab_flag_b = false;
@@ -46,7 +46,7 @@ void LIDAR_2D::open()
         grab_thread_f = new std::thread(&LIDAR_2D::grab_loop_f, this);
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(grab_thread_b == NULL)
     {
         grab_flag_b = true;
@@ -442,7 +442,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_400)
+#if defined(USE_AMR_400)  || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
 void LIDAR_2D::grab_loop_f()
 {
     printf("[LIDAR] start grab loop, front\n");
@@ -506,14 +506,10 @@ void LIDAR_2D::grab_loop_f()
             std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
             int num_scan_point = sp.size();
             double scan_time = data.getDerivedValuesPtr()->getScanTime()*M2S;
-            //double time_increment = data.getDerivedValuesPtr()->getInterbeamPeriod()*U2S;
             double time_increment = scan_time/num_scan_point;
 
             double t0 = lidar_t + offset_t_f;
             double t1 = t0 + scan_time;
-
-            //double t1 = lidar_t + offset_t_f;
-            //double t0 = t1 - scan_time;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -540,10 +536,20 @@ void LIDAR_2D::grab_loop_f()
             // parsing            
             for(size_t p = 0; p < sp.size(); p++)
             {
+                // check sick invaild pts
+                bool is_infinite = sp[p].getInfiniteBit();
+                bool is_glare = sp[p].getGlareBit();
+                bool is_reflect = sp[p].getReflectorBit();
+                bool is_contamination = (sp[p].getContaminationBit() || sp[p].getContaminationWarningBit());
+                if(is_infinite || is_glare || is_reflect || is_contamination)
+                {
+                    continue;
+                }
+
                 double t = t0 + time_increment*p;
                 double deg = sp[p].getAngle();
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
-                double rssi = sp[p].getReflectivity();                               
+                double rssi = sp[p].getReflectivity();
 
                 // dist filter
                 if(dist < 0.05 || dist > config->LIDAR_MAX_RANGE)
@@ -740,6 +746,16 @@ void LIDAR_2D::grab_loop_b()
             // parsing            
             for(size_t p = 0; p < sp.size(); p++)
             {
+                // check sick invaild pts
+                bool is_infinite = sp[p].getInfiniteBit();
+                bool is_glare = sp[p].getGlareBit();
+                bool is_reflect = sp[p].getReflectorBit();
+                bool is_contamination = (sp[p].getContaminationBit() || sp[p].getContaminationWarningBit());
+                if(is_infinite || is_glare || is_reflect || is_contamination)
+                {
+                    continue;
+                }
+
                 double t = t0 + time_increment*p;
                 double deg = sp[p].getAngle();
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
@@ -894,6 +910,7 @@ void LIDAR_2D::a_loop()
                 std::vector<double> reflects_f;
                 std::vector<Eigen::Vector3d> pts_f;
 
+                bool is_found_f = false;
                 for(size_t p = 0; p < filtered_pts_f.size(); p++)
                 {
                     Eigen::Vector3d P = tf_f.block(0,0,3,3)*filtered_pts_f[p] + tf_f.block(0,3,3,1);
@@ -903,6 +920,28 @@ void LIDAR_2D::a_loop()
                     {
                         continue;
                     }
+
+                    #if defined(USE_MECANUM_OLD)
+                    if((P[0] > 0.575) && (P[0] < 1.3) &&
+                       (P[1] > -0.5)  && (P[1] < 0.15))
+                    {
+                        continue;
+                    }
+
+                    if(P[0] > (config->ROBOT_SIZE_X[0] - 0.3) && P[0] < (0) &&
+                       P[1] > (config->ROBOT_SIZE_Y[0] - 0.3) && P[1] < (0))
+                    {
+                        continue;
+                    }
+
+                    if(P[0] > config->ROBOT_SIZE_X[0] - 0.05 && P[0] < config->ROBOT_SIZE_X[1] + 0.05 &&
+                       P[1] > config->ROBOT_SIZE_Y[0] - 0.05 && P[1] < config->ROBOT_SIZE_Y[1] + 0.05 && is_found_f == false)
+                    {
+                        is_found_f = true;
+                        Q_EMIT signal_found_obs();
+                    }
+                    #endif
+
                     pts_f.push_back(P);
                     reflects_f.push_back(frm0.reflects[p]);
                 }
@@ -910,6 +949,8 @@ void LIDAR_2D::a_loop()
                 // lidar frame to robot frame
                 std::vector<double> reflects_b;
                 std::vector<Eigen::Vector3d> pts_b;
+
+                bool is_found_b = false;
                 for(size_t p = 0; p < filtered_pts_b.size(); p++)
                 {
                     Eigen::Vector3d P = tf_b.block(0,0,3,3)*filtered_pts_b[p] + tf_b.block(0,3,3,1);
@@ -919,6 +960,28 @@ void LIDAR_2D::a_loop()
                     {
                         continue;
                     }
+
+                    #if defined(USE_MECANUM_OLD)
+                    if((P[0] > 0.575) && (P[0] < 1.3) &&
+                       (P[1] > -0.5)  && (P[1] < 0.15))
+                    {
+                        continue;
+                    }
+
+                    if(P[0] > (config->ROBOT_SIZE_X[0] - 0.3) && P[0] < (0) &&
+                       P[1] > (config->ROBOT_SIZE_Y[0] - 0.3) && P[1] < (0))
+                    {
+                        continue;
+                    }
+
+                    if(P[0] > config->ROBOT_SIZE_X[0] - 0.05 && P[0] < config->ROBOT_SIZE_X[1] + 0.05 &&
+                       P[1] > config->ROBOT_SIZE_Y[0] - 0.05 && P[1] < config->ROBOT_SIZE_Y[1] + 0.05 && is_found_b == false)
+                    {
+                        is_found_b = true;
+                        Q_EMIT signal_found_obs();
+                    }
+                    #endif
+
                     pts_b.push_back(P);
                     reflects_b.push_back(frm1.reflects[p]);
                 }

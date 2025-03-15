@@ -65,6 +65,7 @@ public:
 
     // auto init
     void semi_auto_init_start();
+    void semi_auto_init_start_spec(const std::vector<Eigen::Matrix4d>& tfs);
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);

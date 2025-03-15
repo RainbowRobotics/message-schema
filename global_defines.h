@@ -171,17 +171,13 @@ enum LED_STATE
     LED_MAGENTA_BLINK,
 };
 
-enum DOCKING_FSM_STATE
+enum DOCK_FSM_STATE
 {
-    DOCKING_FSM_OFF = 0,
-    DOCKING_FSM_POINTDOCK,
-    DOCKING_FSM_COMPENSATE,
-    DOCKING_FSM_DOCK,
-    DOCKING_FSM_UNDOCK,
-    DOCKING_FSM_OBS,
-    DOCKING_FSM_WAIT,
-    DOCKING_FSM_COMPLETE,
-    DOCKING_FSM_FAILED
+    DOCK_FSM_DRIVING = 0,
+    DOCK_FSM_DRIVING_FOR_CHRGE,
+    DOCK_FSM_WAIT_FOR_CHRGE,
+    DOCK_FSM_COMPLETE,
+    DOCK_FSM_FAILED
 };
 
 enum AUTO_OBS_STATE
@@ -244,6 +240,22 @@ enum MOTOR_ERROR_STATE
     MOTOR_ERR_IN = 32,
     MOTOR_ERR_PSI = 64,
     MOTOR_ERR_NON = 128,
+};
+
+enum ROBOT_OPERATING_MODE
+{
+    ROBOT_AUTO_MODE=0,
+    ROBOT_JOYSTICK_MODE=1,
+};
+
+enum CHARGING_STATION_STATE
+{
+    CHARGING_STATION_IDLE = 0,
+    CHARGING_STATION_TRIG_TO_CHARGE = 1,
+    CHARGING_STATION_BATTERY_ON = 2,
+    CHARGING_STATION_CHARGING = 3,
+    CHARGING_STATION_TRIG_TO_STOP_CHARGE= 4,
+    CHARGING_STATION_FAIL = 5,
 };
 
 enum MAP_LOAD_STATE
@@ -558,6 +570,120 @@ struct MOBILE_STATUS
     float imu_acc_x =0;
     float imu_acc_y =0;
     float imu_acc_z =0;
+};
+#endif
+
+#if defined(USE_MECANUM_OLD)
+struct MOBILE_STATUS
+{
+    double t = 0;
+
+    // motor status
+    uint8_t connection_m0 = 0;
+    uint8_t connection_m1 = 0;
+    uint8_t connection_m2 = 0;
+    uint8_t connection_m3 = 0;
+
+    uint8_t status_m0 = 0;
+    uint8_t status_m1 = 0;
+    uint8_t status_m2 = 0;
+    uint8_t status_m3 = 0;
+
+    uint8_t temp_m0 = 0;
+    uint8_t temp_m1 = 0;
+    uint8_t temp_m2 = 0;
+    uint8_t temp_m3 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+    uint8_t cur_m2 = 0;
+    uint8_t cur_m3 = 0;
+
+    uint8_t charge_state = 0;
+    uint8_t power_state = 0;
+    uint8_t motor_stop_state = 0;
+    uint8_t remote_state = 0;
+
+    float bat_in = 0;
+    float bat_out = 0;
+    float bat_current = 0;
+    float power = 0;
+    float total_power = 0;
+
+    // for timesync
+    uint32_t recv_tick = 0;
+    float return_time = 0;
+
+    // imu status
+    float imu_gyr_x =0;
+    float imu_gyr_y =0;
+    float imu_gyr_z =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
+
+    uint8_t inter_lock_state = 0;
+    uint8_t operation_state = 0;
+    uint8_t move_linear_state = 0;
+};
+#endif
+
+#if defined(USE_MECANUM)
+struct MOBILE_STATUS
+{
+    double t = 0;
+    uint32_t recv_tick = 0;
+    float return_time = 0;
+
+    // motor status
+    uint8_t connection_m0 = 0;
+    uint8_t connection_m1 = 0;
+    uint8_t connection_m2 = 0;
+    uint8_t connection_m3 = 0;
+
+    uint8_t status_m0 = 0;
+    uint8_t status_m1 = 0;
+    uint8_t status_m2 = 0;
+    uint8_t status_m3 = 0;
+
+    uint8_t temp_m0 = 0;
+    uint8_t temp_m1 = 0;
+    uint8_t temp_m2 = 0;
+    uint8_t temp_m3 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+    uint8_t cur_m2 = 0;
+    uint8_t cur_m3 = 0;
+
+    uint8_t esti_temp_m0 = 0;
+    uint8_t esti_temp_m1 = 0;
+    uint8_t esti_temp_m2 = 0;
+    uint8_t esti_temp_m3 = 0;
+
+    uint8_t charge_state = 0;
+    uint8_t power_state = 0;
+    uint8_t motor_stop_state = 0;
+    uint8_t remote_state = 0;
+
+    float bat_in = 0;
+    float bat_out = 0;
+    float bat_current = 0;
+    float power = 0;
+    float total_power = 0;
+
+    float charge_current = 0;
+    float contact_voltage = 0;
+
+    // imu status
+    float imu_gyr_x =0;
+    float imu_gyr_y =0;
+    float imu_gyr_z =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
+
+    uint8_t inter_lock_state = 0;
 };
 #endif
 
@@ -944,6 +1070,17 @@ struct CTRL_PARAM
     double DRIVE_EPS = 0.1;
 };
 
+// dockcontrol parameters
+struct DCTRL_PARAM
+{
+    double GAIN_P = 1.0;
+    double GAIN_D = 0.0;
+    double LIMIT_V = 1.0;
+    double LIMIT_W = 60.0;
+    double LIMIT_V_ACC = 0.5;
+    double LIMIT_W_ACC = 360.0;
+};
+
 struct ASTAR_NODE
 {
     ASTAR_NODE* parent = NULL;
@@ -1049,41 +1186,55 @@ struct PATH
     }
 };
 
-struct CODE_INFO
+// bottom qr sensor(GLS611) info
+struct BQR_INFO
 {
     QString id = "";
+    int code_num = -1;
     int t = 0;
     int x = 0;
     int y = 0;
     int z = 0;
     double th = 0;
 
-    CODE_INFO()
+    double xmcl = 0.0;
+    double ymcl = 0.0;
+
+    BQR_INFO()
     {
         id = "";
+        code_num = -1;
         t = 0;
         x = 0;
         y = 0;
         z = 0;
         th = 0;
+        xmcl = 0.0;
+        ymcl = 0.0;
     }
-    CODE_INFO(const CODE_INFO& p)
+    BQR_INFO(const BQR_INFO& p)
     {
         id = p.id;
+        code_num = p.code_num;
         t = p.t;
         x = p.x;
         y = p.y;
         z = p.z;
         th = p.th;
+        xmcl = p.xmcl;
+        ymcl = p.ymcl;
     }
-    CODE_INFO& operator=(const CODE_INFO& p)
+    BQR_INFO& operator=(const BQR_INFO& p)
     {
         id = p.id;
+        code_num = p.code_num;
         t = p.t;
         x = p.x;
         y = p.y;
         z = p.z;
         th = p.th;
+        xmcl = p.xmcl;
+        ymcl = p.ymcl;
         return *this;
     }
 };
@@ -1221,11 +1372,18 @@ struct NODE_INFO
     // size
     Eigen::Vector3d sz;
 
+    // bqr(bottom qr) code number
+    int bqr_code_num = -1;
+
+    // bqr(bottom qr) offset
+    Eigen::Vector3d bqr_offset;
+
     NODE_INFO()
     {
         rpy.setZero();
         ptz.setZero();
         sz.setZero();
+        bqr_offset.setZero();
     }
 
     NODE_INFO(const NODE_INFO& p)
@@ -1233,6 +1391,8 @@ struct NODE_INFO
         rpy = p.rpy;
         ptz = p.ptz;
         sz = p.sz;
+        bqr_code_num = p.bqr_code_num;
+        bqr_offset = p.bqr_offset;
     }
 
     NODE_INFO& operator=(const NODE_INFO& p)
@@ -1240,6 +1400,8 @@ struct NODE_INFO
         rpy = p.rpy;
         ptz = p.ptz;
         sz = p.sz;
+        bqr_code_num = p.bqr_code_num;
+        bqr_offset = p.bqr_offset;
         return *this;
     }
 };

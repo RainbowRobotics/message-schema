@@ -13,7 +13,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "autocontrol.h"
-#include "docking.h"
+#include "dockcontrol.h"
 #include "lvx_loc.h"
 
 // qt
@@ -42,7 +42,7 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
     AUTOCONTROL *ctrl = NULL;
-    DOCKING *dctrl = NULL;
+    DOCKCONTROL *dctrl = NULL;
     LVX_LOC *lvx = NULL;
 
     // vars    

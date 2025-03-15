@@ -1072,6 +1072,7 @@ out</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -1124,7 +1125,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>7</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1443,43 +1444,6 @@ LC</string>
                <string>Resume</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_DockingMove">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>50</y>
-                <width>51</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::StrongFocus</enum>
-              </property>
-              <property name="text">
-               <string>Docking
-run</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="bt_DockingStop">
-              <property name="geometry">
-               <rect>
-                <x>60</x>
-                <y>50</y>
-                <width>51</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Docking
-Stop</string>
-              </property>
-             </widget>
              <widget class="QLabel" name="lb_CodeInfo">
               <property name="geometry">
                <rect>
@@ -1493,12 +1457,17 @@ Stop</string>
                <string>[CODE_INFO]</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_Undock">
+            </widget>
+            <widget class="QWidget" name="tab_7">
+             <attribute name="title">
+              <string>Docking</string>
+             </attribute>
+             <widget class="QPushButton" name="bt_UndockStart">
               <property name="geometry">
                <rect>
-                <x>110</x>
-                <y>50</y>
-                <width>51</width>
+                <x>70</x>
+                <y>10</y>
+                <width>61</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1512,7 +1481,70 @@ Stop</string>
                <enum>Qt::StrongFocus</enum>
               </property>
               <property name="text">
-               <string>Undock</string>
+               <string>Undocking
+start</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockStart">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>10</y>
+                <width>61</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+              <property name="text">
+               <string>Docking
+start</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockStop">
+              <property name="geometry">
+               <rect>
+                <x>130</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Stop</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DockPause">
+              <property name="geometry">
+               <rect>
+                <x>180</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Pause</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_DodkResume">
+              <property name="geometry">
+               <rect>
+                <x>230</x>
+                <y>10</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Resume</string>
               </property>
              </widget>
             </widget>
@@ -1792,160 +1824,6 @@ Stop</string>
                <string>Sync</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_MoveLinear">
-              <property name="geometry">
-               <rect>
-                <x>230</x>
-                <y>10</y>
-                <width>71</width>
-                <height>20</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>move linear</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="bt_MoveRotate">
-              <property name="geometry">
-               <rect>
-                <x>230</x>
-                <y>30</y>
-                <width>71</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>move rotate</string>
-              </property>
-             </widget>
-             <widget class="QDoubleSpinBox" name="dsb_MoveLinearDist">
-              <property name="geometry">
-               <rect>
-                <x>90</x>
-                <y>10</y>
-                <width>51</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="minimum">
-               <double>-5.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>5.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.010000000000000</double>
-              </property>
-             </widget>
-             <widget class="QDoubleSpinBox" name="dsb_MoveLinearV">
-              <property name="geometry">
-               <rect>
-                <x>170</x>
-                <y>10</y>
-                <width>51</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="minimum">
-               <double>-1.500000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>1.500000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.010000000000000</double>
-              </property>
-             </widget>
-             <widget class="QDoubleSpinBox" name="dsb_MoveRotateDeg">
-              <property name="geometry">
-               <rect>
-                <x>90</x>
-                <y>30</y>
-                <width>51</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.100000000000000</double>
-              </property>
-             </widget>
-             <widget class="QDoubleSpinBox" name="dsb_MoveRotateW">
-              <property name="geometry">
-               <rect>
-                <x>170</x>
-                <y>30</y>
-                <width>51</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.100000000000000</double>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_2">
-              <property name="geometry">
-               <rect>
-                <x>60</x>
-                <y>10</y>
-                <width>31</width>
-                <height>20</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>dist:</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_3">
-              <property name="geometry">
-               <rect>
-                <x>150</x>
-                <y>10</y>
-                <width>21</width>
-                <height>16</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>v:</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_4">
-              <property name="geometry">
-               <rect>
-                <x>60</x>
-                <y>30</y>
-                <width>31</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>deg:</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_5">
-              <property name="geometry">
-               <rect>
-                <x>150</x>
-                <y>30</y>
-                <width>21</width>
-                <height>17</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>w:</string>
-              </property>
-             </widget>
              <widget class="QPushButton" name="bt_Test">
               <property name="geometry">
                <rect>
@@ -1963,7 +1841,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>90</x>
-                <y>49</y>
+                <y>69</y>
                 <width>44</width>
                 <height>21</height>
                </rect>
@@ -1976,7 +1854,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>50</y>
+                <y>70</y>
                 <width>51</width>
                 <height>20</height>
                </rect>
@@ -1989,7 +1867,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>50</y>
+                <y>70</y>
                 <width>61</width>
                 <height>20</height>
                </rect>
@@ -2002,7 +1880,7 @@ Stop</string>
               <property name="geometry">
                <rect>
                 <x>190</x>
-                <y>50</y>
+                <y>70</y>
                 <width>61</width>
                 <height>20</height>
                </rect>
@@ -2011,17 +1889,195 @@ Stop</string>
                <string>IMG save</string>
               </property>
              </widget>
-             <widget class="QCheckBox" name="ckb_AccuracySave">
+            </widget>
+            <widget class="QWidget" name="tab_8">
+             <attribute name="title">
+              <string>Page</string>
+             </attribute>
+             <widget class="QPushButton" name="bt_MoveLinearY">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>70</y>
-                <width>131</width>
+                <x>170</x>
+                <y>40</y>
+                <width>81</width>
                 <height>20</height>
                </rect>
               </property>
               <property name="text">
-               <string>Accuracy test logging</string>
+               <string>move linear y</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MoveLinearX">
+              <property name="geometry">
+               <rect>
+                <x>170</x>
+                <y>20</y>
+                <width>81</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>move linear x</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_5">
+              <property name="geometry">
+               <rect>
+                <x>100</x>
+                <y>60</y>
+                <width>21</width>
+                <height>17</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>w:</string>
+              </property>
+             </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MoveLinearV">
+              <property name="geometry">
+               <rect>
+                <x>120</x>
+                <y>20</y>
+                <width>51</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="minimum">
+               <double>-1.500000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>1.500000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_3">
+              <property name="geometry">
+               <rect>
+                <x>100</x>
+                <y>20</y>
+                <width>21</width>
+                <height>16</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>v:</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_4">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>60</y>
+                <width>31</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>deg:</string>
+              </property>
+             </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MoveRotateW">
+              <property name="geometry">
+               <rect>
+                <x>120</x>
+                <y>60</y>
+                <width>51</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="minimum">
+               <double>-180.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>180.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+             </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MoveRotateDeg">
+              <property name="geometry">
+               <rect>
+                <x>40</x>
+                <y>60</y>
+                <width>51</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="minimum">
+               <double>-180.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>180.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MoveRotate">
+              <property name="geometry">
+               <rect>
+                <x>170</x>
+                <y>60</y>
+                <width>81</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>move rotate</string>
+              </property>
+             </widget>
+             <widget class="QDoubleSpinBox" name="dsb_MoveLinearDist">
+              <property name="geometry">
+               <rect>
+                <x>40</x>
+                <y>20</y>
+                <width>51</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="minimum">
+               <double>-5.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>5.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_2">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>20</y>
+                <width>31</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(246, 97, 81);</string>
+              </property>
+              <property name="text">
+               <string>dist:</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MoveStop">
+              <property name="geometry">
+               <rect>
+                <x>260</x>
+                <y>20</y>
+                <width>61</width>
+                <height>61</height>
+               </rect>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(246, 97, 81);</string>
+              </property>
+              <property name="text">
+               <string>Stop</string>
               </property>
              </widget>
             </widget>

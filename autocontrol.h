@@ -12,10 +12,11 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "cam.h"
-#include "code_reader.h"
+#include "bqr_sensor.h"
 #include "slam_2d.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "dockcontrol.h"
 
 // qt
 #include <QObject>
@@ -34,11 +35,10 @@ public:
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
     CAM *cam = NULL;
-    CODE_READER *code = NULL;
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
-
+    DOCKCONTROL *dctrl = NULL;
 
     // params
     CTRL_PARAM params;
@@ -59,10 +59,16 @@ public:
     void set_cur_goal_state(QString str);
 
     void init();
-    void stop();  
-    void move_pp(Eigen::Matrix4d goal_tf, int preset); // single
-    void move_pp(std::vector<QString> node_path, int preset); // multi
-    void clear_path();
+    void stop();
+    void change();
+    void move(DATA_MOVE msg);
+    void move_pp(Eigen::Matrix4d goal_tf, int preset);
+    void move_pp(std::vector<QString> node_path, int preset);
+    void clean_up();
+
+    /* hpp */
+    void move_hpp(Eigen::Matrix4d goal_tf, int val);
+    void move_hpp(std::vector<QString> node_path, int val);
 
     // global path planning (using topo)
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
@@ -98,6 +104,11 @@ public:
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
     void b_loop_pp();
+    void b_loop_hpp();
+
+    // for last goal
+    DATA_MOVE move_info;
+    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
 
     // for path plot
     PATH cur_global_path;
@@ -116,6 +127,7 @@ public:
     std::atomic<bool> is_path_overlap = {false};
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};    
+    std::atomic<bool> is_undock = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
 
     // params for rrs
@@ -131,6 +143,7 @@ Q_SIGNALS:
     void signal_global_path_updated();
     void signal_local_path_updated();
     void signal_move_response(DATA_MOVE msg);
+    void signal_check_docking();
 
 public Q_SLOTS:
     void move(DATA_MOVE msg);

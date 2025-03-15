@@ -2335,6 +2335,11 @@ void SLAM_2D::semi_auto_init_start()
     is_busy = false;
 }
 
+void SLAM_2D::semi_auto_init_start_spec(const std::vector<Eigen::Matrix4d>& tfs)
+{
+
+}
+
 double SLAM_2D::calc_overlap_ratio(std::vector<Eigen::Vector3d>& pts0, std::vector<Eigen::Vector3d>& pts1)
 {
     // Lambda to compute AABB from points

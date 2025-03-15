@@ -59,6 +59,14 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
+    #ifdef USE_MECANUM_OLD
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
+    #ifdef USE_MECANUM
+    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
     {
@@ -337,7 +345,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
     if(path_list2.size() == 0)
     {
-        logger->write_log("[AUTO] move_pp, path_list2 empty");
+        logger->write_log("[AUTO] move_hpp, path_list2 empty");
         stop();
         return;
     }
@@ -470,6 +478,168 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         b_flag = true;
         b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
     }
+}
+
+void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int val)
+{
+    // stop first
+    stop();
+
+    // obs clear
+    obsmap->clear();
+
+    // load preset 0, and apply val for percentage
+    #ifdef USE_MECANUM_OLD
+    params = load_preset(0);
+    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
+    if(params.LIMIT_V > 0.2)
+    {
+        params.LIMIT_V = 0.2;
+    }
+    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
+    if(params.LIMIT_W > 20)
+    {
+        params.LIMIT_W = 20;
+    }
+    #endif
+
+    // load preset
+    #ifdef USE_MECANUM
+    params = load_preset(val);
+    #endif
+
+    // check goal type is station & start position is station
+    const double is_node_close = 0.1;
+    is_undock = false;
+    Eigen::Vector3d cur_pos = TF_to_se2(slam->get_cur_tf());
+    QString cur_node_id = unimap->get_node_id_nn(cur_pos);
+    NODE *cur_node = unimap->get_node_by_id(cur_node_id);
+
+    Eigen::Vector3d goal_pos = TF_to_se2(goal_tf);
+    QString goal_node_id = unimap->get_node_id_nn(goal_pos);
+    NODE *goal_node = unimap->get_node_by_id(goal_node_id);
+    if(cur_node != NULL && goal_node != NULL)
+    {
+        double dist = calc_dist_2d(cur_node->tf.block(0,3,3,1) - cur_pos);
+        if(cur_node->type == "STATION" && goal_node->type != "STATION" && dist < is_node_close)
+        {
+            is_undock = true;
+        }
+    }
+
+    // calc global path
+    PATH path = calc_global_path(goal_tf);
+    if(path.pos.size() > 0)
+    {
+        // enque global path
+        global_path_que.push(path);
+    }
+
+    // start control loop
+    b_flag = true;
+    b_thread = new std::thread(&AUTOCONTROL::b_loop_hpp, this);
+}
+
+void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
+{
+    // for overlap
+    change();
+
+    // obs clear
+    obsmap->clear();
+
+    // load preset 0, and apply val for percentage
+    #ifdef USE_MECANUM_OLD
+    params = load_preset(0);
+    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
+    if(params.LIMIT_V > 0.2)
+    {
+        params.LIMIT_V = 0.2;
+    }
+    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
+    if(params.LIMIT_W > 20)
+    {
+        params.LIMIT_W = 20;
+    }
+    #endif
+
+    // load preset
+    #ifdef USE_MECANUM
+    params = load_preset(val);
+    #endif
+
+    // symmetric cut
+    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
+
+    // loop cut
+    std::vector<std::vector<QString>> path_list2;
+    for(size_t p = 0; p < path_list.size(); p++)
+    {
+        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
+        for(size_t q = 0; q < res.size(); q++)
+        {
+            path_list2.push_back(res[q]);
+        }
+    }
+
+    if(path_list2.size() == 0)
+    {
+        logger->write_log("[AUTO] move_hpp, path_list2 empty");
+        stop();
+        return;
+    }
+
+    mtx.lock();
+    Eigen::Matrix4d final_tf = ZYX_to_TF(move_info.tgt_pose_vec[0], move_info.tgt_pose_vec[1], move_info.tgt_pose_vec[2], 0, 0, move_info.tgt_pose_vec[3]);
+    mtx.unlock();
+
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
+        // enque path
+        PATH path = calc_global_path(path_list2[p], p == 0);
+
+        // check final path
+        if(final_tf.isIdentity())
+        {
+            path.is_final = true;
+        }
+        else
+        {
+            double d = calc_dist_2d(final_tf.block(0,3,3,1) - path.ed_tf.block(0,3,3,1));
+            if(d < config->DRIVE_GOAL_D)
+            {
+                path.is_final = true;
+
+                // check goal type is station & start position is station
+                const double is_node_close = 0.1;
+                is_undock = false;
+                Eigen::Vector3d cur_pos = TF_to_se2(slam->get_cur_tf());
+                QString cur_node_id = unimap->get_node_id_nn(cur_pos);
+                NODE *cur_node = unimap->get_node_by_id(cur_node_id);
+
+                Eigen::Vector3d goal_pos = TF_to_se2(final_tf);
+                QString goal_node_id = unimap->get_node_id_nn(goal_pos);
+                NODE *goal_node = unimap->get_node_by_id(goal_node_id);
+                if(cur_node != NULL && goal_node != NULL)
+                {
+                    double dist = calc_dist_2d(cur_node->tf.block(0,3,3,1) - cur_pos);
+                    if(cur_node->type == "STATION" && goal_node->type != "STATION" && dist < is_node_close)
+                    {
+                        is_undock = true;
+                    }
+                }
+            }
+        }
+
+        global_path_que.push(path);
+    }
+
+    // set flag
+    set_multi_req("recv_path");
+
+    // start control loop
+    b_flag = true;
+    b_thread = new std::thread(&AUTOCONTROL::b_loop_hpp, this);
 }
 
 std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_path)
@@ -670,6 +840,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // divide and smooth metric path    
+    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -678,6 +849,28 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     {
         path_pos.push_back(path_pose[p].block(0,3,3,1));
     }
+    #endif
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    std::vector<Eigen::Matrix4d> path_pose;
+    for(size_t p = 0; p < node_pose.size()-1; p++)
+    {
+        Eigen::Matrix4d tf0 = node_pose[p];
+        Eigen::Matrix4d tf1 = node_pose[p+1];
+
+        std::vector<Eigen::Matrix4d> _path_pose = intp_tf(tf0, tf1, GLOBAL_PATH_STEP, 0);
+        path_pose.insert(path_pose.end(), _path_pose.begin(), _path_pose.end());
+    }
+
+    std::vector<Eigen::Vector3d> path_pos;
+    for(size_t p = 0; p < path_pose.size(); p++)
+    {
+        path_pos.push_back(path_pose[p].block(0,3,3,1));
+    }
+    #endif
+
+    double p0 = params.ST_V;
+    double p1 = params.ED_V;
 
     // set ref_v
     std::vector<double> ref_v;
@@ -747,6 +940,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
 
     // divide and smooth metric path
+    #if defined(USE_SRV) || defined(USE_SRV) || defined(USE_SRV)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -755,6 +949,24 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     {
         path_pos.push_back(path_pose[p].block(0,3,3,1));
     }
+    #endif
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    std::vector<Eigen::Matrix4d> path_pose;
+    std::vector<Eigen::Vector3d> path_pos;
+    for(size_t p = 0; p < node_pose.size()-1; p++)
+    {
+        Eigen::Matrix4d tf0 = node_pose[p];
+        Eigen::Matrix4d tf1 = node_pose[p+1];
+
+        std::vector<Eigen::Matrix4d> _path_pose = intp_tf(tf0, tf1, GLOBAL_PATH_STEP, 0);
+        path_pose.insert(path_pose.end(), _path_pose.begin(), _path_pose.end());
+    }
+    for(size_t p = 0; p < path_pose.size(); p++)
+    {
+        path_pos.push_back(path_pose[p].block(0,3,3,1));
+    }
+    #endif
 
     // set ref_v    
     std::vector<double> ref_v;
@@ -1472,7 +1684,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
-    // get global path segment    
+    // get global path segment
     std::vector<Eigen::Matrix4d> _path_pose;
     std::vector<Eigen::Vector3d> _path_pos;
     int range = config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
@@ -1481,7 +1693,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     for(int p = st_idx; p <= ed_idx; p++)
     {
         _path_pose.push_back(global_path.pose[p]);
-        _path_pos.push_back(global_path.pos[p]);        
+        _path_pos.push_back(global_path.pos[p]);
     }
     double st_v = global_path.ref_v[st_idx];
 
@@ -1502,8 +1714,11 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     else
     {
         // resampling
-        std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
-        path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
+        std::vector<Eigen::Matrix4d> path_pose;
+        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        path_pose = reorientation_path(_path_pose);
+        #endif
+        path_pose = path_resampling(_path_pose, LOCAL_PATH_STEP);
 
         std::vector<Eigen::Vector3d> path_pos;
         for(size_t p = 0; p < path_pose.size(); p++)
@@ -1604,7 +1819,9 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     if(path_pose.size() > 0)
     {
         // sample and interpolation
+        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         path_pose = reorientation_path(path_pose);
+        #endif
         path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
         std::vector<Eigen::Vector3d> path_pos;
         for(size_t p = 0; p < path_pose.size(); p++)
@@ -1702,7 +1919,7 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
-    if(ms.emo_state == 0)
+    if(ms.motor_stop_state == 0)
     {
         logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
         return DRIVING_NOT_READY;

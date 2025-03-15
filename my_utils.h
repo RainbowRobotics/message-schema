@@ -11,6 +11,7 @@ struct VoltageCapacity
 
 extern cv::Vec3b colors[10];
 extern QString AUTO_FSM_STATE_STR[7];
+extern QString DOCK_FSM_STATE_STR[5];
 extern std::vector<VoltageCapacity> volt_lookup_data;
 
 bool ping(std::string ip_address);
