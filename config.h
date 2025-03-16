@@ -146,7 +146,7 @@ public:
     double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.0;
     double DOCKING_CLUST_ANGLE_THRESHOLD = 45.0*D2R;
     double DOCKING_DOCK_SIZE_X[2] = {-0.025, 0.025};
-    double DOCKING_POINTDOCK_MARGIN = 0.18;
+    double DOCK_POINTDOCK_MARGIN = 0.18;
     double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
 
@@ -163,7 +163,7 @@ public:
     double LVX_INLIER_CHECK_DIST = 0.3;
 
     // map
-    QString AUTO_LOAD_MAP_PATH = "";
+    QString MAP_PATH = "";
 
     std::vector<QString> params;
 

@@ -1415,7 +1415,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
         msg.message = "";
       
         MainWindow* _main = (MainWindow*)main;
-        _main->bt_DockingMove();
+        _main->bt_DockStart();
       
         send_dock_response(msg);
     }
@@ -1425,7 +1425,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
         msg.message = "";
 
         MainWindow* _main = (MainWindow*)main;
-        _main->bt_Undock();
+        _main->bt_UnDockStart();
       
         send_dock_response(msg);
     }

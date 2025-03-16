@@ -166,7 +166,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for docking
     connect(ui->bt_DockStart, SIGNAL(clicked()), this, SLOT(bt_DockStart()));
     connect(ui->bt_DockStop, SIGNAL(clicked()), this, SLOT(bt_DockStop()));
-    connect(ui->bt_UndockStart, SIGNAL(clicked()), this,SLOT(bt_UndockStart()));
+    connect(ui->bt_UnDockStart, SIGNAL(clicked()), this,SLOT(bt_UnDockStart()));
 
     // for response
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
@@ -4151,8 +4151,6 @@ void MainWindow::watch_loop()
                         led_color = LED_MAGENTA;
                     }
                 }
-
-
             }
 
             // check lidar
@@ -4390,39 +4388,28 @@ void MainWindow::watch_loop()
 
                 // check emo
                 {
-                    if(ms.emo_state == 0)
+                    if(ms.motor_stop_state == 0)
                     {
                         led_color = LED_YELLOW;
-                        if(ms.emo_state == 1)
-                        {
-                            return;
-                        }
                     }
                 }
 
                 // check battery
                 {
-                    if(ms.bat_out<43.0) // low battery
+                    if(ms.bat_out < 43.0) // low battery
                     {
                         led_color = LED_OFF;
-                        logger.write_log("[BATTERY] Neeed Charge\n");
+                        logger.write_log("[BATTERY] Need Charge");
                     }
                     else if(ms.charge_state == 1) // charge
                     {
                         led_color = LED_RED;
-                        if(ms.bat_out>54.0)
+                        if(ms.bat_out > 54.0)
                         {
                             led_color = LED_BLUE;
                         }
-                        else if (ms.charge_state == 0 || ms.bat_out>54.0)
-                        {
-                            return;
-                        }
                     }
-
                 }
-
-
 
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
@@ -5448,59 +5435,80 @@ void MainWindow::ctrl_plot()
 void MainWindow::raw_plot()
 {
     // plot mobile info
-    if(mobile.is_connected)
     {
-        // plot mobile pose
-        ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
+        if(mobile.is_connected)
+        {
+            // plot mobile pose
+            ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
 
-        // plot mobile status
-        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+            // plot mobile status
+            ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+        }
     }
 
     // plot slam info
-    if(slam.is_slam || slam.is_loc)
     {
-        ui->lb_SlamInfo->setText(slam.get_info_text());
-    }
+        if(slam.is_slam || slam.is_loc)
+        {
+            ui->lb_SlamInfo->setText(slam.get_info_text());
+        }
 
-    // plot que info
-    QString que_info_str;
-    que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%.3f\nlidar_t:%.3f, %.3f",
-                         (int)lidar.scan_que.unsafe_size(),
-                         (int)mobile.msg_que.unsafe_size(),
-                         (int)slam.kfrm_que.unsafe_size(),
-                         (double)plot_proc_t,
-                         (double)lidar.last_t_f, (double)lidar.last_t_b);
-    ui->lb_QueInfo->setText(que_info_str);
+        // plot que info
+        QString que_info_str;
+        que_info_str.sprintf("[QUES]\nscan_q:%d, msg_q:%d, kfrm_q:%d\nplot_t:%.3f\nlidar_t:%.3f, %.3f",
+                             (int)lidar.scan_que.unsafe_size(),
+                             (int)mobile.msg_que.unsafe_size(),
+                             (int)slam.kfrm_que.unsafe_size(),
+                             (double)plot_proc_t,
+                             (double)lidar.last_t_f, (double)lidar.last_t_b);
+        ui->lb_QueInfo->setText(que_info_str);
+    }
 
     // plot auto info
-    QString _multi_state = "";
-    if(comm_fms.is_connected)
     {
-        _multi_state = comm_fms.get_multi_state();
-    }
-    else if(comm_rrs.is_connected)
-    {
-        _multi_state = comm_rrs.get_multi_state();
-    }
-    else
-    {
-        _multi_state = "no connection";
+        QString _multi_state = "";
+        if(comm_fms.is_connected)
+        {
+            _multi_state = comm_fms.get_multi_state();
+        }
+        else if(comm_rrs.is_connected)
+        {
+            _multi_state = comm_rrs.get_multi_state();
+        }
+        else
+        {
+            _multi_state = "no connection";
+        }
+
+        int fsm_state = ctrl.fsm_state;
+
+        QString auto_info_str;
+        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
+                              AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
+                              (bool)ctrl.is_moving ? "1" : "0",
+                              (bool)ctrl.is_pause ? "1" : "0",
+                              ctrl.get_obs_condition().toLocal8Bit().data(),
+                              (bool)ctrl.is_rrs ? "1" : "0",
+                              ctrl.get_multi_req().toLocal8Bit().data(),
+                              _multi_state.toLocal8Bit().data());
+        ui->lb_AutoInfo->setText(auto_info_str);
+
     }
 
-    int fsm_state = ctrl.fsm_state;
+    // plot comm info
+    {
+        QString comm_rrs_str;
+        comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
 
-    QString auto_info_str;
-    auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
-                          AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
-                          (bool)ctrl.is_moving ? "1" : "0",
-                          (bool)ctrl.is_pause ? "1" : "0",
-                          ctrl.get_obs_condition().toLocal8Bit().data(),
-                          (bool)ctrl.is_rrs ? "1" : "0",
-                          ctrl.get_multi_req().toLocal8Bit().data(),
-                          _multi_state.toLocal8Bit().data());
-    ui->lb_AutoInfo->setText(auto_info_str);
+        QString comm_fms_str;
+        comm_fms_str.sprintf("comm_fms: is_connected -> %s\n", (bool)comm_fms.is_connected ? "1" : "0");
 
+        QString comm_old_str;
+        comm_old_str.sprintf("comm_old cmd: is_connected -> %s, data: is_connected -> %s", (bool)comm_old.is_cmd_connected ? "1" : "0", (bool)comm_old.is_data_connected ? "1" : "0");
+
+        QString comm_info_str = "[COMM_INFO]\n" + comm_rrs_str + comm_fms_str + comm_old_str;
+        ui->lb_CommInfo->setText(comm_info_str);
+    }
 
     // plot cam
     if(cam.is_connected[0])
@@ -6435,12 +6443,12 @@ void MainWindow::bt_DockStop()
     ctrl.is_moving = false;
 }
 
-void MainWindow::bt_UndockStart()
+void MainWindow::bt_UnDockStart()
 {
     ctrl.is_moving = true;
     //dctrl.undock();
 
-    double t = std::abs(config.DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
+    double t = std::abs(config.DOCK_POINTDOCK_MARGIN/0.1) + 0.5;
     QTimer::singleShot(t*1000, [&]()
     {
         ctrl.is_moving = false;

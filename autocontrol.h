@@ -60,11 +60,11 @@ public:
 
     void init();
     void stop();
-    void change();
-    void move(DATA_MOVE msg);
+    void clear_path();
+
+    /* pp */
     void move_pp(Eigen::Matrix4d goal_tf, int preset);
     void move_pp(std::vector<QString> node_path, int preset);
-    void clean_up();
 
     /* hpp */
     void move_hpp(Eigen::Matrix4d goal_tf, int val);
@@ -106,7 +106,6 @@ public:
     void b_loop_pp();
     void b_loop_hpp();
 
-    // for last goal
     DATA_MOVE move_info;
     QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
 
@@ -134,9 +133,6 @@ public:
     std::atomic<bool> is_rrs = {false};
     QString multi_req = "none"; // none, req_path, recv_path
     QString obs_condition = "none";
-    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
-
-    DATA_MOVE move_info;
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
