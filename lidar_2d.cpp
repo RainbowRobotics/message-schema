@@ -445,8 +445,6 @@ void LIDAR_2D::a_loop()
 #if defined(USE_AMR_400)  || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
 void LIDAR_2D::grab_loop_f()
 {
-    printf("[LIDAR] start grab loop, front\n");
-
     // sensors
     std::string ip_str = "192.168.2.10"; // front right lidar ip
     sick::types::ip_address_t sensor_ip = boost::asio::ip::address_v4::from_string(ip_str);
@@ -454,7 +452,6 @@ void LIDAR_2D::grab_loop_f()
 
     // host pc
     std::string host_ip_str = "192.168.2.2";
-
     sick::datastructure::CommSettings comm_settings;
     comm_settings.host_ip = boost::asio::ip::address_v4::from_string(host_ip_str); // laptop(temporal)
     comm_settings.host_udp_port = 0;
@@ -462,11 +459,22 @@ void LIDAR_2D::grab_loop_f()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    auto safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
+    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    try
+    {
+        safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
+    }
+    catch(...)
+    {
+        logger->write_log("[LIDAR] front lidar not connected.", "Red");
+        is_connected_f = false;
+        return;
+    }
 
     is_connected_f = true;
 
     int drop_cnt = 10;
+    logger->write_log("[LIDAR] start grab loop, front.", "Green");
     while(grab_flag_f)
     {
         if(safety_scanner->isDataAvailable())
@@ -492,7 +500,7 @@ void LIDAR_2D::grab_loop_f()
                 offset_t_f = pc_t - lidar_t;
 
                 is_synced_f = true;
-                printf("[LIDAR] sync, lidar_t_f: %f, offset_t_f: %f\n", lidar_t, (double)offset_t_f);
+                logger->write_log(QString("[LIDAR] sync, lidar_t_f: %1, offset_t_f: %2").arg(lidar_t).arg((double)offset_t_f));
             }
 
             // check lidar, mobile sync
@@ -586,18 +594,8 @@ void LIDAR_2D::grab_loop_f()
                 }
             }
 
-            int idx1 = -1;
-            for(size_t p = 0; p < pose_storage.size(); p++)
-            {
-                if(pose_storage[p].t > t1)
-                {
-                    idx1 = p;
-                    break;
-                }
-            }
-
             // check
-            if(idx0 == -1 || idx1 == -1)
+            if(idx0 == -1)
             {
                 // drop
                 printf("[LIDAR] front lidar, invalid mobile poses\n");
@@ -605,32 +603,17 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            // precise deskewing
-            Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
-            Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
-            //Eigen::Matrix4d dtf = tf0.inverse()*tf1;
-            Eigen::Matrix4d dtf = Eigen::Matrix4d::Identity();
-
-            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
-            for(size_t p = 0; p < raw_pts.size(); p++)
-            {
-                double t = times[p];
-                double alpha = (t-t0)/(t1-t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
-            }
-
             MOBILE_POSE mo;
             mo.t = t0;
-            mo.pose = TF_to_se2(tf0);
-            //printf("[LIDAR_F] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            mo.pose = pose_storage[idx0].pose;
+            //printf("[LIDAR] front lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
-            frm.dsk = dsk_pts;
+            frm.dsk = raw_pts;
             frm.mo = mo;
             raw_que_f.push(frm);
 
@@ -646,13 +629,11 @@ void LIDAR_2D::grab_loop_f()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    printf("[LIDAR] stop, front\n");
+    logger->write_log("[LIDAR] stop grab loop, back.", "Green");
 }
 
 void LIDAR_2D::grab_loop_b()
 {
-    printf("[LIDAR] start grab loop, back\n");
-
     // sensors
     std::string ip_str = "192.168.2.11"; // back left lidar ip
     sick::types::ip_address_t sensor_ip = boost::asio::ip::address_v4::from_string(ip_str);
@@ -660,7 +641,6 @@ void LIDAR_2D::grab_loop_b()
 
     // host pc
     std::string host_ip_str = "192.168.2.2";
-
     sick::datastructure::CommSettings comm_settings;
     comm_settings.host_ip = boost::asio::ip::address_v4::from_string(host_ip_str); // laptop(temporal)
     comm_settings.host_udp_port = 0;
@@ -668,11 +648,22 @@ void LIDAR_2D::grab_loop_b()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    auto safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
+    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    try
+    {
+        safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
+    }
+    catch(...)
+    {
+        logger->write_log("[LIDAR] back lidar not connected.", "Red");
+        is_connected_b = false;
+        return;
+    }
 
     is_connected_b = true;
 
     int drop_cnt = 10;
+    logger->write_log("[LIDAR] start grab loop, back.", "Green");
     while(grab_flag_b)
     {
         if(safety_scanner->isDataAvailable())
@@ -697,8 +688,8 @@ void LIDAR_2D::grab_loop_b()
                 is_sync_b = false;
                 offset_t_b = pc_t - lidar_t;
 
-                is_synced_b = true;
-                printf("[LIDAR] sync, lidar_t_b: %f, offset_t_b: %f\n", lidar_t, (double)offset_t_b);
+                is_synced_b = true;   
+                logger->write_log(QString("[LIDAR] sync, lidar_t_b: %1, offset_t_b: %2").arg(lidar_t).arg((double)offset_t_b));
             }
 
             // check lidar, mobile sync
@@ -712,14 +703,10 @@ void LIDAR_2D::grab_loop_b()
             std::vector<sick::ScanPoint> sp = data.getMeasurementDataPtr()->getScanPointsVector();
             int num_scan_point = sp.size();
             double scan_time = data.getDerivedValuesPtr()->getScanTime()*M2S;
-            //double time_increment = data.getDerivedValuesPtr()->getInterbeamPeriod()*U2S;
             double time_increment = scan_time/num_scan_point;
 
             double t0 = lidar_t + offset_t_b;
             double t1 = t0 + scan_time;
-
-            //double t1 = lidar_t + offset_t_b;
-            //double t0 = t1 - scan_time;
 
             // check
             if(mobile->get_pose_storage_size() != MO_STORAGE_NUM)
@@ -796,18 +783,8 @@ void LIDAR_2D::grab_loop_b()
                 }
             }
 
-            int idx1 = -1;
-            for(size_t p = 0; p < pose_storage.size(); p++)
-            {
-                if(pose_storage[p].t > t1)
-                {
-                    idx1 = p;
-                    break;
-                }
-            }
-
             // check
-            if(idx0 == -1 || idx1 == -1)
+            if(idx0 == -1)
             {
                 // drop
                 printf("[LIDAR] back lidar, invalid mobile poses\n");
@@ -815,32 +792,17 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            // precise deskewing
-            Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
-            Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
-            //Eigen::Matrix4d dtf = tf0.inverse()*tf1;
-            Eigen::Matrix4d dtf = Eigen::Matrix4d::Identity();
-
-            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
-            for(size_t p = 0; p < raw_pts.size(); p++)
-            {
-                double t = times[p];
-                double alpha = (t-t0)/(t1-t0);
-                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
-            }
-
             MOBILE_POSE mo;
             mo.t = t0;
-            mo.pose = TF_to_se2(tf0);
-            //printf("[LIDAR_B] t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            mo.pose = pose_storage[idx0].pose;
+            //printf("[LIDAR] back lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
             frm.t1 = t1;
             frm.times = times;
             frm.reflects = reflects;
-            frm.dsk = dsk_pts;
+            frm.dsk = raw_pts;
             frm.mo = mo;
             raw_que_b.push(frm);
 
@@ -856,7 +818,7 @@ void LIDAR_2D::grab_loop_b()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    printf("[LIDAR] stop, back\n");
+    logger->write_log("[LIDAR] stop grab loop, front.", "Green");
 }
 
 void LIDAR_2D::a_loop()

@@ -274,6 +274,9 @@ void CONFIG::load()
 
                 DOCK_UNDOCK_REVERSING_DISTANCE = obj_dock["DOCK_UNDOCK_REVERSING_DISTANCE"].toString().toDouble();
                 printf("[CONFIG] DOCK_UNDOCK_REVERSING_DISTANCE, %s\n", obj_dock["DOCK_UNDOCK_REVERSING_DISTANCE"].toString().toLocal8Bit().data());
+
+                DOCK_POINTDOCK_MARGIN = obj_dock["DOCK_POINTDOCK_MARGIN"].toString().toDouble();
+                printf("[CONFIG] DOCK_POINTDOCK_MARGIN, %s\n", obj_dock["DOCK_POINTDOCK_MARGIN"].toString().toLocal8Bit().data());
             }
 
             QJsonObject obj_obs = obj["obs"].toObject();
@@ -380,11 +383,13 @@ void CONFIG::load()
                 LVX_INLIER_CHECK_DIST = obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toDouble();
                 printf("[CONFIG] LVX_ERROR_THRESHOLD, %s\n", obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
             }
-            QJsonObject obj_docking = obj["docking"].toObject();
+
+            QJsonObject obj_path = obj["path"].toObject();
             {
-                DOCKING_POINTDOCK_MARGIN = obj_docking["DOCKING_POINTDOCK_MARGIN"].toString().toDouble();
-                printf("[CONFIG] DOCKING_POINTDOCK_MARGIN, %s\n", obj_lvx["DOCKING_POINTDOCK_MARGIN"].toString().toLocal8Bit().data());
+                MAP_PATH = obj_path["MAP_PATH"].toString();
+                printf("[CONFIG] MAP_PATH, %s\n", obj_path["MAP_PATH"].toString().toLocal8Bit().data());
             }
+
             // complete
             config_file.close();
             printf("[CONFIG] %s, load successed\n", config_path.toLocal8Bit().data());
@@ -419,6 +424,41 @@ void CONFIG::load()
     }
 }
 
+void CONFIG::set_map_path(QString path)
+{
+    if (config_path.isEmpty())
+    {
+        return;
+    }
+
+    MAP_PATH = path;
+
+    QMutexLocker locker(&mtx);
+    QFile config_file(config_path);
+
+    if (!config_file.open(QIODevice::ReadWrite))
+    {
+        printf("[config] failed to open config file for reading and writing.\n");
+        return;
+    }
+
+    QByteArray data = config_file.readAll();
+    config_file.seek(0);
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    QJsonObject rootObj = doc.object();
+
+    QJsonObject mapObj = rootObj["map"].toObject();
+    mapObj["AUTO_LOAD_MAP_PATH"] = path;
+    rootObj["map"] = mapObj;
+
+    doc.setObject(rootObj);
+    config_file.resize(0);
+    config_file.write(doc.toJson());
+    config_file.close();
+}
+
+#if defined(USE_MECANUM_OLD)
 void CONFIG::load_code_info(QString path)
 {
     // load params
@@ -604,38 +644,5 @@ void CONFIG::load_ext(QString path)
         printf("[CONFIG_EXT] %s, load_ext failed\n", path.toLocal8Bit().data());
     }
 }
-
-void CONFIG::set_map_path(QString path)
-{
-    if (config_path.isEmpty())
-    {
-        return;
-    }
-
-    AUTO_LOAD_MAP_PATH = path;
-
-    QMutexLocker locker(&mtx);
-    QFile config_file(config_path);
-
-    if (!config_file.open(QIODevice::ReadWrite))
-    {
-        printf("[config] failed to open config file for reading and writing.\n");
-        return;
-    }
-
-    QByteArray data = config_file.readAll();
-    config_file.seek(0);
-
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    QJsonObject rootObj = doc.object();
-
-    QJsonObject mapObj = rootObj["map"].toObject();
-    mapObj["AUTO_LOAD_MAP_PATH"] = path;
-    rootObj["map"] = mapObj;
-
-    doc.setObject(rootObj);
-    config_file.resize(0);
-    config_file.write(doc.toJson());
-    config_file.close();
-}
+#endif
 

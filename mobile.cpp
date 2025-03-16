@@ -193,7 +193,7 @@ QString MOBILE::get_status_text()
     str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
                 mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
                 (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                mobile_status.charge_state, mobile_status.power_state, mobile_status.emo_state, mobile_status.remote_state,
+                mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
                 mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                 mobile_status.power, mobile_status.total_power,
                 mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
@@ -223,7 +223,7 @@ QString MOBILE::get_status_text()
     str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
                 mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
                 (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                mobile_status.charge_state, mobile_status.power_state, mobile_status.emo_state, mobile_status.remote_state,
+                mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
                 mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                 mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                 mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
@@ -468,10 +468,10 @@ void MOBILE::recv_loop()
                 cur_m0 = _buf[index];     index=index+dlc;
                 cur_m1 = _buf[index];     index=index+dlc;
 
-                uint8_t charge_state, power_state, emo_state, remote_state;
+                uint8_t charge_state, power_state, motor_stop_state, remote_state;
                 charge_state = _buf[index];     index=index+dlc;
                 power_state = _buf[index];      index=index+dlc;
-                emo_state = _buf[index];        index=index+dlc;
+                motor_stop_state = _buf[index];        index=index+dlc;
                 remote_state = _buf[index];     index=index+dlc;
 
                 float bat_in, bat_out, bat_cur, power, total_used_power;
@@ -525,7 +525,7 @@ void MOBILE::recv_loop()
                 mobile_status.cur_m1 = cur_m1;
                 mobile_status.charge_state = charge_state;
                 mobile_status.power_state = power_state;
-                mobile_status.emo_state = emo_state;
+                mobile_status.motor_stop_state = motor_stop_state;
                 mobile_status.remote_state = remote_state;
                 mobile_status.bat_in = bat_in;
                 mobile_status.bat_out = bat_out;
@@ -713,8 +713,6 @@ void MOBILE::recv_loop()
             continue;
         }
 
-        //printf("recv_num : %d\n", num);
-
         // initial drop
         if(drop_cnt > 0)
         {
@@ -787,10 +785,10 @@ void MOBILE::recv_loop()
                 cur_m0 = _buf[index];     index=index+dlc;
                 cur_m1 = _buf[index];     index=index+dlc;
 
-                uint8_t charge_state, power_state, emo_state, remote_state;
+                uint8_t charge_state, power_state, motor_stop_state, remote_state;
                 charge_state = _buf[index];     index=index+dlc;
                 power_state = _buf[index];      index=index+dlc;
-                emo_state = _buf[index];        index=index+dlc;
+                motor_stop_state = _buf[index];        index=index+dlc;
                 remote_state = _buf[index];     index=index+dlc;
 
                 float bat_in, bat_out, bat_cur, power, total_used_power;
@@ -819,21 +817,6 @@ void MOBILE::recv_loop()
                 memcpy(&imu_acc_x, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
-
-
-
-                // calc time offset
-                /*if(is_sync && get_time() > sync_st_time + 0.1)
-                {
-                    is_sync = false;
-
-                    double _mobile_t = recv_tick*0.002;
-                    double _offset_t = return_time - _mobile_t;
-                    offset_t = _offset_t;
-                    is_synced = true;
-                    QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
-                    logger->write_log(str);
-                }*/
 
                 if(is_sync && pc_t > sync_st_time + 0.1)
                 {
@@ -871,7 +854,7 @@ void MOBILE::recv_loop()
                 mobile_status.cur_m1 = cur_m1;
                 mobile_status.charge_state = charge_state;
                 mobile_status.power_state = power_state;
-                mobile_status.emo_state = emo_state;
+                mobile_status.motor_stop_state = motor_stop_state;
                 mobile_status.remote_state = remote_state;
                 mobile_status.bat_in = bat_in;
                 mobile_status.bat_out = bat_out;
@@ -893,8 +876,8 @@ void MOBILE::recv_loop()
                 mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
                 // get orientation
-                Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                //Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+                //Eigen::Matrix3d R = Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
+                Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
                 Eigen::Vector3d r = Sophus::SO3d::fitToSO3(R).log();
 
                 MOBILE_IMU imu;

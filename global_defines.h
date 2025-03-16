@@ -187,7 +187,7 @@ enum AUTO_OBS_STATE
     AUTO_OBS_AVOID,
     AUTO_OBS_WAIT,
     AUTO_OBS_WAIT2,
-    AUTO_OBS_VIR
+    AUTO_OBS_VIRTUAL
 };
 
 enum OBS_INFO_STATE
@@ -200,9 +200,9 @@ enum OBS_INFO_STATE
 enum OBS_DETECT_STATE
 {
     OBS_DETECT_NONE = 0,
-    OBS_DETECT_STA = 1,
-    OBS_DETECT_DYN = 2,
-    OBS_DETECT_VIR = 3,
+    OBS_DETECT_STATIC = 1,
+    OBS_DETECT_DYNAMIC = 2,
+    OBS_DETECT_VIRTUAL = 3,
 };
 
 enum LOCAL_PATH_STATE
@@ -492,7 +492,7 @@ struct MOBILE_STATUS
 
     uint8_t charge_state = 0;
     uint8_t power_state = 0;
-    uint8_t emo_state = 0;
+    uint8_t motor_stop_state = 0;
     uint8_t remote_state = 0;
 
     float bat_in = 0;
@@ -546,7 +546,7 @@ struct MOBILE_STATUS
 
     uint8_t charge_state = 0;
     uint8_t power_state = 0;
-    uint8_t emo_state = 0;
+    uint8_t motor_stop_state = 0;
     uint8_t remote_state = 0;
 
     float bat_in = 0;
@@ -1054,20 +1054,20 @@ struct NODE
 struct CTRL_PARAM
 {
     double LIMIT_V = 1.0;
-    double LIMIT_W = 60.0;
-    double LIMIT_V_ACC = 0.5;
-    double LIMIT_V_DCC = 0.25;
-    double LIMIT_W_ACC = 360.0;
-    double LIMIT_PIVOT_W = 60.0; 
-    double ST_V = 0.1;
-    double ED_V = 0.1;
-    double DRIVE_T = 0.15;
-    double DRIVE_H = 1.0;
-    double DRIVE_A = 1.0;
-    double DRIVE_B = 0.05;
-    double DRIVE_L = 0.18;
+    double LIMIT_W = 30.0;
+    double LIMIT_V_ACC = 0.3;
+    double LIMIT_V_DCC = 0.3;
+    double LIMIT_W_ACC = 180.0;
+    double LIMIT_PIVOT_W = 30.0;
+    double ST_V = 0.05;
+    double ED_V = 0.05;
+    double DRIVE_T = 0.0;
+    double DRIVE_H = 4.0;
+    double DRIVE_A = 0.9;
+    double DRIVE_B = 0.03;
+    double DRIVE_L = 0.4;
     double DRIVE_K = 1.0;
-    double DRIVE_EPS = 0.1;
+    double DRIVE_EPS = 0.3;
 };
 
 // dockcontrol parameters
@@ -1075,10 +1075,10 @@ struct DCTRL_PARAM
 {
     double GAIN_P = 1.0;
     double GAIN_D = 0.0;
-    double LIMIT_V = 1.0;
-    double LIMIT_W = 60.0;
+    double LIMIT_V = 0.5;
+    double LIMIT_W = 30.0;
     double LIMIT_V_ACC = 0.5;
-    double LIMIT_W_ACC = 360.0;
+    double LIMIT_W_ACC = 180.0;
 };
 
 struct ASTAR_NODE

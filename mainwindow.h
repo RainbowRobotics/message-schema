@@ -375,7 +375,7 @@ public Q_SLOTS:
     // for ldock
     void bt_DockStart();
     void bt_DockStop();
-    void bt_UndockStart();
+    void bt_UnDockStart();
 };
 #endif // MAINWINDOW_H
 

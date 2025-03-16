@@ -1072,7 +1072,6 @@ out</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
-       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -1095,7 +1094,7 @@ out</string>
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -1125,7 +1124,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>7</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1462,7 +1461,7 @@ LC</string>
              <attribute name="title">
               <string>Docking</string>
              </attribute>
-             <widget class="QPushButton" name="bt_UndockStart">
+             <widget class="QPushButton" name="bt_UnDockStart">
               <property name="geometry">
                <rect>
                 <x>70</x>
@@ -1597,9 +1596,9 @@ start</string>
              <widget class="QPushButton" name="bt_TaskPlay">
               <property name="geometry">
                <rect>
-                <x>120</x>
-                <y>58</y>
-                <width>161</width>
+                <x>190</x>
+                <y>60</y>
+                <width>91</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1714,6 +1713,19 @@ start</string>
                 <string>tng</string>
                </property>
               </item>
+             </widget>
+             <widget class="QCheckBox" name="ckb_AccuracySave">
+              <property name="geometry">
+               <rect>
+                <x>120</x>
+                <y>60</y>
+                <width>71</width>
+                <height>23</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Acc log</string>
+              </property>
              </widget>
             </widget>
             <widget class="QWidget" name="tab_6">
@@ -2185,6 +2197,27 @@ start</string>
             </property>
             <property name="text">
              <string>[AUTO_INFO]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lb_CommInfo">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="text">
+             <string>[COMM_INFO]</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

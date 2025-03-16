@@ -718,6 +718,7 @@ QString COMM_OLD::get_req_simple()
     QString bqr_th_str = QString::number(bqr_th*R2D, 'f', 3);
 
     QString operating_mode = "none";
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(ms.operation_state == ROBOT_JOYSTICK_MODE)
     {
         operating_mode = "joystick";
@@ -726,6 +727,7 @@ QString COMM_OLD::get_req_simple()
     {
         operating_mode = "pc";
     }
+    #endif
 
     QString str = QString("{%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12}")
                     .arg(is_moving)
@@ -771,22 +773,34 @@ QString COMM_OLD::get_req_data()
 
     // cur motor state
     MOBILE_STATUS ms = mobile->get_status();
-    QString m0_stat = QString::number(ms.status_m0, 10);
-    QString m1_stat = QString::number(ms.status_m1, 10);
-    QString m2_stat = QString::number(ms.status_m2, 10);
-    QString m3_stat = QString::number(ms.status_m3, 10);
+    QString m0_stat = ""; QString m1_stat = "";
+    QString m2_stat = ""; QString m3_stat = "";
+    m0_stat = QString::number(ms.status_m0, 10);
+    m1_stat = QString::number(ms.status_m1, 10);
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    m2_stat = QString::number(ms.status_m2, 10);
+    m3_stat = QString::number(ms.status_m3, 10);
+    #endif
 
     // cur motot current
-    QString m0_cur_stat = QString::number(ms.cur_m0/10.0);
-    QString m1_cur_stat = QString::number(ms.cur_m1/10.0);
-    QString m2_cur_stat = QString::number(ms.cur_m2/10.0);
-    QString m3_cur_stat = QString::number(ms.cur_m3/10.0);
+    QString m0_cur_stat = ""; QString m1_cur_stat = "";
+    QString m2_cur_stat = ""; QString m3_cur_stat = "";
+    m0_cur_stat = QString::number(ms.cur_m0/10.0);
+    m1_cur_stat = QString::number(ms.cur_m1/10.0);
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    m2_cur_stat = QString::number(ms.cur_m2/10.0);
+    m3_cur_stat = QString::number(ms.cur_m3/10.0);
+    #endif
 
     // cur motor temp
-    QString m0_temp_stat = QString::number(ms.temp_m0, 10);
-    QString m1_temp_stat = QString::number(ms.temp_m1, 10);
-    QString m2_temp_stat = QString::number(ms.temp_m2, 10);
-    QString m3_temp_stat = QString::number(ms.temp_m3, 10);
+    QString m0_temp_stat = ""; QString m1_temp_stat = "";
+    QString m2_temp_stat = ""; QString m3_temp_stat = "";
+    m0_temp_stat = QString::number(ms.temp_m0, 10);
+    m1_temp_stat = QString::number(ms.temp_m1, 10);
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    m2_temp_stat = QString::number(ms.temp_m2, 10);
+    m3_temp_stat = QString::number(ms.temp_m3, 10);
+    #endif
 
     // cur state
     QString ms_power = QString::number(ms.power_state, 10);
@@ -824,6 +838,7 @@ QString COMM_OLD::get_req_data()
     QString node_size  = QString::number(unimap->nodes.size(), 10);
 
     QString operating_mode = "none";
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(ms.operation_state == ROBOT_JOYSTICK_MODE)
     {
         operating_mode = "joystick";
@@ -832,6 +847,7 @@ QString COMM_OLD::get_req_data()
     {
         operating_mode = "pc";
     }
+    #endif
 
     QString str = QString("{%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%17,%18,%19,%20,%21,%22,%23,%24,%25,%26,%27,%28,%29,%30,%31,%32,%33,%34,%35,%36,%37,%38,%39}")
                     .arg(is_moving)

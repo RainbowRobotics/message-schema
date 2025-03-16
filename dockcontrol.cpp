@@ -283,27 +283,57 @@ bool DOCKCONTROL::is_everything_fine()
         return false;
     }
 
+    #if defined(USE_SRV) || defined(USE_AMR) || defined(USE_AMR_LAKI)
+    if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
+    {
+        logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
+        return false;
+    }
+    #endif
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1 || mobile_status.status_m2 > 1 || mobile_status.status_m3 > 1)
     {
         logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
         return false;
     }
+    #endif
 
+    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
     if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
     {
         logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
         return false;
     }
+    #endif
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1 || mobile_status.connection_m2 != 1 || mobile_status.connection_m3 != 1)
+    {
+        logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
+        return false;
+    }
+    #endif
+
+    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0)
+    {
+        logger->write_log("[DOCK] dock failed (motor lock offed)", "Red", true, false);
+        return false;
+    }
+    #endif
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0 || mobile_status.status_m2 == 0 || mobile_status.status_m3 == 0)
+    {
+        logger->write_log("[DOCK] dock failed (motor lock offed)", "Red", true, false);
+        return false;
+    }
+    #endif
 
     if(mobile_status.motor_stop_state == 0)
     {
         logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
-        return false;
-    }
-
-    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0 || mobile_status.status_m2 == 0 || mobile_status.status_m3 == 0)
-    {
-        logger->write_log("[DOCK] dock failed (motor lock offed)", "Red", true, false);
         return false;
     }
 
@@ -344,23 +374,19 @@ DCTRL_PARAM DOCKCONTROL::load_preset(int preset)
 
     // config module init
     #ifdef USE_SRV
-    preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
+    preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
     #ifdef USE_AMR_400
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
     #ifdef USE_AMR_400_LAKI
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
+    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_MECANUM_OLD
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/" + "docking_preset_" + QString::number(preset) + ".json";
-    #endif
-
-    #ifdef USE_MECANUM
-    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "preset_" + QString::number(preset) + ".json";
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
     QFileInfo info(preset_path);

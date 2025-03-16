@@ -186,7 +186,7 @@ void SIM::a_loop()
         status.status_m0 = 1;
         status.status_m1 = 1;
         status.charge_state = 0;
-        status.emo_state = 1;
+        status.motor_stop_state = 1;
         status.power_state = 1;
         status.remote_state = 1;
 
