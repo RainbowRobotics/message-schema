@@ -76,7 +76,7 @@ public:
 
     double ANNOT_QA_STEP = 0.3;
 
-    int USE_SIM = 1; // 0: real mode, 1: simulation mode
+    int USE_SIM = 0; // 0: real mode, 1: simulation mode
     int USE_IMU = 0;
     int USE_BLIDAR = 0;
     int USE_BQR = 0;
