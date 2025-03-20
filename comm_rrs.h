@@ -123,7 +123,7 @@ Q_SIGNALS:
     void signal_vobs_r(DATA_VOBS_R msg);
     void signal_vobs_c(DATA_VOBS_C msg);
 
-private Q_SLOTS:
+public Q_SLOTS:
     void slot_move(DATA_MOVE msg);
     void slot_localization(DATA_LOCALIZATION msg);
     void slot_load(DATA_LOAD msg);

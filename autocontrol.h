@@ -107,7 +107,6 @@ public:
     void b_loop_hpp();
 
     DATA_MOVE move_info;
-    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
 
     // for path plot
     PATH cur_global_path;
@@ -131,8 +130,9 @@ public:
 
     // params for rrs
     std::atomic<bool> is_rrs = {false};
-    QString multi_req = "none"; // none, req_path, recv_path
-    QString obs_condition = "none";
+    QString multi_req      = "none";    // none, req_path, recv_path
+    QString obs_condition  = "none";    // none, far, near, vir
+    QString cur_goal_state = "none";    // none, move, complete, fail, obstacle, cancel
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

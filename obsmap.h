@@ -63,7 +63,7 @@ public:
     std::vector<Eigen::Vector3d> obs_pts_static;
     std::vector<Eigen::Vector3d> obs_pts_dynamic;
     std::vector<Eigen::Vector3d> obs_pts_virtual;
-    std::vector<Eigen::Vector3d> vir_closure_pts;
+    std::vector<Eigen::Vector3d> closure_pts_virtual;
     std::vector<Eigen::Vector4d> plot_pts;
 
     // virtual obs for multirobot

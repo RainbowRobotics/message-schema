@@ -55,7 +55,7 @@ void OBSMAP::clear()
     obs_pts_static.clear();
     obs_pts_dynamic.clear();
     obs_pts_virtual.clear();
-    vir_closure_pts.clear();
+    closure_pts_virtual.clear();
     plot_pts.clear();
 
     vobs_list_robots.clear();
@@ -517,7 +517,7 @@ void OBSMAP::update_vobs_map()
     }
 
     obs_pts_virtual = _vir_pts;
-    vir_closure_pts = _vir_closure_pts;
+    closure_pts_virtual = _vir_closure_pts;
     virtual_map = _virtual_map;
 
     mtx.unlock();
@@ -580,7 +580,7 @@ std::vector<Eigen::Vector3d> OBSMAP::get_vir_pts()
 std::vector<Eigen::Vector3d> OBSMAP::get_vir_closure_pts()
 {
     mtx.lock();
-    std::vector<Eigen::Vector3d> res = vir_closure_pts;
+    std::vector<Eigen::Vector3d> res = closure_pts_virtual;
     mtx.unlock();
 
     return res;

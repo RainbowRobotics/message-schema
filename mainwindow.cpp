@@ -734,7 +734,7 @@ void MainWindow::init_modules()
     comm_old.dctrl = &dctrl;
     {
         comm_old.open();
-    }
+    }  
 
     // start jog loop
     jog_flag = true;
@@ -747,6 +747,26 @@ void MainWindow::init_modules()
     // start communication loop
     comm_flag = true;
     comm_thread = new std::thread(&MainWindow::comm_loop, this);    
+
+    QString auto_load_path = config.MAP_PATH + "/cloud.csv";
+    printf("[AUTO_LOAD] auto load path:%s\n", auto_load_path.toLocal8Bit().data());
+
+    QFileInfo auto_load_info(auto_load_path);
+    if(auto_load_info.exists() && auto_load_info.isFile())
+    {
+        slam.localization_stop();
+        obsmap.clear();
+
+        map_dir = config.MAP_PATH;
+        unimap.load_map(config.MAP_PATH);
+        all_update();
+
+        if(config.USE_LVX)
+        {
+            QString path_3d_map = config.MAP_PATH + "/map.las";
+            lvx.map_load(path_3d_map);
+        }
+    }
 }
 
 void MainWindow::setup_vtk()
@@ -1785,10 +1805,10 @@ void MainWindow::bt_Sync()
     lidar.sync_f();
     lidar.sync_b();
 
-    //if(config.USE_LVX)
-    //{
-    //    lvx.is_sync = true;
-    //}
+    if(config.USE_LVX)
+    {
+        lvx.is_sync = true;
+    }
 }
 
 void MainWindow::bt_MoveLinearX()
@@ -2002,34 +2022,16 @@ void MainWindow::bt_MapLoad()
         slam.localization_stop();
         obsmap.clear();
 
+        config.set_map_path(path);
+
         map_dir = path;
         unimap.load_map(path);
         all_update();
 
         if(config.USE_LVX)
         {
-            // load laz first
-            QString path_3d_map = path + "/map.laz";
-            QFileInfo mapFileInfo(path_3d_map);
-            if(mapFileInfo.exists() && mapFileInfo.isFile())
-            {
-                lvx.map_load(path_3d_map);
-            }
-            else
-            {
-                // load las
-                path_3d_map = path + "/map.las";
-                QFileInfo mapFileInfo2(path_3d_map);
-                if(mapFileInfo2.exists() && mapFileInfo2.isFile())
-                {
-                    lvx.map_load(path_3d_map);
-                }
-                else
-                {
-                    logger.write_log("[LVX] map file extension not invaild. load fail", "Red");
-                }
-            }
-
+            QString path_3d_map = path + "/map.las";
+            lvx.map_load(path_3d_map);
         }
     }
 }
@@ -3942,10 +3944,55 @@ void MainWindow::watch_loop()
 
     CPU_USAGE pre_cpu_usage;
 
+    bool is_first_emo_check = true;
+    MOBILE_STATUS pre_ms = mobile.get_status();
+
     printf("[WATCHDOG] loop start\n");
     while(watch_flag)
     {
         cnt++;
+
+        if(mobile.is_connected)
+        {
+            MOBILE_STATUS ms = mobile.get_status();
+            if(is_first_emo_check)
+            {
+                is_first_emo_check = false;
+                pre_ms = ms;
+            }
+            else
+            {
+                if(ms.t != 0)
+                {
+                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state == 1)
+                    {
+                        Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
+
+                        DATA_MOVE move_info;
+                        move_info.cur_pos = cur_pos;
+                        move_info.result = "emo";
+                        move_info.message = "released";
+                        move_info.time = get_time();
+
+                        comm_rrs.send_move_response(move_info);
+                    }
+                    else if(pre_ms.motor_stop_state == 1 && ms.motor_stop_state == 0)
+                    {
+                        Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
+
+                        DATA_MOVE move_info;
+                        move_info.cur_pos = cur_pos;
+                        move_info.result = "emo";
+                        move_info.message = "pushed";
+                        move_info.time = get_time();
+
+                        comm_rrs.send_move_response(move_info);
+                    }
+
+                    pre_ms = ms;
+                }
+            }
+        }
 
         // every 10 sec
         if(cnt%100 == 0)

@@ -20,6 +20,7 @@ class CAM : public QObject
 public:
     explicit CAM(QObject *parent = nullptr);
     ~CAM();
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -44,9 +45,6 @@ public:
     std::atomic<bool> is_connected[2] = {false, false};
     std::atomic<bool> is_param_loaded = {false};
 
-    // storage    
-    std::recursive_mutex mtx;
-
     cv::Mat cur_img[2];
     TIME_IMG cur_time_img[2];
     TIME_PTS cur_scan[2];
@@ -54,17 +52,21 @@ public:
     CAM_INTRINSIC intrinsic[2];
     Eigen::Matrix4d extrinsic[2];
     
-    #ifdef USE_SRV
+    #if defined (USE_SRV)
     const int depth_profile_idx = 25; // depth_profile(25), w:320, h:180, fps:5, format:11
     //const int color_profile_idx = 88; // color_profile(88), w:1920, h:1080, fps:5, format:22
     const int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
+    #endif
 
-    #elif defined(USE_AMR_400) || defined (USE_AMR_400_LAKI)
+    #if defined (USE_AMR_400) || defined (USE_AMR_400_LAKI)
     const int depth_profile_idx = 20; // depth_profile(20), w:640, h:400, fps:5, format:21
     const int color_profile_idx = 43; // color_profile(43), w:640, h:400, fps:5, format:22
     #endif
 
-
+    #if defined (USE_MECANUM_OLD) || defined(USE_MECANUM)
+    const int depth_profile_idx = 0;
+    const int color_profile_idx = 0;
+    #endif
 
 private:
 

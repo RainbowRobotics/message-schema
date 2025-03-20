@@ -384,7 +384,7 @@ void CONFIG::load()
                 printf("[CONFIG] LVX_ERROR_THRESHOLD, %s\n", obj_lvx["LVX_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
             }
 
-            QJsonObject obj_path = obj["path"].toObject();
+            QJsonObject obj_path = obj["map"].toObject();
             {
                 MAP_PATH = obj_path["MAP_PATH"].toString();
                 printf("[CONFIG] MAP_PATH, %s\n", obj_path["MAP_PATH"].toString().toLocal8Bit().data());
@@ -449,7 +449,7 @@ void CONFIG::set_map_path(QString path)
     QJsonObject rootObj = doc.object();
 
     QJsonObject mapObj = rootObj["map"].toObject();
-    mapObj["AUTO_LOAD_MAP_PATH"] = path;
+    mapObj["MAP_PATH"] = path;
     rootObj["map"] = mapObj;
 
     doc.setObject(rootObj);
