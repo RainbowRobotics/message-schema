@@ -365,6 +365,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
     if(path_list2.size() == 0)
     {
         logger->write_log("[AUTO] move_pp, path_list2 empty");
+
         stop();
 
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -380,9 +381,6 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
         return;
     }
-
-    // set flag
-    set_multi_req("recv_path");
 
     logger->write_log("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
@@ -414,7 +412,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
             NODE* node = unimap->get_node_by_id(path_list2[p].back());
             if(node == NULL)
             {
-                logger->write_log("[AUTO] move_pp, path invalid");
+                logger->write_log("[AUTO] move_pp, last path node invalid");
                 stop();
 
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -423,7 +421,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
                 mtx.lock();
                 move_info.cur_pos = cur_pos;
                 move_info.result = "fail";
-                move_info.message = "path invalid";
+                move_info.message = "last path node invalid";
                 move_info.time = get_time();
                 mtx.unlock();
                 Q_EMIT signal_move_response(move_info);
@@ -460,6 +458,9 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
         tmp_storage.push_back(path);
     }
+
+    // set flag
+    set_multi_req("recv_path");
 
     // control loop shutdown but robot still moving
     if(b_flag)
@@ -545,7 +546,7 @@ void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int val)
     }
     #endif
 
-    // check goal type is station & start position is station
+    // check goal node type is not station && cur node type is station
     const double is_node_close = 0.1;
     is_undock = false;
     Eigen::Vector3d cur_pos = TF_to_se2(slam->get_cur_tf());
@@ -616,9 +617,6 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
         return;
     }
 
-    // set flag
-    set_multi_req("recv_path");
-
     logger->write_log("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
@@ -649,7 +647,7 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
             NODE* node = unimap->get_node_by_id(path_list2[p].back());
             if(node == NULL)
             {
-                logger->write_log("[AUTO] move_pp, path invalid");
+                logger->write_log("[AUTO] move_pp, last path node invalid");
                 stop();
 
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
@@ -658,7 +656,7 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
                 mtx.lock();
                 move_info.cur_pos = cur_pos;
                 move_info.result = "fail";
-                move_info.message = "path invalid";
+                move_info.message = "last path node invalid";
                 move_info.time = get_time();
                 mtx.unlock();
                 Q_EMIT signal_move_response(move_info);
@@ -695,6 +693,9 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
 
         tmp_storage.push_back(path);
     }
+
+    // set flag
+    set_multi_req("recv_path");
 
     // control loop shutdown but robot still moving
     if(b_flag)
@@ -1989,12 +1990,38 @@ int AUTOCONTROL::is_everything_fine()
     if(loc_state == "none" || loc_state == "fail")
     {
         logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "localization fail";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
 
     if(slam->is_qa == true)
     {
         logger->write_log("[AUTO] qa working, auto-drive stop", "Red", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "quick annotation working";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
 
@@ -2003,6 +2030,19 @@ int AUTOCONTROL::is_everything_fine()
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "motor not connected";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
     #endif
@@ -2011,6 +2051,19 @@ int AUTOCONTROL::is_everything_fine()
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1 || ms.connection_m2 != 1 || ms.connection_m3 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "motor not connected";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
     #endif
@@ -2055,12 +2108,41 @@ int AUTOCONTROL::is_everything_fine()
         {
             logger->write_log("[AUTO] failed (motor error NON, 128)", "Red", true, false);
         }
+
+        QString motor_err_code_str;
+        motor_err_code_str.sprintf("motor err code: %d", motor_err_code);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = motor_err_code_str;
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
 
     if(ms.charge_state == 1)
     {
         logger->write_log("[AUTO] failed (robot charging)", "Red", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "robot charging";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_FAILED;
     }
 
@@ -2074,6 +2156,19 @@ int AUTOCONTROL::is_everything_fine()
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "motor lock offed";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_NOT_READY;
     }
     #endif
@@ -2082,6 +2177,19 @@ int AUTOCONTROL::is_everything_fine()
     if(ms.status_m0 == 0 && ms.status_m1 == 0 && ms.status_m2 == 0 && ms.status_m3 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+
+        mtx.lock();
+        move_info.cur_pos = cur_pos;
+        move_info.result = "fail";
+        move_info.message = "robot charging";
+        move_info.time = get_time();
+        mtx.unlock();
+
+        Q_EMIT signal_move_response(move_info);
+
         return DRIVING_NOT_READY;
     }
     #endif
@@ -2316,19 +2424,6 @@ void AUTOCONTROL::b_loop_pp()
 
             clear_path();
 
-            // move response
-            //if(config->USE_RRS)
-            {
-                mtx.lock();
-                move_info.cur_pos = cur_pos;
-                move_info.result = "fail";
-                move_info.message = "something wrong";
-                move_info.time = get_time();
-                mtx.unlock();
-
-                Q_EMIT signal_move_response(move_info);
-            }
-
             fsm_state = AUTO_FSM_COMPLETE;
             logger->write_log("[AUTO] something wrong (fail)");
             return;
@@ -2345,19 +2440,6 @@ void AUTOCONTROL::b_loop_pp()
             set_cur_goal_state("fail");
 
             clear_path();
-
-            // move response
-            //if(config->USE_RRS)
-            {
-                mtx.lock();
-                move_info.cur_pos = cur_pos;
-                move_info.result = "fail";
-                move_info.message = "not ready";
-                move_info.time = get_time();
-                mtx.unlock();
-
-                Q_EMIT signal_move_response(move_info);
-            }
 
             fsm_state = AUTO_FSM_COMPLETE;
             logger->write_log("[AUTO] something wrong (not ready)");

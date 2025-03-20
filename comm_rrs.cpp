@@ -400,7 +400,9 @@ void COMM_RRS::send_status()
 
     // Adding the state object
     QString cur_loc_state = slam->get_cur_loc_state();
-    QString charge_st_string = "";
+    QString charge_st_string = "none";
+
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(ms.charge_state == CHARGE_STATE_IDLE)
     {
         charge_st_string = "none";
@@ -425,6 +427,18 @@ void COMM_RRS::send_status()
     {
         charge_st_string = "fail";
     }
+    #endif
+
+    #if defined(USE_SRV)
+    if(ms.charge_state == 0)
+    {
+        charge_st_string = "none";
+    }
+    else if(ms.charge_state == 1)
+    {
+        charge_st_string = "charging";
+    }
+    #endif
 
     bool is_dock = false;
 
@@ -979,61 +993,39 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            // calc eta (estimate time of arrival)
-            QString cur_node_id = unimap->get_node_id_nn(cur_pos);
-            QString goal_node_id = msg.goal_node_id;
-            std::vector<QString> topo_path = ctrl->topo_path_finding(cur_node_id, goal_node_id);
-            if(topo_path.size() == 0)
+            // calc eta (estimation time arrival)
+            Eigen::Matrix4d goal_tf = node->tf;
+            PATH global_path = ctrl->calc_global_path(goal_tf);
+            if(global_path.pos.size()< 2)
             {
-                msg.result = "reject";
-                msg.message = "no topo path";
-                msg.eta = 9999.0;
-            }
-            else if(topo_path.size() == 1)
-            {
-                NODE* node0 = unimap->get_node_by_id(topo_path.back());
-                if(node0 == NULL)
-                {
-                    msg.result = "reject";
-                    msg.message = "no topo path";
-                    msg.eta = 9999.0;
-                }
-                else
-                {
-                    msg.result = "accept";
-                    msg.message = "";
-                    msg.eta = (cur_pos - node0->tf.block(0,3,3,1)).norm();
-                }
+                msg.result = "accept";
+                msg.message = "just change goal";
+                msg.eta = 0.0;
             }
             else
             {
-                bool is_calc_success = true;
-                double eta = 0.0;
-                for(size_t p = 0; p < topo_path.size()-1; p++)
+                double time = 0.0;
+                for(size_t p = 1; p < global_path.pos.size()-1; p++)
                 {
-                    QString node_id0 = topo_path[p];
-                    QString node_id1 = topo_path[p+1];
+                    Eigen::Vector3d pos0 = global_path.pos[p];
+                    Eigen::Vector3d pos1 = global_path.pos[p+1];
+                    double dist = (pos1 - pos0).norm();
 
-                    NODE* node0 = unimap->get_node_by_id(node_id0);
-                    NODE* node1 = unimap->get_node_by_id(node_id1);
-                    if(node0 == NULL || node1 == NULL)
-                    {
-                        is_calc_success = false;
-                        msg.result = "reject";
-                        msg.message = "no topo path";
-                        msg.eta = 9999.0;
-                        break;
-                    }
+                    double ref_v0 = global_path.ref_v[p];
+                    double ref_v1 = global_path.ref_v[p+1];
+                    double v = (ref_v0 + ref_v1)/2;
 
-                    eta += (node0->tf.block(0,3,3,1) - node1->tf.block(0,3,3,1)).norm();
+                    time += dist / (v+1e-06);
                 }
 
-                if(is_calc_success)
+                if(time == 0.0)
                 {
-                    msg.result = "accept";
-                    msg.message = "";
-                    msg.eta = eta;
+                    time = 9999.0;
                 }
+
+                msg.result = "accept";
+                msg.message = "";
+                msg.eta = time;
             }
 
             send_move_response(msg);
@@ -1183,6 +1175,8 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
 
             slam->localization_stop();
             obsmap->clear();
+
+            config->set_map_path(load_dir);
 
             MainWindow* _main = (MainWindow*)main;
             _main->map_dir = load_dir;
@@ -1345,7 +1339,11 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         // manual init
         double x = msg.tgt_pose_vec[0];
         double y = msg.tgt_pose_vec[1];
+        double test = msg.tgt_pose_vec[2];
         double rz = msg.tgt_pose_vec[3];
+
+        logger->write_log(QString("[COMM_RRS] recv, command: %1, (x,y,test,th,th_test):%2,%3,%4,%5,%6 time: %7").arg(msg.command).arg(x).arg(y).arg(test).arg(rz).arg(rz*D2R).arg(msg.time), "Green");
+
         Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz*D2R));
 
         if(config->USE_LVX)

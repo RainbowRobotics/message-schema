@@ -85,7 +85,7 @@ void LVX_LOC::load_func(QString file_path)
 
     pdal::Options options;
     options.add("filename", file_path.toStdString());
-    //options.add("extra_dims", "NormalX=double,NormalY=double,NormalZ=double");
+    options.add("extra_dims", "NormalX=double,NormalY=double,NormalZ=double");
     reader->setOptions(options);
 
     pdal::PointTable point_table;
@@ -274,7 +274,7 @@ void LVX_LOC::grab_loop()
                 P[2] = p_point_data[i].z/1000.0;
 
                 double d = P.norm();
-                if(d < lidar->config->LIDAR_MIN_RANGE || d > lidar->config->LIDAR_MAX_RANGE)
+                if(d < lidar->config->LVX_MIN_RANGE || d > lidar->config->LVX_MAX_RANGE)
                 {
                     continue;
                 }
@@ -541,7 +541,7 @@ Eigen::Vector2d LVX_LOC::calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Mat
         }
     }
 
-    Eigen::Vector2d res;    
+    Eigen::Vector2d res;
     res[0] = err_sum/cnt;
     res[1] = (double)cnt/cnt_all;
     return res;
