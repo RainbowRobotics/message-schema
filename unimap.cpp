@@ -459,6 +459,21 @@ void UNIMAP::edit_node_type(PICKING pick, QString type)
     }
 }
 
+void UNIMAP::edit_node_info(QString id, QString info)
+{
+    if(id == "")
+    {
+        printf("id empty\n");
+        return;
+    }
+
+    NODE* node = get_node_by_id(id);
+    if(node != NULL)
+    {
+        node->info = info;
+    }
+}
+
 void UNIMAP::edit_node_info(PICKING pick, QString info)
 {
     if(pick.cur_node == "")
@@ -604,10 +619,12 @@ void UNIMAP::add_link_auto(std::vector<QString> _select_nodes)
         std::vector<QString> goals_id = get_nodes("GOAL");
         std::vector<QString> inits_id = get_nodes("INIT");
         std::vector<QString> routes_id = get_nodes("ROUTE");
+        std::vector<QString> stations_id = get_nodes("STATION");
 
         nodes_id.insert(nodes_id.end(), goals_id.begin(), goals_id.end());
         nodes_id.insert(nodes_id.end(), inits_id.begin(), inits_id.end());
         nodes_id.insert(nodes_id.end(), routes_id.begin(), routes_id.end());
+        nodes_id.insert(nodes_id.end(), stations_id.begin(), stations_id.end());
     }
     else
     {
@@ -883,7 +900,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
     double min_d = 99999999;
     for(size_t p = 0; p < nodes.size(); p++)
     {
-        if(nodes[p].type == "GOAL" || nodes[p].type == "INIT")
+        if(nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
         {
             double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
             if(d < config->ROBOT_RADIUS*2 && d < min_d)
@@ -914,7 +931,7 @@ QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
     for(size_t p = 0; p < nodes.size(); p++)
     {
         // check non drivable
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
         {
             double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
             if(d < min_d)
@@ -949,7 +966,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     for(size_t p = 0; p < nodes.size(); p++)
     {
         // check drivable
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT")
+        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
         {
             QString node_id0 = nodes[p].id;
             Eigen::Matrix4d tf0 = nodes[p].tf;
@@ -965,7 +982,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
                 }
 
                 // check drivable
-                if(node->type == "ROUTE" || node->type == "GOAL" || node->type == "INIT")
+                if(node->type == "ROUTE" || node->type == "GOAL" || node->type == "INIT" || nodes[p].type == "STATION")
                 {
                     Eigen::Matrix4d tf1 = node->tf;
                     Eigen::Vector3d pos1 = tf1.block(0,3,3,1);

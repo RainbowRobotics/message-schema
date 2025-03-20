@@ -22,11 +22,16 @@ MainWindow::MainWindow(QWidget *parent)
     , comm_rrs(this)
     , comm_coop(this)
     , comm_old(this)
+    , comm_ui(this)
     , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
     , qa_timer(this)
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    , sound_timer(this)
+    #endif
+    , bqr_localization_timer(this)
 {
     ui->setupUi(this);
 
@@ -64,6 +69,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
     connect(&qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    connect(&sound_timer, SIGNAL(timeout()), this, SLOT(sound_loop()));
+    #endif
 
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
@@ -199,6 +208,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for advanced annot
     connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
+
+    #if defined(USE_MECANUM)
+    connect(&comm_ui, SIGNAL(signal_comm_ui_view_control(double, QString)), this, SLOT(slot_comm_ui_view_control(double, QString)));
+    connect(&comm_ui, SIGNAL(signal_comm_ui_view_type(double, QString)), this, SLOT(slot_comm_ui_view_type(double, QString)));
+    #endif
+
+    // bqr localization
+    connect(&bqr_localization_timer, SIGNAL(timeout()), this, SLOT(bqr_localization_loop()));
+    connect(&ctrl, SIGNAL(signal_check_docking()), &dctrl, SLOT(slot_check_docking()));
 
     connect(ui->bt_SelectPreNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPreNodes()));
     connect(ui->bt_SelectPostNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPostNodes()));
@@ -527,8 +545,8 @@ void MainWindow::init_modules()
     #endif
 
     #ifdef USE_MECANUM
-    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
-    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config_sn.json";
     #endif
 
     config.load();
@@ -733,8 +751,47 @@ void MainWindow::init_modules()
     comm_old.ctrl = &ctrl;
     comm_old.dctrl = &dctrl;
     {
+        #if defined(USE_MECANUM_OLD)
         comm_old.open();
+        #endif
     }  
+
+    // websocket ui init
+    comm_ui.config = &config;
+    comm_ui.logger = &logger;
+    comm_ui.mobile = &mobile;
+    comm_ui.lidar = &lidar;
+    comm_ui.bqr = &bqr;
+    comm_ui.slam = &slam;
+    comm_ui.unimap = &unimap;
+    comm_ui.obsmap = &obsmap;
+    comm_ui.ctrl = &ctrl;
+    comm_ui.dctrl = &dctrl;
+    {
+        #if defined(USE_MECANUM)
+        comm_ui.init();
+        #endif
+    }
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    // music module init
+    QString sound_path = QDir::homePath() + "/Documents/sound/moving.mp3";
+    QFileInfo sound_info(sound_path);
+    if(sound_info.exists() && sound_info.isFile())
+    {
+        media_player = new QMediaPlayer(this);
+        media_player->setVolume(100);
+        playlist = new QMediaPlaylist(media_player);
+        playlist->addMedia(QMediaContent(QUrl::fromLocalFile(sound_path)));
+        playlist->setPlaybackMode(QMediaPlaylist::Loop);
+        media_player->setPlaylist(playlist);
+        sound_timer.start(200);
+    }
+    else
+    {
+        logger.write_log("[SOUND] no sound file", "Red");
+    }
+    #endif
 
     // start jog loop
     jog_flag = true;
@@ -767,6 +824,55 @@ void MainWindow::init_modules()
             lvx.map_load(path_3d_map);
         }
     }
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    QTimer::singleShot(10000, [&]()
+    {
+        std::vector<Eigen::Matrix4d> _tfs;
+        std::vector<QString> _nodes = unimap.get_nodes();
+        for(auto& it : _nodes)
+        {
+            NODE* node = unimap.get_node_by_id(it);
+            if(node == NULL)
+            {
+                continue;
+            }
+
+            QString info = node->info;
+            NODE_INFO res;
+            if(!parse_info(info, "BQR_CODE_NUM", res))
+            {
+                continue;
+            }
+
+            if(res.bqr_code_num < 0)
+            {
+                continue;
+            }
+
+            std::cout << node->id.toStdString() << ", " << res.bqr_code_num << std::endl;
+            Eigen::Matrix4d tf = node->tf;
+            _tfs.push_back(tf);
+        }
+
+        if(_tfs.size() != 0)
+        {
+            if(!slam.is_busy)
+            {
+                if(semi_auto_init_thread != NULL)
+                {
+                    semi_auto_init_flag = false;
+                    semi_auto_init_thread->join();
+                    semi_auto_init_thread = NULL;
+                }
+
+                semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
+            }
+        }
+
+        bqr_localization_timer.start(1000);
+    });
+    #endif
 }
 
 void MainWindow::setup_vtk()
@@ -817,6 +923,188 @@ void MainWindow::setup_vtk()
         ui->qvtkWidget2->setMouseTracking(true);
     }
 }
+
+void MainWindow::bqr_localization_loop()
+{
+    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false || unimap.is_loaded == false)
+    {
+        //std::cout << "[CODE_LOC] no need to do localization" << std::endl;
+        return;
+    }
+
+    BQR_INFO cur_code = bqr.get_cur_bqr();
+    int code_num = cur_code.code_num;
+    if(code_num < 0)
+    {
+        //std::cout << "[CODE_LOC] invalid code num" << std::endl;
+        return;
+    }
+
+    logger.write_log("[CODE_LOC] start code localization", "Green");
+
+    std::vector<Eigen::Matrix4d> _tfs;
+    std::vector<QString> _nodes = unimap.get_nodes();
+    for(auto& it : _nodes)
+    {
+        NODE* node = unimap.get_node_by_id(it);
+        if(node == NULL)
+        {
+            continue;
+        }
+
+        QString info = node->info;
+
+        NODE_INFO res;
+        if(!parse_info(info, "BQR_CODE_NUM", res))
+        {
+            continue;
+        }
+
+        if(res.bqr_code_num < 0)
+        {
+            continue;
+        }
+
+        std::cout << node->id.toStdString() << ", " << res.bqr_code_num << std::endl;
+        Eigen::Matrix4d tf = node->tf;
+        _tfs.push_back(tf);
+    }
+
+    if(_tfs.size() != 0)
+    {
+        if(!slam.is_busy)
+        {
+            if(semi_auto_init_thread != NULL)
+            {
+                semi_auto_init_flag = false;
+                semi_auto_init_thread->join();
+                semi_auto_init_thread = NULL;
+            }
+
+            semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
+        }
+    }
+
+}
+
+#if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+void MainWindow::sound_loop()
+{
+    // sound check
+    if(media_player == NULL || playlist == NULL)
+    {
+        return;
+    }
+
+    static bool prev_state = false;
+    static bool prev_state_obs = false;
+
+    bool is_auto_moving = (ctrl.is_moving || dctrl.is_moving);
+
+    Eigen::Vector3d vel = mobile.get_pose().vel;
+    bool is_robot_moving = false;
+    if(std::abs(vel[0]) > 0.005 || std::abs(vel[1]) > 0.005 || std::abs(vel[2]*R2D) > 0.5)
+    {
+        is_robot_moving = true;
+    }
+
+    if(is_auto_moving == true || is_robot_moving == true)
+    {
+        if(ctrl.obs_condition == "near")
+        {
+            is_play_obs = true;
+            if(prev_state_obs != is_play_obs)
+            {
+                is_play = false;
+
+                playlist->clear();
+                playlist->addMedia(QMediaContent(QUrl::fromLocalFile(QDir::homePath() + "/Documents/sound/robot_move.mp3")));
+                media_player->setPlaylist(playlist);
+                media_player->play();
+            }
+        }
+        else
+        {
+            is_play = true;
+            if(prev_state != is_play)
+            {
+                is_play_obs = false;
+
+                playlist->clear();
+                playlist->addMedia(QMediaContent(QUrl::fromLocalFile(QDir::homePath() + "/Documents/sound/moving.mp3")));
+                media_player->setPlaylist(playlist);
+                media_player->play();
+            }
+        }
+    }
+    else
+    {
+        if(is_play == true)
+        {
+            is_play = false;
+            media_player->stop();
+        }
+
+        if(is_play_obs == true)
+        {
+            is_play_obs = false;
+            media_player->stop();
+        }
+    }
+    prev_state = is_play;
+    prev_state_obs = is_play_obs;
+}
+#endif
+
+#if defined(USE_MECANUM)
+void MainWindow::slot_comm_ui_view_control(double time, QString val)
+{
+    if (val == "ViewLeft")
+    {
+        viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);
+    }
+    else if(val == "ViewRight")
+    {
+        viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);
+    }
+    else if(val == "ViewUp")
+    {
+        viewer_camera_relative_control(0, +2, 0, 0, 0, 0);
+    }
+    else if(val == "ViewDown")
+    {
+        viewer_camera_relative_control(0, -2, 0, 0, 0, 0);
+    }
+    else if(val == "ViewZoomIn")
+    {
+        viewer_camera_relative_control(0, 0, +2, 0, 0, 0);
+    }
+    else if(val == "ViewZoomOut")
+    {
+        viewer_camera_relative_control(0, 0, -2, 0, 0, 0);
+    }
+}
+
+void MainWindow::slot_comm_ui_view_type(double time, QString val)
+{
+    if (val == "ViewReset")
+    {
+        bt_ViewReset();
+    }
+    else if(val == "SetTopView")
+    {
+        bt_SetTopView();
+    }
+    else if (val == "VIEW_MAPPING")
+    {
+        ui->cb_ViewType->setCurrentIndex(ui->cb_ViewType->findText("VIEW_MAPPING"));
+    }
+    else if (val == "VIEW_2D")
+    {
+        ui->cb_ViewType->setCurrentIndex(ui->cb_ViewType->findText("VIEW_2D"));
+    }
+}
+#endif
 
 void MainWindow::all_plot_clear()
 {
@@ -3826,6 +4114,11 @@ void MainWindow::comm_loop()
             {
                 comm_rrs.send_status();
             }
+
+            if(comm_ui.is_connected)
+            {
+                comm_ui.send_status();
+            }
         }
 
         // for 500ms loop
@@ -4640,6 +4933,20 @@ void MainWindow::topo_plot()
             last_plot_nodes.clear();
         }
 
+        // remove names
+        if(last_plot_names.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_names.size(); p++)
+            {
+                QString id = last_plot_names[p];
+                if(viewer->contains(id.toStdString()))
+                {
+                    viewer->removeShape(id.toStdString());
+                }
+            }
+            last_plot_names.clear();
+        }
+
         // draw
         if(unimap.nodes.size() > 0)
         {
@@ -4714,6 +5021,26 @@ void MainWindow::topo_plot()
 
                         cloud->push_back(pt);
                     }
+                    else if(unimap.nodes[p].type == "STATION")
+                    {
+                        viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                        0, 0.1, 0.5, 1.0, 0.5, id.toStdString());
+                        viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        //viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
+                    }
                     else if(unimap.nodes[p].type == "OBS")
                     {
                         QString info = unimap.nodes[p].info;
@@ -4763,6 +5090,22 @@ void MainWindow::topo_plot()
 
                         cloud->push_back(pt);
                     }
+
+                    #if defined(USE_MECANUM)
+                    if(unimap.nodes[p].type == "GOAL" || unimap.nodes[p].type == "INIT" || unimap.nodes[p].type == "STATION")
+                    {
+                        // plot text
+                        QString name = unimap.nodes[p].name;
+                        QString text_id = id + "_text";
+                        pcl::PointXYZ position;
+                        position.x = unimap.nodes[p].tf(0,3);
+                        position.y = unimap.nodes[p].tf(1,3);
+                        position.z = unimap.nodes[p].tf(2,3) + 1.5;
+                        viewer->addText3D(name.toStdString(), position, 0.2, 0.0, 0.0, 0.0, text_id.toStdString());
+
+                        last_plot_names.push_back(text_id);
+                    }
+                    #endif
 
                     // for erase
                     last_plot_nodes.push_back(id);
@@ -5975,6 +6318,26 @@ void MainWindow::topo_plot2()
 
                         cloud->push_back(pt);
                     }
+                    else if(unimap.nodes[p].type == "STATION")
+                    {
+                        viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                        config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                        0, 0.1, 0.5, 1.0, 0.5, id.toStdString());
+                        viewer2->updateShapePose(id.toStdString(), Eigen::Affine3f(unimap.nodes[p].tf.cast<float>()));
+                        viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, id.toStdString());
+
+                        Eigen::Vector3d front_dot = unimap.nodes[p].tf.block(0,0,3,3)*Eigen::Vector3d(config.ROBOT_SIZE_X[1] - 0.05, 0, 0) + unimap.nodes[p].tf.block(0,3,3,1);
+
+                        pcl::PointXYZRGB pt;
+                        pt.x = front_dot[0];
+                        pt.y = front_dot[1];
+                        pt.z = front_dot[2] + config.ROBOT_SIZE_Z[1];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
+                    }
                     else if(unimap.nodes[p].type == "OBS")
                     {
                         QString info = unimap.nodes[p].info;
@@ -6369,6 +6732,14 @@ void MainWindow::pick_plot2()
                     viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
                 }
                 else if(ui->cb_NodeType->currentText() == "GOAL")
+                {
+                    viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                     config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                     config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.5, 0.5, 0.5, "pick_body");
+                    viewer2->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "pick_body");
+                    viewer2->updateShapePose("pick_body", Eigen::Affine3f(pick_tf.cast<float>()));
+                }
+                else if(ui->cb_NodeType->currentText() == "STATION")
                 {
                     viewer2->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
                                      config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],

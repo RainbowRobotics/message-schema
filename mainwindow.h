@@ -27,6 +27,7 @@
 #include "comm_rrs.h"
 #include "comm_coop.h"
 #include "comm_old.h"
+#include "comm_ui.h"
 
 // qt
 #include <QMainWindow>
@@ -37,6 +38,9 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGraphicsOpacityEffect>
+
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -72,6 +76,7 @@ public:
     COMM_RRS comm_rrs;
     COMM_COOP comm_coop;
     COMM_OLD comm_old;
+    COMM_UI comm_ui;
 
     // system logger
     LOGGER system_logger;
@@ -113,11 +118,6 @@ public:
     std::thread *semi_auto_init_thread = NULL;
     void semi_auto_init_loop();
 
-    // auto init
-    std::atomic<bool> auto_init_flag = {false};
-    std::thread *auto_init_thread = NULL;
-    void auto_init_loop();
-
     // comm loop
     std::atomic<bool> comm_flag = {false};
     std::thread *comm_thread = NULL;
@@ -136,6 +136,18 @@ public:
     // quick annotation timer
     QTimer qa_timer;
     QString qa_last_node = "";
+
+    // bqr localization timer
+    QTimer bqr_localization_timer;
+
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    // sound (only use mecanum)
+    QTimer sound_timer;
+    QMediaPlayer *media_player = NULL;
+    QMediaPlaylist *playlist = NULL;
+    std::atomic<bool> is_play = {false};
+    std::atomic<bool> is_play_obs = {false};
+    #endif
 
     // flags
     std::atomic<bool> is_map_update = {false};
@@ -183,6 +195,7 @@ public:
 
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_nodes2;
+    std::vector<QString> last_plot_names;
 
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
@@ -258,6 +271,10 @@ public Q_SLOTS:
     void plot_loop();
     void plot_loop2();
     void qa_loop();
+    void bqr_localization_loop();
+    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    void sound_loop();
+    #endif
 
     // config
     void bt_ConfigLoad();
@@ -376,6 +393,11 @@ public Q_SLOTS:
     void bt_DockStart();
     void bt_DockStop();
     void bt_UnDockStart();
+
+    #if defined(USE_MECANUM)
+    void slot_comm_ui_view_control(double time, QString val);
+    void slot_comm_ui_view_type(double time, QString val);
+    #endif
 };
 #endif // MAINWINDOW_H
 

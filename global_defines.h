@@ -141,6 +141,12 @@ enum DOCKING_CHARGE_STATE
     CHARGE_STATE_FAIL,
 };
 
+enum DOCKING_METHOD
+{
+    GOAL=0,
+    STATION=1,
+};
+
 enum AUTO_FSM_STATE
 {
     AUTO_FSM_FIRST_ALIGN = 0,
@@ -1295,6 +1301,10 @@ struct MOVE_INFO
     int preset = 0;
     QString method = "";
 
+    double docking_offset_x = 0;
+    double docking_offset_y = 0;
+    double docking_offset_th = 0;
+
     MOVE_INFO()
     {
         command = "";
@@ -1305,6 +1315,9 @@ struct MOVE_INFO
         node_id = "";
         preset = 0;
         method = "";
+        docking_offset_x = 0;
+        docking_offset_y = 0;
+        docking_offset_th = 0;
     }
 
     MOVE_INFO(const MOVE_INFO& p)
@@ -1317,6 +1330,9 @@ struct MOVE_INFO
         node_id = p.node_id;
         preset = p.preset;
         method = p.method;
+        docking_offset_x = p.docking_offset_x;
+        docking_offset_y = p.docking_offset_y;
+        docking_offset_th = p.docking_offset_th;
     }
 
     MOVE_INFO& operator=(const MOVE_INFO& p)
@@ -1329,6 +1345,9 @@ struct MOVE_INFO
         node_id = p.node_id;
         preset = p.preset;
         method = p.method;
+        docking_offset_x = p.docking_offset_x;
+        docking_offset_y = p.docking_offset_y;
+        docking_offset_th = p.docking_offset_th;
         return *this;
     }
 };

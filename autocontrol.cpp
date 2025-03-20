@@ -301,10 +301,12 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             {
                 move_pp(tf, msg.preset);
             }
+            #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
             else if(msg.method == "hpp")
             {
                 move_hpp(tf, msg.preset);
             }
+            #endif
         }
     }
     else
@@ -1844,9 +1846,9 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         // resampling
         std::vector<Eigen::Matrix4d> path_pose;
         #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
-        path_pose = reorientation_path(_path_pose);
+        _path_pose = reorientation_path(_path_pose);
         #endif
-        path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
+        path_pose = path_resampling(_path_pose, LOCAL_PATH_STEP);
 
         std::vector<Eigen::Vector3d> path_pos;
         for(size_t p = 0; p < path_pose.size(); p++)
@@ -3522,7 +3524,7 @@ void AUTOCONTROL::b_loop_hpp()
             int cur_idx = 0;
             int tgt_idx = 0;
 
-            if(is_undock)
+            if(_is_undock)
             {
                 // find tgt
                 cur_idx = get_nn_idx(local_path.pos, cur_pos);
@@ -3720,8 +3722,12 @@ void AUTOCONTROL::b_loop_hpp()
                 dir_y = goal_dy/local_goal_d;
                 v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], -params.ED_V, params.ED_V);
 
+                double vx = dir_x * v;
+                double vy = dir_y * v;
+
                 double err_th = deltaRad(goal_xi[2], cur_xi[2]);
-                w = saturation(config->DRIVE_GOAL_APPROACH_GAIN*err_th, -3.0*D2R, 3.0*D2R);
+                double wz = saturation(config->DRIVE_GOAL_APPROACH_GAIN*err_th, -3.0*D2R, 3.0*D2R);
+                mobile->move(vx, vy, wz);
 
                 extend_dt += dt;
                 if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
