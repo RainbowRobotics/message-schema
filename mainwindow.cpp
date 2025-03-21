@@ -4036,7 +4036,6 @@ void MainWindow::comm_loop()
     std::string pipeline0 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
     std::string pipeline1 = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
 
-
     const int send_w = 320;
     const int send_h = 200;
 
@@ -4046,6 +4045,11 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
+        if(comm_ui.is_connected)
+        {
+            comm_ui.send_status();
+        }
+
         // for 100ms loop
         if(cnt % 10 == 0)
         {
@@ -4113,11 +4117,6 @@ void MainWindow::comm_loop()
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_status();
-            }
-
-            if(comm_ui.is_connected)
-            {
-                comm_ui.send_status();
             }
         }
 
@@ -5898,6 +5897,14 @@ void MainWindow::raw_plot()
 
         QString comm_info_str = "[COMM_INFO]\n" + comm_rrs_str + comm_fms_str + comm_old_str;
         ui->lb_CommInfo->setText(comm_info_str);
+    }
+
+    // plot external sensor info
+    {
+        QString ext_sensor_bqr_str = bqr.get_bqr_info();
+
+        QString ext_sensor_str = "[EXT_SENSOR_INFO]\n" + ext_sensor_bqr_str;
+        ui->lb_ExtSensorInfo->setText(ext_sensor_str);
     }
 
     // plot cam
