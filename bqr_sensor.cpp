@@ -22,6 +22,11 @@ BQR_SENSOR::~BQR_SENSOR()
 
 QString BQR_SENSOR::get_bqr_info()
 {
+    if(!is_connected)
+    {
+        return "";
+    }
+
     BQR_INFO _cur_code = get_cur_bqr();
     QString str;
     str.sprintf("[BQR]\ncon:%d,recv:%d\nid:%s,num:%d\nerr(x,y,th):%.3f,%.3f,%.3f\n(xymcl):%.3f,%.3f",
