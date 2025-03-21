@@ -23,18 +23,18 @@
         "USE_SIM": "0",
         "USE_IMU": "0",
         "USE_BLIDAR": "0",
-        "USE_BQR": "0",
-        "USE_BEEP": "1",
-        "USE_CAM": "1",
+        "USE_BQR": "1",
+        "USE_BEEP": "0",
+        "USE_CAM": "0",
         "USE_RTSP": "0",
-        "USE_RRS": "1",
+        "USE_RRS": "0",
         "USE_FMS": "0",
-        "USE_QTUI": "0",
+        "USE_QTUI": "1",
         "USE_ARUCO": "0",
         "USE_EARLYSTOP": "0",
-        "USE_LVX": "1",
+        "USE_LVX": "0",
         "USE_COOP": "0",
-        "USE_MULTI": "1"
+        "USE_MULTI": "0"
     },
     "default": {
         "LIDAR_MAX_RANGE": "24.0",
@@ -97,7 +97,8 @@
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.5",
+        "OBS_DEADZONE_DYN": "0.5",
+        "OBS_DEADZONE_VIR": "0.5",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
@@ -111,10 +112,10 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "robot": {
-        "PLATFORM_NAME": "TT",
-        "PLATFORM_TYPE": "SRV"
+        "PLATFORM_NAME": "KAI",
+        "PLATFORM_TYPE": "MECANUM"
     },
-    "path": {
+    "map": {
         "MAP_PATH": ""
     },
     "lvx": {

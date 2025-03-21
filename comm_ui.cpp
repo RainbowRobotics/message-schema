@@ -838,6 +838,7 @@ void COMM_UI::send_status()
     motorObj2["current"] = QString::number((double)ms.cur_m1/10.0, 'f', 3);
     motorArray.append(motorObj2);
 
+    #if defined(USE_MECANUM)
     QJsonObject motorObj3;
     motorObj3["connection"] = (ms.connection_m2 == 1) ? "true" : "false";
     motorObj3["status"] = QString::number(ms.status_m2, 10);
@@ -851,6 +852,7 @@ void COMM_UI::send_status()
     motorObj4["temp"] = QString::number(ms.temp_m3, 'f', 3);
     motorObj4["current"] = QString::number((double)ms.cur_m3/10.0, 'f', 3);
     motorArray.append(motorObj4);
+    #endif
 
     rootObj["motor"] = motorArray;
 
