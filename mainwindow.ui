@@ -1124,7 +1124,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -2743,6 +2743,11 @@ Nodes</string>
               <item>
                <property name="text">
                 <string>INIT</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>STATION</string>
                </property>
               </item>
               <item>

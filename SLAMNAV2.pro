@@ -1,4 +1,4 @@
-QT       += core gui websockets
+QT       += core gui websockets multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -20,9 +20,9 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-#DEFINES += USE_SRV
+DEFINES += USE_SRV
 #DEFINES += USE_AMR_400
-DEFINES += USE_AMR_400_LAKI
+#DEFINES += USE_AMR_400_LAKI
 #DEFINES += USE_MECANUM_OLD
 #DEFINES += USE_MECANUM
 
@@ -41,6 +41,7 @@ SOURCES += \
     comm_fms.cpp \
     comm_old.cpp \
     comm_rrs.cpp \
+    comm_ui.cpp \
     config.cpp \
     cv_to_qt.cpp \
     dockcontrol.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
     comm_fms.h \
     comm_old.h \
     comm_rrs.h \
+    comm_ui.h \
     config.h \
     cv_to_qt.h \
     dockcontrol.h \

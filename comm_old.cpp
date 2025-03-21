@@ -718,7 +718,7 @@ QString COMM_OLD::get_req_simple()
     QString bqr_th_str = QString::number(bqr_th*R2D, 'f', 3);
 
     QString operating_mode = "none";
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM_OLD)
     if(ms.operation_state == ROBOT_JOYSTICK_MODE)
     {
         operating_mode = "joystick";
@@ -838,7 +838,7 @@ QString COMM_OLD::get_req_data()
     QString node_size  = QString::number(unimap->nodes.size(), 10);
 
     QString operating_mode = "none";
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM_OLD)
     if(ms.operation_state == ROBOT_JOYSTICK_MODE)
     {
         operating_mode = "joystick";

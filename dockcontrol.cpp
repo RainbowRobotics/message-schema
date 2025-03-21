@@ -342,27 +342,27 @@ bool DOCKCONTROL::is_everything_fine()
 
 void DOCKCONTROL::slot_check_docking()
 {
-    //printf("[DOCKING] slot check docking\n");
+    printf("[DOCKING] slot check docking\n");
 
-    //if(node_type == "GOAL" || node_type == "INIT")
-    //{
-    //    docking_node = "GOAL";
-    //}
-    //else if(node_type == "STATION")
-    //{
-    //    docking_node = "STATION";
-    //}
-    //else
-    //{
-    //    printf("[DOCKING] not support node type.\n");
-    //    return;
-    //}
+    if(docking_node_type == "GOAL" || docking_node_type == "INIT")
+    {
+        docking_node_type = "GOAL";
+    }
+    else if(docking_node_type == "STATION")
+    {
+        docking_node_type = "STATION";
+    }
+    else
+    {
+        printf("[DOCKING] not support node type.\n");
+        return;
+    }
 
-    //double offset_x = offset_val[0];
-    //double offset_y = offset_val[1];
-    //double offset_th = offset_val[2];
+    double offset_x = ox;
+    double offset_y = oy;
+    double offset_th = ot;
 
-    //move(1, 0, offset_x, offset_y, offset_th);
+    move(1, 0, offset_x, offset_y, offset_th);
 }
 
 DCTRL_PARAM DOCKCONTROL::load_preset(int preset)

@@ -23,7 +23,7 @@
         "USE_BQR": "0",
         "USE_BEEP": "1",
         "USE_CAM": "1",
-        "USE_RTSP": "0",
+        "USE_RTSP": "1",
         "USE_RRS": "1",
         "USE_FMS": "0",
         "USE_QTUI": "0",
@@ -95,7 +95,8 @@
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE": "0.5",
+        "OBS_DEADZONE_DYN": "0.5",
+        "OBS_DEADZONE_VIR": "0.5",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
@@ -109,13 +110,13 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "robot": {
-        "PLATFORM_NAME": "400_LAKI",
-        "PLATFORM_TYPE": "AMR_400_LAKI"
+        "PLATFORM_NAME": "D400_LAKI",
+        "PLATFORM_TYPE": "D400"
     },
     "docking": {
     	"DOCK_POINTDOCK_MARGIN": "0.18"
     },
-    "path": {
+    "map": {
         "MAP_PATH": ""
     },
     "lvx": {

@@ -1441,8 +1441,8 @@ void MOBILE::recv_loop()
                 memcpy(&imu_gyr_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_gyr_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                uint8_t TFB_LOCK_DATA;
-                TFB_LOCK_DATA = _buf[index];     index=index+dlc;
+                uint8_t inter_lock_state;
+                inter_lock_state = _buf[index];     index=index+dlc;
 
                 // calc time offset
                 if(is_sync && pc_t > sync_st_time + 0.1)
@@ -1510,7 +1510,7 @@ void MOBILE::recv_loop()
                 mobile_status.imu_acc_y = imu_acc_y * ACC_G;
                 mobile_status.imu_acc_z = imu_acc_z * ACC_G;
 
-                mobile_status.TFB_LOCK_DATA = TFB_LOCK_DATA;
+                mobile_status.inter_lock_state = inter_lock_state;
 
                 // get orientation
                 Eigen::Matrix3d R;//
