@@ -261,7 +261,7 @@ QString MOBILE::get_status_text()
                 mobile_status.power, mobile_status.total_power,
                 mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                 mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                mobile_status.inter_lock_state, mobile_status.operation_state, mobile_status.move_linear_state);
+                mobile_status.inter_lock_state, mobile_status.operation_state, mobile_status.move_pdu_state);
     return str;
 }
 #endif
@@ -1184,7 +1184,7 @@ void MOBILE::recv_loop()
 
                 mobile_status.inter_lock_state = inter_lock_state;
                 mobile_status.operation_state = operation_state;
-                mobile_status.move_linear_state = move_linear_state;
+                mobile_status.move_pdu_state = move_linear_state;
 
                 // get orientation
                 Eigen::Matrix3d R;//
@@ -1835,6 +1835,7 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
+    # if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     // set last v,w
     vx0 = 0;
     vy0 = 0;
@@ -1864,10 +1865,12 @@ void MOBILE::move_linear_y(double d, double v)
     {
         msg_que.push(send_byte);
     }
+    #endif
 }
 
 void MOBILE::stop_charge()
 {
+    # if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     std::vector<uchar> send_byte(25, 0);
     send_byte[0] = 0x24;
 
@@ -1885,6 +1888,7 @@ void MOBILE::stop_charge()
     {
         msg_que.push(send_byte);
     }
+    #endif
 }
 
 void MOBILE::move_rotate(double th, double w)
@@ -1908,7 +1912,13 @@ void MOBILE::move_rotate(double th, double w)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
+    #if defined(USE_MECANUM_OLD)
     send_byte[7] = 119; // cmd move rotate
+    #endif
+
+    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    send_byte[7] = 118; // cmd move rotate
+    #endif
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel

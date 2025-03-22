@@ -398,6 +398,10 @@ public Q_SLOTS:
     void slot_comm_ui_view_control(double time, QString val);
     void slot_comm_ui_view_type(double time, QString val);
     #endif
+
+    #if defined(USE_MECANUM_OLD)
+    void slot_found_obs();
+    #endif
 };
 #endif // MAINWINDOW_H
 
