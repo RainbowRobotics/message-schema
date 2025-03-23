@@ -1124,7 +1124,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1852,8 +1852,8 @@ start</string>
              <widget class="QSpinBox" name="spb_Led">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>69</y>
+                <x>150</x>
+                <y>19</y>
                 <width>44</width>
                 <height>21</height>
                </rect>
@@ -1865,8 +1865,8 @@ start</string>
              <widget class="QPushButton" name="bt_TestLed">
               <property name="geometry">
                <rect>
-                <x>140</x>
-                <y>70</y>
+                <x>200</x>
+                <y>20</y>
                 <width>51</width>
                 <height>20</height>
                </rect>
@@ -1878,8 +1878,8 @@ start</string>
              <widget class="QCheckBox" name="ckb_TestDebug">
               <property name="geometry">
                <rect>
-                <x>10</x>
-                <y>70</y>
+                <x>70</x>
+                <y>20</y>
                 <width>61</width>
                 <height>20</height>
                </rect>
@@ -1891,8 +1891,8 @@ start</string>
              <widget class="QPushButton" name="bt_TestImgSave">
               <property name="geometry">
                <rect>
-                <x>190</x>
-                <y>70</y>
+                <x>250</x>
+                <y>20</y>
                 <width>61</width>
                 <height>20</height>
                </rect>
@@ -2069,8 +2069,13 @@ start</string>
                 <height>20</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(246, 97, 81);</string>
+               <string notr="true"/>
               </property>
               <property name="text">
                <string>dist:</string>
@@ -2225,7 +2230,7 @@ start</string>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="lb_ExtSensorInfo">
+           <widget class="QLabel" name="lb_SensorInfo">
             <property name="font">
              <font>
               <pointsize>8</pointsize>
@@ -2238,7 +2243,7 @@ start</string>
              <enum>QFrame::Box</enum>
             </property>
             <property name="text">
-             <string>[EXT_SENSOR_INFO]</string>
+             <string>[SENSOR_INFO]</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

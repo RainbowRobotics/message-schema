@@ -25,7 +25,6 @@
 
 #include "comm_fms.h"
 #include "comm_rrs.h"
-#include "comm_coop.h"
 #include "comm_old.h"
 #include "comm_ui.h"
 
@@ -74,7 +73,6 @@ public:
     LVX_LOC lvx;
     COMM_FMS comm_fms;
     COMM_RRS comm_rrs;
-    COMM_COOP comm_coop;
     COMM_OLD comm_old;
     COMM_UI comm_ui;
 

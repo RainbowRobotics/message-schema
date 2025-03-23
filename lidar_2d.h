@@ -51,6 +51,10 @@ public:
     std::vector<Eigen::Vector3d> get_cur_scan_f();
     std::vector<Eigen::Vector3d> get_cur_scan_b();
     std::vector<Eigen::Vector3d> get_cur_scan();
+    QString get_lidar_info_str();
+
+    std::atomic<double> cur_pts_size_f = {0.};
+    std::atomic<double> cur_pts_size_b = {0.};
 
     // flags
     std::atomic<bool> is_connected_f = {false};

@@ -55,6 +55,13 @@ void LVX_LOC::open()
 
 void LVX_LOC::map_load(QString file_path)
 {
+    // check simulation mode
+    if(config->USE_SIM)
+    {
+        printf("[LVX] simulation mode\n");
+        return;
+    }
+
     if(last_map_file_path == file_path)
     {
         printf("[LVX] map_load, alread loaded\n");

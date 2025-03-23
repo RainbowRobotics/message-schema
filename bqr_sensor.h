@@ -26,7 +26,7 @@ public:
     void load_codes();
 
     cv::Mat get_plot_img();
-    QString get_bqr_info();
+    QString get_bqr_info_str();
 
     TIME_POSE_ID get_cur_tpi();
     BQR_INFO get_cur_bqr();

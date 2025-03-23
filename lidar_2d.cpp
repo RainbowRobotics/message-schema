@@ -61,6 +61,15 @@ void LIDAR_2D::open()
     }
 }
 
+QString LIDAR_2D::get_lidar_info_str()
+{
+    QString str;
+    str.sprintf("[LIDAR_2D]\nconnection(f,b):%d,%d, pts(f,b):%d,%d",
+                (int)is_connected_f, (int)is_connected_b, (int)cur_pts_size_f, (int)cur_pts_size_b);
+
+    return str;
+}
+
 void LIDAR_2D::sync_f()
 {
     is_sync_f = true;
@@ -357,6 +366,8 @@ void LIDAR_2D::grab_loop_f()
                 }
             }
 
+            cur_pts_size_f = raw_pts.size();
+
             MOBILE_POSE mo;
             mo.t = t1;
             mo.pose = min_pose;
@@ -387,6 +398,8 @@ void LIDAR_2D::grab_loop_f()
 
 void LIDAR_2D::a_loop()
 {
+    Eigen::Matrix4d tf_f = ZYX_to_TF(config->LIDAR_TF_F);
+
     printf("[LIDAR] start a loop\n");
     while(a_flag)
     {
@@ -395,7 +408,6 @@ void LIDAR_2D::a_loop()
         {
             std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 5);
 
-            Eigen::Matrix4d tf_f = ZYX_to_TF(config->LIDAR_TF_F);
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> pts;
             std::vector<Eigen::Vector3d> pts_f;
@@ -603,6 +615,8 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
+            cur_pts_size_f = raw_pts.size();
+
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -792,6 +806,8 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
+            cur_pts_size_b = raw_pts.size();
+
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -823,6 +839,9 @@ void LIDAR_2D::grab_loop_b()
 
 void LIDAR_2D::a_loop()
 {
+    Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
+    Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
+
     std::vector<RAW_FRAME> storage;
 
     printf("[LIDAR] start a loop\n");
@@ -857,9 +876,6 @@ void LIDAR_2D::a_loop()
             }
 
             // merge two lidar frame
-            Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
-            Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
-
             if(min_idx >= 0)
             {
                 RAW_FRAME frm1 = storage[min_idx];
@@ -1040,7 +1056,7 @@ void LIDAR_2D::grab_loop_f()
     is_synced_f = true;
 
     // gap time each points
-    const double point_interval = 32*U2S;
+    const double point_interval = 37*U2S;
 
     int drop_cnt = 10;
     while(grab_flag_f)
@@ -1063,15 +1079,8 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            //////////////////////////////////////////////////////////////////////
             double lidar_t = get_time();
 
-
-
-
-
-
-            //////////////////////////////////////////////////////////////////////
             // lidar frame synced ref time
             double t0 = lidar_t - (temp_pack.maxdots * point_interval);
             double t1 = lidar_t;
@@ -1159,23 +1168,25 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
+            // precise deskewing
+            Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
+            Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
+            Eigen::Matrix4d dtf = tf0.inverse()*tf1;
 
-            Eigen::Vector3d min_pose = pose_storage[idx1].pose;
-            double min_dt = 99999999;
-
-            for(size_t p = 0; p < pose_storage.size(); p++)
+            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
+            for(size_t p = 0; p < raw_pts.size(); p++)
             {
-                double dt = std::abs(pose_storage[p].t - t1);
-                if(dt < min_dt)
-                {
-                    min_dt = dt;
-                    min_pose = pose_storage[p].pose;
-                }
+                double t = times[p];
+                double alpha = (t-t0)/(t1-t0);
+                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
             }
 
+            cur_pts_size_f = raw_pts.size();
+
             MOBILE_POSE mo;
-            mo.t = t1;
-            mo.pose = min_pose;
+            mo.t = t0;
+            mo.pose = TF_to_se2(tf0);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -1211,7 +1222,7 @@ void LIDAR_2D::grab_loop_b()
     is_synced_b = true;
 
     // gap time each points
-    const double point_interval = 32*U2S;
+    const double point_interval = 37*U2S;
 
     int drop_cnt = 10;
     while(grab_flag_b)
@@ -1321,23 +1332,25 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
+            // precise deskewing
+            Eigen::Matrix4d tf0 = se2_to_TF(pose_storage[idx0].pose);
+            Eigen::Matrix4d tf1 = se2_to_TF(pose_storage[idx1].pose);
+            Eigen::Matrix4d dtf = tf0.inverse()*tf1;
 
-            Eigen::Vector3d min_pose = pose_storage[idx1].pose;
-            double min_dt = 99999999;
-
-            for(size_t p = 0; p < pose_storage.size(); p++)
+            std::vector<Eigen::Vector3d> dsk_pts(raw_pts.size());
+            for(size_t p = 0; p < raw_pts.size(); p++)
             {
-                double dt = std::abs(pose_storage[p].t - t1);
-                if(dt < min_dt)
-                {
-                    min_dt = dt;
-                    min_pose = pose_storage[p].pose;
-                }
+                double t = times[p];
+                double alpha = (t-t0)/(t1-t0);
+                Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+                dsk_pts[p] = tf.block(0,0,3,3)*raw_pts[p] + tf.block(0,3,3,1);
             }
 
+            cur_pts_size_b = raw_pts.size();
+
             MOBILE_POSE mo;
-            mo.t = t1;
-            mo.pose = min_pose;
+            mo.t = t0;
+            mo.pose = TF_to_se2(tf0);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -1365,6 +1378,9 @@ void LIDAR_2D::grab_loop_b()
 
 void LIDAR_2D::a_loop()
 {
+    Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
+    Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
+
     std::vector<RAW_FRAME> storage;
 
     printf("[LIDAR] start a loop\n");
@@ -1399,9 +1415,6 @@ void LIDAR_2D::a_loop()
             }
 
             // merge two lidar frame
-            Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
-            Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
-
             if(min_idx >= 0)
             {
                 RAW_FRAME frm1 = storage[min_idx];
