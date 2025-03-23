@@ -35,6 +35,17 @@ void CAM::open()
     }    
 }
 
+QString CAM::get_cam_info_str()
+{
+    QString str;
+    str.sprintf("[CAM]\nconnection(0,1):%d,%d, color(w,h):%d,%d, depth(w,h):%d,%d, pts(0,1):%d,%d",
+                (int)is_connected[0], (int)is_connected[1],
+                (int)cur_w_color, (int)cur_h_color,
+                (int)cur_w_depth, (int)cur_h_depth, (int)cur_pts_size0, (int)cur_pts_size1);
+
+    return str;
+}
+
 cv::Mat CAM::get_img(int cam_idx)
 {
     mtx.lock();
@@ -135,8 +146,14 @@ void CAM::grab_loop()
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
+        cur_w_depth = depth_profile0->width();
+        cur_h_depth = depth_profile0->height();
+
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+
+        cur_w_color = color_profile0->width();
+        cur_h_color = color_profile0->height();
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
@@ -202,6 +219,8 @@ void CAM::grab_loop()
 
                     // voxel filtering
                     pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+
+                    cur_pts_size0 = pts.size();
 
                     // update scan
                     TIME_PTS scan;
@@ -331,7 +350,6 @@ void CAM::grab_loop()
         Eigen::Matrix4d TF0 = string_to_TF(config->CAM_TF_0);
 
         auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
-
         /*
         for(size_t p = 0; p < depth_profile_list0->count(); p++)
         {
@@ -340,9 +358,7 @@ void CAM::grab_loop()
         }
         */
 
-
         auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
-
         /*
         for(size_t p = 0; p < color_profile_list0->count(); p++)
         {
@@ -351,12 +367,17 @@ void CAM::grab_loop()
         }
         */
 
-
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
+        cur_w_depth = depth_profile0->width();
+        cur_h_depth = depth_profile0->height();
+
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
         printf("[CAM] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+
+        cur_w_color = color_profile0->width();
+        cur_h_color = color_profile0->height();
 
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
@@ -422,6 +443,8 @@ void CAM::grab_loop()
 
                     // voxel filtering
                     pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+
+                    cur_pts_size0 = pts.size();
 
                     // update scan
                     TIME_PTS scan;
@@ -555,6 +578,8 @@ void CAM::grab_loop()
 
                     // voxel filtering
                     pts = voxel_filtering(pts, config->SLAM_VOXEL_SIZE);
+
+                    cur_pts_size1 = pts.size();
 
                     // update scan
                     TIME_PTS scan;

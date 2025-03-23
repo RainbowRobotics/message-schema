@@ -35,6 +35,7 @@ public:
     CAM_INTRINSIC get_intrinsic(int cam_idx);
     Eigen::Matrix4d get_extrinsic(int cam_idx);
     TIME_PTS get_scan(int cam_idx);
+    QString get_cam_info_str();
 
     // loop
     std::atomic<bool> grab_flag;
@@ -49,12 +50,19 @@ public:
     TIME_IMG cur_time_img[2];
     TIME_PTS cur_scan[2];
 
+    std::atomic<int> cur_w_color = {0};
+    std::atomic<int> cur_h_color = {0};
+    std::atomic<int> cur_w_depth = {0};
+    std::atomic<int> cur_h_depth = {0};
+
+    std::atomic<double> cur_pts_size0 = {0.};
+    std::atomic<double> cur_pts_size1 = {0.};
+
     CAM_INTRINSIC intrinsic[2];
     Eigen::Matrix4d extrinsic[2];
     
     #if defined (USE_SRV)
     const int depth_profile_idx = 25; // depth_profile(25), w:320, h:180, fps:5, format:11
-    //const int color_profile_idx = 88; // color_profile(88), w:1920, h:1080, fps:5, format:22
     const int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
     #endif
 

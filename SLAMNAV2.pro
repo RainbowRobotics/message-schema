@@ -37,7 +37,6 @@ SOURCES += \
     autocontrol.cpp \
     bqr_sensor.cpp \
     cam.cpp \
-    comm_coop.cpp \
     comm_fms.cpp \
     comm_old.cpp \
     comm_rrs.cpp \
@@ -68,7 +67,6 @@ HEADERS += \
     autocontrol.h \
     bqr_sensor.h \
     cam.h \
-    comm_coop.h \
     comm_data.h \
     comm_fms.h \
     comm_old.h \

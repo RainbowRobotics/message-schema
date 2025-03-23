@@ -20,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent)
     , lvx(this)
     , comm_fms(this)
     , comm_rrs(this)
-    , comm_coop(this)
     , comm_old(this)
     , comm_ui(this)
     , system_logger(this)
@@ -427,6 +426,10 @@ void MainWindow::slot_write_log(QString user_log, QString color_code)
     {
         color_code = "black";
     }
+    else
+    {
+        return;
+    }
 
     QString style_code = "QLabel { color : " + color_code + "; }";
 
@@ -695,20 +698,6 @@ void MainWindow::init_modules()
     task.obsmap = &obsmap;
     task.ctrl = &ctrl;
     task.mobile = &mobile;
-
-    // coop client module init
-    comm_coop.config = &config;
-    comm_coop.logger = &logger;
-    comm_coop.mobile = &mobile;
-    comm_coop.slam = &slam;
-    comm_coop.unimap = &unimap;
-    comm_coop.obsmap = &obsmap;
-    comm_coop.ctrl = &ctrl;
-    comm_coop.lvx = &lvx;
-    if(config.USE_COOP)
-    {
-        comm_coop.init();
-    }
 
     // fms client module init
     comm_fms.config = &config;
@@ -4054,15 +4043,6 @@ void MainWindow::comm_loop()
             comm_ui.send_status();
         }
 
-        // for 100ms loop
-        if(cnt % 10 == 0)
-        {
-            if(comm_coop.is_connected)
-            {
-                Q_EMIT comm_coop.signal_send_info();
-            }
-        }
-
         // for variable loop
         double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
         time_lidar_view *= 10.0;
@@ -4742,7 +4722,7 @@ void MainWindow::watch_loop()
                     if(ms.bat_out < 43.0) // low battery
                     {
                         led_color = LED_OFF;
-                        logger.write_log("[BATTERY] Need Charge");
+                        logger.write_log("[BATTERY] need charge");
                     }
                     else if(ms.charge_state == 1) // charge
                     {
@@ -5903,12 +5883,14 @@ void MainWindow::raw_plot()
         ui->lb_CommInfo->setText(comm_info_str);
     }
 
-    // plot external sensor info
+    // plot sensor info
     {
-        QString ext_sensor_bqr_str = bqr.get_bqr_info();
+        QString lidar_str = lidar.get_lidar_info_str();
+        QString cam_str = cam.get_cam_info_str();
+        QString bqr_str = bqr.get_bqr_info_str();
 
-        QString ext_sensor_str = "[EXT_SENSOR_INFO]\n" + ext_sensor_bqr_str;
-        ui->lb_ExtSensorInfo->setText(ext_sensor_str);
+        QString ext_sensor_str = "[SENSOR_INFO]\n" + lidar_str + "\n" + cam_str + "\n" + bqr_str;
+        ui->lb_SensorInfo->setText(ext_sensor_str);
     }
 
     // plot cam
