@@ -1141,6 +1141,51 @@ struct ASTAR_NODE
     }
 };
 
+struct HASTAR_NODE
+{
+    HASTAR_NODE* parent = NULL;
+    NODE* node = NULL;
+    Eigen::Matrix4d tf;
+    double g = 0;
+    double h = 0;
+    double f = 0;
+    int prim = 0;
+
+    HASTAR_NODE()
+    {
+        parent = NULL;
+        node = NULL;
+        tf.setIdentity();
+        g = 0;
+        h = 0;
+        f = 0;
+        prim = 0;
+    }
+
+    HASTAR_NODE(const HASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        prim = p.prim;
+    }
+
+    HASTAR_NODE& operator=(const HASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        prim = p.prim;
+        return *this;
+    }
+};
+
 struct PATH
 {
     double t;
