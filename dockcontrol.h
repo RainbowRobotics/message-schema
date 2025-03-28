@@ -126,8 +126,20 @@ public:
 
 
     // for hybrid a*
+    double gs = 0.05;
+    std::vector<Eigen::Matrix4d> hybrid_dubins(const Eigen::Matrix4d &, const Eigen::Matrix4d &);
     std::vector<Eigen::Matrix4d> runAstar(const Eigen::Matrix4d & , const Eigen::Matrix4d &);
+    cv::Vec2i xy_uv(double,double);
+    cv::Vec2d uv_xy(int,int);
+    cv::Mat calc_flowfield(const cv::Mat& map, cv::Vec2i ed);
+    int dock_mapsize = 10; // m
+    int w = 200;
+    int h = 200;
+    int cx = 100;
+    int cy = 100;
+
 Q_SIGNALS:
+
     void signal_dock_response(DATA_DOCK msg);
     void signal_move_succeed(QString message);
     void signal_move_failed(QString message);

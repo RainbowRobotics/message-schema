@@ -1428,7 +1428,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     continue;
                 }
 
-                // check collision                
+                // check collision
                 std::vector<Eigen::Matrix4d> traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
                 if(is_collision(obs_map, traj, margin_x, margin_y))
                 {
@@ -1443,6 +1443,7 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         for(size_t p = 0; p < around.size(); p++)
         {
             cv::Vec2i uv = xy_uv(around[p](0,3), around[p](1,3));
+
             if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
             {
                 continue;
@@ -1505,7 +1506,6 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
             printf("[OBSMAP] timeout, iter:%d\n", iter);
             break;
         }
-
         iter++;
     }
 

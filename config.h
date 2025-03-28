@@ -151,6 +151,8 @@ public:
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
     int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
+    double DOCKING_GRID_SIZE = 0.05;
+    int DOCKING_MAP_SIZE = 10; //m
 
     // livox
     QString LVX_TF = "0,0,0,0,0,0";    

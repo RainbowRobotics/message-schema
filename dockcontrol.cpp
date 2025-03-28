@@ -96,7 +96,7 @@ void DOCKCONTROL::move()
     end(0,3) = 2.0;
     end(1,3) = 2.0;
 
-    runAstar(start,end);
+    hybrid_dubins(start,end);
 
     // start docking control loop
     fsm_state = DOCKING_FSM_POINTDOCK;
@@ -1476,6 +1476,286 @@ bool DOCKCONTROL::undock()
     }
 }
 
+
+std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& st_tf, const Eigen::Matrix4d& ed_tf)
+
+{
+    const double chk_dt = 0.03;
+    const double chk_dr = 3.0*D2R;
+
+    const double sampling_dt = 0.05;
+    const double sampling_dr = 5.0*D2R;
+
+    gs = config->DOCKING_GRID_SIZE;
+    dock_mapsize = config->DOCKING_MAP_SIZE;
+    w = dock_mapsize/gs;
+    h = dock_mapsize/gs;
+
+
+    cv::Vec2i st_uv = xy_uv(st_tf(0,3), st_tf(1,3));
+    cv::Vec2i ed_uv = xy_uv(ed_tf(0,3), ed_tf(1,3));
+
+    //bfs
+    cv::Mat bfs_map;
+    bfs_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    cv::Mat flow_field = calc_flowfield(bfs_map, ed_uv);
+    qDebug() << "bfs done";
+    double cost0 = flow_field.ptr<float>(st_uv[1])[st_uv[0]];
+
+    // search algorithm
+    std::vector<ASTAR_NODE*> open_set;
+    std::vector<std::vector<ASTAR_NODE*>> close_set(w*h); // close set maybe too big
+
+    // set st, ed
+    ASTAR_NODE *ed = new ASTAR_NODE();
+    ed->tf = ed_tf;
+
+    ASTAR_NODE *st = new ASTAR_NODE();
+    st->tf = st_tf;
+    st->g = 1.0; //1.0/calc_clearance(obs_map, st->tf, 2.0) * 0.1;
+    st->h = cost0*gs;
+    st->f = st->g + 5*st->h;
+    open_set.push_back(st);
+    qDebug() << "done2";
+
+
+    // search loop
+    int iter = 0;
+    double st_time = get_time();
+    while(open_set.size() > 0)
+    {
+        // get best node
+        int cur_idx = 0;
+        ASTAR_NODE *cur = open_set.front();
+        for(size_t p = 0; p < open_set.size(); p++)
+        {
+            if(open_set[p]->f < cur->f)
+            {
+                cur = open_set[p];
+                cur_idx = p;
+            }
+        }
+
+        // pop open_set, push close_set
+        open_set.erase(open_set.begin()+cur_idx);
+        cv::Vec2i uv0 = xy_uv(cur->tf(0,3), cur->tf(1,3));
+        if(uv0[0] < 0 || uv0[0] >= w || uv0[1] < 0 || uv0[1] >= h)
+        {
+            continue;
+        }
+
+        close_set[uv0[1]*w + uv0[0]].push_back(cur);
+
+        // for debug
+//        if(config->USE_SIM == 1)
+//        {
+//            debug_img.ptr<cv::Vec3b>(uv0[1])[uv0[0]] = cv::Vec3b(0,255,0);
+
+//            cv::circle(debug_img, cv::Point(st_uv[0], st_uv[1]), 3, cv::Scalar(0,0,255), 2);
+//            cv::circle(debug_img, cv::Point(ed_uv[0], ed_uv[1]), 3, cv::Scalar(0,255,255), 2);
+
+//            cv::Mat debug_map2;
+//            cv::resize(debug_img, debug_map2, cv::Size(debug_img.cols*2, debug_img.rows*2));
+//            cv::imshow("calc_path_debug", debug_map2);
+//        }
+
+        // found goal
+        if(cur->h < st->h*0.5)
+        {
+            qDebug() << "find goal";
+            Eigen::Matrix4d goal_tf0 = calc_tf(cur->tf.block(0,3,3,1), ed->tf.block(0,3,3,1));
+            Eigen::Matrix4d goal_tf1 = goal_tf0;
+            goal_tf0.block(0,3,3,1) = cur->tf.block(0,3,3,1);
+            goal_tf1.block(0,3,3,1) = ed->tf.block(0,3,3,1);
+
+            std::vector<Eigen::Matrix4d> traj_goal0 = intp_tf(cur->tf, goal_tf0, sampling_dt, sampling_dr);
+            std::vector<Eigen::Matrix4d> traj_goal1 = intp_tf(goal_tf0, goal_tf1, sampling_dt, sampling_dr);
+
+            std::vector<Eigen::Matrix4d> traj_goal = traj_goal0;
+            traj_goal.insert(traj_goal.end(), traj_goal1.begin(), traj_goal1.end());
+            qDebug() << "when die";
+
+            std::vector<Eigen::Matrix4d> res;
+
+            ASTAR_NODE* _cur = cur;
+            while(_cur != NULL)
+            {
+                qDebug() <<"r";
+                res.push_back(_cur->tf);
+                _cur = _cur->parent;
+                if(_cur != NULL)
+                {
+                    Eigen::Vector3d debug_pt(_cur->tf(0,3), _cur->tf(1,3), 0.0);
+                    debug_frame.push_back(debug_pt);
+                }
+            }
+            qDebug() << "when die2";
+            std::reverse(res.begin(), res.end());
+
+            // set final pose
+            for(size_t p = 0; p < traj_goal.size(); p++)
+            {
+                res.push_back(traj_goal[p]);
+
+                Eigen::Vector3d debug_pt(traj_goal[p](0,3), traj_goal[p](1,3), 0.0);
+                debug_frame.push_back(debug_pt);
+            }
+
+            qDebug() << "when die3";
+
+            printf("[DOCKING] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
+            return res;
+
+        }
+
+        // expand nodes for differential drive
+        qDebug() <<"expand nodes";
+        double step = gs;
+        std::vector<Eigen::Matrix4d> around;
+        for(int i = -2; i <= 2; i++)
+        {
+            for(int j = -2; j <= 2; j++)
+            {
+                if(j == 0 && i == 0)
+                {
+                    continue;
+                }
+
+                double offset_x = j*step;
+                double offset_y = i*step;
+                double offset_th = std::atan2(offset_y, offset_x);
+
+                Eigen::Vector3d offset_xi(offset_x, offset_y, offset_th);
+                Eigen::Matrix4d offset_tf = se2_to_TF(offset_xi);
+
+                Eigen::Matrix4d tf0 = cur->tf;
+                Eigen::Matrix4d tf1 = offset_tf;
+
+                tf1(0,3) += tf0(0,3);
+                tf1(1,3) += tf0(1,3);
+                tf1(2,3) += tf0(2,3);
+
+                // check range
+                if(calc_dist_2d(tf1.block(0,3,3,1)) > dock_mapsize)
+                {
+                    continue;
+                }
+
+                // check collision
+                cv::Vec2i uv1 = xy_uv(tf1(0,3), tf1(1,3));
+                if(uv1[0] < 0 || uv1[0] >= w || uv1[1] < 0 || uv1[1] >= h)
+                {
+                    continue;
+                }
+
+//                if(flow_field.ptr<float>(uv1[1])[uv1[0]] < 0)
+//                {
+//                    continue;
+//                }
+
+                // check close set
+                bool is_close_set = false;
+                for(size_t p = 0; p < close_set[uv1[1]*w + uv1[0]].size(); p++)
+                {
+                    double dth = calc_dth(close_set[uv1[1]*w + uv1[0]][p]->tf, tf1);
+                    if(dth < chk_dr) // ?
+                    {
+                        is_close_set = true;
+                        break;
+                    }
+                }
+                if(is_close_set)
+                {
+                    continue;
+                }
+
+                // check collision
+                std::vector<Eigen::Matrix4d> traj = intp_tf(tf0, tf1, sampling_dt, sampling_dr);
+//                if(is_collision(obs_map, traj, margin_x, margin_y))
+//                {
+//                    continue;
+//                }
+                around.push_back(tf1);
+            }
+        }
+
+        // calc child node
+        for(size_t p = 0; p < around.size(); p++)
+        {
+            // 탐색노드의 픽셀좌표확인
+            cv::Vec2i uv = xy_uv(around[p](0,3), around[p](1,3));
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+
+            //거리 cost 확인
+            double cost1 = flow_field.ptr<float>(uv[1])[uv[0]];
+            if(cost1 < 0)
+            {
+                continue;
+            }
+
+            // calc heuristics
+            Eigen::Vector2d dtdr1 = dTdR(cur->tf, around[p]);
+            double g = 0.0; /*cur->g + dtdr1[0]
+                              + dtdr1[1] * 0.1
+                              + 1.0/calc_clearance(obs_map, around[p], 2.0) * 0.1;*/
+
+            double h = cost1*gs; // m단위로 변환하기위한 gs
+            double f = g + 5*h;
+
+            // check open set
+            bool is_open_set = false;
+            ASTAR_NODE* open_node = NULL;
+            for(size_t q = 0; q < open_set.size(); q++)
+            {
+                Eigen::Vector2d dtdr = dTdR(open_set[q]->tf, around[p]);
+                if(dtdr[0] < chk_dt && dtdr[1] < chk_dr)
+                {
+                    is_open_set = true;
+                    open_node = open_set[q];
+                    break;
+                }
+            }
+
+            if(is_open_set)
+            {
+                if(g < open_node->g)
+                {
+                    open_node->parent = cur;
+                    open_node->g = g;
+                    open_node->h = h;
+                    open_node->f = f;
+                }
+                continue;
+            }
+
+            // add new child to open set
+            ASTAR_NODE *child = new ASTAR_NODE();
+            child->parent = cur;
+            child->tf = around[p];
+            child->g = g;
+            child->h = h;
+            child->f = f;
+            open_set.push_back(child);
+        }
+
+        double timeout = get_time() - st_time;
+        qDebug() << "timeout:" <<timeout;
+        if(timeout > 1.5)
+        {
+            printf("[OBSMAP] timeout, iter:%d\n", iter);
+            break;
+        }
+
+        iter++;
+    }
+    std::vector<Eigen::Matrix4d> res;
+    return res;
+}
+
+
 std::vector<Eigen::Matrix4d> DOCKCONTROL::runAstar(const Eigen::Matrix4d &start, const Eigen::Matrix4d &end)
 {
     const double resolution = 0.05; //m
@@ -1510,7 +1790,6 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::runAstar(const Eigen::Matrix4d &start,
     };
 
     float curT = std::hypot(end_grid.x() - start_grid.x(), end_grid.y() - start_grid.y());
-    qDebug() << "curT" << curT;
 
     float priInc = 2.0f;
     int cycles = 10000;
@@ -1604,7 +1883,6 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::runAstar(const Eigen::Matrix4d &start,
         pose(1, 3) = (y - grid_center) * resolution;
         path.push_back(pose);
 
-        qDebug() << "pose" << pose(0,3) << pose(1,3);
 
         Eigen::Vector3d debug_pt(pose(0,3), pose(1,3), 0.0);
         debug_frame.push_back(debug_pt);
@@ -1612,4 +1890,71 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::runAstar(const Eigen::Matrix4d &start,
 
     std::reverse(path.begin(), path.end());
     return path;
+}
+
+cv::Vec2i DOCKCONTROL::xy_uv(double x, double y)
+{
+    // y axis flip
+    int u = std::floor(x/gs) + cx;
+    int v = std::floor(-y/gs) + cy;
+    return cv::Vec2i(u, v);
+}
+
+cv::Vec2d DOCKCONTROL::uv_xy(int u, int v)
+{
+    double x = (u-cx)*gs;
+    double y = -(v-cy)*gs;
+    return cv::Vec2d(x, y);
+}
+
+cv::Mat DOCKCONTROL::calc_flowfield(const cv::Mat& map, cv::Vec2i ed)
+{
+    ed[0] = saturation(ed[0], 0, w-1);
+    ed[1] = saturation(ed[1], 0, h-1);
+
+
+
+    cv::Mat res(h, w, CV_32F, cv::Scalar(-1));
+
+    std::vector<cv::Vec2i> directions = { {0, 1}, {1, 0}, {0, -1}, {-1, 0} };
+
+    std::queue<cv::Vec2i> q;
+    q.push(ed);
+    res.ptr<float>(ed[1])[ed[0]] = 0;
+
+    while(!q.empty())
+    {
+
+        cv::Vec2i current = q.front();
+        q.pop();
+
+        float current_cost = res.ptr<float>(current[1])[current[0]];
+
+        for(const auto& dir : directions)
+        {
+
+            cv::Vec2i neighbor = current + dir;
+
+
+            if (neighbor[0] < 0 || neighbor[0] >= w || neighbor[1] < 0 || neighbor[1] >= h)
+            {
+
+                continue;
+            }
+
+            if (map.ptr<uchar>(neighbor[1])[neighbor[0]] == 255)
+            {
+
+                continue;
+            }
+
+            if (res.ptr<float>(neighbor[1])[neighbor[0]] == -1)
+            {
+                res.ptr<float>(neighbor[1])[neighbor[0]] = current_cost + 1;
+                q.push(neighbor);
+            }
+        }
+    }
+
+    return res;
 }
