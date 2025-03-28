@@ -5981,6 +5981,24 @@ void MainWindow::raw_plot()
         std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan(1).pts;
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+        //for docking debug
+
+        std::vector<Eigen::Vector3d> dock_ = dctrl.get_cur_clust();
+
+        for(size_t p =0; p < dock_.size(); p ++)
+        {
+            pcl::PointXYZRGB pt;
+            pt.x = dock_[p][0];
+            pt.y = dock_[p][1];
+            pt.z = dock_[p][2];
+            pt.r = 0;
+            pt.g = 255;
+            pt.b = 0;
+
+            cloud->push_back(pt);
+        }
+
         for(size_t p = 0; p < cur_scan.size(); p++)
         {
             // set pos
@@ -6857,9 +6875,9 @@ void MainWindow::bt_DockStop()
 void MainWindow::bt_UnDockStart()
 {
     ctrl.is_moving = true;
-    //dctrl.undock();
+    dctrl.undock();
 
-    double t = std::abs(config.DOCK_POINTDOCK_MARGIN/0.1) + 0.5;
+    double t = std::abs(config.DOCKING_POINTDOCK_MARGIN/0.1) + 0.5;
     QTimer::singleShot(t*1000, [&]()
     {
         ctrl.is_moving = false;

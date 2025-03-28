@@ -677,7 +677,7 @@ void COMM_OLD::auto_loop()
 
 void COMM_OLD::docking_loop()
 {
-    if(dctrl->fsm_state == DOCK_FSM_COMPLETE)
+    if(dctrl->fsm_state == DOCKING_FSM_COMPLETE)
     {
         QString str = "DONE\n";
         Q_EMIT signal_cmd_recv(str);

@@ -44,15 +44,23 @@ public:
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
 
-    void move(double p_gain=1.0, double d_gain=1.0, double off_x=0.0, double off_y=0.0, double off_t=0.0);
+//    void move(double p_gain=1.0, double d_gain=1.0, double off_x=0.0, double off_y=0.0, double off_t=0.0);
+    void move(double p_gain, double d_gain, double off_x, double off_y, double off_t);
+    void move();
     void stop();
+    void a_loop();
+    void b_loop();
+    bool undock();
 
     // control loop
     std::atomic<bool> a_flag = {false};
-    std::thread *a_thread = NULL;
-    void a_loop();
+    std::atomic<bool> b_flag = {false};
 
-    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
+    std::thread *a_thread = NULL;
+    std::thread *b_thread = NULL;
+
+
+
     bool is_everything_fine();
 
     double p_gain_ratio = 1.0;
@@ -70,10 +78,57 @@ public:
     // flags
     std::atomic<bool> is_moving = {false};
     std::atomic<bool> is_pause = {false};
-    std::atomic<int> fsm_state = {DOCK_FSM_COMPLETE};
+    std::atomic<int> fsm_state = {DOCKING_FSM_OFF};
     QString obs_condition = "none";
+    QString failed_reason = "";
 
+    // for l_cluster
+    std::queue<std::vector<Eigen::Vector3d>> clusters_queue;
+    int clust_size_min = 60;
+    int clust_size_max = 500;
+    float clust_d_threshold = 0.05;
+    bool sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
+
+    // for l_icp
+    KFRAME generateVKframe();
+    XYZR_CLOUD generateSamplePoints(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, int n);
+    Eigen::Vector3d calculateCenter(const KFRAME& frame);
+    Eigen::Matrix4d calculateTranslationMatrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to);
+    double Vfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG);
+    int ICP_MAX_FEATURE_NUM = 1000;
+    double ICP_COST_THRESHOLD = 3.0;
+    int ICP_CORRESPONDENCE_THRESHOLD = 10;
+
+    // for l_dock
+    bool path_flag = false;
+    bool undock_flag = false;
+    double undock_waiting_time = 0.0;
+    Eigen::Matrix4d docking_station;
+    Eigen::Matrix4d docking_station_m;
+    KFRAME Vfrm;
+    Eigen::Vector3d frm1_center;
+    bool find_Vmark();
+    bool dock = false;
+
+    //for l_control
+    double limit_accel = 0.1;
+    double limit_vel = 0.1;
+    double limit_th_acc = 45;
+    double limit_th = 0.785;
+    double err_th_old = 0.0;
+    double err_v_old = 0.0;
+    double undock_time =0.0;
+    void dockControl(const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
+    bool dock_first = false;
+    // for debug
+    std::vector<Eigen::Vector3d> get_cur_clust();
+    std::vector<Eigen::Vector3d> debug_frame;
+
+
+    // for hybrid a*
+    std::vector<Eigen::Matrix4d> runAstar(const Eigen::Matrix4d & , const Eigen::Matrix4d &);
 Q_SIGNALS:
+    void signal_dock_response(DATA_DOCK msg);
     void signal_move_succeed(QString message);
     void signal_move_failed(QString message);
 
