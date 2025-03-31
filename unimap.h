@@ -73,6 +73,7 @@ public:
 
     QString add_node(Eigen::Matrix4d tf, QString type);
     void add_node(PICKING pick, QString type, QString info="");
+    QString add_node(Eigen::Matrix4d tf, QString type, int bqr_num);
     QString add_node(Eigen::Matrix4d tf, QString type, QString name);
     void del_node(QString id);
     void del_link(QString id0, QString id1);

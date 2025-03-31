@@ -312,6 +312,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     else
     {
         #ifdef USE_MECANUM_OLD
+        Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
         if(msg.method == "hpp")
         {
             move_hpp(tf, msg.preset);

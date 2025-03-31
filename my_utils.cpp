@@ -17,19 +17,69 @@ cv::Vec3b colors[10] =
     cv::Vec3b(0, 255, 0)      // 밝은 녹색
 };
 
-std::vector<VoltageCapacity> volt_lookup_data =
+std::vector<VoltageCapacity> voltage_lookup_table =
 {
-    {42.84, 1}, {43.54, 2}, {44.52, 3}, {44.8, 4}, {45.08, 5}, {45.36, 6},
-    {46.06, 7}, {46.48, 8}, {46.76, 9}, {47.04, 10}, {47.32, 11}, {47.46, 12},
-    {47.74, 13}, {48.02, 14}, {48.3, 15}, {48.44, 16}, {48.58, 17}, {48.72, 18},
-    {48.79, 19}, {48.86, 20}, {49, 21}, {49.07, 22}, {49.14, 23}, {49.28, 24},
-    {49.42, 25}, {49.56, 26}, {49.7, 27}, {49.84, 28}, {49.91, 29}, {49.98, 30},
-    {50.12, 31}, {50.26, 32}, {50.4, 33}, {50.54, 34}, {50.61, 35}, {50.68, 36},
-    {50.75, 37}, {50.82, 38}, {50.89, 39}, {50.96, 40}, {51.03, 41}, {51.1, 42},
-    {51.142, 43}, {51.198, 44}, {51.24, 45}, {51.31, 46}, {51.38, 47}, {51.45, 48},
-    {51.52, 49}, {51.66, 50}, {51.73, 51}, {51.8, 52}, {51.94, 53}, {52.08, 54},
-    {52.22, 55}, {52.36, 56}, {52.5, 57}, {52.78, 58}, {52.92, 59}, {53.06, 60},
-    {53.2, 61}, {53.34, 62}, {53.48, 63}, {53.62, 64}, {53.76, 65}, {53.9, 66},
+    {42.84,  1},
+    {43.54,  2},
+    {44.52,  3},
+    {44.8,   4},
+    {45.08,  5},
+    {45.36,  6},
+    {46.06,  7},
+    {46.48,  8},
+    {46.76,  9},
+    {47.04,  10},
+    {47.32,  11},
+    {47.46,  12},
+    {47.74,  13},
+    {48.02,  14},
+    {48.3,   15},
+    {48.44,  16},
+    {48.58,  17},
+    {48.72,  18},
+    {48.79,  19},
+    {48.86,  20},
+    {49,     21},
+    {49.07,  22},
+    {49.14,  23},
+    {49.28,  24},
+    {49.42,  25},
+    {49.56,  26},
+    {49.7,   27},
+    {49.84,  28},
+    {49.91,  29},
+    {49.98,  30},
+    {50.12,  31},
+    {50.26,  32},
+    {50.4,   33},
+    {50.54,  34},
+    {50.61,  35},
+    {50.68,  36},
+    {50.75,  37},
+    {50.82,  38},
+    {50.89,  39},
+    {50.96,  40},
+    {51.03,  41},
+    {51.1,   42},
+    {51.142, 43},
+    {51.198, 44},
+    {51.24,  45},
+    {51.31,  46},
+    {51.38,  47},
+    {51.45,  48},
+    {51.52,  49},
+    {51.66,  50},
+    {51.73,  51},
+    {51.8,   52},
+    {51.94,  53},
+    {52.08,  54},
+    {52.22,  55},
+    {52.36,  56},
+    {52.5,   57},
+    {52.78,  58},
+    {52.92,  59},
+    {53.06,  60},
+    {53.2,   61}, {53.34, 62}, {53.48, 63}, {53.62, 64}, {53.76, 65}, {53.9, 66},
     {54.04, 67}, {54.18, 68}, {54.32, 69}, {54.46, 70}, {54.53, 71}, {54.6, 72},
     {54.74, 73}, {55.02, 74}, {55.3, 75}, {55.37, 76}, {55.44, 77}, {55.51, 78},
     {55.58, 79}, {55.72, 80}, {55.86, 81}, {56, 82}, {56.14, 83}, {56.28, 84},
@@ -65,12 +115,31 @@ bool ping(std::string ip_address)
     return (result == 0);
 }
 
+double get_time0()
+{
+    std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
+    return (timestamp*1.0e-9);
+}
+
+#if defined(USE_SRV)
 double get_time()
 {
     std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
     auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
     return (timestamp*1.0e-9);
 }
+#endif
+
+#if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+double st_time_for_get_time = get_time();
+double get_time()
+{
+    std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
+    return (timestamp*1.0e-9) - st_time_for_get_time;
+}
+#endif
 
 QString get_time_str()
 {
@@ -956,6 +1025,18 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
                 result.sz[0] = info_parts[1].toDouble(); // size x
                 result.sz[1] = info_parts[2].toDouble(); // size y
                 result.sz[2] = info_parts[3].toDouble(); // size z
+                return true;
+            }
+            else if(info_key == "BQR_CODE_NUM" && info_parts.size() == 2)
+            {
+                result.bqr_code_num = info_parts[1].toInt(); // bottom qr code num
+                return true;
+            }
+            else if(info_key == "BQR_CODE_OFFSET" && info_parts.size() == 4)
+            {
+                result.bqr_code_offset[0] = info_parts[1].toDouble(); // bottom qr code offset x
+                result.bqr_code_offset[1] = info_parts[2].toDouble(); // bottom qr code offset y
+                result.bqr_code_offset[2] = info_parts[3].toDouble(); // bottom qr code offset z
                 return true;
             }
         }

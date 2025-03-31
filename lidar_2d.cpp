@@ -471,7 +471,7 @@ void LIDAR_2D::grab_loop_f()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    std::unique_ptr<sick::SyncSickSafetyScanner> safety_scanner;
     try
     {
         safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
@@ -485,7 +485,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 10;
+    int drop_cnt = 100;
     logger->write_log("[LIDAR] start grab loop, front.", "Green");
     while(grab_flag_f)
     {
@@ -615,8 +615,6 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            cur_pts_size_f = raw_pts.size();
-
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -662,7 +660,7 @@ void LIDAR_2D::grab_loop_b()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    std::unique_ptr<sick::SyncSickSafetyScanner> safety_scanner;
     try
     {
         safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
@@ -676,7 +674,7 @@ void LIDAR_2D::grab_loop_b()
 
     is_connected_b = true;
 
-    int drop_cnt = 10;
+    int drop_cnt = 100;
     logger->write_log("[LIDAR] start grab loop, back.", "Green");
     while(grab_flag_b)
     {
@@ -806,8 +804,6 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            cur_pts_size_b = raw_pts.size();
-
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -839,10 +835,10 @@ void LIDAR_2D::grab_loop_b()
 
 void LIDAR_2D::a_loop()
 {
+    std::vector<RAW_FRAME> storage;
+
     Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
     Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
-
-    std::vector<RAW_FRAME> storage;
 
     printf("[LIDAR] start a loop\n");
     while(a_flag)
@@ -881,8 +877,8 @@ void LIDAR_2D::a_loop()
                 RAW_FRAME frm1 = storage[min_idx];
 
                 // apply shadow filter for frm0 and frm1
-                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
-                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 3);
+                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 5);
+                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 5);
 
                 // lidar frame to robot frame
                 std::vector<double> reflects_f;
@@ -1011,6 +1007,9 @@ void LIDAR_2D::a_loop()
                     pts = pts_inlier;
                     reflects = reflects_inlier;
                 }
+
+                cur_pts_size_f = pts_f.size();
+                cur_pts_size_b = pts_b.size();
 
                 // update
                 mtx.lock();

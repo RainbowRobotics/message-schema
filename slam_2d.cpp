@@ -946,7 +946,7 @@ void SLAM_2D::loc_b_loop()
         }
         else
         {
-            //printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }

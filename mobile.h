@@ -59,12 +59,13 @@ public:
     void led(int target, int mode);
     void time_sync();
     void stop_charge();
+
     // recv loop
     std::atomic<bool> recv_flag = {false};
     std::thread* recv_thread = NULL;
     void recv_loop();
 
-    int cal_voltage(float voltage);
+    int calc_battery_percentage(float voltage);
 
     // send loop
     std::atomic<bool> send_flag = {false};
@@ -75,6 +76,9 @@ public:
     tbb::concurrent_queue<std::vector<uchar>> msg_que;
     std::vector<MOBILE_POSE> pose_storage;
     std::vector<MOBILE_IMU> imu_storage;
+
+    std::atomic<bool> is_first_receive = {true};
+    double input_voltage = 999.0;
 
     // vars
     MOBILE_POSE cur_pose;

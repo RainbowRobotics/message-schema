@@ -221,6 +221,9 @@ void CONFIG::load()
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
 
+                USE_COMM_OLD = obj_debug["USE_COMM_OLD"].toString().toInt();
+                printf("[CONFIG] USE_COMM_OLD, %s\n", obj_debug["USE_COMM_OLD"].toString().toLocal8Bit().data());
+
                 USE_QTUI = obj_debug["USE_QTUI"].toString().toInt();
                 printf("[CONFIG] USE_QTUI, %s\n", obj_debug["USE_QTUI"].toString().toLocal8Bit().data());
 
@@ -598,8 +601,8 @@ void CONFIG::load_ext(QString path)
                 OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
                 printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
 
-                OBS_DEADZONE = obj_obs["OBS_DEADZONE"].toString().toDouble();
-                printf("[CONFIG] OBS_DEADZONE, %s\n", obj_obs["OBS_DEADZONE"].toString().toLocal8Bit().data());
+                OBS_DEADZONE_DYN = obj_obs["OBS_DEADZONE_DYN"].toString().toDouble();
+                printf("[CONFIG] OBS_DEADZONE_DYN, %s\n", obj_obs["OBS_DEADZONE_DYN"].toString().toLocal8Bit().data());
 
                 OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
                 printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());

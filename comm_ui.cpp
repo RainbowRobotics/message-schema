@@ -428,9 +428,9 @@ void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString m
         NODE_INFO res;
         if(parse_info(info, "BQR_OFFSET", res))
         {
-            ref_offset_x = res.bqr_offset[0];
-            ref_offset_y = res.bqr_offset[1];
-            ref_offset_th = res.bqr_offset[2];
+            ref_offset_x = res.bqr_code_offset[0];
+            ref_offset_y = res.bqr_code_offset[1];
+            ref_offset_th = res.bqr_code_offset[2];
 
             if(ref_offset_x != offset_val[0] || ref_offset_y != offset_val[1] || ref_offset_th != offset_val[2])
             {
@@ -893,8 +893,14 @@ void COMM_UI::send_status()
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM)
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
+    #endif
+    #if defined(USE_SRV) || defined(USE_MECANUM_OLD)
+    powerObj["charge_current"] = QString::number(0, 'f', 3);
+    powerObj["contact_voltage"] = QString::number(0, 'f', 3);
+    #endif
     rootObj["power"] = powerObj;
 
     // Adding the state object

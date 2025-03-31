@@ -121,7 +121,7 @@
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
-#define MO_STORAGE_NUM 400
+#define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3
 
@@ -1392,17 +1392,18 @@ struct NODE_INFO
     Eigen::Vector3d sz;
 
     // bqr(bottom qr) code number
-    int bqr_code_num = -1;
+    int bqr_code_num;
 
     // bqr(bottom qr) offset
-    Eigen::Vector3d bqr_offset;
+    Eigen::Vector3d bqr_code_offset;
 
     NODE_INFO()
     {
         rpy.setZero();
         ptz.setZero();
         sz.setZero();
-        bqr_offset.setZero();
+        bqr_code_num = -1;
+        bqr_code_offset.setZero();
     }
 
     NODE_INFO(const NODE_INFO& p)
@@ -1411,7 +1412,7 @@ struct NODE_INFO
         ptz = p.ptz;
         sz = p.sz;
         bqr_code_num = p.bqr_code_num;
-        bqr_offset = p.bqr_offset;
+        bqr_code_offset = p.bqr_code_offset;
     }
 
     NODE_INFO& operator=(const NODE_INFO& p)
@@ -1420,7 +1421,7 @@ struct NODE_INFO
         ptz = p.ptz;
         sz = p.sz;
         bqr_code_num = p.bqr_code_num;
-        bqr_offset = p.bqr_offset;
+        bqr_code_offset = p.bqr_code_offset;
         return *this;
     }
 };

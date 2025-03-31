@@ -349,6 +349,24 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     return node.id;
 }
 
+QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, int bqr_num)
+{
+    QString info = "BQR_CODE_NUM," + QString::number(bqr_num) + "\n";
+
+    // for quick annotation
+    NODE node;
+    node.id = gen_node_id();
+    node.name = gen_node_name();
+    node.type = type;
+    node.info = info;
+    node.tf = tf;
+    nodes.push_back(node);
+
+    printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
+
+    return node.id;
+}
+
 QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
 {
     NODE node;

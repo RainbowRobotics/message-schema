@@ -77,7 +77,6 @@ public:
     COMM_UI comm_ui;
 
     // system logger
-    LOGGER system_logger;
     std::atomic<int> log_cnt = {0};
 
     // funcs    

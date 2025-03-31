@@ -22,7 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
     , comm_rrs(this)
     , comm_old(this)
     , comm_ui(this)
-    , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
@@ -541,9 +540,9 @@ void MainWindow::init_modules()
     #endif
 
     #ifdef USE_MECANUM_OLD
-    config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config.json";
-    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config_sn.json";
-    QString code_path = QCoreApplication::applicationDirPath() + "/config/AMR_KAI/config_code.json";
+    config.config_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config.json";
+    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config_sn.json";
+    QString code_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config_code.json";
     QString ext_path = QDir::homePath() + "/Desktop/KAI_CONFIG.json";
     #endif
 
@@ -574,10 +573,6 @@ void MainWindow::init_modules()
     // log module init (slamnav)
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
-
-    // log module init (system)
-    system_logger.log_path = QCoreApplication::applicationDirPath() + "/systemlog/";
-    system_logger.init();
 
     // unimap module init
     unimap.config = &config;
@@ -915,7 +910,12 @@ void MainWindow::setup_vtk()
 
 void MainWindow::bqr_localization_loop()
 {
-    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false || unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        return;
+    }
+
+    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false)
     {
         //std::cout << "[CODE_LOC] no need to do localization" << std::endl;
         return;
@@ -942,6 +942,8 @@ void MainWindow::bqr_localization_loop()
         }
 
         QString info = node->info;
+
+        std::cout << info.toStdString() << std::endl;
 
         NODE_INFO res;
         if(!parse_info(info, "BQR_CODE_NUM", res))
@@ -973,7 +975,6 @@ void MainWindow::bqr_localization_loop()
             semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
         }
     }
-
 }
 
 #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
@@ -3272,8 +3273,11 @@ void MainWindow::bt_QuickAddNode()
         return;
     }
 
+    QString type = ui->cb_NodeType->currentText();
+
     Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-    unimap.add_node(cur_tf, "GOAL");
+    BQR_INFO cur_bqr = bqr.get_cur_bqr();
+    unimap.add_node(cur_tf, type, cur_bqr.code_num);
 
     topo_update();
     printf("[QA_Node] quick add node\n");
@@ -4236,7 +4240,7 @@ void MainWindow::watch_loop()
             {
                 if(ms.t != 0)
                 {
-                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state == 1)
+                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state >= 1)
                     {
                         Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
 
@@ -4248,7 +4252,7 @@ void MainWindow::watch_loop()
 
                         comm_rrs.send_move_response(move_info);
                     }
-                    else if(pre_ms.motor_stop_state == 1 && ms.motor_stop_state == 0)
+                    else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
                     {
                         Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
 
@@ -4573,7 +4577,7 @@ void MainWindow::watch_loop()
                 // check temperature
                 {
                     int cpu_temp_sum = 0;
-                    int cnt = 0;
+                    int _cnt = 0;
 
                     QDir dir_temp("/sys/class/thermal");
                     QStringList filters;
@@ -4598,15 +4602,15 @@ void MainWindow::watch_loop()
                                 if(temperature != 0)
                                 {
                                     cpu_temp_sum += temperature/1000;
-                                    cnt++;
+                                    _cnt++;
                                 }
                             }
                         }
                     }
 
-                    if(cnt != 0)
+                    if(_cnt != 0)
                     {
-                        int pc_temp = cpu_temp_sum/cnt;
+                        int pc_temp = cpu_temp_sum/_cnt;
                         temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", pc_temp, ms.temp_m0, ms.temp_m1);
                         if(pc_temp > 85)
                         {
@@ -4622,7 +4626,7 @@ void MainWindow::watch_loop()
                 // check power
                 {
                     int cpu_power_sum = 0;
-                    int cnt = 0;
+                    int _cnt = 0;
 
                     QDir dir_temp("/sys/class/power_supply");
                     QStringList filters;
@@ -4648,15 +4652,15 @@ void MainWindow::watch_loop()
                                 if(power != 0)
                                 {
                                     cpu_power_sum += power/1000;
-                                    cnt++;
+                                    _cnt++;
                                 }
                             }
                         }
                     }
 
-                    if(cnt != 0)
+                    if(_cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/_cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                     else
                     {
@@ -4717,8 +4721,8 @@ void MainWindow::watch_loop()
                 {
                     if(ms.bat_out < 43.0) // low battery
                     {
-                        led_color = LED_OFF;
-                        logger.write_log("[BATTERY] need charge");
+                        led_color = LED_YELLOW_BLINK;
+                        // logger.write_log("[BATTERY] need charge");
                     }
                     else if(ms.charge_state == 1) // charge
                     {
@@ -4733,15 +4737,15 @@ void MainWindow::watch_loop()
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
 
-                if(ui->ckb_RecordSystemInfo->isChecked())
-                {
-                    log_cnt++;
-                    if(log_cnt >= 10)
-                    {
-                        log_cnt = 0;
-                        system_logger.write_log(system_info_str, "White", true, true);
-                    }
-                }
+                //if(ui->ckb_RecordSystemInfo->isChecked())
+                //{
+                //    log_cnt++;
+                //    if(log_cnt >= 10)
+                //    {
+                //        log_cnt = 0;
+                //        system_logger.write_log(system_info_str, "White", true, true);
+                //    }
+                //}
             }
 
             // set led
@@ -5866,26 +5870,46 @@ void MainWindow::raw_plot()
 
     // plot comm info
     {
-        QString comm_rrs_str;
-        comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
+        QString comm_info_str = "[COMM_INFO]\n";
 
-        QString comm_fms_str;
-        comm_fms_str.sprintf("comm_fms: is_connected -> %s\n", (bool)comm_fms.is_connected ? "1" : "0");
+        if(config.USE_RRS)
+        {
+            QString comm_rrs_str;
+            comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_rrs_str);
+        }
 
-        QString comm_old_str;
-        comm_old_str.sprintf("comm_old cmd: is_connected -> %s, data: is_connected -> %s", (bool)comm_old.is_cmd_connected ? "1" : "0", (bool)comm_old.is_data_connected ? "1" : "0");
+        if(config.USE_FMS)
+        {
+            QString comm_fms_str;
+            comm_fms_str.sprintf("comm_fms: is_connected -> %s\n", (bool)comm_fms.is_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_fms_str);
+        }
 
-        QString comm_info_str = "[COMM_INFO]\n" + comm_rrs_str + comm_fms_str + comm_old_str;
+        if(config.USE_COMM_OLD)
+        {
+            QString comm_old_str;
+            comm_old_str.sprintf("comm_old cmd: is_connected -> %s, data: is_connected -> %s", (bool)comm_old.is_cmd_connected ? "1" : "0", (bool)comm_old.is_data_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_old_str);
+        }
+
         ui->lb_CommInfo->setText(comm_info_str);
     }
 
     // plot sensor info
     {
-        QString lidar_str = lidar.get_lidar_info_str();
-        QString cam_str = cam.get_cam_info_str();
-        QString bqr_str = bqr.get_bqr_info_str();
+        QString ext_sensor_str = "[SENSOR_INFO]\n";
+        ext_sensor_str += lidar.get_lidar_info_str();
 
-        QString ext_sensor_str = "[SENSOR_INFO]\n" + lidar_str + "\n" + cam_str + "\n" + bqr_str;
+        if(config.USE_CAM)
+        {
+            ext_sensor_str += (QString("\n") + cam.get_cam_info_str());
+        }
+
+        if(config.USE_BQR)
+        {
+            ext_sensor_str += (QString("\n") + bqr.get_bqr_info_str());
+        }
         ui->lb_SensorInfo->setText(ext_sensor_str);
     }
 
