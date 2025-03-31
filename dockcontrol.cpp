@@ -86,6 +86,10 @@ void DOCKCONTROL::move()
     Vfrm = generateVKframe();
     frm1_center = calculateCenter(Vfrm);
 
+    //odometry coordinate set
+    Eigen::Vector3d odom_pose = mobile->get_pose().pose;
+    odom_start_tf = se2_to_TF(odom_pose);
+
     //debug
     Eigen::Matrix4d start = Eigen::Matrix4d::Identity();
     Eigen::Matrix4d end = Eigen::Matrix4d::Identity();
@@ -97,6 +101,20 @@ void DOCKCONTROL::move()
     end(1,3) = 2.0;
 
     hybrid_dubins(start,end);
+
+    Eigen::Matrix4d temp_dock_tf = Eigen::Matrix4d::Identity();
+
+    double theta = M_PI / 4.0;
+    temp_dock_tf(0, 0) = std::cos(theta);
+    temp_dock_tf(0, 1) = -std::sin(theta);
+    temp_dock_tf(1, 0) = std::sin(theta);
+    temp_dock_tf(1, 1) = std::cos(theta);
+
+    temp_dock_tf(0,3) = 5.0;
+    temp_dock_tf(1,3) = 2.0;
+
+
+    std::vector<Eigen::Matrix4d> final_path = generateStraightPathDock(temp_dock_tf,0.05, 1.0);
 
     // start docking control loop
     fsm_state = DOCKING_FSM_POINTDOCK;
@@ -1478,13 +1496,16 @@ bool DOCKCONTROL::undock()
 
 
 std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& st_tf, const Eigen::Matrix4d& ed_tf)
-
 {
     const double chk_dt = 0.03;
     const double chk_dr = 3.0*D2R;
 
     const double sampling_dt = 0.05;
     const double sampling_dr = 5.0*D2R;
+
+    const double penaltyTurning = 1.05;
+    const double penaltyCOD = 2.0;
+    const double penaltyReversing = 2.0;
 
     gs = config->DOCKING_GRID_SIZE;
     dock_mapsize = config->DOCKING_MAP_SIZE;
@@ -1499,24 +1520,27 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
     cv::Mat bfs_map;
     bfs_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     cv::Mat flow_field = calc_flowfield(bfs_map, ed_uv);
-    qDebug() << "bfs done";
     double cost0 = flow_field.ptr<float>(st_uv[1])[st_uv[0]];
 
     // search algorithm
-    std::vector<ASTAR_NODE*> open_set;
-    std::vector<std::vector<ASTAR_NODE*>> close_set(w*h); // close set maybe too big
+    std::vector<HASTAR_NODE*> open_set;
+    std::vector<std::vector<HASTAR_NODE*>> close_set(w*h); // close set maybe too big
 
     // set st, ed
-    ASTAR_NODE *ed = new ASTAR_NODE();
+    // update h
+    HASTAR_NODE *ed = new HASTAR_NODE();
     ed->tf = ed_tf;
 
-    ASTAR_NODE *st = new ASTAR_NODE();
+    HASTAR_NODE *st = new HASTAR_NODE();
     st->tf = st_tf;
-    st->g = 1.0; //1.0/calc_clearance(obs_map, st->tf, 2.0) * 0.1;
-    st->h = cost0*gs;
-    st->f = st->g + 5*st->h;
+
+    double dx = ed->tf(0,3) - st->tf(0,3);
+    double dy = ed->tf(1,3) - st->tf(1,3);
+    st->g = std::sqrt(dx*dx + dy*dy);
+    st->h = updateH(st->tf,ed->tf);
+    st->f = st->g + st->h;
+    qDebug() <<" first h" << st->h;
     open_set.push_back(st);
-    qDebug() << "done2";
 
 
     // search loop
@@ -1526,7 +1550,7 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
     {
         // get best node
         int cur_idx = 0;
-        ASTAR_NODE *cur = open_set.front();
+        HASTAR_NODE *cur = open_set.front();
         for(size_t p = 0; p < open_set.size(); p++)
         {
             if(open_set[p]->f < cur->f)
@@ -1573,11 +1597,10 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
 
             std::vector<Eigen::Matrix4d> traj_goal = traj_goal0;
             traj_goal.insert(traj_goal.end(), traj_goal1.begin(), traj_goal1.end());
-            qDebug() << "when die";
 
             std::vector<Eigen::Matrix4d> res;
 
-            ASTAR_NODE* _cur = cur;
+            HASTAR_NODE* _cur = cur;
             while(_cur != NULL)
             {
                 qDebug() <<"r";
@@ -1609,7 +1632,6 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
         }
 
         // expand nodes for differential drive
-        qDebug() <<"expand nodes";
         double step = gs;
         std::vector<Eigen::Matrix4d> around;
         for(int i = -2; i <= 2; i++)
@@ -1691,23 +1713,110 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
 
             //거리 cost 확인
             double cost1 = flow_field.ptr<float>(uv[1])[uv[0]];
+
             if(cost1 < 0)
             {
                 continue;
             }
 
             // calc heuristics
-            Eigen::Vector2d dtdr1 = dTdR(cur->tf, around[p]);
-            double g = 0.0; /*cur->g + dtdr1[0]
+            // update h
+            Eigen::Vector2d dtdr1 = dTdR(cur->tf, around[p]);   
+            double dx = ed->tf(0,3) - st->tf(0,3);
+            double dy = ed->tf(1,3) - st->tf(1,3);
+
+            int prim = 0;
+            // prim 0 :d / 1: d-l / 2: d-r / 3: b / 4: b-r / 5: b-l
+
+            double g =0;
+            double h =0;
+            double f =0;
+            //front move
+            if(dtdr1[0] > 0)
+            {
+                if(dtdr1[1] > 0)
+                {
+                    prim = 1;
+                }
+                else if (dtdr1[1] < 0)
+                {
+                    prim = 2;
+                }
+                else
+                {
+                    prim = 0;
+                }
+            }
+
+            //back move
+            else
+            {
+                if(dtdr1[1] > 0)
+                {
+                    prim = 4;
+                }
+                else if(dtdr1[1] < 0)
+                {
+                    prim = 5;
+                }
+                else
+                {
+                    prim = 3;
+                }
+            }
+
+            if(prim < 3) //forward driving
+            {
+                if(cur->prim != prim)
+                {
+                    if(cur->prim > 2)
+                    {
+                        //change direction
+                        g += dtdr1[0] * penaltyTurning * penaltyCOD;
+                    }
+                    else
+                    {
+                        //just turning
+                        g += dtdr1[0] * penaltyTurning;
+                    }
+                }
+                else
+                {
+                    g+= dtdr1[0];
+                }
+            }
+
+            else //reversiong driving
+            {
+                if(cur->prim != prim)
+                {
+                    if(cur->prim <3)
+                    {
+                        g+= dtdr1[0] * penaltyTurning * penaltyReversing * penaltyCOD;
+                    }
+                    else
+                    {
+                        g+= dtdr1[0] * penaltyTurning * penaltyReversing;
+                    }
+                }
+                else
+                {
+                    g+= dtdr1[0] * penaltyReversing;
+                }
+            }
+                    //cost1*gs; //std::sqrt(dx*dx+dy*dy);
+                                /*cur->g + dtdr1[0]
                               + dtdr1[1] * 0.1
                               + 1.0/calc_clearance(obs_map, around[p], 2.0) * 0.1;*/
 
-            double h = cost1*gs; // m단위로 변환하기위한 gs
-            double f = g + 5*h;
+            h = updateH(cur->tf,around[p]);//cost1*gs; // m단위로 변환하기위한 gs
+            f = g + h;
+
+            qDebug() << "chiled prim" << prim;
 
             // check open set
             bool is_open_set = false;
-            ASTAR_NODE* open_node = NULL;
+            HASTAR_NODE* open_node = NULL;
             for(size_t q = 0; q < open_set.size(); q++)
             {
                 Eigen::Vector2d dtdr = dTdR(open_set[q]->tf, around[p]);
@@ -1732,17 +1841,17 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
             }
 
             // add new child to open set
-            ASTAR_NODE *child = new ASTAR_NODE();
+            HASTAR_NODE *child = new HASTAR_NODE();
             child->parent = cur;
             child->tf = around[p];
             child->g = g;
             child->h = h;
             child->f = f;
+            child->prim = prim;
             open_set.push_back(child);
         }
 
         double timeout = get_time() - st_time;
-        qDebug() << "timeout:" <<timeout;
         if(timeout > 1.5)
         {
             printf("[OBSMAP] timeout, iter:%d\n", iter);
@@ -1957,4 +2066,56 @@ cv::Mat DOCKCONTROL::calc_flowfield(const cv::Mat& map, cv::Vec2i ed)
     }
 
     return res;
+}
+
+std::vector<Eigen::Matrix4d> DOCKCONTROL::generateStraightPathDock(const Eigen::Matrix4d& dock_tf, double step, double length)
+{
+    std::vector<Eigen::Matrix4d> path;
+
+    int num_steps = static_cast<int>(length / step);
+    Eigen::Vector3d dir = dock_tf.block<3,1>(0, 0).normalized();
+    Eigen::Vector3d end_pos = dock_tf.block<3,1>(0, 3);
+
+    for (int i = num_steps; i >= 0; --i)
+    {
+        Eigen::Vector3d offset = -dir * (i * step);
+        Eigen::Matrix4d tf = dock_tf;
+        tf.block<3,1>(0, 3) = end_pos + offset;
+
+        Eigen::Vector3d debug_pt(tf(0,3), tf(1,3), 0.0);
+        debug_frame.push_back(debug_pt);
+        path.push_back(tf);
+    }
+    return path;
+}
+
+double DOCKCONTROL::updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed)
+{
+
+    double set_h = 0;
+    double dubinsCost =0;
+    double reedsSheppCost =0;
+    ompl::base::DubinsStateSpace dubinsPath(1);
+
+    State* dbst = (State*)dubinsPath.allocState();
+    State* dbend = (State*)dubinsPath.allocState();
+
+    dbst->setXY(st(0,3),st(1,3));
+    dbst->setYaw(std::atan2(st(1,0),st(0,0)));
+
+    dbend->setXY(ed(0,3),ed(1,3));
+    dbend->setYaw(std::atan2(ed(1,0),ed(0,0)));
+
+    dubinsCost = dubinsPath.distance(dbst,dbend);
+
+
+    //if use reverse path mode
+    //
+    double dx = ed(0,3) - st(0,3);
+    double dy = ed(1,3) - st(1,3);
+
+    double twoDcost = std::sqrt(dx*dx + dy*dy);
+    set_h = std::max(reedsSheppCost, std::max(dubinsCost, twoDcost));
+
+    return set_h;
 }

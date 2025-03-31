@@ -1,6 +1,12 @@
 #ifndef GLOBAL_DEFINES_H
 #define GLOBAL_DEFINES_H
 
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/ProblemDefinition.h>
+#include <ompl/geometric/SimpleSetup.h>
+
 // OpenMP
 #include <omp.h>
 

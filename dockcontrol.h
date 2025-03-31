@@ -17,6 +17,8 @@
 
 #include <QObject>
 
+typedef ompl::base::SE2StateSpace::StateType State;
+
 class DOCKCONTROL : public QObject
 {
     Q_OBJECT
@@ -120,12 +122,15 @@ public:
     double undock_time =0.0;
     void dockControl(const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
     bool dock_first = false;
+
     // for debug
     std::vector<Eigen::Vector3d> get_cur_clust();
     std::vector<Eigen::Vector3d> debug_frame;
 
 
     // for hybrid a*
+    std::vector<Eigen::Matrix4d> generateStraightPathDock(const Eigen::Matrix4d& dock_tf , double step , double length);
+    double updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed);
     double gs = 0.05;
     std::vector<Eigen::Matrix4d> hybrid_dubins(const Eigen::Matrix4d &, const Eigen::Matrix4d &);
     std::vector<Eigen::Matrix4d> runAstar(const Eigen::Matrix4d & , const Eigen::Matrix4d &);
@@ -137,6 +142,9 @@ public:
     int h = 200;
     int cx = 100;
     int cy = 100;
+
+    Eigen::Matrix4d odom_start_tf;
+
 
 Q_SIGNALS:
 
