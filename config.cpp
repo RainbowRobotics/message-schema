@@ -221,6 +221,9 @@ void CONFIG::load()
                 USE_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
 
+                USE_COMM_OLD = obj_debug["USE_COMM_OLD"].toString().toInt();
+                printf("[CONFIG] USE_COMM_OLD, %s\n", obj_debug["USE_COMM_OLD"].toString().toLocal8Bit().data());
+
                 USE_QTUI = obj_debug["USE_QTUI"].toString().toInt();
                 printf("[CONFIG] USE_QTUI, %s\n", obj_debug["USE_QTUI"].toString().toLocal8Bit().data());
 

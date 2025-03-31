@@ -1,0 +1,17 @@
+{
+    "obs": {
+        "OBS_AVOID": "0",
+        "OBS_DEADZONE_DYN": "0.25",
+	"OBS_DEADZONE_VIR": "0.25",
+        "OBS_EB_MARGIN_X": "0.3",
+        "OBS_EB_MARGIN_Y": "0.2",
+        "OBS_LOCAL_GOAL_D": "3.0",
+        "OBS_MAP_GRID_SIZE": "0.05",
+        "OBS_MAP_MAX_Z": "1.0",
+        "OBS_MAP_MIN_Z": "-1.0",
+        "OBS_MAP_RANGE": "5.0",
+        "OBS_OMPL_MARGIN_X": "0.2",
+        "OBS_OMPL_MARGIN_Y": "0.05",
+        "OBS_PREDICT_TIME": "1.5"
+    }
+}

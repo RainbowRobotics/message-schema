@@ -38,7 +38,7 @@ void CAM::open()
 QString CAM::get_cam_info_str()
 {
     QString str;
-    str.sprintf("[CAM]\nconnection(0,1):%d,%d, color(w,h):%d,%d, depth(w,h):%d,%d, pts(0,1):%d,%d",
+    str.sprintf("[CAM]\nconnection(0,1):%d,%d, color(w,h):%d,%d\ndepth(w,h):%d,%d, pts(0,1):%d,%d",
                 (int)is_connected[0], (int)is_connected[1],
                 (int)cur_w_color, (int)cur_h_color,
                 (int)cur_w_depth, (int)cur_h_depth, (int)cur_pts_size0, (int)cur_pts_size1);

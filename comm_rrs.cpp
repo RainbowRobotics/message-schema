@@ -996,7 +996,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             // calc eta (estimation time arrival)
             Eigen::Matrix4d goal_tf = node->tf;
             PATH global_path = ctrl->calc_global_path(goal_tf);
-            if(global_path.pos.size()< 2)
+            if(global_path.pos.size() < 2)
             {
                 msg.result = "accept";
                 msg.message = "just change goal";

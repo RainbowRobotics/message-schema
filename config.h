@@ -85,6 +85,7 @@ public:
     int USE_RTSP = 0;
     int USE_RRS = 0;
     int USE_FMS = 0;
+    int USE_COMM_OLD = 0;
     int USE_QTUI = 0;
     int USE_ARUCO = 0;
     int USE_EARLYSTOP = 0;

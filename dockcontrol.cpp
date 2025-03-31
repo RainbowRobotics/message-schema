@@ -3,6 +3,7 @@
 DOCKCONTROL::DOCKCONTROL(QObject *parent)
     : QObject{parent}
 {
+
 }
 
 DOCKCONTROL::~DOCKCONTROL()

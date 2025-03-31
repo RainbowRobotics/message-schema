@@ -428,9 +428,9 @@ void COMM_UI::slot_move_goal(double time, QString node_id, int preset, QString m
         NODE_INFO res;
         if(parse_info(info, "BQR_OFFSET", res))
         {
-            ref_offset_x = res.bqr_offset[0];
-            ref_offset_y = res.bqr_offset[1];
-            ref_offset_th = res.bqr_offset[2];
+            ref_offset_x = res.bqr_code_offset[0];
+            ref_offset_y = res.bqr_code_offset[1];
+            ref_offset_th = res.bqr_code_offset[2];
 
             if(ref_offset_x != offset_val[0] || ref_offset_y != offset_val[1] || ref_offset_th != offset_val[2])
             {
@@ -897,9 +897,9 @@ void COMM_UI::send_status()
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     #endif
-    #if defined(USE_MECANUM_OLD)
-    powerObj["charge_current"] = QString::number(0.0, 'f', 3);
-    powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
+    #if defined(USE_SRV) || defined(USE_MECANUM_OLD)
+    powerObj["charge_current"] = QString::number(0, 'f', 3);
+    powerObj["contact_voltage"] = QString::number(0, 'f', 3);
     #endif
     rootObj["power"] = powerObj;
 

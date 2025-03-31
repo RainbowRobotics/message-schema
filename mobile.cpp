@@ -59,7 +59,7 @@ void MOBILE::sync()
 
     QString str;
     str.sprintf("[MOBILE] time sync, sync_st_time:%f", (double)sync_st_time);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 }
 
 QString MOBILE::get_cur_pdu_state()
@@ -333,7 +333,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -502,7 +502,21 @@ void MOBILE::recv_loop()
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
 
-                int bat_percent = cal_voltage(bat_out);
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -624,7 +638,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -823,13 +837,28 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _mobile_t = recv_tick*0.002;
-                    double _offset_t = pc_t - _mobile_t;
+                    double _offset_t = return_time - _mobile_t;
                     offset_t = _offset_t;
 
                     is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
-                int bat_percent = cal_voltage(bat_out);
+
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -943,7 +972,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1128,12 +1157,28 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _mobile_t = recv_tick*0.002;
-                    double _offset_t = pc_t - _mobile_t;
+                    double _offset_t = return_time - _mobile_t;
                     offset_t = _offset_t;
+
                     is_synced = true;
-                    QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
-                    logger->write_log(str);
+                    logger->write_log(QString("[MOBILE] sync, offset_t: %1").arg((double)offset_t));
                 }
+
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -1252,7 +1297,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1456,6 +1501,22 @@ void MOBILE::recv_loop()
                     is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
+
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -1730,7 +1791,7 @@ void MOBILE::motor_on()
         }
     }
 
-    logger->write_log("[MOBILE] motor lock on", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock on", "Green", true, false);
 }
 
 void MOBILE::motor_off()
@@ -1754,7 +1815,7 @@ void MOBILE::motor_off()
         msg_que.push(send_byte);
     }
 
-    logger->write_log("[MOBILE] motor lock off", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock off", "Green", true, false);
 }
 
 void MOBILE::move(double vx, double vy, double wz)
@@ -2024,14 +2085,11 @@ void MOBILE::send_loop()
     printf("[MOBILE] send loop stop\n");
 }
 
-// 입력된 전압에 대응하는 용량 찾기
-int MOBILE::cal_voltage(float voltage)
+int MOBILE::calc_battery_percentage(float voltage)
 {
-//    float f_voltage = voltage.toFloat();
-
-    // 정확히 일치하는 전압을 찾기
+    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM) || defined(USE_MECANUM_OLD)
     float capacity = -1;
-    for (const auto& entry : volt_lookup_data)
+    for (const auto& entry : voltage_lookup_table)
     {
         if (voltage == entry.voltage)
         {
@@ -2040,20 +2098,17 @@ int MOBILE::cal_voltage(float voltage)
         }
     }
 
-    // 정확히 일치하는 값이 없으면 선형 보간법을 사용
     if (capacity == -1)
     {
-        for (int i = 0; i < volt_lookup_data.size() - 1; ++i)
+        for (int i = 0; i < voltage_lookup_table.size() - 1; ++i)
         {
-            if (voltage > volt_lookup_data[i].voltage && voltage < volt_lookup_data[i + 1].voltage)
+            if (voltage > voltage_lookup_table[i].voltage && voltage < voltage_lookup_table[i + 1].voltage)
             {
-                // 선형 보간법
-                double x1 = volt_lookup_data[i].voltage;
-                double y1 = volt_lookup_data[i].capacity;
-                double x2 = volt_lookup_data[i + 1].voltage;
-                double y2 = volt_lookup_data[i + 1].capacity;
+                double x1 = voltage_lookup_table[i].voltage;
+                double y1 = voltage_lookup_table[i].capacity;
+                double x2 = voltage_lookup_table[i + 1].voltage;
+                double y2 = voltage_lookup_table[i + 1].capacity;
 
-                // 선형 보간 공식으로 용량 계산
                 capacity = static_cast<int>(y1 + (voltage - x1) * (y2 - y1) / (x2 - x1));
                 break;
             }
@@ -2061,4 +2116,19 @@ int MOBILE::cal_voltage(float voltage)
     }
 
     return capacity;
+    #endif
+
+    #if defined(USE_SRV)
+    int percentage = (voltage - 43)*10;
+    if(percentage > 100)
+    {
+       percentage = 100;
+    }
+    else if(percentage < 0)
+    {
+        percentage = 0;
+    }
+
+    return percentage;
+    #endif
 }
