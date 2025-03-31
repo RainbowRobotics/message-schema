@@ -212,6 +212,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&comm_ui, SIGNAL(signal_comm_ui_view_type(double, QString)), this, SLOT(slot_comm_ui_view_type(double, QString)));
     #endif
 
+    #if defined(USE_MECANUM_OLD)
+    connect(&lidar, SIGNAL(signal_found_obs()), this, SLOT(slot_found_obs()));
+    #endif
+
     // bqr localization
     connect(&bqr_localization_timer, SIGNAL(timeout()), this, SLOT(bqr_localization_loop()));
     connect(&ctrl, SIGNAL(signal_check_docking()), &dctrl, SLOT(slot_check_docking()));
@@ -6885,3 +6889,14 @@ void MainWindow::bt_UnDockStart()
         ctrl.is_moving = false;
     });
 }
+
+#if defined(USE_MECANUM_OLD)
+void MainWindow::slot_found_obs()
+{
+    MOBILE_STATUS ms = mobile.get_status();
+    if(ms.move_pdu_state != PDU_MOVE_NONE)
+    {
+        mobile.stop();
+    }
+}
+#endif

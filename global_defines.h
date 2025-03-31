@@ -271,6 +271,14 @@ enum MAP_LOAD_STATE
     MAP_LOADED = 2,
 };
 
+enum PDU_MOVE_STATE
+{
+    PDU_MOVE_NONE=0,
+    PDU_MOVE_LINEAR_X=1,
+    PDU_MOVE_LINEAR_Y=2,
+    PDU_MOVE_ROTATE=3
+};
+
 // structure
 struct TIME_IMG
 {
@@ -630,7 +638,7 @@ struct MOBILE_STATUS
 
     uint8_t inter_lock_state = 0;
     uint8_t operation_state = 0;
-    uint8_t move_linear_state = 0;
+    uint8_t move_pdu_state = 0;
 };
 #endif
 

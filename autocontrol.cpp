@@ -315,6 +315,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
         Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
         if(msg.method == "hpp")
         {
+            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
             move_hpp(tf, msg.preset);
         }
         #endif
