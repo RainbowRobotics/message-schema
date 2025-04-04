@@ -172,7 +172,7 @@ int MOBILE::get_imu_storage_size()
 }
 
 // for plot
-#if defined(USE_SRV)
+#if defined(USE_S100)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -201,7 +201,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -301,7 +301,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 // recv loop
 void MOBILE::recv_loop()
 {
@@ -606,7 +606,7 @@ void MOBILE::recv_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 // recv loop
 void MOBILE::recv_loop()
 {
@@ -1842,7 +1842,7 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+#if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
     memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
 #endif
@@ -1977,7 +1977,7 @@ void MOBILE::move_rotate(double th, double w)
     send_byte[7] = 119; // cmd move rotate
     #endif
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     send_byte[7] = 118; // cmd move rotate
     #endif
 
@@ -2087,7 +2087,7 @@ void MOBILE::send_loop()
 
 int MOBILE::calc_battery_percentage(float voltage)
 {
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM) || defined(USE_MECANUM_OLD)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM) || defined(USE_MECANUM_OLD)
     float capacity = -1;
     for (const auto& entry : voltage_lookup_table)
     {
@@ -2118,7 +2118,7 @@ int MOBILE::calc_battery_percentage(float voltage)
     return capacity;
     #endif
 
-    #if defined(USE_SRV)
+    #if defined(USE_S100)
     int percentage = (voltage - 43)*10;
     if(percentage > 100)
     {

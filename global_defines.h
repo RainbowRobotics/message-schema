@@ -483,7 +483,7 @@ struct PICKING
     }
 };
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -537,7 +537,7 @@ struct MOBILE_STATUS
 };
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 struct MOBILE_STATUS
 {
     double t = 0;

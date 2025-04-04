@@ -240,7 +240,7 @@ void ARUCO::detect(int cam_idx)
             cur_tpi = aruco_tpi;
         }
 
-        #ifdef USE_SRV
+        #ifdef USE_S100
         if(cam_idx == 0 || cam_idx == 2)
         {
             cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));
@@ -253,7 +253,7 @@ void ARUCO::detect(int cam_idx)
             cur_plot_img[cam_idx]= plot_aruco.clone();
         }
         #endif
-        #if defined (USE_AMR_400) || (USE_AMR_400_LAKI) || (USE_MECANUM_OLD) || (USE_MECANUM)
+        #if defined (USE_D400) || (USE_D400_LAKI) || (USE_MECANUM_OLD) || (USE_MECANUM)
         if(cam_idx == 0 || cam_idx == 2)
         {
             cv::resize(plot_aruco, plot_aruco, cv::Size(160, 90));

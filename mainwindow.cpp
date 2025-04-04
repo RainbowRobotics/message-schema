@@ -529,17 +529,17 @@ void MainWindow::set_mapping_view()
 void MainWindow::init_modules()
 {            
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     config.config_path = QCoreApplication::applicationDirPath() + "/config/SRV/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/SRV/config_sn.json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config_sn.json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
     #endif
@@ -3839,7 +3839,7 @@ void MainWindow::bt_TaskPlay()
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
+    #if defined (USE_S100) || (USE_D400) || (USE_D400_LAKI)
     if(mode == "holonomic")
     {
         mode = "basic";
@@ -3997,7 +3997,7 @@ void MainWindow::slot_sim_random_seq()
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
+    #if defined (USE_S100) || (USE_D400) || (USE_D400_LAKI)
     if(mode == "holonomic")
     {
         mode = "basic";

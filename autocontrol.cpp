@@ -48,15 +48,15 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     QString preset_path = "";
 
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
@@ -975,7 +975,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // divide and smooth metric path    
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -1072,7 +1072,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
 
     // divide and smooth metric path
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -1847,7 +1847,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     {
         // resampling
         std::vector<Eigen::Matrix4d> path_pose;
-        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
         _path_pose = reorientation_path(_path_pose);
         #endif
         path_pose = path_resampling(_path_pose, LOCAL_PATH_STEP);
@@ -1950,7 +1950,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     if(path_pose.size() > 0)
     {
         // sample and interpolation
-        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
         path_pose = reorientation_path(path_pose);
         #endif
         path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
@@ -2030,7 +2030,7 @@ int AUTOCONTROL::is_everything_fine()
     }
 
     MOBILE_STATUS ms = mobile->get_status();
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
@@ -2073,7 +2073,7 @@ int AUTOCONTROL::is_everything_fine()
     #endif
 
     bool is_motor_status_err = false;
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     is_motor_status_err = (ms.status_m0 > 1 || ms.status_m1 > 1);
     #endif
 
@@ -2156,7 +2156,7 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_NOT_READY;
     }
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);

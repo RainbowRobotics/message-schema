@@ -20,9 +20,9 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-DEFINES += USE_SRV
-#DEFINES += USE_AMR_400
-#DEFINES += USE_AMR_400_LAKI
+DEFINES += USE_S100
+#DEFINES += USE_D400
+#DEFINES += USE_D400_LAKI
 #DEFINES += USE_MECANUM_OLD
 #DEFINES += USE_MECANUM
 
@@ -98,7 +98,7 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
-contains(DEFINES, USE_SRV) {
+contains(DEFINES, USE_S100) {
     SOURCES += \
         blidar/calibration.cpp \
         blidar/lidar_data_processing.cpp \

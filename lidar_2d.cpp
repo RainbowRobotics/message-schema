@@ -13,7 +13,7 @@ LIDAR_2D::~LIDAR_2D()
         grab_thread_f = NULL;
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(grab_thread_b != NULL)
     {
         grab_flag_b = false;
@@ -46,7 +46,7 @@ void LIDAR_2D::open()
         grab_thread_f = new std::thread(&LIDAR_2D::grab_loop_f, this);
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(grab_thread_b == NULL)
     {
         grab_flag_b = true;
@@ -174,7 +174,7 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
 }
 
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 void LIDAR_2D::grab_loop_f()
 {
     //sudo adduser $USER dialout
@@ -454,7 +454,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_400)  || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+#if defined(USE_D400)  || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
 void LIDAR_2D::grab_loop_f()
 {
     // sensors
@@ -1044,7 +1044,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_D400_LAKI)
 void LIDAR_2D::grab_loop_f()
 {
     printf("[LIDAR][grab_f] start grab loop, front\n");
