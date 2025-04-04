@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     , task(this)
     , sim(this)
     , lvx(this)
+    , comm_coop(this)
     , comm_fms(this)
     , comm_rrs(this)
     , comm_old(this)
@@ -693,6 +694,20 @@ void MainWindow::init_modules()
     task.obsmap = &obsmap;
     task.ctrl = &ctrl;
     task.mobile = &mobile;
+
+    // coop client module init
+    comm_coop.config = &config;
+    comm_coop.logger = &logger;
+    comm_coop.mobile = &mobile;
+    comm_coop.slam = &slam;
+    comm_coop.unimap = &unimap;
+    comm_coop.obsmap = &obsmap;
+    comm_coop.ctrl = &ctrl;
+    comm_coop.lvx = &lvx;
+    if(config.USE_COOP)
+    {
+        comm_coop.init();
+    }
 
     // fms client module init
     comm_fms.config = &config;
@@ -2572,9 +2587,9 @@ void MainWindow::cb_NodeType(QString type)
 
     if(type == "GOAL")
     {
-        ui->cb_NodeAdvanceType->addItem("Forward");
-        ui->cb_NodeAdvanceType->addItem("Backward");
-        ui->cb_NodeAdvanceType->addItem("Offset");
+        ui->cb_NodeAdvanceType->addItem("forward");
+        ui->cb_NodeAdvanceType->addItem("backward");
+        ui->cb_NodeAdvanceType->addItem("offset");
     }
     else if(type == "INIT")
     {
@@ -2590,17 +2605,18 @@ void MainWindow::cb_NodeType(QString type)
     }
     else if(type == "ZONE")
     {
-        ui->cb_NodeAdvanceType->addItem("Forbidden");
-        ui->cb_NodeAdvanceType->addItem("SwitchableForbidden");
-        ui->cb_NodeAdvanceType->addItem("Speed");
-        ui->cb_NodeAdvanceType->addItem("SensorMute");
-        ui->cb_NodeAdvanceType->addItem("Sound");
-        ui->cb_NodeAdvanceType->addItem("Light");
-        ui->cb_NodeAdvanceType->addItem("Avoid");
-        ui->cb_NodeAdvanceType->addItem("IgnoreLowLidar");
-        ui->cb_NodeAdvanceType->addItem("IgnoreTiltLidar");
-        ui->cb_NodeAdvanceType->addItem("Offset");
-        ui->cb_NodeAdvanceType->addItem("Mask");
+        ui->cb_NodeAdvanceType->addItem("forbidden");
+        ui->cb_NodeAdvanceType->addItem("switchable_forbidden");
+        ui->cb_NodeAdvanceType->addItem("speed");
+        ui->cb_NodeAdvanceType->addItem("sensor_mute");
+        ui->cb_NodeAdvanceType->addItem("sound");
+        ui->cb_NodeAdvanceType->addItem("light");
+        ui->cb_NodeAdvanceType->addItem("avoid");
+        ui->cb_NodeAdvanceType->addItem("ignore_low_lidar");
+        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar1");
+        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar2");
+        ui->cb_NodeAdvanceType->addItem("offset");
+        ui->cb_NodeAdvanceType->addItem("mask");
     }
 }
 
@@ -4096,6 +4112,10 @@ void MainWindow::comm_loop()
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_move_status();
+            }
+            if(comm_coop.is_connected)
+            {
+                Q_EMIT comm_coop.signal_send_info();
             }
         }
 

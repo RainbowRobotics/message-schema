@@ -23,6 +23,7 @@
 #include "sim.h"
 #include "lvx_loc.h"
 
+#include "comm_coop.h"
 #include "comm_fms.h"
 #include "comm_rrs.h"
 #include "comm_old.h"
@@ -71,6 +72,8 @@ public:
     TASK task;    
     SIM sim;
     LVX_LOC lvx;
+
+    COMM_COOP comm_coop;
     COMM_FMS comm_fms;
     COMM_RRS comm_rrs;
     COMM_OLD comm_old;
