@@ -61,12 +61,12 @@ public:
     CAM_INTRINSIC intrinsic[2];
     Eigen::Matrix4d extrinsic[2];
     
-    #if defined (USE_SRV)
+    #if defined (USE_S100)
     const int depth_profile_idx = 25; // depth_profile(25), w:320, h:180, fps:5, format:11
     const int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
     #endif
 
-    #if defined (USE_AMR_400) || defined (USE_AMR_400_LAKI)
+    #if defined (USE_D400) || defined (USE_D400_LAKI)
     const int depth_profile_idx = 20; // depth_profile(20), w:640, h:400, fps:5, format:21
     const int color_profile_idx = 43; // color_profile(43), w:640, h:400, fps:5, format:22
     #endif

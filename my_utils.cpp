@@ -122,7 +122,7 @@ double get_time0()
     return (timestamp*1.0e-9);
 }
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 double get_time()
 {
     std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
@@ -131,7 +131,7 @@ double get_time()
 }
 #endif
 
-#if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+#if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
 double st_time_for_get_time = get_time();
 double get_time()
 {

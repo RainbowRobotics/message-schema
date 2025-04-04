@@ -893,11 +893,11 @@ void COMM_UI::send_status()
     powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     #endif
-    #if defined(USE_SRV) || defined(USE_MECANUM_OLD)
+    #if defined(USE_S100) || defined(USE_MECANUM_OLD)
     powerObj["charge_current"] = QString::number(0, 'f', 3);
     powerObj["contact_voltage"] = QString::number(0, 'f', 3);
     #endif

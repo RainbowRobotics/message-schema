@@ -402,7 +402,7 @@ void COMM_RRS::send_status()
     QString cur_loc_state = slam->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     if(ms.charge_state == CHARGE_STATE_IDLE)
     {
         charge_st_string = "none";
@@ -429,7 +429,7 @@ void COMM_RRS::send_status()
     }
     #endif
 
-    #if defined(USE_SRV)
+    #if defined(USE_S100)
     if(ms.charge_state == 0)
     {
         charge_st_string = "none";
@@ -458,18 +458,18 @@ void COMM_RRS::send_status()
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     powerObj["bat_percent"] = QString::number(ms.bat_percent);
     #endif
     #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
     powerObj["bat_percent"] = QString::number(0);
     #endif
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     #endif
-    #if defined(USE_SRV) || defined(USE_MECANUM_OLD)
+    #if defined(USE_S100) || defined(USE_MECANUM_OLD)
     powerObj["charge_current"] = QString::number(0.0, 'f', 3);
     powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
     #endif
@@ -477,6 +477,7 @@ void COMM_RRS::send_status()
 
     QJsonObject settingObj;
     settingObj["platform_type"] = config->PLATFORM_TYPE;
+    settingObj["platform_name"] = config->PLATFORM_NAME;
     rootObj["setting"] = settingObj;
 
     QJsonObject mapObj;
@@ -1259,7 +1260,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_D400) || defined(USE_D400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
@@ -1321,7 +1322,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_D400) || defined(USE_D400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";

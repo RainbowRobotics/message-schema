@@ -3,7 +3,7 @@
 
 #include "global_defines.h"
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 
 // lidar sdk
 #include "node_lidar.h"

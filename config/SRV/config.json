@@ -109,8 +109,8 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "robot": {
-        "PLATFORM_NAME": "TT",
-        "PLATFORM_TYPE": "SRV"
+        "PLATFORM_NAME": "b",
+        "PLATFORM_TYPE": "S100"
     },
     "lvx": {
         "LVX_TF": "-0.2079,0.0,1.34,0.0,0.0,90.0",

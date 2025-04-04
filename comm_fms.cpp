@@ -397,7 +397,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_D400) || defined(USE_D400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
@@ -469,7 +469,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_D400) || defined(USE_D400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
