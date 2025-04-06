@@ -292,7 +292,7 @@ bool DOCKCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1 || mobile_status.status_m2 > 1 || mobile_status.status_m3 > 1)
     {
         logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
@@ -308,7 +308,7 @@ bool DOCKCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1 || mobile_status.connection_m2 != 1 || mobile_status.connection_m3 != 1)
     {
         logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
@@ -324,7 +324,7 @@ bool DOCKCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0 || mobile_status.status_m2 == 0 || mobile_status.status_m3 == 0)
     {
         logger->write_log("[DOCK] dock failed (motor lock offed)", "Red", true, false);
@@ -386,7 +386,7 @@ DCTRL_PARAM DOCKCONTROL::load_preset(int preset)
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 

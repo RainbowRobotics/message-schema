@@ -194,6 +194,15 @@ Eigen::Matrix4d LVX_LOC::get_cur_tf()
     return res;
 }
 
+std::vector<Eigen::Vector3d> LVX_LOC::get_cur_scan()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector3d> res = cur_scan;
+    mtx.unlock();
+
+    return res;
+}
+
 IMU LVX_LOC::get_best_imu(double ref_t)
 {
     mtx.lock();
@@ -490,6 +499,10 @@ void LVX_LOC::a_loop()
                 }
             }
 
+            mtx.lock();
+            cur_scan = dsk;
+            mtx.unlock();
+
             // icp
             double err = map_icp(dsk, G);
 
@@ -502,6 +515,8 @@ void LVX_LOC::a_loop()
             cur_tf_ie = ieir[0];
             cur_tf_ir = ieir[1];
             set_cur_tf(G*offset_tf_inv);
+
+
 
             // for next
             _pre_tf = _cur_tf;

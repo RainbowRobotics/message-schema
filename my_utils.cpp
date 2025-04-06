@@ -131,7 +131,7 @@ double get_time()
 }
 #endif
 
-#if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+#if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
 double st_time_for_get_time = get_time();
 double get_time()
 {

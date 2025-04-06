@@ -60,10 +60,6 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #if defined (USE_MECANUM_OLD) || defined(USE_MECANUM)
-    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
     {
@@ -301,27 +297,11 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             {
                 move_pp(tf, msg.preset);
             }
-            #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-            else if(msg.method == "hpp")
-            {
-                move_hpp(tf, msg.preset);
-            }
-            #endif
         }
     }
     else
     {
-        #ifdef USE_MECANUM_OLD
-        Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-        if(msg.method == "hpp")
-        {
-            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            move_hpp(tf, msg.preset);
-        }
-        #endif
-        #ifndef USE_MECANUM_OLD
         logger->write_log("[AUTO] just change goal", "Green");
-        #endif
     }
 }
 
@@ -535,40 +515,6 @@ void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int val)
     // load preset
     params = load_preset(val);
 
-    // load preset 0, and apply val for percentage
-    #ifdef USE_MECANUM_OLD
-    params = load_preset(0);
-    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
-    if(params.LIMIT_V > 0.2)
-    {
-        params.LIMIT_V = 0.2;
-    }
-    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
-    if(params.LIMIT_W > 20)
-    {
-        params.LIMIT_W = 20;
-    }
-    #endif
-
-    // check goal node type is not station && cur node type is station
-    const double is_node_close = 0.1;
-    is_undock = false;
-    Eigen::Vector3d cur_pos = TF_to_se2(slam->get_cur_tf());
-    QString cur_node_id = unimap->get_node_id_nn(cur_pos);
-    NODE *cur_node = unimap->get_node_by_id(cur_node_id);
-
-    Eigen::Vector3d goal_pos = TF_to_se2(goal_tf);
-    QString goal_node_id = unimap->get_node_id_nn(goal_pos);
-    NODE *goal_node = unimap->get_node_by_id(goal_node_id);
-    if(cur_node != NULL && goal_node != NULL)
-    {
-        double dist = calc_dist_2d(cur_node->tf.block(0,3,3,1) - cur_pos);
-        if(cur_node->type == "STATION" && goal_node->type != "STATION" && dist < is_node_close)
-        {
-            is_undock = true;
-        }
-    }
-
     // calc global path
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
@@ -753,21 +699,6 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
 
     // load preset
     params = load_preset(val);
-
-    // load preset 0, and apply val for percentage
-    #ifdef USE_MECANUM_OLD
-    params = load_preset(0);
-    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
-    if(params.LIMIT_V > 0.2)
-    {
-        params.LIMIT_V = 0.2;
-    }
-    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
-    if(params.LIMIT_W > 20)
-    {
-        params.LIMIT_W = 20;
-    }
-    #endif
 
     // start control loop
     if(b_flag == false)
@@ -986,7 +917,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     std::vector<Eigen::Matrix4d> path_pose;
     for(size_t p = 0; p < node_pose.size()-1; p++)
     {
@@ -1083,7 +1014,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     std::vector<Eigen::Matrix4d> path_pose;
     std::vector<Eigen::Vector3d> path_pos;
     for(size_t p = 0; p < node_pose.size()-1; p++)
@@ -2051,7 +1982,7 @@ int AUTOCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1 || ms.connection_m2 != 1 || ms.connection_m3 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
@@ -2077,7 +2008,7 @@ int AUTOCONTROL::is_everything_fine()
     is_motor_status_err = (ms.status_m0 > 1 || ms.status_m1 > 1);
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     is_motor_status_err = (ms.status_m0 > 1 || ms.status_m1 > 1 || ms.status_m2 > 1 || ms.status_m3 > 1);
     #endif
 
@@ -2177,7 +2108,7 @@ int AUTOCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(ms.status_m0 == 0 && ms.status_m1 == 0 && ms.status_m2 == 0 && ms.status_m3 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
