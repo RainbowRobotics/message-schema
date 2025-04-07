@@ -71,7 +71,7 @@ public:
     const int color_profile_idx = 43; // color_profile(43), w:640, h:400, fps:5, format:22
     #endif
 
-    #if defined (USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     const int depth_profile_idx = 0;
     const int color_profile_idx = 0;
     #endif

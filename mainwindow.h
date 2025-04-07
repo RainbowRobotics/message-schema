@@ -26,8 +26,6 @@
 #include "comm_coop.h"
 #include "comm_fms.h"
 #include "comm_rrs.h"
-#include "comm_old.h"
-#include "comm_ui.h"
 
 // qt
 #include <QMainWindow>
@@ -74,27 +72,26 @@ public:
     LVX_LOC lvx;
 
     COMM_COOP comm_coop;
-    COMM_FMS comm_fms;
-    COMM_RRS comm_rrs;
-    COMM_OLD comm_old;
-    COMM_UI comm_ui;
+    COMM_FMS  comm_fms;
+    COMM_RRS  comm_rrs;
 
     // system logger
     std::atomic<int> log_cnt = {0};
 
     // funcs    
-    void init_ui_effect();
-    void init_modules();
     void setup_vtk();
+    void init_modules();
+    void init_ui_effect();
     void all_plot_clear();
     void ui_tasks_update();
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
-    Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
-    void set_mapping_view();    
+
+    void set_mapping_view();
     void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     void viewer_camera_relative_control2(double tx, double ty, double tz, double rx, double ry, double rz);
+    Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
     
 public:
     Ui::MainWindow *ui;
@@ -139,15 +136,6 @@ public:
 
     // bqr localization timer
     QTimer bqr_localization_timer;
-
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    // sound (only use mecanum)
-    QTimer sound_timer;
-    QMediaPlayer *media_player = NULL;
-    QMediaPlaylist *playlist = NULL;
-    std::atomic<bool> is_play = {false};
-    std::atomic<bool> is_play_obs = {false};
-    #endif
 
     // flags
     std::atomic<bool> is_map_update = {false};
@@ -272,9 +260,6 @@ public Q_SLOTS:
     void plot_loop2();
     void qa_loop();
     void bqr_localization_loop();
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    void sound_loop();
-    #endif
 
     // config
     void bt_ConfigLoad();
@@ -393,15 +378,6 @@ public Q_SLOTS:
     void bt_DockStart();
     void bt_DockStop();
     void bt_UnDockStart();
-
-    #if defined(USE_MECANUM)
-    void slot_comm_ui_view_control(double time, QString val);
-    void slot_comm_ui_view_type(double time, QString val);
-    #endif
-
-    #if defined(USE_MECANUM_OLD)
-    void slot_found_obs();
-    #endif
 };
 #endif // MAINWINDOW_H
 

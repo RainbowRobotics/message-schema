@@ -89,7 +89,7 @@ QString COMM_RRS::get_multi_state()
 
 void COMM_RRS::init()
 {
-    if(config->USE_RRS)
+    if(config->USE_COMM_RRS)
     {
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
@@ -402,7 +402,7 @@ void COMM_RRS::send_status()
     QString cur_loc_state = slam->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     if(ms.charge_state == CHARGE_STATE_IDLE)
     {
         charge_st_string = "none";
@@ -461,7 +461,7 @@ void COMM_RRS::send_status()
     #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     powerObj["bat_percent"] = QString::number(ms.bat_percent);
     #endif
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     powerObj["bat_percent"] = QString::number(0);
     #endif
 
@@ -469,7 +469,7 @@ void COMM_RRS::send_status()
     powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
     powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     #endif
-    #if defined(USE_S100) || defined(USE_MECANUM_OLD)
+    #if defined(USE_S100)
     powerObj["charge_current"] = QString::number(0.0, 'f', 3);
     powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
     #endif

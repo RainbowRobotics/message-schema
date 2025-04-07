@@ -23,7 +23,6 @@ DEFINES += QT_NO_KEYWORDS
 DEFINES += USE_S100
 #DEFINES += USE_D400
 #DEFINES += USE_D400_LAKI
-#DEFINES += USE_MECANUM_OLD
 #DEFINES += USE_MECANUM
 
 # set home dir
@@ -39,9 +38,7 @@ SOURCES += \
     cam.cpp \
     comm_coop.cpp \
     comm_fms.cpp \
-    comm_old.cpp \
     comm_rrs.cpp \
-    comm_ui.cpp \
     config.cpp \
     cv_to_qt.cpp \
     dockcontrol.cpp \
@@ -71,9 +68,7 @@ HEADERS += \
     comm_coop.h \
     comm_data.h \
     comm_fms.h \
-    comm_old.h \
     comm_rrs.h \
-    comm_ui.h \
     config.h \
     cv_to_qt.h \
     dockcontrol.h \
