@@ -275,7 +275,7 @@ void CONFIG::load()
                 DOCKING_POINTDOCK_MARGIN = obj_dock["DOCKING_POINTDOCK_MARGIN"].toString().toDouble();
                 printf("[CONFIG] DOCKING_POINTDOCK_MARGIN, %s\n", obj_dock["DOCKING_POINTDOCK_MARGIN"].toString().toLocal8Bit().data());
 
-                DOCKING_TYPE = obj_dock["DOCKING_TYPE"].toString().toDouble();
+                DOCKING_TYPE = obj_dock["DOCKING_TYPE"].toString().toInt();
                 printf("[CONFIG] DOCKING_TYPE, %s\n", obj_dock["DOCKING_TYPE"].toString().toLocal8Bit().data());
             }
 

@@ -5983,7 +5983,6 @@ void MainWindow::raw_plot()
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
         //for docking debug
-
         std::vector<Eigen::Vector3d> dock_ = dctrl.get_cur_clust();
 
         for(size_t p =0; p < dock_.size(); p ++)
@@ -5998,6 +5997,7 @@ void MainWindow::raw_plot()
 
             cloud->push_back(pt);
         }
+        //
 
         for(size_t p = 0; p < cur_scan.size(); p++)
         {

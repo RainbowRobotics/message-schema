@@ -136,7 +136,7 @@ public:
 
     // docking
     double DOCKING_GOAL_D = 0.05;
-    double DOCKING_GOAL_TH = 0.1*D2R;
+    double DOCKING_GOAL_TH = 0.01745; //0.1*D2R;
     double DOCKING_KP_d = 0.15;
     double DOCKING_KD_d = 0.1;
     double DOCKING_KP_th = 0.35;

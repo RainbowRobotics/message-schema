@@ -22,6 +22,13 @@ DOCKCONTROL::~DOCKCONTROL()
         b_thread = NULL;
     }
 
+    if(c_thread != NULL)
+    {
+        c_flag = false;
+        c_thread->join();
+        c_thread = NULL;
+    }
+
     mobile->move(0, 0, 0);
     is_moving = false;
 }
@@ -35,7 +42,6 @@ void DOCKCONTROL::init()
         //L_DOCK_INIT
         Vfrm = generateVKframe();
         frm1_center = calculateCenter(Vfrm);
-
     }
 }
 
@@ -56,12 +62,18 @@ void DOCKCONTROL::stop()
         b_thread = NULL;
     }
 
+    if(c_thread != NULL)
+    {
+        c_flag = false;
+        c_thread->join();
+        c_thread = NULL;
+    }
+
     if(config->DOCKING_TYPE == 0)
     {
         undock_flag = false;
         path_flag = false;
     }
-
     mobile->move(0, 0, 0);
     is_moving = false;
     is_pause = false;
@@ -142,11 +154,10 @@ void DOCKCONTROL::move(double p_gain, double d_gain, double off_x, double off_y,
     d_gain_ratio = std::clamp(d_gain, 0.0, 2.0);
 
     // start control loop
-    a_flag = true;
-    a_thread = new std::thread(&DOCKCONTROL::a_loop, this);
+    c_flag = true;
+    c_thread = new std::thread(&DOCKCONTROL::c_loop, this);
 }
 
-#if defined(USE_SRV) || defined(USE_AMR) || defined(USE_AMR_400_LAKI)
 void DOCKCONTROL::a_loop()
 {
     const double dt = 0.02; // 50hz
@@ -154,10 +165,18 @@ void DOCKCONTROL::a_loop()
     double wait_start_time = 0.0;
     double vmark_start_time = get_time();
 
-    while(a_flag){
+    while(a_flag)
+    {
 
         double pre_loop_time = get_time();
+
+        //use map frame
         Eigen::Matrix4d cur_pos = slam->get_cur_tf();
+
+        //use odom frame
+        Eigen::Vector3d odom_pose = mobile->get_pose().pose;
+        Eigen::Matrix4d cur_pos_odom = se2_to_TF(odom_pose);
+
 
         int is_good_everything = is_everything_fine();
 
@@ -182,7 +201,11 @@ void DOCKCONTROL::a_loop()
 
             if(path_flag)
             {
-                Eigen::Vector2d dtdr = dTdR(cur_pos, docking_station_m);
+                // use map_frame
+                //Eigen::Vector2d dtdr = dTdR(cur_pos, docking_station_m);
+
+                // use odom_frame
+                Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
                 if(std::abs(dtdr(0)) < config->DOCKING_GOAL_D)
                 {
@@ -190,7 +213,7 @@ void DOCKCONTROL::a_loop()
                     fsm_state = DOCKING_FSM_COMPENSATE;
                     continue;
                 }
-                dockControl(cur_pos,cmd_v,cmd_w);
+                dockControl(cur_pos_odom,cmd_v,cmd_w);
                 mobile->move(cmd_v,0,cmd_w);
             }
 
@@ -203,7 +226,6 @@ void DOCKCONTROL::a_loop()
                     ddock.result = "fail";
                     ddock.message = failed_reason;
                     ddock.time = get_time();
-
                     Q_EMIT signal_dock_response(ddock);
                 }
             }
@@ -217,7 +239,11 @@ void DOCKCONTROL::a_loop()
 
             if(path_flag)
             {
-                Eigen::Vector2d dtdr = dTdR(cur_pos, docking_station_m);
+                // use map_frame
+                //Eigen::Vector2d dtdr = dTdR(cur_pos, docking_station_m);
+
+                // use odom_frame
+                Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
                 if(std::abs(dtdr(1)) < config->DOCKING_GOAL_TH)
                 {
@@ -253,8 +279,7 @@ void DOCKCONTROL::a_loop()
             MOBILE_STATUS ms = mobile->get_status();
 
             mobile->move(0, 0, 0);
-            qDebug() << "wait start time" << wait_start_time;
-            qDebug() << "motor cur" << ms.cur_m0 << ms.cur_m1;
+
             if (ms.charge_state == 3 && ms.cur_m0 < 60 && ms.cur_m1 < 60)
             {
                 fsm_state = DOCKING_FSM_COMPLETE;
@@ -267,6 +292,7 @@ void DOCKCONTROL::a_loop()
 
                 Q_EMIT signal_dock_response(ddock);
             }
+
             else if (get_time() - wait_start_time > 8.0)
             {
                 if(!undock_flag)
@@ -300,6 +326,7 @@ void DOCKCONTROL::a_loop()
         else if (fsm_state == DOCKING_FSM_OBS)
         {
             mobile->move(0,0,0);
+
             if(get_time() - obs_wait_st_time > 1.0)
             {
                 fsm_state = DOCKING_FSM_OBS;
@@ -361,7 +388,6 @@ void DOCKCONTROL::b_loop()
                 ddock.time = get_time();
 
                 Q_EMIT signal_dock_response(ddock);
-
                 fsm_state = DOCKING_FSM_OFF;
             }
         }
@@ -400,10 +426,7 @@ void DOCKCONTROL::b_loop()
     }
 }
 
-#endif
-
-#if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-void DOCKCONTROL::a_loop()
+void DOCKCONTROL::c_loop()
 {
     // set flag
     if(bqr->is_connected == false)
@@ -434,7 +457,7 @@ void DOCKCONTROL::a_loop()
     fsm_state = DOCKING_FSM_POINTDOCK;
 
     logger->write_log("[DOCK] start a_loop", "Green");
-    while(a_flag)
+    while(c_flag)
     {
         if(is_pause)
         {
@@ -569,8 +592,6 @@ void DOCKCONTROL::a_loop()
 
     logger->write_log("[DOCK] stop a_loop", "Green");
 }
-#endif
-
 
 void DOCKCONTROL::dockControl( const Eigen::Matrix4d& cur_pose, double& linear_vel, double& angular_vel)
 {
@@ -587,7 +608,10 @@ void DOCKCONTROL::dockControl( const Eigen::Matrix4d& cur_pose, double& linear_v
     Eigen::Matrix4d local = Eigen::Matrix4d::Identity();
 
     //PID
-    Eigen::Matrix4d dist = cur_pose.inverse()*docking_station_m;
+    //use map frame
+    //Eigen::Matrix4d dist = cur_pose.inverse()*docking_station_m;
+    //use odom frame
+    Eigen::Matrix4d dist = cur_pose.inverse()*docking_station_o;
     Eigen::Vector2d dtdr = dTdR(local, dist);
 
 
@@ -646,7 +670,7 @@ bool DOCKCONTROL::find_Vmark()
     const int c_points = filtered_lidar.size();
     std::vector< std::vector<float> > polar(c_points +1 ,std::vector<float>(2));
 
-    for(unsigned int i=0; i <c_points; ++i)
+    for(unsigned int i=0; i < c_points; ++i)
     {
         float x = static_cast<float>(filtered_lidar[i].x());
         float y = static_cast<float>(filtered_lidar[i].y());
@@ -815,7 +839,7 @@ bool DOCKCONTROL::find_Vmark()
         dock_tf = calculateTranslationMatrix(frm1_center, frm0_center0);
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
-        qDebug() << "err" << err;
+
         if(err >0.002) //0.001
         {
             return false;
@@ -825,6 +849,9 @@ bool DOCKCONTROL::find_Vmark()
 
         Eigen::Matrix4d cur_pos = slam->get_cur_tf();
         docking_station_m = cur_pos * docking_station;
+
+        //odom_start_tf : odom->base_link transformation
+        docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
 
         path_flag = true;
         return true;
@@ -1585,8 +1612,10 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
 
         // found goal
         if(cur->h < st->h*0.5)
+//        Eigen::Vector2d dist = dTdR(cur->tf,ed->tf);
+//        if(dist[0] < 0.5)
         {
-            qDebug() << "find goal";
+
             Eigen::Matrix4d goal_tf0 = calc_tf(cur->tf.block(0,3,3,1), ed->tf.block(0,3,3,1));
             Eigen::Matrix4d goal_tf1 = goal_tf0;
             goal_tf0.block(0,3,3,1) = cur->tf.block(0,3,3,1);
@@ -1603,7 +1632,7 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
             HASTAR_NODE* _cur = cur;
             while(_cur != NULL)
             {
-                qDebug() <<"r";
+
                 res.push_back(_cur->tf);
                 _cur = _cur->parent;
                 if(_cur != NULL)
@@ -1612,17 +1641,20 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::hybrid_dubins(const Eigen::Matrix4d& s
                     debug_frame.push_back(debug_pt);
                 }
             }
-            qDebug() << "when die2";
+
             std::reverse(res.begin(), res.end());
 
-            // set final pose
-            for(size_t p = 0; p < traj_goal.size(); p++)
-            {
-                res.push_back(traj_goal[p]);
 
-                Eigen::Vector3d debug_pt(traj_goal[p](0,3), traj_goal[p](1,3), 0.0);
-                debug_frame.push_back(debug_pt);
-            }
+
+
+            // set final pose
+//            for(size_t p = 0; p < traj_goal.size(); p++)
+//            {
+//                res.push_back(traj_goal[p]);
+
+//                Eigen::Vector3d debug_pt(traj_goal[p](0,3), traj_goal[p](1,3), 0.0);
+//                debug_frame.push_back(debug_pt);
+//            }
 
             qDebug() << "when die3";
 
@@ -2119,3 +2151,88 @@ double DOCKCONTROL::updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed)
 
     return set_h;
 }
+
+void DOCKCONTROL::smoothTrajectory(std::vector<Eigen::Matrix4d>& path)
+{
+
+    const int maxIterations = 500;
+    const double alpha = 0.3;
+
+    int N = path.size();
+    int iterations = 0;
+
+    //double totalweight = wSmoothness + wCurvature + wVornoi;
+
+    while (iterations < maxIterations)
+    {
+        for (int i = 2; i < N - 2; ++i) {
+            Eigen::Vector2d xim2(path[i - 2](0, 3), path[i - 2](1, 3));
+            Eigen::Vector2d xim1(path[i - 1](0, 3), path[i - 1](1, 3));
+            Eigen::Vector2d xi  (path[i](0, 3),     path[i](1, 3));
+            Eigen::Vector2d xip1(path[i + 1](0, 3), path[i + 1](1, 3));
+            Eigen::Vector2d xip2(path[i + 2](0, 3), path[i + 2](1, 3));
+            Eigen::Vector2d correction(0.0, 0.0);
+
+//            correction = correction - smoothnessTerm(xim2, xim1, xi, xip1, xip2);
+//            correction = correction - curvatureTerm(xim2, xim1, xi, xip1, xip2);
+
+
+//            // Apply correction
+//            xi = xi + alpha * smoothness;
+
+            // Update smoothed position
+            path[i](0, 3) = xi.x();
+            path[i](1, 3) = xi.y();
+
+            // Recompute heading using xi - xim1
+            Eigen::Vector2d dxi = xi - xim1;
+            double theta = std::atan2(dxi.y(), dxi.x());
+
+            path[i].block<2,2>(0,0) << std::cos(theta), -std::sin(theta),
+                                       std::sin(theta),  std::cos(theta);
+        }
+
+        iterations++;
+    }
+
+}
+
+Eigen::Vector2d DOCKCONTROL::smoothnessTerm(Eigen::Vector2d xim2, Eigen::Vector2d xim1, Eigen::Vector2d xi, Eigen::Vector2d xip1, Eigen::Vector2d xip2)
+{
+    double wSmoothness = 0.25;
+
+    return wSmoothness * (xim2 - 4 * xim1 + 6 * xi - 4 * xip1 + xip2);
+}
+
+//std:vector<Eigen::Matrix4d> DOCKCONTROL::dubinsShot(const HASTAR_NODE& st, const HASTAR_NODE& ed)
+//{
+//    double rho = 0.3; // 0.3 m
+//    //init
+//    DubinsPath d_path;
+//    double dx = ed.tf(0,3) - st.tf(0,3);
+//    double dy = ed.tf(1,3) - st.tf(1,3);
+
+//    double st_th = atan2(st.tf(1,0), st.tf(0,0));
+//    double ed_th = atan2(ed.tf(1,0), ed.tf(0,0));
+
+//    double dist = sqrt(dx*dx + dy*dy);
+//    double d = dist / rho ;
+
+//    double theta = atan2(dy,dx);
+//    double alpha = st_th - theta;
+//    double beta = ed_th - theta;
+
+//    d_path.st = st.tf;
+//    d_path.rho = rho;
+
+//    double best_cost = 99999;
+//    int best_word = -1;
+//    int i = 0;
+
+//    for( i=0; i<6 ;i++)
+//    {
+//        double params[3];
+////        int err = dubins_words[i](alpha, beta, d, params);
+//    }
+
+//}

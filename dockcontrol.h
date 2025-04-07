@@ -52,14 +52,17 @@ public:
     void stop();
     void a_loop();
     void b_loop();
+    void c_loop();
     bool undock();
 
     // control loop
     std::atomic<bool> a_flag = {false};
     std::atomic<bool> b_flag = {false};
+    std::atomic<bool> c_flag = {false};
 
     std::thread *a_thread = NULL;
     std::thread *b_thread = NULL;
+    std::thread *c_thread = NULL;
 
 
 
@@ -107,6 +110,7 @@ public:
     double undock_waiting_time = 0.0;
     Eigen::Matrix4d docking_station;
     Eigen::Matrix4d docking_station_m;
+    Eigen::Matrix4d docking_station_o;
     KFRAME Vfrm;
     Eigen::Vector3d frm1_center;
     bool find_Vmark();
@@ -129,6 +133,9 @@ public:
 
 
     // for hybrid a*
+    Eigen::Vector2d smoothnessTerm(Eigen::Vector2d xim2, Eigen::Vector2d xim1, Eigen::Vector2d xi, Eigen::Vector2d xip1, Eigen::Vector2d xip2);
+    void smoothTrajectory(std::vector<Eigen::Matrix4d>& path);
+    std::vector<Eigen::Matrix4d> dubinsShot(const HASTAR_NODE& st, const HASTAR_NODE&ed);
     std::vector<Eigen::Matrix4d> generateStraightPathDock(const Eigen::Matrix4d& dock_tf , double step , double length);
     double updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed);
     double gs = 0.05;
@@ -144,6 +151,15 @@ public:
     int cy = 100;
 
     Eigen::Matrix4d odom_start_tf;
+
+    typedef struct
+    {
+        Eigen::Matrix4d st;
+        double param[3];
+        double rho;
+        int type;
+
+    } DubinsPath;
 
 
 Q_SIGNALS:
