@@ -479,6 +479,7 @@ void LVX_LOC::a_loop()
             }
 
             // deskewing
+            std::vector<Eigen::Vector3d> dsk_plot;
             std::vector<Eigen::Vector3d> dsk;
             {
                 IMU imu0 = get_best_imu(frm.pts.front().t);
@@ -490,17 +491,26 @@ void LVX_LOC::a_loop()
                 Eigen::Matrix4d dG = Eigen::Matrix4d::Identity();
                 dG.block(0,0,3,3) = dR;
 
+                int plot_cnt = 0;
+
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Matrix4d G_i = intp_tf(frm.pts[p].alpha, Eigen::Matrix4d::Identity(), dG);
                     Eigen::Vector3d P(frm.pts[p].x, frm.pts[p].y, frm.pts[p].z);
                     Eigen::Vector3d _P = G_i.block(0,0,3,3)*P + G_i.block(0,3,3,1);
                     dsk.push_back(_P);
+
+                    if(plot_cnt % 4 == 0)
+                    {
+                        dsk_plot.push_back(_P);
+                    }
+
+                    plot_cnt++;
                 }
             }
 
             mtx.lock();
-            cur_scan = dsk;
+            cur_scan = dsk_plot;
             mtx.unlock();
 
             // icp
@@ -515,8 +525,6 @@ void LVX_LOC::a_loop()
             cur_tf_ie = ieir[0];
             cur_tf_ir = ieir[1];
             set_cur_tf(G*offset_tf_inv);
-
-
 
             // for next
             _pre_tf = _cur_tf;
