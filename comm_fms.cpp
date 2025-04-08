@@ -15,13 +15,13 @@ COMM_FMS::COMM_FMS(QObject *parent)
 
     connect(this, SIGNAL(signal_send_move_status()), this, SLOT(send_move_status()));
 
-    connect(this, SIGNAL(recv_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
-    connect(this, SIGNAL(recv_load(DATA_LOAD)), this, SLOT(slot_load(DATA_LOAD)));
-    connect(this, SIGNAL(recv_localization(DATA_LOCALIZATION)), this, SLOT(slot_localization(DATA_LOCALIZATION)));
-    connect(this, SIGNAL(recv_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_randomseq(DATA_RANDOMSEQ)));
-    connect(this, SIGNAL(recv_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
-    connect(this, SIGNAL(recv_vobs_r(DATA_VOBS_R)), this, SLOT(slot_vobs_r(DATA_VOBS_R)));
-    connect(this, SIGNAL(recv_vobs_c(DATA_VOBS_C)), this, SLOT(slot_vobs_c(DATA_VOBS_C)));
+    connect(this, SIGNAL(signal_recv_move(DATA_MOVE)), this, SLOT(slot_recv_move(DATA_MOVE)));
+    connect(this, SIGNAL(signal_recv_load(DATA_LOAD)), this, SLOT(slot_recv_load(DATA_LOAD)));
+    connect(this, SIGNAL(signal_recv_localization(DATA_LOCALIZATION)), this, SLOT(slot_recv_localization(DATA_LOCALIZATION)));
+    connect(this, SIGNAL(signal_recv_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_recv_randomseq(DATA_RANDOMSEQ)));
+    connect(this, SIGNAL(signal_recv_path(DATA_PATH)), this, SLOT(slot_recv_path(DATA_PATH)));
+    connect(this, SIGNAL(signal_recv_vobs_r(DATA_VOBS_R)), this, SLOT(slot_recv_vobs_r(DATA_VOBS_R)));
+    connect(this, SIGNAL(signal_recv_vobs_c(DATA_VOBS_C)), this, SLOT(slot_recv_vobs_c(DATA_VOBS_C)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -214,7 +214,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.map_name = get_json(data_obj, "name");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_load(msg);
+        Q_EMIT signal_recv_load(msg);
     }
     else if(topic == "localization")
     {
@@ -226,14 +226,14 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.tgt_pose_vec[3] = get_json(data_obj, "rz").toDouble();
         msg.seed = get_json(data_obj, "seed");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_localization(msg);
+        Q_EMIT signal_recv_localization(msg);
     }
     else if(topic == "randomseq")
     {
         DATA_RANDOMSEQ msg;
         msg.command = get_json(data_obj, "command");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_randomseq(msg);
+        Q_EMIT signal_recv_randomseq(msg);
     }
     else if(topic == "move")
     {
@@ -242,6 +242,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.preset = get_json(data_obj, "preset").toInt();
         msg.method = get_json(data_obj, "method");
         msg.goal_node_id = get_json(data_obj, "goal_id");
+        msg.goal_node_name = get_json(data_obj, "goal_name");
         msg.tgt_pose_vec[0] = get_json(data_obj, "x").toDouble();
         msg.tgt_pose_vec[1] = get_json(data_obj, "y").toDouble();
         msg.tgt_pose_vec[2] = get_json(data_obj, "z").toDouble();
@@ -250,7 +251,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.jog_val[1] = get_json(data_obj, "vy").toDouble();
         msg.jog_val[2] = get_json(data_obj, "wz").toDouble();
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_move(msg);
+        Q_EMIT signal_recv_move(msg);
     }
     else if(topic == "path")
     {
@@ -259,7 +260,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.path = get_json(data_obj, "path");
         msg.preset = get_json(data_obj, "preset").toInt();
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_path(msg);
+        Q_EMIT signal_recv_path(msg);
     }
     else if(topic == "vobsRobots")
     {
@@ -267,7 +268,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.vobs = get_json(data_obj, "vobs");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_vobs_r(msg);
+        Q_EMIT signal_recv_vobs_r(msg);
     }
     else if(topic == "vobsClosures")
     {
@@ -275,11 +276,11 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.vobs = get_json(data_obj, "vobs");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_vobs_c(msg);
+        Q_EMIT signal_recv_vobs_c(msg);
     }
 }
 
-void COMM_FMS::slot_load(DATA_LOAD msg)
+void COMM_FMS::slot_recv_load(DATA_LOAD msg)
 {
     QString command = msg.command;
     if(command == "mapload")
@@ -353,7 +354,7 @@ void COMM_FMS::slot_load(DATA_LOAD msg)
     }
 }
 
-void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
+void COMM_FMS::slot_recv_randomseq(DATA_RANDOMSEQ msg)
 {
     QString command = msg.command;
     if(command == "randomseq")
@@ -370,7 +371,7 @@ void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
     }
 }
 
-void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
+void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
 {
     QString command = msg.command;
     if(command == "semiautoinit")
@@ -558,7 +559,7 @@ void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
     }
 }
 
-void COMM_FMS::slot_move(DATA_MOVE msg)
+void COMM_FMS::slot_recv_move(DATA_MOVE msg)
 {
     QString command = msg.command;
     if(command == "goal")
@@ -687,7 +688,7 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
     }
 }
 
-void COMM_FMS::slot_path(DATA_PATH msg)
+void COMM_FMS::slot_recv_path(DATA_PATH msg)
 {
     QString command = msg.command;
     if(command == "path")
@@ -708,7 +709,7 @@ void COMM_FMS::slot_path(DATA_PATH msg)
     }
 }
 
-void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
+void COMM_FMS::slot_recv_vobs_r(DATA_VOBS_R msg)
 {
     QString command = msg.command;
     if(command == "vobs_robots")
@@ -742,7 +743,7 @@ void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
     }
 }
 
-void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
+void COMM_FMS::slot_recv_vobs_c(DATA_VOBS_C msg)
 {
     QString command = msg.command;
     if(command == "vobs_closures")

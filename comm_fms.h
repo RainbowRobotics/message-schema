@@ -74,24 +74,24 @@ private Q_SLOTS:
 Q_SIGNALS:    
     void signal_send_move_status();
 
-    void recv_move(DATA_MOVE msg);
-    void recv_localization(DATA_LOCALIZATION msg);
-    void recv_load(DATA_LOAD msg);
-    void recv_randomseq(DATA_RANDOMSEQ msg);
-    void recv_path(DATA_PATH msg);
-    void recv_vobs_r(DATA_VOBS_R msg);
-    void recv_vobs_c(DATA_VOBS_C msg);
+    void signal_recv_move(DATA_MOVE msg);
+    void signal_recv_localization(DATA_LOCALIZATION msg);
+    void signal_recv_load(DATA_LOAD msg);
+    void signal_recv_randomseq(DATA_RANDOMSEQ msg);
+    void signal_recv_path(DATA_PATH msg);
+    void signal_recv_vobs_r(DATA_VOBS_R msg);
+    void signal_recv_vobs_c(DATA_VOBS_C msg);
 
 private Q_SLOTS:
     void send_move_status();
 
-    void slot_move(DATA_MOVE msg);
-    void slot_localization(DATA_LOCALIZATION msg);
-    void slot_load(DATA_LOAD msg);
-    void slot_randomseq(DATA_RANDOMSEQ msg);
-    void slot_path(DATA_PATH msg);
-    void slot_vobs_r(DATA_VOBS_R msg);
-    void slot_vobs_c(DATA_VOBS_C msg);
+    void slot_recv_move(DATA_MOVE msg);
+    void slot_recv_localization(DATA_LOCALIZATION msg);
+    void slot_recv_load(DATA_LOAD msg);
+    void slot_recv_randomseq(DATA_RANDOMSEQ msg);
+    void slot_recv_path(DATA_PATH msg);
+    void slot_recv_vobs_r(DATA_VOBS_R msg);
+    void slot_recv_vobs_c(DATA_VOBS_C msg);
 
     /* send command response */
     void send_move_response(DATA_MOVE msg);

@@ -724,57 +724,7 @@ void SLAM_2D::loc_a_loop()
     printf("[SLAM] loc_a_loop start\n");
     while(loc_a_flag)
     {
-        {
-            if(unimap->is_loaded != MAP_LOADED)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                continue;
-            }
-
-            double st_time = get_time();
-
-            Eigen::Matrix4d _cur_tf = lvx->get_cur_tf();
-            double time = lvx->cur_tf_t;
-            double err = lvx->cur_tf_err;
-            Eigen::Vector2d ieir;
-            ieir[0] = lvx->cur_tf_ie;
-            ieir[1] = lvx->cur_tf_ir;
-
-            // update ieir
-            mtx.lock();
-            cur_ieir = ieir;
-            mtx.unlock();
-
-            // check error
-            if(err < config->LOC_ICP_ERROR_THRESHOLD)
-            {
-                // for loc b loop
-                TIME_POSE tp;
-                tp.t = time;
-                tp.tf = _cur_tf;
-                tp_que.push(tp);
-
-                // for obs loop
-                TIME_POSE_PTS tpp;
-                tpp.t   = time;
-                tpp.tf  = _cur_tf;
-                tpp.pts = lvx->get_cur_scan();
-                tpp_que.push(tpp);
-
-                // update
-                mtx.lock();
-                cur_tpp = tpp;
-                mtx.unlock();
-            }
-
-            // update processing time
-            proc_time_loc_a = get_time() - st_time;
-
-            // for que overflow
-            lidar->scan_que.clear();
-        }
-
-        /*FRAME frm;
+        FRAME frm;
         if(lidar->scan_que.try_pop(frm))
         {
             if(unimap->is_loaded != MAP_LOADED)
@@ -850,7 +800,7 @@ void SLAM_2D::loc_a_loop()
 
             // for que overflow
             lidar->scan_que.clear();
-        }*/
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }

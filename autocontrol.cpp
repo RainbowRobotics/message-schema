@@ -211,6 +211,38 @@ void AUTOCONTROL::set_multi_req(QString str)
     mtx.unlock();
 }
 
+QString AUTOCONTROL::get_remaining_dist()
+{
+    mtx.lock();
+    QString res = remaining_dist_str;
+    mtx.unlock();
+
+    return res;
+}
+
+void AUTOCONTROL::set_remaining_dist(QString str)
+{
+    mtx.lock();
+    remaining_dist_str = str;
+    mtx.unlock();
+}
+
+DATA_MOVE AUTOCONTROL::get_move_info()
+{
+    mtx.lock();
+    DATA_MOVE msg = move_info;
+    mtx.unlock();
+
+    return msg;
+}
+
+void AUTOCONTROL::set_move_info(DATA_MOVE msg)
+{
+    mtx.lock();
+    move_info = msg;
+    mtx.unlock();
+}
+
 void AUTOCONTROL::stop()
 {
     // control loop stop    
@@ -259,6 +291,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
         NODE* node = unimap->get_node_by_id(msg.goal_node_id);
         if(node == NULL)
         {
+            MOBILE_STATUS ms = mobile->get_status();
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();
             Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -267,6 +300,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             move_info.result = "fail";
             move_info.message = "node is empty";
             move_info.time = get_time();
+            move_info.bat_percent = ms.bat_percent;
             mtx.unlock();
             Q_EMIT signal_move_response(move_info);
 
@@ -278,9 +312,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
         }
     }
 
-    mtx.lock();
-    move_info = msg;
-    mtx.unlock();
+    set_move_info(msg);
 
     if(msg.preset < 100)
     {
@@ -352,6 +384,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
         stop();
 
+        MOBILE_STATUS ms = mobile->get_status();
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -360,6 +393,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         move_info.result = "fail";
         move_info.message = "path failed";
         move_info.time = get_time();
+        move_info.bat_percent = ms.bat_percent;
         mtx.unlock();
         Q_EMIT signal_move_response(move_info);
 
@@ -399,6 +433,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
                 logger->write_log("[AUTO] move_pp, last path node invalid");
                 stop();
 
+                MOBILE_STATUS ms = mobile->get_status();
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
                 Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -407,6 +442,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
                 move_info.result = "fail";
                 move_info.message = "last path node invalid";
                 move_info.time = get_time();
+                move_info.bat_percent = ms.bat_percent;
                 mtx.unlock();
                 Q_EMIT signal_move_response(move_info);
 
@@ -2237,6 +2273,8 @@ void AUTOCONTROL::b_loop_pp()
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
 
+    double st_time_ctrl = get_time();
+
     // check already goal
     if(global_path_que.unsafe_size() == 0)
     {
@@ -2280,6 +2318,7 @@ void AUTOCONTROL::b_loop_pp()
                 // move response
                 //if(config->USE_RRS)
                 {
+                    MOBILE_STATUS ms = mobile->get_status();
                     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
                     mtx.lock();
@@ -2287,6 +2326,7 @@ void AUTOCONTROL::b_loop_pp()
                     move_info.result = "success";
                     move_info.message = "already goal";
                     move_info.time = get_time();
+                    move_info.bat_percent = ms.bat_percent;
                     mtx.unlock();
 
                     Q_EMIT signal_move_response(move_info);
@@ -2339,6 +2379,25 @@ void AUTOCONTROL::b_loop_pp()
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
+        int cur_idx_for_rrs = get_nn_idx(global_path.pos, cur_pos);
+        if(cur_idx_for_rrs >= global_path.pos.size()-1)
+        {
+            set_remaining_dist(QString::number(0, 'f', 3));
+        }
+        else
+        {
+            double remain_dist = 0.0;
+            for(size_t p = cur_idx_for_rrs; p < global_path.pos.size()-1; p++)
+            {
+                Eigen::Vector3d pos0 = global_path.pos[p];
+                Eigen::Vector3d pos1 = global_path.pos[p+1];
+                double dist = (pos0 - pos1).norm();
+                remain_dist += dist;
+            }
+
+            set_remaining_dist(QString::number(remain_dist, 'f', 3));
+        }
+
         // for plot
         mtx.lock();
         last_cur_pos = cur_pos;
@@ -2356,6 +2415,7 @@ void AUTOCONTROL::b_loop_pp()
             set_multi_req("none");
             set_obs_condition("none");
             set_cur_goal_state("fail");
+            set_remaining_dist(QString::number(0, 'f', 3));
 
             clear_path();
 
@@ -2373,6 +2433,7 @@ void AUTOCONTROL::b_loop_pp()
             set_multi_req("none");
             set_obs_condition("none");
             set_cur_goal_state("fail");
+            set_remaining_dist(QString::number(0, 'f', 3));
 
             clear_path();
 
@@ -2494,8 +2555,9 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // obs check
+            Eigen::Vector3d obs_pts(0,0,0);
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
-            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj);
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj, obs_pts);
             if(cur_obs_val != OBS_DETECT_NONE)
             {
                 mobile->move(0, 0, 0);
@@ -2614,6 +2676,7 @@ void AUTOCONTROL::b_loop_pp()
                             set_multi_req("none");
                             set_obs_condition("none");
                             set_cur_goal_state("move");
+                            set_remaining_dist(QString::number(0, 'f', 3));
 
                             clear_path();
 
@@ -2684,7 +2747,8 @@ void AUTOCONTROL::b_loop_pp()
                     traj_vir.push_back(local_path.pose[p]);
                 }
 
-                cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, 0, 0, 0, 10);
+                Eigen::Vector3d obs_pts(0,0,0);
+                cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, obs_pts, 0, 0, 0, 10);
                 if(cur_obs_val != OBS_DETECT_NONE)
                 {
                     mobile->move(0, 0, 0);
@@ -2790,18 +2854,26 @@ void AUTOCONTROL::b_loop_pp()
                     set_multi_req("none");
                     set_obs_condition("none");
                     set_cur_goal_state("complete");
+                    set_remaining_dist(QString::number(0, 'f', 3));
 
                     clear_path();
 
                     // response
                     //if(config->USE_RRS)
                     {
+                        MOBILE_STATUS ms = mobile->get_status();
+
                         mtx.lock();
                         move_info.cur_pos = cur_pos;
                         move_info.result = "success";
                         move_info.message = "very good";
                         move_info.time = get_time();
+                        move_info.bat_percent = ms.bat_percent;
                         mtx.unlock();
+
+                        double ed_time_ctrl = get_time();
+
+                        printf("[CTRL] real eta:%f\n", ed_time_ctrl - st_time_ctrl);
 
                         Q_EMIT signal_move_response(move_info);
                     }
@@ -2813,8 +2885,9 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // obs check
+            Eigen::Vector3d obs_pts(0,0,0);
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj);
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj, obs_pts);
             if(cur_obs_val != OBS_DETECT_NONE)
             {
                 mobile->move(0, 0, 0);
@@ -3132,6 +3205,7 @@ void AUTOCONTROL::b_loop_pp()
     // response
     //if(config->USE_RRS)
     {
+        MOBILE_STATUS ms = mobile->get_status();
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -3140,6 +3214,7 @@ void AUTOCONTROL::b_loop_pp()
         move_info.result = "fail";
         move_info.message = "manual stopped";
         move_info.time = get_time();
+        move_info.bat_percent = ms.bat_percent;
         mtx.unlock();
 
         Q_EMIT signal_move_response(move_info);
@@ -3573,7 +3648,8 @@ void AUTOCONTROL::b_loop_hpp()
                 }
                 else
                 {
-                    cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, 0, 0, 0, 10);
+                    Eigen::Vector3d obs_pts(0,0,0);
+                    cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, obs_pts, 0, 0, 0, 10);
                     bool is_inside_line_laser = obsmap->is_tf_collision(cur_tf, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
                     if(is_inside_line_laser)
                     {
