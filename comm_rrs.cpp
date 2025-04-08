@@ -594,6 +594,7 @@ void COMM_RRS::send_move_status()
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
     moveStateObj["path"] = ctrl->get_multi_req(); // "none", "req_path", "recv_path"
+    moveStateObj["remaining_dist"] = ctrl->get_remaining_dist();
     rootObj["move_state"] = moveStateObj;
 
     // Adding the pose object
@@ -839,6 +840,9 @@ void COMM_RRS::send_mapping_cloud()
 
 void COMM_RRS::slot_move(DATA_MOVE msg)
 {
+    MOBILE_STATUS ms = mobile->get_status();
+    int bat_percent = ms.bat_percent;
+
     QString command = msg.command;
     if(command == "jog")
     {
@@ -867,6 +871,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Mx1800]map not loaded";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -876,6 +881,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Px1800]no localization";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -887,6 +893,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Tx1800]target location out of range";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -899,6 +906,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Tx1801]target location occupied(static obs)";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -908,6 +916,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Tx1802]target command not supported by multi. use goal_id";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -915,6 +924,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
             msg.result = "accept";
             msg.message = "";
+            msg.bat_percent = bat_percent;
 
             send_move_response(msg);
 
@@ -938,6 +948,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Mx2000]map not loaded";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -947,6 +958,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Px2000]no localization";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -957,6 +969,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "reject";
                 msg.message = "[R0Nx2000]empty node id";
+                msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
                 return;
@@ -970,6 +983,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 {
                     msg.result = "reject";
                     msg.message = "[R0Nx2001]can not find node";
+                    msg.bat_percent = bat_percent;
 
                     send_move_response(msg);
                     return;
@@ -994,6 +1008,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
+            msg.bat_percent = bat_percent;
+
             // calc eta (estimation time arrival)
             Eigen::Matrix4d goal_tf = node->tf;
             PATH global_path = ctrl->calc_global_path(goal_tf);
@@ -1005,7 +1021,14 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             }
             else
             {
-                double time = 0.0;
+                // time align (first align + final align)
+                CTRL_PARAM params = ctrl->load_preset(msg.preset);
+                Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+                auto dtdr_st = dTdR(cur_tf, global_path.pose.front());
+                double time_align = (dtdr_st[1] / (params.LIMIT_W*D2R + 1e-06)) * 2;
+
+                // time driving
+                double time_driving = 0.0;
                 for(size_t p = 1; p < global_path.pos.size()-1; p++)
                 {
                     Eigen::Vector3d pos0 = global_path.pos[p];
@@ -1016,17 +1039,20 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                     double ref_v1 = global_path.ref_v[p+1];
                     double v = (ref_v0 + ref_v1)/2;
 
-                    time += dist / (v+1e-06);
+                    time_driving += dist/(v+1e-06);
                 }
 
-                if(time == 0.0)
+                if(time_driving == 0.0)
                 {
-                    time = 9999.0;
+                    time_driving = 9999.0;
                 }
+
+                double total_time = time_driving + time_align;
+                printf("[COMM_RRS] eta-> driving:%f, align:%f, total:%f\n", time_driving, time_align, total_time);
 
                 msg.result = "accept";
                 msg.message = "";
-                msg.eta = time;
+                msg.eta = total_time;
             }
 
             send_move_response(msg);
@@ -1038,6 +1064,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         {
             msg.result = "reject";
             msg.message = "not supported yet";
+            msg.bat_percent = bat_percent;
 
             send_move_response(msg);
         }
@@ -1045,6 +1072,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         {
             msg.result = "reject";
             msg.message = "not supported yet";
+            msg.bat_percent = bat_percent;
 
             send_move_response(msg);
         }
@@ -1052,6 +1080,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         {
             msg.result = "reject";
             msg.message = "[R0Sx2000]not supported";
+            msg.bat_percent = bat_percent;
 
             send_move_response(msg);
         }
@@ -1060,6 +1089,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     {
         msg.result = "accept";
         msg.message = "";
+        msg.bat_percent = bat_percent;
 
         send_move_response(msg);
 
@@ -1069,6 +1099,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     {
         msg.result = "accept";
         msg.message = "";
+        msg.bat_percent = bat_percent;
 
         send_move_response(msg);
 
@@ -1078,6 +1109,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
     {
         msg.result = "accept";
         msg.message = "";
+        msg.bat_percent = bat_percent;
 
         send_move_response(msg);
 

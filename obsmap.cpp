@@ -713,7 +713,8 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
     robot_pts.push_back(robot_tf.block(0,0,3,3)*P2 + robot_tf.block(0,3,3,1));
     robot_pts.push_back(robot_tf.block(0,0,3,3)*P3 + robot_tf.block(0,3,3,1));
 
-    // check collision (dynamic)
+    // check collision (dynamic obs)
+    bool is_collision_dyn = false;
     for(size_t p = 0; p < pts_dyn.size(); p++)
     {
         Eigen::Vector3d P = Eigen::Vector3d(pts_dyn[p][0], pts_dyn[p][1], pts_dyn[p][2]);
@@ -725,7 +726,7 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
             Eigen::Vector3d pt0 = robot_pts[q];
             Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
 
-            if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+            if(((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
                  (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
             {
                 is_collision = !is_collision;
@@ -735,11 +736,13 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
         // collision
         if(is_collision)
         {
-            return OBS_DETECT_DYNAMIC;
+            is_collision_dyn = true;
+            break;
         }
     }
 
-    // check collision (virtual)
+    // check collision (virtual obs)
+    bool is_collision_vir = false;
     for(size_t p = 0; p < pts_vir.size(); p++)
     {
         Eigen::Vector3d P = Eigen::Vector3d(pts_vir[p][0], pts_vir[p][1], pts_vir[p][2]);
@@ -751,7 +754,7 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
             Eigen::Vector3d pt0 = robot_pts[q];
             Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
 
-            if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+            if(((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
                  (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
             {
                 is_collision = !is_collision;
@@ -761,12 +764,35 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
         // collision
         if(is_collision)
         {
-            return OBS_DETECT_VIRTUAL;
+            is_collision_vir = true;
+            break;
         }
     }
 
-    // no collision
-    return OBS_DETECT_NONE;
+    if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        if(config->OBS_DEADZONE_DYN >= config->OBS_DEADZONE_VIR)
+        {
+            return OBS_DETECT_VIRTUAL;
+        }
+        else
+        {
+            return OBS_DETECT_DYNAMIC;
+        }
+    }
+    else if(is_collision_dyn == false && is_collision_vir == true)
+    {
+        return OBS_DETECT_VIRTUAL;
+    }
+    else if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        return OBS_DETECT_DYNAMIC;
+    }
+    else
+    {
+        // no collision
+        return OBS_DETECT_NONE;
+    }
 }
 
 int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step)
@@ -829,7 +855,7 @@ int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, dou
     return OBS_DETECT_NONE;
 }
 
-int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, double margin_x, double margin_y, int st_idx, int idx_step)
+int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, Eigen::Vector3d &obs_pts, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
     std::vector<Eigen::Vector3d> pts_dyn;
@@ -851,6 +877,8 @@ int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     // check collision (dynamic obs)
+    Eigen::Vector3d obs_pts_dyn;
+    bool is_collision_dyn = false;
     for(int i = st_idx; i < (int)robot_tfs_dyn.size(); i++)
     {
         if(i == st_idx || i == (int)robot_tfs_dyn.size()-1 || i%idx_step == 0)
@@ -876,19 +904,23 @@ int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_
                          (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
                     {
                         is_collision = !is_collision;
+                        obs_pts_dyn = pt;
                     }
                 }
 
                 // collision
                 if(is_collision)
                 {
-                    return OBS_DETECT_DYNAMIC;
+                    is_collision_dyn = true;
+                    break;
                 }
             }
         }
     }
 
     // check collision (virtual obs)
+    Eigen::Vector3d obs_pts_vir;
+    bool is_collision_vir = false;
     for(int i = st_idx; i < (int)robot_tfs_vir.size(); i++)
     {
         if(i == st_idx || i == (int)robot_tfs_vir.size()-1 || i%idx_step == 0)
@@ -914,20 +946,49 @@ int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_
                          (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
                     {
                         is_collision = !is_collision;
+                        obs_pts_vir = pt;
                     }
                 }
 
                 // collision
                 if(is_collision)
                 {
-                    return OBS_DETECT_VIRTUAL;
+                    is_collision_vir = true;
+                    break;
                 }
             }
         }
     }
 
-    // no collision
-    return OBS_DETECT_NONE;
+    if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        if(config->OBS_DEADZONE_DYN > config->OBS_DEADZONE_VIR)
+        {
+            obs_pts = obs_pts_vir;
+            return OBS_DETECT_VIRTUAL;
+        }
+        else
+        {
+            obs_pts = obs_pts_dyn;
+            return OBS_DETECT_DYNAMIC;
+        }
+    }
+    else if(is_collision_dyn == false && is_collision_vir == true)
+    {
+        obs_pts = obs_pts_vir;
+        return OBS_DETECT_VIRTUAL;
+    }
+    else if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        obs_pts = obs_pts_dyn;
+        return OBS_DETECT_DYNAMIC;
+    }
+    else
+    {
+        // no collision
+        obs_pts = Eigen::Vector3d(0,0,0);
+        return OBS_DETECT_NONE;
+    }
 }
 
 int OBSMAP::is_undock_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step)
@@ -1009,6 +1070,7 @@ int OBSMAP::is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& rob
     Eigen::Vector3d P3(x_min, y_max, 0);
 
     // check collision (dynamic obs)
+    bool is_collision_dyn = false;
     for(int i = st_idx; i < (int)robot_tfs_dyn.size(); i++)
     {
         if(i == st_idx || i == (int)robot_tfs_dyn.size()-1 || i%idx_step == 0)
@@ -1039,14 +1101,15 @@ int OBSMAP::is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& rob
 
                 if(is_collision)
                 {
-                    // collision
-                    return OBS_DETECT_DYNAMIC;
+                    is_collision_dyn = true;
+                    break;
                 }
             }
         }
     }
 
     // check collision (virtual obs)
+    bool is_collision_vir = false;
     for(int i = st_idx; i < (int)robot_tfs_vir.size(); i++)
     {
         if(i == st_idx || i == (int)robot_tfs_vir.size()-1 || i%idx_step == 0)
@@ -1077,15 +1140,37 @@ int OBSMAP::is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& rob
 
                 if(is_collision)
                 {
-                    // collision
-                    return OBS_DETECT_DYNAMIC;
+                    is_collision_vir = true;
+                    break;
                 }
             }
         }
     }
 
-    // no collision
-    return OBS_DETECT_NONE;
+    if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        if(config->OBS_DEADZONE_DYN >= config->OBS_DEADZONE_VIR)
+        {
+            return OBS_DETECT_VIRTUAL;
+        }
+        else
+        {
+            return OBS_DETECT_DYNAMIC;
+        }
+    }
+    else if(is_collision_dyn == false && is_collision_vir == true)
+    {
+        return OBS_DETECT_VIRTUAL;
+    }
+    else if(is_collision_dyn == true && is_collision_vir == true)
+    {
+        return OBS_DETECT_DYNAMIC;
+    }
+    else
+    {
+        // no collision
+        return OBS_DETECT_NONE;
+    }
 }
 
 // for avoid path

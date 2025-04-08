@@ -3283,6 +3283,43 @@ void MainWindow::bt_AutoMove()
         NODE* node = unimap.get_node_by_id(pick.cur_node);
         if(node != NULL)
         {
+            // just test ...
+            PATH global_path = ctrl.calc_global_path(node->tf);
+            if(global_path.pos.size() < 2)
+            {
+                printf("[ETA] eta:0\n");
+            }
+            else
+            {
+                // time align
+                CTRL_PARAM params = ctrl.load_preset(0);
+                Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+                auto dtdr_st = dTdR(cur_tf, global_path.pose.front());
+                double time_align = (dtdr_st[1] / (params.LIMIT_W*D2R + 1e-06)) * 2; // first align + final align
+
+                // time driving
+                double time_driving = 0.0;
+                for(size_t p = 1; p < global_path.pos.size()-1; p++)
+                {
+                    Eigen::Vector3d pos0 = global_path.pos[p];
+                    Eigen::Vector3d pos1 = global_path.pos[p+1];
+                    double dist = (pos1 - pos0).norm();
+
+                    double ref_v0 = global_path.ref_v[p];
+                    double ref_v1 = global_path.ref_v[p+1];
+                    double v = (ref_v0 + ref_v1)/2;
+
+                    time_driving += dist / (v+1e-06);
+                }
+
+                if(time_driving == 0.0)
+                {
+                    time_driving = 9999.0;
+                }
+
+                printf("[ETA] eta-> driving:%f, align:%f, total:%f\n", time_driving, time_align, (time_driving + time_align));
+            }
+
             Eigen::Vector3d xi = TF_to_se2(node->tf);
 
             DATA_MOVE msg;
@@ -5619,12 +5656,12 @@ void MainWindow::raw_plot()
         int fsm_state = ctrl.fsm_state;
 
         QString auto_info_str;
-        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
+        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
                               (bool)ctrl.is_moving ? "1" : "0",
                               (bool)ctrl.is_pause ? "1" : "0",
                               ctrl.get_obs_condition().toLocal8Bit().data(),
-                              (bool)ctrl.is_rrs ? "1" : "0",
+                              config.USE_MULTI,
                               ctrl.get_multi_req().toLocal8Bit().data(),
                               _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
@@ -5762,7 +5799,6 @@ void MainWindow::raw_plot()
         std::vector<Eigen::Vector3d> cur_scan_b = blidar.get_cur_scan();
         std::vector<Eigen::Vector3d> cam_scan0 = cam.get_scan(0).pts;
         std::vector<Eigen::Vector3d> cam_scan1 = cam.get_scan(1).pts;
-        std::vector<Eigen::Vector3d> cur_scan_3d = lvx.get_cur_scan();
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(size_t p = 0; p < cur_scan.size(); p++)
@@ -5772,20 +5808,6 @@ void MainWindow::raw_plot()
             pt.x = cur_scan[p][0];
             pt.y = cur_scan[p][1];
             pt.z = cur_scan[p][2];
-            pt.r = 255;
-            pt.g = 0;
-            pt.b = 0;
-
-            cloud->push_back(pt);
-        }
-
-        for(size_t p = 0; p < cur_scan_3d.size(); p++)
-        {
-            // set pos
-            pcl::PointXYZRGB pt;
-            pt.x = cur_scan_3d[p][0];
-            pt.y = cur_scan_3d[p][1];
-            pt.z = cur_scan_3d[p][2];
             pt.r = 255;
             pt.g = 0;
             pt.b = 0;

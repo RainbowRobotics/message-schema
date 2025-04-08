@@ -85,8 +85,6 @@ void COMM_COOP::recv_message(const QByteArray &buf)
         return;
     }
 
-    std::cout << "received data ..." << std::endl;
-
     // parsing
     if(get_json(data, "type") == "control")
     {
