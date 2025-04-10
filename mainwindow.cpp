@@ -4522,7 +4522,7 @@ void MainWindow::watch_loop()
 
                 // check battery
                 {
-                    if(ms.bat_out < 43.0) // low battery
+                    if(ms.bat_out < 45.0) // low battery
                     {
                         led_color = LED_YELLOW_BLINK;
                         // logger.write_log("[BATTERY] need charge");

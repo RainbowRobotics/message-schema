@@ -1738,7 +1738,7 @@ int MOBILE::calc_battery_percentage(float voltage)
     #endif
 
     #if defined(USE_S100)
-    int percentage = (voltage - 43)*10;
+    int percentage = (voltage - 44)*10;
     if(percentage > 100)
     {
        percentage = 100;
