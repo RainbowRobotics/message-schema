@@ -3852,6 +3852,8 @@ void MainWindow::comm_loop()
                     comm_rrs.send_lidar();
                 }
             }
+
+            lidar_view_cnt++;
         }
 
         double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
@@ -3876,6 +3878,7 @@ void MainWindow::comm_loop()
                     }
                 }
             }
+            path_view_cnt++;
         }
 
         // for 100ms loop

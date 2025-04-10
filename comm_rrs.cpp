@@ -594,7 +594,6 @@ void COMM_RRS::send_move_status()
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
     moveStateObj["path"] = ctrl->get_multi_req(); // "none", "req_path", "recv_path"
-    moveStateObj["remaining_dist"] = ctrl->get_remaining_dist();
     rootObj["move_state"] = moveStateObj;
 
     // Adding the pose object
@@ -1691,7 +1690,9 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     obj["preset"] = QString::number(msg.preset, 10);
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
+    obj["remaining_dist"] = QString::number(msg.remaining_dist, 'f', 3);
     obj["eta"] = QString::number(msg.eta, 'f', 3);
+    obj["bat_percent"] = QString::number(msg.bat_percent, 'f', 3);
 
     // temporal patch
     QString response_goal_node_name = msg.goal_node_name;
