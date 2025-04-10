@@ -211,22 +211,6 @@ void AUTOCONTROL::set_multi_req(QString str)
     mtx.unlock();
 }
 
-QString AUTOCONTROL::get_remaining_dist()
-{
-    mtx.lock();
-    QString res = remaining_dist_str;
-    mtx.unlock();
-
-    return res;
-}
-
-void AUTOCONTROL::set_remaining_dist(QString str)
-{
-    mtx.lock();
-    remaining_dist_str = str;
-    mtx.unlock();
-}
-
 DATA_MOVE AUTOCONTROL::get_move_info()
 {
     mtx.lock();
@@ -2382,20 +2366,20 @@ void AUTOCONTROL::b_loop_pp()
         int cur_idx_for_rrs = get_nn_idx(global_path.pos, cur_pos);
         if(cur_idx_for_rrs >= global_path.pos.size()-1)
         {
-            set_remaining_dist(QString::number(0, 'f', 3));
+            remaining_dist = 0.;
         }
         else
         {
-            double remain_dist = 0.0;
+            double _remaining_dist = 0.0;
             for(size_t p = cur_idx_for_rrs; p < global_path.pos.size()-1; p++)
             {
                 Eigen::Vector3d pos0 = global_path.pos[p];
                 Eigen::Vector3d pos1 = global_path.pos[p+1];
                 double dist = (pos0 - pos1).norm();
-                remain_dist += dist;
+                _remaining_dist += dist;
             }
 
-            set_remaining_dist(QString::number(remain_dist, 'f', 3));
+            remaining_dist = _remaining_dist;
         }
 
         // for plot
@@ -2415,7 +2399,8 @@ void AUTOCONTROL::b_loop_pp()
             set_multi_req("none");
             set_obs_condition("none");
             set_cur_goal_state("fail");
-            set_remaining_dist(QString::number(0, 'f', 3));
+
+            remaining_dist = 0.;
 
             clear_path();
 
@@ -2433,7 +2418,8 @@ void AUTOCONTROL::b_loop_pp()
             set_multi_req("none");
             set_obs_condition("none");
             set_cur_goal_state("fail");
-            set_remaining_dist(QString::number(0, 'f', 3));
+
+            remaining_dist = 0.;
 
             clear_path();
 
@@ -2676,7 +2662,8 @@ void AUTOCONTROL::b_loop_pp()
                             set_multi_req("none");
                             set_obs_condition("none");
                             set_cur_goal_state("move");
-                            set_remaining_dist(QString::number(0, 'f', 3));
+
+                            remaining_dist = 0.;
 
                             clear_path();
 
@@ -2854,7 +2841,8 @@ void AUTOCONTROL::b_loop_pp()
                     set_multi_req("none");
                     set_obs_condition("none");
                     set_cur_goal_state("complete");
-                    set_remaining_dist(QString::number(0, 'f', 3));
+
+                    remaining_dist = 0.;
 
                     clear_path();
 
