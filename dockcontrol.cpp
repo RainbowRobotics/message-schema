@@ -913,6 +913,7 @@ bool DOCKCONTROL::is_everything_fine()
         logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
         return false;
     }
+    #endif
 
     #if defined(USE_MECANUM)
     if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1 || mobile_status.connection_m2 != 1 || mobile_status.connection_m3 != 1)
