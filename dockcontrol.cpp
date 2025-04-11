@@ -3,6 +3,7 @@
 DOCKCONTROL::DOCKCONTROL(QObject *parent)
     : QObject{parent}
 {
+
 }
 
 DOCKCONTROL::~DOCKCONTROL()
@@ -890,36 +891,15 @@ bool DOCKCONTROL::is_everything_fine()
         return false;
     }
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
-    if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
+    #if defined(USE_S100) || defined(USE_AMR) || defined(USE_AMR_LAKI)
+    if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
     {
         logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
         return false;
     }
     #endif
 
-    #if defined(USE_SRV) || defined(USE_AMR) || defined(USE_AMR_400_LAKI)
-    if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
-    {
-        logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
-        return false;
-    }
-    #endif
-
-    if(mobile_status.motor_stop_state == 0)
-    {
-        logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
-        return false;
-    }
-
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    if(bqr->is_recv_data == false)
-    {
-        return false;
-    }
-    #endif
-
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1 || mobile_status.status_m2 > 1 || mobile_status.status_m3 > 1)
     {
         logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
@@ -927,9 +907,31 @@ bool DOCKCONTROL::is_everything_fine()
     }
     #endif
 
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
+    if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
+    {
+        logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
+        return false;
+    }
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1 || mobile_status.connection_m2 != 1 || mobile_status.connection_m3 != 1)
+    {
+        return false;
+    }
+    #endif
+
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
+    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0)
+    {
+        logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
+        return false;
+    }
+    #endif
+
+
+    #if defined(USE_MECANUM)
+    if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0 || mobile_status.status_m2 == 0 || mobile_status.status_m3 == 0)
     {
         logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
         return false;
@@ -980,19 +982,19 @@ DCTRL_PARAM DOCKCONTROL::load_preset(int preset)
     QString preset_path = "";
 
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "docking_preset_" + QString::number(preset) + ".json";
     #endif
 

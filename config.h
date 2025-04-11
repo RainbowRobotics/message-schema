@@ -83,13 +83,14 @@ public:
     int USE_BEEP = 0;
     int USE_CAM = 0;
     int USE_RTSP = 0;
-    int USE_RRS = 0;
-    int USE_FMS = 0;
+    int USE_COMM_RRS = 0;
+    int USE_COMM_FMS = 0;
+    int USE_COMM_OLD = 0;
     int USE_QTUI = 0;
     int USE_ARUCO = 0;
     int USE_EARLYSTOP = 0;
     int USE_LVX = 0;
-    int USE_COOP = 0;
+    int USE_COMM_COOP = 0;
     int USE_MULTI = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
@@ -198,11 +199,6 @@ public:
     QString config_path = "";
     QString config_sn_path = "";
     std::atomic<bool> is_load = {false};    
-
-    #if defined(USE_MECANUM_OLD)
-    void load_code_info(QString path);
-    void load_ext(QString path);
-    #endif
 
     void set_map_path(QString path);
 

@@ -15,7 +15,10 @@ struct DATA_MOVE
     Eigen::Vector3d cur_pos; // x, y, z
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
+
+    double remaining_dist;
     double eta; // estimated time of arrival
+    int bat_percent; // battery percentage
 
     QString result;
     QString message;
@@ -25,6 +28,7 @@ struct DATA_MOVE
         time = 0.0;
         command = "";
         method = "";
+
         goal_node_id = "";
         goal_node_name = "";
 
@@ -32,7 +36,10 @@ struct DATA_MOVE
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
+
+        remaining_dist = 0.0;
         eta = 9999.0;
+        bat_percent = -1;
 
         result = "";
         message = "";
@@ -45,12 +52,14 @@ struct DATA_MOVE
         method = p.method;
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
+        remaining_dist = p.remaining_dist;
 
         preset = p.preset;
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
         eta = p.eta;
+        bat_percent = p.bat_percent;
 
         result = p.result;
         message = p.message;
@@ -63,12 +72,14 @@ struct DATA_MOVE
         method = p.method;
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
+        remaining_dist = p.remaining_dist;
 
         preset = p.preset;
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
         eta = p.eta;
+        bat_percent = p.bat_percent;
 
         result = p.result;
         message = p.message;

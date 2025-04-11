@@ -190,7 +190,7 @@ void SIM::a_loop()
         status.power_state = 1;
         status.remote_state = 1;
 
-        #if defined (USE_MECANUM_OLD) || defined (USE_MECANUM)
+        #if defined (USE_MECANUM)
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;

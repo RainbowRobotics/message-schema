@@ -18,18 +18,13 @@ MainWindow::MainWindow(QWidget *parent)
     , task(this)
     , sim(this)
     , lvx(this)
+    , comm_coop(this)
     , comm_fms(this)
     , comm_rrs(this)
-    , comm_old(this)
-    , comm_ui(this)
-    , system_logger(this)
     , ui(new Ui::MainWindow)
     , plot_timer(this)
     , plot_timer2(this)
     , qa_timer(this)
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    , sound_timer(this)
-    #endif
     , bqr_localization_timer(this)
 {
     ui->setupUi(this);
@@ -68,10 +63,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     connect(&plot_timer2, SIGNAL(timeout()), this, SLOT(plot_loop2()));
     connect(&qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
-
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    connect(&sound_timer, SIGNAL(timeout()), this, SLOT(sound_loop()));
-    #endif
 
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
@@ -207,15 +198,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for advanced annot
     connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
-
-    #if defined(USE_MECANUM)
-    connect(&comm_ui, SIGNAL(signal_comm_ui_view_control(double, QString)), this, SLOT(slot_comm_ui_view_control(double, QString)));
-    connect(&comm_ui, SIGNAL(signal_comm_ui_view_type(double, QString)), this, SLOT(slot_comm_ui_view_type(double, QString)));
-    #endif
-
-    #if defined(USE_MECANUM_OLD)
-    connect(&lidar, SIGNAL(signal_found_obs()), this, SLOT(slot_found_obs()));
-    #endif
 
     // bqr localization
     connect(&bqr_localization_timer, SIGNAL(timeout()), this, SLOT(bqr_localization_loop()));
@@ -529,26 +511,19 @@ void MainWindow::set_mapping_view()
 void MainWindow::init_modules()
 {            
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     config.config_path = QCoreApplication::applicationDirPath() + "/config/SRV/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/SRV/config_sn.json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/config_sn.json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     config.config_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config.json";
     config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/config_sn.json";
-    #endif
-
-    #ifdef USE_MECANUM_OLD
-    config.config_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config.json";
-    config.config_sn_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config_sn.json";
-    QString code_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/config_code.json";
-    QString ext_path = QDir::homePath() + "/Desktop/KAI_CONFIG.json";
     #endif
 
     #ifdef USE_MECANUM
@@ -557,11 +532,6 @@ void MainWindow::init_modules()
     #endif
 
     config.load();
-
-    #ifdef USE_MECANUM_OLD
-    config.load_code_info(code_path);
-    config.load_ext(ext_path);
-    #endif
 
     // simulation check
     if(config.USE_SIM)
@@ -578,10 +548,6 @@ void MainWindow::init_modules()
     // log module init (slamnav)
     logger.log_path = QCoreApplication::applicationDirPath() + "/snlog/";
     logger.init();
-
-    // log module init (system)
-    system_logger.log_path = QCoreApplication::applicationDirPath() + "/systemlog/";
-    system_logger.init();
 
     // unimap module init
     unimap.config = &config;
@@ -699,6 +665,20 @@ void MainWindow::init_modules()
     task.ctrl = &ctrl;
     task.mobile = &mobile;
 
+    // coop client module init
+    comm_coop.config = &config;
+    comm_coop.logger = &logger;
+    comm_coop.mobile = &mobile;
+    comm_coop.slam = &slam;
+    comm_coop.unimap = &unimap;
+    comm_coop.obsmap = &obsmap;
+    comm_coop.ctrl = &ctrl;
+    comm_coop.lvx = &lvx;
+    if(config.USE_COMM_COOP)
+    {
+        comm_coop.init();
+    }
+
     // fms client module init
     comm_fms.config = &config;
     comm_fms.logger = &logger;
@@ -709,7 +689,7 @@ void MainWindow::init_modules()
     comm_fms.ctrl = &ctrl;
     comm_fms.dctrl = &dctrl;
     comm_fms.lvx = &lvx;
-    if(config.USE_FMS)
+    if(config.USE_COMM_FMS)
     {
         comm_fms.init();
     }
@@ -727,64 +707,10 @@ void MainWindow::init_modules()
     comm_rrs.ctrl = &ctrl;
     comm_rrs.dctrl = &dctrl;
     comm_rrs.lvx = &lvx;
-    if(config.USE_RRS)
+    if(config.USE_COMM_RRS)
     {
         comm_rrs.init();
     }
-
-    // (MECANUM_OLD) tcp/ip server init
-    comm_old.config = &config;
-    comm_old.logger = &logger;
-    comm_old.mobile = &mobile;
-    comm_old.lidar = &lidar;
-    comm_old.bqr = &bqr;
-    comm_old.slam = &slam;
-    comm_old.unimap = &unimap;
-    comm_old.obsmap = &obsmap;
-    comm_old.ctrl = &ctrl;
-    comm_old.dctrl = &dctrl;
-    {
-        #if defined(USE_MECANUM_OLD)
-        comm_old.open();
-        #endif
-    }  
-
-    // websocket ui init
-    comm_ui.config = &config;
-    comm_ui.logger = &logger;
-    comm_ui.mobile = &mobile;
-    comm_ui.lidar = &lidar;
-    comm_ui.bqr = &bqr;
-    comm_ui.slam = &slam;
-    comm_ui.unimap = &unimap;
-    comm_ui.obsmap = &obsmap;
-    comm_ui.ctrl = &ctrl;
-    comm_ui.dctrl = &dctrl;
-    {
-        #if defined(USE_MECANUM)
-        comm_ui.init();
-        #endif
-    }
-
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    // music module init
-    QString sound_path = QDir::homePath() + "/Documents/sound/moving.mp3";
-    QFileInfo sound_info(sound_path);
-    if(sound_info.exists() && sound_info.isFile())
-    {
-        media_player = new QMediaPlayer(this);
-        media_player->setVolume(100);
-        playlist = new QMediaPlaylist(media_player);
-        playlist->addMedia(QMediaContent(QUrl::fromLocalFile(sound_path)));
-        playlist->setPlaybackMode(QMediaPlaylist::Loop);
-        media_player->setPlaylist(playlist);
-        sound_timer.start(200);
-    }
-    else
-    {
-        logger.write_log("[SOUND] no sound file", "Red");
-    }
-    #endif
 
     // start jog loop
     jog_flag = true;
@@ -818,54 +744,6 @@ void MainWindow::init_modules()
         }
     }
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-    QTimer::singleShot(10000, [&]()
-    {
-        std::vector<Eigen::Matrix4d> _tfs;
-        std::vector<QString> _nodes = unimap.get_nodes();
-        for(auto& it : _nodes)
-        {
-            NODE* node = unimap.get_node_by_id(it);
-            if(node == NULL)
-            {
-                continue;
-            }
-
-            QString info = node->info;
-            NODE_INFO res;
-            if(!parse_info(info, "BQR_CODE_NUM", res))
-            {
-                continue;
-            }
-
-            if(res.bqr_code_num < 0)
-            {
-                continue;
-            }
-
-            std::cout << node->id.toStdString() << ", " << res.bqr_code_num << std::endl;
-            Eigen::Matrix4d tf = node->tf;
-            _tfs.push_back(tf);
-        }
-
-        if(_tfs.size() != 0)
-        {
-            if(!slam.is_busy)
-            {
-                if(semi_auto_init_thread != NULL)
-                {
-                    semi_auto_init_flag = false;
-                    semi_auto_init_thread->join();
-                    semi_auto_init_thread = NULL;
-                }
-
-                semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
-            }
-        }
-
-        bqr_localization_timer.start(1000);
-    });
-    #endif
 }
 
 void MainWindow::setup_vtk()
@@ -919,7 +797,12 @@ void MainWindow::setup_vtk()
 
 void MainWindow::bqr_localization_loop()
 {
-    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false || unimap.is_loaded == false)
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        return;
+    }
+
+    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false)
     {
         //std::cout << "[CODE_LOC] no need to do localization" << std::endl;
         return;
@@ -946,6 +829,8 @@ void MainWindow::bqr_localization_loop()
         }
 
         QString info = node->info;
+
+        std::cout << info.toStdString() << std::endl;
 
         NODE_INFO res;
         if(!parse_info(info, "BQR_CODE_NUM", res))
@@ -977,127 +862,7 @@ void MainWindow::bqr_localization_loop()
             semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
         }
     }
-
 }
-
-#if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-void MainWindow::sound_loop()
-{
-    // sound check
-    if(media_player == NULL || playlist == NULL)
-    {
-        return;
-    }
-
-    static bool prev_state = false;
-    static bool prev_state_obs = false;
-
-    bool is_auto_moving = (ctrl.is_moving || dctrl.is_moving);
-
-    Eigen::Vector3d vel = mobile.get_pose().vel;
-    bool is_robot_moving = false;
-    if(std::abs(vel[0]) > 0.005 || std::abs(vel[1]) > 0.005 || std::abs(vel[2]*R2D) > 0.5)
-    {
-        is_robot_moving = true;
-    }
-
-    if(is_auto_moving == true || is_robot_moving == true)
-    {
-        if(ctrl.obs_condition == "near")
-        {
-            is_play_obs = true;
-            if(prev_state_obs != is_play_obs)
-            {
-                is_play = false;
-
-                playlist->clear();
-                playlist->addMedia(QMediaContent(QUrl::fromLocalFile(QDir::homePath() + "/Documents/sound/robot_move.mp3")));
-                media_player->setPlaylist(playlist);
-                media_player->play();
-            }
-        }
-        else
-        {
-            is_play = true;
-            if(prev_state != is_play)
-            {
-                is_play_obs = false;
-
-                playlist->clear();
-                playlist->addMedia(QMediaContent(QUrl::fromLocalFile(QDir::homePath() + "/Documents/sound/moving.mp3")));
-                media_player->setPlaylist(playlist);
-                media_player->play();
-            }
-        }
-    }
-    else
-    {
-        if(is_play == true)
-        {
-            is_play = false;
-            media_player->stop();
-        }
-
-        if(is_play_obs == true)
-        {
-            is_play_obs = false;
-            media_player->stop();
-        }
-    }
-    prev_state = is_play;
-    prev_state_obs = is_play_obs;
-}
-#endif
-
-#if defined(USE_MECANUM)
-void MainWindow::slot_comm_ui_view_control(double time, QString val)
-{
-    if (val == "ViewLeft")
-    {
-        viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);
-    }
-    else if(val == "ViewRight")
-    {
-        viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);
-    }
-    else if(val == "ViewUp")
-    {
-        viewer_camera_relative_control(0, +2, 0, 0, 0, 0);
-    }
-    else if(val == "ViewDown")
-    {
-        viewer_camera_relative_control(0, -2, 0, 0, 0, 0);
-    }
-    else if(val == "ViewZoomIn")
-    {
-        viewer_camera_relative_control(0, 0, +2, 0, 0, 0);
-    }
-    else if(val == "ViewZoomOut")
-    {
-        viewer_camera_relative_control(0, 0, -2, 0, 0, 0);
-    }
-}
-
-void MainWindow::slot_comm_ui_view_type(double time, QString val)
-{
-    if (val == "ViewReset")
-    {
-        bt_ViewReset();
-    }
-    else if(val == "SetTopView")
-    {
-        bt_SetTopView();
-    }
-    else if (val == "VIEW_MAPPING")
-    {
-        ui->cb_ViewType->setCurrentIndex(ui->cb_ViewType->findText("VIEW_MAPPING"));
-    }
-    else if (val == "VIEW_2D")
-    {
-        ui->cb_ViewType->setCurrentIndex(ui->cb_ViewType->findText("VIEW_2D"));
-    }
-}
-#endif
 
 void MainWindow::all_plot_clear()
 {
@@ -2571,9 +2336,9 @@ void MainWindow::cb_NodeType(QString type)
 
     if(type == "GOAL")
     {
-        ui->cb_NodeAdvanceType->addItem("Forward");
-        ui->cb_NodeAdvanceType->addItem("Backward");
-        ui->cb_NodeAdvanceType->addItem("Offset");
+        ui->cb_NodeAdvanceType->addItem("forward");
+        ui->cb_NodeAdvanceType->addItem("backward");
+        ui->cb_NodeAdvanceType->addItem("offset");
     }
     else if(type == "INIT")
     {
@@ -2589,17 +2354,18 @@ void MainWindow::cb_NodeType(QString type)
     }
     else if(type == "ZONE")
     {
-        ui->cb_NodeAdvanceType->addItem("Forbidden");
-        ui->cb_NodeAdvanceType->addItem("SwitchableForbidden");
-        ui->cb_NodeAdvanceType->addItem("Speed");
-        ui->cb_NodeAdvanceType->addItem("SensorMute");
-        ui->cb_NodeAdvanceType->addItem("Sound");
-        ui->cb_NodeAdvanceType->addItem("Light");
-        ui->cb_NodeAdvanceType->addItem("Avoid");
-        ui->cb_NodeAdvanceType->addItem("IgnoreLowLidar");
-        ui->cb_NodeAdvanceType->addItem("IgnoreTiltLidar");
-        ui->cb_NodeAdvanceType->addItem("Offset");
-        ui->cb_NodeAdvanceType->addItem("Mask");
+        ui->cb_NodeAdvanceType->addItem("forbidden");
+        ui->cb_NodeAdvanceType->addItem("switchable_forbidden");
+        ui->cb_NodeAdvanceType->addItem("speed");
+        ui->cb_NodeAdvanceType->addItem("sensor_mute");
+        ui->cb_NodeAdvanceType->addItem("sound");
+        ui->cb_NodeAdvanceType->addItem("light");
+        ui->cb_NodeAdvanceType->addItem("avoid");
+        ui->cb_NodeAdvanceType->addItem("ignore_low_lidar");
+        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar1");
+        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar2");
+        ui->cb_NodeAdvanceType->addItem("offset");
+        ui->cb_NodeAdvanceType->addItem("mask");
     }
 }
 
@@ -3276,8 +3042,11 @@ void MainWindow::bt_QuickAddNode()
         return;
     }
 
+    QString type = ui->cb_NodeType->currentText();
+
     Eigen::Matrix4d cur_tf = slam.get_cur_tf();
-    unimap.add_node(cur_tf, "GOAL");
+    BQR_INFO cur_bqr = bqr.get_cur_bqr();
+    unimap.add_node(cur_tf, type, cur_bqr.code_num);
 
     topo_update();
     printf("[QA_Node] quick add node\n");
@@ -3514,6 +3283,43 @@ void MainWindow::bt_AutoMove()
         NODE* node = unimap.get_node_by_id(pick.cur_node);
         if(node != NULL)
         {
+            // just test ...
+            PATH global_path = ctrl.calc_global_path(node->tf);
+            if(global_path.pos.size() < 2)
+            {
+                printf("[ETA] eta:0\n");
+            }
+            else
+            {
+                // time align
+                CTRL_PARAM params = ctrl.load_preset(0);
+                Eigen::Matrix4d cur_tf = slam.get_cur_tf();
+                auto dtdr_st = dTdR(cur_tf, global_path.pose.front());
+                double time_align = (dtdr_st[1] / (params.LIMIT_W*D2R + 1e-06)) * 2; // first align + final align
+
+                // time driving
+                double time_driving = 0.0;
+                for(size_t p = 1; p < global_path.pos.size()-1; p++)
+                {
+                    Eigen::Vector3d pos0 = global_path.pos[p];
+                    Eigen::Vector3d pos1 = global_path.pos[p+1];
+                    double dist = (pos1 - pos0).norm();
+
+                    double ref_v0 = global_path.ref_v[p];
+                    double ref_v1 = global_path.ref_v[p+1];
+                    double v = (ref_v0 + ref_v1)/2;
+
+                    time_driving += dist / (v+1e-06);
+                }
+
+                if(time_driving == 0.0)
+                {
+                    time_driving = 9999.0;
+                }
+
+                printf("[ETA] eta-> driving:%f, align:%f, total:%f\n", time_driving, time_align, (time_driving + time_align));
+            }
+
             Eigen::Vector3d xi = TF_to_se2(node->tf);
 
             DATA_MOVE msg;
@@ -3566,12 +3372,7 @@ void MainWindow::bt_AutoMove2()
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "hpp";
-            #if defined(USE_MECANUM_OLD)
-            msg.preset = 100;
-            #endif
-            #if defined (USE_MECANUM)
             msg.preset = 0;
-            #endif
             msg.goal_node_id = node->id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
@@ -3819,7 +3620,7 @@ void MainWindow::bt_TaskPlay()
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
+    #if defined (USE_S100) || (USE_D400) || (USE_D400_LAKI)
     if(mode == "holonomic")
     {
         mode = "basic";
@@ -3977,7 +3778,7 @@ void MainWindow::slot_sim_random_seq()
     printf("[TASK] use looping: %d\n", (int)task.use_looping);
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
-    #if defined (USE_SRV) || (USE_AMR_400) || (USE_AMR_400_LAKI)
+    #if defined (USE_S100) || (USE_D400) || (USE_D400_LAKI)
     if(mode == "holonomic")
     {
         mode = "basic";
@@ -4038,11 +3839,6 @@ void MainWindow::comm_loop()
     printf("[COMM] loop start\n");
     while(comm_flag)
     {
-        if(comm_ui.is_connected)
-        {
-            comm_ui.send_status();
-        }
-
         // for variable loop
         double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
         time_lidar_view *= 10.0;
@@ -4056,6 +3852,8 @@ void MainWindow::comm_loop()
                     comm_rrs.send_lidar();
                 }
             }
+
+            lidar_view_cnt++;
         }
 
         double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
@@ -4080,6 +3878,7 @@ void MainWindow::comm_loop()
                     }
                 }
             }
+            path_view_cnt++;
         }
 
         // for 100ms loop
@@ -4092,6 +3891,10 @@ void MainWindow::comm_loop()
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_move_status();
+            }
+            if(comm_coop.is_connected)
+            {
+                Q_EMIT comm_coop.signal_send_info();
             }
         }
 
@@ -4240,7 +4043,7 @@ void MainWindow::watch_loop()
             {
                 if(ms.t != 0)
                 {
-                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state == 1)
+                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state >= 1)
                     {
                         Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
 
@@ -4252,7 +4055,7 @@ void MainWindow::watch_loop()
 
                         comm_rrs.send_move_response(move_info);
                     }
-                    else if(pre_ms.motor_stop_state == 1 && ms.motor_stop_state == 0)
+                    else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
                     {
                         Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
 
@@ -4279,7 +4082,7 @@ void MainWindow::watch_loop()
             }
             else
             {
-                if(config.USE_FMS)
+                if(config.USE_COMM_FMS)
                 {
                     printf("[MAIN] robot id: %s\n", comm_fms.robot_id.toLocal8Bit().data());
                 }
@@ -4577,7 +4380,7 @@ void MainWindow::watch_loop()
                 // check temperature
                 {
                     int cpu_temp_sum = 0;
-                    int cnt = 0;
+                    int _cnt = 0;
 
                     QDir dir_temp("/sys/class/thermal");
                     QStringList filters;
@@ -4602,15 +4405,15 @@ void MainWindow::watch_loop()
                                 if(temperature != 0)
                                 {
                                     cpu_temp_sum += temperature/1000;
-                                    cnt++;
+                                    _cnt++;
                                 }
                             }
                         }
                     }
 
-                    if(cnt != 0)
+                    if(_cnt != 0)
                     {
-                        int pc_temp = cpu_temp_sum/cnt;
+                        int pc_temp = cpu_temp_sum/_cnt;
                         temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", pc_temp, ms.temp_m0, ms.temp_m1);
                         if(pc_temp > 85)
                         {
@@ -4626,7 +4429,7 @@ void MainWindow::watch_loop()
                 // check power
                 {
                     int cpu_power_sum = 0;
-                    int cnt = 0;
+                    int _cnt = 0;
 
                     QDir dir_temp("/sys/class/power_supply");
                     QStringList filters;
@@ -4652,15 +4455,15 @@ void MainWindow::watch_loop()
                                 if(power != 0)
                                 {
                                     cpu_power_sum += power/1000;
-                                    cnt++;
+                                    _cnt++;
                                 }
                             }
                         }
                     }
 
-                    if(cnt != 0)
+                    if(_cnt != 0)
                     {
-                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/_cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
                     }
                     else
                     {
@@ -4719,10 +4522,10 @@ void MainWindow::watch_loop()
 
                 // check battery
                 {
-                    if(ms.bat_out < 43.0) // low battery
+                    if(ms.bat_out < 45.0) // low battery
                     {
-                        led_color = LED_OFF;
-                        logger.write_log("[BATTERY] need charge");
+                        led_color = LED_YELLOW_BLINK;
+                        // logger.write_log("[BATTERY] need charge");
                     }
                     else if(ms.charge_state == 1) // charge
                     {
@@ -4737,15 +4540,15 @@ void MainWindow::watch_loop()
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
 
-                if(ui->ckb_RecordSystemInfo->isChecked())
-                {
-                    log_cnt++;
-                    if(log_cnt >= 10)
-                    {
-                        log_cnt = 0;
-                        system_logger.write_log(system_info_str, "White", true, true);
-                    }
-                }
+                //if(ui->ckb_RecordSystemInfo->isChecked())
+                //{
+                //    log_cnt++;
+                //    if(log_cnt >= 10)
+                //    {
+                //        log_cnt = 0;
+                //        system_logger.write_log(system_info_str, "White", true, true);
+                //    }
+                //}
             }
 
             // set led
@@ -5856,12 +5659,12 @@ void MainWindow::raw_plot()
         int fsm_state = ctrl.fsm_state;
 
         QString auto_info_str;
-        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %s, request: %s, multi_state: %s",
+        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
                               (bool)ctrl.is_moving ? "1" : "0",
                               (bool)ctrl.is_pause ? "1" : "0",
                               ctrl.get_obs_condition().toLocal8Bit().data(),
-                              (bool)ctrl.is_rrs ? "1" : "0",
+                              config.USE_MULTI,
                               ctrl.get_multi_req().toLocal8Bit().data(),
                               _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
@@ -5870,26 +5673,46 @@ void MainWindow::raw_plot()
 
     // plot comm info
     {
-        QString comm_rrs_str;
-        comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
+        QString comm_info_str = "[COMM_INFO]\n";
 
-        QString comm_fms_str;
-        comm_fms_str.sprintf("comm_fms: is_connected -> %s\n", (bool)comm_fms.is_connected ? "1" : "0");
+        if(config.USE_COMM_RRS)
+        {
+            QString comm_rrs_str;
+            comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_rrs_str);
+        }
 
-        QString comm_old_str;
-        comm_old_str.sprintf("comm_old cmd: is_connected -> %s, data: is_connected -> %s", (bool)comm_old.is_cmd_connected ? "1" : "0", (bool)comm_old.is_data_connected ? "1" : "0");
+        if(config.USE_COMM_FMS)
+        {
+            QString comm_fms_str;
+            comm_fms_str.sprintf("comm_fms: is_connected -> %s\n", (bool)comm_fms.is_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_fms_str);
+        }
 
-        QString comm_info_str = "[COMM_INFO]\n" + comm_rrs_str + comm_fms_str + comm_old_str;
+        if(config.USE_COMM_COOP)
+        {
+            QString comm_coop_str;
+            comm_coop_str.sprintf("comm_coop cmd: is_connected -> %s", (bool)comm_coop.is_connected ? "1" : "0");
+            comm_info_str += (QString("\n") + comm_coop_str);
+        }
+
         ui->lb_CommInfo->setText(comm_info_str);
     }
 
     // plot sensor info
     {
-        QString lidar_str = lidar.get_lidar_info_str();
-        QString cam_str = cam.get_cam_info_str();
-        QString bqr_str = bqr.get_bqr_info_str();
+        QString ext_sensor_str = "[SENSOR_INFO]\n";
+        ext_sensor_str += lidar.get_lidar_info_str();
 
-        QString ext_sensor_str = "[SENSOR_INFO]\n" + lidar_str + "\n" + cam_str + "\n" + bqr_str;
+        if(config.USE_CAM)
+        {
+            ext_sensor_str += (QString("\n") + cam.get_cam_info_str());
+        }
+
+        if(config.USE_BQR)
+        {
+            ext_sensor_str += (QString("\n") + bqr.get_bqr_info_str());
+        }
         ui->lb_SensorInfo->setText(ext_sensor_str);
     }
 
@@ -6883,14 +6706,3 @@ void MainWindow::bt_UnDockStart()
         ctrl.is_moving = false;
     });
 }
-
-#if defined(USE_MECANUM_OLD)
-void MainWindow::slot_found_obs()
-{
-    MOBILE_STATUS ms = mobile.get_status();
-    if(ms.move_pdu_state != PDU_MOVE_NONE)
-    {
-        mobile.stop();
-    }
-}
-#endif

@@ -215,11 +215,14 @@ void CONFIG::load()
                 USE_RTSP = obj_debug["USE_RTSP"].toString().toInt();
                 printf("[CONFIG] USE_RTSP, %s\n", obj_debug["USE_RTSP"].toString().toLocal8Bit().data());
 
-                USE_RRS = obj_debug["USE_RRS"].toString().toInt();
+                USE_COMM_RRS = obj_debug["USE_RRS"].toString().toInt();
                 printf("[CONFIG] USE_RRS, %s\n", obj_debug["USE_RRS"].toString().toLocal8Bit().data());
 
-                USE_FMS = obj_debug["USE_FMS"].toString().toInt();
+                USE_COMM_FMS = obj_debug["USE_FMS"].toString().toInt();
                 printf("[CONFIG] USE_FMS, %s\n", obj_debug["USE_FMS"].toString().toLocal8Bit().data());
+
+                USE_COMM_OLD = obj_debug["USE_COMM_OLD"].toString().toInt();
+                printf("[CONFIG] USE_COMM_OLD, %s\n", obj_debug["USE_COMM_OLD"].toString().toLocal8Bit().data());
 
                 USE_QTUI = obj_debug["USE_QTUI"].toString().toInt();
                 printf("[CONFIG] USE_QTUI, %s\n", obj_debug["USE_QTUI"].toString().toLocal8Bit().data());
@@ -233,7 +236,7 @@ void CONFIG::load()
                 USE_LVX = obj_debug["USE_LVX"].toString().toInt();
                 printf("[CONFIG] USE_LVX, %s\n", obj_debug["USE_LVX"].toString().toLocal8Bit().data());
 
-                USE_COOP = obj_debug["USE_COOP"].toString().toInt();
+                USE_COMM_COOP = obj_debug["USE_COOP"].toString().toInt();
                 printf("[CONFIG] USE_COOP, %s\n", obj_debug["USE_COOP"].toString().toLocal8Bit().data());
 
                 USE_MULTI = obj_debug["USE_MULTI"].toString().toInt();
@@ -457,195 +460,3 @@ void CONFIG::set_map_path(QString path)
     config_file.write(doc.toJson());
     config_file.close();
 }
-
-#if defined(USE_MECANUM_OLD)
-void CONFIG::load_code_info(QString path)
-{
-    // load params
-    QFileInfo config_info(path);
-    if(config_info.exists() && config_info.isFile())
-    {
-        // read
-        QFile config_file(path);
-        if(config_file.open(QIODevice::ReadOnly))
-        {
-            QByteArray data = config_file.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            QJsonObject obj = doc.object();
-
-            QJsonObject obj_code = obj["code"].toObject();
-            {
-                CODE_A1_X = obj_code["CODE_A1_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A1_X, %s\n", obj_code["CODE_A1_X"].toString().toLocal8Bit().data());
-
-                CODE_A2_X = obj_code["CODE_A2_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A2_X, %s\n", obj_code["CODE_A2_X"].toString().toLocal8Bit().data());
-
-                CODE_A3_X = obj_code["CODE_A3_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A3_X, %s\n", obj_code["CODE_A3_X"].toString().toLocal8Bit().data());
-
-                CODE_A4_X = obj_code["CODE_A4_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A4_X, %s\n", obj_code["CODE_A4_X"].toString().toLocal8Bit().data());
-
-                CODE_A1_Y = obj_code["CODE_A1_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A1_Y, %s\n", obj_code["CODE_A1_Y"].toString().toLocal8Bit().data());
-
-                CODE_A2_Y = obj_code["CODE_A2_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A2_Y, %s\n", obj_code["CODE_A2_Y"].toString().toLocal8Bit().data());
-
-                CODE_A3_Y = obj_code["CODE_A3_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A3_Y, %s\n", obj_code["CODE_A3_Y"].toString().toLocal8Bit().data());
-
-                CODE_A4_Y = obj_code["CODE_A4_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_A4_Y, %s\n", obj_code["CODE_A4_Y"].toString().toLocal8Bit().data());
-
-                CODE_B1_X = obj_code["CODE_B1_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B1_X, %s\n", obj_code["CODE_B1_X"].toString().toLocal8Bit().data());
-
-                CODE_B2_X = obj_code["CODE_B2_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B2_X, %s\n", obj_code["CODE_B2_X"].toString().toLocal8Bit().data());
-
-                CODE_B3_X = obj_code["CODE_B3_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B3_X, %s\n", obj_code["CODE_B3_X"].toString().toLocal8Bit().data());
-
-                CODE_B4_X = obj_code["CODE_B4_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B4_X, %s\n", obj_code["CODE_B4_X"].toString().toLocal8Bit().data());
-
-                CODE_B1_Y = obj_code["CODE_B1_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B1_Y, %s\n", obj_code["CODE_B1_Y"].toString().toLocal8Bit().data());
-
-                CODE_B2_Y = obj_code["CODE_B2_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B2_Y, %s\n", obj_code["CODE_B2_Y"].toString().toLocal8Bit().data());
-
-                CODE_B3_Y = obj_code["CODE_B3_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B3_Y, %s\n", obj_code["CODE_B3_Y"].toString().toLocal8Bit().data());
-
-                CODE_B4_Y = obj_code["CODE_B4_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_B4_Y, %s\n", obj_code["CODE_B4_Y"].toString().toLocal8Bit().data());
-
-                CODE_C1_X = obj_code["CODE_C1_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C1_X, %s\n", obj_code["CODE_C1_X"].toString().toLocal8Bit().data());
-
-                CODE_C2_X = obj_code["CODE_C2_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C2_X, %s\n", obj_code["CODE_C2_X"].toString().toLocal8Bit().data());
-
-                CODE_C3_X = obj_code["CODE_C3_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C3_X, %s\n", obj_code["CODE_C3_X"].toString().toLocal8Bit().data());
-
-                CODE_C4_X = obj_code["CODE_C4_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C4_X, %s\n", obj_code["CODE_C4_X"].toString().toLocal8Bit().data());
-
-                CODE_C1_Y = obj_code["CODE_C1_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C1_Y, %s\n", obj_code["CODE_C1_Y"].toString().toLocal8Bit().data());
-
-                CODE_C2_Y = obj_code["CODE_C2_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C2_Y, %s\n", obj_code["CODE_C2_Y"].toString().toLocal8Bit().data());
-
-                CODE_C3_Y = obj_code["CODE_C3_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C3_Y, %s\n", obj_code["CODE_C3_Y"].toString().toLocal8Bit().data());
-
-                CODE_C4_Y = obj_code["CODE_C4_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_C4_Y, %s\n", obj_code["CODE_C4_Y"].toString().toLocal8Bit().data());
-
-                CODE_D1_X = obj_code["CODE_D1_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D1_X, %s\n", obj_code["CODE_D1_X"].toString().toLocal8Bit().data());
-
-                CODE_D2_X = obj_code["CODE_D2_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D2_X, %s\n", obj_code["CODE_D2_X"].toString().toLocal8Bit().data());
-
-                CODE_D3_X = obj_code["CODE_D3_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D3_X, %s\n", obj_code["CODE_D3_X"].toString().toLocal8Bit().data());
-
-                CODE_D4_X = obj_code["CODE_D4_X"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D4_X, %s\n", obj_code["CODE_D4_X"].toString().toLocal8Bit().data());
-
-                CODE_D1_Y = obj_code["CODE_D1_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D1_Y, %s\n", obj_code["CODE_D1_Y"].toString().toLocal8Bit().data());
-
-                CODE_D2_Y = obj_code["CODE_D2_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D2_Y, %s\n", obj_code["CODE_D2_Y"].toString().toLocal8Bit().data());
-
-                CODE_D3_Y = obj_code["CODE_D3_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D3_Y, %s\n", obj_code["CODE_D3_Y"].toString().toLocal8Bit().data());
-
-                CODE_D4_Y = obj_code["CODE_D4_Y"].toString().toDouble();
-                printf("[CONFIG_CODE] CODE_D4_Y, %s\n", obj_code["CODE_D4_Y"].toString().toLocal8Bit().data());
-            }
-        }
-    }
-    else
-    {
-        printf("[CONFIG_CODE] %s, load_code failed\n", path.toLocal8Bit().data());
-    }
-}
-
-void CONFIG::load_ext(QString path)
-{
-    // load params
-    QFileInfo config_info(path);
-    if(config_info.exists() && config_info.isFile())
-    {
-        // read
-        QFile config_file(path);
-        if(config_file.open(QIODevice::ReadOnly))
-        {
-            QByteArray data = config_file.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            QJsonObject obj = doc.object();
-
-            QJsonObject obj_obs = obj["obs"].toObject();
-            {
-                OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
-                printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
-
-                OBS_DEADZONE_DYN = obj_obs["OBS_DEADZONE_DYN"].toString().toDouble();
-                printf("[CONFIG] OBS_DEADZONE_DYN, %s\n", obj_obs["OBS_DEADZONE_DYN"].toString().toLocal8Bit().data());
-
-                OBS_DEADZONE_VIR = obj_obs["OBS_DEADZONE_VIR"].toString().toDouble();
-                printf("[CONFIG] OBS_DEADZONE_VIR, %s\n", obj_obs["OBS_DEADZONE_VIR"].toString().toLocal8Bit().data());
-
-                OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
-                printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
-
-                OBS_SAFE_MARGIN_X = obj_obs["OBS_SAFE_MARGIN_X"].toString().toDouble();
-                printf("[CONFIG] OBS_SAFE_MARGIN_X, %s\n", obj_obs["OBS_SAFE_MARGIN_X"].toString().toLocal8Bit().data());
-
-                OBS_SAFE_MARGIN_Y = obj_obs["OBS_SAFE_MARGIN_Y"].toString().toDouble();
-                printf("[CONFIG] OBS_SAFE_MARGIN_Y, %s\n", obj_obs["OBS_SAFE_MARGIN_Y"].toString().toLocal8Bit().data());
-
-                OBS_PATH_MARGIN_X = obj_obs["OBS_PATH_MARGIN_X"].toString().toDouble();
-                printf("[CONFIG] OBS_PATH_MARGIN_X, %s\n", obj_obs["OBS_PATH_MARGIN_X"].toString().toLocal8Bit().data());
-
-                OBS_PATH_MARGIN_Y = obj_obs["OBS_PATH_MARGIN_Y"].toString().toDouble();
-                printf("[CONFIG] OBS_PATH_MARGIN_Y, %s\n", obj_obs["OBS_PATH_MARGIN_Y"].toString().toLocal8Bit().data());
-
-                OBS_MAP_GRID_SIZE = obj_obs["OBS_MAP_GRID_SIZE"].toString().toDouble();
-                printf("[CONFIG] OBS_MAP_GRID_SIZE, %s\n", obj_obs["OBS_MAP_GRID_SIZE"].toString().toLocal8Bit().data());
-
-                OBS_MAP_RANGE = obj_obs["OBS_MAP_RANGE"].toString().toDouble();
-                printf("[CONFIG] OBS_MAP_RANGE, %s\n", obj_obs["OBS_MAP_RANGE"].toString().toLocal8Bit().data());
-
-                OBS_MAP_MIN_V = obj_obs["OBS_MAP_MIN_V"].toString().toDouble();
-                printf("[CONFIG] OBS_MAP_MIN_V, %s\n", obj_obs["OBS_MAP_MIN_V"].toString().toLocal8Bit().data());
-
-                OBS_MAP_MIN_Z = obj_obs["OBS_MAP_MIN_Z"].toString().toDouble();
-                printf("[CONFIG] OBS_MAP_MIN_Z, %s\n", obj_obs["OBS_MAP_MIN_Z"].toString().toLocal8Bit().data());
-
-                OBS_MAP_MAX_Z = obj_obs["OBS_MAP_MAX_Z"].toString().toDouble();
-                printf("[CONFIG] OBS_MAP_MAX_Z, %s\n", obj_obs["OBS_MAP_MAX_Z"].toString().toLocal8Bit().data());
-
-                OBS_PREDICT_TIME = obj_obs["OBS_PREDICT_TIME"].toString().toDouble();
-                printf("[CONFIG] OBS_PREDICT_TIME, %s\n", obj_obs["OBS_PREDICT_TIME"].toString().toLocal8Bit().data());
-            }
-
-            config_file.close();
-            printf("[CONFIG_EXT] %s, load_ext successed\n", path.toLocal8Bit().data());
-        }
-    }
-    else
-    {
-        printf("[CONFIG_EXT] %s, load_ext failed\n", path.toLocal8Bit().data());
-    }
-}
-#endif
-

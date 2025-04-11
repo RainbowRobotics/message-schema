@@ -53,10 +53,12 @@ public:
     QString get_multi_req();
     QString get_obs_condition();
     QString get_cur_goal_state();
+    DATA_MOVE get_move_info();
 
     void set_multi_req(QString str);
     void set_obs_condition(QString str);   
     void set_cur_goal_state(QString str);
+    void set_move_info(DATA_MOVE msg);
 
     void init();
     void stop();
@@ -133,6 +135,7 @@ public:
     QString multi_req      = "none";    // none, req_path, recv_path
     QString obs_condition  = "none";    // none, far, near, vir
     QString cur_goal_state = "none";    // none, move, complete, fail, obstacle, cancel
+    std::atomic<double> remaining_dist = {0.};
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

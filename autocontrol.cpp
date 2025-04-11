@@ -48,20 +48,16 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     QString preset_path = "";
 
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
-    #if defined (USE_MECANUM_OLD) || defined(USE_MECANUM)
-    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
     QFileInfo info(preset_path);
@@ -215,6 +211,22 @@ void AUTOCONTROL::set_multi_req(QString str)
     mtx.unlock();
 }
 
+DATA_MOVE AUTOCONTROL::get_move_info()
+{
+    mtx.lock();
+    DATA_MOVE msg = move_info;
+    mtx.unlock();
+
+    return msg;
+}
+
+void AUTOCONTROL::set_move_info(DATA_MOVE msg)
+{
+    mtx.lock();
+    move_info = msg;
+    mtx.unlock();
+}
+
 void AUTOCONTROL::stop()
 {
     // control loop stop    
@@ -263,6 +275,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
         NODE* node = unimap->get_node_by_id(msg.goal_node_id);
         if(node == NULL)
         {
+            MOBILE_STATUS ms = mobile->get_status();
             Eigen::Matrix4d cur_tf = slam->get_cur_tf();
             Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -271,6 +284,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             move_info.result = "fail";
             move_info.message = "node is empty";
             move_info.time = get_time();
+            move_info.bat_percent = ms.bat_percent;
             mtx.unlock();
             Q_EMIT signal_move_response(move_info);
 
@@ -282,9 +296,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
         }
     }
 
-    mtx.lock();
-    move_info = msg;
-    mtx.unlock();
+    set_move_info(msg);
 
     if(msg.preset < 100)
     {
@@ -301,26 +313,11 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             {
                 move_pp(tf, msg.preset);
             }
-            #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
-            else if(msg.method == "hpp")
-            {
-                move_hpp(tf, msg.preset);
-            }
-            #endif
         }
     }
     else
     {
-        #ifdef USE_MECANUM_OLD
-        if(msg.method == "hpp")
-        {
-            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            move_hpp(tf, msg.preset);
-        }
-        #endif
-        #ifndef USE_MECANUM_OLD
         logger->write_log("[AUTO] just change goal", "Green");
-        #endif
     }
 }
 
@@ -371,6 +368,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
         stop();
 
+        MOBILE_STATUS ms = mobile->get_status();
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -379,6 +377,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         move_info.result = "fail";
         move_info.message = "path failed";
         move_info.time = get_time();
+        move_info.bat_percent = ms.bat_percent;
         mtx.unlock();
         Q_EMIT signal_move_response(move_info);
 
@@ -418,6 +417,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
                 logger->write_log("[AUTO] move_pp, last path node invalid");
                 stop();
 
+                MOBILE_STATUS ms = mobile->get_status();
                 Eigen::Matrix4d cur_tf = slam->get_cur_tf();
                 Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -426,6 +426,7 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
                 move_info.result = "fail";
                 move_info.message = "last path node invalid";
                 move_info.time = get_time();
+                move_info.bat_percent = ms.bat_percent;
                 mtx.unlock();
                 Q_EMIT signal_move_response(move_info);
 
@@ -533,40 +534,6 @@ void AUTOCONTROL::move_hpp(Eigen::Matrix4d goal_tf, int val)
 
     // load preset
     params = load_preset(val);
-
-    // load preset 0, and apply val for percentage
-    #ifdef USE_MECANUM_OLD
-    params = load_preset(0);
-    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
-    if(params.LIMIT_V > 0.2)
-    {
-        params.LIMIT_V = 0.2;
-    }
-    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
-    if(params.LIMIT_W > 20)
-    {
-        params.LIMIT_W = 20;
-    }
-    #endif
-
-    // check goal node type is not station && cur node type is station
-    const double is_node_close = 0.1;
-    is_undock = false;
-    Eigen::Vector3d cur_pos = TF_to_se2(slam->get_cur_tf());
-    QString cur_node_id = unimap->get_node_id_nn(cur_pos);
-    NODE *cur_node = unimap->get_node_by_id(cur_node_id);
-
-    Eigen::Vector3d goal_pos = TF_to_se2(goal_tf);
-    QString goal_node_id = unimap->get_node_id_nn(goal_pos);
-    NODE *goal_node = unimap->get_node_by_id(goal_node_id);
-    if(cur_node != NULL && goal_node != NULL)
-    {
-        double dist = calc_dist_2d(cur_node->tf.block(0,3,3,1) - cur_pos);
-        if(cur_node->type == "STATION" && goal_node->type != "STATION" && dist < is_node_close)
-        {
-            is_undock = true;
-        }
-    }
 
     // calc global path
     PATH path = calc_global_path(goal_tf);
@@ -752,21 +719,6 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
 
     // load preset
     params = load_preset(val);
-
-    // load preset 0, and apply val for percentage
-    #ifdef USE_MECANUM_OLD
-    params = load_preset(0);
-    params.LIMIT_V = params.LIMIT_V * ((double)val/100.0);
-    if(params.LIMIT_V > 0.2)
-    {
-        params.LIMIT_V = 0.2;
-    }
-    params.LIMIT_W = params.LIMIT_W * ((double)val/100.0);
-    if(params.LIMIT_W > 20)
-    {
-        params.LIMIT_W = 20;
-    }
-    #endif
 
     // start control loop
     if(b_flag == false)
@@ -974,7 +926,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // divide and smooth metric path    
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -985,7 +937,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     std::vector<Eigen::Matrix4d> path_pose;
     for(size_t p = 0; p < node_pose.size()-1; p++)
     {
@@ -1071,7 +1023,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
 
     // divide and smooth metric path
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, GLOBAL_PATH_STEP);
 
@@ -1082,7 +1034,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     std::vector<Eigen::Matrix4d> path_pose;
     std::vector<Eigen::Vector3d> path_pos;
     for(size_t p = 0; p < node_pose.size()-1; p++)
@@ -1846,7 +1798,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     {
         // resampling
         std::vector<Eigen::Matrix4d> path_pose;
-        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
         _path_pose = reorientation_path(_path_pose);
         #endif
         path_pose = path_resampling(_path_pose, LOCAL_PATH_STEP);
@@ -1949,7 +1901,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     if(path_pose.size() > 0)
     {
         // sample and interpolation
-        #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+        #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
         path_pose = reorientation_path(path_pose);
         #endif
         path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
@@ -2029,7 +1981,7 @@ int AUTOCONTROL::is_everything_fine()
     }
 
     MOBILE_STATUS ms = mobile->get_status();
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
@@ -2050,7 +2002,7 @@ int AUTOCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1 || ms.connection_m2 != 1 || ms.connection_m3 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
@@ -2072,11 +2024,11 @@ int AUTOCONTROL::is_everything_fine()
     #endif
 
     bool is_motor_status_err = false;
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     is_motor_status_err = (ms.status_m0 > 1 || ms.status_m1 > 1);
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     is_motor_status_err = (ms.status_m0 > 1 || ms.status_m1 > 1 || ms.status_m2 > 1 || ms.status_m3 > 1);
     #endif
 
@@ -2155,7 +2107,7 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_NOT_READY;
     }
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
@@ -2176,7 +2128,7 @@ int AUTOCONTROL::is_everything_fine()
     }
     #endif
 
-    #if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_MECANUM)
     if(ms.status_m0 == 0 && ms.status_m1 == 0 && ms.status_m2 == 0 && ms.status_m3 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock offed)", "Orange", true, false);
@@ -2305,6 +2257,8 @@ void AUTOCONTROL::b_loop_pp()
     // set initial state
     fsm_state = AUTO_FSM_FIRST_ALIGN;
 
+    double st_time_ctrl = get_time();
+
     // check already goal
     if(global_path_que.unsafe_size() == 0)
     {
@@ -2348,6 +2302,7 @@ void AUTOCONTROL::b_loop_pp()
                 // move response
                 //if(config->USE_RRS)
                 {
+                    MOBILE_STATUS ms = mobile->get_status();
                     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
                     mtx.lock();
@@ -2355,6 +2310,7 @@ void AUTOCONTROL::b_loop_pp()
                     move_info.result = "success";
                     move_info.message = "already goal";
                     move_info.time = get_time();
+                    move_info.bat_percent = ms.bat_percent;
                     mtx.unlock();
 
                     Q_EMIT signal_move_response(move_info);
@@ -2407,6 +2363,25 @@ void AUTOCONTROL::b_loop_pp()
         Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
+        int cur_idx_for_rrs = get_nn_idx(global_path.pos, cur_pos);
+        if(cur_idx_for_rrs >= global_path.pos.size()-1)
+        {
+            remaining_dist = 0.;
+        }
+        else
+        {
+            double _remaining_dist = 0.0;
+            for(size_t p = cur_idx_for_rrs; p < global_path.pos.size()-1; p++)
+            {
+                Eigen::Vector3d pos0 = global_path.pos[p];
+                Eigen::Vector3d pos1 = global_path.pos[p+1];
+                double dist = (pos0 - pos1).norm();
+                _remaining_dist += dist;
+            }
+
+            remaining_dist = _remaining_dist;
+        }
+
         // for plot
         mtx.lock();
         last_cur_pos = cur_pos;
@@ -2425,6 +2400,8 @@ void AUTOCONTROL::b_loop_pp()
             set_obs_condition("none");
             set_cur_goal_state("fail");
 
+            remaining_dist = 0.;
+
             clear_path();
 
             fsm_state = AUTO_FSM_COMPLETE;
@@ -2441,6 +2418,8 @@ void AUTOCONTROL::b_loop_pp()
             set_multi_req("none");
             set_obs_condition("none");
             set_cur_goal_state("fail");
+
+            remaining_dist = 0.;
 
             clear_path();
 
@@ -2562,8 +2541,9 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // obs check
+            Eigen::Vector3d obs_pts(0,0,0);
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
-            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj);
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj, obs_pts);
             if(cur_obs_val != OBS_DETECT_NONE)
             {
                 mobile->move(0, 0, 0);
@@ -2683,6 +2663,8 @@ void AUTOCONTROL::b_loop_pp()
                             set_obs_condition("none");
                             set_cur_goal_state("move");
 
+                            remaining_dist = 0.;
+
                             clear_path();
 
                             fsm_state = AUTO_FSM_COMPLETE;
@@ -2752,7 +2734,8 @@ void AUTOCONTROL::b_loop_pp()
                     traj_vir.push_back(local_path.pose[p]);
                 }
 
-                cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, 0, 0, 0, 10);
+                Eigen::Vector3d obs_pts(0,0,0);
+                cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, obs_pts, 0, 0, 0, 10);
                 if(cur_obs_val != OBS_DETECT_NONE)
                 {
                     mobile->move(0, 0, 0);
@@ -2859,17 +2842,26 @@ void AUTOCONTROL::b_loop_pp()
                     set_obs_condition("none");
                     set_cur_goal_state("complete");
 
+                    remaining_dist = 0.;
+
                     clear_path();
 
                     // response
                     //if(config->USE_RRS)
                     {
+                        MOBILE_STATUS ms = mobile->get_status();
+
                         mtx.lock();
                         move_info.cur_pos = cur_pos;
                         move_info.result = "success";
                         move_info.message = "very good";
                         move_info.time = get_time();
+                        move_info.bat_percent = ms.bat_percent;
                         mtx.unlock();
+
+                        double ed_time_ctrl = get_time();
+
+                        printf("[CTRL] real eta:%f\n", ed_time_ctrl - st_time_ctrl);
 
                         Q_EMIT signal_move_response(move_info);
                     }
@@ -2881,8 +2873,9 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // obs check
+            Eigen::Vector3d obs_pts(0,0,0);
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj);
+            cur_obs_val = obsmap->is_path_collision_dyn(traj, traj, obs_pts);
             if(cur_obs_val != OBS_DETECT_NONE)
             {
                 mobile->move(0, 0, 0);
@@ -3200,6 +3193,7 @@ void AUTOCONTROL::b_loop_pp()
     // response
     //if(config->USE_RRS)
     {
+        MOBILE_STATUS ms = mobile->get_status();
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
@@ -3208,6 +3202,7 @@ void AUTOCONTROL::b_loop_pp()
         move_info.result = "fail";
         move_info.message = "manual stopped";
         move_info.time = get_time();
+        move_info.bat_percent = ms.bat_percent;
         mtx.unlock();
 
         Q_EMIT signal_move_response(move_info);
@@ -3641,7 +3636,8 @@ void AUTOCONTROL::b_loop_hpp()
                 }
                 else
                 {
-                    cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, 0, 0, 0, 10);
+                    Eigen::Vector3d obs_pts(0,0,0);
+                    cur_obs_val = obsmap->is_path_collision_dyn(traj_dyn, traj_vir, obs_pts, 0, 0, 0, 10);
                     bool is_inside_line_laser = obsmap->is_tf_collision(cur_tf, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
                     if(is_inside_line_laser)
                     {

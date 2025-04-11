@@ -59,7 +59,7 @@ void MOBILE::sync()
 
     QString str;
     str.sprintf("[MOBILE] time sync, sync_st_time:%f", (double)sync_st_time);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 }
 
 QString MOBILE::get_cur_pdu_state()
@@ -172,7 +172,7 @@ int MOBILE::get_imu_storage_size()
 }
 
 // for plot
-#if defined(USE_SRV)
+#if defined(USE_S100)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -201,7 +201,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 QString MOBILE::get_pose_text()
 {
     MOBILE_POSE mobile_pose = get_pose();
@@ -228,40 +228,6 @@ QString MOBILE::get_status_text()
                 mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                 mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                 mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z);
-    return str;
-}
-#endif
-
-#if defined(USE_MECANUM_OLD)
-QString MOBILE::get_pose_text()
-{
-    MOBILE_POSE mobile_pose = get_pose();
-    Eigen::Vector3d imu = get_imu();
-
-    QString str;
-    str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
-                mobile_pose.t,
-                mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                imu[0]*R2D, imu[1]*R2D, imu[2]*R2D);
-    return str;
-}
-
-QString MOBILE::get_status_text()
-{
-    MOBILE_STATUS mobile_status = get_status();
-    QString str;
-    str.sprintf("[MOBILE_STATUS]\nconnection:%d,%d,%d,%d\nstatus:%d,%d,%d,%d\ntemp:%d,%d,%d,%d, cur:%.2f,%.2f,%2f,%2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\nTFB:%d,CTRL:%d,CALIB:%d",
-                mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.connection_m2, mobile_status.connection_m3,
-                mobile_status.status_m0, mobile_status.status_m1, mobile_status.status_m2, mobile_status.status_m3,
-                mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.temp_m2, mobile_status.temp_m3,
-                (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0, (double)mobile_status.cur_m2/10.0, (double)mobile_status.cur_m3/10.0,
-                mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
-                mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
-                mobile_status.power, mobile_status.total_power,
-                mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                mobile_status.inter_lock_state, mobile_status.operation_state, mobile_status.move_pdu_state);
     return str;
 }
 #endif
@@ -301,7 +267,7 @@ QString MOBILE::get_status_text()
 }
 #endif
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 // recv loop
 void MOBILE::recv_loop()
 {
@@ -332,8 +298,8 @@ void MOBILE::recv_loop()
     server_addr.sin_port = htons(pdu_port);
 
     QString str;
-    str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    str.sprintf("[MOBILE] try connect, ip:%s, port:%d", pdu_ip.toLocal8Bit().data(), pdu_port);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -502,7 +468,21 @@ void MOBILE::recv_loop()
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
 
-                int bat_percent = cal_voltage(bat_out);
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -592,7 +572,7 @@ void MOBILE::recv_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 // recv loop
 void MOBILE::recv_loop()
 {
@@ -624,7 +604,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -823,13 +803,28 @@ void MOBILE::recv_loop()
                     is_sync = false;
 
                     double _mobile_t = recv_tick*0.002;
-                    double _offset_t = pc_t - _mobile_t;
+                    double _offset_t = return_time - _mobile_t;
                     offset_t = _offset_t;
 
                     is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
-                int bat_percent = cal_voltage(bat_out);
+
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                if(bat_out < input_voltage && charge_state == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_state != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -927,315 +922,6 @@ void MOBILE::recv_loop()
 }
 #endif
 
-#if defined(USE_MECANUM_OLD)
-void MOBILE::recv_loop()
-{
-    // pdu connection info
-    const QString pdu_ip = "192.168.2.100";
-    const int pdu_port = 1977;
-
-    // socket
-    sockaddr_in server_addr;
-    bzero((char*)&server_addr, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(pdu_ip.toLocal8Bit().data());
-    server_addr.sin_port = htons(pdu_port);
-
-    QString str;
-    str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
-
-    // connection
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(fd < 0)
-    {
-        logger->write_log("[MOBILE] socket create failed", "Red", true, false);
-        return;
-    }
-
-    // set option
-    {
-        int val = 1;
-        ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-    }
-
-    // set non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-    int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
-    if(status < 0 && errno != EINPROGRESS)
-    {
-        logger->write_log("[MOBILE] connect failed", "Red", true, false);
-        return;
-    }
-
-    // wait for connection with timeout
-    fd_set writefds;
-    struct timeval tv;
-    tv.tv_sec = 10; // 10 seconds timeout
-    tv.tv_usec = 0;
-
-    FD_ZERO(&writefds);
-    FD_SET(fd, &writefds);
-
-    status = select(fd + 1, NULL, &writefds, NULL, &tv);
-    if (status <= 0) // timeout or error
-    {
-        logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
-        close(fd);
-        return;
-    }
-
-    // set back to blocking mode
-    fcntl(fd, F_SETFL, flags);
-
-    is_connected = true;
-    logger->write_log("[MOBILE] connected", "Green", true, false);
-
-    // var init
-    const int packet_size = 138;
-    std::vector<uchar> buf;
-    int drop_cnt = 10;
-
-    printf("[MOBILE] recv loop start\n");
-    while(recv_flag)
-    {
-        // storing buffer
-        std::vector<uchar> recv_buf(2000, 0);
-        int num = read(fd, (char*)recv_buf.data(), recv_buf.size());
-        if(num == 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            continue;
-        }
-
-        // initial drop
-        if(drop_cnt > 0)
-        {
-            drop_cnt--;
-            continue;
-        }
-
-        // storing packet
-        buf.insert(buf.end(), recv_buf.begin(), recv_buf.begin()+num);
-
-        // parsing
-        while((int)buf.size() >= packet_size && recv_flag)
-        {
-            uchar *_buf = (uchar*)buf.data();
-            if(_buf[0] == 0x24 && _buf[5] == 0xA2 && _buf[packet_size-1] == 0x25)
-            {
-                int index=6;
-                int dlc=1;
-                int dlc_f=4;
-
-                uint32_t tick;
-                memcpy(&tick, &_buf[index], dlc_f);     index=index+dlc_f;
-                double mobile_t = tick*0.002;
-                double pc_t = get_time();
-
-                uint8_t connection_status_m0, connection_status_m1;
-                uint8_t connection_status_m2, connection_status_m3;
-                connection_status_m0 = _buf[index];     index=index+dlc;
-                connection_status_m1 = _buf[index];     index=index+dlc;
-                connection_status_m2 = _buf[index];     index=index+dlc;
-                connection_status_m3 = _buf[index];     index=index+dlc;
-
-                float x_dot, y_dot, th_dot;
-                memcpy(&x_dot, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&y_dot, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&th_dot, &_buf[index], dlc_f);    index=index+dlc_f;
-
-                float x, y, th;
-                memcpy(&x, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&y, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&th, &_buf[index], dlc_f);    index=index+dlc_f;
-
-                float local_vx, local_vy, local_wz;
-                memcpy(&local_vx, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&local_vy, &_buf[index], dlc_f);     index=index+dlc_f;
-                memcpy(&local_wz, &_buf[index], dlc_f);     index=index+dlc_f;
-
-                uint8_t stat_m0, stat_m1;
-                uint8_t stat_m2, stat_m3;
-                stat_m0 = _buf[index];     index=index+dlc;
-                stat_m1 = _buf[index];     index=index+dlc;
-                stat_m2 = _buf[index];     index=index+dlc;
-                stat_m3 = _buf[index];     index=index+dlc;
-
-                uint8_t temp_m0, temp_m1;
-                uint8_t temp_m2, temp_m3;
-                temp_m0 = _buf[index];     index=index+dlc;
-                temp_m1 = _buf[index];     index=index+dlc;
-                temp_m2 = _buf[index];     index=index+dlc;
-                temp_m3 = _buf[index];     index=index+dlc;
-
-                uint8_t cur_m0, cur_m1;
-                uint8_t cur_m2, cur_m3;
-                cur_m0 = _buf[index];     index=index+dlc;
-                cur_m1 = _buf[index];     index=index+dlc;
-                cur_m2 = _buf[index];     index=index+dlc;
-                cur_m3 = _buf[index];     index=index+dlc;
-
-                uint8_t charge_state, power_state, motor_stop_state, remote_state;
-                charge_state = _buf[index];     index=index+dlc;
-                power_state = _buf[index];      index=index+dlc;
-                motor_stop_state = _buf[index];        index=index+dlc;
-                remote_state = _buf[index];     index=index+dlc;
-
-                float bat_in, bat_out, bat_cur, power, total_used_power;
-                memcpy(&bat_in, &_buf[index], dlc_f);               index=index+dlc_f;
-                memcpy(&bat_out, &_buf[index], dlc_f);              index=index+dlc_f;
-                memcpy(&bat_cur, &_buf[index], dlc_f);              index=index+dlc_f;
-                memcpy(&power, &_buf[index], dlc_f);                index=index+dlc_f;
-                memcpy(&total_used_power, &_buf[index], dlc_f);     index=index+dlc_f;
-
-                uint32_t recv_tick;
-                memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
-
-                float return_time;
-                memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
-
-                float q0, q1, q2, q3;
-                memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;
-
-                float imu_gyr_x, imu_gyr_y, imu_gyr_z;
-                memcpy(&imu_gyr_x, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_gyr_y, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_gyr_z, &_buf[index], dlc_f);      index=index+dlc_f;
-
-                float imu_acc_x, imu_acc_y, imu_acc_z;
-                memcpy(&imu_acc_x, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
-
-                uint8_t inter_lock_state;
-                inter_lock_state = _buf[index];     index=index+dlc;
-
-                uint8_t operation_state;
-                operation_state = _buf[index];     index=index+dlc;
-
-                uint8_t move_linear_state;
-                move_linear_state = _buf[index];     index=index+dlc;
-
-                // calc time offset
-                if(is_sync && pc_t > sync_st_time + 0.1)
-                {
-                    is_sync = false;
-
-                    double _mobile_t = recv_tick*0.002;
-                    double _offset_t = pc_t - _mobile_t;
-                    offset_t = _offset_t;
-                    is_synced = true;
-                    QString str; str.sprintf("[MOBILE] sync, offset_t: %f", (double)offset_t);
-                    logger->write_log(str);
-                }
-
-                // received mobile pose update
-                MOBILE_POSE mobile_pose;
-                mobile_pose.t = mobile_t + offset_t;
-                mobile_pose.pose = Eigen::Vector3d(x, y, toWrap(th));
-                mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
-
-                // received mobile status update
-                MOBILE_STATUS mobile_status;
-                mobile_status.t = mobile_t + offset_t;
-
-                // motor
-                mobile_status.connection_m0 = connection_status_m0;
-                mobile_status.connection_m1 = connection_status_m1;
-                mobile_status.connection_m2 = connection_status_m2;
-                mobile_status.connection_m3 = connection_status_m3;
-                mobile_status.status_m0 = stat_m0;
-                mobile_status.status_m1 = stat_m1;
-                mobile_status.status_m2 = stat_m2;
-                mobile_status.status_m3 = stat_m3;
-                mobile_status.temp_m0 = temp_m0;
-                mobile_status.temp_m1 = temp_m1;
-                mobile_status.temp_m2 = temp_m2;
-                mobile_status.temp_m3 = temp_m3;
-                mobile_status.cur_m0 = cur_m0;
-                mobile_status.cur_m1 = cur_m1;
-                mobile_status.cur_m2 = cur_m2;
-                mobile_status.cur_m3 = cur_m3;
-                mobile_status.charge_state = charge_state;
-                mobile_status.power_state = power_state;
-                mobile_status.motor_stop_state = motor_stop_state;
-                mobile_status.remote_state = remote_state;
-                mobile_status.bat_in = bat_in;
-                mobile_status.bat_out = bat_out;
-                mobile_status.bat_current = bat_cur;
-                mobile_status.power = power;
-                mobile_status.total_power = total_used_power;
-                mobile_status.recv_tick = recv_tick;
-                mobile_status.return_time = return_time;
-
-                // imu
-                mobile_status.imu_gyr_x = imu_gyr_x * D2R;
-                mobile_status.imu_gyr_y = imu_gyr_y * D2R;
-                mobile_status.imu_gyr_z = imu_gyr_z * D2R;
-                mobile_status.imu_acc_x = imu_acc_x * ACC_G;
-                mobile_status.imu_acc_y = imu_acc_y * ACC_G;
-                mobile_status.imu_acc_z = imu_acc_z * ACC_G;
-
-                mobile_status.inter_lock_state = inter_lock_state;
-                mobile_status.operation_state = operation_state;
-                mobile_status.move_pdu_state = move_linear_state;
-
-                // get orientation
-                Eigen::Matrix3d R;//
-                R.setIdentity();//= Eigen::Matrix3d::setIdentity();//Eigen::Quaterniond(q0, q1, q2, q3).normalized().toRotationMatrix();
-                Eigen::Vector3d r = Sophus::SO3d::fitToSO3(R).log();
-
-                MOBILE_IMU imu;
-                imu.t = mobile_status.t;
-                imu.acc_x = mobile_status.imu_acc_x;
-                imu.acc_y = mobile_status.imu_acc_y;
-                imu.acc_z = mobile_status.imu_acc_z;
-                imu.gyr_x = mobile_status.imu_gyr_x;
-                imu.gyr_y = mobile_status.imu_gyr_y;
-                imu.gyr_z = mobile_status.imu_gyr_z;
-                imu.rx = r[0];
-                imu.ry = r[1];
-                imu.rz = r[2];
-
-                // storing
-                mtx.lock();
-                cur_pose = mobile_pose;
-                cur_status = mobile_status;
-                cur_imu = r;
-
-                pose_storage.push_back(mobile_pose);
-                if(pose_storage.size() > MO_STORAGE_NUM)
-                {
-                    pose_storage.erase(pose_storage.begin());
-                }
-
-                imu_storage.push_back(imu);
-                if(imu_storage.size() > MO_STORAGE_NUM)
-                {
-                    imu_storage.erase(imu_storage.begin());
-                }
-                mtx.unlock();
-
-                // update last t
-                last_pose_t = mobile_pose.t;
-                last_imu_t = imu.t;
-            }
-
-            // erase used packet
-            buf.erase(buf.begin(), buf.begin() + packet_size);
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    printf("[MOBILE] recv loop stop\n");
-}
-#endif
-
 #if defined(USE_MECANUM)
 void MOBILE::recv_loop()
 {
@@ -1252,7 +938,7 @@ void MOBILE::recv_loop()
 
     QString str;
     str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "DeepSkyBlue", true, false);
+    logger->write_log(str, "Green", true, false);
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -1302,7 +988,7 @@ void MOBILE::recv_loop()
     is_connected = true;
     logger->write_log("[MOBILE] connected", "Green", true, false);
 
-    const int packet_size = 148;
+    const int packet_size = 136;
 
     std::vector<uchar> buf;
     int drop_cnt = 10;
@@ -1328,9 +1014,6 @@ void MOBILE::recv_loop()
 
         // storing packet
         buf.insert(buf.end(), recv_buf.begin(), recv_buf.begin()+num);
-
-        //std::cout << "buf size: " << buf.size() << std::endl;
-
         if(buf.size() % packet_size != 0)
         {
             buf.clear();
@@ -1352,12 +1035,6 @@ void MOBILE::recv_loop()
                 double mobile_t = tick*0.002;
                 double pc_t = get_time();
 
-                uint32_t recv_tick;
-                memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
-
-                float return_time;
-                memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
-
                 uint8_t connection_status_m0, connection_status_m1;
                 uint8_t connection_status_m2, connection_status_m3;
                 connection_status_m0 = _buf[index];     index=index+dlc;
@@ -1401,17 +1078,10 @@ void MOBILE::recv_loop()
                 cur_m2 = _buf[index];     index=index+dlc;
                 cur_m3 = _buf[index];     index=index+dlc;
 
-                uint8_t esti_temp_m0, esti_temp_m1;
-                uint8_t esti_temp_m2, esti_temp_m3;
-                esti_temp_m0 = _buf[index];     index=index+dlc;
-                esti_temp_m1 = _buf[index];     index=index+dlc;
-                esti_temp_m2 = _buf[index];     index=index+dlc;
-                esti_temp_m3 = _buf[index];     index=index+dlc;
-
-                uint8_t charger_state, power_state, motor_stop_state, remote_state;
-                charger_state = _buf[index];     index=index+dlc;
+                uint8_t charge_state, power_state, emo_state, remote_state;
+                charge_state = _buf[index];     index=index+dlc;
                 power_state = _buf[index];      index=index+dlc;
-                motor_stop_state = _buf[index];        index=index+dlc;
+                emo_state = _buf[index];        index=index+dlc;
                 remote_state = _buf[index];     index=index+dlc;
 
                 float bat_in, bat_out, bat_cur, power, total_used_power;
@@ -1421,9 +1091,11 @@ void MOBILE::recv_loop()
                 memcpy(&power, &_buf[index], dlc_f);                index=index+dlc_f;
                 memcpy(&total_used_power, &_buf[index], dlc_f);     index=index+dlc_f;
 
-                float charge_current, contact_voltage;
-                memcpy(&charge_current, &_buf[index], dlc_f);               index=index+dlc_f;
-                memcpy(&contact_voltage, &_buf[index], dlc_f);               index=index+dlc_f;
+                uint32_t recv_tick;
+                memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
+
+                float return_time;
+                memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
 
                 float q0, q1, q2, q3;
                 memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -1431,15 +1103,15 @@ void MOBILE::recv_loop()
                 memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&q3, &_buf[index], dlc_f);      index=index+dlc_f;
 
-                float imu_acc_x, imu_acc_y, imu_acc_z;
-                memcpy(&imu_acc_x, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
-                memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
-
                 float imu_gyr_x, imu_gyr_y, imu_gyr_z;
                 memcpy(&imu_gyr_x, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_gyr_y, &_buf[index], dlc_f);      index=index+dlc_f;
                 memcpy(&imu_gyr_z, &_buf[index], dlc_f);      index=index+dlc_f;
+
+                float imu_acc_x, imu_acc_y, imu_acc_z;
+                memcpy(&imu_acc_x, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&imu_acc_y, &_buf[index], dlc_f);      index=index+dlc_f;
+                memcpy(&imu_acc_z, &_buf[index], dlc_f);      index=index+dlc_f;
 
                 uint8_t inter_lock_state;
                 inter_lock_state = _buf[index];     index=index+dlc;
@@ -1456,6 +1128,22 @@ void MOBILE::recv_loop()
                     is_synced = true;
                     printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
                 }
+
+                // battery percentage value stabilization
+                if(is_first_receive)
+                {
+                    is_first_receive = false;
+                    input_voltage = bat_out;
+                }
+                /*if(bat_out < input_voltage && charge_current == 0)
+                {
+                    input_voltage = bat_out;
+                }
+                if(bat_out >= input_voltage && charge_current != 0)
+                {
+                    input_voltage = bat_out;
+                }
+                int bat_percent = calc_battery_percentage(input_voltage);*/
 
                 // received mobile pose update
                 MOBILE_POSE mobile_pose;
@@ -1486,21 +1174,13 @@ void MOBILE::recv_loop()
                 mobile_status.cur_m1 = cur_m1;
                 mobile_status.cur_m2 = cur_m2;
                 mobile_status.cur_m3 = cur_m3;
-                mobile_status.esti_temp_m0 = esti_temp_m0;
-                mobile_status.esti_temp_m1 = esti_temp_m1;
-                mobile_status.esti_temp_m2 = esti_temp_m2;
-                mobile_status.esti_temp_m3 = esti_temp_m3;
-                mobile_status.charge_state = charger_state;
                 mobile_status.power_state = power_state;
-                mobile_status.motor_stop_state = motor_stop_state;
                 mobile_status.remote_state = remote_state;
                 mobile_status.bat_in = bat_in;
                 mobile_status.bat_out = bat_out;
                 mobile_status.bat_current = bat_cur;
                 mobile_status.power = power;
                 mobile_status.total_power = total_used_power;
-                mobile_status.charge_current = charge_current;
-                mobile_status.contact_voltage = contact_voltage;
 
                 // imu
                 mobile_status.imu_gyr_x = imu_gyr_x * D2R;
@@ -1730,7 +1410,7 @@ void MOBILE::motor_on()
         }
     }
 
-    logger->write_log("[MOBILE] motor lock on", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock on", "Green", true, false);
 }
 
 void MOBILE::motor_off()
@@ -1754,7 +1434,7 @@ void MOBILE::motor_off()
         msg_que.push(send_byte);
     }
 
-    logger->write_log("[MOBILE] motor lock off", "DeepSkyBlue", true, false);
+    logger->write_log("[MOBILE] motor lock off", "Green", true, false);
 }
 
 void MOBILE::move(double vx, double vy, double wz)
@@ -1781,12 +1461,12 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-#if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+#if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
     memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
 #endif
 
-#if defined(USE_MECANUM) || defined(USE_MECANUM_OLD)
+#if defined(USE_MECANUM)
     memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
     memcpy(&send_byte[12], &_vy, 4); // param2 linear vel
     memcpy(&send_byte[16], &_wz, 4); // param3 angular vel
@@ -1835,7 +1515,7 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    # if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    # if defined(USE_MECANUM)
     // set last v,w
     vx0 = 0;
     vy0 = 0;
@@ -1870,7 +1550,7 @@ void MOBILE::move_linear_y(double d, double v)
 
 void MOBILE::stop_charge()
 {
-    # if defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    # if defined(USE_MECANUM)
     std::vector<uchar> send_byte(25, 0);
     send_byte[0] = 0x24;
 
@@ -1912,11 +1592,11 @@ void MOBILE::move_rotate(double th, double w)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    #if defined(USE_MECANUM_OLD)
+    #if defined(USE_MECANUM)
     send_byte[7] = 119; // cmd move rotate
     #endif
 
-    #if defined(USE_SRV) || defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
+    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
     send_byte[7] = 118; // cmd move rotate
     #endif
 
@@ -2024,14 +1704,11 @@ void MOBILE::send_loop()
     printf("[MOBILE] send loop stop\n");
 }
 
-// 입력된 전압에 대응하는 용량 찾기
-int MOBILE::cal_voltage(float voltage)
+int MOBILE::calc_battery_percentage(float voltage)
 {
-//    float f_voltage = voltage.toFloat();
-
-    // 정확히 일치하는 전압을 찾기
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     float capacity = -1;
-    for (const auto& entry : volt_lookup_data)
+    for (const auto& entry : voltage_lookup_table)
     {
         if (voltage == entry.voltage)
         {
@@ -2040,20 +1717,17 @@ int MOBILE::cal_voltage(float voltage)
         }
     }
 
-    // 정확히 일치하는 값이 없으면 선형 보간법을 사용
     if (capacity == -1)
     {
-        for (int i = 0; i < volt_lookup_data.size() - 1; ++i)
+        for (int i = 0; i < voltage_lookup_table.size() - 1; ++i)
         {
-            if (voltage > volt_lookup_data[i].voltage && voltage < volt_lookup_data[i + 1].voltage)
+            if (voltage > voltage_lookup_table[i].voltage && voltage < voltage_lookup_table[i + 1].voltage)
             {
-                // 선형 보간법
-                double x1 = volt_lookup_data[i].voltage;
-                double y1 = volt_lookup_data[i].capacity;
-                double x2 = volt_lookup_data[i + 1].voltage;
-                double y2 = volt_lookup_data[i + 1].capacity;
+                double x1 = voltage_lookup_table[i].voltage;
+                double y1 = voltage_lookup_table[i].capacity;
+                double x2 = voltage_lookup_table[i + 1].voltage;
+                double y2 = voltage_lookup_table[i + 1].capacity;
 
-                // 선형 보간 공식으로 용량 계산
                 capacity = static_cast<int>(y1 + (voltage - x1) * (y2 - y1) / (x2 - x1));
                 break;
             }
@@ -2061,4 +1735,19 @@ int MOBILE::cal_voltage(float voltage)
     }
 
     return capacity;
+    #endif
+
+    #if defined(USE_S100)
+    int percentage = (voltage - 44)*10;
+    if(percentage > 100)
+    {
+       percentage = 100;
+    }
+    else if(percentage < 0)
+    {
+        percentage = 0;
+    }
+
+    return percentage;
+    #endif
 }

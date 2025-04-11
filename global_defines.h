@@ -127,7 +127,7 @@
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
-#define MO_STORAGE_NUM 400
+#define MO_STORAGE_NUM 300
 #define POINT_PLOT_SIZE 3
 #define VIRTUAL_OBS_SIZE 0.3
 
@@ -494,7 +494,7 @@ struct PICKING
     }
 };
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -548,7 +548,7 @@ struct MOBILE_STATUS
 };
 #endif
 
-#if defined(USE_AMR_400_LAKI) || defined(USE_AMR_400)
+#if defined(USE_D400_LAKI) || defined(USE_D400)
 struct MOBILE_STATUS
 {
     double t = 0;
@@ -595,61 +595,6 @@ struct MOBILE_STATUS
     float imu_acc_x =0;
     float imu_acc_y =0;
     float imu_acc_z =0;
-};
-#endif
-
-#if defined(USE_MECANUM_OLD)
-struct MOBILE_STATUS
-{
-    double t = 0;
-
-    // motor status
-    uint8_t connection_m0 = 0;
-    uint8_t connection_m1 = 0;
-    uint8_t connection_m2 = 0;
-    uint8_t connection_m3 = 0;
-
-    uint8_t status_m0 = 0;
-    uint8_t status_m1 = 0;
-    uint8_t status_m2 = 0;
-    uint8_t status_m3 = 0;
-
-    uint8_t temp_m0 = 0;
-    uint8_t temp_m1 = 0;
-    uint8_t temp_m2 = 0;
-    uint8_t temp_m3 = 0;
-
-    uint8_t cur_m0 = 0;
-    uint8_t cur_m1 = 0;
-    uint8_t cur_m2 = 0;
-    uint8_t cur_m3 = 0;
-
-    uint8_t charge_state = 0;
-    uint8_t power_state = 0;
-    uint8_t motor_stop_state = 0;
-    uint8_t remote_state = 0;
-
-    float bat_in = 0;
-    float bat_out = 0;
-    float bat_current = 0;
-    float power = 0;
-    float total_power = 0;
-
-    // for timesync
-    uint32_t recv_tick = 0;
-    float return_time = 0;
-
-    // imu status
-    float imu_gyr_x =0;
-    float imu_gyr_y =0;
-    float imu_gyr_z =0;
-    float imu_acc_x =0;
-    float imu_acc_y =0;
-    float imu_acc_z =0;
-
-    uint8_t inter_lock_state = 0;
-    uint8_t operation_state = 0;
-    uint8_t move_pdu_state = 0;
 };
 #endif
 
@@ -1456,17 +1401,18 @@ struct NODE_INFO
     Eigen::Vector3d sz;
 
     // bqr(bottom qr) code number
-    int bqr_code_num = -1;
+    int bqr_code_num;
 
     // bqr(bottom qr) offset
-    Eigen::Vector3d bqr_offset;
+    Eigen::Vector3d bqr_code_offset;
 
     NODE_INFO()
     {
         rpy.setZero();
         ptz.setZero();
         sz.setZero();
-        bqr_offset.setZero();
+        bqr_code_num = -1;
+        bqr_code_offset.setZero();
     }
 
     NODE_INFO(const NODE_INFO& p)
@@ -1475,7 +1421,7 @@ struct NODE_INFO
         ptz = p.ptz;
         sz = p.sz;
         bqr_code_num = p.bqr_code_num;
-        bqr_offset = p.bqr_offset;
+        bqr_code_offset = p.bqr_code_offset;
     }
 
     NODE_INFO& operator=(const NODE_INFO& p)
@@ -1484,7 +1430,7 @@ struct NODE_INFO
         ptz = p.ptz;
         sz = p.sz;
         bqr_code_num = p.bqr_code_num;
-        bqr_offset = p.bqr_offset;
+        bqr_code_offset = p.bqr_code_offset;
         return *this;
     }
 };

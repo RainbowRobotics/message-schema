@@ -42,6 +42,7 @@ public:
     Eigen::Matrix4d get_cur_tf();
     IMU get_best_imu(double ref_t);
     QString get_info_text();
+    std::vector<Eigen::Vector3d> get_cur_scan();
 
     // map load
     QString last_map_file_path = "";
@@ -72,6 +73,8 @@ public:
     std::atomic<double> cur_tf_err = {0};
     std::atomic<double> cur_tf_ie = {0};
     std::atomic<double> cur_tf_ir = {0};
+
+    std::vector<Eigen::Vector3d> cur_scan;
 
     // tf
     Eigen::Matrix4d lvx_tf;

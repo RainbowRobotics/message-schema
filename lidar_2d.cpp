@@ -13,7 +13,7 @@ LIDAR_2D::~LIDAR_2D()
         grab_thread_f = NULL;
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     if(grab_thread_b != NULL)
     {
         grab_flag_b = false;
@@ -46,7 +46,7 @@ void LIDAR_2D::open()
         grab_thread_f = new std::thread(&LIDAR_2D::grab_loop_f, this);
     }
 
-    #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI) || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+    #if defined(USE_D400) || defined(USE_D400_LAKI) || defined(USE_MECANUM)
     if(grab_thread_b == NULL)
     {
         grab_flag_b = true;
@@ -174,7 +174,7 @@ std::vector<Eigen::Vector3d> LIDAR_2D::scan_shadow_filter(std::vector<Eigen::Vec
 }
 
 
-#if defined(USE_SRV)
+#if defined(USE_S100)
 void LIDAR_2D::grab_loop_f()
 {
     //sudo adduser $USER dialout
@@ -454,7 +454,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_400)  || defined(USE_MECANUM_OLD) || defined(USE_MECANUM)
+#if defined(USE_D400) || defined(USE_MECANUM)
 void LIDAR_2D::grab_loop_f()
 {
     // sensors
@@ -471,7 +471,7 @@ void LIDAR_2D::grab_loop_f()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    std::unique_ptr<sick::SyncSickSafetyScanner> safety_scanner;
     try
     {
         safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
@@ -485,7 +485,7 @@ void LIDAR_2D::grab_loop_f()
 
     is_connected_f = true;
 
-    int drop_cnt = 10;
+    int drop_cnt = 100;
     logger->write_log("[LIDAR] start grab loop, front.", "Green");
     while(grab_flag_f)
     {
@@ -615,8 +615,6 @@ void LIDAR_2D::grab_loop_f()
                 continue;
             }
 
-            cur_pts_size_f = raw_pts.size();
-
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -662,7 +660,7 @@ void LIDAR_2D::grab_loop_b()
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz
 
     // create instance
-    std::shared_ptr<sick::SyncSickSafetyScanner> safety_scanner;
+    std::unique_ptr<sick::SyncSickSafetyScanner> safety_scanner;
     try
     {
         safety_scanner = std::make_unique<sick::SyncSickSafetyScanner>(sensor_ip, tcp_port, comm_settings);
@@ -676,7 +674,7 @@ void LIDAR_2D::grab_loop_b()
 
     is_connected_b = true;
 
-    int drop_cnt = 10;
+    int drop_cnt = 100;
     logger->write_log("[LIDAR] start grab loop, back.", "Green");
     while(grab_flag_b)
     {
@@ -806,8 +804,6 @@ void LIDAR_2D::grab_loop_b()
                 continue;
             }
 
-            cur_pts_size_b = raw_pts.size();
-
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
@@ -839,10 +835,10 @@ void LIDAR_2D::grab_loop_b()
 
 void LIDAR_2D::a_loop()
 {
+    std::vector<RAW_FRAME> storage;
+
     Eigen::Matrix4d tf_f = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_F));
     Eigen::Matrix4d tf_b = flip_lidar_tf(ZYX_to_TF(config->LIDAR_TF_B));
-
-    std::vector<RAW_FRAME> storage;
 
     printf("[LIDAR] start a loop\n");
     while(a_flag)
@@ -881,14 +877,13 @@ void LIDAR_2D::a_loop()
                 RAW_FRAME frm1 = storage[min_idx];
 
                 // apply shadow filter for frm0 and frm1
-                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 3);
-                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 3);
+                std::vector<Eigen::Vector3d> filtered_pts_f = scan_shadow_filter(frm0.dsk, 5);
+                std::vector<Eigen::Vector3d> filtered_pts_b = scan_shadow_filter(frm1.dsk, 5);
 
                 // lidar frame to robot frame
                 std::vector<double> reflects_f;
                 std::vector<Eigen::Vector3d> pts_f;
 
-                bool is_found_f = false;
                 for(size_t p = 0; p < filtered_pts_f.size(); p++)
                 {
                     Eigen::Vector3d P = tf_f.block(0,0,3,3)*filtered_pts_f[p] + tf_f.block(0,3,3,1);
@@ -899,27 +894,6 @@ void LIDAR_2D::a_loop()
                         continue;
                     }
 
-                    #if defined(USE_MECANUM_OLD)
-                    if((P[0] > 0.575) && (P[0] < 1.3) &&
-                       (P[1] > -0.5)  && (P[1] < 0.15))
-                    {
-                        continue;
-                    }
-
-                    if(P[0] > (config->ROBOT_SIZE_X[0] - 0.3) && P[0] < (0) &&
-                       P[1] > (config->ROBOT_SIZE_Y[0] - 0.3) && P[1] < (0))
-                    {
-                        continue;
-                    }
-
-                    if(P[0] > config->ROBOT_SIZE_X[0] - 0.05 && P[0] < config->ROBOT_SIZE_X[1] + 0.05 &&
-                       P[1] > config->ROBOT_SIZE_Y[0] - 0.05 && P[1] < config->ROBOT_SIZE_Y[1] + 0.05 && is_found_f == false)
-                    {
-                        is_found_f = true;
-                        Q_EMIT signal_found_obs();
-                    }
-                    #endif
-
                     pts_f.push_back(P);
                     reflects_f.push_back(frm0.reflects[p]);
                 }
@@ -928,7 +902,6 @@ void LIDAR_2D::a_loop()
                 std::vector<double> reflects_b;
                 std::vector<Eigen::Vector3d> pts_b;
 
-                bool is_found_b = false;
                 for(size_t p = 0; p < filtered_pts_b.size(); p++)
                 {
                     Eigen::Vector3d P = tf_b.block(0,0,3,3)*filtered_pts_b[p] + tf_b.block(0,3,3,1);
@@ -938,27 +911,6 @@ void LIDAR_2D::a_loop()
                     {
                         continue;
                     }
-
-                    #if defined(USE_MECANUM_OLD)
-                    if((P[0] > 0.575) && (P[0] < 1.3) &&
-                       (P[1] > -0.5)  && (P[1] < 0.15))
-                    {
-                        continue;
-                    }
-
-                    if(P[0] > (config->ROBOT_SIZE_X[0] - 0.3) && P[0] < (0) &&
-                       P[1] > (config->ROBOT_SIZE_Y[0] - 0.3) && P[1] < (0))
-                    {
-                        continue;
-                    }
-
-                    if(P[0] > config->ROBOT_SIZE_X[0] - 0.05 && P[0] < config->ROBOT_SIZE_X[1] + 0.05 &&
-                       P[1] > config->ROBOT_SIZE_Y[0] - 0.05 && P[1] < config->ROBOT_SIZE_Y[1] + 0.05 && is_found_b == false)
-                    {
-                        is_found_b = true;
-                        Q_EMIT signal_found_obs();
-                    }
-                    #endif
 
                     pts_b.push_back(P);
                     reflects_b.push_back(frm1.reflects[p]);
@@ -1012,6 +964,9 @@ void LIDAR_2D::a_loop()
                     reflects = reflects_inlier;
                 }
 
+                cur_pts_size_f = pts_f.size();
+                cur_pts_size_b = pts_b.size();
+
                 // update
                 mtx.lock();
                 cur_scan_outlier = pts_outlier;
@@ -1045,7 +1000,7 @@ void LIDAR_2D::a_loop()
 }
 #endif
 
-#if defined(USE_AMR_400_LAKI)
+#if defined(USE_D400_LAKI)
 void LIDAR_2D::grab_loop_f()
 {
     printf("[LIDAR][grab_f] start grab loop, front\n");

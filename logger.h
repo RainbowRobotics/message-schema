@@ -38,6 +38,7 @@ private:
     QString log_with_time(QString msg);
 
     QString log_file_name = "";
+
     std::string log_ = "";
     std::vector<std::string> log_list_;
 

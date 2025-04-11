@@ -24,7 +24,7 @@ QString BQR_SENSOR::get_bqr_info_str()
 {
     BQR_INFO _cur_code = get_cur_bqr();
     QString str;
-    str.sprintf("[BQR]\nconnection:%d,recv:%d,id:%s,num:%d,err(x,y,th):%.3f,%.3f,%.3f,(xymcl):%.3f,%.3f",
+    str.sprintf("[BQR]\nconnection:%d,recv:%d,id:%s,num:%d\nerr(x,y,th):%.3f,%.3f,%.3f,(xymcl):%.3f,%.3f",
                 (int)is_connected, (int)is_recv_data, _cur_code.id.toStdString().c_str(), _cur_code.code_num,
                 (double)err_x, (double)err_y, (double)err_th*R2D,
                 _cur_code.xmcl, _cur_code.ymcl);

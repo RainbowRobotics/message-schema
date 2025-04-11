@@ -50,7 +50,7 @@ void signalHandler(int signal)
     }
 
     std::string date_and_time = getCurrentDate();
-    std::string full_path = getExecutableDir() + "/snlog/" + date_and_time + "-fault_log.txt";
+    std::string full_path = getExecutableDir() + "/snlog/fault_log/" + date_and_time + "-fault_log.txt";
 
     std::ofstream logFile(full_path, std::ios::app);
     logFile << "Signal (" << signal << ") received." << std::endl;

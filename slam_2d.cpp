@@ -329,7 +329,7 @@ void SLAM_2D::map_a_loop()
                 {
                     Eigen::Vector3d _P = frm.pts[p];
 
-                    #ifdef USE_SRV
+                    #ifdef USE_S100
                     double dx = 1.0;
                     if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
                        _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
@@ -398,7 +398,7 @@ void SLAM_2D::map_a_loop()
                         {
                             Eigen::Vector3d _P = frm.pts[p];
 
-                            #ifdef USE_SRV
+                            #ifdef USE_S100
                             double dx = 1.0;
                             if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
                                _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
@@ -801,6 +801,7 @@ void SLAM_2D::loc_a_loop()
             // for que overflow
             lidar->scan_que.clear();
         }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[SLAM] loc_a_loop stop\n");
@@ -946,7 +947,7 @@ void SLAM_2D::loc_b_loop()
         }
         else
         {
-            //printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -1535,7 +1536,7 @@ double SLAM_2D::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     {
         Eigen::Vector3d _P = frm.pts[p];
 
-        #ifdef USE_SRV
+        #ifdef USE_S100
         double dx = 1.0;
         if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
            _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])

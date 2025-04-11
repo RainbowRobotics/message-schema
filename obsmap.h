@@ -49,7 +49,7 @@ public:
     int is_undock_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step);
 
     int is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    int is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
+    int is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, Eigen::Vector3d &obs_pts, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
     int is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
 
     // for avoid path

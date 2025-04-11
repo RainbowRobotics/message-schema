@@ -26,6 +26,14 @@ void LOGGER::init()
             log_folder_path.mkdir(log_path);
         }
 
+        // make fault log folder (signalhander ---> look main.cpp)
+        QString fault_log_path = log_path + "/fault_log/";
+        QDir fault_log_folder_path(fault_log_path);
+        if(!fault_log_folder_path.exists())
+        {
+            fault_log_folder_path.mkdir(fault_log_path);
+        }
+
         QString date_and_time = QDateTime::currentDateTime().toString("yyyy-MM-dd");
         log_file_name = log_path + date_and_time + "-log-list.html";
 

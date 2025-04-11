@@ -20,10 +20,9 @@ DEFINES += QT_NO_SIGNALS_SLOTS_KEYWORDS
 DEFINES += QT_NO_KEYWORDS
 
 # select mobile platform type
-#DEFINES += USE_SRV
-#DEFINES += USE_AMR_400
-DEFINES += USE_AMR_400_LAKI
-#DEFINES += USE_MECANUM_OLD
+DEFINES += USE_S100
+#DEFINES += USE_D400
+#DEFINES += USE_D400_LAKI
 #DEFINES += USE_MECANUM
 
 # set home dir
@@ -37,10 +36,9 @@ SOURCES += \
     autocontrol.cpp \
     bqr_sensor.cpp \
     cam.cpp \
+    comm_coop.cpp \
     comm_fms.cpp \
-    comm_old.cpp \
     comm_rrs.cpp \
-    comm_ui.cpp \
     config.cpp \
     cv_to_qt.cpp \
     dockcontrol.cpp \
@@ -67,11 +65,10 @@ HEADERS += \
     autocontrol.h \
     bqr_sensor.h \
     cam.h \
+    comm_coop.h \
     comm_data.h \
     comm_fms.h \
-    comm_old.h \
     comm_rrs.h \
-    comm_ui.h \
     config.h \
     cv_to_qt.h \
     dockcontrol.h \
@@ -96,7 +93,7 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
-contains(DEFINES, USE_SRV) {
+contains(DEFINES, USE_S100) {
     SOURCES += \
         blidar/calibration.cpp \
         blidar/lidar_data_processing.cpp \
