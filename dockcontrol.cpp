@@ -103,30 +103,29 @@ void DOCKCONTROL::move()
     odom_start_tf = se2_to_TF(odom_pose);
 
     //debug
-    Eigen::Matrix4d start = Eigen::Matrix4d::Identity();
-    Eigen::Matrix4d end = Eigen::Matrix4d::Identity();
+//    Eigen::Matrix4d start = Eigen::Matrix4d::Identity();
+//    Eigen::Matrix4d end = Eigen::Matrix4d::Identity();
 
-    start(0,3) = 0.0;
-    start(1,3) = 0.0;
+//    start(0,3) = 0.0;
+//    start(1,3) = 0.0;
 
-    end(0,3) = 2.0;
-    end(1,3) = 2.0;
+//    end(0,3) = 2.0;
+//    end(1,3) = 2.0;
 
-    hybrid_dubins(start,end);
+//    hybrid_dubins(start,end);
 
-    Eigen::Matrix4d temp_dock_tf = Eigen::Matrix4d::Identity();
+//    Eigen::Matrix4d temp_dock_tf = Eigen::Matrix4d::Identity();
 
-    double theta = M_PI / 4.0;
-    temp_dock_tf(0, 0) = std::cos(theta);
-    temp_dock_tf(0, 1) = -std::sin(theta);
-    temp_dock_tf(1, 0) = std::sin(theta);
-    temp_dock_tf(1, 1) = std::cos(theta);
+//    double theta = M_PI / 4.0;
+//    temp_dock_tf(0, 0) = std::cos(theta);
+//    temp_dock_tf(0, 1) = -std::sin(theta);
+//    temp_dock_tf(1, 0) = std::sin(theta);
+//    temp_dock_tf(1, 1) = std::cos(theta);
 
-    temp_dock_tf(0,3) = 5.0;
-    temp_dock_tf(1,3) = 2.0;
+//    temp_dock_tf(0,3) = 5.0;
+//    temp_dock_tf(1,3) = 2.0;
 
-
-    std::vector<Eigen::Matrix4d> final_path = generateStraightPathDock(temp_dock_tf,0.05, 1.0);
+//    std::vector<Eigen::Matrix4d> final_path = generateStraightPathDock(temp_dock_tf,0.05, 1.0);
 
     // start docking control loop
     fsm_state = DOCKING_FSM_POINTDOCK;
@@ -136,6 +135,13 @@ void DOCKCONTROL::move()
 
 void DOCKCONTROL::move(double p_gain, double d_gain, double off_x, double off_y, double off_t)
 {
+    // exception
+    if(config->DOCKING_TYPE != 2)
+    {
+        printf("[DOCKING] THIS IS NOT BQR TYPE ROBOT\n");
+        return;
+    }
+
     // stop first
     stop();
 
@@ -177,7 +183,6 @@ void DOCKCONTROL::a_loop()
         Eigen::Vector3d odom_pose = mobile->get_pose().pose;
         Eigen::Matrix4d cur_pos_odom = se2_to_TF(odom_pose);
 
-
         int is_good_everything = is_everything_fine();
 
         if(is_good_everything == DRIVING_FAILED)
@@ -185,12 +190,6 @@ void DOCKCONTROL::a_loop()
             failed_reason = "FIND CHECK WRONG";
             fsm_state = DOCKING_FSM_FAILED;
         }
-        else if(is_good_everything == DRIVING_NOT_READY)
-        {
-            failed_reason = "FIND CHECK WRONG";
-            fsm_state = DOCKING_FSM_FAILED;
-        }
-
 
         if(fsm_state == DOCKING_FSM_POINTDOCK)
         {
@@ -201,6 +200,7 @@ void DOCKCONTROL::a_loop()
 
             if(path_flag)
             {
+
                 // use map_frame
                 //Eigen::Vector2d dtdr = dTdR(cur_pos, docking_station_m);
 
@@ -235,6 +235,7 @@ void DOCKCONTROL::a_loop()
         {
             double cmd_v =0.0;
             double cmd_w =0.0;
+
             find_Vmark();
 
             if(path_flag)
@@ -251,7 +252,7 @@ void DOCKCONTROL::a_loop()
                     fsm_state = DOCKING_FSM_DOCK;
                     continue;
                 }
-                dockControl(cur_pos,cmd_v,cmd_w);
+                dockControl(cur_pos_odom,cmd_v,cmd_w);
                 mobile->move(cmd_v,0.0,cmd_w);
             }
         }
@@ -375,6 +376,7 @@ void DOCKCONTROL::b_loop()
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
+            qDebug() << "docking fsm undock stat";
             double t = std::abs((config->DOCKING_POINTDOCK_MARGIN +0.3) /0.1) + 0.5;
 
             if(get_time() - undock_time > t )
@@ -617,6 +619,9 @@ void DOCKCONTROL::dockControl( const Eigen::Matrix4d& cur_pose, double& linear_v
 
     double dist_x = dist(0,3);
     double dist_y = dist(1,3);
+
+    qDebug() << "[DOCKING] dist_x : " << dist_x;
+    
     double err_d = std::sqrt(dist_x*dist_x + dist_y*dist_y);
     double err_th = std::atan2(dist_y,dist_x);
     double d_err_th = 0.0;
@@ -808,7 +813,6 @@ bool DOCKCONTROL::find_Vmark()
 
     if(clusters_queue.size() > 10)
     {
-        // KFRAME kfrm = generateVKframe();
         KFRAME cur_frm;
 
         while (!clusters_queue.empty())
@@ -839,11 +843,24 @@ bool DOCKCONTROL::find_Vmark()
         dock_tf = calculateTranslationMatrix(frm1_center, frm0_center0);
 
         double err = Vfrm_icp(cur_frm, Vfrm, dock_tf);
+        qDebug() <<"err:" << err;
 
         if(err >0.002) //0.001
         {
             return false;
         }
+
+        debug_frame.clear();
+
+        //for icp matching debug
+        for (const auto& pt : Vfrm.pts)
+        {
+            Eigen::Vector4d p(pt.x, pt.y, pt.z, 1.0);
+            Eigen::Vector4d p_trans = dock_tf * p;
+            debug_frame.push_back(p_trans.head<3>());
+        }
+
+
 
         docking_station = dock_tf;
 
@@ -852,6 +869,8 @@ bool DOCKCONTROL::find_Vmark()
 
         //odom_start_tf : odom->base_link transformation
         docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
+
+//        generateStraightPathDock(docking_station_o, 0.05, 1.0);
 
         path_flag = true;
         return true;
@@ -1476,12 +1495,6 @@ KFRAME DOCKCONTROL::generateVKframe()
         Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
         debug_frame.push_back(debug_pt);
     }
-    //    for (const auto& pt : res4.pts)
-    //    {
-    //        frame.pts.push_back(pt);
-    //        Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-    //        debug_frame.push_back(debug_pt);
-    //    }
 
     return frame;
 }
@@ -1498,13 +1511,6 @@ bool DOCKCONTROL::undock()
         return false;
     }
 
-    else if(is_good_everything == DRIVING_NOT_READY)
-    {
-        mobile->move(0, 0, 0);
-        printf("[DOCKING] something wrong (not ready)\n");
-        return false;
-    }
-
     else
     {
         // obs clear
@@ -1515,6 +1521,7 @@ bool DOCKCONTROL::undock()
         fsm_state = DOCKING_FSM_UNDOCK;
         b_thread = new std::thread(&DOCKCONTROL::b_loop, this);
         mobile->stop_charge();
+        qDebug() << config->DOCKING_POINTDOCK_MARGIN;
         mobile->move_linear_x(-1*(config->DOCKING_POINTDOCK_MARGIN), 0.05);
         undock_time = get_time();
         return true;
@@ -2100,11 +2107,15 @@ cv::Mat DOCKCONTROL::calc_flowfield(const cv::Mat& map, cv::Vec2i ed)
     return res;
 }
 
-std::vector<Eigen::Matrix4d> DOCKCONTROL::generateStraightPathDock(const Eigen::Matrix4d& dock_tf, double step, double length)
+PATH DOCKCONTROL::generateStraightPathDock(const Eigen::Matrix4d& dock_tf, double step, double length)
 {
-    std::vector<Eigen::Matrix4d> path;
+    PATH path;
+
+    Eigen::Vector3d odom_pose = mobile->get_pose().pose;
+    Eigen::Matrix4d cur_pos_odom = se2_to_TF(odom_pose);
 
     int num_steps = static_cast<int>(length / step);
+
     Eigen::Vector3d dir = dock_tf.block<3,1>(0, 0).normalized();
     Eigen::Vector3d end_pos = dock_tf.block<3,1>(0, 3);
 
@@ -2114,9 +2125,16 @@ std::vector<Eigen::Matrix4d> DOCKCONTROL::generateStraightPathDock(const Eigen::
         Eigen::Matrix4d tf = dock_tf;
         tf.block<3,1>(0, 3) = end_pos + offset;
 
-        Eigen::Vector3d debug_pt(tf(0,3), tf(1,3), 0.0);
-        debug_frame.push_back(debug_pt);
-        path.push_back(tf);
+        //for debug
+        Eigen::Matrix4d debug_tf_baselink = tf;
+        Eigen::Vector3d debug_pos(debug_tf_baselink(0,3), debug_tf_baselink(1,3), 0.0);
+        debug_frame.push_back(debug_pos);
+        //
+
+        Eigen::Vector3d pos(tf(0,3), tf(1,3), 0.0);
+
+        path.pose.push_back(tf);
+        path.pos.push_back(pos);
     }
     return path;
 }
@@ -2173,8 +2191,8 @@ void DOCKCONTROL::smoothTrajectory(std::vector<Eigen::Matrix4d>& path)
             Eigen::Vector2d xip2(path[i + 2](0, 3), path[i + 2](1, 3));
             Eigen::Vector2d correction(0.0, 0.0);
 
-//            correction = correction - smoothnessTerm(xim2, xim1, xi, xip1, xip2);
-//            correction = correction - curvatureTerm(xim2, xim1, xi, xip1, xip2);
+            correction = correction - smoothnessTerm(xim2, xim1, xi, xip1, xip2);
+            correction = correction - curvatureTerm(xim2, xim1, xi, xip1, xip2);
 
 
 //            // Apply correction
@@ -2204,35 +2222,40 @@ Eigen::Vector2d DOCKCONTROL::smoothnessTerm(Eigen::Vector2d xim2, Eigen::Vector2
     return wSmoothness * (xim2 - 4 * xim1 + 6 * xi - 4 * xip1 + xip2);
 }
 
-//std:vector<Eigen::Matrix4d> DOCKCONTROL::dubinsShot(const HASTAR_NODE& st, const HASTAR_NODE& ed)
-//{
-//    double rho = 0.3; // 0.3 m
-//    //init
-//    DubinsPath d_path;
-//    double dx = ed.tf(0,3) - st.tf(0,3);
-//    double dy = ed.tf(1,3) - st.tf(1,3);
+Eigen::Vector2d DOCKCONTROL::curvatureTerm(Eigen::Vector2d x_im2, Eigen::Vector2d x_im1, Eigen::Vector2d x_i, Eigen::Vector2d x_ip1, Eigen::Vector2d x_ip2)
+{
+    float kappaMax = 0.5;
+    Eigen::Vector2d output;
 
-//    double st_th = atan2(st.tf(1,0), st.tf(0,0));
-//    double ed_th = atan2(ed.tf(1,0), ed.tf(0,0));
+    const Eigen::Vector2d& delta_x_im1 = x_im1 - x_im2;
+    const Eigen::Vector2d& delta_x_i = x_i - x_im1;
+    const Eigen::Vector2d& delta_x_ip1 = x_ip1 - x_i;
+    const Eigen::Vector2d& delta_x_ip2 = x_ip2 - x_ip1;
 
-//    double dist = sqrt(dx*dx + dy*dy);
-//    double d = dist / rho ;
+    auto compute_kappa = [](const Eigen::Vector2d& delta_x_0, const Eigen::Vector2d& delta_x_1, float& delta_phi, float& kappa)
+    {
+        double dot = delta_x_0.dot(delta_x_1);
+        double len0 = delta_x_0.norm();
+        double len1 = delta_x_1.norm();
+        delta_phi = std::acos(std::clamp(dot / (len0 * len1), -1.0, 1.0));
+        kappa = delta_phi / len0;
+    };
 
-//    double theta = atan2(dy,dx);
-//    double alpha = st_th - theta;
-//    double beta = ed_th - theta;
+    float delta_phi_im1, kappa_im1;
+    compute_kappa(delta_x_im1, delta_x_i, delta_phi_im1, kappa_im1);
 
-//    d_path.st = st.tf;
-//    d_path.rho = rho;
+    float delta_phi_i, kappa_i;
+    compute_kappa(delta_x_i, delta_x_ip1, delta_phi_i, kappa_i);
 
-//    double best_cost = 99999;
-//    int best_word = -1;
-//    int i = 0;
+    float delta_phi_ip1, kappa_ip1;
+    compute_kappa(delta_x_ip1, delta_x_ip2, delta_phi_ip1, kappa_ip1);
 
-//    for( i=0; i<6 ;i++)
-//    {
-//        double params[3];
-////        int err = dubins_words[i](alpha, beta, d, params);
-//    }
+    if (kappa_i <= kappaMax)
+    {
+        return output;
+    }
 
-//}
+    return output;
+}
+
+

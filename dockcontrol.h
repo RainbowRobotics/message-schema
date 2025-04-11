@@ -130,13 +130,14 @@ public:
     // for debug
     std::vector<Eigen::Vector3d> get_cur_clust();
     std::vector<Eigen::Vector3d> debug_frame;
-
+    PATH docking_path;
 
     // for hybrid a*
     Eigen::Vector2d smoothnessTerm(Eigen::Vector2d xim2, Eigen::Vector2d xim1, Eigen::Vector2d xi, Eigen::Vector2d xip1, Eigen::Vector2d xip2);
+    Eigen::Vector2d curvatureTerm(Eigen::Vector2d x_im2, Eigen::Vector2d x_im1, Eigen::Vector2d x_i, Eigen::Vector2d x_ip1, Eigen::Vector2d x_ip2);
     void smoothTrajectory(std::vector<Eigen::Matrix4d>& path);
     std::vector<Eigen::Matrix4d> dubinsShot(const HASTAR_NODE& st, const HASTAR_NODE&ed);
-    std::vector<Eigen::Matrix4d> generateStraightPathDock(const Eigen::Matrix4d& dock_tf , double step , double length);
+    PATH generateStraightPathDock(const Eigen::Matrix4d& dock_tf , double step , double length);
     double updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed);
     double gs = 0.05;
     std::vector<Eigen::Matrix4d> hybrid_dubins(const Eigen::Matrix4d &, const Eigen::Matrix4d &);

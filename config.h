@@ -149,7 +149,7 @@ public:
     double DOCKING_POINTDOCK_MARGIN = 0.18;
     double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
-    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2
+    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
     double DOCKING_GRID_SIZE = 0.05;
     int DOCKING_MAP_SIZE = 10; //m
