@@ -125,7 +125,10 @@
         "LVX_INLIER_CHECK_DIST": "0.3"   
     },
     "docking": {
-    	"DOCK_POINTDOCK_MARGIN": "0.18"
+    	"DOCKING_POINTDOCK_MARGIN": "0.18",
+    	"DOCKING_GOAL_D": "0.05",
+    	"DOCKING_GOAL_TH": "0.01745",
+    	"DOCKING_TYPE": "0"
     },
     "map": {
         "MAP_PATH": ""

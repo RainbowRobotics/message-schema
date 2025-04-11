@@ -17,7 +17,7 @@
         "DRIVE_W_DEADZONE": "0.0"
     },
     "docking": {
-    	"DOCK_POINTDOCK_MARGIN": "0.18"
+    	"DOCKING_POINTDOCK_MARGIN": "0.18"
     },
     "debug": {
         "USE_SIM": "0",

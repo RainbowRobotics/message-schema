@@ -1,6 +1,12 @@
 #ifndef GLOBAL_DEFINES_H
 #define GLOBAL_DEFINES_H
 
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/ProblemDefinition.h>
+#include <ompl/geometric/SimpleSetup.h>
+
 // OpenMP
 #include <omp.h>
 
@@ -179,11 +185,16 @@ enum LED_STATE
 
 enum DOCK_FSM_STATE
 {
-    DOCK_FSM_DRIVING = 0,
-    DOCK_FSM_DRIVING_FOR_CHRGE,
-    DOCK_FSM_WAIT_FOR_CHRGE,
-    DOCK_FSM_COMPLETE,
-    DOCK_FSM_FAILED
+    DOCKING_FSM_OFF = 0,
+    DOCKING_FSM_POINTDOCK,
+    DOCKING_FSM_COMPENSATE,
+    DOCKING_FSM_DOCK,
+    DOCKING_FSM_UNDOCK,
+    DOCKING_FSM_OBS,
+    DOCKING_FSM_WAIT,
+    DOCKING_FSM_COMPLETE,
+    DOCKING_FSM_FAILED,
+    DOCKING_FSM_POINTDOCK_FOR_CHRGE
 };
 
 enum AUTO_OBS_STATE
@@ -1077,6 +1088,51 @@ struct ASTAR_NODE
         g = p.g;
         h = p.h;
         f = p.f;
+        return *this;
+    }
+};
+
+struct HASTAR_NODE
+{
+    HASTAR_NODE* parent = NULL;
+    NODE* node = NULL;
+    Eigen::Matrix4d tf;
+    double g = 0;
+    double h = 0;
+    double f = 0;
+    int prim = 0;
+
+    HASTAR_NODE()
+    {
+        parent = NULL;
+        node = NULL;
+        tf.setIdentity();
+        g = 0;
+        h = 0;
+        f = 0;
+        prim = 0;
+    }
+
+    HASTAR_NODE(const HASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        prim = p.prim;
+    }
+
+    HASTAR_NODE& operator=(const HASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        prim = p.prim;
         return *this;
     }
 };
