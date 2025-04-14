@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     , plot_timer2(this)
     , qa_timer(this)
     , bqr_localization_timer(this)
+    , init_localization_timer(this)
 {
     ui->setupUi(this);
 
@@ -202,6 +203,9 @@ MainWindow::MainWindow(QWidget *parent)
     // bqr localization
     connect(&bqr_localization_timer, SIGNAL(timeout()), this, SLOT(bqr_localization_loop()));
     connect(&ctrl, SIGNAL(signal_check_docking()), &dctrl, SLOT(slot_check_docking()));
+
+    // init localization
+    connect(&init_localization_timer, SIGNAL(timeout()), this, SLOT(init_localization_loop()));
 
     connect(ui->bt_SelectPreNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPreNodes()));
     connect(ui->bt_SelectPostNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPostNodes()));
@@ -744,6 +748,17 @@ void MainWindow::init_modules()
         }
     }
 
+    // bqr localization loop
+    if(config.USE_BQR)
+    {
+        bqr_localization_timer.start(1000);
+    }
+
+    // init localization loop
+    if(config.USE_FIRST_AUTO_LOC)
+    {
+        init_localization_timer.start(1000);
+    }
 }
 
 void MainWindow::setup_vtk()
@@ -793,6 +808,37 @@ void MainWindow::setup_vtk()
         ui->qvtkWidget2->installEventFilter(this);
         ui->qvtkWidget2->setMouseTracking(true);
     }
+}
+
+void MainWindow::init_localization_loop()
+{
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        return;
+    }
+
+    if(slam.is_busy == true || slam.get_cur_loc_state() == "good")
+    {
+        return;
+    }
+
+    QTimer::singleShot(1000, [&]()
+    {
+        logger.write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
+        slam.localization_stop();
+
+        // semi auto init
+        if(semi_auto_init_thread != NULL)
+        {
+            logger.write_log("[AUTO_INIT] thread already running.", "Orange", true, false);
+            semi_auto_init_thread->join();
+            semi_auto_init_thread = NULL;
+        }
+
+        semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, &slam);
+    });
+
+    init_localization_timer.stop();
 }
 
 void MainWindow::bqr_localization_loop()
@@ -2749,53 +2795,6 @@ void MainWindow::bt_NodePoseThDown()
     }
     else if(select_nodes.size() != 0 )
     {
-        /*
-        double cnt = 0.0;
-        Eigen::Vector3d center_pose(0, 0, 0);
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            cnt++;
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
-            center_pose += pose0;
-        }
-
-        if(cnt == 0.0)
-        {
-            return;
-        }
-
-        center_pose /= cnt;
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
-
-            Eigen::Vector3d pose1 = pose0 - center_pose;
-            pose1 = tf1.block(0,0,3,3) * pose1;
-
-            Eigen::Vector3d pose = pose1 + center_pose;
-
-            Eigen::Matrix4d tf = Eigen::Matrix4d::Identity();
-            tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
-            tf.block(0,3,3,1) = pose;
-
-            unimap.edit_node_pos(id, tf);
-        }
-        */
         for(size_t p = 0; p < select_nodes.size(); p++)
         {
             NODE* node = unimap.get_node_by_id(select_nodes[p]);
@@ -3602,7 +3601,6 @@ void MainWindow::bt_TaskLoad()
     }
 
     ui_tasks_update();
-
 }
 
 void MainWindow::bt_TaskPlay()
@@ -3679,6 +3677,12 @@ void MainWindow::bt_SendMap()
 
 void MainWindow::slot_sim_random_init(QString seed)
 {
+    if(config.USE_SIM == false)
+    {
+        logger.write_log("[SIM] only simulation mode", "Red", true, false);
+        return;
+    }
+
     if(unimap.is_loaded != MAP_LOADED)
     {
         logger.write_log("[SIM] map load first", "Red", true, false);

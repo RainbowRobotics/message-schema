@@ -784,7 +784,7 @@ int OBSMAP::is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x
     {
         return OBS_DETECT_VIRTUAL;
     }
-    else if(is_collision_dyn == true && is_collision_vir == true)
+    else if(is_collision_dyn == true && is_collision_vir == false)
     {
         return OBS_DETECT_DYNAMIC;
     }
@@ -978,7 +978,7 @@ int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_
         obs_pts = obs_pts_vir;
         return OBS_DETECT_VIRTUAL;
     }
-    else if(is_collision_dyn == true && is_collision_vir == true)
+    else if(is_collision_dyn == true && is_collision_vir == false)
     {
         obs_pts = obs_pts_dyn;
         return OBS_DETECT_DYNAMIC;
@@ -1162,7 +1162,7 @@ int OBSMAP::is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& rob
     {
         return OBS_DETECT_VIRTUAL;
     }
-    else if(is_collision_dyn == true && is_collision_vir == true)
+    else if(is_collision_dyn == true && is_collision_vir == false)
     {
         return OBS_DETECT_DYNAMIC;
     }

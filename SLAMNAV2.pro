@@ -252,8 +252,3 @@ INCLUDEPATH += /usr/local/include/
 LIBS += -L/usr/local/lib/
 LIBS += -llivox_lidar_sdk_static
 
-# ompl
-INCLUDEPATH += /usr/local/include/ompl-1.6
-LIBS += -L/usr/local/lib
-LIBS += -lompl
-
