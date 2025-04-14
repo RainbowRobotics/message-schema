@@ -92,6 +92,7 @@ public:
     int USE_LVX = 0;
     int USE_COMM_COOP = 0;
     int USE_MULTI = 0;
+    int USE_FIRST_AUTO_LOC = 0;
 
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;
     double DRIVE_GOAL_D = 0.05;    
@@ -105,7 +106,7 @@ public:
     double DOCK_EXTENDED_CONTROL_TIME = 10.0;
     double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
 
-    int OBS_AVOID = 0; // 0: stop, 1: stop + OMPL, 2: eband + OMPL
+    int OBS_AVOID = 0;
     double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
     double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
     double OBS_LOCAL_GOAL_D = 4.0;

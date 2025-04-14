@@ -2146,7 +2146,7 @@ double DOCKCONTROL::updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed)
 {
 
     double set_h = 0;
-    double dubinsCost =0;
+    /*double dubinsCost =0;
     double reedsSheppCost =0;
     ompl::base::DubinsStateSpace dubinsPath(1);
 
@@ -2168,7 +2168,7 @@ double DOCKCONTROL::updateH(const Eigen::Matrix4d st, const Eigen::Matrix4d ed)
     double dy = ed(1,3) - st(1,3);
 
     double twoDcost = std::sqrt(dx*dx + dy*dy);
-    set_h = std::max(reedsSheppCost, std::max(dubinsCost, twoDcost));
+    set_h = std::max(reedsSheppCost, std::max(dubinsCost, twoDcost));*/
 
     return set_h;
 }

@@ -1047,7 +1047,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 }
 
                 double total_time = time_driving + time_align;
-                printf("[COMM_RRS] eta-> driving:%f, align:%f, total:%f\n", time_driving, time_align, total_time);
 
                 msg.result = "accept";
                 msg.message = "";
@@ -1730,6 +1729,10 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("moveResponse", res);
+
+    // Debug
+    QByteArray jsonData = doc.toJson(QJsonDocument::Indented);
+    printf("%s\n", jsonData.constData());
 }
 
 void COMM_RRS::send_localization_response(DATA_LOCALIZATION msg)

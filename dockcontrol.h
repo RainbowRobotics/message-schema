@@ -17,8 +17,6 @@
 
 #include <QObject>
 
-typedef ompl::base::SE2StateSpace::StateType State;
-
 class DOCKCONTROL : public QObject
 {
     Q_OBJECT
@@ -164,7 +162,6 @@ public:
 
 
 Q_SIGNALS:
-
     void signal_dock_response(DATA_DOCK msg);
     void signal_move_succeed(QString message);
     void signal_move_failed(QString message);

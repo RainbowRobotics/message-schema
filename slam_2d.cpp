@@ -2185,21 +2185,48 @@ void SLAM_2D::semi_auto_init_start()
         Eigen::Vector2d ieir = lvx->calc_ieir(pts, min_tf);
         if(ieir[0] < config->LOC_CHECK_IE && ieir[1] > config->LOC_CHECK_IR)
         {
-            Eigen::Matrix4d res_tf = min_tf*offset_tf_inv;
+            // check min_tf is close init nodes
+            //bool is_find = false;
+            //for(size_t p = 0; p < idxs.size(); p++)
+            //{
+            //    int i = idxs[p];
+            //    Eigen::Matrix4d tf = unimap->nodes[i].tf;
+            //    Eigen::Vector2d dtdr = dTdR(tf, min_tf);
+            //    if(dtdr[0] < 0.1)
+            //    {
+            //        is_find = true;
+            //        break;
+            //    }
+            //}
 
-            lvx->set_cur_tf(res_tf);
-            set_cur_tf(res_tf);
+            //if(is_find)
+            {
+                Eigen::Matrix4d res_tf = min_tf*offset_tf_inv;
 
-            lvx->loc_start();
-            localization_start();
+                lvx->set_cur_tf(res_tf);
+                set_cur_tf(res_tf);
 
-            DATA_LOCALIZATION dloc;
-            dloc.command = "semiautoinit";
-            dloc.result = "success";
-            dloc.time = get_time();
-            Q_EMIT signal_localization_response(dloc);
+                lvx->loc_start();
+                localization_start();
 
-            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+                DATA_LOCALIZATION dloc;
+                dloc.command = "semiautoinit";
+                dloc.result = "success";
+                dloc.time = get_time();
+                Q_EMIT signal_localization_response(dloc);
+
+                printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            }
+            //else
+            //{
+            //    DATA_LOCALIZATION dloc;
+            //    dloc.command = "semiautoinit";
+            //    dloc.result = "fail";
+            //    dloc.time = get_time();
+            //    Q_EMIT signal_localization_response(dloc);
+
+            //    printf("[AUTOINIT] failed auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            //}
         }
         else
         {
