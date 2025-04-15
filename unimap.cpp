@@ -381,6 +381,35 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
     return node.id;
 }
 
+QString UNIMAP::add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attribute, QString name, QString id)
+{
+    QString type_str;
+    if(type == TypeNode::GOAL)
+    {
+        type_str = "GOAL";
+    }
+    else if(type == TypeNode::ROUTE)
+    {
+        type_str = "ROUTE";
+    }
+    else if(type == TypeNode::VIRTUAL_WALL)
+    {
+        type_str = "OBS";
+    }
+    else if(type == TypeNode::ZONE)
+    {
+        type_str = "ZONE";
+    }
+
+
+    NODE node;
+    node.id = gen_node_id();
+    node.name = name;
+    node.type = type;
+    node.tf = tf;
+    nodes.push_back(node);
+}
+
 void UNIMAP::del_node(QString id)
 {
     NODE* node = get_node_by_id(id);

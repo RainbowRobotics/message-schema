@@ -86,6 +86,9 @@ public:
     // util func
     QString get_json(sio::message::ptr const& data, QString key);
     QString get_multi_state();
+    QByteArray get_last_msg();
+
+    QByteArray last_msg;
 
 private Q_SLOTS:
     void sio_connected();

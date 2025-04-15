@@ -17,6 +17,7 @@ extern std::vector<VoltageCapacity> voltage_lookup_table;
 bool ping(std::string ip_address);
 double get_time0();
 double get_time();
+double get_hash(double time);
 QString get_time_str();
 
 Eigen::Matrix4d ZYX_to_TF(double tx, double ty, double tz, double rx, double ry, double rz);

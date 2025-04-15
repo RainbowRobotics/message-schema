@@ -15,6 +15,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
+using node_attributes = std::variant<AttributeGoal, AttributeRoute, AttributeVirtualWall, AttributeZone>;
+
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, boost::property<boost::edge_weight_t, double>> Graph;
 typedef boost::graph_traits<Graph>::edge_descriptor Edge;
 typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
@@ -75,6 +77,10 @@ public:
     void add_node(PICKING pick, QString type, QString info="");
     QString add_node(Eigen::Matrix4d tf, QString type, int bqr_num);
     QString add_node(Eigen::Matrix4d tf, QString type, QString name);
+
+    QString add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attribute, QString name, QString id);
+
+
     void del_node(QString id);
     void del_link(QString id0, QString id1);
     void edit_node_pos(PICKING pick);

@@ -2378,13 +2378,13 @@ void MainWindow::bt_AddPoints()
 
 void MainWindow::cb_NodeType(QString type)
 {
-    ui->cb_NodeAdvanceType->clear();
+    ui->cb_NodeAttribute->clear();
 
     if(type == "GOAL")
     {
-        ui->cb_NodeAdvanceType->addItem("forward");
-        ui->cb_NodeAdvanceType->addItem("backward");
-        ui->cb_NodeAdvanceType->addItem("offset");
+        ui->cb_NodeAttribute->addItem("forward");
+        ui->cb_NodeAttribute->addItem("backward");
+        ui->cb_NodeAttribute->addItem("offset");
     }
     else if(type == "INIT")
     {
@@ -2400,18 +2400,18 @@ void MainWindow::cb_NodeType(QString type)
     }
     else if(type == "ZONE")
     {
-        ui->cb_NodeAdvanceType->addItem("forbidden");
-        ui->cb_NodeAdvanceType->addItem("switchable_forbidden");
-        ui->cb_NodeAdvanceType->addItem("speed");
-        ui->cb_NodeAdvanceType->addItem("sensor_mute");
-        ui->cb_NodeAdvanceType->addItem("sound");
-        ui->cb_NodeAdvanceType->addItem("light");
-        ui->cb_NodeAdvanceType->addItem("avoid");
-        ui->cb_NodeAdvanceType->addItem("ignore_low_lidar");
-        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar1");
-        ui->cb_NodeAdvanceType->addItem("ignore_main_lidar2");
-        ui->cb_NodeAdvanceType->addItem("offset");
-        ui->cb_NodeAdvanceType->addItem("mask");
+        ui->cb_NodeAttribute->addItem("forbidden");
+        ui->cb_NodeAttribute->addItem("switchable_forbidden");
+        ui->cb_NodeAttribute->addItem("speed");
+        ui->cb_NodeAttribute->addItem("sensor_mute");
+        ui->cb_NodeAttribute->addItem("sound");
+        ui->cb_NodeAttribute->addItem("light");
+        ui->cb_NodeAttribute->addItem("avoid");
+        ui->cb_NodeAttribute->addItem("ignore_low_lidar");
+        ui->cb_NodeAttribute->addItem("ignore_main_lidar1");
+        ui->cb_NodeAttribute->addItem("ignore_main_lidar2");
+        ui->cb_NodeAttribute->addItem("offset");
+        ui->cb_NodeAttribute->addItem("mask");
     }
 }
 
@@ -5677,13 +5677,13 @@ void MainWindow::raw_plot()
 
     // plot comm info
     {
-        QString comm_info_str = "[COMM_INFO]\n";
+        QString comm_info_str = "[COMM_INFO]";
 
         if(config.USE_COMM_RRS)
         {
             QString comm_rrs_str;
             comm_rrs_str.sprintf("comm_rrs: is_connected -> %s\n", (bool)comm_rrs.is_connected ? "1" : "0");
-            comm_info_str += (QString("\n") + comm_rrs_str);
+            comm_info_str += (QString("\n") + comm_rrs_str);           
         }
 
         if(config.USE_COMM_FMS)
@@ -5701,6 +5701,15 @@ void MainWindow::raw_plot()
         }
 
         ui->lb_CommInfo->setText(comm_info_str);
+    }
+
+    // plot rrs response msg info
+    {
+        QByteArray msg = comm_rrs.get_last_msg();
+        QString rrs_msg_info_str;
+        rrs_msg_info_str.sprintf("[RRS_MSG_INFO]\n response msg:\n%s", msg.constData());
+
+        ui->lb_RrsMsgInfo->setText(rrs_msg_info_str);
     }
 
     // plot sensor info
