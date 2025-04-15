@@ -87,6 +87,15 @@ QString COMM_RRS::get_multi_state()
     return res;
 }
 
+QByteArray COMM_RRS::get_last_msg()
+{
+    mtx.lock();
+    QByteArray res = last_msg;
+    mtx.unlock();
+
+    return res;
+}
+
 void COMM_RRS::init()
 {
     if(config->USE_COMM_RRS)
@@ -851,7 +860,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         double wz = msg.jog_val[2];
 
         MainWindow* _main = (MainWindow*)main;
-        _main->update_jog_values(vx, vy, wz*D2R);
+        _main->update_jog_values(vx, vy, wz);
 
         // response
         msg.result = "accept";
@@ -1028,7 +1037,8 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
                 // time driving
                 double time_driving = 0.0;
-                for(size_t p = 1; p < global_path.pos.size()-1; p++)
+                double remaining_dist = 0.0;
+                for(size_t p = 0; p < global_path.pos.size()-1; p++)
                 {
                     Eigen::Vector3d pos0 = global_path.pos[p];
                     Eigen::Vector3d pos1 = global_path.pos[p+1];
@@ -1039,6 +1049,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                     double v = (ref_v0 + ref_v1)/2;
 
                     time_driving += dist/(v+1e-06);
+                    remaining_dist += dist;
                 }
 
                 if(time_driving == 0.0)
@@ -1051,6 +1062,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 msg.result = "accept";
                 msg.message = "";
                 msg.eta = total_time;
+                msg.remaining_dist = remaining_dist;
             }
 
             send_move_response(msg);
@@ -1712,8 +1724,6 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
         response_goal_node_name = "AMR-CONTAINER-01";
     }
     obj["goal_name"] = response_goal_node_name;
-
-    //obj["goal_name"] = msg.goal_node_name;
     obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
     obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
     obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
@@ -1730,9 +1740,10 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("moveResponse", res);
 
-    // Debug
-    QByteArray jsonData = doc.toJson(QJsonDocument::Indented);
-    printf("%s\n", jsonData.constData());
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 
 void COMM_RRS::send_localization_response(DATA_LOCALIZATION msg)
@@ -1756,6 +1767,11 @@ void COMM_RRS::send_localization_response(DATA_LOCALIZATION msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("localizationResponse", res);
+
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 
 void COMM_RRS::send_load_response(DATA_LOAD msg)
@@ -1775,6 +1791,11 @@ void COMM_RRS::send_load_response(DATA_LOAD msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("loadResponse", res);
+
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 
 void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ msg)
@@ -1793,6 +1814,11 @@ void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("randomseqResponse", res);
+
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 
 void COMM_RRS::send_mapping_response(DATA_MAPPING msg)
@@ -1812,6 +1838,11 @@ void COMM_RRS::send_mapping_response(DATA_MAPPING msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mappingResponse", res);
+
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 
 void COMM_RRS::send_dock_response(DATA_DOCK msg)
@@ -1830,5 +1861,10 @@ void COMM_RRS::send_dock_response(DATA_DOCK msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("dockResponse", res);
+
+    // for plot
+    mtx.lock();
+    last_msg = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
 }
 

@@ -55,9 +55,14 @@ public:
     QString get_cur_goal_state();
     DATA_MOVE get_move_info();
 
-    void set_multi_req(QString str);
-    void set_obs_condition(QString str);   
-    void set_cur_goal_state(QString str);
+    void set_control_state(StateMultiReq _multi_req, StateObsCondition _obs_condition, StateCurGoal _cur_goal);
+    void set_multi_req(StateMultiReq _multi_req);               // none, recv_path, req_path
+    void set_obs_condition(StateObsCondition _obs_condition);   // none, far, near, vir
+    void set_cur_goal_state(StateCurGoal _cur_goal);            // cancel, move, fail, complete, obstacle
+
+    void set_multi_req(QString str);       // none, recv_path, req_path
+    void set_obs_condition(QString str);   // none, far, near, vir
+    void set_cur_goal_state(QString str);  // cancel, move, fail, complete, obstacle
     void set_move_info(DATA_MOVE msg);
 
     void init();

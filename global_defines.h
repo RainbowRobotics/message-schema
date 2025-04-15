@@ -20,6 +20,7 @@
 #include <iostream>
 #include <streambuf>
 #include <random>
+#include <variant>
 
 // tbb
 #include <tbb/concurrent_queue.h>
@@ -130,7 +131,6 @@
 #define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
 // enumulator
-
 enum DOCKING_CHARGE_STATE
 {
     CHARGE_STATE_IDLE =0,
@@ -282,6 +282,75 @@ enum PDU_MOVE_STATE
     PDU_MOVE_LINEAR_X=1,
     PDU_MOVE_LINEAR_Y=2,
     PDU_MOVE_ROTATE=3
+};
+
+// enum class
+enum class StateMultiReq
+{
+    NONE,
+    RECV_PATH,
+    REQ_PATH
+};
+
+enum class StateObsCondition
+{
+    NONE,
+    FAR,
+    NEAR,
+    VIR
+};
+
+enum class StateCurGoal
+{
+    CANCEL,
+    MOVE,
+    FAIL,
+    COMPLETE,
+    OBSTACLE
+};
+
+enum class TypeNode
+{
+    GOAL,
+    ROUTE,
+    VIRTUAL_WALL,
+    ZONE
+};
+
+enum class AttributeGoal
+{
+    NONE,
+    FORWARD,
+    BACKWARD,
+    OFFSET,
+    INIT,
+    STATION
+};
+
+enum class AttributeRoute
+{
+    NONE
+};
+
+enum class AttributeVirtualWall
+{
+    NONE
+};
+
+enum class AttributeZone
+{
+    NONE,
+    FORBIDDEN,
+    SWITCHABLE_FORBIDDEN,
+    SPEED,
+    SENSOR_MUTE,
+    SOUND,
+    LIGHT,
+    AVOID,
+    IGNORE_LIDAR1,
+    IGNORE_LIDAR2,
+    OFFSET,
+    MASK
 };
 
 // structure

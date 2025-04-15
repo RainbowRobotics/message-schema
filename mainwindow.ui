@@ -723,6 +723,33 @@ out</string>
               <string>Robot goal</string>
              </property>
             </widget>
+            <widget class="QLabel" name="lb_RrsMsgInfo">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>330</y>
+               <width>180</width>
+               <height>250</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>7</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgba(0, 0, 0, 100); color: black;</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="text">
+              <string>[RRS_MSG]</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>
@@ -1071,7 +1098,7 @@ out</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -2870,7 +2897,7 @@ Nodes</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>10</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
               <property name="text">
@@ -3341,7 +3368,7 @@ Nodes</string>
                <string>Auto link</string>
               </property>
              </widget>
-             <widget class="QComboBox" name="cb_NodeAdvanceType">
+             <widget class="QComboBox" name="cb_NodeAttribute">
               <property name="geometry">
                <rect>
                 <x>210</x>
@@ -3380,11 +3407,11 @@ Nodes</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>10</pointsize>
+                <pointsize>8</pointsize>
                </font>
               </property>
               <property name="text">
-               <string>advance:</string>
+               <string>attribute:</string>
               </property>
              </widget>
              <widget class="QCheckBox" name="ckb_UseMeasure">
