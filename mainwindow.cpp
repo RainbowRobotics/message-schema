@@ -169,6 +169,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_UnDockStart, SIGNAL(clicked()), this,SLOT(bt_UnDockStart()));
 
     // for response
+    connect(this, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
     connect(&dctrl, SIGNAL(signal_dock_response(DATA_DOCK)), &comm_rrs, SLOT(send_dock_response(DATA_DOCK)));
     connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_rrs, SLOT(send_move_response(DATA_MOVE)));
     connect(&ctrl, SIGNAL(signal_move_response(DATA_MOVE)), &comm_fms, SLOT(send_move_response(DATA_MOVE)));
@@ -4057,7 +4058,7 @@ void MainWindow::watch_loop()
                         move_info.message = "released";
                         move_info.time = get_time();
 
-                        comm_rrs.send_move_response(move_info);
+                        Q_EMIT signal_move_response(move_info);
                     }
                     else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
                     {
@@ -4069,7 +4070,7 @@ void MainWindow::watch_loop()
                         move_info.message = "pushed";
                         move_info.time = get_time();
 
-                        comm_rrs.send_move_response(move_info);
+                        Q_EMIT signal_move_response(move_info);
                     }
 
                     pre_ms = ms;

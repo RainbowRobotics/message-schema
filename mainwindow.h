@@ -239,6 +239,9 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
+Q_SIGNALS:
+    void signal_move_response(DATA_MOVE msg);
+
 public Q_SLOTS:
     // for log
     void slot_write_log(QString user_log, QString color_code);
