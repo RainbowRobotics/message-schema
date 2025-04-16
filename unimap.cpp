@@ -401,13 +401,7 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attr
         type_str = "ZONE";
     }
 
-
-    NODE node;
-    node.id = gen_node_id();
-    node.name = name;
-    node.type = type;
-    node.tf = tf;
-    nodes.push_back(node);
+    return "";
 }
 
 void UNIMAP::del_node(QString id)
