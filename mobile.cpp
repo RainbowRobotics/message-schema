@@ -1738,17 +1738,17 @@ int MOBILE::calc_battery_percentage(float voltage)
     #endif
 
     #if defined(USE_S100)
-    if (voltage >= BAT_MAX_VOLTAGE)
+    if ((double)voltage >= BAT_MAX_VOLTAGE)
     {
         return 100;
     }
 
-    if (voltage <= BAT_MIN_VOLTAGE)
+    if ((double)voltage <= BAT_MIN_VOLTAGE)
     {
         return 0;
     }
 
-    int percentage = (int)((voltage - BAT_MIN_VOLTAGE) / (BAT_MAX_VOLTAGE - BAT_MIN_VOLTAGE + 1e-06) * 100.0f);
+    int percentage = (int)(((double)voltage - BAT_MIN_VOLTAGE) / (BAT_MAX_VOLTAGE - BAT_MIN_VOLTAGE + 1e-06) * 100.0);
     return percentage;
     #endif
 }
