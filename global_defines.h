@@ -131,8 +131,8 @@
 #define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
 #ifdef USE_S100
-const float BAT_MAX_VOLTAGE = 53.5f;
-const float BAT_MIN_VOLTAGE = 42.0f;
+#define BAT_MAX_VOLTAGE 53.5
+#define BAT_MIN_VOLTAGE 42.0
 #endif
 
 // enumulator
