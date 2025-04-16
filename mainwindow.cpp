@@ -4526,7 +4526,7 @@ void MainWindow::watch_loop()
 
                 // check battery
                 {
-                    if(ms.bat_out < 45.0) // low battery
+                    if(ms.bat_out < (double)BAT_MAX_VOLTAGE) // low battery
                     {
                         led_color = LED_YELLOW_BLINK;
                         // logger.write_log("[BATTERY] need charge");
@@ -4534,7 +4534,7 @@ void MainWindow::watch_loop()
                     else if(ms.charge_state == 1) // charge
                     {
                         led_color = LED_RED;
-                        if(ms.bat_out > 54.0)
+                        if(ms.bat_out > (double)BAT_MIN_VOLTAGE)
                         {
                             led_color = LED_BLUE;
                         }

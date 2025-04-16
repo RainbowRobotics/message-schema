@@ -130,6 +130,11 @@
 #define LOCAL_PATH_STEP 0.01
 #define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
+#ifdef USE_S100
+const float BAT_MAX_VOLTAGE = 53.5f;
+const float BAT_MIN_VOLTAGE = 42.0f;
+#endif
+
 // enumulator
 enum DOCKING_CHARGE_STATE
 {
