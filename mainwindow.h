@@ -354,6 +354,7 @@ public Q_SLOTS:
     void bt_AutoStop();
     void bt_AutoPause();
     void bt_AutoResume();
+    void bt_ReturnToCharging();
 
     void slot_local_path_updated();
     void slot_global_path_updated();

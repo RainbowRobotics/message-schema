@@ -160,6 +160,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
     connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
+    connect(ui->bt_ReturnToCharging, SIGNAL(clicked()), this, SLOT(bt_ReturnToCharging()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
 
@@ -3421,6 +3422,66 @@ void MainWindow::bt_AutoPause()
 void MainWindow::bt_AutoResume()
 {
     ctrl.is_pause = false;
+}
+
+void MainWindow::bt_ReturnToCharging()
+{
+    if(config.ROBOT_SERIAL_NUMBER == "RB-M-")
+    {
+        logger.write_log("[RTC] Robot serial number is not properly set.", "Red");
+        return;
+    }
+
+    std::vector<QString> found_ids;
+
+    for(size_t i = 0; i < unimap.nodes.size(); i++)
+    {
+        if(unimap.nodes[i].name.contains(config.ROBOT_SERIAL_NUMBER))
+        {
+            found_ids.push_back(unimap.nodes[i].id);
+        }
+    }
+
+    if(found_ids.size() == 0)
+    {
+        logger.write_log(QString("[RTC] No charging node found for robot serial: %1").arg(config.ROBOT_SERIAL_NUMBER), "Red");
+        return;
+    }
+
+    if(found_ids.size() > 1)
+    {
+        logger.write_log(QString("[RTC] Multiple charging nodes found for serial: %1 (count: %2)")
+                         .arg(config.ROBOT_SERIAL_NUMBER)
+                         .arg(found_ids.size()), "Red");
+        return;
+    }
+
+
+    QString found_id = found_ids[0];
+    NODE* node = unimap.get_node_by_id(found_id);
+    if(node == NULL)
+    {
+        logger.write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
+        return;
+    }
+
+    logger.write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+
+    Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+    DATA_MOVE msg;
+    msg.command = "goal";
+    msg.method = "pp";
+    msg.preset = 0;
+    msg.goal_node_id = node->id;
+    msg.tgt_pose_vec[0] = xi[0];
+    msg.tgt_pose_vec[1] = xi[1];
+    msg.tgt_pose_vec[2] = node->tf(2,3);
+    msg.tgt_pose_vec[3] = xi[2];
+
+    Q_EMIT ctrl.signal_move(msg);
+
+
 }
 
 void MainWindow::slot_local_path_updated()
