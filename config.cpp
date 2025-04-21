@@ -420,8 +420,8 @@ void CONFIG::load()
 
             QJsonObject obj_robot = obj["robot"].toObject();
             {
-                PLATFORM_SERIAL_NUMBER = obj_robot["PLATFORM_SERIAL_NUMBER"].toString();
-                printf("[CONFIG] PLATFORM_SERIAL_NUMBER, %s\n", obj_robot["PLATFORM_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+                ROBOT_SERIAL_NUMBER = obj_robot["ROBOT_SERIAL_NUMBER"].toString();
+                printf("[CONFIG] ROBOT_SERIAL_NUMBER, %s\n", obj_robot["ROBOT_SERIAL_NUMBER"].toString().toLocal8Bit().data());
             }
 
             // complete

@@ -2139,7 +2139,7 @@ void SLAM_2D::semi_auto_init_start()
 
         // candidates
         std::vector<QString> prefix_list;
-        prefix_list.push_back(config->PLATFORM_SERIAL_NUMBER);
+        prefix_list.push_back(config->ROBOT_SERIAL_NUMBER);
         std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
         if(idxs.size() == 0)
         {
