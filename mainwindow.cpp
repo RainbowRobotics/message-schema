@@ -3195,6 +3195,9 @@ void MainWindow::bt_CheckNodes()
     {
         if(node.linked.size() == 0)
         {
+            std::cout << "nodes id: " << node.id.toStdString() << std::endl;
+            std::cout << "nodes name: " << node.name.toStdString() << std::endl;
+            std::cout << "nodes tf: " << TF_to_string(node.tf).toStdString() << std::endl;
             printf("no linked node!!\n");
         }
     }
