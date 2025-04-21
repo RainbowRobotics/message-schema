@@ -614,36 +614,36 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
     // load preset
     params = load_preset(preset);
 
-    double total_dist = 0.0;
-    double total_time = 0.0;
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        for(size_t q = 0; q < tmp_storage[p].pos.size()-1; q++)
-        {
-            Eigen::Vector3d pos0 = tmp_storage[p].pos[q];
-            Eigen::Vector3d pos1 = tmp_storage[p].pos[q+1];
-            double dist = (pos1 - pos0).norm();
+    //double total_dist = 0.0;
+    //double total_time = 0.0;
+    //for(size_t p = 0; p < tmp_storage.size(); p++)
+    //{
+    //    for(size_t q = 0; q < tmp_storage[p].pos.size()-1; q++)
+    //    {
+    //        Eigen::Vector3d pos0 = tmp_storage[p].pos[q];
+    //        Eigen::Vector3d pos1 = tmp_storage[p].pos[q+1];
+    //        double dist = (pos1 - pos0).norm();
 
-            double ref_v0 = tmp_storage[p].ref_v[q];
-            double ref_v1 = tmp_storage[p].ref_v[q+1];
-            double v = (ref_v0 + ref_v1)/2;
+    //        double ref_v0 = tmp_storage[p].ref_v[q];
+    //        double ref_v1 = tmp_storage[p].ref_v[q+1];
+    //        double v = (ref_v0 + ref_v1)/2;
 
-            total_time += dist/(v+1e-06);
-            total_dist += dist;
-        }
-    }
+    //        total_time += dist/(v+1e-06);
+    //        total_dist += dist;
+    //    }
+    //}
 
-    mtx.lock();
-    move_info.cur_pos = cur_pos;
-    move_info.result = "accept";
-    move_info.message = "";
-    move_info.time = get_time();
-    move_info.bat_percent = ms.bat_percent;
-    move_info.eta = total_time;
-    move_info.remaining_dist = total_dist;
-    mtx.unlock();
+    //mtx.lock();
+    //move_info.cur_pos = cur_pos;
+    //move_info.result = "accept";
+    //move_info.message = "";
+    //move_info.time = get_time();
+    //move_info.bat_percent = ms.bat_percent;
+    //move_info.eta = total_time;
+    //move_info.remaining_dist = total_dist;
+    //mtx.unlock();
 
-    Q_EMIT signal_move_response(move_info);
+    //Q_EMIT signal_move_response(move_info);
 
     // start control loop    
     if(b_flag == false)

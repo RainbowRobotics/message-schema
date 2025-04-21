@@ -418,6 +418,12 @@ void CONFIG::load()
                 printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
             }
 
+            QJsonObject obj_robot = obj["robot"].toObject();
+            {
+                PLATFORM_SERIAL_NUMBER = obj_robot["PLATFORM_SERIAL_NUMBER"].toString();
+                printf("[CONFIG] PLATFORM_SERIAL_NUMBER, %s\n", obj_robot["PLATFORM_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+            }
+
             // complete
             is_load = true;
             config_sn_file.close();

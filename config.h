@@ -20,6 +20,7 @@ public:
     // params (initial value ref from AMR200)
     QString PLATFORM_NAME = "TT";
     QString PLATFORM_TYPE = "AMR400";
+    QString PLATFORM_SERIAL_NUMBER = "RB-M-";
 
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
