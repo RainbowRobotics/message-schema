@@ -27,6 +27,7 @@ public:
 
     void init();    
     void clear();
+    void clear_vir_obs();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void update_obs_map_sim(Eigen::Matrix4d tf);
     void update_vobs_map();
@@ -69,6 +70,10 @@ public:
     // virtual obs for multirobot
     std::vector<Eigen::Vector3d> vobs_list_robots;
     std::vector<Eigen::Vector3d> vobs_list_closures;
+
+    // dirty flag
+    std::atomic<bool> dirty_vobs_r = {false};
+    std::atomic<bool> dirty_vobs_c = {false};
 
     // grid map
     Eigen::Matrix4d map_tf;

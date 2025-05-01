@@ -60,6 +60,10 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
+    #ifdef USE_MECANUM
+    preset_path = QCoreApplication::applicationDirPath() + "/config/MECANUM/" + "preset_" + QString::number(preset) + ".json";
+    #endif
+
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
     {
@@ -163,13 +167,6 @@ QString AUTOCONTROL::get_cur_node_id()
     return res;
 }
 
-void AUTOCONTROL::set_cur_goal_state(QString str)
-{
-    mtx.lock();
-    cur_goal_state = str;
-    mtx.unlock();
-}
-
 QString AUTOCONTROL::get_cur_goal_state()
 {
     mtx.lock();
@@ -188,13 +185,6 @@ QString AUTOCONTROL::get_obs_condition()
     return res;
 }
 
-void AUTOCONTROL::set_obs_condition(QString str)
-{
-    mtx.lock();
-    obs_condition = str;
-    mtx.unlock();
-}
-
 QString AUTOCONTROL::get_multi_req()
 {
     mtx.lock();
@@ -202,13 +192,6 @@ QString AUTOCONTROL::get_multi_req()
     mtx.unlock();
 
     return res;
-}
-
-void AUTOCONTROL::set_multi_req(QString str)
-{
-    mtx.lock();
-    multi_req = str;
-    mtx.unlock();
 }
 
 void AUTOCONTROL::set_control_state(StateMultiReq _multi_req, StateObsCondition _obs_condition, StateCurGoal _cur_goal)
@@ -221,6 +204,7 @@ void AUTOCONTROL::set_control_state(StateMultiReq _multi_req, StateObsCondition 
 void AUTOCONTROL::set_multi_req(StateMultiReq _multi_req)
 {
     QString str = "";
+
     if(_multi_req == StateMultiReq::NONE)
     {
         str = "none";
@@ -246,6 +230,7 @@ void AUTOCONTROL::set_multi_req(StateMultiReq _multi_req)
 void AUTOCONTROL::set_obs_condition(StateObsCondition _obs_condition)
 {
     QString str = "";
+
     if(_obs_condition == StateObsCondition::NONE)
     {
         str = "none";
@@ -275,6 +260,7 @@ void AUTOCONTROL::set_obs_condition(StateObsCondition _obs_condition)
 void AUTOCONTROL::set_cur_goal_state(StateCurGoal _cur_goal)
 {
     QString str = "";
+
     if(_cur_goal == StateCurGoal::CANCEL)
     {
         str = "cancel";
@@ -305,7 +291,7 @@ void AUTOCONTROL::set_cur_goal_state(StateCurGoal _cur_goal)
     mtx.unlock();
 }
 
-DATA_MOVE AUTOCONTROL::get_move_info()
+DATA_MOVE AUTOCONTROL::get_cur_move_info()
 {
     mtx.lock();
     DATA_MOVE msg = move_info;
@@ -341,15 +327,11 @@ void AUTOCONTROL::stop()
     // comm params clear
     set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::CANCEL);
 
-    //set_multi_req("none");
-    //set_obs_condition("none");
-    //set_cur_goal_state("cancel");
+    // path clear
+    clear_path();
 
     // obsmap clear
     obsmap->clear();
-
-    // path clear
-    clear_path();
 }
 
 void AUTOCONTROL::clear_path()
@@ -382,6 +364,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             move_info.time = get_time();
             move_info.bat_percent = ms.bat_percent;
             mtx.unlock();
+
             Q_EMIT signal_move_response(move_info);
 
             return;
@@ -394,15 +377,16 @@ void AUTOCONTROL::move(DATA_MOVE msg)
 
     set_move_info(msg);
 
-    if(msg.preset < 100)
+    if(msg.command == "change_goal")
+    {
+        logger->write_log("[AUTO] just change goal", "Green");
+    }
+    else if(msg.command == "goal")
     {
         if(is_rrs && config->USE_MULTI)
         {
-            logger->write_log("[AUTO] req_path, move", "Green");
-
             set_control_state(StateMultiReq::REQ_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
-            //set_multi_req("req_path");
-            //set_cur_goal_state("move");
+            logger->write_log("[AUTO] req_path, move", "Green");
         }
         else
         {
@@ -412,10 +396,6 @@ void AUTOCONTROL::move(DATA_MOVE msg)
                 move_pp(tf, msg.preset);
             }
         }
-    }
-    else
-    {
-        logger->write_log("[AUTO] just change goal", "Green");
     }
 }
 
@@ -559,7 +539,6 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
     // set flag
     set_multi_req(StateMultiReq::RECV_PATH);
-    //set_multi_req("recv_path");
 
     // control loop shutdown but robot still moving
     if(b_flag)
@@ -613,37 +592,6 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 
     // load preset
     params = load_preset(preset);
-
-    //double total_dist = 0.0;
-    //double total_time = 0.0;
-    //for(size_t p = 0; p < tmp_storage.size(); p++)
-    //{
-    //    for(size_t q = 0; q < tmp_storage[p].pos.size()-1; q++)
-    //    {
-    //        Eigen::Vector3d pos0 = tmp_storage[p].pos[q];
-    //        Eigen::Vector3d pos1 = tmp_storage[p].pos[q+1];
-    //        double dist = (pos1 - pos0).norm();
-
-    //        double ref_v0 = tmp_storage[p].ref_v[q];
-    //        double ref_v1 = tmp_storage[p].ref_v[q+1];
-    //        double v = (ref_v0 + ref_v1)/2;
-
-    //        total_time += dist/(v+1e-06);
-    //        total_dist += dist;
-    //    }
-    //}
-
-    //mtx.lock();
-    //move_info.cur_pos = cur_pos;
-    //move_info.result = "accept";
-    //move_info.message = "";
-    //move_info.time = get_time();
-    //move_info.bat_percent = ms.bat_percent;
-    //move_info.eta = total_time;
-    //move_info.remaining_dist = total_dist;
-    //mtx.unlock();
-
-    //Q_EMIT signal_move_response(move_info);
 
     // start control loop    
     if(b_flag == false)
@@ -792,7 +740,6 @@ void AUTOCONTROL::move_hpp(std::vector<QString> node_path, int val)
 
     // set flag
     set_multi_req(StateMultiReq::RECV_PATH);
-    //set_multi_req("recv_path");
 
     // control loop shutdown but robot still moving
     if(b_flag)
@@ -2348,11 +2295,7 @@ void AUTOCONTROL::b_loop_pp()
 {    
     // set flag
     is_moving = true;
-
     set_control_state(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
-    //set_multi_req("recv_path");
-    //set_obs_condition("none");
-    //set_cur_goal_state("move");
 
     // check global path
     logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
@@ -2374,9 +2317,6 @@ void AUTOCONTROL::b_loop_pp()
         logger->write_log(QString("[AUTO] global path invalid"));
 
         set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
-        //set_multi_req("none");
-        //set_obs_condition("none");
-        //set_cur_goal_state("fail");
         return;
     }
 
@@ -2407,10 +2347,6 @@ void AUTOCONTROL::b_loop_pp()
                 is_pause = false;
 
                 set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::MOVE);
-                //set_multi_req("none");
-                //set_obs_condition("none");
-                //set_cur_goal_state("move");
-
                 clear_path();
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2426,10 +2362,6 @@ void AUTOCONTROL::b_loop_pp()
                 is_pause = false;
 
                 set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
-                //set_multi_req("none");
-                //set_obs_condition("none");
-                //set_cur_goal_state("complete");
-
                 clear_path();
 
                 // move response
@@ -2511,10 +2443,6 @@ void AUTOCONTROL::b_loop_pp()
             is_pause = false;
 
             set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
-            //set_multi_req("none");
-            //set_obs_condition("none");
-            //set_cur_goal_state("fail");
-
             clear_path();
 
             fsm_state = AUTO_FSM_COMPLETE;
@@ -2529,10 +2457,6 @@ void AUTOCONTROL::b_loop_pp()
             is_pause = false;
 
             set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
-            //set_multi_req("none");
-            //set_obs_condition("none");
-            //set_cur_goal_state("fail");
-
             clear_path();
 
             fsm_state = AUTO_FSM_COMPLETE;
@@ -2660,7 +2584,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 mobile->move(0, 0, 0);
 
-                set_cur_goal_state("obstacle");
+                set_cur_goal_state(StateCurGoal::OBSTACLE);
 
                 obs_state = AUTO_OBS_CHECK;
                 fsm_state = AUTO_FSM_OBS;
@@ -2772,10 +2696,6 @@ void AUTOCONTROL::b_loop_pp()
                             is_pause = false;
 
                             set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::MOVE);
-                            //set_multi_req("none");
-                            //set_obs_condition("none");
-                            //set_cur_goal_state("move");
-
                             clear_path();
 
                             fsm_state = AUTO_FSM_COMPLETE;
@@ -2851,7 +2771,17 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     mobile->move(0, 0, 0);
 
-                    set_cur_goal_state("obstacle");
+                    set_cur_goal_state(StateCurGoal::OBSTACLE);
+
+                    // for mobile server
+                    if(cur_obs_val == OBS_DETECT_DYNAMIC)
+                    {
+                        set_obs_condition(StateObsCondition::NEAR);
+                    }
+                    else if(cur_obs_val == OBS_DETECT_VIRTUAL)
+                    {
+                        set_obs_condition(StateObsCondition::VIR);
+                    }
 
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
@@ -2862,7 +2792,14 @@ void AUTOCONTROL::b_loop_pp()
             }
 
             // for mobile server
-            set_obs_condition(_obs_condition);
+            if(_obs_condition == "far")
+            {
+                set_obs_condition(StateObsCondition::FAR);
+            }
+            else if(_obs_condition == "none")
+            {
+                set_obs_condition(StateObsCondition::NONE);
+            }
 
             // calc heading error
             Eigen::Matrix4d _tgt_tf = cur_tf_inv*tgt_tf;
@@ -2950,10 +2887,6 @@ void AUTOCONTROL::b_loop_pp()
                     is_pause = false;
 
                     set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
-                    //set_multi_req("none");
-                    //set_obs_condition("none");
-                    //set_cur_goal_state("complete");
-
                     clear_path();
 
                     // response
@@ -2989,7 +2922,7 @@ void AUTOCONTROL::b_loop_pp()
             {
                 mobile->move(0, 0, 0);
 
-                set_cur_goal_state("obstacle");
+                set_cur_goal_state(StateCurGoal::OBSTACLE);
 
                 obs_wait_st_time = get_time();
                 obs_state = AUTO_OBS_WAIT2;
@@ -3023,7 +2956,7 @@ void AUTOCONTROL::b_loop_pp()
                 if(cur_obs_val == OBS_DETECT_DYNAMIC)
                 {
                     // for mobile server
-                    set_obs_condition("near");
+                    set_obs_condition(StateObsCondition::NEAR);
 
                     if(config->OBS_AVOID == 0)
                     {
@@ -3046,7 +2979,7 @@ void AUTOCONTROL::b_loop_pp()
                 else if(cur_obs_val == OBS_DETECT_VIRTUAL)
                 {
                     // for mobile server
-                    set_obs_condition("vir");
+                    set_obs_condition(StateObsCondition::VIR);
 
                     // for vobs works
                     obs_wait_st_time = get_time();
@@ -3073,7 +3006,9 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
-                    set_cur_goal_state("move");
+
+                    // for mobile server
+                    set_cur_goal_state(StateCurGoal::MOVE);
 
                     fsm_state = AUTO_FSM_FIRST_ALIGN;
                     logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
@@ -3178,7 +3113,9 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
-                    set_cur_goal_state("move");
+
+                    // for mobile server
+                    set_cur_goal_state(StateCurGoal::MOVE);
 
                     cur_obs_val = OBS_DETECT_NONE;
                     obs_state = AUTO_OBS_CHECK;
@@ -3194,7 +3131,9 @@ void AUTOCONTROL::b_loop_pp()
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
-                    set_cur_goal_state("move");
+
+                    // for mobile server
+                    set_cur_goal_state(StateCurGoal::MOVE);
 
                     fsm_state = AUTO_FSM_FINAL_ALIGN;
                     logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
@@ -3283,7 +3222,7 @@ void AUTOCONTROL::b_loop_pp()
     if(is_path_overlap)
     {
         is_path_overlap = false;
-        set_obs_condition("none");
+        set_obs_condition(StateObsCondition::NONE);
         logger->write_log("[AUTO] path overlap, b_loop_pp stop");        
         return;
     }
@@ -3294,10 +3233,6 @@ void AUTOCONTROL::b_loop_pp()
     is_pause = false;
 
     set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::CANCEL);
-    //set_multi_req("none");
-    //set_obs_condition("none");
-    //set_cur_goal_state("cancel");
-
     clear_path();
 
     // response
@@ -3327,9 +3262,7 @@ void AUTOCONTROL::b_loop_hpp()
     // set flag
     is_moving = true;
 
-    set_multi_req("recv_path");
-    set_obs_condition("none");
-    set_cur_goal_state("move");
+    set_control_state(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
 
     // check global path
     logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
@@ -3349,9 +3282,8 @@ void AUTOCONTROL::b_loop_hpp()
     if(global_path.pose.size() == 0)
     {
         logger->write_log(QString("[AUTO] global path invalid"));
-        set_multi_req("none");
-        set_obs_condition("none");
-        set_cur_goal_state("fail");
+
+        set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
 
         Eigen::Matrix4d cur_tf = slam->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
@@ -3392,10 +3324,7 @@ void AUTOCONTROL::b_loop_hpp()
                 is_moving = false;
                 is_pause = false;
 
-                set_multi_req("none");
-                set_obs_condition("none");
-                set_cur_goal_state("move");
-
+                set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::MOVE);
                 clear_path();
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -3410,10 +3339,7 @@ void AUTOCONTROL::b_loop_hpp()
                 is_moving = false;
                 is_pause = false;
 
-                set_multi_req("none");
-                set_obs_condition("none");
-                set_cur_goal_state("complete");
-
+                set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
                 clear_path();
 
                 // response
@@ -3502,10 +3428,7 @@ void AUTOCONTROL::b_loop_hpp()
             is_moving = false;
             is_pause = false;
 
-            set_multi_req("none");
-            set_obs_condition("none");
-            set_cur_goal_state("fail");
-
+            set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
             clear_path();
 
             // response
@@ -3532,10 +3455,7 @@ void AUTOCONTROL::b_loop_hpp()
             is_moving = false;
             is_pause = false;
 
-            set_multi_req("none");
-            set_obs_condition("none");
-            set_cur_goal_state("fail");
-
+            set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
             clear_path();
 
             // response
@@ -3759,7 +3679,7 @@ void AUTOCONTROL::b_loop_hpp()
                 {
                     mobile->move(0, 0, 0);
 
-                    set_cur_goal_state("obstacle");
+                    set_cur_goal_state(StateCurGoal::OBSTACLE);
 
                     obs_state = AUTO_OBS_CHECK;
                     fsm_state = AUTO_FSM_OBS;
@@ -3770,7 +3690,14 @@ void AUTOCONTROL::b_loop_hpp()
             }
 
             // for mobile server
-            set_obs_condition(_obs_condition);
+            if(_obs_condition == "far")
+            {
+                set_obs_condition(StateObsCondition::FAR);
+            }
+            else if(_obs_condition == "none")
+            {
+                set_obs_condition(StateObsCondition::NONE);
+            }
 
             // calc control input
             double v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
@@ -3849,10 +3776,7 @@ void AUTOCONTROL::b_loop_hpp()
                         is_moving = false;
                         is_pause = false;
 
-                        set_multi_req("none");
-                        set_obs_condition("none");
-                        set_cur_goal_state("complete");
-
+                        set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
                         clear_path();
 
                         // response
@@ -3952,10 +3876,7 @@ void AUTOCONTROL::b_loop_hpp()
                     is_moving = false;
                     is_pause = false;
 
-                    set_multi_req("none");
-                    set_obs_condition("none");
-                    set_cur_goal_state("complete");
-
+                    set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
                     clear_path();
 
                     // response
@@ -3984,7 +3905,7 @@ void AUTOCONTROL::b_loop_hpp()
             {
                 mobile->move(0, 0, 0);
 
-                set_cur_goal_state("obstacle");
+                set_cur_goal_state(StateCurGoal::OBSTACLE);
 
                 obs_wait_st_time = get_time();
                 obs_state = AUTO_OBS_WAIT2;
@@ -4020,7 +3941,7 @@ void AUTOCONTROL::b_loop_hpp()
                 if(cur_obs_val == OBS_DETECT_DYNAMIC)
                 {
                     // for mobile server
-                    set_obs_condition("near");
+                    set_obs_condition(StateObsCondition::NEAR);
 
                     if(config->OBS_AVOID == 0)
                     {
@@ -4042,7 +3963,7 @@ void AUTOCONTROL::b_loop_hpp()
                 else if(cur_obs_val == OBS_DETECT_VIRTUAL)
                 {
                     // for mobile server
-                    set_obs_condition("vir");
+                    set_obs_condition(StateObsCondition::VIR);
 
                     // for vobs works
                     obs_wait_st_time = get_time();
@@ -4069,7 +3990,7 @@ void AUTOCONTROL::b_loop_hpp()
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
-                    set_cur_goal_state("move");
+                    set_cur_goal_state(StateCurGoal::MOVE);
 
                     fsm_state = AUTO_FSM_DRIVING;
                     logger->write_log("[AUTO] avoid path found, OBS_AVOID -> DRIVING");
@@ -4213,7 +4134,7 @@ void AUTOCONTROL::b_loop_hpp()
     if(is_path_overlap)
     {
         is_path_overlap = false;
-        set_obs_condition("none");
+        set_obs_condition(StateObsCondition::NONE);
         logger->write_log("[AUTO] path overlap, b_loop_hpp stop");
         return;
     }
@@ -4223,10 +4144,7 @@ void AUTOCONTROL::b_loop_hpp()
     is_moving = false;
     is_pause = false;
 
-    set_multi_req("none");
-    set_obs_condition("none");
-    set_cur_goal_state("cancel");
-
+    set_control_state(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::CANCEL);
     clear_path();
 
     // response

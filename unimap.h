@@ -80,7 +80,6 @@ public:
 
     QString add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attribute, QString name, QString id);
 
-
     void del_node(QString id);
     void del_link(QString id0, QString id1);
     void edit_node_pos(PICKING pick);

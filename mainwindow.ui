@@ -61,7 +61,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -72,8 +72,8 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>910</width>
-         <height>772</height>
+         <width>16777215</width>
+         <height>16777215</height>
         </size>
        </property>
        <attribute name="title">
@@ -385,8 +385,8 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>914</width>
-              <height>702</height>
+              <width>16777215</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="font">
@@ -816,8 +816,8 @@ out</string>
       <widget class="QWidget" name="page_annot">
        <property name="maximumSize">
         <size>
-         <width>910</width>
-         <height>772</height>
+         <width>16777215</width>
+         <height>16777215</height>
         </size>
        </property>
        <attribute name="title">

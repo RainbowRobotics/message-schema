@@ -111,7 +111,7 @@ void COMM_FMS::send_move_status()
     QString cur_node_id = ctrl->get_cur_node_id();
 
     // get goal_node_id
-    QString goal_node_id = ctrl->move_info.goal_node_id;
+    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
     if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
@@ -562,7 +562,7 @@ void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
 void COMM_FMS::slot_recv_move(DATA_MOVE msg)
 {
     QString command = msg.command;
-    if(command == "goal")
+    if(command == "goal" || command == "change_goal")
     {
         QString method = msg.method;
         if(method == "pp")
@@ -678,6 +678,18 @@ void COMM_FMS::slot_recv_move(DATA_MOVE msg)
     {
         MainWindow* _main = (MainWindow*)main;
         _main->bt_Emergency();
+
+        msg.result = "accept";
+        msg.message = "";
+
+        printf("[COMM_FMS] command: %s, result: %s, message: %s\n", msg.command.toLocal8Bit().data(),
+                                                                    msg.result.toLocal8Bit().data(),
+                                                                    msg.message.toLocal8Bit().data());
+    }
+    else if(command == "rtc")
+    {
+        MainWindow* _main = (MainWindow*)main;
+        _main->bt_ReturnToCharging();
 
         msg.result = "accept";
         msg.message = "";

@@ -88,7 +88,9 @@ public:
     QString get_multi_state();
     QByteArray get_last_msg();
 
-    QByteArray last_msg;
+    QByteArray lastest_msg_str;
+
+    QTimer vobs_update_timer;
 
 private Q_SLOTS:
     void sio_connected();

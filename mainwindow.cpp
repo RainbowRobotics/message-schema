@@ -430,8 +430,8 @@ void MainWindow::bt_Emergency()
 {
     task.cancel();
     ctrl.stop();
-    ctrl.set_multi_req("none");
-    ctrl.set_obs_condition("none");
+    ctrl.set_multi_req(StateMultiReq::NONE);
+    ctrl.set_obs_condition(StateObsCondition::NONE);
     dctrl.stop();
     mobile.move(0,0,0);
 }
@@ -3480,8 +3480,6 @@ void MainWindow::bt_ReturnToCharging()
     msg.tgt_pose_vec[3] = xi[2];
 
     Q_EMIT ctrl.signal_move(msg);
-
-
 }
 
 void MainWindow::slot_local_path_updated()
@@ -3918,7 +3916,7 @@ void MainWindow::comm_loop()
                 lidar_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
-                    comm_rrs.send_lidar();
+                    //comm_rrs.send_lidar();
                 }
             }
 
@@ -3937,13 +3935,13 @@ void MainWindow::comm_loop()
                     if(is_global_path_update2)
                     {
                         is_global_path_update2 = false;
-                        comm_rrs.send_global_path();
+                        //comm_rrs.send_global_path();
                     }
 
                     if(is_local_path_update2)
                     {
                         is_local_path_update2 = false;
-                        comm_rrs.send_local_path();
+                        //comm_rrs.send_local_path();
                     }
                 }
             }
@@ -3968,7 +3966,8 @@ void MainWindow::comm_loop()
         }
 
         // for 500ms loop
-        if(cnt % 50 == 0)
+        //if(cnt % 50 == 0)
+        if(cnt % 53 == 0)
         {
             if(comm_rrs.is_connected)
             {
@@ -3977,16 +3976,18 @@ void MainWindow::comm_loop()
         }
 
         // for 500ms loop
-        if(cnt % 50 == 0)
+        //if(cnt % 50 == 0)
+        if(cnt % 57 == 0)
         {
             if(comm_rrs.is_connected)
             {
-                comm_rrs.send_mapping_cloud();
+                //comm_rrs.send_mapping_cloud();
             }
         }
 
         // for 1000ms loop
-        if(cnt % 100 == 0)
+        //if(cnt % 100 == 0)
+        if(cnt % 102 == 0)
         {
             // open video writer
             if(config.USE_RTSP && config.USE_CAM)
@@ -4099,6 +4100,10 @@ void MainWindow::watch_loop()
     while(watch_flag)
     {
         cnt++;
+        if(cnt % 20 == 0)
+        {
+            //obsmap.clear_vir_obs();
+        }
 
         if(mobile.is_connected)
         {

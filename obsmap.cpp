@@ -70,6 +70,19 @@ void OBSMAP::clear()
     mtx.unlock();
 }
 
+void OBSMAP::clear_vir_obs()
+{
+    mtx.lock();
+    obs_pts_virtual.clear();
+    closure_pts_virtual.clear();
+
+    vobs_list_robots.clear();
+    vobs_list_closures.clear();
+
+    virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    mtx.unlock();
+}
+
 void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 {
     mtx.lock();
@@ -450,6 +463,91 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 void OBSMAP::update_vobs_map()
 {
     mtx.lock();
+    std::vector<Eigen::Vector3d> vobs_robots = vobs_list_robots;
+    std::vector<Eigen::Vector3d> vobs_closures = vobs_list_closures;
+    Eigen::Matrix4d cur_tf = map_tf;
+    mtx.unlock();
+
+    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+
+    // add vobs robots from fms
+    std::vector<Eigen::Vector3d> _vir_pts;
+    cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
+    for(size_t p = 0; p < vobs_robots.size(); p++)
+    {
+        // add global points
+        Eigen::Vector3d center = vobs_robots[p];
+
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
+        pts.push_back(center);
+
+        for(size_t q = 0; q < pts.size(); q++)
+        {
+            Eigen::Vector3d P = pts[q];
+            _vir_pts.push_back(P);
+
+            // add local obsmap
+            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+            double x = _P[0];
+            double y = _P[1];
+
+            cv::Vec2i uv = xy_uv(x,y);
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+            _virtual_map.ptr<uchar>(uv[1])[uv[0]] = 255;
+        }
+    }
+
+    // add vobs closures from fms
+    std::vector<Eigen::Vector3d> _vir_closure_pts;
+    for(size_t p = 0; p < vobs_closures.size(); p++)
+    {
+        // add global points
+        Eigen::Vector3d center = vobs_closures[p];
+        _vir_closure_pts.push_back(center);
+
+        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
+        pts.push_back(center);
+
+        for(size_t q = 0; q < pts.size(); q++)
+        {
+            Eigen::Vector3d P = pts[q];
+            _vir_pts.push_back(P);
+
+            // add local obsmap
+            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+
+            double x = _P[0];
+            double y = _P[1];
+
+            cv::Vec2i uv = xy_uv(x,y);
+            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
+            {
+                continue;
+            }
+            _virtual_map.ptr<uchar>(uv[1])[uv[0]] = 255;
+        }
+    }
+
+    // mutex
+    {
+        mtx.lock();
+        obs_pts_virtual = _vir_pts;
+        closure_pts_virtual = _vir_closure_pts;
+        virtual_map = _virtual_map;
+        mtx.unlock();
+    }
+
+    // signal for redrawing
+    Q_EMIT obs_updated();
+}
+
+/*void OBSMAP::update_vobs_map()
+{
+    mtx.lock();
     Eigen::Matrix4d cur_tf = map_tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
@@ -524,7 +622,7 @@ void OBSMAP::update_vobs_map()
 
     // signal for redrawing
     Q_EMIT obs_updated();
-}
+}*/
 
 void OBSMAP::get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf)
 {
@@ -858,11 +956,9 @@ int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, dou
 int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, Eigen::Vector3d &obs_pts, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
-    std::vector<Eigen::Vector3d> pts_dyn;
-    std::vector<Eigen::Vector3d> pts_vir;
     mtx.lock();
-    pts_dyn = obs_pts_dynamic;
-    pts_vir = obs_pts_virtual;
+    std::vector<Eigen::Vector3d> pts_dyn = obs_pts_dynamic;
+    std::vector<Eigen::Vector3d> pts_vir = obs_pts_virtual;
     mtx.unlock();
 
     // draw trajectory
@@ -962,7 +1058,7 @@ int OBSMAP::is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_
 
     if(is_collision_dyn == true && is_collision_vir == true)
     {
-        if(config->OBS_DEADZONE_DYN > config->OBS_DEADZONE_VIR)
+        if(config->OBS_DEADZONE_DYN <= config->OBS_DEADZONE_VIR)
         {
             obs_pts = obs_pts_vir;
             return OBS_DETECT_VIRTUAL;

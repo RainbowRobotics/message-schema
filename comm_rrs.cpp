@@ -6,6 +6,7 @@ COMM_RRS::COMM_RRS(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
+    , vobs_update_timer(this)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -90,7 +91,7 @@ QString COMM_RRS::get_multi_state()
 QByteArray COMM_RRS::get_last_msg()
 {
     mtx.lock();
-    QByteArray res = last_msg;
+    QByteArray res = lastest_msg_str;
     mtx.unlock();
 
     return res;
@@ -104,6 +105,16 @@ void COMM_RRS::init()
         query["name"] = "slamnav";
 
         io->connect("ws://localhost:11337", query);
+
+        connect(&vobs_update_timer, &QTimer::timeout, this, [this]()
+        {
+            if(obsmap->dirty_vobs_r.exchange(false) || obsmap->dirty_vobs_c.exchange(false))
+            {
+                obsmap->update_vobs_map();
+            }
+        });
+
+        vobs_update_timer.start(50); // 50ms debounce
     }
 }
 
@@ -303,7 +314,7 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
+        //logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
         Q_EMIT signal_path(msg);
     }
 }
@@ -319,7 +330,11 @@ void COMM_RRS::recv_vobs_robots(std::string const& name, sio::message::ptr const
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-        //logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+
+        QString res = QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time);
+        printf("%s\n", res.toLocal8Bit().data());
+
+        //logger->write_log(QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time), "Green");
         Q_EMIT signal_vobs_r(msg);
     }
 }
@@ -544,8 +559,11 @@ void COMM_RRS::send_status()
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     QJsonDocument doc(rootObj);
-    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("status", res); 
+    if(!doc.isNull())
+    {
+        sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+        io->socket()->emit("status", res);
+    }
 }
 
 // send functions
@@ -558,6 +576,9 @@ void COMM_RRS::send_move_status()
 
     // Creating the JSON object
     QJsonObject rootObj;
+
+
+    QString cur_node_id0 = ctrl->get_cur_node_id();
 
     // Adding the move state object
     QString auto_state = "stop";
@@ -583,6 +604,11 @@ void COMM_RRS::send_move_status()
     if(ctrl->get_obs_condition() == "vir")
     {
         auto_state = "vir";
+    }
+
+    if(cur_node_id0 == "")
+    {
+        auto_state = "error";
     }
 
     QString dock_state = "stop";
@@ -645,7 +671,7 @@ void COMM_RRS::send_move_status()
 
     // Adding the goal_node object
     QString goal_state = ctrl->get_cur_goal_state();
-    QString goal_node_id = ctrl->move_info.goal_node_id;
+    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
     QString goal_node_name = "";
     Eigen::Vector3d goal_xi(0,0,0);
     if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
@@ -672,8 +698,11 @@ void COMM_RRS::send_move_status()
     rootObj["time"] = QString::number((long long)(time*1000), 10);
 
     QJsonDocument doc(rootObj);
-    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("moveStatus", res);    
+    if(!doc.isNull())
+    {
+        sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+        io->socket()->emit("moveStatus", res);
+    }
 }
 
 void COMM_RRS::send_local_path()
@@ -861,13 +890,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
         MainWindow* _main = (MainWindow*)main;
         _main->update_jog_values(vx, vy, wz);
-
-        // response
-        msg.result = "accept";
-        msg.message = "";
-
-        // no response?
-        //send_move_response(msg);
     }
     else if(command == "target")
     {
@@ -878,7 +900,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->is_loaded != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx1800]map not loaded";
+                msg.message = "[R0Mx1800] map not loaded";
                 msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
@@ -888,7 +910,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(slam->is_loc == false)
             {
                 msg.result = "reject";
-                msg.message = "[R0Px1800]no localization";
+                msg.message = "[R0Px1800] no localization";
                 msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
@@ -900,7 +922,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(x < unimap->map_min_x || x > unimap->map_max_x || y < unimap->map_min_y || y > unimap->map_max_y)
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1800]target location out of range";
+                msg.message = "[R0Tx1800] target location out of range";
                 msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
@@ -913,7 +935,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(obsmap->is_tf_collision(goal_tf))
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1801]target location occupied(static obs)";
+                msg.message = "[R0Tx1801] target location occupied(static obs)";
                 msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
@@ -923,7 +945,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(config->USE_MULTI)
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1802]target command not supported by multi. use goal_id";
+                msg.message = "[R0Tx1802] target command not supported by multi. use goal_id";
                 msg.bat_percent = bat_percent;
 
                 send_move_response(msg);
@@ -947,7 +969,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             send_move_response(msg);
         }
     }
-    else if(command == "goal")
+    else if(command == "goal" || command == "change_goal")
     {
         QString method = msg.method;
         if(method == "pp")
@@ -1075,7 +1097,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.result = "reject";
             msg.message = "not supported yet";
             msg.bat_percent = bat_percent;
-
             send_move_response(msg);
         }
         else if(method == "tng")
@@ -1083,7 +1104,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.result = "reject";
             msg.message = "not supported yet";
             msg.bat_percent = bat_percent;
-
             send_move_response(msg);
         }
         else
@@ -1091,7 +1111,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             msg.result = "reject";
             msg.message = "[R0Sx2000]not supported";
             msg.bat_percent = bat_percent;
-
             send_move_response(msg);
         }
     }
@@ -1100,7 +1119,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         msg.result = "accept";
         msg.message = "";
         msg.bat_percent = bat_percent;
-
         send_move_response(msg);
 
         ctrl->is_pause = true;
@@ -1110,7 +1128,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         msg.result = "accept";
         msg.message = "";
         msg.bat_percent = bat_percent;
-
         send_move_response(msg);
 
         ctrl->is_pause = false;
@@ -1120,7 +1137,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         msg.result = "accept";
         msg.message = "";
         msg.bat_percent = bat_percent;
-
         send_move_response(msg);
 
         MainWindow* _main = (MainWindow*)main;
@@ -1647,11 +1663,21 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
         }
 
         // update vobs
-        obsmap->mtx.lock();
-        obsmap->vobs_list_robots = vobs_list;
-        obsmap->mtx.unlock();
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_list;
+            obsmap->dirty_vobs_r = true;
+            obsmap->mtx.unlock();
+        }
 
-        obsmap->update_vobs_map();
+        /*// update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_list;
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }*/
     }
 }
 
@@ -1679,11 +1705,21 @@ void COMM_RRS::slot_vobs_c(DATA_VOBS_C msg)
         }
 
         // update vobs
-        obsmap->mtx.lock();
-        obsmap->vobs_list_closures = vobs_list;
-        obsmap->mtx.unlock();
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_closures = vobs_list;
+            obsmap->dirty_vobs_c = true;
+            obsmap->mtx.unlock();
+        }
 
-        obsmap->update_vobs_map();
+        /*// update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_closures = vobs_list;
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }*/
     }
 }
 
@@ -1742,7 +1778,7 @@ void COMM_RRS::send_move_response(DATA_MOVE msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 
@@ -1770,7 +1806,7 @@ void COMM_RRS::send_localization_response(DATA_LOCALIZATION msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 
@@ -1794,7 +1830,7 @@ void COMM_RRS::send_load_response(DATA_LOAD msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 
@@ -1817,7 +1853,7 @@ void COMM_RRS::send_randomseq_response(DATA_RANDOMSEQ msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 
@@ -1841,7 +1877,7 @@ void COMM_RRS::send_mapping_response(DATA_MAPPING msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 
@@ -1864,7 +1900,7 @@ void COMM_RRS::send_dock_response(DATA_DOCK msg)
 
     // for plot
     mtx.lock();
-    last_msg = doc.toJson(QJsonDocument::Indented);
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
 }
 

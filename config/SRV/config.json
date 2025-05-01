@@ -94,7 +94,7 @@
     },
     "obs": {
         "OBS_AVOID": "0",
-        "OBS_DEADZONE_DYN": "0.7",
+        "OBS_DEADZONE_DYN": "0.5",
   	"OBS_DEADZONE_VIR": "0.7",
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
