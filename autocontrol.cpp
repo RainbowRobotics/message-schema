@@ -426,6 +426,12 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 {
+    // stop first
+    stop();
+
+    // load preset
+    params = load_preset(preset);
+
     MOBILE_STATUS ms = mobile->get_status();
     Eigen::Matrix4d cur_tf = slam->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
@@ -589,9 +595,6 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
     {        
         global_path_que.push(tmp_storage[p]);
     }
-
-    // load preset
-    params = load_preset(preset);
 
     // start control loop    
     if(b_flag == false)

@@ -157,6 +157,7 @@ void COMM_FMS::send_move_status()
 
     // Creating the JSON object
     QJsonObject rootObj;
+    rootObj["title"] = "moveStatus";
 
     QJsonObject robotObj;
     robotObj["robotSerial"] = robot_id;
@@ -186,8 +187,6 @@ void COMM_FMS::send_move_status()
     rootObj["data"] = dataObj;
 
     QJsonDocument doc(rootObj);
-    //QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    //client.sendBinaryMessage(buf);
     QString buf = doc.toJson(QJsonDocument::Compact);
     client.sendTextMessage(buf);
 }
@@ -795,6 +794,8 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
     }
 
     QJsonObject obj;
+    obj["title"] = "moveResponse";
+    obj["robot_id"] = robot_id;
     obj["command"] = msg.command;
     obj["result"] = msg.result;
     obj["message"] = msg.message;
@@ -822,7 +823,10 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
     }
     obj["goal_name"] = response_goal_node_name;
 
-    //obj["goal_name"] = msg.goal_node_name;
+    obj["eta"] = QString::number(msg.eta, 'f', 3);
+    obj["remaining_dist"] = QString::number(msg.remaining_dist, 'f', 3);
+    obj["bat_percent"] = QString::number(msg.bat_percent, 10);
+
     obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
     obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
     obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
@@ -837,5 +841,5 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
 
     QJsonDocument doc(obj);
     QString buf = doc.toJson(QJsonDocument::Compact);
-    qDebug() << buf;
+    client.sendTextMessage(buf);
 }

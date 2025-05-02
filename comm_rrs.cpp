@@ -330,7 +330,6 @@ void COMM_RRS::recv_vobs_robots(std::string const& name, sio::message::ptr const
         msg.time = get_json(data, "time").toDouble()/1000;
 
         // action
-
         QString res = QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time);
         printf("%s\n", res.toLocal8Bit().data());
 
@@ -1665,7 +1664,7 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
         // update vobs
         {
             obsmap->mtx.lock();
-            obsmap->vobs_list_robots = vobs_list;
+            obsmap->vobs_list_robots.swap(vobs_list);
             obsmap->dirty_vobs_r = true;
             obsmap->mtx.unlock();
         }
@@ -1707,7 +1706,7 @@ void COMM_RRS::slot_vobs_c(DATA_VOBS_C msg)
         // update vobs
         {
             obsmap->mtx.lock();
-            obsmap->vobs_list_closures = vobs_list;
+            obsmap->vobs_list_closures.swap(vobs_list);
             obsmap->dirty_vobs_c = true;
             obsmap->mtx.unlock();
         }
