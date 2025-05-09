@@ -46,6 +46,7 @@ public:
     void load_map(QString path);
     void save_map();
     void save_annotation();
+    void save_annotation_with_simplify();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
 
     // topology

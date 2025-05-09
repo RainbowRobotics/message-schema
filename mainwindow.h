@@ -134,12 +134,6 @@ public:
     QTimer qa_timer;
     QString qa_last_node = "";
 
-    // bqr localization timer
-    QTimer bqr_localization_timer;
-
-    // init localization timer
-    QTimer init_localization_timer;
-
     // flags
     std::atomic<bool> is_map_update = {false};
     std::atomic<bool> is_topo_update = {false};
@@ -265,8 +259,6 @@ public Q_SLOTS:
     void plot_loop();
     void plot_loop2();
     void qa_loop();
-    void bqr_localization_loop();
-    void init_localization_loop();
 
     // config
     void bt_ConfigLoad();
@@ -386,6 +378,8 @@ public Q_SLOTS:
     void bt_DockStart();
     void bt_DockStop();
     void bt_UnDockStart();
+
+    void bt_TestAnnot();
 };
 #endif // MAINWINDOW_H
 

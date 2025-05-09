@@ -61,7 +61,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_slamnav">
        <property name="minimumSize">
@@ -369,7 +369,7 @@
                <string>Plot enable</string>
               </property>
               <property name="checked">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -1134,7 +1134,7 @@ out</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -2564,6 +2564,24 @@ Cloud</string>
              <property name="text">
               <string>Check
 Nodes</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_TestAnnot">
+             <property name="geometry">
+              <rect>
+               <x>260</x>
+               <y>50</y>
+               <width>51</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Test</string>
              </property>
             </widget>
            </widget>

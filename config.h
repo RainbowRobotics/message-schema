@@ -108,6 +108,7 @@ public:
     double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
 
     int OBS_AVOID = 0;
+    double OBS_DEADZONE = 0.5;
     double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
     double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
     double OBS_LOCAL_GOAL_D = 4.0;

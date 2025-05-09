@@ -252,7 +252,39 @@ void UNIMAP::save_annotation()
             obj["type"] = nodes[p].type;
             obj["info"] = nodes[p].info;
             obj["pose"] = TF_to_string(nodes[p].tf);
-            obj["links"] = links_to_array(nodes[p].linked);            
+            obj["links"] = links_to_array(nodes[p].linked);
+            arr.append(obj);
+        }
+
+        QJsonDocument doc(arr);
+        topo_file.write(doc.toJson());
+        topo_file.close();
+
+        printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+    }
+}
+
+void UNIMAP::save_annotation_with_simplify()
+{
+    // get save folder
+    QString path = map_dir;
+
+    // save topo.json
+    QString topo_path = path + "/topo.json";
+    QFile topo_file(topo_path);
+    if(topo_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    {
+        QJsonArray arr;
+        for(size_t p = 0; p < nodes.size(); p++)
+        {
+            QJsonObject obj;
+            obj["id"] = nodes[p].id;
+            obj["name"] = nodes[p].name;
+            obj["type"] = nodes[p].type;
+            obj["info"] = nodes[p].info;
+            obj["pose"] = TF_to_string(nodes[p].tf);
+            obj["order"] = QString::number(p, 10);
+            obj["links"] = links_to_array(nodes[p].linked);
             arr.append(obj);
         }
 

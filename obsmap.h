@@ -25,16 +25,15 @@ public:
     LOGGER *logger = NULL;
     UNIMAP *unimap = NULL;
 
-    void init();    
+    void init();
     void clear();
-    void clear_vir_obs();
     void update_obs_map(TIME_POSE_PTS& tpp);
     void update_obs_map_sim(Eigen::Matrix4d tf);
     void update_vobs_map();
 
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
-    void get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf);    
+    void get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf);
     std::vector<Eigen::Vector3d> get_obs_pts();
     std::vector<Eigen::Vector3d> get_dyn_pts();
     std::vector<Eigen::Vector3d> get_vir_pts();
@@ -45,13 +44,9 @@ public:
     std::vector<Eigen::Vector4d> get_plot_pts(); // x, y, z, prob
 
     // check collision
-    int is_tf_collision(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    int is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
-    int is_undock_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, double margin_x, double margin_y, int st_idx, int idx_step);
-
-    int is_tf_collision_dyn(const Eigen::Matrix4d& robot_tf, double margin_x = 0, double margin_y = 0);
-    int is_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, Eigen::Vector3d &obs_pts, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
-    int is_undock_path_collision_dyn(const std::vector<Eigen::Matrix4d>& robot_tfs_dyn, const std::vector<Eigen::Matrix4d>& robot_tfs_vir, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
+    bool is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is_dyn = false);
+    int is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn = false, double margin_x = 0, double margin_y = 0);
+    int is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn = false, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
 
     // for avoid path
     double calc_clearance(const cv::Mat& map, const Eigen::Matrix4d& robot_tf, double radius);
@@ -61,19 +56,15 @@ public:
 
     // octree for obsmap
     octomap::OcTree* octree = NULL;
-    std::vector<Eigen::Vector3d> obs_pts_static;
-    std::vector<Eigen::Vector3d> obs_pts_dynamic;
-    std::vector<Eigen::Vector3d> obs_pts_virtual;
-    std::vector<Eigen::Vector3d> closure_pts_virtual;
+    std::vector<Eigen::Vector3d> obs_pts;
+    std::vector<Eigen::Vector3d> dyn_pts;
+    std::vector<Eigen::Vector3d> vir_pts;
+    std::vector<Eigen::Vector3d> vir_closure_pts;
     std::vector<Eigen::Vector4d> plot_pts;
 
     // virtual obs for multirobot
     std::vector<Eigen::Vector3d> vobs_list_robots;
     std::vector<Eigen::Vector3d> vobs_list_closures;
-
-    // dirty flag
-    std::atomic<bool> dirty_vobs_r = {false};
-    std::atomic<bool> dirty_vobs_c = {false};
 
     // grid map
     Eigen::Matrix4d map_tf;

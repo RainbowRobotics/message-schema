@@ -8,12 +8,11 @@ COMM_FMS::COMM_FMS(QObject *parent)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_FMS::disconnected);
-    //connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
     connect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
 
     connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
 
-    connect(this, SIGNAL(signal_send_move_status()), this, SLOT(send_move_status()));
+    connect(this, &COMM_FMS::signal_send_move_status, this, &COMM_FMS::send_move_status, Qt::QueuedConnection);
 
     connect(this, SIGNAL(signal_recv_move(DATA_MOVE)), this, SLOT(slot_recv_move(DATA_MOVE)));
     connect(this, SIGNAL(signal_recv_load(DATA_LOAD)), this, SLOT(slot_recv_load(DATA_LOAD)));
@@ -111,7 +110,7 @@ void COMM_FMS::send_move_status()
     QString cur_node_id = ctrl->get_cur_node_id();
 
     // get goal_node_id
-    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
+    QString goal_node_id = ctrl->move_info.goal_node_id;
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
     if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
     {
@@ -189,6 +188,8 @@ void COMM_FMS::send_move_status()
     QJsonDocument doc(rootObj);
     QString buf = doc.toJson(QJsonDocument::Compact);
     client.sendTextMessage(buf);
+
+    //printf("[COMM_SN] move status size %d \n", buf.size());
 }
 
 // recv callback
@@ -269,6 +270,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT signal_recv_vobs_r(msg);
     }
+
     else if(topic == "vobsClosures")
     {
         DATA_VOBS_C msg;
@@ -794,6 +796,7 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
     }
 
     QJsonObject obj;
+
     obj["title"] = "moveResponse";
     obj["robot_id"] = robot_id;
     obj["command"] = msg.command;
@@ -822,7 +825,6 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
         response_goal_node_name = "AMR-CONTAINER-01";
     }
     obj["goal_name"] = response_goal_node_name;
-
     obj["eta"] = QString::number(msg.eta, 'f', 3);
     obj["remaining_dist"] = QString::number(msg.remaining_dist, 'f', 3);
     obj["bat_percent"] = QString::number(msg.bat_percent, 10);
@@ -841,5 +843,5 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
 
     QJsonDocument doc(obj);
     QString buf = doc.toJson(QJsonDocument::Compact);
-    client.sendTextMessage(buf);
+    //client.sendTextMessage(buf);
 }

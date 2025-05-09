@@ -35,6 +35,7 @@ public:
     MOBILE *mobile = NULL;
     LIDAR_2D *lidar = NULL;
     CAM *cam = NULL;
+    BQR_SENSOR *code = NULL;
     SLAM_2D *slam = NULL;
     UNIMAP *unimap = NULL;
     OBSMAP *obsmap = NULL;
@@ -53,26 +54,16 @@ public:
     QString get_multi_req();
     QString get_obs_condition();
     QString get_cur_goal_state();
-    DATA_MOVE get_cur_move_info();
 
-    void set_control_state(StateMultiReq _multi_req, StateObsCondition _obs_condition, StateCurGoal _cur_goal);
-    void set_multi_req(StateMultiReq _multi_req);               // none, recv_path, req_path
-    void set_obs_condition(StateObsCondition _obs_condition);   // none, far, near, vir
-    void set_cur_goal_state(StateCurGoal _cur_goal);            // cancel, move, fail, complete, obstacle
-
-    void set_move_info(DATA_MOVE msg);
+    void set_multi_req(QString str);
+    void set_obs_condition(QString str);
+    void set_cur_goal_state(QString str);
 
     void init();
     void stop();
+    void move_pp(Eigen::Matrix4d goal_tf, int preset); // single
+    void move_pp(std::vector<QString> node_path, int preset); // multi
     void clear_path();
-
-    /* pp */
-    void move_pp(Eigen::Matrix4d goal_tf, int preset);
-    void move_pp(std::vector<QString> node_path, int preset);
-
-    /* hpp */
-    void move_hpp(Eigen::Matrix4d goal_tf, int val);
-    void move_hpp(std::vector<QString> node_path, int val);
 
     // global path planning (using topo)
     std::vector<QString> remove_duplicates(std::vector<QString> node_path);
@@ -83,7 +74,7 @@ public:
     PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
     std::vector<QString> topo_path_finding(QString st_node_id, QString ed_node_id);
     std::vector<Eigen::Vector3d> path_resampling(const std::vector<Eigen::Vector3d>& src, double step);
-    std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);    
+    std::vector<Eigen::Matrix4d> path_resampling(const std::vector<Eigen::Matrix4d>& src, double step);
     std::vector<Eigen::Vector3d> sample_and_interpolation(const std::vector<Eigen::Vector3d>& src, double large_step, double small_step, bool use_ccma = true);
     std::vector<Eigen::Vector3d> path_ccma(const std::vector<Eigen::Vector3d>& src);
 
@@ -91,7 +82,7 @@ public:
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
     // for local path planning (using obs_map)
-    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);        
+    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d G0);
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
     PATH calc_local_path(PATH& global_path);
     PATH calc_avoid_path(PATH& global_path);
@@ -108,9 +99,6 @@ public:
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
     void b_loop_pp();
-    void b_loop_hpp();
-
-    DATA_MOVE move_info;
 
     // for path plot
     PATH cur_global_path;
@@ -128,23 +116,22 @@ public:
     std::atomic<bool> is_debug = {false};
     std::atomic<bool> is_path_overlap = {false};
     std::atomic<bool> is_moving = {false};
-    std::atomic<bool> is_pause = {false};    
-    std::atomic<bool> is_undock = {false};
+    std::atomic<bool> is_pause = {false};
     std::atomic<int> fsm_state = {AUTO_FSM_COMPLETE};
 
     // params for rrs
     std::atomic<bool> is_rrs = {false};
-    QString multi_req      = "none";    // none, req_path, recv_path
-    QString obs_condition  = "none";    // none, far, near, vir
-    QString cur_goal_state = "none";    // none, move, complete, fail, obstacle, cancel
-    std::atomic<double> remaining_dist = {0.};
+    QString multi_req = "none"; // none, req_path, recv_path
+    QString obs_condition = "none";
+    QString cur_goal_state = "none"; // "none", "move", "complete", "fail", "obstacle", "cancel"
+
+    DATA_MOVE move_info;
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();
     void signal_move_response(DATA_MOVE msg);
-    void signal_check_docking();
 
 public Q_SLOTS:
     void move(DATA_MOVE msg);

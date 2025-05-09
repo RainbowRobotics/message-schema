@@ -6,7 +6,6 @@ COMM_RRS::COMM_RRS(QObject *parent)
     : QObject(parent)
     , main(parent)
     , io(new sio::client())
-    , vobs_update_timer(this)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -105,16 +104,6 @@ void COMM_RRS::init()
         query["name"] = "slamnav";
 
         io->connect("ws://localhost:11337", query);
-
-        connect(&vobs_update_timer, &QTimer::timeout, this, [this]()
-        {
-            if(obsmap->dirty_vobs_r.exchange(false) || obsmap->dirty_vobs_c.exchange(false))
-            {
-                obsmap->update_vobs_map();
-            }
-        });
-
-        vobs_update_timer.start(50); // 50ms debounce
     }
 }
 
@@ -670,7 +659,7 @@ void COMM_RRS::send_move_status()
 
     // Adding the goal_node object
     QString goal_state = ctrl->get_cur_goal_state();
-    QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
+    QString goal_node_id = ctrl->move_info.goal_node_id;
     QString goal_node_name = "";
     Eigen::Vector3d goal_xi(0,0,0);
     if(unimap->is_loaded == MAP_LOADED && goal_node_id != "")
@@ -1664,19 +1653,11 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
         // update vobs
         {
             obsmap->mtx.lock();
-            obsmap->vobs_list_robots.swap(vobs_list);
-            obsmap->dirty_vobs_r = true;
-            obsmap->mtx.unlock();
-        }
-
-        /*// update vobs
-        {
-            obsmap->mtx.lock();
             obsmap->vobs_list_robots = vobs_list;
             obsmap->mtx.unlock();
 
             obsmap->update_vobs_map();
-        }*/
+        }
     }
 }
 
@@ -1706,19 +1687,11 @@ void COMM_RRS::slot_vobs_c(DATA_VOBS_C msg)
         // update vobs
         {
             obsmap->mtx.lock();
-            obsmap->vobs_list_closures.swap(vobs_list);
-            obsmap->dirty_vobs_c = true;
-            obsmap->mtx.unlock();
-        }
-
-        /*// update vobs
-        {
-            obsmap->mtx.lock();
             obsmap->vobs_list_closures = vobs_list;
             obsmap->mtx.unlock();
 
             obsmap->update_vobs_map();
-        }*/
+        }
     }
 }
 
