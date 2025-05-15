@@ -109,6 +109,7 @@ private Q_SLOTS:
     void recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs_robots(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs_closures(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
@@ -125,6 +126,7 @@ Q_SIGNALS:
     void signal_motor(DATA_MOTOR msg);
 
     void signal_path(DATA_PATH msg);
+    void signal_vobs(DATA_VOBS msg);
     void signal_vobs_r(DATA_VOBS_R msg);
     void signal_vobs_c(DATA_VOBS_C msg);
 
@@ -141,6 +143,7 @@ public Q_SLOTS:
     void slot_motor(DATA_MOTOR msg);
 
     void slot_path(DATA_PATH msg);
+    void slot_vobs(DATA_VOBS msg);
     void slot_vobs_r(DATA_VOBS_R msg);
     void slot_vobs_c(DATA_VOBS_C msg);
 

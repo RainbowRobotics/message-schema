@@ -450,6 +450,84 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
 void OBSMAP::update_vobs_map()
 {
+    Eigen::Matrix4d cur_tf, cur_tf_inv;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        cur_tf = map_tf;
+    }
+    cur_tf_inv = cur_tf.inverse();
+
+    // add vobs from fms
+    std::vector<Eigen::Vector3d> _vir_pts;
+    std::vector<Eigen::Vector3d> _vir_closure_pts;
+    cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
+
+    auto process_vobs = [&](const std::vector<Eigen::Vector3d>& list, bool is_closure)
+    {
+        std::vector<std::vector<Eigen::Vector3d>> local_pts(3);
+        std::vector<std::vector<Eigen::Vector3d>> local_closure_pts(3);
+        std::vector<std::vector<cv::Point>> local_pixels(3);
+
+        #pragma omp parallel for num_threads(3)
+        for(int i = 0; i < static_cast<int>(list.size()); ++i)
+        {
+            int tid = omp_get_thread_num();
+            Eigen::Vector3d center = list[i];
+
+            auto pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
+            pts.push_back(center);
+
+            for(const auto& pt : pts)
+            {
+                local_pts[tid].push_back(pt);
+
+                if(is_closure)
+                {
+                    local_closure_pts[tid].push_back(pt);
+                }
+
+                Eigen::Vector3d _P = cur_tf_inv.block<3,3>(0,0) * pt + cur_tf_inv.block<3,1>(0,3);
+                cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+                if(uv[0] >= 0 && uv[0] < w && uv[1] >= 0 && uv[1] < h)
+                {
+                    local_pixels[tid].push_back(uv);
+                }
+            }
+        }
+
+        // thread-local → main vector merge
+        for(int tid = 0; tid < 3; ++tid)
+        {
+            _vir_pts.insert(_vir_pts.end(), local_pts[tid].begin(), local_pts[tid].end());
+
+            if(is_closure)
+            {
+                _vir_closure_pts.insert(_vir_closure_pts.end(), local_closure_pts[tid].begin(), local_closure_pts[tid].end());
+            }
+
+            for(const auto& px : local_pixels[tid])
+            {
+                _virtual_map.ptr<uchar>(px.y)[px.x] = 255;
+            }
+        }
+    };
+
+    process_vobs(vobs_list_robots, false);
+    process_vobs(vobs_list_closures, true);
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        vir_pts = std::move(_vir_pts);
+        vir_closure_pts = std::move(_vir_closure_pts);
+        virtual_map = _virtual_map.clone();
+    }
+
+    // signal for redrawing
+    Q_EMIT obs_updated();
+}
+
+/*void OBSMAP::update_vobs_map()
+{
     mtx.lock();
     Eigen::Matrix4d cur_tf = map_tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
@@ -517,15 +595,15 @@ void OBSMAP::update_vobs_map()
         }
     }
 
-    vir_pts = _vir_pts;
-    vir_closure_pts = _vir_closure_pts;
+    obs_pts_virtual = _vir_pts;
+    closure_pts_virtual = _vir_closure_pts;
     virtual_map = _virtual_map;
 
     mtx.unlock();
 
     // signal for redrawing
     Q_EMIT obs_updated();
-}
+}*/
 
 void OBSMAP::get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf)
 {

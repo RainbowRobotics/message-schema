@@ -30,6 +30,7 @@ COMM_RRS::COMM_RRS(QObject *parent)
     BIND_EVENT(sock, "led",             std::bind(&COMM_RRS::recv_led,               this, _1, _2, _3, _4));
     BIND_EVENT(sock, "motor",           std::bind(&COMM_RRS::recv_motor,             this, _1, _2, _3, _4));
     BIND_EVENT(sock, "path",            std::bind(&COMM_RRS::recv_path,              this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "vobsRobots",      std::bind(&COMM_RRS::recv_vobs_robots,       this, _1, _2, _3, _4));
     BIND_EVENT(sock, "vobsClosures",    std::bind(&COMM_RRS::recv_vobs_closures,     this, _1, _2, _3, _4));
 
@@ -45,6 +46,7 @@ COMM_RRS::COMM_RRS(QObject *parent)
     connect(this, SIGNAL(signal_led(DATA_LED)),                   this, SLOT(slot_led(DATA_LED)));
     connect(this, SIGNAL(signal_motor(DATA_MOTOR)),               this, SLOT(slot_motor(DATA_MOTOR)));
     connect(this, SIGNAL(signal_path(DATA_PATH)),                 this, SLOT(slot_path(DATA_PATH)));
+    connect(this, SIGNAL(signal_vobs(DATA_VOBS)),                 this, SLOT(slot_vobs(DATA_VOBS)));
     connect(this, SIGNAL(signal_vobs_r(DATA_VOBS_R)),             this, SLOT(slot_vobs_r(DATA_VOBS_R)));
     connect(this, SIGNAL(signal_vobs_c(DATA_VOBS_C)),             this, SLOT(slot_vobs_c(DATA_VOBS_C)));
 }
@@ -305,6 +307,27 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         // action
         //logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
         Q_EMIT signal_path(msg);
+    }
+}
+
+void COMM_RRS::recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        DATA_VOBS msg;
+        msg.command = get_json(data, "command"); // "vobs"
+        msg.vobs_robots = get_json(data, "vobs_r");
+        msg.vobs_clousers = get_json(data, "vobs_c");
+        msg.is_vobs_closures_change = get_json(data, "is_vobs_c");
+        msg.time = get_json(data, "time").toDouble()/1000;
+
+        // action
+        QString res = QString("[COMM_RRS] recv, command: %1, vobs_r: %2, vobs_c: %3, time: %4").arg(msg.command).arg(msg.vobs_robots).arg(msg.vobs_clousers).arg(msg.time);
+        printf("%s\n", res.toLocal8Bit().data());
+
+        //logger->write_log(QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time), "Green");
+        Q_EMIT signal_vobs(msg);
     }
 }
 
@@ -1405,11 +1428,11 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         }
         slam->set_cur_tf(tf);
 
-        if(config->USE_LVX)
+        /*if(config->USE_LVX)
         {
             lvx->loc_start();
         }
-        slam->localization_start();
+        slam->localization_start();*/
     }
     else if(command == "start")
     {
@@ -1654,6 +1677,67 @@ void COMM_RRS::slot_vobs_r(DATA_VOBS_R msg)
         {
             obsmap->mtx.lock();
             obsmap->vobs_list_robots = vobs_list;
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }
+    }
+}
+
+void COMM_RRS::slot_vobs(DATA_VOBS msg)
+{
+    QString command = msg.command;
+    if(command == "vobs")
+    {
+        std::vector<Eigen::Vector3d> vobs_r_list;
+        {
+            QString vobs_str = msg.vobs_robots;
+            QStringList vobs_str_list = vobs_str.split("\n");
+            if(vobs_str_list.size() > 0)
+            {
+                for(int p = 0; p < vobs_str_list.size(); p++)
+                {
+                    QStringList vobs_str_list2 = vobs_str_list[p].split(",");
+                    if(vobs_str_list2.size() == 3)
+                    {
+                        Eigen::Vector3d P;
+                        P[0] = vobs_str_list2[0].toDouble();
+                        P[1] = vobs_str_list2[1].toDouble();
+                        P[2] = vobs_str_list2[2].toDouble();
+                        vobs_r_list.push_back(P);
+                    }
+                }
+            }
+        }
+
+        std::vector<Eigen::Vector3d> vobs_c_list;
+        {
+            QString vobs_str = msg.vobs_clousers;
+            QStringList vobs_str_list = vobs_str.split(",");
+
+            // set vobs
+            for(int p = 0; p < vobs_str_list.size(); p++)
+            {
+                QString node_id = vobs_str_list[p];
+                if(node_id != "")
+                {
+                    NODE *node = unimap->get_node_by_id(node_id);
+                    if(node != NULL)
+                    {
+                        vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    }
+                }
+            }
+        }
+
+        // update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_r_list;
+            if(msg.is_vobs_closures_change == "true")
+            {
+                obsmap->vobs_list_closures = vobs_c_list;
+            }
             obsmap->mtx.unlock();
 
             obsmap->update_vobs_map();

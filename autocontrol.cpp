@@ -47,15 +47,15 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     QString preset_path = "";
 
     // config module init
-    #ifdef USE_SRV
+    #ifdef USE_S100
     preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400
+    #ifdef USE_D400
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
-    #ifdef USE_AMR_400_LAKI
+    #ifdef USE_D400_LAKI
     preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
     #endif
 
@@ -259,7 +259,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
     move_info = msg;
     mtx.unlock();
 
-    if(msg.preset < 100)
+    if(msg.command == "goal")
     {
         if(is_rrs && config->USE_MULTI)
         {
@@ -273,7 +273,7 @@ void AUTOCONTROL::move(DATA_MOVE msg)
             move_pp(tf, msg.preset);
         }
     }
-    else
+    else if(msg.command == "change_goal")
     {
         qDebug() << "[AUTO] just change goal";
     }
@@ -2224,8 +2224,23 @@ void AUTOCONTROL::b_loop_pp()
                     }
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                // for real time loop
+                double cur_loop_time = get_time();
+                double delta_loop_time = cur_loop_time - pre_loop_time;
+                if(delta_loop_time < dt)
+                {
+                    int sleep_ms = (dt-delta_loop_time)*1000;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+                }
+                else
+                {
+                    logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+                }
+                pre_loop_time = get_time();
                 continue;
+
+                //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                //continue;
             }
 
             // obs decel
@@ -2692,7 +2707,7 @@ void AUTOCONTROL::b_loop_pp()
         }
         else
         {
-            //logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
         }
         pre_loop_time = get_time();
     }

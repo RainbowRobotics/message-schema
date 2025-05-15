@@ -453,6 +453,8 @@ struct DATA_PATH
     double time;
     QString command; // path
     QString path;
+    QString vobs_robots;
+    QString vobs_clousers;
     int preset;
 
     QString result;
@@ -463,6 +465,8 @@ struct DATA_PATH
         time = 0.0;
         command = "";
         path = "";
+        vobs_robots = "";
+        vobs_clousers = "";
         preset = 0;
 
         result = "";
@@ -474,6 +478,8 @@ struct DATA_PATH
         time = p.time;
         command = p.command;
         path = p.path;
+        vobs_robots = p.vobs_robots;
+        vobs_clousers = p.vobs_clousers;
         preset = p.preset;
 
         result = p.result;
@@ -485,7 +491,58 @@ struct DATA_PATH
         time = p.time;
         command = p.command;
         path = p.path;
+        vobs_robots = p.vobs_robots;
+        vobs_clousers = p.vobs_clousers;
         preset = p.preset;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+struct DATA_VOBS
+{
+    double time;
+    QString command; // vobs
+    QString vobs_robots;
+    QString vobs_clousers;
+    QString is_vobs_closures_change;
+
+    QString result;
+    QString message;
+
+    DATA_VOBS()
+    {
+        time = 0.0;
+        command = "";
+        vobs_robots = "";
+        vobs_clousers = "";
+        is_vobs_closures_change = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_VOBS(const DATA_VOBS& p)
+    {
+        time = p.time;
+        command = p.command;
+        vobs_robots = p.vobs_robots;
+        vobs_clousers = p.vobs_clousers;
+        is_vobs_closures_change = p.is_vobs_closures_change;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_VOBS& operator=(const DATA_VOBS& p)
+    {
+        time = p.time;
+        command = p.command;
+        vobs_robots = p.vobs_robots;
+        vobs_clousers = p.vobs_clousers;
+        is_vobs_closures_change = p.is_vobs_closures_change;
 
         result = p.result;
         message = p.message;
@@ -588,5 +645,6 @@ Q_DECLARE_METATYPE(DATA_MOTOR)
 Q_DECLARE_METATYPE(DATA_PATH)
 Q_DECLARE_METATYPE(DATA_VOBS_R)
 Q_DECLARE_METATYPE(DATA_VOBS_C)
+Q_DECLARE_METATYPE(DATA_VOBS)
 
 #endif // COMM_DATA_H

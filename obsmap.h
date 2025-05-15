@@ -18,7 +18,7 @@ class OBSMAP : public QObject
 public:
     explicit OBSMAP(QObject *parent = nullptr);
     ~OBSMAP();
-    std::recursive_mutex mtx;
+    std::mutex mtx;
 
     // other modules
     CONFIG *config = NULL;
@@ -65,6 +65,10 @@ public:
     // virtual obs for multirobot
     std::vector<Eigen::Vector3d> vobs_list_robots;
     std::vector<Eigen::Vector3d> vobs_list_closures;
+
+    // dirty flag
+    std::atomic<bool> dirty_vobs_r = {false};
+    std::atomic<bool> dirty_vobs_c = {false};
 
     // grid map
     Eigen::Matrix4d map_tf;

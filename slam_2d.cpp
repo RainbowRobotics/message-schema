@@ -182,15 +182,20 @@ void SLAM_2D::localization_stop()
     }    
 
     // clear lidar scan
-    lidar->mtx.lock();
+    {
+        std::lock_guard<std::recursive_mutex> lock(lidar->mtx);
+        lidar->scan_que.clear();
+        lidar->cur_scan.clear();
+        lidar->cur_scan_f.clear();
+        lidar->cur_scan_b.clear();
+        lidar->cur_scan_outlier.clear();
+    }
 
-    lidar->scan_que.clear();
-    lidar->cur_scan.clear();
-    lidar->cur_scan_f.clear();
-    lidar->cur_scan_b.clear();
-    lidar->cur_scan_outlier.clear();
-
-    lidar->mtx.unlock();
+    // clear cur ieir
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        cur_ieir = Eigen::Vector2d(9999.0, 0.0);
+    }
 }
 
 void SLAM_2D::set_cur_tf(Eigen::Matrix4d tf)
