@@ -58,6 +58,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+Q_DECLARE_METATYPE(Eigen::Matrix4d)
 
 // sophus
 #define SOPHUS_USE_BASIC_LOGGING
@@ -203,7 +204,7 @@ enum AUTO_OBS_STATE
     AUTO_OBS_AVOID,
     AUTO_OBS_WAIT,
     AUTO_OBS_WAIT2,
-    AUTO_OBS_VIRTUAL
+    AUTO_OBS_VIR
 };
 
 enum OBS_INFO_STATE
@@ -213,12 +214,11 @@ enum OBS_INFO_STATE
     OBS_VIRTUAL = 2,
 };
 
-enum OBS_DETECT_STATE
+enum OBS_STATE
 {
-    OBS_DETECT_NONE = 0,
-    OBS_DETECT_STATIC = 1,
-    OBS_DETECT_DYNAMIC = 2,
-    OBS_DETECT_VIRTUAL = 3,
+    OBS_NONE = 0,
+    OBS_DYN = 1,
+    OBS_VIR = 2,
 };
 
 enum LOCAL_PATH_STATE
@@ -272,6 +272,13 @@ enum CHARGING_STATION_STATE
     CHARGING_STATION_CHARGING = 3,
     CHARGING_STATION_TRIG_TO_STOP_CHARGE= 4,
     CHARGING_STATION_FAIL = 5,
+};
+
+enum SEMIAUTOINIT_STATE
+{
+    NONE=0,
+    INITIALIZING=1,
+    COMPLETE=2
 };
 
 enum MAP_LOAD_STATE

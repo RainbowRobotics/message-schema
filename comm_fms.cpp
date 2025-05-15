@@ -4,6 +4,7 @@
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
     , reconnect_timer(this)
+    , vobs_update_timer(this)
     , main(parent)
 {
     connect(&client, &QWebSocket::connected, this, &COMM_FMS::connected);
@@ -11,17 +12,18 @@ COMM_FMS::COMM_FMS(QObject *parent)
     //connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_FMS::recv_message);
     connect(&client, &QWebSocket::textMessageReceived, this, &COMM_FMS::recv_message);
 
-    connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));    
+    connect(&reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
 
     connect(this, SIGNAL(signal_send_move_status()), this, SLOT(send_move_status()));
 
-    connect(this, SIGNAL(signal_recv_move(DATA_MOVE)), this, SLOT(slot_recv_move(DATA_MOVE)));
-    connect(this, SIGNAL(signal_recv_load(DATA_LOAD)), this, SLOT(slot_recv_load(DATA_LOAD)));
-    connect(this, SIGNAL(signal_recv_localization(DATA_LOCALIZATION)), this, SLOT(slot_recv_localization(DATA_LOCALIZATION)));
-    connect(this, SIGNAL(signal_recv_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_recv_randomseq(DATA_RANDOMSEQ)));
-    connect(this, SIGNAL(signal_recv_path(DATA_PATH)), this, SLOT(slot_recv_path(DATA_PATH)));
-    connect(this, SIGNAL(signal_recv_vobs_r(DATA_VOBS_R)), this, SLOT(slot_recv_vobs_r(DATA_VOBS_R)));
-    connect(this, SIGNAL(signal_recv_vobs_c(DATA_VOBS_C)), this, SLOT(slot_recv_vobs_c(DATA_VOBS_C)));
+    connect(this, SIGNAL(recv_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
+    connect(this, SIGNAL(recv_load(DATA_LOAD)), this, SLOT(slot_load(DATA_LOAD)));
+    connect(this, SIGNAL(recv_localization(DATA_LOCALIZATION)), this, SLOT(slot_localization(DATA_LOCALIZATION)));
+    connect(this, SIGNAL(recv_randomseq(DATA_RANDOMSEQ)), this, SLOT(slot_randomseq(DATA_RANDOMSEQ)));
+    connect(this, SIGNAL(recv_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
+    connect(this, SIGNAL(recv_vobs_r(DATA_VOBS_R)), this, SLOT(slot_vobs_r(DATA_VOBS_R)));
+    connect(this, SIGNAL(recv_vobs_c(DATA_VOBS_C)), this, SLOT(slot_vobs_c(DATA_VOBS_C)));
+    connect(this, SIGNAL(recv_vobs(DATA_VOBS)), this, SLOT(slot_vobs(DATA_VOBS)));
 }
 
 COMM_FMS::~COMM_FMS()
@@ -61,6 +63,16 @@ void COMM_FMS::init()
     // start reconnect loop
     reconnect_timer.start(3000);
     printf("[COMM_FMS] start reconnect timer\n");
+
+    //connect(&vobs_update_timer, &QTimer::timeout, this, [this]()
+    //{
+    //    if(obsmap->dirty_vobs_r.exchange(false) || obsmap->dirty_vobs_c.exchange(false))
+    //    {
+    //        obsmap->update_vobs_map();
+    //    }
+    //});
+
+    //vobs_update_timer.start(50); // 50ms debounce
 }
 
 void COMM_FMS::reconnect_loop()
@@ -156,13 +168,11 @@ void COMM_FMS::send_move_status()
     Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
 
     // Creating the JSON object
-    QJsonObject rootObj;
-
     QJsonObject robotObj;
     robotObj["robotSerial"] = robot_id;
-    rootObj["robot"] = robotObj;
 
     QJsonObject dataObj;
+    dataObj["title"] = "moveStatus";
     dataObj["time"] = QString::number((long long)(time*1000), 10);
 
     QJsonObject curObj;
@@ -183,11 +193,12 @@ void COMM_FMS::send_move_status()
     moveObj["path"] = multi_req;
     moveObj["auto_move"] = auto_state;
     dataObj["move_state"] = moveObj;
+
+    QJsonObject rootObj;
+    rootObj["robot"] = robotObj;
     rootObj["data"] = dataObj;
 
     QJsonDocument doc(rootObj);
-    //QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-    //client.sendBinaryMessage(buf);
     QString buf = doc.toJson(QJsonDocument::Compact);
     client.sendTextMessage(buf);
 }
@@ -204,7 +215,7 @@ void COMM_FMS::recv_message(const QString &buf)
         return;
     }
 
-    QString topic = get_json(root_obj, "topic");    
+    QString topic = get_json(root_obj, "topic");
     QJsonObject data_obj = root_obj.value("data").toObject();
 
     // parsing
@@ -214,7 +225,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.map_name = get_json(data_obj, "name");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_load(msg);
+        Q_EMIT recv_load(msg);
     }
     else if(topic == "localization")
     {
@@ -226,14 +237,14 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.tgt_pose_vec[3] = get_json(data_obj, "rz").toDouble();
         msg.seed = get_json(data_obj, "seed");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_localization(msg);
+        Q_EMIT recv_localization(msg);
     }
     else if(topic == "randomseq")
     {
         DATA_RANDOMSEQ msg;
         msg.command = get_json(data_obj, "command");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_randomseq(msg);
+        Q_EMIT recv_randomseq(msg);
     }
     else if(topic == "move")
     {
@@ -242,7 +253,6 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.preset = get_json(data_obj, "preset").toInt();
         msg.method = get_json(data_obj, "method");
         msg.goal_node_id = get_json(data_obj, "goal_id");
-        msg.goal_node_name = get_json(data_obj, "goal_name");
         msg.tgt_pose_vec[0] = get_json(data_obj, "x").toDouble();
         msg.tgt_pose_vec[1] = get_json(data_obj, "y").toDouble();
         msg.tgt_pose_vec[2] = get_json(data_obj, "z").toDouble();
@@ -251,16 +261,28 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.jog_val[1] = get_json(data_obj, "vy").toDouble();
         msg.jog_val[2] = get_json(data_obj, "wz").toDouble();
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_move(msg);
+        Q_EMIT recv_move(msg);
     }
     else if(topic == "path")
     {
         DATA_PATH msg;
         msg.command = get_json(data_obj, "command");
         msg.path = get_json(data_obj, "path");
+        msg.vobs_robots = get_json(data_obj, "vobs_r");
+        msg.vobs_clousers = get_json(data_obj, "vobs_c");
         msg.preset = get_json(data_obj, "preset").toInt();
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_path(msg);
+        Q_EMIT recv_path(msg);
+    }
+    else if(topic == "vobs")
+    {
+        DATA_VOBS msg;
+        msg.command = get_json(data_obj, "command");
+        msg.vobs_robots = get_json(data_obj, "vobs_r");
+        msg.vobs_clousers = get_json(data_obj, "vobs_c");
+        msg.is_vobs_closures_change = get_json(data_obj, "is_vobs_c");
+        msg.time = get_json(data_obj, "time").toDouble()/1000;
+        Q_EMIT recv_vobs(msg);
     }
     else if(topic == "vobsRobots")
     {
@@ -268,7 +290,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.vobs = get_json(data_obj, "vobs");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_vobs_r(msg);
+        Q_EMIT recv_vobs_r(msg);
     }
     else if(topic == "vobsClosures")
     {
@@ -276,11 +298,11 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.vobs = get_json(data_obj, "vobs");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT signal_recv_vobs_c(msg);
+        Q_EMIT recv_vobs_c(msg);
     }
 }
 
-void COMM_FMS::slot_recv_load(DATA_LOAD msg)
+void COMM_FMS::slot_load(DATA_LOAD msg)
 {
     QString command = msg.command;
     if(command == "mapload")
@@ -354,7 +376,7 @@ void COMM_FMS::slot_recv_load(DATA_LOAD msg)
     }
 }
 
-void COMM_FMS::slot_recv_randomseq(DATA_RANDOMSEQ msg)
+void COMM_FMS::slot_randomseq(DATA_RANDOMSEQ msg)
 {
     QString command = msg.command;
     if(command == "randomseq")
@@ -371,7 +393,7 @@ void COMM_FMS::slot_recv_randomseq(DATA_RANDOMSEQ msg)
     }
 }
 
-void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
+void COMM_FMS::slot_localization(DATA_LOCALIZATION msg)
 {
     QString command = msg.command;
     if(command == "semiautoinit")
@@ -398,7 +420,7 @@ void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_D400) || defined(USE_D400_LAKI)
+        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
@@ -470,7 +492,7 @@ void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
             return;
         }
 
-        #if defined(USE_D400) || defined(USE_D400_LAKI)
+        #if defined(USE_AMR_400) || defined(USE_AMR_400_LAKI)
         if(lidar->is_connected_b == false)
         {
             msg.result = "reject";
@@ -559,10 +581,10 @@ void COMM_FMS::slot_recv_localization(DATA_LOCALIZATION msg)
     }
 }
 
-void COMM_FMS::slot_recv_move(DATA_MOVE msg)
+void COMM_FMS::slot_move(DATA_MOVE msg)
 {
     QString command = msg.command;
-    if(command == "goal")
+    if(command == "goal" || command == "change_goal")
     {
         QString method = msg.method;
         if(method == "pp")
@@ -688,11 +710,66 @@ void COMM_FMS::slot_recv_move(DATA_MOVE msg)
     }
 }
 
-void COMM_FMS::slot_recv_path(DATA_PATH msg)
+void COMM_FMS::slot_path(DATA_PATH msg)
 {
     QString command = msg.command;
     if(command == "path")
     {
+        std::vector<Eigen::Vector3d> vobs_r_list;
+        {
+            QString vobs_str = msg.vobs_robots;
+            QStringList vobs_str_list = vobs_str.split("\n");
+            if(vobs_str_list.size() > 0)
+            {
+                for(int p = 0; p < vobs_str_list.size(); p++)
+                {
+                    QStringList vobs_str_list2 = vobs_str_list[p].split(",");
+                    if(vobs_str_list2.size() == 3)
+                    {
+                        Eigen::Vector3d P;
+                        P[0] = vobs_str_list2[0].toDouble();
+                        P[1] = vobs_str_list2[1].toDouble();
+                        P[2] = vobs_str_list2[2].toDouble();
+                        vobs_r_list.push_back(P);
+                    }
+                }
+            }
+
+            std::cout << "[SLOT_PATH] recv vobs_robots: " << vobs_str.toStdString() << std::endl;
+        }
+
+        std::vector<Eigen::Vector3d> vobs_c_list;
+        {
+            QString vobs_str = msg.vobs_clousers;
+            QStringList vobs_str_list = vobs_str.split(",");
+
+            // set vobs
+            for(int p = 0; p < vobs_str_list.size(); p++)
+            {
+                QString node_id = vobs_str_list[p];
+                if(node_id != "")
+                {
+                    NODE *node = unimap->get_node_by_id(node_id);
+                    if(node != NULL)
+                    {
+                        vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    }
+                }
+            }
+
+            std::cout << "[SLOT_PATH] recv vobs_clousers: " << vobs_str.toStdString() << std::endl;
+        }
+
+        // update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_r_list;
+            obsmap->vobs_list_closures = vobs_c_list;
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }
+
         QString path_str = msg.path;
         QStringList path_str_list = path_str.split(",");
 
@@ -709,9 +786,70 @@ void COMM_FMS::slot_recv_path(DATA_PATH msg)
     }
 }
 
-void COMM_FMS::slot_recv_vobs_r(DATA_VOBS_R msg)
+void COMM_FMS::slot_vobs(DATA_VOBS msg)
 {
     QString command = msg.command;
+    if(command == "vobs")
+    {
+        std::vector<Eigen::Vector3d> vobs_r_list;
+        {
+            QString vobs_str = msg.vobs_robots;
+            QStringList vobs_str_list = vobs_str.split("\n");
+            if(vobs_str_list.size() > 0)
+            {
+                for(int p = 0; p < vobs_str_list.size(); p++)
+                {
+                    QStringList vobs_str_list2 = vobs_str_list[p].split(",");
+                    if(vobs_str_list2.size() == 3)
+                    {
+                        Eigen::Vector3d P;
+                        P[0] = vobs_str_list2[0].toDouble();
+                        P[1] = vobs_str_list2[1].toDouble();
+                        P[2] = vobs_str_list2[2].toDouble();
+                        vobs_r_list.push_back(P);
+                    }
+                }
+            }
+        }
+
+        std::vector<Eigen::Vector3d> vobs_c_list;
+        {
+            QString vobs_str = msg.vobs_clousers;
+            QStringList vobs_str_list = vobs_str.split(",");
+
+            // set vobs
+            for(int p = 0; p < vobs_str_list.size(); p++)
+            {
+                QString node_id = vobs_str_list[p];
+                if(node_id != "")
+                {
+                    NODE *node = unimap->get_node_by_id(node_id);
+                    if(node != NULL)
+                    {
+                        vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    }
+                }
+            }
+        }
+
+        // update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_r_list;
+            if(msg.is_vobs_closures_change == "true")
+            {
+                obsmap->vobs_list_closures = vobs_c_list;
+            }
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }
+    }
+}
+
+void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
+{
+    /*QString command = msg.command;
     if(command == "vobs_robots")
     {
         std::vector<Eigen::Vector3d> vobs_list;
@@ -737,15 +875,16 @@ void COMM_FMS::slot_recv_vobs_r(DATA_VOBS_R msg)
         // update vobs
         obsmap->mtx.lock();
         obsmap->vobs_list_robots = vobs_list;
+        //obsmap->dirty_vobs_r = true;
         obsmap->mtx.unlock();
 
         obsmap->update_vobs_map();
-    }
+    }*/
 }
 
-void COMM_FMS::slot_recv_vobs_c(DATA_VOBS_C msg)
+void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
 {
-    QString command = msg.command;
+    /*QString command = msg.command;
     if(command == "vobs_closures")
     {
         QString vobs_str = msg.vobs;
@@ -769,10 +908,11 @@ void COMM_FMS::slot_recv_vobs_c(DATA_VOBS_C msg)
         // update vobs
         obsmap->mtx.lock();
         obsmap->vobs_list_closures = vobs_list;
+        //obsmap->dirty_vobs_c = true;
         obsmap->mtx.unlock();
 
         obsmap->update_vobs_map();
-    }
+    }*/
 }
 
 void COMM_FMS::send_move_response(DATA_MOVE msg)
@@ -782,13 +922,17 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
         return;
     }
 
-    QJsonObject obj;
-    obj["command"] = msg.command;
-    obj["result"] = msg.result;
-    obj["message"] = msg.message;
-    obj["preset"] = QString::number(msg.preset, 10);
-    obj["method"] = msg.method;
-    obj["goal_id"] = msg.goal_node_id;
+    QJsonObject robotObj;
+    robotObj["robotSerial"] = robot_id;
+
+    QJsonObject dataObj;
+    dataObj["title"] = "moveResponse";
+    dataObj["command"] = msg.command;
+    dataObj["result"] = msg.result;
+    dataObj["message"] = msg.message;
+    dataObj["preset"] = QString::number(msg.preset, 10);
+    dataObj["method"] = msg.method;
+    dataObj["goal_id"] = msg.goal_node_id;
 
     // temporal patch
     QString response_goal_node_name = msg.goal_node_name;
@@ -808,22 +952,27 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
     {
         response_goal_node_name = "AMR-CONTAINER-01";
     }
-    obj["goal_name"] = response_goal_node_name;
+    dataObj["goal_name"] = response_goal_node_name;
 
     //obj["goal_name"] = msg.goal_node_name;
-    obj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
-    obj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
-    obj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
-    obj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
-    obj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
-    obj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
-    obj["rz"] = QString::number(msg.tgt_pose_vec[3]*R2D, 'f', 3);
-    obj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
-    obj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
-    obj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
-    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+    dataObj["cur_x"] = QString::number(msg.cur_pos[0], 'f', 3);
+    dataObj["cur_y"] = QString::number(msg.cur_pos[1], 'f', 3);
+    dataObj["cur_z"] = QString::number(msg.cur_pos[2], 'f', 3);
+    dataObj["x"] = QString::number(msg.tgt_pose_vec[0], 'f', 3);
+    dataObj["y"] = QString::number(msg.tgt_pose_vec[1], 'f', 3);
+    dataObj["z"] = QString::number(msg.tgt_pose_vec[2], 'f', 3);
+    dataObj["rz"] = QString::number(msg.tgt_pose_vec[3]*R2D, 'f', 3);
+    dataObj["vx"] = QString::number(msg.jog_val[0], 'f', 3);
+    dataObj["vy"] = QString::number(msg.jog_val[1], 'f', 3);
+    dataObj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
+    dataObj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-    QJsonDocument doc(obj);
+
+    QJsonObject rootObj;
+    rootObj["robot"] = robotObj;
+    rootObj["data"] = dataObj;
+
+    QJsonDocument doc(rootObj);
     QString buf = doc.toJson(QJsonDocument::Compact);
-    qDebug() << buf;
+    client.sendTextMessage(buf);
 }

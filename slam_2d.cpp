@@ -182,15 +182,20 @@ void SLAM_2D::localization_stop()
     }    
 
     // clear lidar scan
-    lidar->mtx.lock();
+    {
+        std::lock_guard<std::recursive_mutex> lock(lidar->mtx);
+        lidar->scan_que.clear();
+        lidar->cur_scan.clear();
+        lidar->cur_scan_f.clear();
+        lidar->cur_scan_b.clear();
+        lidar->cur_scan_outlier.clear();
+    }
 
-    lidar->scan_que.clear();
-    lidar->cur_scan.clear();
-    lidar->cur_scan_f.clear();
-    lidar->cur_scan_b.clear();
-    lidar->cur_scan_outlier.clear();
-
-    lidar->mtx.unlock();
+    // clear cur ieir
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        cur_ieir = Eigen::Vector2d(9999.0, 0.0);
+    }
 }
 
 void SLAM_2D::set_cur_tf(Eigen::Matrix4d tf)
@@ -2141,7 +2146,7 @@ void SLAM_2D::semi_auto_init_start()
         std::vector<QString> prefix_list;
         prefix_list.push_back(config->ROBOT_SERIAL_NUMBER);
         std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
-        if(idxs.size() == 0)
+        //if(idxs.size() == 0)
         {
             std::vector<QString> prefix_list0;
             prefix_list0.push_back("CHARGING");
@@ -2196,22 +2201,22 @@ void SLAM_2D::semi_auto_init_start()
         Eigen::Vector2d ieir = lvx->calc_ieir(pts, min_tf);
         if(ieir[0] < config->LOC_CHECK_IE && ieir[1] > config->LOC_CHECK_IR)
         {
-            // check min_tf is close init nodes
-            bool is_find = false;
-            for(size_t p = 0; p < idxs.size(); p++)
-            {
-                int i = idxs[p];
-                Eigen::Matrix4d tf = unimap->nodes[i].tf;
-                Eigen::Vector2d dtdr = dTdR(tf, min_tf);
-                if(dtdr[0] < 0.1)
-                {
-                    is_find = true;
-                    break;
-                }
-            }
+            //// check min_tf is close init nodes
+            //bool is_find = false;
+            //for(size_t p = 0; p < idxs.size(); p++)
+            //{
+            //    int i = idxs[p];
+            //    Eigen::Matrix4d tf = unimap->nodes[i].tf;
+            //    Eigen::Vector2d dtdr = dTdR(tf, min_tf);
+            //    if(dtdr[0] < 0.1)
+            //    {
+            //        is_find = true;
+            //        break;
+            //    }
+            //}
 
-            if(is_find)
-            {
+            //if(is_find)
+            //{
                 Eigen::Matrix4d res_tf = min_tf*offset_tf_inv;
 
                 lvx->set_cur_tf(res_tf);
@@ -2227,18 +2232,18 @@ void SLAM_2D::semi_auto_init_start()
                 Q_EMIT signal_localization_response(dloc);
 
                 printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
-            }
-            else
-            {
-                DATA_LOCALIZATION dloc;
-                dloc.command = "semiautoinit";
-                dloc.result = "fail";
-                dloc.message = "node and current location are too far apart.";
-                dloc.time = get_time();
-                Q_EMIT signal_localization_response(dloc);
+            //}
+            //else
+            //{
+            //    DATA_LOCALIZATION dloc;
+            //    dloc.command = "semiautoinit";
+            //    dloc.result = "fail";
+            //    dloc.message = "node and current location are too far apart.";
+            //    dloc.time = get_time();
+            //    Q_EMIT signal_localization_response(dloc);
 
-                printf("[AUTOINIT] failed auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
-            }
+            //    printf("[AUTOINIT] failed auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            //}
         }
         else
         {

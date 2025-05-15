@@ -25,8 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
     , plot_timer(this)
     , plot_timer2(this)
     , qa_timer(this)
-    , bqr_localization_timer(this)
-    , init_localization_timer(this)
 {
     ui->setupUi(this);
 
@@ -161,8 +159,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
     connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
     connect(ui->bt_ReturnToCharging, SIGNAL(clicked()), this, SLOT(bt_ReturnToCharging()));
-    connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()));
-    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()));
+    connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()), Qt::QueuedConnection);
+    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);
 
     // for docking
     connect(ui->bt_DockStart, SIGNAL(clicked()), this, SLOT(bt_DockStart()));
@@ -177,7 +175,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&slam, SIGNAL(signal_localization_response(DATA_LOCALIZATION)), &comm_rrs, SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // for obsmap
-    connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()));
+    connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);
     connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
 
     // task interface
@@ -202,15 +200,11 @@ MainWindow::MainWindow(QWidget *parent)
     // for advanced annot
     connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
 
-    // bqr localization
-    connect(&bqr_localization_timer, SIGNAL(timeout()), this, SLOT(bqr_localization_loop()));
-    connect(&ctrl, SIGNAL(signal_check_docking()), &dctrl, SLOT(slot_check_docking()));
-
-    // init localization
-    connect(&init_localization_timer, SIGNAL(timeout()), this, SLOT(init_localization_loop()));
-
     connect(ui->bt_SelectPreNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPreNodes()));
     connect(ui->bt_SelectPostNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPostNodes()));
+
+    // test annotation
+    connect(ui->bt_TestAnnot, SIGNAL(clicked()), this, SLOT(bt_TestAnnot()));
 
     // solve tab with vtk render window problem
     QTimer::singleShot(100, [&]()
@@ -749,18 +743,6 @@ void MainWindow::init_modules()
             lvx.map_load(path_3d_map);
         }
     }
-
-    // bqr localization loop
-    if(config.USE_BQR)
-    {
-        bqr_localization_timer.start(1000);
-    }
-
-    // init localization loop
-    if(config.USE_FIRST_AUTO_LOC)
-    {
-        init_localization_timer.start(1000);
-    }
 }
 
 void MainWindow::setup_vtk()
@@ -809,106 +791,6 @@ void MainWindow::setup_vtk()
         // install event filter
         ui->qvtkWidget2->installEventFilter(this);
         ui->qvtkWidget2->setMouseTracking(true);
-    }
-}
-
-void MainWindow::init_localization_loop()
-{
-    if(unimap.is_loaded != MAP_LOADED)
-    {
-        return;
-    }
-
-    if(slam.is_busy == true || slam.get_cur_loc_state() == "good")
-    {
-        return;
-    }
-
-    QTimer::singleShot(1000, [&]()
-    {
-        logger.write_log("[AUTO_INIT] try semi-auto init", "Green", true, false);
-        slam.localization_stop();
-
-        // semi auto init
-        if(semi_auto_init_thread != NULL)
-        {
-            logger.write_log("[AUTO_INIT] thread already running.", "Orange", true, false);
-            semi_auto_init_thread->join();
-            semi_auto_init_thread = NULL;
-        }
-
-        semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start, &slam);
-    });
-
-    init_localization_timer.stop();
-}
-
-void MainWindow::bqr_localization_loop()
-{
-    if(unimap.is_loaded != MAP_LOADED)
-    {
-        return;
-    }
-
-    if(slam.is_busy == true || slam.get_cur_loc_state() == "good" || bqr.is_recv_data == false)
-    {
-        //std::cout << "[CODE_LOC] no need to do localization" << std::endl;
-        return;
-    }
-
-    BQR_INFO cur_code = bqr.get_cur_bqr();
-    int code_num = cur_code.code_num;
-    if(code_num < 0)
-    {
-        //std::cout << "[CODE_LOC] invalid code num" << std::endl;
-        return;
-    }
-
-    logger.write_log("[CODE_LOC] start code localization", "Green");
-
-    std::vector<Eigen::Matrix4d> _tfs;
-    std::vector<QString> _nodes = unimap.get_nodes();
-    for(auto& it : _nodes)
-    {
-        NODE* node = unimap.get_node_by_id(it);
-        if(node == NULL)
-        {
-            continue;
-        }
-
-        QString info = node->info;
-
-        std::cout << info.toStdString() << std::endl;
-
-        NODE_INFO res;
-        if(!parse_info(info, "BQR_CODE_NUM", res))
-        {
-            continue;
-        }
-
-        if(res.bqr_code_num < 0)
-        {
-            continue;
-        }
-
-        std::cout << node->id.toStdString() << ", " << res.bqr_code_num << std::endl;
-        Eigen::Matrix4d tf = node->tf;
-        _tfs.push_back(tf);
-    }
-
-    if(_tfs.size() != 0)
-    {
-        if(!slam.is_busy)
-        {
-            if(semi_auto_init_thread != NULL)
-            {
-                semi_auto_init_flag = false;
-                semi_auto_init_thread->join();
-                semi_auto_init_thread = NULL;
-            }
-
-            semi_auto_init_thread = new std::thread(&SLAM_2D::semi_auto_init_start_spec, &slam, _tfs);
-        }
     }
 }
 
@@ -2239,6 +2121,11 @@ void MainWindow::bt_MapSave2()
     unimap.save_annotation();
 }
 
+void MainWindow::bt_TestAnnot()
+{
+    unimap.save_annotation_with_simplify();
+}
+
 void MainWindow::bt_MapReload()
 {
     if(unimap.is_loaded != MAP_LOADED)
@@ -3480,8 +3367,6 @@ void MainWindow::bt_ReturnToCharging()
     msg.tgt_pose_vec[3] = xi[2];
 
     Q_EMIT ctrl.signal_move(msg);
-
-
 }
 
 void MainWindow::slot_local_path_updated()
@@ -3918,7 +3803,7 @@ void MainWindow::comm_loop()
                 lidar_view_cnt = 0;
                 if(comm_rrs.is_connected)
                 {
-                    comm_rrs.send_lidar();
+                    //comm_rrs.send_lidar();
                 }
             }
 
@@ -3937,13 +3822,13 @@ void MainWindow::comm_loop()
                     if(is_global_path_update2)
                     {
                         is_global_path_update2 = false;
-                        comm_rrs.send_global_path();
+                        //comm_rrs.send_global_path();
                     }
 
                     if(is_local_path_update2)
                     {
                         is_local_path_update2 = false;
-                        comm_rrs.send_local_path();
+                        //comm_rrs.send_local_path();
                     }
                 }
             }
@@ -3973,15 +3858,7 @@ void MainWindow::comm_loop()
             if(comm_rrs.is_connected)
             {
                 comm_rrs.send_status();
-            }
-        }
-
-        // for 500ms loop
-        if(cnt % 50 == 0)
-        {
-            if(comm_rrs.is_connected)
-            {
-                comm_rrs.send_mapping_cloud();
+                //comm_rrs.send_mapping_cloud();
             }
         }
 
@@ -4100,50 +3977,8 @@ void MainWindow::watch_loop()
     {
         cnt++;
 
-        if(mobile.is_connected)
-        {
-            MOBILE_STATUS ms = mobile.get_status();
-            if(is_first_emo_check)
-            {
-                is_first_emo_check = false;
-                pre_ms = ms;
-            }
-            else
-            {
-                if(ms.t != 0)
-                {
-                    if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state >= 1)
-                    {
-                        Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
-
-                        DATA_MOVE move_info;
-                        move_info.cur_pos = cur_pos;
-                        move_info.result = "emo";
-                        move_info.message = "released";
-                        move_info.time = get_time();
-
-                        Q_EMIT signal_move_response(move_info);
-                    }
-                    else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
-                    {
-                        Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
-
-                        DATA_MOVE move_info;
-                        move_info.cur_pos = cur_pos;
-                        move_info.result = "emo";
-                        move_info.message = "pushed";
-                        move_info.time = get_time();
-
-                        Q_EMIT signal_move_response(move_info);
-                    }
-
-                    pre_ms = ms;
-                }
-            }
-        }
-
         // every 10 sec
-        if(cnt%100 == 0)
+        if(cnt % 100 == 0)
         {
             if(!QCoreApplication::instance()->thread()->isRunning())
             {
@@ -4154,6 +3989,52 @@ void MainWindow::watch_loop()
                 if(config.USE_COMM_FMS)
                 {
                     printf("[MAIN] robot id: %s\n", comm_fms.robot_id.toLocal8Bit().data());
+                }
+            }
+        }
+
+        // for 500ms
+        if(cnt % 2 == 0)
+        {
+            if(mobile.is_connected)
+            {
+                MOBILE_STATUS ms = mobile.get_status();
+                if(is_first_emo_check)
+                {
+                    is_first_emo_check = false;
+                    pre_ms = ms;
+                }
+                else
+                {
+                    if(ms.t != 0)
+                    {
+                        if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state >= 1)
+                        {
+                            Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
+
+                            DATA_MOVE move_info;
+                            move_info.cur_pos = cur_pos;
+                            move_info.result = "emo";
+                            move_info.message = "released";
+                            move_info.time = get_time();
+
+                            Q_EMIT signal_move_response(move_info);
+                        }
+                        else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
+                        {
+                            Eigen::Vector3d cur_pos = slam.get_cur_tf().block(0,3,3,1);
+
+                            DATA_MOVE move_info;
+                            move_info.cur_pos = cur_pos;
+                            move_info.result = "emo";
+                            move_info.message = "pushed";
+                            move_info.time = get_time();
+
+                            Q_EMIT signal_move_response(move_info);
+                        }
+
+                        pre_ms = ms;
+                    }
                 }
             }
         }
@@ -4608,16 +4489,6 @@ void MainWindow::watch_loop()
 
                 QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                 ui->lb_SystemInfo->setText(system_info_str);
-
-                //if(ui->ckb_RecordSystemInfo->isChecked())
-                //{
-                //    log_cnt++;
-                //    if(log_cnt >= 10)
-                //    {
-                //        log_cnt = 0;
-                //        system_logger.write_log(system_info_str, "White", true, true);
-                //    }
-                //}
             }
 
             // set led

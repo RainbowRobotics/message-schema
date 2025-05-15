@@ -46,6 +46,7 @@ public:
     void load_map(QString path);
     void save_map();
     void save_annotation();
+    void save_annotation_with_simplify();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
 
     // topology
@@ -79,7 +80,6 @@ public:
     QString add_node(Eigen::Matrix4d tf, QString type, QString name);
 
     QString add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attribute, QString name, QString id);
-
 
     void del_node(QString id);
     void del_link(QString id0, QString id1);

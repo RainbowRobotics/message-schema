@@ -782,14 +782,27 @@ std::vector<cv::Vec2i> filled_circle_iterator(cv::Vec2i pt, int r)
 
 std::vector<Eigen::Vector3d> circle_iterator_3d(Eigen::Vector3d center, double radius)
 {
-    std::vector<Eigen::Vector3d> res;
-    for (int angle = 0; angle < 360; angle += 10)
+    static const int angle_step = 10;
+    static const int num_points = 360 / angle_step;
+    static std::vector<std::pair<double, double>> unit_circle_lut = []()
     {
-        double radians = angle * D2R;
-        double x = center.x() + radius * std::cos(radians);
-        double y = center.y() + radius * std::sin(radians);
-        double z = center.z();
-        res.push_back(Eigen::Vector3d(x, y, z));
+        std::vector<std::pair<double, double>> lut;
+        lut.reserve(num_points);
+        for (int angle = 0; angle < 360; angle += angle_step)
+        {
+            double rad = angle * D2R;
+            lut.emplace_back(std::cos(rad), std::sin(rad));
+        }
+        return lut;
+    }();
+
+    std::vector<Eigen::Vector3d> res;
+    res.reserve(num_points);
+    for (const auto& [cx, cy] : unit_circle_lut)
+    {
+        res.emplace_back(center.x() + radius * cx,
+                         center.y() + radius * cy,
+                         center.z());
     }
     return res;
 }

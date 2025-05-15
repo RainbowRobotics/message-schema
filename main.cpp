@@ -70,23 +70,6 @@ void signalHandler(int signal)
     std::_Exit(signal);
 }
 
-// add qt unknown type
-Q_DECLARE_METATYPE(Eigen::Matrix4d)
-
-Q_DECLARE_METATYPE(DATA_MOVE)
-Q_DECLARE_METATYPE(DATA_LOCALIZATION)
-Q_DECLARE_METATYPE(DATA_LOAD)
-Q_DECLARE_METATYPE(DATA_RANDOMSEQ)
-Q_DECLARE_METATYPE(DATA_MAPPING)
-Q_DECLARE_METATYPE(DATA_DOCK)
-Q_DECLARE_METATYPE(DATA_VIEW_LIDAR)
-Q_DECLARE_METATYPE(DATA_VIEW_PATH)
-Q_DECLARE_METATYPE(DATA_LED)
-Q_DECLARE_METATYPE(DATA_MOTOR)
-Q_DECLARE_METATYPE(DATA_PATH)
-Q_DECLARE_METATYPE(DATA_VOBS_R)
-Q_DECLARE_METATYPE(DATA_VOBS_C)
-
 int main(int argc, char *argv[])
 {
     // Disable buffering for stdout (apply globally)
@@ -119,6 +102,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<DATA_PATH>();
     qRegisterMetaType<DATA_VOBS_R>();
     qRegisterMetaType<DATA_VOBS_C>();
+    qRegisterMetaType<DATA_VOBS>();
 
     QApplication a(argc, argv);
 
