@@ -23,6 +23,14 @@ void UNIMAP::clear()
         kdtree_index = NULL;
     }
 
+    kdtree_node.pos.clear();
+
+    if(kdtree_node_index != NULL)
+    {
+        delete kdtree_node_index;
+        kdtree_node_index = NULL;
+    }
+
     nodes.clear();
 
     map_min_x = 99999999;
@@ -149,7 +157,6 @@ void UNIMAP::load_map(QString path)
     // load topology file
     {
         nodes.clear();
-
         QString topo_path = map_dir + "/topo.json";
         QFileInfo topo_info(topo_path);
         if(topo_info.exists() && topo_info.isFile())
@@ -175,11 +182,38 @@ void UNIMAP::load_map(QString path)
                     nodes.push_back(node);
                 }
                 topo_file.close();
-
                 logger->write_log(QString("[UNIMAP] %1 loaded").arg(topo_path), "Green", true, false);
+
+                std::vector<Eigen::Vector3d> node_pos; node_pos.resize(nodes.size());
+                std::vector<QString> node_id; node_id.resize(nodes.size());
+                for(size_t p=0; p<nodes.size(); p++)
+                {
+                    NODE node = nodes[p];
+                    if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+                    {
+                        node_pos[p] = node.tf.block(0,3,3,1);
+                        node_id[p] = node.id;
+                    }
+
+                    NODE* ptr = &nodes[p];
+                    nodes_id_map[ptr->id] = ptr;
+                    nodes_name_map[ptr->name] = ptr;
+                }
+
+                kdtree_node.pos = node_pos;
+                kdtree_node.id = node_id;
             }
         }
     }
+
+    if(kdtree_node_index != NULL)
+    {
+        delete kdtree_node_index;
+        kdtree_node_index = NULL;
+    }
+
+    kdtree_node_index = new KD_TREE_NODE(3, kdtree_node, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    kdtree_node_index->buildIndex();
 
     // set flag
     is_loaded = MAP_LOADED;
@@ -1029,6 +1063,84 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         return "";
     }
 
+    const int cnt_num = 10;
+    std::vector<unsigned int> ret_near_idxs(cnt_num);
+    std::vector<double> ret_near_sq_dists(cnt_num);
+
+    double near_query_pt[3] = {pos[0], pos[1], pos[2]};
+    kdtree_node_index->knnSearch(&near_query_pt[0], cnt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+    Eigen::Vector3d _P0(0,0,0);
+    Eigen::Vector3d _P1(0,0,0);
+    QString _node_id0 = "";
+    QString _node_id1 = "";
+    double min_d = 99999999;
+
+    bool is_found = false;
+    for(int p = 0; p < cnt_num; p++)
+    {
+        QString id0 = kdtree_node.id[ret_near_idxs[p]];
+
+        NODE* node0 = get_node_by_id(id0);
+        if(node0 == NULL)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[p]];
+
+        for(size_t q=0; q<node0->linked.size(); q++)
+        {
+            QString id1 = node0->linked[q];
+
+            NODE* node1 = get_node_by_id(id1);
+            if(node1 == NULL)
+            {
+                continue;
+            }
+
+            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION")
+            {
+                Eigen::Matrix4d tf1 = node1->tf;
+                Eigen::Vector3d pos1 = tf1.block(0,3,3,1);
+
+                double d = calc_seg_dist(pos0, pos1, pos);
+                if(d < min_d)
+                {
+                    min_d = d;
+                    _P0 = pos0;
+                    _P1 = pos1;
+                    _node_id0 = id0;
+                    _node_id1 = id1;
+                    is_found = true;
+                }
+            }
+        }
+    }
+
+    if(is_found)
+    {
+        double d0 = calc_dist_2d(_P0-pos);
+        double d1 = calc_dist_2d(_P1-pos);
+        if(d0 < d1)
+        {
+            return _node_id0;
+        }
+        else
+        {
+            return _node_id1;
+        }
+    }
+    return "";
+}
+
+/*QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
+{
+    if(nodes.size() == 0)
+    {
+        return "";
+    }
+
     Eigen::Vector3d _P0(0,0,0);
     Eigen::Vector3d _P1(0,0,0);
     QString _node_id0 = "";
@@ -1039,7 +1151,8 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     for(size_t p = 0; p < nodes.size(); p++)
     {
         // check drivable
-        if(nodes[p].type == "ROUTE" || nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
+        QString type0 = nodes[p].type;
+        if(type0 == "ROUTE" || type0 == "GOAL" || type0 == "INIT" || type0 == "STATION")
         {
             QString node_id0 = nodes[p].id;
             Eigen::Matrix4d tf0 = nodes[p].tf;
@@ -1090,9 +1203,9 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     }
 
     return "";
-}
+}*/
 
-NODE* UNIMAP::get_node_by_id(QString id)
+/*NODE* UNIMAP::get_node_by_id(QString id)
 {
     if(id == "")
     {
@@ -1113,9 +1226,27 @@ NODE* UNIMAP::get_node_by_id(QString id)
     }
 
     return node;
+}*/
+
+NODE* UNIMAP::get_node_by_id(QString id)
+{
+    if(id == "")
+    {
+        return NULL;
+    }
+
+    NODE *node = NULL;
+
+    auto it = nodes_id_map.find(id);
+    if(it != nodes_id_map.end())
+    {
+        node = it->second;
+    }
+
+    return node;
 }
 
-NODE* UNIMAP::get_node_by_name(QString name)
+/*NODE* UNIMAP::get_node_by_name(QString name)
 {
     if(name == "")
     {
@@ -1133,6 +1264,24 @@ NODE* UNIMAP::get_node_by_name(QString name)
                 break;
             }
         }
+    }
+
+    return node;
+}*/
+
+NODE* UNIMAP::get_node_by_name(QString name)
+{
+    if(name == "")
+    {
+        return NULL;
+    }
+
+    NODE *node = NULL;
+
+    auto it = nodes_name_map.find(name);
+    if(it != nodes_name_map.end())
+    {
+        node = it->second;
     }
 
     return node;

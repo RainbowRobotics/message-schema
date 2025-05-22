@@ -270,6 +270,16 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="lb_Version">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(87, 227, 137);</string>
+              </property>
+              <property name="text">
+               <string>Version:250522_00</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>

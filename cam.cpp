@@ -158,7 +158,7 @@ void CAM::grab_loop()
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
         config0->enableStream(depth_profile0);
-        config0->enableStream(color_profile0);
+        //config0->enableStream(color_profile0);
         config0->setAlignMode(ALIGN_DISABLE);
 
         pipe0->start(config0, [&](std::shared_ptr<ob::FrameSet> fs)
@@ -232,7 +232,7 @@ void CAM::grab_loop()
                     mtx.unlock();
                 }
 
-                if(fs->colorFrame() != nullptr)
+                /*if(fs->colorFrame() != nullptr)
                 {
                     if(is_connected[0] == false)
                     {
@@ -267,7 +267,7 @@ void CAM::grab_loop()
                         cur_time_img[0] = time_img;
                         mtx.unlock();
                     }
-                }
+                }*/
             }
             catch(const ob::Error &e)
             {
@@ -350,13 +350,12 @@ void CAM::grab_loop()
         Eigen::Matrix4d TF0 = string_to_TF(config->CAM_TF_0);
 
         auto depth_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_DEPTH);
-        /*
-        for(size_t p = 0; p < depth_profile_list0->count(); p++)
+
+        /*for(size_t p = 0; p < depth_profile_list0->count(); p++)
         {
             auto profile = depth_profile_list0->getProfile(p)->as<ob::VideoStreamProfile>();
             printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
-        }
-        */
+        }*/
 
         auto color_profile_list0 = pipe0->getStreamProfileList(OB_SENSOR_COLOR);
         /*
@@ -382,7 +381,7 @@ void CAM::grab_loop()
         std::shared_ptr<ob::Config> config0 = std::make_shared<ob::Config>();
         config0->disableAllStream();
         config0->enableStream(depth_profile0);
-        config0->enableStream(color_profile0);
+        //config0->enableStream(color_profile0);
         config0->setAlignMode(ALIGN_DISABLE);
 
         pipe0->start(config0, [&](std::shared_ptr<ob::FrameSet> fs)
@@ -456,7 +455,7 @@ void CAM::grab_loop()
                     mtx.unlock();
                 }
 
-                if(fs->colorFrame() != nullptr)
+                /*if(fs->colorFrame() != nullptr)
                 {
                     if(is_connected[0] == false)
                     {
@@ -491,7 +490,7 @@ void CAM::grab_loop()
                         cur_time_img[0] = time_img;
                         mtx.unlock();
                     }
-                }
+                */
             }
             catch(const ob::Error &e)
             {

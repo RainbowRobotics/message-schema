@@ -108,6 +108,12 @@ public:
     XYZR_CLOUD kdtree_cloud;
     KD_TREE_XYZR* kdtree_index = NULL;
 
+    // for fast find neareast
+    XYZ_NODE kdtree_node;
+    KD_TREE_NODE* kdtree_node_index = NULL;
+    std::unordered_map<QString, NODE*> nodes_id_map;
+    std::unordered_map<QString, NODE*> nodes_name_map;
+
     // additional cloud storage
     std::vector<Eigen::Vector3d> additional_cloud;
 
