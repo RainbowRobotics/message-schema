@@ -94,7 +94,7 @@ public:
     void add_link2(PICKING pick);
     void add_link1(QString id0, QString id1);
     void add_link2(QString id0, QString id1);
-    void add_link_auto(std::vector<QString> _select_nodes);
+    void add_link_auto(std::vector<QString> nodes);
     void add_node_auto(PICKING pick, QString type, double gap);
 
     // annotation
@@ -118,12 +118,12 @@ public:
     std::vector<Eigen::Vector3d> additional_cloud;
 
     // bounding box
-    double map_min_x = 99999999;
-    double map_max_x = -99999999;
-    double map_min_y = 99999999;
-    double map_max_y = -99999999;
-    double map_min_z = 99999999;
-    double map_max_z = -99999999;
+    double map_max_x = std::numeric_limits<double>::min();
+    double map_max_y = std::numeric_limits<double>::min();
+    double map_max_z = std::numeric_limits<double>::min();
+    double map_min_x = std::numeric_limits<double>::max();
+    double map_min_y = std::numeric_limits<double>::max();
+    double map_min_z = std::numeric_limits<double>::max();
 
     // flags
     std::atomic<int> is_loaded = {MAP_NOT_LOADED};
