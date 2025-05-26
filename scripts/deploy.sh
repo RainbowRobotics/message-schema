@@ -108,8 +108,6 @@ function ask_version_type() {
 function create_github_release() {
     local tag_version=$1
     local release_message=$2
-
-    update_release_log "$tag_version" "$release_message"
     
     # Release 노트 생성
     local release_notes=$(cat "./RELEASE_LOG.md")
@@ -117,7 +115,7 @@ function create_github_release() {
     # Release 생성
     gh release create "$tag_version" \
         --title "Release $tag_version" \
-        --notes "$release_notes" \
+        --notes "$release_message" \
         --repo "$(git config --get remote.origin.url | sed 's/.*github.com[:/]//' | sed 's/\.git$//')" || {
             print_string "error" "GitHub Release 생성 실패"
             return 1
