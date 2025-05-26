@@ -51,7 +51,7 @@ jobs:
 
       - name: Clone release apps repository
         env:
-          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.RAINBOW_APPS_DEPLOY_TOKEN }}
         run: |
           git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git rainbow-release-apps
           cd rainbow-release-apps
@@ -70,7 +70,7 @@ jobs:
           
       - name: Copy and commit build files
         env:
-          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.RAINBOW_APPS_DEPLOY_TOKEN }}
         run: |
           cd rainbow-release-apps
           APP_DIR="slamnav2"
@@ -109,7 +109,7 @@ jobs:
       - name: Delete release tag
         if: always()
         env:
-          GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.RAINBOW_APPS_DEPLOY_TOKEN }}
         run: |
           cd $GITHUB_WORKSPACE
           
