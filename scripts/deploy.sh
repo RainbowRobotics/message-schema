@@ -56,7 +56,7 @@ function git_tag_work() {
     fi
 
     git tag -d "$tag_version"
-    
+
     return 0
 }
 
@@ -185,8 +185,6 @@ last_git_work_status="normal"
 
 timestamp=$(date +%Y%m%d%H%M%S)
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git name-rev --name-only HEAD)
-
-echo "current_branch: $current_branch"
 
 # 현재 버전 생성
 new_version="$timestamp"
