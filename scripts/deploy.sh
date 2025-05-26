@@ -48,6 +48,46 @@ function git_tag_work() {
     return 0
 }
 
+# CHANGELOG 업데이트 함수 추가
+function update_release_log() {
+    local version=$1
+    local message=$2
+    local date=$(date +%Y-%m-%d)
+    local release_log_file="./RELEASE_LOG.md"
+    
+    # RELEASE_LOG.md 파일이 없으면 생성
+    if [ ! -f $release_log_file ]; then
+        echo "# Release Log\n" > $release_log_file
+    fi
+    
+    # 임시 파일 생성
+    local temp_file=$(mktemp)
+    
+    # 새로운 변경사항을 파일 상단에 추가
+    echo "# Release log" > "$temp_file"
+    echo "" >> "$temp_file"
+    echo "## [$version] - $date" >> "$temp_file"
+
+    echo "$message" | while IFS= read -r line; do
+        if [ ! -z "$line" ]; then
+            echo "- $line" >> "$temp_file"
+        fi
+    done
+    
+    echo "" >> "$temp_file"
+    
+    # 기존 내용에서 첫 줄(# Release Log)을 제외한 나머지를 추가
+    tail -n +2 "$release_log_file" 2>/dev/null >> "$temp_file"
+    
+    # 임시 파일을 RELEASE_LOG.md로 이동
+    mv "$temp_file" "$release_log_file"
+    
+    # Git에 RELEASE_LOG.md 추가
+    git add $release_log_file
+    git commit -m "docs: update RELEASE_LOG.md for version $version"
+    git push origin $current_branch
+}
+
 # 버전 타입 선택 함수
 function ask_version_type() {
     local version_type="patch"
@@ -69,10 +109,15 @@ function create_github_release() {
     local tag_version=$1
     local release_message=$2
 
+    update_release_log "$tag_version" "$release_message"
+    
+    # Release 노트 생성
+    local release_notes=$(cat "./RELEASE_LOG.md")
+
     # Release 생성
     gh release create "$tag_version" \
         --title "Release $tag_version" \
-        --notes "$release_message" \
+        --notes "$release_notes" \
         --repo "$(git config --get remote.origin.url | sed 's/.*github.com[:/]//' | sed 's/\.git$//')" || {
             print_string "error" "GitHub Release 생성 실패"
             return 1
@@ -172,7 +217,9 @@ fi
 last_git_work_status="normal"
 
 timestamp=$(date +%Y%m%d%H%M%S)
-current_branch=$(git rev-parse --abbrev-ref HEAD)
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git name-rev --name-only HEAD)
+
+echo "current_branch: $current_branch"
 
 # 현재 버전 생성
 new_version="$timestamp"
