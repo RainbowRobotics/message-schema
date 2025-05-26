@@ -218,7 +218,7 @@ function print_completion_message() {
     local new_version=$1
     
     print_string "success" "=================================="
-    print_string "success" "✨🎉 Slamnav2 v $new_version 배포 완료 🎉✨"
+    print_string "success" "✨🔫 Slamnav2 v $new_version 배포 시작 ✨"
     print_string "success" "=================================="
 }
 
