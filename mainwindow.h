@@ -151,29 +151,11 @@ public:
     std::atomic<bool> is_view_reset = {false};
     std::atomic<bool> is_set_top_view = {false};
 
-    // for copy & paste
-    double area_lt_x = 0.0;
-    double area_lt_y = 0.0;
-    double area_rb_x = 0.0;
-    double area_rb_y = 0.0;
-
     // for measure
     double measure_lt_x = 0.0;
     double measure_lt_y = 0.0;
     double measure_rb_x = 0.0;
     double measure_rb_y = 0.0;
-
-    std::atomic<bool> is_select_multi = {false};
-    std::atomic<bool> is_select_all = {false};
-    std::atomic<bool> is_quick_move = {false};
-    std::atomic<bool> is_grab = {false};
-    std::atomic<bool> is_copy = {false};
-    std::atomic<bool> is_pressed_btn_ctrl = {false};
-
-    std::atomic<int> saved_select_idx = {0};
-    std::vector<COPY_INFO> copy_infos;
-    std::vector<QString> select_nodes;
-    std::vector<std::vector<QString>> pre_select_nodes;
 
     // plot object names
     std::vector<QString> last_plot_kfrms;
@@ -184,7 +166,6 @@ public:
 
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
-    std::vector<QString> last_plot_select;
 
     // jog
     std::atomic<double> vx_target = {0.};
@@ -204,11 +185,6 @@ public:
     // for variable loop
     std::atomic<int> lidar_view_frequency = {1};
     std::atomic<int> path_view_frequency = {2};
-
-    // for touch event
-    double lastScaleFactor = 1.0;
-    QPointF lastTouchPoint;
-    bool isPanning = false;
 
     // for user led
     std::atomic<bool> is_user_led = {false};
@@ -283,8 +259,6 @@ public Q_SLOTS:
     void bt_MapReload();
     void bt_MapSave2();
     void bt_AddNode();
-    void bt_DelNode();
-    void bt_DelLink();
     void bt_AddLink1();
     void bt_AddLink2();
     void bt_AutoLink();
@@ -336,8 +310,8 @@ public Q_SLOTS:
     // for test
     void bt_Test();
     void bt_TestLed();
-    void ckb_TestDebug();
     void bt_TestImgSave();
+    void ckb_TestDebug();
 
     // for autocontrol
     void bt_AutoMove();
@@ -365,9 +339,6 @@ public Q_SLOTS:
 
     // for advanced annot
     void cb_NodeType(QString type);
-
-    void bt_SelectPreNodes();
-    void bt_SelectPostNodes();
 
     // for fms
     void bt_SendMap();

@@ -100,8 +100,6 @@ int main(int argc, char *argv[])
     qRegisterMetaType<DATA_LED>();
     qRegisterMetaType<DATA_MOTOR>();
     qRegisterMetaType<DATA_PATH>();
-    qRegisterMetaType<DATA_VOBS_R>();
-    qRegisterMetaType<DATA_VOBS_C>();
     qRegisterMetaType<DATA_VOBS>();
 
     QApplication a(argc, argv);

@@ -8,6 +8,7 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent)
     last_local_goal.setZero();
 
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(move(DATA_MOVE)));
+    connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(move_path(DATA_MOVE)));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -306,6 +307,11 @@ void AUTOCONTROL::move_pp(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
 {
+    if(node_path.size() == 0 || preset == -1)
+    {
+        return;
+    }
+
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
 
@@ -455,6 +461,57 @@ void AUTOCONTROL::move_pp(std::vector<QString> node_path, int preset)
         b_flag = true;
         b_thread = new std::thread(&AUTOCONTROL::b_loop_pp, this);
     }
+}
+
+void AUTOCONTROL::move_escape(QString escape_dir)
+{
+    // stop first
+    stop();
+
+    // start control loop
+    if(b_flag == false)
+    {
+        b_flag = true;
+        b_thread = new std::thread(&AUTOCONTROL::b_loop_escape, this, escape_dir);
+    }
+}
+
+std::pair<std::vector<QString>, int> AUTOCONTROL::get_path()
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    std::vector<QString> res_path = cur_node_path;
+    int res_preset = cur_preset;
+
+    return std::make_pair(res_path, res_preset);
+}
+
+std::pair<QString, QString> AUTOCONTROL::get_vobs()
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    QString vobs_r = cur_vobs_r;
+    QString vobs_c = cur_vobs_c;
+
+    cur_vobs_r = "";
+    cur_vobs_c = "";
+
+    return std::make_pair(vobs_r, vobs_c);
+}
+
+void AUTOCONTROL::set_path(const std::vector<QString> &path, int preset, const QString& vobs_r, const QString& vobs_c)
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    cur_node_path = path;
+    cur_preset = preset;
+    cur_vobs_r = vobs_r;
+    cur_vobs_c = vobs_c;
+}
+
+void AUTOCONTROL::move_path()
+{
+    move_pp(cur_node_path, cur_preset);
+
+    cur_node_path.clear();
+    cur_preset = -1;
 }
 
 std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_path)
@@ -2749,5 +2806,73 @@ void AUTOCONTROL::b_loop_pp()
 
     fsm_state = AUTO_FSM_COMPLETE;
     logger->write_log("[AUTO] path stop, b_loop_pp stop");
+}
+
+void AUTOCONTROL::b_loop_escape(QString escape_dir)
+{
+    // set flag
+    is_moving = true;
+
+    // loop params
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+    double total_loop_time = 3.0;
+
+    // velocity params
+    const double v = -0.1;
+    const double w = 0;
+
+    int cur_obs_val = OBS_NONE;
+
+    while(b_flag)
+    {
+        if(total_loop_time < 0)
+        {
+            mobile->move(0, 0, 0);
+            is_moving = false;
+            return;
+        }
+
+        Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+        bool is_another_collision = false;
+        std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(v, 0, 0), 0.2, 1.0, cur_tf);
+        for(size_t p = 0; p < traj.size(); p++)
+        {
+            cur_obs_val = obsmap->is_tf_collision(traj[p], true, 0.0, 0.0);
+            if(cur_obs_val == OBS_DYN)
+            {
+                is_another_collision = true;
+                break;
+            }
+        }
+
+        if(is_another_collision)
+        {
+            total_loop_time -= dt;
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
+        }
+
+        mobile->move(v, 0, w);
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        printf("[ESCAPE] escape_dir:%s, delta_loop_time:%f, total_loop_time:%f, v:%f, w:%f\n", escape_dir.toStdString().c_str(), delta_loop_time, total_loop_time, v, w*R2D);
+
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            total_loop_time -= (dt-delta_loop_time);
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            total_loop_time -= delta_loop_time;
+            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+        }
+
+        pre_loop_time = get_time();
+    }
 }
 

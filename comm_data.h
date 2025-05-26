@@ -16,6 +16,8 @@ struct DATA_MOVE
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
 
+    QString escape_dir; // BL, BR, FL, FR, OR, OF, OB
+
     double remaining_dist;
     double eta; // estimated time of arrival
     int bat_percent; // battery percentage
@@ -36,6 +38,8 @@ struct DATA_MOVE
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
+
+        escape_dir = "";
 
         remaining_dist = 0.0;
         eta = 9999.0;
@@ -58,6 +62,8 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        escape_dir = p.escape_dir;
+
         eta = p.eta;
         bat_percent = p.bat_percent;
 
@@ -78,6 +84,8 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        escape_dir = p.escape_dir;
+
         eta = p.eta;
         bat_percent = p.bat_percent;
 
@@ -454,9 +462,10 @@ struct DATA_PATH
     QString command; // path
     QString path;
     QString vobs_robots;
-    QString vobs_clousers;
+    QString vobs_closures;
     int preset;
 
+    QString response;
     QString result;
     QString message;
 
@@ -466,9 +475,10 @@ struct DATA_PATH
         command = "";
         path = "";
         vobs_robots = "";
-        vobs_clousers = "";
+        vobs_closures = "";
         preset = 0;
 
+        response = "";
         result = "";
         message = "";
     }
@@ -479,9 +489,10 @@ struct DATA_PATH
         command = p.command;
         path = p.path;
         vobs_robots = p.vobs_robots;
-        vobs_clousers = p.vobs_clousers;
+        vobs_closures = p.vobs_closures;
         preset = p.preset;
 
+        response = p.response;
         result = p.result;
         message = p.message;
     }
@@ -492,9 +503,10 @@ struct DATA_PATH
         command = p.command;
         path = p.path;
         vobs_robots = p.vobs_robots;
-        vobs_clousers = p.vobs_clousers;
+        vobs_closures = p.vobs_closures;
         preset = p.preset;
 
+        response = p.response;
         result = p.result;
         message = p.message;
         return *this;
@@ -550,88 +562,6 @@ struct DATA_VOBS
     }
 };
 
-struct DATA_VOBS_R
-{
-    double time;
-    QString command; // vobsRobots
-    QString vobs;
-
-    QString result;
-    QString message;
-
-    DATA_VOBS_R()
-    {
-        time = 0.0;
-        command = "";
-        vobs = "";
-
-        result = "";
-        message = "";
-    }
-
-    DATA_VOBS_R(const DATA_VOBS_R& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-    }
-
-    DATA_VOBS_R& operator=(const DATA_VOBS_R& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-        return *this;
-    }
-};
-
-struct DATA_VOBS_C
-{
-    double time;
-    QString command; // vobsClosures
-    QString vobs;
-
-    QString result;
-    QString message;
-
-    DATA_VOBS_C()
-    {
-        time = 0.0;
-        command = "";
-        vobs = "";
-
-        result = "";
-        message = "";
-    }
-
-    DATA_VOBS_C(const DATA_VOBS_C& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-    }
-
-    DATA_VOBS_C& operator=(const DATA_VOBS_C& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-        return *this;
-    }
-};
-
 Q_DECLARE_METATYPE(DATA_MOVE)
 Q_DECLARE_METATYPE(DATA_LOCALIZATION)
 Q_DECLARE_METATYPE(DATA_LOAD)
@@ -643,8 +573,6 @@ Q_DECLARE_METATYPE(DATA_VIEW_PATH)
 Q_DECLARE_METATYPE(DATA_LED)
 Q_DECLARE_METATYPE(DATA_MOTOR)
 Q_DECLARE_METATYPE(DATA_PATH)
-Q_DECLARE_METATYPE(DATA_VOBS_R)
-Q_DECLARE_METATYPE(DATA_VOBS_C)
 Q_DECLARE_METATYPE(DATA_VOBS)
 
 #endif // COMM_DATA_H

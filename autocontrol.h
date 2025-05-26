@@ -63,6 +63,15 @@ public:
     void stop();
     void move_pp(Eigen::Matrix4d goal_tf, int preset); // single
     void move_pp(std::vector<QString> node_path, int preset); // multi
+    void move_escape(QString escape_dir);
+
+    // node path
+    std::pair<std::vector<QString>, int> get_path();
+    std::pair<QString, QString> get_vobs();
+    void set_path(const std::vector<QString>& path, int preset, const QString& vobs_r, const QString& v_obs_c);
+    void move_path();
+
+    // global path, local path
     void clear_path();
 
     // global path planning (using topo)
@@ -99,10 +108,16 @@ public:
     std::atomic<bool> b_flag = {false};
     std::thread *b_thread = NULL;
     void b_loop_pp();
+    void b_loop_escape(QString escape_dir);
 
     // for path plot
     PATH cur_global_path;
     PATH cur_local_path;
+
+    std::vector<QString> cur_node_path;
+    int cur_preset = 0;
+    QString cur_vobs_r = "";
+    QString cur_vobs_c = "";
 
     QString last_node_id = "";
 
@@ -135,7 +150,6 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void move(DATA_MOVE msg);
-
 };
 
 #endif // AUTOCONTROL_H

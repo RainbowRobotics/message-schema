@@ -110,8 +110,6 @@ private Q_SLOTS:
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_vobs_robots(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_vobs_closures(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
@@ -127,8 +125,6 @@ Q_SIGNALS:
 
     void signal_path(DATA_PATH msg);
     void signal_vobs(DATA_VOBS msg);
-    void signal_vobs_r(DATA_VOBS_R msg);
-    void signal_vobs_c(DATA_VOBS_C msg);
 
 public Q_SLOTS:
     void slot_move(DATA_MOVE msg);
@@ -144,8 +140,6 @@ public Q_SLOTS:
 
     void slot_path(DATA_PATH msg);
     void slot_vobs(DATA_VOBS msg);
-    void slot_vobs_r(DATA_VOBS_R msg);
-    void slot_vobs_c(DATA_VOBS_C msg);
 
     /* send command response */
     void send_move_response(DATA_MOVE msg);
@@ -154,6 +148,7 @@ public Q_SLOTS:
     void send_randomseq_response(DATA_RANDOMSEQ msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_dock_response(DATA_DOCK msg);
+    void send_path_response(DATA_PATH msg);
 };
 
 #endif // COMM_RRS_H

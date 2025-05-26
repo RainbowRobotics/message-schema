@@ -63,6 +63,7 @@ public:
     
     #if defined (USE_S100)
     const int depth_profile_idx = 25; // depth_profile(25), w:320, h:180, fps:5, format:11
+    //const int depth_profile_idx = 55; // depth_profile(55), w:640, h:480, fps:30, format:11
     const int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
     #endif
 

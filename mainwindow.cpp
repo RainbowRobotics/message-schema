@@ -110,8 +110,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_MapReload, SIGNAL(clicked()), this, SLOT(bt_MapReload()));
     connect(ui->bt_MapSave2, SIGNAL(clicked()), this, SLOT(bt_MapSave2()));
     connect(ui->bt_AddNode, SIGNAL(clicked()), this, SLOT(bt_AddNode()));
-    connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
-    connect(ui->bt_DelLink, SIGNAL(clicked()), this, SLOT(bt_DelLink()));
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_AutoLink, SIGNAL(clicked()), this, SLOT(bt_AutoLink()));
@@ -199,9 +197,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // for advanced annot
     connect(ui->cb_NodeType, SIGNAL(currentIndexChanged(QString)), this, SLOT(cb_NodeType(QString)));
-
-    connect(ui->bt_SelectPreNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPreNodes()));
-    connect(ui->bt_SelectPostNodes, SIGNAL(clicked()), this, SLOT(bt_SelectPostNodes()));
 
     // test annotation
     connect(ui->bt_TestAnnot, SIGNAL(clicked()), this, SLOT(bt_TestAnnot()));
@@ -1237,24 +1232,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 switch(ke->key())
                 {
                     case Qt::Key_W:
-                        is_grab = true;
                         pick.pre_node = "";
                         pick.cur_node = "";
-                        break;
-                    case Qt::Key_A:
-                        is_select_all = true;
-                        break;
-                    case Qt::Key_Q:
-                        is_quick_move = true;
-                        break;
-                    case Qt::Key_S:
-                        is_select_multi = true;
-                        break;
-                    case Qt::Key_Control:
-                        is_pressed_btn_ctrl = true;
-                        break;
-                    case Qt::Key_C:
-                        is_copy = true;
                         break;
                     default:
                         return false;
@@ -1266,27 +1245,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
                 switch(ke->key())
                 {
-                    case Qt::Key_W:
-                        is_grab = false;
-                        break;
-                    case Qt::Key_A:
-                        is_select_all = false;
-                        break;
-                    case Qt::Key_Q:
-                        is_quick_move = false;
-                        break;
-                    case Qt::Key_S:
-                        is_select_multi = false;
-                        break;
-                    case Qt::Key_Control:
-                        is_pressed_btn_ctrl = false;
-                        break;
-                    case Qt::Key_C:
-                        is_copy = false;
-                        break;
-                    case::Qt::Key_Escape:
-                        select_nodes.clear();
-                        break;
                     default:
                         return false;
                 }
@@ -1318,60 +1276,12 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     // update last mouse button
                     pick.last_btn = 0;
 
-                    if(is_select_multi == false)
-                    {
-                        select_nodes.clear();
-                    }
-                    area_lt_x = 0.0;
-                    area_lt_y = 0.0;
-                    area_rb_x = 0.0;
-                    area_rb_y = 0.0;
-
-                    saved_select_idx = (int)pre_select_nodes.size();
-
                     if(ui->ckb_UseMeasure->isChecked())
                     {
                         measure_lt_x = pt[0];
                         measure_lt_y = pt[1];
                         measure_rb_x = pt[0];
                         measure_rb_y = pt[1];
-                    }
-                    else
-                    {
-                        if(is_grab == true)
-                        {
-                            // nodes clicked
-                            area_lt_x = pt[0];
-                            area_lt_y = pt[1];
-                            area_rb_x = pt[0];
-                            area_rb_y = pt[1];
-                        }
-                        else if(is_quick_move == true)
-                        {
-                            // only one node clicked
-                            std::vector<QString> _select_nodes;
-                            _select_nodes.push_back(pick.cur_node);
-                            select_nodes = _select_nodes;
-
-                            pre_select_nodes.push_back(_select_nodes);
-                            if(pre_select_nodes.size() > 10)
-                            {
-                                pre_select_nodes.erase(pre_select_nodes.begin());
-                            }
-                            saved_select_idx = (int)pre_select_nodes.size();
-                        }
-                        else if(is_select_multi == true)
-                        {
-                            QString id = pick.cur_node;
-                            select_nodes.push_back(id);
-
-                            pre_select_nodes.push_back(select_nodes);
-                            if(pre_select_nodes.size() > 10)
-                            {
-                                pre_select_nodes.erase(pre_select_nodes.begin());
-                            }
-                            saved_select_idx = (int)pre_select_nodes.size();
-                        }
                     }
 
                     pick_update();
@@ -1434,31 +1344,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         measure_rb_x = pt[0];
                         measure_rb_y = pt[1];
                     }
-                    else
-                    {
-                        if(is_grab == true)
-                        {
-                            area_rb_x = pt[0];
-                            area_rb_y = pt[1];
-                        }
-                        else if(is_grab == false)
-                        {
-                            if(is_quick_move == true)
-                            {
-                                QString id = pick.cur_node;
-                                NODE* node = unimap.get_node_by_id(id);
-                                if(node != NULL)
-                                {
-                                    Eigen::Matrix4d tf = node->tf;
-                                    tf.block(0,3,3,1) = pt;
-
-                                    unimap.edit_node_pos(id, tf);
-                                    topo_update();
-                                }
-                            }
-                        }
-
-                    }
 
                     pick_update();
                     return true;
@@ -1495,44 +1380,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 if(me->button() == Qt::LeftButton)
                 {
                     pick.l_drag = false;
-                    if(is_grab == true)
-                    {
-                        if(unimap.is_loaded == MAP_LOADED)
-                        {
-                            std::vector<QString> _select_nodes;
-                            std::vector<QString> nodes = unimap.get_nodes();
-                            for(size_t p = 0; p < nodes.size(); p++)
-                            {
-                                NODE* node = unimap.get_node_by_id(nodes[p]);
-                                if(node == NULL)
-                                {
-                                    continue;
-                                }
-
-                                double x = node->tf(0,3);
-                                double y = node->tf(1,3);
-
-                                if(x >= area_lt_x && x <= area_rb_x && y >= area_rb_y && y <= area_lt_y)
-                                {
-                                    _select_nodes.push_back(node->id);
-                                }
-                            }
-
-                            select_nodes = _select_nodes;
-                            pre_select_nodes.push_back(_select_nodes);
-                            if(pre_select_nodes.size() > 10)
-                            {
-                                pre_select_nodes.erase(pre_select_nodes.begin());
-                            }
-                            saved_select_idx = (int)pre_select_nodes.size();
-
-                            copy_infos.clear();
-
-                            pick.pre_node = "";
-                            pick.cur_node = "";
-                        }
-                    }
-
                     pick_update();
                     return true;
                 }
@@ -2153,49 +2000,6 @@ void MainWindow::bt_AddNode()
     topo_update();
 }
 
-void MainWindow::bt_DelNode()
-{
-    if(select_nodes.size() == 0)
-    {
-        return;
-    }
-
-    for(size_t p = 0; p < select_nodes.size(); p++)
-    {
-        QString id = select_nodes[p];
-        unimap.del_node(id);
-    }
-
-    topo_update();
-    pick_update();
-}
-
-void MainWindow::bt_DelLink()
-{
-    if(select_nodes.size() == 0)
-    {
-        return;
-    }
-
-    for(size_t p = 0; p < select_nodes.size(); p++)
-    {
-        for(size_t q = 0; q < select_nodes.size(); q++)
-        {
-            if(p == q)
-            {
-                continue;
-            }
-
-            QString id0 = select_nodes[p];
-            QString id1 = select_nodes[q];
-            unimap.del_link(id0, id1);
-        }
-    }
-
-    topo_update();
-    pick_update();
-}
-
 void MainWindow::bt_EditNodePos()
 {
     unimap.edit_node_pos(pick);
@@ -2234,8 +2038,8 @@ void MainWindow::bt_AddLink2()
 
 void MainWindow::bt_AutoLink()
 {
-    std::vector<QString> _select_nodes = select_nodes;
-    unimap.add_link_auto(_select_nodes);
+    std::vector<QString> _nodes = unimap.get_nodes();
+    unimap.add_link_auto(_nodes);
     topo_update();
 }
 
@@ -2340,22 +2144,6 @@ void MainWindow::bt_NodePoseXUp()
             unimap.edit_node_pos(id, tf);
         }
     }
-    else if(select_nodes.size() != 0 )
-    {
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
-            Eigen::Matrix4d tf = node->tf;
-            tf(0,3) += dx;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
     else
     {
         QString id = pick.cur_node;
@@ -2394,22 +2182,6 @@ void MainWindow::bt_NodePoseYUp()
                 continue;
             }
 
-            Eigen::Matrix4d tf = node->tf;
-            tf(1,3) += dy;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
-    else if(select_nodes.size() != 0 )
-    {
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
             Eigen::Matrix4d tf = node->tf;
             tf(1,3) += dy;
             unimap.edit_node_pos(id, tf);
@@ -2458,69 +2230,6 @@ void MainWindow::bt_NodePoseThUp()
             unimap.edit_node_pos(id, tf);
         }
     }
-    else if(select_nodes.size() != 0 )
-    {
-        /*
-        double cnt = 0.0;
-        Eigen::Vector3d center_pose(0, 0, 0);
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            cnt++;
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
-            center_pose += pose0;
-        }
-
-        if(cnt == 0.0)
-        {
-            return;
-        }
-
-        center_pose /= cnt;
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Vector3d pose0 = tf0.block(0,3,3,1);
-
-            Eigen::Vector3d pose1 = pose0 - center_pose;
-            pose1 = tf1.block(0,0,3,3) * pose1;
-
-            Eigen::Vector3d pose = pose1 + center_pose;
-
-            Eigen::Matrix4d tf = Eigen::Matrix4d::Identity();
-            tf.block(0,0,3,3) = tf0.block(0,0,3,3) * tf1.block(0,0,3,3);
-            tf.block(0,3,3,1) = pose;
-
-            unimap.edit_node_pos(id, tf);
-        }
-        */
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Matrix4d tf = tf0 * tf1;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
     else
     {
         QString id = pick.cur_node;
@@ -2559,22 +2268,6 @@ void MainWindow::bt_NodePoseXDown()
                 continue;
             }
 
-            Eigen::Matrix4d tf = node->tf;
-            tf(0,3) -= dx;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
-    else if(select_nodes.size() != 0 )
-    {
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
             Eigen::Matrix4d tf = node->tf;
             tf(0,3) -= dx;
             unimap.edit_node_pos(id, tf);
@@ -2623,22 +2316,6 @@ void MainWindow::bt_NodePoseYDown()
             unimap.edit_node_pos(id, tf);
         }
     }
-    else if(select_nodes.size() != 0 )
-    {
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
-            Eigen::Matrix4d tf = node->tf;
-            tf(1,3) -= dy;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
     else
     {
         QString id = pick.cur_node;
@@ -2677,22 +2354,6 @@ void MainWindow::bt_NodePoseThDown()
                 continue;
             }
 
-            Eigen::Matrix4d tf0 = node->tf;
-            Eigen::Matrix4d tf = tf0 * tf1;
-            unimap.edit_node_pos(id, tf);
-        }
-    }
-    else if(select_nodes.size() != 0 )
-    {
-        for(size_t p = 0; p < select_nodes.size(); p++)
-        {
-            NODE* node = unimap.get_node_by_id(select_nodes[p]);
-            if(node == nullptr)
-            {
-                continue;
-            }
-
-            QString id = node->id;
             Eigen::Matrix4d tf0 = node->tf;
             Eigen::Matrix4d tf = tf0 * tf1;
             unimap.edit_node_pos(id, tf);
@@ -3741,36 +3402,6 @@ void MainWindow::slot_sim_random_seq()
     task.play(mode);
 }
 
-void MainWindow::bt_SelectPreNodes()
-{
-    int val = (int)saved_select_idx - 1;
-    if((val < 0) || (val >= pre_select_nodes.size()))
-    {
-        return;
-    }
-
-    select_nodes = pre_select_nodes[val];
-    saved_select_idx = val;
-
-    topo_update();
-    pick_update();
-}
-
-void MainWindow::bt_SelectPostNodes()
-{
-    int val = (int)saved_select_idx + 1;
-    if((val < 0) || (val >= pre_select_nodes.size()))
-    {
-        return;
-    }
-
-    select_nodes = pre_select_nodes[val];
-    saved_select_idx = val;
-
-    topo_update();
-    pick_update();
-}
-
 // comm
 void MainWindow::comm_loop()
 {
@@ -4035,131 +3666,6 @@ void MainWindow::watch_loop()
 
                         pre_ms = ms;
                     }
-                }
-            }
-        }
-
-        // annotation works
-        prevent_duplicate_clicks_cnt++;
-        if(is_select_all == true && is_pressed_btn_ctrl == true)
-        {
-            std::vector<QString> _select_nodes = unimap.get_nodes();
-            select_nodes = _select_nodes;
-
-            pre_select_nodes.push_back(_select_nodes);
-            if(pre_select_nodes.size() > 10)
-            {
-                pre_select_nodes.erase(pre_select_nodes.begin());
-            }
-            saved_select_idx = (int)pre_select_nodes.size();
-
-            topo_update();
-            pick_update();
-        }
-        if(is_copy == true && is_pressed_btn_ctrl == true && select_nodes.size() != 0)
-        {
-            if(prevent_duplicate_clicks_cnt > 10)
-            {
-                prevent_duplicate_clicks_cnt = 0;
-
-                copy_infos.clear();
-                for(size_t p=0; p < select_nodes.size(); p++)
-                {
-                    NODE* node = unimap.get_node_by_id(select_nodes[p]);
-                    if(node == NULL)
-                    {
-                        continue;
-                    }
-
-                    QString id0 = node->id;
-                    Eigen::Matrix4d tf = node->tf;
-                    QString type = node->type;
-                    std::vector<QString> links = node->linked;
-
-                    int idx0 = unimap.get_node_idx_by_id(id0);
-
-                    // for copy nodes
-                    tf(0,3) += 0.5;
-                    tf(1,3) -= 0.5;
-                    QString id = unimap.add_node(tf, type);
-
-                    std::vector<int> links_idx;
-                    for(size_t q = 0; q < links.size(); q++)
-                    {
-                        QString link_id = links[q];
-                        int idx = unimap.get_node_idx_by_id(link_id);
-                        if(idx == -1)
-                        {
-                            continue;
-                        }
-                        links_idx.push_back(idx);
-                    }
-
-                    COPY_INFO ci;
-                    ci.id = id;
-                    ci.original_idx = idx0;
-                    ci.original_links = links_idx;
-                    copy_infos.push_back(ci);
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-
-                for(size_t p=0; p < copy_infos.size(); p++)
-                {
-                    COPY_INFO ci0 = copy_infos[p];
-
-                    QString id0 = ci0.id;
-                    NODE* node0 = unimap.get_node_by_id(id0);
-                    if(node0 == NULL)
-                    {
-                        continue;
-                    }
-
-                    std::vector<int> links0 = ci0.original_links;
-                    for(size_t q = 0; q < links0.size(); q++)
-                    {
-                        int idx0 = links0[q];
-                        for(size_t r = 0; r < copy_infos.size(); r++)
-                        {
-                            COPY_INFO ci1 = copy_infos[r];
-                            int idx1 = ci1.original_idx;
-
-                            if(idx0 == idx1)
-                            {
-                                NODE* node0 = unimap.get_node_by_id(copy_infos[p].id);
-                                NODE* node1 = unimap.get_node_by_id(copy_infos[r].id);
-                                if(node0 == NULL || node1 == NULL)
-                                {
-                                    continue;
-                                }
-
-                                unimap.add_link1(node0->id, node1->id);
-                            }
-                        }
-                    }
-                }
-
-                if(copy_infos.size() != 0)
-                {
-                    std::vector<QString> _select_nodes;
-                    for(size_t p = 0; p < copy_infos.size(); p++)
-                    {
-                        QString id = copy_infos[p].id;
-                        _select_nodes.push_back(id);
-                    }
-                    select_nodes = _select_nodes;
-
-                    pre_select_nodes.push_back(_select_nodes);
-                    if(pre_select_nodes.size() > 10)
-                    {
-                        pre_select_nodes.erase(pre_select_nodes.begin());
-                    }
-                    saved_select_idx = (int)pre_select_nodes.size();
-
-                    pick.pre_node = "";
-                    pick.cur_node = "";
-                    topo_update();
-                    pick_update();
                 }
             }
         }
@@ -6364,24 +5870,6 @@ void MainWindow::pick_plot2()
             viewer2->removeShape("sel_pre");
         }
 
-        // erase first
-        if(last_plot_select.size() > 0)
-        {
-            for(size_t p = 0; p < last_plot_select.size(); p++)
-            {
-                QString contain_id = last_plot_select[p] + "_select";
-                if(viewer2->contains(contain_id.toStdString()))
-                {
-                    viewer2->removeShape(contain_id.toStdString());
-                }
-            }
-        }
-
-        if(viewer2->contains("select_area"))
-        {
-            viewer2->removeShape("select_area");
-        }
-
         if(viewer2->contains("measure"))
         {
             viewer2->removeShape("measure");
@@ -6432,22 +5920,6 @@ void MainWindow::pick_plot2()
                 measure_str.sprintf("dx:%.3f, dy%.3f, dist:%.3f", dx, dy, dist);
                 ui->lb_Measure->setText(measure_str);
             }
-
-            if(select_nodes.size() != 0)
-            {
-                for(size_t p = 0; p < select_nodes.size(); p++)
-                {
-                    NODE *node = unimap.get_node_by_id(select_nodes[p]);
-                    if(node != NULL)
-                    {
-                        QString id = node->id + "_select";
-                        pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.8, 0.05, node->tf, 1.0, 1.0, 0.0);
-                        viewer2->addPolygonMesh(donut, id.toStdString());
-                        last_plot_select.push_back(node->id);
-                    }
-                }
-            }
-            viewer2->addCube(area_lt_x, area_rb_x, area_rb_y, area_lt_y, -1.1, -1, 0.3, 0.3, 0.3, "select_area");
 
             // draw selection
             if(pick.pre_node != "")

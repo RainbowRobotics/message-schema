@@ -207,13 +207,6 @@ enum AUTO_OBS_STATE
     AUTO_OBS_VIR
 };
 
-enum OBS_INFO_STATE
-{
-    OBS_STATIC = 0,
-    OBS_DYNAMIC = 1,
-    OBS_VIRTUAL = 2,
-};
-
 enum OBS_STATE
 {
     OBS_NONE = 0,
@@ -913,6 +906,36 @@ struct XYZR_CLOUD
     template <class BBOX>
     bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 };
+
+struct ID_XYZ
+{
+    Eigen::Vector3d pos;
+    QString id;
+};
+
+struct XYZ_NODE
+{
+    std::vector<Eigen::Vector3d> pos;
+    std::vector<QString> id;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const { return pos.size(); }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    inline double kdtree_get_pt(const size_t idx, const size_t dim) const
+    {
+        if (dim == 0) return pos[idx][0];
+        else if (dim == 1) return pos[idx][1];
+        else return pos[idx][2];
+    }
+
+    // Optional: computation of bounding box
+    template <class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+};
+
+typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZ_NODE>, XYZ_NODE, 3> KD_TREE_NODE;
+
 
 struct COST_JACOBIAN
 {
