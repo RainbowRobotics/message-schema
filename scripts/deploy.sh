@@ -39,12 +39,22 @@ function ask_hotfix() {
 function git_tag_work() {
     local tag_version=$1
     local release_message=$2
-    
-    # 태그 생성 및 푸시
-    git tag -a $tag_version -m "$release_message" || { print_string "error" "Git tag 생성 실패"; return 1; }
-    git push origin $tag_version || { print_string "error" "Git tag push 실패"; return 1; }
-    git tag -d $tag_version || { print_string "error" "Git tag 삭제 실패"; return 1; }
-    
+
+    # 태그 생성
+    if ! git tag -a "$tag_version" -m "$release_message"; then
+        print_string "error" "Git tag 생성 실패"
+        return 1
+    fi
+
+    # 명확히 refs/tags/ 경로로 푸시
+    if ! git push origin "refs/tags/$tag_version"; then
+        print_string "error" "Git tag 푸시 실패"
+        return 1
+    fi
+
+    git tag -d "$tag_version"
+
+    print_string "success" "✅ 태그 $tag_version 푸시 완료"
     return 0
 }
 
@@ -113,7 +123,7 @@ function get_app_version() {
     version_tag=$(git tag --list 'release/[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
 
     if [ -z "$version_tag" ]; then
-        app_version="1.0.0"
+        app_version="1.5.0"
     else
         app_version="${version_tag#release/}"
     fi
