@@ -80,8 +80,6 @@ Q_SIGNALS:
     void recv_load(DATA_LOAD msg);
     void recv_randomseq(DATA_RANDOMSEQ msg);
     void recv_path(DATA_PATH msg);
-    void recv_vobs_r(DATA_VOBS_R msg);
-    void recv_vobs_c(DATA_VOBS_C msg);
     void recv_vobs(DATA_VOBS msg);
 
 private Q_SLOTS:
@@ -93,8 +91,6 @@ private Q_SLOTS:
     void slot_randomseq(DATA_RANDOMSEQ msg);
     void slot_path(DATA_PATH msg);
     void slot_vobs(DATA_VOBS msg);
-    void slot_vobs_r(DATA_VOBS_R msg);
-    void slot_vobs_c(DATA_VOBS_C msg);
 
     /* send command response */
     void send_move_response(DATA_MOVE msg);

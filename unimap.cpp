@@ -368,6 +368,10 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
         node.tf = ZYX_to_TF(pick.r_pose[0], pick.r_pose[1], 0, 0, 0, pick.r_pose[2]);        
         nodes.push_back(node);
 
+        NODE* ptr = &nodes.back();
+        nodes_id_map[ptr->id] = ptr;
+        nodes_name_map[ptr->name] = ptr;
+
         printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
     }
     else
@@ -392,6 +396,18 @@ void UNIMAP::add_node(PICKING pick, QString type, QString info)
                     }
                 }
 
+                auto it0 = nodes_id_map.find(node->id);
+                if(it0 != nodes_id_map.end())
+                {
+                    nodes_id_map.erase(it0);
+                }
+
+                auto it1 = nodes_name_map.find(node->name);
+                if(it1 != nodes_name_map.end())
+                {
+                    nodes_name_map.erase(it1);
+                }
+
                 // erase node
                 nodes.erase(it);                
             }
@@ -409,6 +425,10 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type)
     node.info = "";
     node.tf = tf;
     nodes.push_back(node);
+
+    NODE* ptr = &nodes.back();
+    nodes_id_map[ptr->id] = ptr;
+    nodes_name_map[ptr->name] = ptr;
 
     printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
 
@@ -428,6 +448,10 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, int bqr_num)
     node.tf = tf;
     nodes.push_back(node);
 
+    NODE* ptr = &nodes.back();
+    nodes_id_map[ptr->id] = ptr;
+    nodes_name_map[ptr->name] = ptr;
+
     printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
 
     return node.id;
@@ -441,6 +465,10 @@ QString UNIMAP::add_node(Eigen::Matrix4d tf, QString type, QString name)
     node.type = type;
     node.tf = tf;
     nodes.push_back(node);
+
+    NODE* ptr = &nodes.back();
+    nodes_id_map[ptr->id] = ptr;
+    nodes_name_map[ptr->name] = ptr;
 
     printf("[UNIMAP] add node, %s\n", node.id.toLocal8Bit().data());
 
@@ -490,6 +518,18 @@ void UNIMAP::del_node(QString id)
                         nodes[p].linked.erase(_it);
                     }
                 }
+            }
+
+            auto it0 = nodes_id_map.find(node->id);
+            if(it0 != nodes_id_map.end())
+            {
+                nodes_id_map.erase(it0);
+            }
+
+            auto it1 = nodes_name_map.find(node->name);
+            if(it1 != nodes_name_map.end())
+            {
+                nodes_name_map.erase(it1);
             }
 
             // erase node

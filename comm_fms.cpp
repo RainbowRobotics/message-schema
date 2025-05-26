@@ -285,22 +285,6 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_vobs(msg);
     }
-    else if(topic == "vobsRobots")
-    {
-        DATA_VOBS_R msg;
-        msg.command = get_json(data_obj, "command");
-        msg.vobs = get_json(data_obj, "vobs");
-        msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_vobs_r(msg);
-    }
-    else if(topic == "vobsClosures")
-    {
-        DATA_VOBS_C msg;
-        msg.command = get_json(data_obj, "command");
-        msg.vobs = get_json(data_obj, "vobs");
-        msg.time = get_json(data_obj, "time").toDouble()/1000;
-        Q_EMIT recv_vobs_c(msg);
-    }
 }
 
 void COMM_FMS::slot_load(DATA_LOAD msg)
@@ -871,74 +855,6 @@ void COMM_FMS::slot_vobs(DATA_VOBS msg)
             obsmap->update_vobs_map();
         }
     }
-}
-
-void COMM_FMS::slot_vobs_r(DATA_VOBS_R msg)
-{
-    /*QString command = msg.command;
-    if(command == "vobs_robots")
-    {
-        std::vector<Eigen::Vector3d> vobs_list;
-
-        QString vobs_str = msg.vobs;
-        QStringList vobs_str_list = vobs_str.split("\n");
-        if(vobs_str_list.size() > 0)
-        {
-            for(int p = 0; p < vobs_str_list.size(); p++)
-            {
-                QStringList vobs_str_list2 = vobs_str_list[p].split(",");
-                if(vobs_str_list2.size() == 3)
-                {
-                    Eigen::Vector3d P;
-                    P[0] = vobs_str_list2[0].toDouble();
-                    P[1] = vobs_str_list2[1].toDouble();
-                    P[2] = vobs_str_list2[2].toDouble();
-                    vobs_list.push_back(P);
-                }
-            }
-        }
-
-        // update vobs
-        obsmap->mtx.lock();
-        obsmap->vobs_list_robots = vobs_list;
-        //obsmap->dirty_vobs_r = true;
-        obsmap->mtx.unlock();
-
-        obsmap->update_vobs_map();
-    }*/
-}
-
-void COMM_FMS::slot_vobs_c(DATA_VOBS_C msg)
-{
-    /*QString command = msg.command;
-    if(command == "vobs_closures")
-    {
-        QString vobs_str = msg.vobs;
-        QStringList vobs_str_list = vobs_str.split(",");
-
-        // set vobs
-        std::vector<Eigen::Vector3d> vobs_list;
-        for(int p = 0; p < vobs_str_list.size(); p++)
-        {
-            QString node_id = vobs_str_list[p];
-            if(node_id != "")
-            {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != NULL)
-                {
-                    vobs_list.push_back(node->tf.block(0,3,3,1));
-                }
-            }
-        }
-
-        // update vobs
-        obsmap->mtx.lock();
-        obsmap->vobs_list_closures = vobs_list;
-        //obsmap->dirty_vobs_c = true;
-        obsmap->mtx.unlock();
-
-        obsmap->update_vobs_map();
-    }*/
 }
 
 void COMM_FMS::send_move_response(DATA_MOVE msg)

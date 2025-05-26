@@ -562,88 +562,6 @@ struct DATA_VOBS
     }
 };
 
-struct DATA_VOBS_R
-{
-    double time;
-    QString command; // vobsRobots
-    QString vobs;
-
-    QString result;
-    QString message;
-
-    DATA_VOBS_R()
-    {
-        time = 0.0;
-        command = "";
-        vobs = "";
-
-        result = "";
-        message = "";
-    }
-
-    DATA_VOBS_R(const DATA_VOBS_R& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-    }
-
-    DATA_VOBS_R& operator=(const DATA_VOBS_R& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-        return *this;
-    }
-};
-
-struct DATA_VOBS_C
-{
-    double time;
-    QString command; // vobsClosures
-    QString vobs;
-
-    QString result;
-    QString message;
-
-    DATA_VOBS_C()
-    {
-        time = 0.0;
-        command = "";
-        vobs = "";
-
-        result = "";
-        message = "";
-    }
-
-    DATA_VOBS_C(const DATA_VOBS_C& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-    }
-
-    DATA_VOBS_C& operator=(const DATA_VOBS_C& p)
-    {
-        time = p.time;
-        command = p.command;
-        vobs = p.vobs;
-
-        result = p.result;
-        message = p.message;
-        return *this;
-    }
-};
-
 Q_DECLARE_METATYPE(DATA_MOVE)
 Q_DECLARE_METATYPE(DATA_LOCALIZATION)
 Q_DECLARE_METATYPE(DATA_LOAD)
@@ -655,8 +573,6 @@ Q_DECLARE_METATYPE(DATA_VIEW_PATH)
 Q_DECLARE_METATYPE(DATA_LED)
 Q_DECLARE_METATYPE(DATA_MOTOR)
 Q_DECLARE_METATYPE(DATA_PATH)
-Q_DECLARE_METATYPE(DATA_VOBS_R)
-Q_DECLARE_METATYPE(DATA_VOBS_C)
 Q_DECLARE_METATYPE(DATA_VOBS)
 
 #endif // COMM_DATA_H
