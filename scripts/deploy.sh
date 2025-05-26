@@ -37,30 +37,13 @@ function ask_hotfix() {
 
 # Git tag 작업 수행
 function git_tag_work() {
-    local current_branch=$1
-    local new_version=$2
-    local tag_version=$3
-    local release_message=$4
-
-
-    if [ "$current_branch" = "main" ]; then
-        # main 브랜치에서만 package.json 파일을 스테이징에 추가
-        git add app.json || { print_string "error" "Git add app.json 실패"; return 1; }
-    fi
-
-    # 태그용 임시 커밋 생성
-    git commit --allow-empty -m "chore: Release ${new_version}" || { print_string "error" "Git commit 실패"; return 1; }
+    local tag_version=$1
+    local release_message=$2
     
     # 태그 생성 및 푸시
     git tag -a $tag_version -m "$release_message" || { print_string "error" "Git tag 생성 실패"; return 1; }
     git push origin $tag_version || { print_string "error" "Git tag push 실패"; return 1; }
     git tag -d $tag_version || { print_string "error" "Git tag 삭제 실패"; return 1; }
-    
-    # 임시 커밋 되돌리기
-    git reset --soft HEAD~1 || { print_string "error" "Git reset 실패"; return 1; }
-
-    git commit --allow-empty -m "chore: Git 추적 제거" || { print_string "error" "Git commit 실패"; return 1; }
-    git push origin $current_branch || { print_string "error" "Git push 실패"; return 1; }
     
     return 0
 }
@@ -170,12 +153,15 @@ function get_release_message() {
 function get_app_version() {
     local version_type=$1
 
-    if [ "$current_branch" = "main" ]; then
-        # app.json 파일을 먼저 최신화
-        git checkout origin/main -- app.json || { print_string "error" "루트 app.json pull 실패"; return 1; }
-    fi
+    git fetch --tags > /dev/null
 
-    app_version=$(grep "\"version\":" "./app.json" | sed -E "s/.*\"version\": *\"([^\"]+)\".*/\1/")
+    version_tag=$(git tag --list 'release/[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+
+    if [ -z "$version_tag" ]; then
+        app_version="1.0.0"
+    else
+        app_version="${version_tag#release/}"
+    fi
 
     IFS='.' read -r major minor patch <<< "$app_version"
 
@@ -196,20 +182,7 @@ function get_app_version() {
 
     new_version="${major}.${minor}.${patch}"
 
-    set_app_version "$new_version"
-
     echo "$new_version"
-}
-
-# app.json 파일 버전 업데이트
-function set_app_version() {
-    local version=$1
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" "./app.json"
-    else
-        sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" "./app.json"
-    fi
 }
 
 
@@ -274,7 +247,7 @@ release_message="[App: SLAMNAV2, Version: ${new_version}] release 배포"
 
 
 # Git 작업 실행
-git_tag_work "$current_branch" "$new_version" "$tag_version" "$release_message" || last_git_work_status="bad"
+git_tag_work "$tag_version" "$release_message" || last_git_work_status="bad"
 
 if [[ "$last_git_work_status" = "bad" ]]; then
     git tag -d $tag_version
