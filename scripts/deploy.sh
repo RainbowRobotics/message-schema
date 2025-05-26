@@ -220,7 +220,7 @@ timestamp=$(date +%Y%m%d%H%M%S)
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # 현재 버전 생성
-new_version="${current_branch}-${timestamp}"
+new_version="$timestamp"
 
 if [[ "$current_branch" = "main" ]]; then
      # 메인 스크립트 실행 부분에 hotfix 여부 확인 추가
