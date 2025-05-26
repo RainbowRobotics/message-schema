@@ -260,6 +260,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.jog_val[0] = get_json(data_obj, "vx").toDouble();
         msg.jog_val[1] = get_json(data_obj, "vy").toDouble();
         msg.jog_val[2] = get_json(data_obj, "wz").toDouble();
+        msg.escape_dir = get_json(data_obj, "escape_dir");
         msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_move(msg);
     }
@@ -269,7 +270,7 @@ void COMM_FMS::recv_message(const QString &buf)
         msg.command = get_json(data_obj, "command");
         msg.path = get_json(data_obj, "path");
         msg.vobs_robots = get_json(data_obj, "vobs_r");
-        msg.vobs_clousers = get_json(data_obj, "vobs_c");
+        msg.vobs_closures = get_json(data_obj, "vobs_c");
         msg.preset = get_json(data_obj, "preset").toInt();
         msg.time = get_json(data_obj, "time").toDouble()/1000;
         Q_EMIT recv_path(msg);
@@ -708,6 +709,19 @@ void COMM_FMS::slot_move(DATA_MOVE msg)
                                                                     msg.result.toLocal8Bit().data(),
                                                                     msg.message.toLocal8Bit().data());
     }
+    else if(command == "escape")
+    {
+        QString escape_dir = msg.escape_dir;
+        if(escape_dir == "stop")
+        {
+            MainWindow* _main = (MainWindow*)main;
+            _main->bt_Emergency();
+        }
+        else if(escape_dir == "backward")
+        {
+            ctrl->move_escape(escape_dir);
+        }
+    }
 }
 
 void COMM_FMS::slot_path(DATA_PATH msg)
@@ -715,10 +729,38 @@ void COMM_FMS::slot_path(DATA_PATH msg)
     QString command = msg.command;
     if(command == "path")
     {
+        QString path_str = msg.path;
+        QStringList path_str_list = path_str.split(",");
+
+        std::vector<QString> path;
+        for(int p = 0; p < path_str_list.size(); p++)
+        {
+            path.push_back(path_str_list[p]);
+        }
+
+        QString _vobs_robots = msg.vobs_robots;
+        QString _vobs_closures = msg.vobs_closures;
+
+        int preset = msg.preset;
+        ctrl->set_path(path, preset, _vobs_robots, _vobs_closures);
+
+        msg.response = "true";
+
+        msg.vobs_closures = "";
+        msg.vobs_robots = "";
+        msg.path = "";
+
+        send_path_response(msg);
+    }
+    else if(command == "move")
+    {
+        std::pair<QString, QString> vobs_str = ctrl->get_vobs();
+        QString vobs_r_str = vobs_str.first;
+        QString vobs_c_str = vobs_str.second;
+
         std::vector<Eigen::Vector3d> vobs_r_list;
         {
-            QString vobs_str = msg.vobs_robots;
-            QStringList vobs_str_list = vobs_str.split("\n");
+            QStringList vobs_str_list = vobs_r_str.split("\n");
             if(vobs_str_list.size() > 0)
             {
                 for(int p = 0; p < vobs_str_list.size(); p++)
@@ -734,30 +776,26 @@ void COMM_FMS::slot_path(DATA_PATH msg)
                     }
                 }
             }
-
-            std::cout << "[SLOT_PATH] recv vobs_robots: " << vobs_str.toStdString() << std::endl;
         }
 
         std::vector<Eigen::Vector3d> vobs_c_list;
         {
-            QString vobs_str = msg.vobs_clousers;
-            QStringList vobs_str_list = vobs_str.split(",");
-
-            // set vobs
-            for(int p = 0; p < vobs_str_list.size(); p++)
+            QStringList vobs_str_list = vobs_c_str.split(",");
+            if(vobs_str_list.size() > 0)
             {
-                QString node_id = vobs_str_list[p];
-                if(node_id != "")
+                for(int p = 0; p < vobs_str_list.size(); p++)
                 {
-                    NODE *node = unimap->get_node_by_id(node_id);
-                    if(node != NULL)
+                    QString node_id = vobs_str_list[p];
+                    if(node_id != "")
                     {
-                        vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                        NODE *node = unimap->get_node_by_id(node_id);
+                        if(node != NULL)
+                        {
+                            vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                        }
                     }
                 }
             }
-
-            std::cout << "[SLOT_PATH] recv vobs_clousers: " << vobs_str.toStdString() << std::endl;
         }
 
         // update vobs
@@ -770,19 +808,7 @@ void COMM_FMS::slot_path(DATA_PATH msg)
             obsmap->update_vobs_map();
         }
 
-        QString path_str = msg.path;
-        QStringList path_str_list = path_str.split(",");
-
-        std::vector<QString> path;
-        for(int p = 0; p < path_str_list.size(); p++)
-        {
-            path.push_back(path_str_list[p]);
-        }
-
-        printf("[COMM_FMS] ID: %s\n", robot_id.toLocal8Bit().data());
-
-        int preset = msg.preset;
-        ctrl->move_pp(path, preset);
+        ctrl->move_path();
     }
 }
 
@@ -967,6 +993,28 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
     dataObj["wz"] = QString::number(msg.jog_val[2], 'f', 3);
     dataObj["time"] = QString::number((long long)(msg.time*1000), 10);
 
+    QJsonObject rootObj;
+    rootObj["robot"] = robotObj;
+    rootObj["data"] = dataObj;
+
+    QJsonDocument doc(rootObj);
+    QString buf = doc.toJson(QJsonDocument::Compact);
+    client.sendTextMessage(buf);
+}
+
+void COMM_FMS::send_path_response(DATA_PATH msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject robotObj;
+    robotObj["robotSerial"] = robot_id;
+
+    QJsonObject dataObj;
+    dataObj["title"] = "pathResponse";
+    dataObj["time"] = QString::number((long long)(msg.time*1000), 10);
 
     QJsonObject rootObj;
     rootObj["robot"] = robotObj;

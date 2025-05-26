@@ -146,6 +146,7 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         msg.jog_val[0] = get_json(data, "vx").toDouble();
         msg.jog_val[1] = get_json(data, "vy").toDouble();
         msg.jog_val[2] = get_json(data, "wz").toDouble()*D2R;
+        msg.escape_dir = get_json(data, "escape_dir");
         msg.time = get_json(data, "time").toDouble()/1000;
 
         logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
@@ -301,6 +302,8 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         DATA_PATH msg;
         msg.command = get_json(data, "command"); // "path"
         msg.path = get_json(data, "path");
+        msg.vobs_robots = get_json(data, "vobs_r");
+        msg.vobs_closures = get_json(data, "vobs_c");
         msg.preset = get_json(data, "preset").toInt();
         msg.time = get_json(data, "time").toDouble()/1000;
 
@@ -1153,6 +1156,11 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         MainWindow* _main = (MainWindow*)main;
         _main->bt_Emergency();
     }
+    else if(command == "escape")
+    {
+        QString escape_dir = msg.escape_dir;
+        ctrl->move_escape(escape_dir);
+    }
 }
 
 void COMM_RRS::slot_mapping(DATA_MAPPING msg)
@@ -1643,8 +1651,77 @@ void COMM_RRS::slot_path(DATA_PATH msg)
             path.push_back(path_str_list[p]);
         }
 
+        QString _vobs_robots = msg.vobs_robots;
+        QString _vobs_closures = msg.vobs_closures;
+
         int preset = msg.preset;
-        ctrl->move_pp(path, preset);
+        ctrl->set_path(path, preset, _vobs_robots, _vobs_closures);
+
+        msg.response = "true";
+
+        msg.vobs_closures = "";
+        msg.vobs_robots = "";
+        msg.path = "";
+
+        send_path_response(msg);
+    }
+    else if(command == "move")
+    {
+        std::pair<QString, QString> vobs_str = ctrl->get_vobs();
+        QString vobs_r_str = vobs_str.first;
+        QString vobs_c_str = vobs_str.second;
+
+        std::vector<Eigen::Vector3d> vobs_r_list;
+        {
+            QStringList vobs_str_list = vobs_r_str.split("\n");
+            if(vobs_str_list.size() > 0)
+            {
+                for(int p = 0; p < vobs_str_list.size(); p++)
+                {
+                    QStringList vobs_str_list2 = vobs_str_list[p].split(",");
+                    if(vobs_str_list2.size() == 3)
+                    {
+                        Eigen::Vector3d P;
+                        P[0] = vobs_str_list2[0].toDouble();
+                        P[1] = vobs_str_list2[1].toDouble();
+                        P[2] = vobs_str_list2[2].toDouble();
+                        vobs_r_list.push_back(P);
+                    }
+                }
+            }
+        }
+
+        std::vector<Eigen::Vector3d> vobs_c_list;
+        {
+            QStringList vobs_str_list = vobs_c_str.split(",");
+            if(vobs_str_list.size() > 0)
+            {
+                for(int p = 0; p < vobs_str_list.size(); p++)
+                {
+                    QString node_id = vobs_str_list[p];
+                    if(node_id != "")
+                    {
+                        NODE *node = unimap->get_node_by_id(node_id);
+                        if(node != NULL)
+                        {
+                            vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                        }
+                    }
+                }
+            }
+        }
+
+        // update vobs
+        {
+            obsmap->mtx.lock();
+            obsmap->vobs_list_robots = vobs_r_list;
+            obsmap->vobs_list_closures = vobs_c_list;
+            obsmap->mtx.unlock();
+
+            obsmap->update_vobs_map();
+        }
+
+        ctrl->move_path();
     }
 }
 
@@ -1958,5 +2035,30 @@ void COMM_RRS::send_dock_response(DATA_DOCK msg)
     mtx.lock();
     lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
+}
+
+void COMM_RRS::send_path_response(DATA_PATH msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+
+    QString test = QString::number((long long)(msg.time*1000), 10);
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+    printf("test %s\n", test.toLocal8Bit().data());
+
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("pathResponse", res);
 }
 

@@ -1118,7 +1118,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         }
     }
 
-    if(is_found)
+    if(is_found && min_d < 3.0)
     {
         double d0 = calc_dist_2d(_P0-pos);
         double d1 = calc_dist_2d(_P1-pos);
@@ -1131,6 +1131,19 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
             return _node_id1;
         }
     }
+    else
+    {
+        Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[0]];
+        if((pos-pos0).norm() < 10.0)
+        {
+            return kdtree_node.id[ret_near_idxs[0]];
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     return "";
 }
 

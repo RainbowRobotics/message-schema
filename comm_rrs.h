@@ -154,6 +154,7 @@ public Q_SLOTS:
     void send_randomseq_response(DATA_RANDOMSEQ msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_dock_response(DATA_DOCK msg);
+    void send_path_response(DATA_PATH msg);
 };
 
 #endif // COMM_RRS_H

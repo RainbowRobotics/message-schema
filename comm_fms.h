@@ -98,6 +98,7 @@ private Q_SLOTS:
 
     /* send command response */
     void send_move_response(DATA_MOVE msg);
+    void send_path_response(DATA_PATH msg);
 };
 
 #endif // COMM_FMS_H

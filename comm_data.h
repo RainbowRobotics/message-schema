@@ -16,6 +16,8 @@ struct DATA_MOVE
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
 
+    QString escape_dir; // BL, BR, FL, FR, OR, OF, OB
+
     double remaining_dist;
     double eta; // estimated time of arrival
     int bat_percent; // battery percentage
@@ -36,6 +38,8 @@ struct DATA_MOVE
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
+
+        escape_dir = "";
 
         remaining_dist = 0.0;
         eta = 9999.0;
@@ -58,6 +62,8 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        escape_dir = p.escape_dir;
+
         eta = p.eta;
         bat_percent = p.bat_percent;
 
@@ -78,6 +84,8 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
+        escape_dir = p.escape_dir;
+
         eta = p.eta;
         bat_percent = p.bat_percent;
 
@@ -454,9 +462,10 @@ struct DATA_PATH
     QString command; // path
     QString path;
     QString vobs_robots;
-    QString vobs_clousers;
+    QString vobs_closures;
     int preset;
 
+    QString response;
     QString result;
     QString message;
 
@@ -466,9 +475,10 @@ struct DATA_PATH
         command = "";
         path = "";
         vobs_robots = "";
-        vobs_clousers = "";
+        vobs_closures = "";
         preset = 0;
 
+        response = "";
         result = "";
         message = "";
     }
@@ -479,9 +489,10 @@ struct DATA_PATH
         command = p.command;
         path = p.path;
         vobs_robots = p.vobs_robots;
-        vobs_clousers = p.vobs_clousers;
+        vobs_closures = p.vobs_closures;
         preset = p.preset;
 
+        response = p.response;
         result = p.result;
         message = p.message;
     }
@@ -492,9 +503,10 @@ struct DATA_PATH
         command = p.command;
         path = p.path;
         vobs_robots = p.vobs_robots;
-        vobs_clousers = p.vobs_clousers;
+        vobs_closures = p.vobs_closures;
         preset = p.preset;
 
+        response = p.response;
         result = p.result;
         message = p.message;
         return *this;

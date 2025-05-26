@@ -207,13 +207,6 @@ enum AUTO_OBS_STATE
     AUTO_OBS_VIR
 };
 
-enum OBS_INFO_STATE
-{
-    OBS_STATIC = 0,
-    OBS_DYNAMIC = 1,
-    OBS_VIRTUAL = 2,
-};
-
 enum OBS_STATE
 {
     OBS_NONE = 0,
