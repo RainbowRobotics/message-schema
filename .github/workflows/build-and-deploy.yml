@@ -43,11 +43,13 @@ jobs:
         run: |
           bash scripts/build.sh
 
-      - name: Compress build directory
+      - name: Compress build directory And Remove build directory
         run: |
           cd build
          
           zip -r "../${{ env.VERSION }}.zip" .
+
+          cd .. && rm -rf build
 
           cd $GITHUB_WORKSPACE
 
