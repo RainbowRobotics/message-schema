@@ -40,6 +40,9 @@ function git_tag_work() {
     local tag_version=$1
     local release_message=$2
 
+    echo "tag_version: $tag_version"
+    echo "release_message: $release_message"
+
     # 태그 생성
     if ! git tag -a "$tag_version" -m "$release_message"; then
         print_string "error" "Git tag 생성 실패"
@@ -54,7 +57,6 @@ function git_tag_work() {
 
     git tag -d "$tag_version"
 
-    print_string "success" "✅ 태그 $tag_version 푸시 완료"
     return 0
 }
 
@@ -184,8 +186,6 @@ last_git_work_status="normal"
 timestamp=$(date +%Y%m%d%H%M%S)
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git name-rev --name-only HEAD)
 
-echo "current_branch: $current_branch"
-
 # 현재 버전 생성
 new_version="$timestamp"
 
@@ -200,6 +200,7 @@ if [[ "$current_branch" = "main" ]]; then
     main_release_message=$(get_release_message)
 
     new_version=$(get_app_version $version_type)
+    new_version=$(echo "$new_version" | tr -d '\n' | tr -d '\r')
 fi
 
 # 태그 버전 생성
@@ -224,7 +225,7 @@ fi
 # 최종 상태에 따라 종료
 if [ "$last_git_work_status" = "normal" ]; then
     if [[ "$current_branch" = "main" ]]; then
-        git_tag_work "$current_branch" "$new_version" "release/${new_version}" "$main_release_message"
+        git_tag_work "release/${new_version}" "$main_release_message"
         create_github_release "$new_version" "$main_release_message"
     fi
 
