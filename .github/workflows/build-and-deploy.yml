@@ -46,6 +46,14 @@ jobs:
       - name: Compress build directory And Remove build directory
         run: |
           cd build
+
+          rm -rf ./**/*.o
+          rm -rf ./**/*.a
+          rm -rf ./**/CMakeFiles
+          rm -rf ./**/Makefile
+          rm -rf ./**/*.pdb
+          rm -rf ./**/qmltooling*
+          rm -rf ./**/__pycache__
          
           zip -r "../${{ env.VERSION }}.zip" .
 
