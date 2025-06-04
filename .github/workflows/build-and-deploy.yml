@@ -45,18 +45,43 @@ jobs:
 
       - name: Compress build directory And Remove build directory
         run: |         
-          find build/lib -type f -name "*.so" -exec strip --strip-unneeded {} \;
-          find build/lib -type f -name "*.a" -exec strip --strip-debug {} \;
+          LIB_DIR="build/lib"
+          CORE_DIR="$LIB_DIR/lib-core"
+          EXTRA_DIR="$LIB_DIR/lib-extra"
+          SIZE_LIMIT=$((95 * 1024 * 1024)) # 95MB in bytes
+
+          mkdir -p "$CORE_DIR" "$EXTRA_DIR"
+
+          mapfile -t LIB_FILES < <(
+            find "$LIB_DIR" -maxdepth 1 -type f -name "*.so*" -exec du -b {} + |
+            sort -nr | awk '{print $1 ":" $2}'
+          )
+
+          total=0
+          for entry in "${LIB_FILES[@]}"; do
+            size=${entry%%:*}
+            path=${entry##*:}
+            base=$(basename "$path")
+
+            if (( total + size <= SIZE_LIMIT )); then
+              cp "$path" "$CORE_DIR/$base"
+              total=$((total + size))
+            else
+              cp "$path" "$EXTRA_DIR/$base"
+            fi
+          done
 
           tar --exclude='lib' -czf build.tar.gz -C build .
-          tar -czf lib.tar.gz -C build/lib .
+
+          tar -czf lib-core.tar.gz -C "$CORE_DIR" .
+          tar -czf lib-extra.tar.gz -C "$EXTRA_DIR" .
 
           echo "📦 압축 결과:"
           du -h build.tar.gz
-          du -h lib.tar.gz
+          du -h lib-core.tar.gz
+          du -h lib-extra.tar.gz
 
           rm -rf build
-
           cd $GITHUB_WORKSPACE
 
       - name: Clone release apps repository
