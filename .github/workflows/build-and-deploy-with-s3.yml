@@ -52,24 +52,25 @@ jobs:
         run: |
           S3_BUCKET="rainbow-deploy"
           S3_PREFIX="slamnav2/${{ env.BRANCH_NAME }}/"
-          VERSION="${{ env.VERSION }}"
-          ZIP_NAME="${VERSION}.zip"
-          S3_PATH="${S3_PREFIX}${VERSION}/lib"
+          TARGET_VERSION="${{ env.VERSION }}"
+          FILE_NAME="lib.zip"
+
+          S3_PATH="$S3_PREFIX$TARGET_VERSION"
 
           zip -r lib.zip build/lib
 
-          ZIP_KEYS=$(aws s3 ls "s3://$S3_BUCKET/$S3_PREFIX" --recursive | grep '/lib/' | grep '.zip' | awk '{print $4}')
+          LIB_ZIPS=$(aws s3 ls "s3://$S3_BUCKET/$S3_PREFIX" --recursive | grep "$FILE_NAME" | awk '{print $4}')
 
-          ZIP_COUNT=$(echo "$ZIP_KEYS" | wc -l)
+          LIB_COUNT=$(echo "$LIB_ZIPS" | wc -l)
 
-          if [ "$ZIP_COUNT" -ge 10 ]; then
-            OLDEST_KEY=$(echo "$ZIP_KEYS" | sort | head -n 1)
+          if [ "$LIB_COUNT" -ge 10 ]; then
+            OLDEST_KEY=$(echo "$LIB_ZIPS" | sort | head -n 1)
             aws s3 rm "s3://$S3_BUCKET/$OLDEST_KEY"
           fi
 
-          aws s3 cp "$ZIP_NAME" "s3://$S3_BUCKET/$S3_PATH/$ZIP_NAME" --acl public-read
+          aws s3 cp lib.zip "s3://$S3_BUCKET/$S3_PATH/$FILE_NAME" --acl public-read
 
-          rm -rf lib.zip
+          rm -rf "$FILE_NAME"
           rm -rf build/lib
 
       - name: Compress build directory And Remove build directory
