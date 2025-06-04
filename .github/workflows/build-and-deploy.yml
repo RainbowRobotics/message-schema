@@ -90,6 +90,10 @@ jobs:
 
           chmod +x build/deps-install.sh
 
+          cp scripts/exec-files/deps-install.desktop build/deps-install.desktop
+          cp scripts/exec-files/deps-install.command build/deps-install.command
+          cp scripts/exec-files/deps-install.bat build/deps-install.bat
+
           tar --exclude='lib' -czf build-${VERSION}.tar.gz -C build .
 
           du -h build.tar.gz
