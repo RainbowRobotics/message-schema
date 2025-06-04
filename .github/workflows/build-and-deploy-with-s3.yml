@@ -75,11 +75,22 @@ jobs:
 
       - name: Compress build directory And Remove build directory
         run: |
-          cd build
-          
-          zip -r "../${{ env.VERSION }}.zip" .
+          BRANCH_NAME=${{ env.BRANCH_NAME }}
+          VERSION=${{ env.VERSION }}
 
-          cd .. && rm -rf build
+          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/deps-install.sh \
+          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
+          > build/deps-install.sh
+
+          chmod +x build/deps-install.sh
+
+          cp scripts/exec-files/deps-install.desktop build/deps-install.desktop
+          cp scripts/exec-files/deps-install.command build/deps-install.command
+          cp scripts/exec-files/deps-install.bat build/deps-install.bat
+          
+          zip -r "${{ env.VERSION }}.zip" ./build
+
+          rm -rf build
 
           cd $GITHUB_WORKSPACE
 
