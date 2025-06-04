@@ -46,43 +46,50 @@ jobs:
       - name: Compress build directory And Remove build directory
         run: |         
           LIB_DIR="build/lib"
-          CORE_DIR="$LIB_DIR/lib-core"
-          EXTRA_DIR="$LIB_DIR/lib-extra"
-          SIZE_LIMIT=$((95 * 1024 * 1024)) # 95MB in bytes
-
-          mkdir -p "$CORE_DIR" "$EXTRA_DIR"
+          SPLIT_BASE="lib-split"
+          SIZE_LIMIT=$((95 * 1024 * 1024)) # 95MB
+          PART_PREFIX="lib-part"
+          mkdir -p "$SPLIT_BASE"
 
           mapfile -t LIB_FILES < <(
             find "$LIB_DIR" -maxdepth 1 -type f -name "*.so*" -exec du -b {} + |
             sort -nr | awk '{print $1 ":" $2}'
           )
 
-          total=0
+          PART_INDEX=1
+          PART_SIZE=0
+          PART_DIR=""
+
           for entry in "${LIB_FILES[@]}"; do
             size=${entry%%:*}
             path=${entry##*:}
             base=$(basename "$path")
 
-            if (( total + size <= SIZE_LIMIT )); then
-              cp "$path" "$CORE_DIR/$base"
-              total=$((total + size))
-            else
-              cp "$path" "$EXTRA_DIR/$base"
+            if [[ -z "$PART_DIR" || $((PART_SIZE + size)) -gt $SIZE_LIMIT ]]; then
+              PART_DIR="$SPLIT_BASE/${PART_PREFIX}-${PART_INDEX}"
+              mkdir -p "$PART_DIR"
+              PART_SIZE=0
+              ((PART_INDEX++))
             fi
+
+            cp "$path" "$PART_DIR/$base"
+            PART_SIZE=$((PART_SIZE + size))
+          done
+
+          for dir in "$SPLIT_BASE"/${PART_PREFIX}-*; do
+            name=$(basename "$dir")
+            tar -czf "${name}.tar.gz" -C "$dir" .
           done
 
           tar --exclude='lib' -czf build.tar.gz -C build .
 
-          tar -czf lib-core.tar.gz -C "$CORE_DIR" .
-          tar -czf lib-extra.tar.gz -C "$EXTRA_DIR" .
-
-          echo "📦 압축 결과:"
           du -h build.tar.gz
-          du -h lib-core.tar.gz
-          du -h lib-extra.tar.gz
+          for file in ${PART_PREFIX}-*.tar.gz; do
+            du -h "$file"
+          done
 
           rm -rf build
-          cd $GITHUB_WORKSPACE
+          cd "$GITHUB_WORKSPACE"
 
       - name: Clone release apps repository
         env:
@@ -131,8 +138,12 @@ jobs:
 
           # 압축파일 이동
           mkdir -p "$APP_DIR/${{ env.VERSION }}"
+          
           mv ../build.tar.gz "$APP_DIR/"
-          mv ../lib.tar.gz "$APP_DIR/"
+
+          for f in ../lib-part-*.tar.gz; do
+            mv "$f" "$APP_DIR/"
+          done
           
           # 새 버전 배포
           git config --global user.email "dfd1123@naver.com"
