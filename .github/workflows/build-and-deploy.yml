@@ -90,7 +90,7 @@ jobs:
 
           chmod +x build/deps-install.sh
 
-          tar --exclude='lib' -czf build.tar.gz -C build .
+          tar --exclude='lib' -czf build-${VERSION}.tar.gz -C build .
 
           du -h build.tar.gz
           for file in ${PART_PREFIX}-*.tar.gz; do
@@ -149,7 +149,7 @@ jobs:
           mkdir -p "$APP_DIR/${{ env.VERSION }}"
           mkdir -p "$APP_DIR/${{ env.VERSION }}/lib"
 
-          mv ../build.tar.gz "$APP_DIR/${{ env.VERSION }}"
+          mv "../build-${{ env.VERSION }}.tar.gz" "$APP_DIR/${{ env.VERSION }}"
 
           for f in ../lib-part-*.tar.gz; do
             mv "$f" "$APP_DIR/${{ env.VERSION }}/lib"
