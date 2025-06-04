@@ -57,7 +57,7 @@ jobs:
 
           S3_PATH="$S3_PREFIX$TARGET_VERSION"
 
-          zip -r lib.zip build/lib
+          (cd build/lib && zip -r "../../$FILE_NAME" .)
 
           LIB_ZIPS=$(aws s3 ls "s3://$S3_BUCKET/$S3_PREFIX" --recursive | grep "$FILE_NAME" | awk '{print $4}')
 
@@ -88,7 +88,7 @@ jobs:
           cp scripts/exec-files/deps-install.command build/deps-install.command
           cp scripts/exec-files/deps-install.bat build/deps-install.bat
           
-          zip -r "${{ env.VERSION }}.zip" ./build
+          (cd build && zip -r "../${VERSION}.zip" .)
 
           rm -rf build
 

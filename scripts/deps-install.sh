@@ -15,10 +15,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}"
 DEST="${LIB_DIR}/lib.zip"
 
-if [[ -d "$LIB_DIR" ]]; then
-  rm -rf "$LIB_DIR"
-fi
-mkdir -p "$LIB_DIR"
+# if [[ -d "$LIB_DIR" ]]; then
+#   rm -rf "$LIB_DIR"
+# fi
+# mkdir -p "$LIB_DIR"
 
 if curl -fLo "$DEST" "$S3_BASE_URL" 2>/dev/null; then
   echo "🗃️ S3에서 다운로드 성공, 압축 해제: lib.zip → $LIB_DIR"
