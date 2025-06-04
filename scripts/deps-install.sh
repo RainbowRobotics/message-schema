@@ -20,7 +20,7 @@ mkdir -p "$LIB_DIR"
 while :; do
   FILENAME="${PART_PREFIX}-${INDEX}.tar.gz"
   URL="${BASE_URL}/lib/${FILENAME}"
-  DEST="${SCRIPT_DIR}/${FILENAME}"
+  DEST="${LIB_DIR}/${FILENAME}"
 
   echo "🔎 다운로드 시도: $URL"
   curl -fLo "$DEST" "$URL" 2>/dev/null || break
