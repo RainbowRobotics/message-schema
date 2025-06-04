@@ -147,6 +147,7 @@ jobs:
 
           # 압축파일 이동
           mkdir -p "$APP_DIR/${{ env.VERSION }}"
+          mkdir -p "$APP_DIR/${{ env.VERSION }}/lib"
 
           mv ../build.tar.gz "$APP_DIR/${{ env.VERSION }}"
 
