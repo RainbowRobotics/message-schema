@@ -43,7 +43,7 @@ jobs:
         run: |
           bash scripts/build.sh
 
-      - name: Compress build directory And Remove build directory
+      - name: Compress build, lib directory And Remove build directory
         run: |         
           LIB_DIR="build/lib"
           SPLIT_BASE="lib-split"
@@ -81,6 +81,15 @@ jobs:
             tar -czf "${name}.tar.gz" -C "$dir" .
           done
 
+          BRANCH_NAME=${{ env.BRANCH_NAME }}
+          VERSION=${{ env.VERSION }}
+
+          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/deps-install.sh \
+          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
+          > build/deps-install.sh
+
+          chmod +x build/deps-install.sh
+
           tar --exclude='lib' -czf build.tar.gz -C build .
 
           du -h build.tar.gz
@@ -95,7 +104,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_APPS_DEPLOY_TOKEN }}
         run: |
-          git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git rainbow-release-apps
+          git clone https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
           cd rainbow-release-apps
           
           # 원하는 브랜치가 있는지 확인하고 없으면 empty 브랜치에서 생성
@@ -138,11 +147,12 @@ jobs:
 
           # 압축파일 이동
           mkdir -p "$APP_DIR/${{ env.VERSION }}"
-          
-          mv ../build.tar.gz "$APP_DIR/"
+          mkdir -p "$APP_DIR/${{ env.VERSION }}/lib"
+
+          mv ../build.tar.gz "$APP_DIR/${{ env.VERSION }}"
 
           for f in ../lib-part-*.tar.gz; do
-            mv "$f" "$APP_DIR/"
+            mv "$f" "$APP_DIR/${{ env.VERSION }}/lib"
           done
           
           # 새 버전 배포
