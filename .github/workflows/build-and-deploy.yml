@@ -44,22 +44,11 @@ jobs:
           bash scripts/build.sh
 
       - name: Compress build directory And Remove build directory
-        run: |
-          shopt -s globstar nullglob
+        run: |         
+          tar --exclude='lib' -czf build.tar.gz -C build .
+          tar -czf lib.tar.gz -C build/lib .
 
-          cd build
-
-          rm -rf ./**/*.o
-          rm -rf ./**/*.a
-          rm -rf ./**/CMakeFiles
-          rm -rf ./**/Makefile
-          rm -rf ./**/*.pdb
-          rm -rf ./**/qmltooling*
-          rm -rf ./**/__pycache__
-         
-          zip -r "../${{ env.VERSION }}.zip" .
-
-          cd .. && rm -rf build
+          rm -rf build
 
           cd $GITHUB_WORKSPACE
 
@@ -110,7 +99,8 @@ jobs:
 
           # 압축파일 이동
           mkdir -p "$APP_DIR/${{ env.VERSION }}"
-          mv ../${{ env.VERSION }}.zip "$APP_DIR/"
+          mv ../build.tar.gz "$APP_DIR/"
+          mv ../lib.tar.gz "$APP_DIR/"
           
           # 새 버전 배포
           git config --global user.email "dfd1123@naver.com"
