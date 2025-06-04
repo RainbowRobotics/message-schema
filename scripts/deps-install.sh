@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-BRANCH=main
-VERSION=version
+BRANCH="develop"
+VERSION="20250604124828"
 BASE_URL="https://github.com/rainbow-mobile/rainbow-release-apps/raw/refs/heads/${BRANCH}/slamnav2/${VERSION}"
 PART_PREFIX="lib-part"
 INDEX=1
@@ -20,10 +20,15 @@ mkdir -p "$LIB_DIR"
 while :; do
   FILENAME="${PART_PREFIX}-${INDEX}.tar.gz"
   URL="${BASE_URL}/${FILENAME}"
-  DEST="${SCRIPT_DIR}/${FILENAME}"
+  DEST="${LIB_DIR}/${FILENAME}"
 
   echo "🔎 다운로드 시도: $URL"
-  curl -fLo "$DEST" "$URL" 2>/dev/null || break
+
+  HTTP_CODE=$(curl -s -o "$DEST" -w "%{http_code}" "$URL")
+  if [ "$HTTP_CODE" -eq 404 ]; then
+    echo "❌ 파일이 존재하지 않습니다: $FILENAME"
+    break
+  fi
 
   echo "🗃️ 압축 해제: $FILENAME → $LIB_DIR"
   tar -xzf "$DEST" -C "$LIB_DIR"

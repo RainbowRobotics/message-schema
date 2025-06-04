@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+Name=Run Deps Install
+Exec=$(pwd)/deps-install.sh
+Icon=utilities-terminal
