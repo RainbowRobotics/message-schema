@@ -51,6 +51,10 @@ jobs:
           tar --exclude='lib' -czf build.tar.gz -C build .
           tar -czf lib.tar.gz -C build/lib .
 
+          echo "📦 압축 결과:"
+          du -h build.tar.gz
+          du -h lib.tar.gz
+
           rm -rf build
 
           cd $GITHUB_WORKSPACE
