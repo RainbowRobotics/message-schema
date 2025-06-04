@@ -68,7 +68,7 @@ jobs:
             aws s3 rm "s3://$S3_BUCKET/$OLDEST_KEY"
           fi
 
-          aws s3 cp lib.zip "s3://$S3_BUCKET/$S3_PATH/$FILE_NAME" --acl public-read
+          aws s3 cp lib.zip "s3://$S3_BUCKET/$S3_PATH/$FILE_NAME"
 
           rm -rf "$FILE_NAME"
           rm -rf build/lib
