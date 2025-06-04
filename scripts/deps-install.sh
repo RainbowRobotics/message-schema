@@ -28,7 +28,9 @@ while :; do
   echo "🗃️ 압축 해제: $FILENAME → $LIB_DIR"
   tar -xzf "$DEST" -C "$LIB_DIR"
 
+  rm -rf "$DEST"
+
   ((INDEX++))
 done
 
-echo "✅ 다운로드 및 압축 해제 완료 (${INDEX}개 시도됨)"
+echo "✅ 다운로드 및 압축 해제 완료"

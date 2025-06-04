@@ -162,6 +162,7 @@ jobs:
           # 새 버전 배포
           git config --global user.email "dfd1123@naver.com"
           git config --global user.name "dfd1123"
+          git pull
           git add .
           git commit -m "Release App: Slamnav2, Version: ${{ env.VERSION }}"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
