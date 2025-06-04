@@ -96,7 +96,7 @@ jobs:
 
           tar --exclude='lib' -czf build-${VERSION}.tar.gz -C build .
 
-          du -h build.tar.gz
+          du -h "build-${VERSION}.tar.gz"
           for file in ${PART_PREFIX}-*.tar.gz; do
             du -h "$file"
           done
