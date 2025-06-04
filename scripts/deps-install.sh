@@ -10,7 +10,8 @@ INDEX=1
 echo "🌐 [rainbow-release-app]레포에서 ${PART_PREFIX}-*.tar.gz 파일 다운로드 및 압축 해제 시작..."
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LIB_DIR="${SCRIPT_DIR}/lib"
+# LIB_DIR="${SCRIPT_DIR}/lib"
+LIB_DIR="${SCRIPT_DIR}"
 
 if [[ -d "$LIB_DIR" ]]; then
   rm -rf "$LIB_DIR"
