@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <ctime>
 #include <sstream>
-#include <signal.h>
+#include <csignal>
 #include <execinfo.h>
 #include <unistd.h>
 #include <limits.h>
@@ -77,12 +77,12 @@ int main(int argc, char *argv[])
     setbuf(stdout, NULL);
 
     // critical error catcher
-    signal(SIGINT, signalHandler);
-    signal(SIGSEGV, signalHandler);
-    signal(SIGABRT, signalHandler);
-    signal(SIGTERM, signalHandler);
-    signal(SIGKILL, signalHandler);
-    signal(SIGPIPE, signalHandler);
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGSEGV, signalHandler);
+    std::signal(SIGABRT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+    std::signal(SIGKILL, signalHandler);
+    std::signal(SIGPIPE, signalHandler);
 
     // set for high dpi
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);

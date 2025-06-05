@@ -2321,7 +2321,7 @@ start</string>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLabel" name="lb_LvxInfo">
+             <widget class="QLabel" name="lb_LidarInfo_3D">
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
@@ -2334,7 +2334,7 @@ start</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[LVX_INFO]</string>
+               <string>[3D LIDAR INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

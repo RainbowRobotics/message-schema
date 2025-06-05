@@ -9,6 +9,7 @@
 #include "config.h"
 #include "logger.h"
 #include "unimap.h"
+#include "lidar_3d.h"
 
 // qt
 #include <QMainWindow>
@@ -40,6 +41,7 @@ public:
     CONFIG config;
     LOGGER logger;
     UNIMAP unimap;
+    LIDAR_3D lidar_3d;
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -74,6 +76,8 @@ public:
     void map_plot();
     void topo_plot();
     void pick_plot();
+    void info_plot();
+    void raw_plot();
 
     // plot timer
     QTimer plot_timer;

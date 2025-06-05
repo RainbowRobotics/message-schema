@@ -41,6 +41,7 @@ SOURCES += \
     unimap.cpp \
     comm_data.h \
     lidar_3d.cpp \
+    lidar/LIVOX/livox.cpp \
 
 
 HEADERS += \
@@ -55,6 +56,7 @@ HEADERS += \
     logger.h \
     unimap.h \
     lidar_3d.h \
+    lidar/LIVOX/livox.h \
 
 
 FORMS += \

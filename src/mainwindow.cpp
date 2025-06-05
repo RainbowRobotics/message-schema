@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , logger(this)
     , unimap(this)
+    , lidar_3d(this)
     , plot_timer(this)
     , ui(new Ui::MainWindow)
 {
@@ -34,35 +35,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // start plot loop
     plot_timer.start(50);
-
-    // // solve tab with vtk render window problem
-    // QTimer::singleShot(100, [&]()
-    // {
-    //     ui->main_tab->setCurrentIndex(1);
-    //     QTimer::singleShot(100, [&]()
-    //     {
-    //         ui->main_tab->setCurrentIndex(0);
-
-    //         QTimer::singleShot(2000, [&]()
-    //         {
-    //             // set effect
-    //             init_ui_effect();
-
-    //             // set plot window
-    //             setup_vtk();
-
-    //             // init modules
-    //             init_modules();
-
-    //             // start plot loop
-    //             plot_timer.start(50);
-    //         });
-    //     });
-    // });
 }
 
 MainWindow::~MainWindow()
 {
+    plot_timer.stop();
     delete ui;
 }
 
@@ -272,6 +249,16 @@ void MainWindow::init_modules()
     // unimap module init
     unimap.config = &config;
     unimap.logger = &logger;
+
+    // lidar 3d module init
+    if(config.USE_LIDAR_3D)
+    {
+        lidar_3d.config = &config;
+        lidar_3d.logger = &logger;
+        lidar_3d.init();
+        lidar_3d.open();
+        // lidar_3d.mobile = &mobile;
+    }
 
     // auto load
     if(config.MAP_PATH.isEmpty())
@@ -1188,6 +1175,82 @@ void MainWindow::pick_plot()
     }
 }
 
+void MainWindow::info_plot()
+{
+    // 3d lidar
+    if(config.USE_LIDAR_3D)
+    {
+        ui->lb_LidarInfo_3D->setText(lidar_3d.get_info_text());
+    }
+
+}
+
+void MainWindow::raw_plot()
+{
+    // plot 3d lidar
+    if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D")
+    {
+        for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
+        {
+            // plot current lidar data
+            LVX_FRM cur_frm = lidar_3d.get_cur_frm(idx);
+
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                Eigen::Vector3d P;
+                P[0] = cur_frm.pts[p].x;
+                P[1] = cur_frm.pts[p].y;
+                P[2] = cur_frm.pts[p].z;
+
+                Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
+                Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
+
+                pcl::PointXYZRGB pt;
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
+                // pt.r = lidar_color.r;
+                // pt.g = lidar_color.g;
+                // pt.b = lidar_color.b;
+                if(idx == 0)
+                {
+                    pt.r = 255; pt.g = 127; pt.b = 0;   // Orange for lidar 0
+                }
+                else
+                {
+                    pt.r = 0; pt.g = 200; pt.b = 255;   // Cyan for lidar 1
+                }
+
+                cloud->push_back(pt);
+            }
+
+            QString cloud_id = QString("lidar_cur_pts_%1").arg(idx);
+            if(!viewer->updatePointCloud(cloud, cloud_id.toStdString()))
+            {
+                viewer->addPointCloud(cloud, cloud_id.toStdString());
+            }
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, cloud_id.toStdString());
+
+        }
+    }
+    else
+    {
+        // remove 3d lidar cloud
+        for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
+        {
+            QString cloud_id = QString("lidar_cur_pts_%1").arg(idx);
+            std::string id = cloud_id.toStdString();
+
+            if(viewer->contains(id))
+            {
+                viewer->removePointCloud(id);
+            }
+        }
+    }
+}
+
 void MainWindow::plot_loop()
 {
     plot_timer.stop();
@@ -1196,6 +1259,8 @@ void MainWindow::plot_loop()
     map_plot();
     topo_plot();
     pick_plot();
+    info_plot();
+    raw_plot();
 
     // rendering
     ui->qvtkWidget->renderWindow()->Render();
