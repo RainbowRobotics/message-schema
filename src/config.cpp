@@ -476,7 +476,7 @@ void CONFIG::load()
 
 void CONFIG::set_map_path(QString path)
 {
-    if (config_path.isEmpty())
+    if(config_path.isEmpty())
     {
         return;
     }
@@ -486,24 +486,46 @@ void CONFIG::set_map_path(QString path)
     QMutexLocker locker(&mtx);
     QFile config_file(config_path);
 
-    if (!config_file.open(QIODevice::ReadWrite))
+    if(!config_file.open(QIODevice::ReadWrite))
     {
         printf("[config] failed to open config file for reading and writing.\n");
         return;
     }
 
-    QByteArray data = config_file.readAll();
-    config_file.seek(0);
+    QString data;
+    {
+        QTextStream in(&config_file);
+        data = in.readAll();
+        config_file.close();
+    }
 
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    QJsonObject rootObj = doc.object();
+    QString pattern = R"("MAP_PATH"\s*:\s*".*?")";
+    QRegularExpression re(pattern);
+    QRegularExpressionMatch match = re.match(data);
 
-    QJsonObject mapObj = rootObj["map"].toObject();
-    mapObj["MAP_PATH"] = path;
-    rootObj["map"] = mapObj;
+    if(match.hasMatch())
+    {
+        data.replace(re, R"("MAP_PATH": ")" + path + R"(")");
+    }
+    else
+    {
+        QRegularExpression mapRe(R"("map"\s*:\s*\{)");
+        QRegularExpressionMatch mapMatch = mapRe.match(data);
+        if (mapMatch.hasMatch())
+        {
+            int insertPos = mapMatch.capturedEnd();
+            data.insert(insertPos, QString(R"(
+            "MAP_PATH": ")") + path + R"(",)");
+        }
+    }
 
-    doc.setObject(rootObj);
-    config_file.resize(0);
-    config_file.write(doc.toJson());
+    if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+    {
+        printf("[config] failed to open config file for writing.\n");
+        return;
+    }
+
+    QTextStream out(&config_file);
+    out << data;
     config_file.close();
 }

@@ -131,10 +131,14 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 #define LOCAL_PATH_STEP 0.01
 #define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
-#ifdef USE_S100
-#define BAT_MAX_VOLTAGE 53.5
-#define BAT_MIN_VOLTAGE 42.0
-#endif
+#define S100_BAT_MAX_VOLTAGE 53.5
+#define S100_BAT_MIN_VOLTAGE 42.0
+
+#define ROBOT_TYPE_UNKNOWN  0
+#define ROBOT_TYPE_D400     1
+#define ROBOT_TYPE_S100     2
+#define ROBOT_TYPE_MECANUM  3
+#define ROBOT_TYPE_SAFETY   4
 
 // enumulator
 enum DOCKING_CHARGE_STATE
@@ -562,116 +566,39 @@ struct PICKING
     }
 };
 
-#if defined(USE_S100)
-struct MOBILE_STATUS
+struct MOBILE_SETTING
 {
-    double t = 0;
+    // for safety setting
+    unsigned int version = 0;
+    unsigned char robot_type = 0;
 
-    // motor status
-    uint8_t connection_m0 = 0;
-    uint8_t connection_m1 = 0;
+    float v_limit =.0;
+    float w_limit =.0;
+    float a_limit =.0;
+    float b_limit =.0;
 
-    uint8_t status_m0 = 0;
-    uint8_t status_m1 = 0;
+    float v_limit_jog = .0;
+    float w_limit_jog = .0;
+    float a_limit_jog = .0;
+    float b_limit_jog = .0;
 
-    uint8_t temp_m0 = 0;
-    uint8_t temp_m1 = 0;
+    float v_limit_monitor = .0;
+    float w_limit_monitor = .0;
 
-    uint8_t temp_ex_m0 = 0;
-    uint8_t temp_ex_m1 = 0;
+    float safety_v_limit =.0;
+    float safety_w_limit =.0;
 
-    uint8_t cur_m0 = 0;
-    uint8_t cur_m1 = 0;
+    float w_s = .0;
+    float w_r = .0;
+    float gear = .0;
+    float dir = .0;
 
-    uint8_t charge_state = 0;
-    uint8_t power_state = 0;
-    uint8_t motor_stop_state = 0;
-    uint8_t remote_state = 0;
-
-    float bat_in = 0;
-    float bat_out = 0;
-    float bat_current = 0;
-    uint8_t bat_percent = 0;
-    float power = 0;
-    float total_power = 0;
-
-    float charge_current = 0;
-    float contact_voltage = 0;
-
-    float core_temp0 = 0;
-    float core_temp1 = 0;
-    uint8_t state = 0;
-
-    // for timesync
-    uint32_t recv_tick = 0;
-    float return_time = 0;
-
-    // imu status
-    float imu_gyr_x =0;
-    float imu_gyr_y =0;
-    float imu_gyr_z =0;
-    float imu_acc_x =0;
-    float imu_acc_y =0;
-    float imu_acc_z =0;
+    unsigned char d_out[16] = {0,};
 };
-#endif
 
-#if defined(USE_D400_LAKI) || defined(USE_D400)
 struct MOBILE_STATUS
 {
     double t = 0;
-
-    // motor status
-    uint8_t connection_m0 = 0;
-    uint8_t connection_m1 = 0;
-
-    uint8_t status_m0 = 0;
-    uint8_t status_m1 = 0;
-
-    uint8_t temp_m0 = 0;
-    uint8_t temp_m1 = 0;
-
-    uint8_t esti_temp_m0 = 0;
-    uint8_t esti_temp_m1 = 0;
-
-    uint8_t cur_m0 = 0;
-    uint8_t cur_m1 = 0;
-
-    uint8_t charge_state = 0;
-    uint8_t power_state = 0;
-    uint8_t motor_stop_state = 0;
-    uint8_t remote_state = 0;
-
-    float bat_in = 0;
-    float bat_out = 0;
-    float bat_current = 0;
-    uint8_t bat_percent = 0;
-    float power = 0;
-    float total_power = 0;
-
-    float charge_current = 0;
-    float contact_voltage = 0;
-
-    // for timesync
-    uint32_t recv_tick = 0;
-    float return_time = 0;
-
-    // imu status
-    float imu_gyr_x =0;
-    float imu_gyr_y =0;
-    float imu_gyr_z =0;
-    float imu_acc_x =0;
-    float imu_acc_y =0;
-    float imu_acc_z =0;
-};
-#endif
-
-#if defined(USE_MECANUM)
-struct MOBILE_STATUS
-{
-    double t = 0;
-    uint32_t recv_tick = 0;
-    float return_time = 0;
 
     // motor status
     uint8_t connection_m0 = 0;
@@ -689,15 +616,15 @@ struct MOBILE_STATUS
     uint8_t temp_m2 = 0;
     uint8_t temp_m3 = 0;
 
-    uint8_t cur_m0 = 0;
-    uint8_t cur_m1 = 0;
-    uint8_t cur_m2 = 0;
-    uint8_t cur_m3 = 0;
-
     uint8_t esti_temp_m0 = 0;
     uint8_t esti_temp_m1 = 0;
     uint8_t esti_temp_m2 = 0;
     uint8_t esti_temp_m3 = 0;
+
+    uint8_t cur_m0 = 0;
+    uint8_t cur_m1 = 0;
+    uint8_t cur_m2 = 0;
+    uint8_t cur_m3 = 0;
 
     uint8_t charge_state = 0;
     uint8_t power_state = 0;
@@ -707,11 +634,26 @@ struct MOBILE_STATUS
     float bat_in = 0;
     float bat_out = 0;
     float bat_current = 0;
+    float bat_voltage = 0;
+    uint8_t bat_percent = 0;
     float power = 0;
     float total_power = 0;
 
+    float lift_voltage_in = 0.;
+    float lift_voltage_out = 0.;
+    float lift_current = 0.;
+
+
     float charge_current = 0;
     float contact_voltage = 0;
+
+    float core_temp0 = 0;   // from S100
+    float core_temp1 = 0;   // from S100
+    uint8_t state = 0;      // from S100
+
+    // for timesync
+    uint32_t recv_tick = 0;
+    float return_time = 0;
 
     // imu status
     float imu_gyr_x =0;
@@ -722,8 +664,51 @@ struct MOBILE_STATUS
     float imu_acc_z =0;
 
     uint8_t inter_lock_state = 0;
+
+    // for safety
+    uint8_t auto_manual_sw = 0;
+    uint8_t brake_release_sw = 0;
+    uint8_t sw_reset = 0;
+    uint8_t sw_stop= 0;
+    uint8_t sw_start = 0;
+
+
+    uint8_t ri_state = 0;
+    uint8_t om_state = 0;
+    uint8_t bumper_state =0;
+
+    uint8_t safety_state_emo_pressed_1 = 0;
+    uint8_t safety_state_ref_meas_mismatch_1 = 0;
+    uint8_t safety_state_over_speed_1 =0;
+    uint8_t safety_state_obstacle_detected_1 =0;
+    uint8_t safety_state_speed_field_mismatch_1 =0;
+    uint8_t safety_state_interlock_stop_1 =0;
+    uint8_t safety_state_bumper_stop_1 =0;
+    uint8_t operational_stop_state_flag_1 =0;
+
+    uint8_t safety_state_emo_pressed_2 = 0;
+    uint8_t safety_state_ref_meas_mismatch_2 = 0;
+    uint8_t safety_state_over_speed_2 =0;
+    uint8_t safety_state_obstacle_detected_2 =0;
+    uint8_t safety_state_speed_field_mismatch_2 =0;
+    uint8_t safety_state_interlock_stop_2 =0;
+    uint8_t safety_state_bumper_stop_2 =0;
+    uint8_t operational_stop_state_flag_2 =0;
+
+    uint8_t lidar_field;
+
+    short ref_dps[2] = {0,0};
+    short meas_dps[2] = {0,0};
+
+    unsigned char mcu0_dio[8] ={0,};
+    unsigned char mcu1_dio[8] ={0,};
+
+    unsigned char mcu0_din[8] ={0,};
+    unsigned char mcu1_din[8] ={0,};
+
+    unsigned char adc_value[4] ={0,};
+    unsigned char dac_value[4] ={0,};
 };
-#endif
 
 struct MOBILE_POSE
 {

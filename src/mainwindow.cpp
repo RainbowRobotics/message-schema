@@ -21,8 +21,17 @@ MainWindow::MainWindow(QWidget *parent)
     // for simulation
     connect(ui->bt_SimInit, SIGNAL(clicked()), this, SLOT(bt_SimInit()));
 
+    // config
+    connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
+
+    // localization
+    connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
+    connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
+    connect(ui->bt_LocStop, SIGNAL(clicked()), this, SLOT(bt_LocStop()));
+
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
+
 
     // set effect
     init_ui_effect();
@@ -250,6 +259,11 @@ void MainWindow::init_modules()
     unimap.config = &config;
     unimap.logger = &logger;
 
+    // mobile module init
+    mobile.config = &config;
+    mobile.logger = &logger;
+    mobile.open();
+
     // lidar 3d module init
     if(config.USE_LIDAR_3D)
     {
@@ -259,6 +273,15 @@ void MainWindow::init_modules()
         lidar_3d.open();
         // lidar_3d.mobile = &mobile;
     }
+
+    // localization module init
+    loc.config = &config;
+    loc.logger = &logger;
+    // loc.mobile = &mobile;
+    loc.lidar_3d = &lidar_3d;
+    // loc.cam = &cam;
+    loc.unimap = &unimap;
+    // loc.obsmap = &obsmap;
 
     // auto load
     if(config.MAP_PATH.isEmpty())
@@ -740,6 +763,27 @@ void MainWindow::bt_SimInit()
 
 }
 
+void MainWindow::bt_ConfigLoad()
+{
+    config.load();
+}
+
+// localization
+void MainWindow::bt_LocInit()
+{
+    loc.set_cur_tf(se2_to_TF(pick.r_pose));
+}
+
+void MainWindow::bt_LocStart()
+{
+    loc.start();
+}
+
+void MainWindow::bt_LocStop()
+{
+    loc.stop();
+}
+
 // for plot loop
 void MainWindow::map_plot()
 {
@@ -1177,6 +1221,20 @@ void MainWindow::pick_plot()
 
 void MainWindow::info_plot()
 {
+    // plot mobile info
+    {
+        ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+
+        if(mobile.is_connected)
+        {
+            // plot mobile pose
+            ui->lb_MobilePoseInfo->setText(mobile.get_pose_text());
+
+            // plot mobile status
+            ui->lb_MobileStatusInfo->setText(mobile.get_status_text());
+        }
+    }
+
     // 3d lidar
     if(config.USE_LIDAR_3D)
     {
@@ -1188,7 +1246,7 @@ void MainWindow::info_plot()
 void MainWindow::raw_plot()
 {
     // plot 3d lidar
-    if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D")
+    if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D" && !loc.is_loc)
     {
         for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
         {
@@ -1203,8 +1261,7 @@ void MainWindow::raw_plot()
                 P[1] = cur_frm.pts[p].y;
                 P[2] = cur_frm.pts[p].z;
 
-                Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
-                Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
+                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
 
                 pcl::PointXYZRGB pt;
                 pt.x = _P[0];
@@ -1251,6 +1308,138 @@ void MainWindow::raw_plot()
     }
 }
 
+void MainWindow::loc_plot()
+{
+    loc.plot_cur_pts_que.try_pop(plot_cur_pts);
+    if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0)
+    {
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < plot_cur_pts.size(); p++)
+        {
+            Eigen::Vector3d P = plot_cur_pts[p];
+
+            pcl::PointXYZRGB pt;
+            pt.x = P[0];
+            pt.y = P[1];
+            pt.z = P[2];
+            pt.r = 0;
+            pt.g = 0;
+            pt.b = 255;
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "plot_cur_pts"))
+        {
+            viewer->addPointCloud(cloud, "plot_cur_pts");
+        }
+
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "plot_cur_pts");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "plot_cur_pts");
+
+        loc.plot_cur_pts_que.clear();
+    }
+    else
+    {
+        if(viewer->contains("plot_cur_pts"))
+        {
+            viewer->removePointCloud("plot_cur_pts");
+        }
+    }
+}
+
+void MainWindow::ctrl_plot()
+{
+    // cur tf
+    Eigen::Matrix4d cur_tf = loc.get_cur_tf();
+
+    // draw robot
+    {
+        // draw axis
+        if(!viewer->contains("robot_axis"))
+        {
+            viewer->addCoordinateSystem(1.0, "robot_axis");
+        }
+        viewer->updateCoordinateSystemPose("robot_axis", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw body
+        if(!viewer->contains("robot_body"))
+        {
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                            config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                            config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0.0, 0.5, 1.0, "robot_body");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.75, "robot_body");
+        }
+        viewer->updateShapePose("robot_body", Eigen::Affine3f(cur_tf.cast<float>()));
+
+        // draw vel
+        if(viewer->contains("vel_text"))
+        {
+            viewer->removeShape("vel_text");
+        }
+
+        pcl::PointXYZ position;
+        position.x = cur_tf(0,3);
+        position.y = cur_tf(1,3);
+        position.z = cur_tf(2,3) + 1.5;
+
+        // check zone
+        QString zone = "";
+        std::vector<QString> zones = unimap.get_nodes("ZONE");
+        for(size_t p = 0; p < zones.size(); p++)
+        {
+            NODE* node = unimap.get_node_by_id(zones[p]);
+            if(node != NULL)
+            {
+                QString name = node->name;
+                QString info = node->info;
+
+                NODE_INFO res;
+                if(parse_info(info, "SIZE", res))
+                {
+                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
+
+                    double x = tf(0,3);
+                    double y = tf(1,3);
+                    double z = tf(2,3);
+
+                    if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
+                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
+                       z > -res.sz[2]/2 && z < res.sz[2]/2)
+                    {
+                        // current zone
+                        zone = name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        QString text;
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", (double)mobile.vx0, (double)mobile.vy0, (double)mobile.wz0*R2D, zone.toLocal8Bit().data());
+        ui->lb_RobotVel->setText(text);
+
+        // draw cur node
+        if(viewer->contains("cur_node"))
+        {
+            viewer->removeShape("cur_node");
+        }
+
+        QString cur_node_id; // = ctrl.get_cur_node_id();
+        if(cur_node_id != "")
+        {
+            NODE *node = unimap.get_node_by_id(cur_node_id);
+            if(node != NULL)
+            {
+                Eigen::Matrix4d tf = node->tf;
+                tf(2,3) += config.ROBOT_SIZE_Z[1];
+                pcl::PolygonMesh donut = make_donut(config.ROBOT_RADIUS*0.5, 0.05, tf, 0.0, 1.0, 1.0);
+                viewer->addPolygonMesh(donut, "cur_node");
+            }
+        }
+    }
+
+}
+
 void MainWindow::plot_loop()
 {
     plot_timer.stop();
@@ -1261,6 +1450,8 @@ void MainWindow::plot_loop()
     pick_plot();
     info_plot();
     raw_plot();
+    loc_plot();
+    ctrl_plot();
 
     // rendering
     ui->qvtkWidget->renderWindow()->Render();

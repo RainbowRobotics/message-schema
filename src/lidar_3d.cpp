@@ -204,11 +204,11 @@ QString LIDAR_3D::get_info_text()
         {
             res += livox->get_info_text(idx);
 
-            res += QString().sprintf("dq: %d, ", (int)dsk_que[idx].unsafe_size());
+            res += QString().sprintf("dq: %d\n\n", (int)dsk_que[idx].unsafe_size());
         }
     }
 
-    res += QString().sprintf("mq: %d (%d)\n",(int)merged_que.unsafe_size(), cur_merged_num.load());
+    res += QString().sprintf("mq: %d (%d)",(int)merged_que.unsafe_size(), cur_merged_num.load());
 
     return res;
 }

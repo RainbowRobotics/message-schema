@@ -49,6 +49,7 @@ public:
     bool load_topo();
 
     void save_map();
+
     void save_annotation();
     void save_annotation_with_simplify();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
@@ -100,6 +101,8 @@ public:
     void add_link2(QString id0, QString id1);
     void add_link_auto(std::vector<QString> nodes);
     void add_node_auto(PICKING pick, QString type, double gap);
+
+    std::vector<int> knn_search_idx(Eigen::Vector3d center, int k, double radius);
 
     // annotation
     std::vector<NODE> nodes;

@@ -1,0 +1,6 @@
+ 
+ - Install linuxptp
+        # @ https://sourceforge.net/projects/linuxptp/files/v3.1/
+        $ wget https://sourceforge.net/projects/linuxptp/files/v3.1/linuxptp-3.1.1.tgz/download -O linuxptp-3.1.1.tgz
+        $ tar -xvf linuxptp-3.1.1.tgz 
+        $ cd linuxptp-3.1.1 && make && sudo make install

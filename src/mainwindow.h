@@ -9,7 +9,9 @@
 #include "config.h"
 #include "logger.h"
 #include "unimap.h"
+#include "mobile.h"
 #include "lidar_3d.h"
+#include "localization.h"
 
 // qt
 #include <QMainWindow>
@@ -41,7 +43,9 @@ public:
     CONFIG config;
     LOGGER logger;
     UNIMAP unimap;
+    MOBILE mobile;
     LIDAR_3D lidar_3d;
+    LOCALIZATION loc;
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -72,12 +76,17 @@ public:
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_names;
 
+    // plot cur loc pts
+    std::vector<Eigen::Vector3d> plot_cur_pts;
+
     // plot funcs
     void map_plot();
     void topo_plot();
     void pick_plot();
     void info_plot();
     void raw_plot();
+    void loc_plot();
+    void ctrl_plot();
 
     // plot timer
     QTimer plot_timer;
@@ -99,6 +108,12 @@ public Q_SLOTS:
 
     // for simulation
     void bt_SimInit();
+    void bt_ConfigLoad();
+
+    // localization
+    void bt_LocInit();
+    void bt_LocStart();
+    void bt_LocStop();
 
     // timer loops
     void plot_loop();

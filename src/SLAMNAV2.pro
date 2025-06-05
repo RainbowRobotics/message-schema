@@ -31,6 +31,7 @@ HOME = $$system(echo $HOME)
 message($$HOME)
 
 SOURCES += \
+    localization.cpp \
     main.cpp \
     mainwindow.cpp \
     config.cpp \
@@ -39,12 +40,14 @@ SOURCES += \
     cv_to_qt.cpp \
     logger.cpp \
     unimap.cpp \
-    comm_data.h \
+    mobile.cpp \
     lidar_3d.cpp \
     lidar/LIVOX/livox.cpp \
 
 
 HEADERS += \
+    comm_data.h \
+    localization.h \
     mainwindow.h \
     config.h \
     global_defines.h \
@@ -55,6 +58,7 @@ HEADERS += \
     tinycolormap.hpp \
     logger.h \
     unimap.h \
+    mobile.h \
     lidar_3d.h \
     lidar/LIVOX/livox.h \
 

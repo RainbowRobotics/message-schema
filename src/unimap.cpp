@@ -1530,3 +1530,28 @@ QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
     return zone_type;
 }
 
+std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double radius)
+{
+    const double sq_radius = radius*radius;
+
+    std::vector<unsigned int> res_idxs(k);
+    std::vector<double> res_sq_dists(k);
+    double query_pt[3] = {center[0], center[1], center[2]};
+
+    tree_3d->knnSearch(&query_pt[0], k, &res_idxs[0], &res_sq_dists[0]);
+
+    std::vector<int> res;
+    for(size_t p = 0; p < res_idxs.size(); p++)
+    {
+        double dx = cloud_3d.pts[res_idxs[p]][0] - cloud_3d.pts[res_idxs[0]][0];
+        double dy = cloud_3d.pts[res_idxs[p]][1] - cloud_3d.pts[res_idxs[0]][1];
+        double dz = cloud_3d.pts[res_idxs[p]][2] - cloud_3d.pts[res_idxs[0]][2];
+        double sq_d = dx*dx + dy*dy + dz*dz;
+
+        if(sq_d < sq_radius)
+        {
+            res.push_back(res_idxs[p]);
+        }
+    }
+    return res;
+}
