@@ -8,11 +8,11 @@
 // module
 #include "config.h"
 #include "logger.h"
-// #include "mobile.h"
+#include "mobile.h"
 #include "lidar_3d.h"
 // #include "cam.h"
 #include "unimap.h"
-// #include "obsmap.h"
+#include "obsmap.h"
 
 #include <QObject>
 
@@ -29,11 +29,11 @@ public:
     // other modules
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
-    // MOBILE *mobile = NULL;
+    MOBILE *mobile = NULL;
     LIDAR_3D *lidar_3d = NULL;
     // CAM *cam = NULL;
     UNIMAP *unimap = NULL;
-    // OBSMAP *obsmap = NULL;
+    OBSMAP *obsmap = NULL;
 
     // interface functions
     void start();

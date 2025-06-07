@@ -31,6 +31,7 @@ HOME = $$system(echo $HOME)
 message($$HOME)
 
 SOURCES += \
+    autocontrol.cpp \
     localization.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -43,9 +44,11 @@ SOURCES += \
     mobile.cpp \
     lidar_3d.cpp \
     lidar/LIVOX/livox.cpp \
+    obsmap.cpp \
 
 
 HEADERS += \
+    autocontrol.h \
     comm_data.h \
     localization.h \
     mainwindow.h \
@@ -61,6 +64,7 @@ HEADERS += \
     mobile.h \
     lidar_3d.h \
     lidar/LIVOX/livox.h \
+    obsmap.h \
 
 
 FORMS += \

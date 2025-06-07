@@ -24,6 +24,14 @@ MainWindow::MainWindow(QWidget *parent)
     // config
     connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));
 
+    // emergency stop
+    connect(ui->bt_Emergency, SIGNAL(clicked()), this, SLOT(bt_Emergency()));
+
+    // motor
+    connect(ui->bt_MotorInit, SIGNAL(clicked()), this, SLOT(bt_MotorInit()));
+
+    connect(ui->bt_Sync, SIGNAL(clicked()), this, SLOT(bt_Sync()));
+
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
     connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
@@ -259,6 +267,12 @@ void MainWindow::init_modules()
     unimap.config = &config;
     unimap.logger = &logger;
 
+    // obsmap module init
+    obsmap.config = &config;
+    obsmap.logger = &logger;
+    obsmap.unimap = &unimap;
+    obsmap.init();
+
     // mobile module init
     mobile.config = &config;
     mobile.logger = &logger;
@@ -277,11 +291,26 @@ void MainWindow::init_modules()
     // localization module init
     loc.config = &config;
     loc.logger = &logger;
-    // loc.mobile = &mobile;
+    loc.mobile = &mobile;
     loc.lidar_3d = &lidar_3d;
     // loc.cam = &cam;
     loc.unimap = &unimap;
-    // loc.obsmap = &obsmap;
+    loc.obsmap = &obsmap;
+
+    // autocontrol module init
+    ctrl.config = &config;
+    ctrl.logger = &logger;
+    ctrl.mobile = &mobile;
+    // ctrl.lidar = &lidar;
+    // ctrl.cam = &cam;
+    ctrl.loc = &loc;
+    ctrl.unimap = &unimap;
+    ctrl.obsmap = &obsmap;
+    ctrl.init();
+
+    // start jog loop
+    jog_flag = true;
+    jog_thread = new std::thread(&MainWindow::jog_loop, this);
 
     // auto load
     if(config.MAP_PATH.isEmpty())
@@ -741,6 +770,31 @@ Eigen::Vector3d MainWindow::ray_intersection(Eigen::Vector3d ray_center, Eigen::
     return ray_center + t*ray_direction;
 }
 
+void MainWindow::update_jog_values(double vx, double vy, double wz)
+{
+    last_jog_update_t = get_time();
+
+    vx_target = vx;
+    vy_target = vy;
+    wz_target = wz;
+}
+
+double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt)
+{
+    double err = tgt_vel - cur_vel;
+
+    if(tgt_vel != 0)
+    {
+        cur_vel += saturation(err, -acc*dt, acc*dt);
+    }
+    else
+    {
+        cur_vel += saturation(err, -dcc*dt, dcc*dt);
+    }
+
+    return cur_vel;
+}
+
 void MainWindow::bt_MapLoad()
 {
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
@@ -768,6 +822,125 @@ void MainWindow::bt_ConfigLoad()
     config.load();
 }
 
+// for emergency stop
+void MainWindow::bt_Emergency()
+{
+    // task.cancel();
+    // ctrl.stop();
+    // ctrl.set_multi_req("none");
+    // ctrl.set_obs_condition("none");
+    // dctrl.stop();
+    mobile.move(0,0,0);
+}
+
+// mobile
+void MainWindow::bt_MotorInit()
+{
+    mobile.motor_on();
+}
+
+void MainWindow::bt_Sync()
+{
+    mobile.sync();
+    // lidar.sync_f();
+    // lidar.sync_b();
+
+    // if(config.USE_LVX)
+    // {
+    //     lvx.is_sync = true;
+    // }
+}
+
+void MainWindow::bt_MoveLinearX()
+{
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double d = ui->dsb_MoveLinearDist->value();
+        double v = ui->dsb_MoveLinearV->value();
+        double t = std::abs(d/v) + 0.5;
+
+        mobile.move_linear_x(d, v);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
+}
+
+void MainWindow::bt_MoveLinearY()
+{
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double d = ui->dsb_MoveLinearDist->value();
+        double v = ui->dsb_MoveLinearV->value();
+        double t = std::abs(d/v) + 0.5;
+
+        mobile.move_linear_y(d, v);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
+}
+
+void MainWindow::bt_MoveRotate()
+{
+    ctrl.is_moving = true;
+    QTimer::singleShot(1000, [&]()
+    {
+        double th = ui->dsb_MoveRotateDeg->value() * D2R;
+        double w = ui->dsb_MoveRotateW->value() * D2R;
+        double t = std::abs(th/w) + 0.5;
+
+        mobile.move_rotate(th, w);
+
+        QTimer::singleShot(t*1000, [&]()
+        {
+            ctrl.is_moving = false;
+        });
+    });
+}
+
+void MainWindow::bt_MoveStop()
+{
+    ctrl.is_moving = false;
+    mobile.stop();
+}
+
+void MainWindow::bt_JogF()
+{
+    is_jog_pressed = true;
+    update_jog_values(ui->spb_JogV->value(), 0, 0);
+}
+
+void MainWindow::bt_JogB()
+{
+    is_jog_pressed = true;
+    update_jog_values(-ui->spb_JogV->value(), 0, 0);
+}
+
+void MainWindow::bt_JogL()
+{
+    is_jog_pressed = true;
+    update_jog_values(0, 0, ui->spb_JogW->value()*D2R);
+}
+
+void MainWindow::bt_JogR()
+{
+    is_jog_pressed = true;
+    update_jog_values(0, 0, -ui->spb_JogW->value()*D2R);
+}
+
+void MainWindow::bt_JogReleased()
+{
+    is_jog_pressed = false;
+    update_jog_values(0, 0, 0);
+}
+
 // localization
 void MainWindow::bt_LocInit()
 {
@@ -782,6 +955,59 @@ void MainWindow::bt_LocStart()
 void MainWindow::bt_LocStop()
 {
     loc.stop();
+}
+
+// jog
+void MainWindow::jog_loop()
+{
+    // loop params
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+
+    printf("[JOG] loop start\n");
+    while(jog_flag)
+    {
+        // check autodrive
+        if(ctrl.is_moving == false || ctrl.is_debug == true)
+        {
+            // action
+            double v_acc = ui->spb_AccV->value();
+            double v_decel = ui->spb_DecelV->value();
+
+            double w_acc = ui->spb_AccW->value()*D2R;
+            double w_decel = ui->spb_DecelW->value()*D2R;
+
+            double vx = apply_jog_acc(mobile.vx0, vx_target, v_acc, v_decel, dt);
+            double vy = apply_jog_acc(mobile.vy0, vy_target, v_acc, v_decel, dt);
+            double wz = apply_jog_acc(mobile.wz0, wz_target, w_acc, w_decel, dt);
+            if(is_jog_pressed == false && get_time() - last_jog_update_t > 1.0)
+            {
+                if(vx_target != 0 || vy_target != 0 || wz_target != 0)
+                {
+                    vx_target = 0;
+                    vy_target = 0;
+                    wz_target = 0;
+                    printf("[JOG] no input, stop\n");
+                }
+            }
+            mobile.move(vx, vy, wz);
+        }
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
+    }
+    printf("[JOG] loop stop\n");
 }
 
 // for plot loop
