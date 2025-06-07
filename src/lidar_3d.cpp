@@ -213,6 +213,17 @@ QString LIDAR_3D::get_info_text()
     return res;
 }
 
+void LIDAR_3D::set_sync_flag(bool flag)
+{
+    is_sync = true;
+
+    if(config->LIDAR_3D_TYPE == "LIVOX" && livox != NULL)
+    {
+        livox->is_sync.store(flag);
+        printf("[LIDAR_3D] set livox->is_sync = %d\n", flag);
+    }
+}
+
 void LIDAR_3D::dsk_loop(int idx)
 {
     IMU _pre_imu;

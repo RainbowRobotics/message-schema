@@ -49,6 +49,18 @@ void LOCALIZATION::start()
         is_loc = false;
     }
 
+    if(loc_b_thread == NULL)
+    {
+        loc_b_flag = true;
+        loc_b_thread = new std::thread(&LOCALIZATION::loc_b_loop, this);
+    }
+
+    if(obs_thread == NULL)
+    {
+        obs_flag = true;
+        obs_thread = new std::thread(&LOCALIZATION::obs_loop, this);
+    }
+
     printf("[LOCALIZATION(%s)] start\n", config->LOC_MODE.toStdString().c_str());
 }
 
@@ -80,6 +92,47 @@ Eigen::Matrix4d LOCALIZATION::get_cur_tf()
     mtx.unlock();
 
     return res;
+}
+
+Eigen::Vector2d LOCALIZATION::get_cur_ieir()
+{
+    mtx.lock();
+    Eigen::Vector2d res = cur_ieir;
+    mtx.unlock();
+
+    return res;
+}
+
+QString LOCALIZATION::get_cur_loc_state()
+{
+    mtx.lock();
+    QString res = cur_loc_state;
+    mtx.unlock();
+
+    return res;
+}
+
+void LOCALIZATION::set_cur_loc_state(QString str)
+{
+    mtx.lock();
+    cur_loc_state = str;
+    mtx.unlock();
+}
+
+QString LOCALIZATION::get_info_text()
+{
+    Eigen::Vector2d cur_ieir = get_cur_ieir();
+    QString loc_state = get_cur_loc_state();
+    Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());
+
+
+    QString str;
+    str.sprintf("[LOC]\npos:%.2f,%.2f,%.2f\nerr:%f\nloc_t: %.3f, %.3f, %.3f\nieir: (%.3f, %.3f)\nloc_state: %s",
+                cur_xi[0], cur_xi[1], cur_xi[2]*R2D,
+                (double)cur_tf_err, (double)proc_time_loc_a, (double)proc_time_loc_b, (double)proc_time_obs,
+                cur_ieir[0], cur_ieir[1],
+                loc_state.toLocal8Bit().data());
+    return str;
 }
 
 Eigen::Vector2d LOCALIZATION::calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)
@@ -173,29 +226,47 @@ void LOCALIZATION::a_loop_3d()
             double err = map_icp(dsk, G);
 
             // check ieir
-            Eigen::Vector2d ieir = calc_ieir(dsk, G);
+            cur_ieir = calc_ieir(dsk, G);
 
-            // update
-            cur_tf_t = frm.t;
-            cur_tf_err = err;
-            cur_tf_ie = ieir[0];
-            cur_tf_ir = ieir[1];
-            set_cur_tf(G);
-
-            // for next
-            _pre_tf = _cur_tf;
-            _cur_tf = G;
-            pre_imu = cur_imu;
-
-            // local to global deskewed point
-            std::vector<Eigen::Vector3d> pts(dsk.size());
-            for(size_t p = 0; p < dsk.size(); p++)
+            // check error
+            if(err < config->LOC_ICP_ERROR_THRESHOLD)
             {
-                Eigen::Vector3d P(dsk[p][0], dsk[p][1], dsk[p][2]);
-                Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
-                pts[p] = _P;
+                // for loc b loop
+                TIME_POSE tp;
+                tp.t = frm.t;
+                tp.tf = _cur_tf;
+                tp_que.push(tp);
+
+                // for obs loop
+                TIME_POSE_PTS tpp;
+                tpp.t = frm.t;
+                tpp.tf = _cur_tf;
+                tpp.pts = dsk;
+                tpp_que.push(tpp);
+
+                // update
+                set_cur_tf(G);
+
+                // local to global deskewed point
+                std::vector<Eigen::Vector3d> pts(dsk.size());
+                for(size_t p = 0; p < dsk.size(); p++)
+                {
+                    Eigen::Vector3d P(dsk[p][0], dsk[p][1], dsk[p][2]);
+                    Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+                    pts[p] = _P;
+                }
+                plot_cur_pts_que.push(pts);
+
+                // for next
+                _pre_tf = _cur_tf;
+                _cur_tf = G;
+                pre_imu = cur_imu;
             }
-            plot_cur_pts_que.push(pts);
+
+            // set localization info for plot
+            cur_tf_err = err;
+            proc_time_loc_a = get_time() - st_time;
+
 
             // for speed
             lidar_3d->merged_que.clear();
@@ -204,6 +275,201 @@ void LOCALIZATION::a_loop_3d()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("[LOCALIZATION(3D)] a_loop stop\n");
+}
+
+void LOCALIZATION::loc_b_loop()
+{
+    // loop params
+    const double dt = 0.02;
+    double pre_loop_time = get_time();
+
+    // clear storage
+    mtx.lock();
+    tp_storage.clear();
+    mtx.unlock();
+
+    // for aruco fusion
+    double pre_aruco_t = 0;
+    std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
+
+    // params
+    MOBILE_POSE pre_mo = mobile->get_pose();
+
+    printf("[LOCALIZATION] loc_b_loop start\n");
+    while(loc_b_flag)
+    {
+        MOBILE_POSE cur_mo = mobile->get_pose();
+        if(cur_mo.t > pre_mo.t)
+        {
+            double st_time = get_time();
+
+            Eigen::Matrix4d pre_mo_tf = se2_to_TF(pre_mo.pose);
+            Eigen::Matrix4d cur_mo_tf = se2_to_TF(cur_mo.pose);
+
+            // get current tf
+            Eigen::Matrix4d _cur_tf = get_cur_tf();
+
+            // update odo_tf
+            Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
+            Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
+            pre_mo_tf = cur_mo_tf;
+
+            // icp-odometry fusion
+            TIME_POSE tp;
+            if(tp_que.try_pop(tp) && !config->USE_SIM)
+            {
+                // time delay compensation
+                Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
+                Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+                Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+                Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
+
+                double alpha = config->LOC_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+
+                // for odometry slip
+                Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                if(std::abs(dtdr[1]) > 10.0*D2R)
+                {
+                    alpha = 0;
+                    printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
+                }
+
+                // interpolation
+                Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                // update
+                _cur_tf = fused_tf;
+            }
+            else
+            {
+                // update
+                _cur_tf = odo_tf;
+            }
+
+            /*
+            // aruco fusion
+            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
+            if(aruco_tpi.t > pre_aruco_t && config->USE_SIM == 0)
+            {
+                double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
+                if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
+                {
+                    NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
+                    if(node != NULL)
+                    {
+                        // parse tf
+                        Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
+                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+
+                        // time delay compensation
+                        Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
+                        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+                        Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+
+                        Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
+                        Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
+
+                        // interpolation
+                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 1.0 mean odometry only
+                        if(std::abs(cur_mo.vel[2]) > 10.0*D2R)
+                        {
+                            alpha = 1.0; // odometry only
+                        }
+
+                        Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
+                        Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                        // update
+                        _cur_tf = fused_tf;
+                        pre_aruco_t = aruco_tpi.t;
+                    }
+                }
+            }
+            */
+
+            // update
+            set_cur_tf(_cur_tf);
+
+            mtx.lock();
+            TIME_POSE fused_tp;
+            fused_tp.t = cur_mo.t;
+            fused_tp.tf = _cur_tf;
+            tp_storage.push_back(fused_tp);
+            if(tp_storage.size() > 300)
+            {
+                tp_storage.erase(tp_storage.begin());
+            }
+            mtx.unlock();
+
+            // for next operation
+            pre_mo = cur_mo;
+
+            // update processing time
+            proc_time_loc_b = get_time() - st_time;
+        }
+
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
+    }
+    printf("[LOCALIZATION] loc_b_loop stop\n");
+}
+
+void LOCALIZATION::obs_loop()
+{
+    printf("[LOCALIZATION] obs_loop start\n");
+    while(obs_flag)
+    {
+        double st_time = get_time();
+
+        if(config->USE_SIM)
+        {
+            if(unimap->is_loaded == MAP_LOADED)
+            {
+                Eigen::Matrix4d _cur_tf = get_cur_tf();
+                obsmap->update_obs_map_sim(_cur_tf);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        TIME_POSE_PTS tpp;
+        if(tpp_que.try_pop(tpp))
+        {
+            if(tpp.pts.size() == 0)
+            {
+                continue;
+            }
+
+            // todo: add 2D or 3D pts
+
+            // todo: add cam pts
+
+            // update obstacle map
+            obsmap->update_obs_map(tpp);
+
+            // for speed
+            tpp_que.clear();
+
+            // update processing time
+            proc_time_obs = get_time() - st_time;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    printf("[LOCALIZATION] obs_loop stop\n");
 }
 
 // 2D

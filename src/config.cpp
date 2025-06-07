@@ -336,6 +336,9 @@ void CONFIG::load()
 
             LOC_INLIER_CHECK_DIST = obj_loc_3d["LOC_INLIER_CHECK_DIST"].toString().toDouble();
             printf("[CONFIG] LOC_INLIER_CHECK_DIST, %s\n", obj_loc_3d["LOC_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
+
+            LOC_ICP_ODO_FUSION_RATIO = obj_loc_3d["LOC_ICP_ODO_FUSION_RATIO"].toString().toDouble();
+            printf("[CONFIG] LOC_ICP_ODO_FUSION_RATIO, %s\n", obj_loc_3d["LOC_ICP_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
         }
     }
 

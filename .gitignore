@@ -70,7 +70,7 @@ libs
 .docker
 dynamic_build
 static_build
-
+snlog
 
 
 

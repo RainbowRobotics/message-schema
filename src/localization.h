@@ -41,6 +41,10 @@ public:
 
     void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
+    Eigen::Vector2d get_cur_ieir();
+    QString get_cur_loc_state();
+    void set_cur_loc_state(QString str);
+    QString get_info_text();
 
     Eigen::Vector2d calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);
 
@@ -48,14 +52,19 @@ public:
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G); //2D
     double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G); // 3D
 
-    // loc loop
+    // loop
     std::atomic<bool> a_flag = {false};
     std::thread* a_thread = NULL;
     void a_loop_2d();
     void a_loop_3d();
 
-    // current pose
-    Eigen::Matrix4d cur_tf;
+    std::atomic<bool> loc_b_flag = {false};
+    std::thread* loc_b_thread = NULL;
+    void loc_b_loop();
+
+    std::atomic<bool> obs_flag = {false};
+    std::thread* obs_thread = NULL;
+    void obs_loop();
 
     // for plot
     tbb::concurrent_queue<std::vector<Eigen::Vector3d>> plot_cur_pts_que;
@@ -63,10 +72,21 @@ public:
     // flag
     std::atomic<bool> is_loc = {false};
 
-    std::atomic<double> cur_tf_t = {0};
+    // result
+    Eigen::Matrix4d cur_tf;
+    Eigen::Vector2d cur_ieir;
     std::atomic<double> cur_tf_err = {0};
-    std::atomic<double> cur_tf_ie = {0};
-    std::atomic<double> cur_tf_ir = {0};
+    QString cur_loc_state = "none";
+
+    // for loc
+    std::vector<TIME_POSE> tp_storage;
+    tbb::concurrent_queue<TIME_POSE> tp_que;
+    tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
+
+    // loop processing time
+    std::atomic<double> proc_time_loc_a = {0};
+    std::atomic<double> proc_time_loc_b = {0};
+    std::atomic<double> proc_time_obs = {0};
 
 private:
     const int max_iter0 = 50;

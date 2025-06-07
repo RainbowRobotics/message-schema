@@ -24,7 +24,7 @@ DEFINES += ROBOT_PLATFORM=\\\"SEM\\\"
 TARGET = SLAMNAV2
 TEMPLATE = app
 
-DESTDIR = ../bin
+DESTDIR = ../
 
 # set home dir
 HOME = $$system(echo $HOME)
@@ -45,6 +45,7 @@ SOURCES += \
     lidar_3d.cpp \
     lidar/LIVOX/livox.cpp \
     obsmap.cpp \
+    sim.cpp \
 
 
 HEADERS += \
@@ -65,15 +66,11 @@ HEADERS += \
     lidar_3d.h \
     lidar/LIVOX/livox.h \
     obsmap.h \
+    sim.h \
 
 
 FORMS += \
     mainwindow.ui
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
 
 # OpenCV library all
 INCLUDEPATH += /usr/include/opencv4/

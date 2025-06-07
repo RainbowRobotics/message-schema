@@ -45,6 +45,7 @@ public:
     QString get_cur_state();
     void set_cur_state(QString str);
     QString get_info_text();
+    void set_sync_flag(bool flag);
 
     // dsk loop
     std::atomic<bool> dsk_flag[2] = {false, false};
@@ -61,7 +62,7 @@ public:
 
     // params
     std::atomic<bool> is_connected = {false};
-    // std::atomic<bool> is_sync = {false};
+    std::atomic<bool> is_sync = {false};
 
     // std::atomic<double> offset_t[2] = {0, 0};
     // std::atomic<double> cur_frm_t[2] = {0, 0};

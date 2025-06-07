@@ -56,12 +56,12 @@
     ],
     "lidar_3d_config": [
         {
-            "IP": "192.168.1.101",
-            "TF": "0, 0, 0, 0, 0, 0"
+            "IP": "192.168.1.100",
+            "TF": "0.360, -0.2228, 0.880, 0.0, 0.0, -90.0"
         },
         {
-            "IP": "192.168.1.102",
-            "TF": "-0.3, 0.2, 1.2, 0, 0, -90"
+            "IP": "192.168.1.101",
+            "TF": "-0.360, 0.2228, 0.880, 0.0, 0.0, 180.0"
         }
     ],
     "cam_config": [
@@ -130,7 +130,8 @@
         "LOC_SURFEL_RANGE": "1.0",
         "LOC_SURFEL_BALANCE": "0.4",
         "LOC_COST_THRESHOLD": "1.0",
-        "LOC_INLIER_CHECK_DIST": "0.3"   
+        "LOC_INLIER_CHECK_DIST": "0.3",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.8"   
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
@@ -177,7 +178,7 @@
     	"DOCKING_TYPE": "0"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250520_unicos_park"
+        "MAP_PATH": "/home/juyeon/maps/250429_unicos_test"
     }
 }
 

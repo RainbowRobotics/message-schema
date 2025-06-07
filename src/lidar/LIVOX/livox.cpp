@@ -103,7 +103,7 @@ void LIVOX::grab_loop()
     printf("[LIVOX] Disable debug message\n");
 
     // Init Livox SDK2
-    QString path = QDir::currentPath() + "/../configs/SEM/mid360_config.json";
+    QString path = QDir::currentPath() + "/configs/SEM/mid360_config.json";
     printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
 
     FILE* fp = fopen(path.toLocal8Bit().data(), "r");

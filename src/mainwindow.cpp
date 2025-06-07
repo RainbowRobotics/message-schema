@@ -27,15 +27,41 @@ MainWindow::MainWindow(QWidget *parent)
     // emergency stop
     connect(ui->bt_Emergency, SIGNAL(clicked()), this, SLOT(bt_Emergency()));
 
+    // test
+    connect(ui->bt_Sync, SIGNAL(clicked()), this, SLOT(bt_Sync()));
+    connect(ui->bt_MoveLinearX, SIGNAL(clicked()), this, SLOT(bt_MoveLinearX()));
+    connect(ui->bt_MoveLinearY, SIGNAL(clicked()), this, SLOT(bt_MoveLinearY()));
+    connect(ui->bt_MoveRotate, SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));
+
     // motor
     connect(ui->bt_MotorInit, SIGNAL(clicked()), this, SLOT(bt_MotorInit()));
 
-    connect(ui->bt_Sync, SIGNAL(clicked()), this, SLOT(bt_Sync()));
+    // jog
+    connect(ui->bt_JogF, SIGNAL(pressed()), this, SLOT(bt_JogF()));
+    connect(ui->bt_JogB, SIGNAL(pressed()), this, SLOT(bt_JogB()));
+    connect(ui->bt_JogL, SIGNAL(pressed()), this, SLOT(bt_JogL()));
+    connect(ui->bt_JogR, SIGNAL(pressed()), this, SLOT(bt_JogR()));
+    connect(ui->bt_JogF, SIGNAL(released()), this, SLOT(bt_JogReleased()));
+    connect(ui->bt_JogB, SIGNAL(released()), this, SLOT(bt_JogReleased()));
+    connect(ui->bt_JogL, SIGNAL(released()), this, SLOT(bt_JogReleased()));
+    connect(ui->bt_JogR, SIGNAL(released()), this, SLOT(bt_JogReleased()));
 
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
     connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
     connect(ui->bt_LocStop, SIGNAL(clicked()), this, SLOT(bt_LocStop()));
+
+    // for autocontrol
+    connect(ui->bt_AutoMove, SIGNAL(clicked()), this, SLOT(bt_AutoMove()));
+    connect(ui->bt_AutoMove2, SIGNAL(clicked()), this, SLOT(bt_AutoMove2()));
+    connect(ui->bt_AutoMove3, SIGNAL(clicked()), this, SLOT(bt_AutoMove3()));
+    connect(ui->bt_AutoStop, SIGNAL(clicked()), this, SLOT(bt_AutoStop()));
+    connect(ui->bt_AutoPause, SIGNAL(clicked()), this, SLOT(bt_AutoPause()));
+    connect(ui->bt_AutoResume, SIGNAL(clicked()), this, SLOT(bt_AutoResume()));
+    connect(ui->bt_ReturnToCharging, SIGNAL(clicked()), this, SLOT(bt_ReturnToCharging()));
+    connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()), Qt::QueuedConnection);
+    connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);
+
 
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
@@ -244,7 +270,7 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // load config
-    config.config_path = QCoreApplication::applicationDirPath() + "/../configs/" + QString(ROBOT_PLATFORM) + "/config.json";
+    config.config_path = QCoreApplication::applicationDirPath() + "/configs/" + QString(ROBOT_PLATFORM) + "/config.json";
     config.load();
 
     // simulation check
@@ -308,9 +334,28 @@ void MainWindow::init_modules()
     ctrl.obsmap = &obsmap;
     ctrl.init();
 
+    // simulation module init
+    sim.config = &config;
+    sim.logger = &logger;
+    sim.unimap = &unimap;
+    sim.mobile = &mobile;
+    if(config.LOC_MODE == "3D")
+    {
+        sim.lidar_3d = &lidar_3d;
+    }
+    else
+    {
+        // sim.lidar_2d = &lidar_2d;
+    }
+    sim.loc = &loc;
+
     // start jog loop
     jog_flag = true;
     jog_thread = new std::thread(&MainWindow::jog_loop, this);
+
+    // start watchdog loop
+    watch_flag = true;
+    watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
     // auto load
     if(config.MAP_PATH.isEmpty())
@@ -814,7 +859,39 @@ void MainWindow::bt_MapLoad()
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        logger.write_log("[SIM] map load first", "Red", true, false);
+        return;
+    }
 
+    // loc stop
+    loc.stop();
+
+    // stop first
+    sim.stop();
+
+    // set
+    Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+    sim.set_cur_tf(tf);
+    loc.set_cur_tf(tf);
+
+    // start
+    sim.start();
+
+    // make dummy
+    mobile.is_connected = true;
+    mobile.is_synced = true;
+
+    // lidar.is_connected_f = true;
+    // lidar.is_connected_b = true;
+
+    // lidar.is_synced_f = true;
+    // lidar.is_synced_b = true;
+
+    // loc start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    loc.start();
 }
 
 void MainWindow::bt_ConfigLoad()
@@ -826,9 +903,9 @@ void MainWindow::bt_ConfigLoad()
 void MainWindow::bt_Emergency()
 {
     // task.cancel();
-    // ctrl.stop();
-    // ctrl.set_multi_req("none");
-    // ctrl.set_obs_condition("none");
+    ctrl.stop();
+    ctrl.set_multi_req("none");
+    ctrl.set_obs_condition("none");
     // dctrl.stop();
     mobile.move(0,0,0);
 }
@@ -845,10 +922,10 @@ void MainWindow::bt_Sync()
     // lidar.sync_f();
     // lidar.sync_b();
 
-    // if(config.USE_LVX)
-    // {
-    //     lvx.is_sync = true;
-    // }
+    if(config.USE_LIDAR_3D)
+    {
+        lidar_3d.set_sync_flag(true);
+    }
 }
 
 void MainWindow::bt_MoveLinearX()
@@ -957,6 +1034,226 @@ void MainWindow::bt_LocStop()
     loc.stop();
 }
 
+// for autocontrol
+void MainWindow::bt_AutoMove()
+{
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+
+    if(pick.cur_node != "")
+    {
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node != NULL)
+        {
+            // just test ...
+            PATH global_path = ctrl.calc_global_path(node->tf);
+            if(global_path.pos.size() < 2)
+            {
+                printf("[ETA] eta:0\n");
+            }
+            else
+            {
+                // time align
+                CTRL_PARAM params = ctrl.load_preset(0);
+                Eigen::Matrix4d cur_tf = loc.get_cur_tf();
+                auto dtdr_st = dTdR(cur_tf, global_path.pose.front());
+                double time_align = (dtdr_st[1] / (params.LIMIT_W*D2R + 1e-06)) * 2; // first align + final align
+
+                // time driving
+                double time_driving = 0.0;
+                for(size_t p = 1; p < global_path.pos.size()-1; p++)
+                {
+                    Eigen::Vector3d pos0 = global_path.pos[p];
+                    Eigen::Vector3d pos1 = global_path.pos[p+1];
+                    double dist = (pos1 - pos0).norm();
+
+                    double ref_v0 = global_path.ref_v[p];
+                    double ref_v1 = global_path.ref_v[p+1];
+                    double v = (ref_v0 + ref_v1)/2;
+
+                    time_driving += dist / (v+1e-06);
+                }
+
+                if(time_driving == 0.0)
+                {
+                    time_driving = 9999.0;
+                }
+
+                printf("[ETA] eta-> driving:%f, align:%f, total:%f\n", time_driving, time_align, (time_driving + time_align));
+            }
+
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "pp";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+
+            Q_EMIT ctrl.signal_move(msg);
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+
+        Q_EMIT ctrl.signal_move(msg);
+
+        return;
+    }
+}
+
+void MainWindow::bt_AutoMove2()
+{
+    if(unimap.is_loaded == false)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+
+    if(pick.cur_node != "")
+    {
+        NODE* node = unimap.get_node_by_id(pick.cur_node);
+        if(node != NULL)
+        {
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "hpp";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+            ctrl.move(msg);
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+        ctrl.move(msg);
+
+        return;
+    }
+}
+
+void MainWindow::bt_AutoMove3()
+{
+
+}
+
+void MainWindow::bt_AutoStop()
+{
+    // stop driving
+    ctrl.stop();
+}
+
+void MainWindow::bt_AutoPause()
+{
+    ctrl.is_pause = true;
+}
+
+void MainWindow::bt_AutoResume()
+{
+    ctrl.is_pause = false;
+}
+
+void MainWindow::bt_ReturnToCharging()
+{
+    if(config.ROBOT_SERIAL_NUMBER == "RB-M-")
+    {
+        logger.write_log("[RTC] Robot serial number is not properly set.", "Red");
+        return;
+    }
+
+    std::vector<QString> found_ids;
+
+    for(size_t i = 0; i < unimap.nodes.size(); i++)
+    {
+        if(unimap.nodes[i].name.contains(config.ROBOT_SERIAL_NUMBER))
+        {
+            found_ids.push_back(unimap.nodes[i].id);
+        }
+    }
+
+    if(found_ids.size() == 0)
+    {
+        logger.write_log(QString("[RTC] No charging node found for robot serial: %1").arg(config.ROBOT_SERIAL_NUMBER), "Red");
+        return;
+    }
+
+    if(found_ids.size() > 1)
+    {
+        logger.write_log(QString("[RTC] Multiple charging nodes found for serial: %1 (count: %2)")
+                         .arg(config.ROBOT_SERIAL_NUMBER)
+                         .arg(found_ids.size()), "Red");
+        return;
+    }
+
+
+    QString found_id = found_ids[0];
+    NODE* node = unimap.get_node_by_id(found_id);
+    if(node == NULL)
+    {
+        logger.write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
+        return;
+    }
+
+    logger.write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+
+    Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+    DATA_MOVE msg;
+    msg.command = "goal";
+    msg.method = "pp";
+    msg.preset = 0;
+    msg.goal_node_id = node->id;
+    msg.tgt_pose_vec[0] = xi[0];
+    msg.tgt_pose_vec[1] = xi[1];
+    msg.tgt_pose_vec[2] = node->tf(2,3);
+    msg.tgt_pose_vec[3] = xi[2];
+
+    Q_EMIT ctrl.signal_move(msg);
+}
+
+void MainWindow::slot_local_path_updated()
+{
+    is_local_path_update = true;
+}
+
+void MainWindow::slot_global_path_updated()
+{
+    is_global_path_update = true;
+}
+
+
 // jog
 void MainWindow::jog_loop()
 {
@@ -1010,8 +1307,208 @@ void MainWindow::jog_loop()
     printf("[JOG] loop stop\n");
 }
 
+// watchdog
+void MainWindow::watch_loop()
+{
+    int prevent_duplicate_clicks_cnt =0;
+    int cnt = 0;
+    int loc_fail_cnt = 0;
+    double last_sync_time = 0;
+    bool last_fms_connection = false;
+
+    CPU_USAGE pre_cpu_usage;
+
+    bool is_first_emo_check = true;
+    MOBILE_STATUS pre_ms = mobile.get_status();
+
+    printf("[WATCHDOG] loop start\n");
+    while(watch_flag)
+    {
+        cnt++;
+
+        // every 10 sec
+        // if(cnt % 100 == 0)
+        // {
+        //     if(!QCoreApplication::instance()->thread()->isRunning())
+        //     {
+        //         logger.write_log("[MAIN] Main thread is unresponsive!", "Red");
+        //     }
+        //     else
+        //     {
+        //         if(config.USE_COMM_FMS)
+        //         {
+        //             printf("[MAIN] robot id: %s\n", comm_fms.robot_id.toLocal8Bit().data());
+        //         }
+        //     }
+        // }
+
+        // for 500ms
+        if(cnt % 2 == 0)
+        {
+            if(mobile.is_connected)
+            {
+                MOBILE_STATUS ms = mobile.get_status();
+                if(is_first_emo_check)
+                {
+                    is_first_emo_check = false;
+                    pre_ms = ms;
+                }
+                else
+                {
+                    if(ms.t != 0)
+                    {
+                        if(pre_ms.motor_stop_state == 0 && ms.motor_stop_state >= 1)
+                        {
+                            Eigen::Vector3d cur_pos = loc.get_cur_tf().block(0,3,3,1);
+
+                            DATA_MOVE move_info;
+                            move_info.cur_pos = cur_pos;
+                            move_info.result = "emo";
+                            move_info.message = "released";
+                            move_info.time = get_time();
+
+                            Q_EMIT signal_move_response(move_info);
+                        }
+                        else if(pre_ms.motor_stop_state >= 1 && ms.motor_stop_state == 0)
+                        {
+                            Eigen::Vector3d cur_pos = loc.get_cur_tf().block(0,3,3,1);
+
+                            DATA_MOVE move_info;
+                            move_info.cur_pos = cur_pos;
+                            move_info.result = "emo";
+                            move_info.message = "pushed";
+                            move_info.time = get_time();
+
+                            Q_EMIT signal_move_response(move_info);
+                        }
+
+                        pre_ms = ms;
+                    }
+                }
+            }
+        }
+
+        // for 1000ms loop
+        if(cnt % 10 == 0)
+        {
+            // led state
+            int led_color = LED_GREEN;
+
+            // autodrive led control
+            if(ctrl.is_moving)
+            {
+                if(ctrl.get_obs_condition() == "far")
+                {
+                    led_color = LED_WHITE_BLINK;
+                }
+                else if(ctrl.get_obs_condition() == "near")
+                {
+                    led_color = LED_RED;
+
+                    if(config.USE_BEEP)
+                    {
+                        QApplication::beep();
+                    }
+                }
+                else if(ctrl.get_obs_condition() == "near_robot")
+                {
+                    led_color = LED_RED;
+                }
+                else
+                {
+                    led_color = LED_WHITE;
+                }
+            }
+
+            // check mobile
+            if(mobile.is_connected)
+            {
+                if(mobile.is_synced == false)
+                {
+                    mobile.sync();
+                    last_sync_time = get_time();
+                    logger.write_log("[WATCH] try time sync, pc and mobile");
+                }
+
+                MOBILE_STATUS ms = mobile.get_status();
+                if(ms.t != 0)
+                {
+                    // when motor status 0, emo released, no charging
+                    if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0)
+                    {
+                        mobile.motor_on();
+                    }
+
+                    if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
+                       ms.status_m0 == 1 && ms.status_m1 == 1 &&
+                       ms.motor_stop_state == 1 && ms.charge_state == 0)
+                    {
+                        mobile.set_cur_pdu_state("good");
+                    }
+                    else
+                    {
+                        mobile.set_cur_pdu_state("fail");
+                        led_color = LED_MAGENTA;
+                    }
+                }
+            }
+
+            // check lidar
+            if(config.USE_LIDAR_3D)
+            {
+                if(lidar_3d.is_connected && !lidar_3d.is_sync)
+                {
+                    if(config.LIDAR_3D_TYPE == "LIVOX")
+                    {
+                        lidar_3d.set_sync_flag(true);
+                        logger.write_log("[WATCH] try time sync, pc and livox lidar");
+                    }
+                }
+            }
+
+            // check loc
+            if(config.USE_SIM)
+            {
+                loc.set_cur_loc_state("good");
+            }
+            else
+            {
+                if(loc.is_loc == false)
+                {
+                    loc_fail_cnt = 0;
+                    loc.set_cur_loc_state("none");
+                    led_color = LED_MAGENTA;
+                }
+                else
+                {
+                    Eigen::Vector2d ieir = loc.get_cur_ieir();
+                    if(ieir[0] > config.LOC_CHECK_IE || ieir[1] < config.LOC_CHECK_IR)
+                    {
+                        loc_fail_cnt++;
+                        if(loc_fail_cnt > 3)
+                        {
+                            loc.set_cur_loc_state("fail");
+                            led_color = LED_MAGENTA_BLINK;
+                        }
+                    }
+                    else
+                    {
+                        loc_fail_cnt = 0;
+                        loc.set_cur_loc_state("good");
+                    }
+                }
+            }
+        }
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[WATCHDOG] loop stop\n");
+}
+
+
 // for plot loop
-void MainWindow::map_plot()
+void MainWindow::plot_map()
 {
     if(unimap.is_loaded != MAP_LOADED)
     {
@@ -1099,7 +1596,7 @@ void MainWindow::map_plot()
     }
 }
 
-void MainWindow::topo_plot()
+void MainWindow::plot_topo()
 {
     if(unimap.is_loaded != MAP_LOADED)
     {
@@ -1386,7 +1883,7 @@ void MainWindow::topo_plot()
     }
 }
 
-void MainWindow::pick_plot()
+void MainWindow::plot_pick()
 {
     // draw cursors
     if(is_pick_update)
@@ -1445,7 +1942,7 @@ void MainWindow::pick_plot()
     }
 }
 
-void MainWindow::info_plot()
+void MainWindow::plot_info()
 {
     // plot mobile info
     {
@@ -1461,15 +1958,42 @@ void MainWindow::info_plot()
         }
     }
 
-    // 3d lidar
+    // plot slam info
+    {
+        // mapping
+
+        // localization
+        if(loc.is_loc)
+        {
+            ui->lb_SlamInfo->setText(loc.get_info_text());
+        }
+    }
+
+    // 3d lidar info
     if(config.USE_LIDAR_3D)
     {
         ui->lb_LidarInfo_3D->setText(lidar_3d.get_info_text());
     }
 
+    // plot auto info
+    {
+        QString _multi_state = "";
+        int fsm_state = ctrl.fsm_state;
+
+        QString auto_info_str;
+        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s\nis_multi: %d, request: %s, multi_state: %s",
+                              AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
+                              (bool)ctrl.is_moving ? "1" : "0",
+                              (bool)ctrl.is_pause ? "1" : "0",
+                              ctrl.get_obs_condition().toLocal8Bit().data(),
+                              config.USE_MULTI,
+                              ctrl.get_multi_req().toLocal8Bit().data(),
+                              _multi_state.toLocal8Bit().data());
+        ui->lb_AutoInfo->setText(auto_info_str);
+    }
 }
 
-void MainWindow::raw_plot()
+void MainWindow::plot_raw()
 {
     // plot 3d lidar
     if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D" && !loc.is_loc)
@@ -1534,7 +2058,7 @@ void MainWindow::raw_plot()
     }
 }
 
-void MainWindow::loc_plot()
+void MainWindow::plot_loc()
 {
     loc.plot_cur_pts_que.try_pop(plot_cur_pts);
     if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0)
@@ -1573,8 +2097,225 @@ void MainWindow::loc_plot()
     }
 }
 
-void MainWindow::ctrl_plot()
+void MainWindow::plot_obs()
 {
+    if(unimap.is_loaded != MAP_LOADED)
+    {
+        return;
+    }
+
+    if(is_obs_update)
+    {
+        is_obs_update = false;
+
+        cv::Mat obs_map;
+        cv::Mat dyn_map;
+        cv::Mat vir_map;
+
+        Eigen::Matrix4d obs_tf;
+        obsmap.get_obs_map(obs_map, obs_tf);
+        obsmap.get_dyn_map(dyn_map, obs_tf);
+        obsmap.get_vir_map(vir_map, obs_tf);
+
+        std::vector<Eigen::Vector4d> plot_pts = obsmap.get_plot_pts();
+
+        // plot grid map
+        {
+            cv::Mat plot_obs_map(obs_map.rows, obs_map.cols, CV_8UC3, cv::Scalar(0));
+            obsmap.draw_robot(plot_obs_map);
+
+            for(int i = 0; i < obs_map.rows; i++)
+            {
+                for(int j = 0; j < obs_map.cols; j++)
+                {
+                    if(obs_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(255,255,255);
+                    }
+
+                    if(dyn_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,0,255);
+                    }
+
+                    if(vir_map.ptr<uchar>(i)[j] == 255)
+                    {
+                        plot_obs_map.ptr<cv::Vec3b>(i)[j] = cv::Vec3b(0,255,255);
+                    }
+                }
+            }
+
+            ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
+            ui->lb_Screen1->setScaledContents(true);
+            ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+
+        // plot obs pts
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        for(size_t p = 0; p < plot_pts.size(); p+=4)
+        {
+            double x = plot_pts[p][0];
+            double y = plot_pts[p][1];
+            double z = plot_pts[p][2];
+            double prob = plot_pts[p][3];
+
+            if(prob <= 0.5)
+            {
+                continue;
+            }
+
+            tinycolormap::Color c = tinycolormap::GetColor(prob, tinycolormap::ColormapType::Jet);
+
+            pcl::PointXYZRGB pt;
+            pt.x = x;
+            pt.y = y;
+            pt.z = z;
+            pt.r = c.r()*255;
+            pt.g = c.g()*255;
+            pt.b = c.b()*255;
+            cloud->push_back(pt);
+        }
+
+        if(!viewer->updatePointCloud(cloud, "obs_plot_pts"))
+        {
+            viewer->addPointCloud(cloud, "obs_plot_pts");
+        }
+
+        // point size
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
+    }
+}
+
+void MainWindow::plot_ctrl()
+{
+    // plot global path
+    if(is_global_path_update)
+    {
+        is_global_path_update = false;
+
+        // draw
+        PATH global_path = ctrl.get_cur_global_path();
+        {
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < global_path.pos.size(); p++)
+            {
+                Eigen::Vector3d P = global_path.pos[p];
+
+                pcl::PointXYZRGB pt;
+                pt.x = P[0];
+                pt.y = P[1];
+                pt.z = P[2]+0.1;
+                pt.r = 255;
+                pt.g = 0;
+                pt.b = 0;
+
+                cloud->push_back(pt);
+            }
+
+            if(!viewer->updatePointCloud(cloud, "global_path"))
+            {
+                viewer->addPointCloud(cloud, "global_path");
+            }
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*3, "global_path");
+        }
+    }
+
+    // plot local path
+    if(is_local_path_update)
+    {
+        is_local_path_update = false;
+
+        // erase first
+        for(size_t p = 0; p < last_plot_local_path.size(); p++)
+        {
+            QString name = last_plot_local_path[p];
+            if(viewer->contains(name.toStdString()))
+            {
+                viewer->removeShape(name.toStdString());
+            }
+        }
+        last_plot_local_path.clear();
+
+        // draw local path
+        PATH local_path = ctrl.get_cur_local_path();
+
+        // draw local path
+        if(local_path.pos.size() >= 2)
+        {
+            for(size_t p = 0; p < local_path.pose.size(); p++)
+            {
+                if(p == local_path.pose.size()-1 || p % 50 == 0)
+                {
+                    QString name;
+                    name.sprintf("local_path_%d", (int)p);
+
+                    Eigen::Matrix4d tf = local_path.pose[p];
+                    viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 0, 1, 0, name.toStdString());
+
+                    viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                        name.toStdString());
+                    last_plot_local_path.push_back(name);
+                }
+            }
+        }
+    }
+
+    // draw control points
+    if(ctrl.is_moving)
+    {
+        // erase first
+        if(viewer->contains("cur_pos"))
+        {
+            viewer->removeShape("cur_pos");
+        }
+
+        if(viewer->contains("tgt_pos"))
+        {
+            viewer->removeShape("tgt_pos");
+        }
+
+        if(viewer->contains("local_goal"))
+        {
+            viewer->removeShape("local_goal");
+        }
+
+        // draw monitoring points
+        {
+            Eigen::Vector3d cur_pos = ctrl.last_cur_pos;
+            Eigen::Vector3d tgt_pos = ctrl.last_tgt_pos;
+            Eigen::Vector3d local_goal = ctrl.last_local_goal;
+
+            viewer->addSphere(pcl::PointXYZ(cur_pos[0], cur_pos[1], cur_pos[2]), 0.1, 1.0, 1.0, 1.0, "cur_pos");
+            viewer->addSphere(pcl::PointXYZ(tgt_pos[0], tgt_pos[1], tgt_pos[2]), 0.1, 1.0, 0.0, 0.0, "tgt_pos");
+            viewer->addSphere(pcl::PointXYZ(local_goal[0], local_goal[1], local_goal[2]), 0.1, 0.0, 1.0, 0.0, "local_goal");
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "cur_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "tgt_pos");
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "local_goal");
+        }
+    }
+    else
+    {
+        if(viewer->contains("cur_pos"))
+        {
+            viewer->removeShape("cur_pos");
+        }
+
+        if(viewer->contains("tgt_pos"))
+        {
+            viewer->removeShape("tgt_pos");
+        }
+
+        if(viewer->contains("local_goal"))
+        {
+            viewer->removeShape("local_goal");
+        }
+    }
+
     // cur tf
     Eigen::Matrix4d cur_tf = loc.get_cur_tf();
 
@@ -1663,7 +2404,6 @@ void MainWindow::ctrl_plot()
             }
         }
     }
-
 }
 
 void MainWindow::plot_loop()
@@ -1671,13 +2411,13 @@ void MainWindow::plot_loop()
     plot_timer.stop();
     double st_time = get_time();
 
-    map_plot();
-    topo_plot();
-    pick_plot();
-    info_plot();
-    raw_plot();
-    loc_plot();
-    ctrl_plot();
+    plot_map();
+    plot_topo();
+    plot_pick();
+    plot_info();
+    plot_raw();
+    plot_loc();
+    plot_ctrl();
 
     // rendering
     ui->qvtkWidget->renderWindow()->Render();

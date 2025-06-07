@@ -14,6 +14,7 @@
 #include "lidar_3d.h"
 #include "localization.h"
 #include "autocontrol.h"
+#include "sim.h"
 
 // qt
 #include <QMainWindow>
@@ -50,6 +51,7 @@ public:
     LIDAR_3D lidar_3d;
     LOCALIZATION loc;
     AUTOCONTROL ctrl;
+    SIM sim;
 
     // pcl viewer
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
@@ -58,6 +60,11 @@ public:
     std::atomic<bool> jog_flag = {false};
     std::thread *jog_thread = NULL;
     void jog_loop();
+
+    // watchdog
+    std::atomic<bool> watch_flag = {false};
+    std::thread *watch_thread = NULL;
+    void watch_loop();
 
     // funcs
     void setup_vtk();
@@ -98,23 +105,29 @@ public:
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_names;
 
+    std::vector<QString> last_plot_local_path;
+
     // plot cur loc pts
     std::vector<Eigen::Vector3d> plot_cur_pts;
 
     // plot funcs
-    void map_plot();
-    void topo_plot();
-    void pick_plot();
-    void info_plot();
-    void raw_plot();
-    void loc_plot();
-    void ctrl_plot();
+    void plot_map();
+    void plot_topo();
+    void plot_pick();
+    void plot_info();
+    void plot_raw();
+    void plot_loc();
+    void plot_obs();
+    void plot_ctrl();
 
     // plot timer
     QTimer plot_timer;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
+
+Q_SIGNALS:
+    void signal_move_response(DATA_MOVE msg);
 
 public Q_SLOTS:
 
@@ -154,6 +167,18 @@ public Q_SLOTS:
     void bt_LocInit();
     void bt_LocStart();
     void bt_LocStop();
+
+    // for autocontrol
+    void bt_AutoMove();
+    void bt_AutoMove2();
+    void bt_AutoMove3();
+    void bt_AutoStop();
+    void bt_AutoPause();
+    void bt_AutoResume();
+    void bt_ReturnToCharging();
+
+    void slot_local_path_updated();
+    void slot_global_path_updated();
 
     // timer loops
     void plot_loop();
