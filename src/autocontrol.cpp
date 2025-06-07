@@ -45,20 +45,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     CTRL_PARAM res;
 
     // read
-    QString preset_path = "";
-
-    // config module init
-    #ifdef USE_S100
-    preset_path = QCoreApplication::applicationDirPath() + "/config/SRV/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
-    #ifdef USE_D400
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400/" + "preset_" + QString::number(preset) + ".json";
-    #endif
-
-    #ifdef USE_D400_LAKI
-    preset_path = QCoreApplication::applicationDirPath() + "/config/AMR_400_LAKI/" + "preset_" + QString::number(preset) + ".json";
-    #endif
+    QString preset_path = QCoreApplication::applicationDirPath() + "/configs/" + QString(ROBOT_PLATFORM) + "/preset_" + QString::number(preset) + ".json";
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
@@ -1684,12 +1671,12 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
 int AUTOCONTROL::is_everything_fine()
 {
     // check localization
-    // QString loc_state = loc->get_cur_loc_state();
-    // if(loc_state == "none" || loc_state == "fail")
-    // {
-    //     logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
-    //     return DRIVING_FAILED;
-    // }
+    QString loc_state = loc->get_cur_loc_state();
+    if(loc_state == "none" || loc_state == "fail")
+    {
+        logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
+        return DRIVING_FAILED;
+    }
 
     // if(loc->is_qa == true)
     // {
@@ -1744,11 +1731,12 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
-    if(ms.motor_stop_state == 0)
-    {
-        logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
-        return DRIVING_NOT_READY;
-    }
+    // todo: fix emo
+    // if(ms.motor_stop_state == 0)
+    // {
+    //     logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
+    //     return DRIVING_NOT_READY;
+    // }
 
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {

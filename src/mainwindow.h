@@ -89,6 +89,9 @@ public:
     std::atomic<bool> is_global_path_update = {false};
     std::atomic<bool> is_3d_update = {false};
 
+    std::atomic<bool> is_view_reset = {false};
+    std::atomic<bool> is_set_top_view = {false};
+
     // jog
     std::atomic<double> vx_target = {0.};
     std::atomic<double> vy_target = {0.};
@@ -106,9 +109,14 @@ public:
     std::vector<QString> last_plot_names;
 
     std::vector<QString> last_plot_local_path;
+    std::vector<QString> last_plot_tactile;
 
     // plot cur loc pts
     std::vector<Eigen::Vector3d> plot_cur_pts;
+
+    // for user led
+    std::atomic<bool> is_user_led = {false};
+    std::atomic<int> user_led_color = {LED_OFF};
 
     // plot funcs
     void plot_map();
@@ -167,6 +175,9 @@ public Q_SLOTS:
     void bt_LocInit();
     void bt_LocStart();
     void bt_LocStop();
+
+    // for obsmap
+    void bt_ObsClear();
 
     // for autocontrol
     void bt_AutoMove();

@@ -645,6 +645,12 @@ void MOBILE::recv_loop()
                             mobile_status.cur_m3 = cur_m3;
                             mobile_status.charge_state = charge_state;
                             mobile_status.power_state = power_state;
+                            if(robot_type == ROBOT_TYPE_SAFETY){
+                                mobile_status.motor_stop_state = !(safety_emo_pressed_1||safety_emo_pressed_2);
+                            }
+                            else{
+                                mobile_status.motor_stop_state =  motor_stop_state;
+                            }
                             mobile_status.motor_stop_state = motor_stop_state;
                             mobile_status.remote_state = remote_state;
                             mobile_status.bat_in = bat_in;

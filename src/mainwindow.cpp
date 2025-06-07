@@ -51,6 +51,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_LocStart, SIGNAL(clicked()), this, SLOT(bt_LocStart()));
     connect(ui->bt_LocStop, SIGNAL(clicked()), this, SLOT(bt_LocStop()));
 
+    // for obsmap
+    connect(&obsmap, SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);
+    connect(ui->bt_ObsClear, SIGNAL(clicked()), this, SLOT(bt_ObsClear()));
+
     // for autocontrol
     connect(ui->bt_AutoMove, SIGNAL(clicked()), this, SLOT(bt_AutoMove()));
     connect(ui->bt_AutoMove2, SIGNAL(clicked()), this, SLOT(bt_AutoMove2()));
@@ -61,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_ReturnToCharging, SIGNAL(clicked()), this, SLOT(bt_ReturnToCharging()));
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()), Qt::QueuedConnection);
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);
+
 
 
     // timer
@@ -283,6 +288,12 @@ void MainWindow::init_modules()
         this->setPalette(palette);
 
         ui->bt_SimInit->setEnabled(true);
+    }
+
+    // view mode
+    if(config.LOC_MODE == "3D")
+    {
+        ui->cb_ViewType->setCurrentText("VIEW_3D");
     }
 
     // log module init (slamnav)
@@ -1253,6 +1264,12 @@ void MainWindow::slot_global_path_updated()
     is_global_path_update = true;
 }
 
+// for obsmap
+void MainWindow::bt_ObsClear()
+{
+    obsmap.clear();
+    obs_update();
+}
 
 // jog
 void MainWindow::jog_loop()
@@ -1498,8 +1515,191 @@ void MainWindow::watch_loop()
                     }
                 }
             }
-        }
 
+            // check system info
+            {
+                MOBILE_STATUS ms = mobile.get_status();
+
+                QString temp_str;
+                QString power_str;
+                QString cpu_usage_str;
+
+                // check temperature
+                {
+                    int cpu_temp_sum = 0;
+                    int _cnt = 0;
+
+                    QDir dir_temp("/sys/class/thermal");
+                    QStringList filters;
+                    filters << "thermal_zone*";
+                    dir_temp.setNameFilters(filters);
+                    QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                    for (const QFileInfo &info : list_temp)
+                    {
+                        QString path = info.filePath() + "/temp";
+                        QFile file(path);
+                        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                        {
+                            QTextStream in(&file);
+                            QString line = in.readLine();
+                            file.close();
+
+                            bool ok = false;
+                            int temperature = line.toInt(&ok);
+                            if(ok)
+                            {
+                                if(temperature != 0)
+                                {
+                                    cpu_temp_sum += temperature/1000;
+                                    _cnt++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(_cnt != 0)
+                    {
+                        int pc_temp = cpu_temp_sum/_cnt;
+                        temp_str.sprintf("[TEMP] cpu:%d, m0:%d, m1:%d", pc_temp, ms.temp_m0, ms.temp_m1);
+                        if(pc_temp > 85)
+                        {
+                            led_color = LED_RED_BLINK;
+                        }
+                    }
+                    else
+                    {
+                        temp_str.sprintf("[TEMP] cpu:0, m0:%d, m1:d", ms.temp_m0, ms.temp_m1);
+                    }
+                }
+
+                // check power
+                {
+                    int cpu_power_sum = 0;
+                    int _cnt = 0;
+
+                    QDir dir_temp("/sys/class/power_supply");
+                    QStringList filters;
+                    filters << "BAT*";
+                    dir_temp.setNameFilters(filters);
+                    QFileInfoList list_temp = dir_temp.entryInfoList();
+
+                    for (const QFileInfo &info : list_temp)
+                    {
+                        QString path = info.filePath() + "/power_now";
+                        QFile file(path);
+
+                        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                        {
+                            QTextStream in(&file);
+                            QString line = in.readLine();
+                            file.close();
+
+                            bool ok = false;
+                            int power = line.toInt(&ok);
+                            if(ok)
+                            {
+                                if(power != 0)
+                                {
+                                    cpu_power_sum += power/1000;
+                                    _cnt++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(_cnt != 0)
+                    {
+                        power_str.sprintf("[POWER] cpu:%.2f, m0:%.2f, m1:%.2f", (double)cpu_power_sum/_cnt, (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                    }
+                    else
+                    {
+                        power_str.sprintf("[POWER] cpu:0.0, m0:%.2f, m1:%.2f", (double)ms.cur_m0/10.0, (double)ms.cur_m1/10.0);
+                    }
+                }
+
+                // check cpu usage
+                {
+                    QFile file("/proc/stat");
+                    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+                    {
+                        QTextStream in(&file);
+                        QString line = in.readLine();
+                        file.close();
+
+                        CPU_USAGE cur_cpu_usage;
+                        QStringList values = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+                        if (values[0] == "cpu")
+                        {
+                            cur_cpu_usage.user = values[1].toLongLong();
+                            cur_cpu_usage.nice = values[2].toLongLong();
+                            cur_cpu_usage.system = values[3].toLongLong();
+                            cur_cpu_usage.idle = values[4].toLongLong();
+                            cur_cpu_usage.iowait = values[5].toLongLong();
+                            cur_cpu_usage.irq = values[6].toLongLong();
+                            cur_cpu_usage.softirq = values[7].toLongLong();
+                        }
+
+                        double cur_total_usage = cur_cpu_usage.user + cur_cpu_usage.nice + cur_cpu_usage.system + cur_cpu_usage.idle + cur_cpu_usage.iowait + cur_cpu_usage.irq + cur_cpu_usage.softirq;
+                        double pre_total_usage = pre_cpu_usage.user + pre_cpu_usage.nice + pre_cpu_usage.system + pre_cpu_usage.idle + pre_cpu_usage.iowait + pre_cpu_usage.irq + pre_cpu_usage.softirq;
+
+                        double cur_idle_usage = cur_cpu_usage.idle;
+                        double pre_idle_usage = pre_cpu_usage.idle;
+
+                        double cpu_usage = (1.0 - (double)(cur_idle_usage - pre_idle_usage) / (cur_total_usage - pre_total_usage)) * 100.0;
+                        if(isfinite(cpu_usage))
+                        {
+                            cpu_usage_str.sprintf("[CPU]: %.2f", cpu_usage);
+                            pre_cpu_usage = cur_cpu_usage;
+                        }
+                    }
+                    else
+                    {
+                        cpu_usage_str.sprintf("[CPU]: 0.0");
+                    }
+                }
+
+                // check emo
+                {
+                    if(ms.motor_stop_state == 0)
+                    {
+                        led_color = LED_YELLOW;
+                    }
+                }
+
+                // check battery
+                if(config.PLATFORM_NAME == "S100")
+                {
+                    if(ms.bat_out < (double)S100_BAT_MIN_VOLTAGE) // low battery
+                    {
+                        led_color = LED_YELLOW_BLINK;
+                        // logger.write_log("[BATTERY] need charge");
+                    }
+                    else if(ms.charge_state == 1) // charge
+                    {
+                        led_color = LED_RED;
+                        if(ms.bat_out > (double)S100_BAT_MAX_VOLTAGE)
+                        {
+                            led_color = LED_BLUE;
+                        }
+                    }
+
+                    QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
+                    ui->lb_SystemInfo->setText(system_info_str);
+                }
+
+
+                // set led
+                if(is_user_led)
+                {
+                    mobile.led(0, (int)user_led_color);
+                }
+                else
+                {
+                    mobile.led(0, led_color);
+                }
+            }
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -2404,6 +2604,46 @@ void MainWindow::plot_ctrl()
             }
         }
     }
+
+    // plot tactile
+    {
+        // erase first
+        if(last_plot_tactile.size() > 0)
+        {
+            for(size_t p = 0; p < last_plot_tactile.size(); p++)
+            {
+                QString name = last_plot_tactile[p];
+                if(viewer->contains(name.toStdString()))
+                {
+                    viewer->removeShape(name.toStdString());
+                }
+            }
+            last_plot_tactile.clear();
+        }
+
+        //Eigen::Vector3d vel(mobile.vx0, mobile.vy0, mobile.wz0);
+        Eigen::Vector3d vel = mobile.get_pose().vel;
+        std::vector<Eigen::Matrix4d> traj = ctrl.calc_trajectory(vel, 0.2, 1.0, cur_tf);
+        for(size_t p = 0; p < traj.size(); p++)
+        {
+            QString name;
+            name.sprintf("traj_%d", (int)p);
+
+            viewer->addCube(config.ROBOT_SIZE_X[0], config.ROBOT_SIZE_X[1],
+                    config.ROBOT_SIZE_Y[0], config.ROBOT_SIZE_Y[1],
+                    config.ROBOT_SIZE_Z[0], config.ROBOT_SIZE_Z[1], 1.0, 0.0, 0.0, name.toStdString());
+
+            viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(traj[p].cast<float>()));
+
+            viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
+                                                pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                name.toStdString());
+            last_plot_tactile.push_back(name);
+        }
+    }
+
+    // plot goal info
+    ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(ctrl.move_info.goal_node_id).arg(ctrl.cur_goal_state));
 }
 
 void MainWindow::plot_loop()
@@ -2417,7 +2657,44 @@ void MainWindow::plot_loop()
     plot_info();
     plot_raw();
     plot_loc();
+    plot_obs();
     plot_ctrl();
+
+    // camera reset
+    if(is_set_top_view)
+    {
+        is_set_top_view = false;
+        viewer->setCameraPosition(0, 0, 30, 0, 0, 0, 0, 1, 0);
+        printf("[MAIN] set top view camera\n");
+    }
+
+    if(is_view_reset)
+    {
+        is_view_reset = false;
+        viewer->resetCamera();
+        printf("[MAIN] reset view camera\n");
+    }
+
+    // mapping view
+    if(ui->cb_ViewType->currentText() == "VIEW_MAPPING")
+    {
+        Eigen::Matrix4d cur_tf = loc.get_cur_tf();
+        Eigen::Matrix4d _cur_tf = se2_to_TF(TF_to_se2(cur_tf));
+        _cur_tf(2,3) = cur_tf(2,3);
+
+        double d = ui->cb_ViewHeight->currentText().toDouble();
+        Eigen::Vector3d cam_pos = _cur_tf.block(0,0,3,3)*Eigen::Vector3d(0,0,d) + _cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cam_tgt = _cur_tf.block(0,0,3,3)*Eigen::Vector3d(0,0,0) + _cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cam_up(1,0,0);
+
+        viewer->setCameraPosition(cam_pos[0], cam_pos[1], cam_pos[2],
+                                  cam_tgt[0], cam_tgt[1], cam_tgt[2],
+                                  cam_up[0], cam_up[1], cam_up[2]);
+
+        double near = 2.0;
+        double far = 2.0*d;
+        viewer->setCameraClipDistances(near, far);
+    }
 
     // rendering
     ui->qvtkWidget->renderWindow()->Render();
