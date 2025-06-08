@@ -651,7 +651,6 @@ void MOBILE::recv_loop()
                             else{
                                 mobile_status.motor_stop_state =  motor_stop_state;
                             }
-                            mobile_status.motor_stop_state = motor_stop_state;
                             mobile_status.remote_state = remote_state;
                             mobile_status.bat_in = bat_in;
                             mobile_status.bat_out = bat_out;
