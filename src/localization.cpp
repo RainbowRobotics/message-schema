@@ -49,10 +49,10 @@ void LOCALIZATION::start()
         is_loc = false;
     }
 
-    if(loc_b_thread == NULL)
+    if(b_thread == NULL)
     {
-        loc_b_flag = true;
-        loc_b_thread = new std::thread(&LOCALIZATION::loc_b_loop, this);
+        b_flag = true;
+        b_thread = new std::thread(&LOCALIZATION::b_loop, this);
     }
 
     if(obs_thread == NULL)
@@ -277,7 +277,7 @@ void LOCALIZATION::a_loop_3d()
     printf("[LOCALIZATION(3D)] a_loop stop\n");
 }
 
-void LOCALIZATION::loc_b_loop()
+void LOCALIZATION::b_loop()
 {
     // loop params
     const double dt = 0.02;
@@ -295,11 +295,11 @@ void LOCALIZATION::loc_b_loop()
     // params
     MOBILE_POSE pre_mo = mobile->get_pose();
 
-    printf("[LOCALIZATION] loc_b_loop start\n");
-    while(loc_b_flag)
+    printf("[LOCALIZATION] b_loop start\n");
+    while(b_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
-        if(cur_mo.t > pre_mo.t)
+        if(cur_mo.t > pre_mo.t && config->LOC_ICP_ODO_FUSION_RATIO != 0.0)
         {
             double st_time = get_time();
 
@@ -420,11 +420,11 @@ void LOCALIZATION::loc_b_loop()
         }
         else
         {
-            printf("[SLAM] loc_b_loop loop time drift, dt:%f\n", delta_loop_time);
+            printf("[LOCALIZATION] b_loop loop time drift, dt:%f\n", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
-    printf("[LOCALIZATION] loc_b_loop stop\n");
+    printf("[LOCALIZATION] b_loop stop\n");
 }
 
 void LOCALIZATION::obs_loop()

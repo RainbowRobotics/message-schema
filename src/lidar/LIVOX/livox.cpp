@@ -314,9 +314,9 @@ void LIVOX::grab_loop()
         uint64_t time_base = *reinterpret_cast<const uint64_t*>(data->timestamp); // nanosec
 
         // time sync
-        if(livox->offset_t[idx] == 0 || livox->is_sync)
+        if(livox->offset_t[idx] == 0 || livox->is_sync[idx])
         {
-            livox->is_sync = false;
+            livox->is_sync[idx] = false;
             livox->offset_t[idx] = get_time() - (time_base * N2S);
         }
 

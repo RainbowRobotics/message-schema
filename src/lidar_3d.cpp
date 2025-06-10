@@ -217,10 +217,14 @@ void LIDAR_3D::set_sync_flag(bool flag)
 {
     is_sync = true;
 
-    if(config->LIDAR_3D_TYPE == "LIVOX" && livox != NULL)
+    for(int idx = 0; idx < config->LIDAR_3D_NUM; idx++)
     {
-        livox->is_sync.store(flag);
-        printf("[LIDAR_3D] set livox->is_sync = %d\n", flag);
+
+        if(config->LIDAR_3D_TYPE == "LIVOX" && livox != NULL)
+        {
+            livox->is_sync[idx].store(flag);
+            printf("[LIDAR_3D] set livox->is_sync[%d] = %d\n",idx, flag);
+        }
     }
 }
 
@@ -326,10 +330,10 @@ void LIDAR_3D::a_loop()
                     TIME_PTS tmp;
                     merged_que.try_pop(tmp);
                 }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                continue;
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
         }
         else if((livox->time_type[0].load() == 1 && livox->time_type[1].load() == 1))
         {

@@ -1731,12 +1731,11 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
-    // todo: fix emo
-     if(ms.motor_stop_state == 0)
-     {
-         logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
-         return DRIVING_NOT_READY;
-     }
+    if(ms.motor_stop_state == 0)
+    {
+        logger->write_log("[AUTO] not ready (emo pushed)", "Orange", true, false);
+        return DRIVING_NOT_READY;
+    }
 
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {

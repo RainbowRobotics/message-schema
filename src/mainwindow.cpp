@@ -1475,11 +1475,8 @@ void MainWindow::watch_loop()
             {
                 if(lidar_3d.is_connected && !lidar_3d.is_sync)
                 {
-                    if(config.LIDAR_3D_TYPE == "LIVOX")
-                    {
-                        lidar_3d.set_sync_flag(true);
-                        logger.write_log("[WATCH] try time sync, pc and livox lidar");
-                    }
+                    lidar_3d.set_sync_flag(true);
+                    logger.write_log("[WATCH] try time sync, pc and livox lidar");
                 }
             }
 
