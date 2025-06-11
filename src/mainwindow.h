@@ -11,6 +11,7 @@
 #include "unimap.h"
 #include "obsmap.h"
 #include "mobile.h"
+#include "lidar_2d.h"
 #include "lidar_3d.h"
 #include "localization.h"
 #include "autocontrol.h"
@@ -48,6 +49,7 @@ public:
     UNIMAP unimap;
     OBSMAP obsmap;
     MOBILE mobile;
+    LIDAR_2D lidar_2d;
     LIDAR_3D lidar_3d;
     LOCALIZATION loc;
     AUTOCONTROL ctrl;
@@ -111,6 +113,8 @@ public:
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
 
+    atomic<double> last_sync_time = {0.};
+
     // plot cur loc pts
     std::vector<Eigen::Vector3d> plot_cur_pts;
 
@@ -123,7 +127,8 @@ public:
     void plot_topo();
     void plot_pick();
     void plot_info();
-    void plot_raw();
+    void plot_raw_2d();
+    void plot_raw_3d();
     void plot_loc();
     void plot_obs();
     void plot_ctrl();

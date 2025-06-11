@@ -71,6 +71,9 @@ void CONFIG::load()
         USE_LIDAR_2D = obj_sensors["USE_LIDAR_2D"].toBool();
         printf("[CONFIG] USE_LIDAR_2D, %s\n", USE_LIDAR_2D ? "true" : "false");
 
+        IS_LIDAR_2D_FLIP = obj_sensors["IS_LIDAR_2D_FLIP"].toBool();
+        printf("[CONFIG] IS_LIDAR_2D_FLIP, %s\n", IS_LIDAR_2D_FLIP ? "true" : "false");
+
         LIDAR_2D_TYPE = obj_sensors["LIDAR_2D_TYPE"].toString();
         printf("[CONFIG] LIDAR_2D_TYPE, %s\n", LIDAR_2D_TYPE.toLocal8Bit().data());
 

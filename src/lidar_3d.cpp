@@ -219,7 +219,6 @@ void LIDAR_3D::set_sync_flag(bool flag)
 
     for(int idx = 0; idx < config->LIDAR_3D_NUM; idx++)
     {
-
         if(config->LIDAR_3D_TYPE == "LIVOX" && livox != NULL)
         {
             livox->is_sync[idx].store(flag);
