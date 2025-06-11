@@ -1518,10 +1518,10 @@ void MainWindow::watch_loop()
                     lidar_2d.set_sync_flag(true);
                 }
 
-                /*if(lidar_3d.is_connected)
+                if(lidar_3d.is_connected)
                 {
-                    lidar_3d.is_sync = true;
-                }*/
+                    lidar_3d.set_sync_flag(true);
+                }
 
                 last_sync_time = get_time();
             }
