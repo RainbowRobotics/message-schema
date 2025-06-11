@@ -196,7 +196,7 @@ void LIDAR_2D::dsk_loop(int idx)
             dsk_frm.times = filtered_time;
             dsk_frm.pts = filetered_dsk0;
 
-            printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
+            // printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
 
             // set queue
             dsk_que[idx].push(dsk_frm);

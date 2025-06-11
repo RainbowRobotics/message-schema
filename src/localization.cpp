@@ -172,12 +172,116 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen
     return res;
 }
 
+Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G)
+{
+    int err_num = 0;
+    double err_sum = 0;
+    for(size_t p = 0; p < frm.pts.size(); p++)
+    {
+        Eigen::Vector3d P = frm.pts[p];
+        Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+
+        // find nn
+        std::vector<unsigned int> ret_near_idxs(1);
+        std::vector<double> ret_near_sq_dists(1);
+
+        double near_query_pt[3] = {_P[0], _P[1], _P[2]};
+        tree.knnSearch(&near_query_pt[0], 1, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+
+        // point to point distance
+        double err = std::sqrt(ret_near_sq_dists[0]);
+        if(err > config->LOC_CHECK_DIST)
+        {
+            continue;
+        }
+
+        err_sum += err;
+        err_num++;
+    }
+
+    if(err_num == 0)
+    {
+        Eigen::Vector2d res;
+        res[0] = 1.0;
+        res[1] = 0.0;
+        return res;
+    }
+    else
+    {
+        Eigen::Vector2d res;
+        res[0] = err_sum/err_num; // inlier error
+        res[1] = (double)err_num/frm.pts.size(); // inlier ratio
+        return res;
+    }
+}
+
 void LOCALIZATION::a_loop_2d()
 {
+    // Eigen::Matrix4d _cur_tf = get_cur_tf();
+    // Eigen::Matrix4d _pre_tf = _cur_tf;
+
+    lidar_2d->merged_que.clear();
+
     printf("[LOCALIZATION(2D)] a_loop start\n");
     while(a_flag)
     {
+        FRAME frm;
+        if(lidar_2d->merged_que.try_pop(frm))
+        {
+            if(unimap->is_loaded != MAP_LOADED)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
 
+            double st_time = get_time();
+
+            // initial guess
+            Eigen::Matrix4d G = get_cur_tf();
+
+            // icp
+            double err = map_icp(*unimap->kdtree_index, unimap->kdtree_cloud, frm, G);
+
+            // check ieir
+            cur_ieir = calc_ieir(*unimap->kdtree_index, unimap->kdtree_cloud, frm, G);
+
+            // check error
+            if(err < config->LOC_ICP_ERROR_THRESHOLD)
+            {
+                // for loc b loop
+                TIME_POSE tp;
+                tp.t = frm.t;
+                tp.tf = G;
+                tp_que.push(tp);
+
+                // for obs loop
+                TIME_POSE_PTS tpp;
+                tpp.t = frm.t;
+                tpp.tf = G;
+                tpp.pts = frm.pts;
+                tpp_que.push(tpp);
+
+                // update
+                set_cur_tf(G);
+
+                // local to global deskewed point
+                std::vector<Eigen::Vector3d> pts(frm.pts.size());
+                for(size_t p = 0; p < frm.pts.size(); p++)
+                {
+                    Eigen::Vector3d P(frm.pts[p][0], frm.pts[p][1], frm.pts[p][2]);
+                    Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+                    pts[p] = _P;
+                }
+                plot_cur_pts_que.push(pts);
+            }
+
+            // set localization info for plot
+            cur_tf_err = err;
+            proc_time_loc_a = get_time() - st_time;
+
+            // for speed
+            lidar_2d->merged_que.clear();
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("[LOCALIZATION(2D)] a_loop stop\n");
@@ -723,7 +827,6 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
 
     return last_err;
 }
-
 
 // 3D
 double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G)

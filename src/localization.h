@@ -9,6 +9,7 @@
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
+#include "lidar_2d.h"
 #include "lidar_3d.h"
 // #include "cam.h"
 #include "unimap.h"
@@ -30,6 +31,7 @@ public:
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
+    LIDAR_2D *lidar_2d = NULL;
     LIDAR_3D *lidar_3d = NULL;
     // CAM *cam = NULL;
     UNIMAP *unimap = NULL;
@@ -47,6 +49,7 @@ public:
     QString get_info_text();
 
     Eigen::Vector2d calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);
+    Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
 
     // algorithm for localization
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G); //2D

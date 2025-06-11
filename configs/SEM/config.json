@@ -29,7 +29,7 @@
         "USE_IMU": false
     },
     "localization": {
-        "MODE": "3D",
+        "MODE": "2D",
         "USE_ARUCO": false
     },
     "network": {
@@ -47,11 +47,11 @@
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
-            "TF": "-0.360, 0.2228, 0.0, 0.0, 0.0, -135.0"
+            "TF": "0.360, -0.2228, 0.0, 180.0, 0.0, 45.0"
         },
         {
             "IP": "192.168.2.11",
-            "TF": "0.360, -0.2228, 0.0, 0.0, 0.0, 45.0"
+            "TF": "-0.360, 0.2228, 0.0, 180.0, 0.0, -135.0"
         }
     ],
     "lidar_3d_config": [
@@ -120,7 +120,7 @@
         "LOC_ICP_COST_THRESHOLD_0": "1.0",
         "LOC_ICP_ERROR_THRESHOLD": "0.2",
         "LOC_ICP_MAX_FEATURE_NUM": "1500",
-        "LOC_ICP_ODO_FUSION_RATIO": "0.8",
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5",
         "LOC_SURFEL_NUM": "3",
         "LOC_SURFEL_RANGE": "0.15"
     },
@@ -131,7 +131,7 @@
         "LOC_SURFEL_BALANCE": "0.4",
         "LOC_COST_THRESHOLD": "1.0",
         "LOC_INLIER_CHECK_DIST": "0.3",
-        "LOC_ICP_ODO_FUSION_RATIO": "0.8"   
+        "LOC_ICP_ODO_FUSION_RATIO": "0.5"   
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",
@@ -164,7 +164,7 @@
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
     "control": {
-        "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
+        "DRIVE_EXTENDED_CONTROL_TIME": "3.0",
         "DRIVE_GOAL_APPROACH_GAIN": "1.0",
         "DRIVE_GOAL_D": "0.05",
         "DRIVE_GOAL_TH": "2.0",

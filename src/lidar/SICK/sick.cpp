@@ -68,7 +68,7 @@ RAW_FRAME SICK::get_cur_frm(int idx)
 QString SICK::get_info_text(int idx)
 {
     QString res;
-    res += QString().sprintf("[LIDAR %d]\npts_t: %.3f (%d)\n", idx, cur_frm_t[idx].load(), cur_pts_num[idx].load());
+    res += QString().sprintf("[SICK %d]\npts_t: %.3f (%d)\n", idx, cur_frm_t[idx].load(), cur_pts_num[idx].load());
     res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
 
     return res;

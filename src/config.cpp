@@ -5,6 +5,38 @@ CONFIG::CONFIG(QObject *parent)
 {
 }
 
+bool CONFIG::load_common(QString path)
+{
+    QFile common_file(path);
+    if(!common_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "[CONFIG] Failed to open common file:" << config_path;
+        return false;
+    }
+
+    QByteArray data = common_file.readAll();
+    common_file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
+        return false;
+    }
+
+    QJsonObject obj = doc.object();
+
+    if(obj.contains("PLATFORM_NAME"))
+    {
+        PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
+    }
+
+    // complete
+    common_file.close();
+    return true;
+}
+
 void CONFIG::load()
 {
     QFile config_file(config_path);
@@ -70,9 +102,6 @@ void CONFIG::load()
     {
         USE_LIDAR_2D = obj_sensors["USE_LIDAR_2D"].toBool();
         printf("[CONFIG] USE_LIDAR_2D, %s\n", USE_LIDAR_2D ? "true" : "false");
-
-        IS_LIDAR_2D_FLIP = obj_sensors["IS_LIDAR_2D_FLIP"].toBool();
-        printf("[CONFIG] IS_LIDAR_2D_FLIP, %s\n", IS_LIDAR_2D_FLIP ? "true" : "false");
 
         LIDAR_2D_TYPE = obj_sensors["LIDAR_2D_TYPE"].toString();
         printf("[CONFIG] LIDAR_2D_TYPE, %s\n", LIDAR_2D_TYPE.toLocal8Bit().data());

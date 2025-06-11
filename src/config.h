@@ -20,8 +20,8 @@ public:
     // params (initial value ref from AMR200)
 
     // robot
-    QString PLATFORM_NAME = "TT";
-    QString PLATFORM_TYPE = "AMR400";
+    QString PLATFORM_NAME = "";
+    QString PLATFORM_TYPE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};
@@ -32,7 +32,6 @@ public:
 
     // sensors
     bool USE_LIDAR_2D = false;
-    bool IS_LIDAR_2D_FLIP = false;
     QString LIDAR_2D_TYPE = "";
     int LIDAR_2D_NUM = 1;
 
@@ -220,6 +219,7 @@ public:
 public:
 
     // interface
+    bool load_common(QString path);
     void load();
     QString config_path = "";
     std::atomic<bool> is_load = {false};    

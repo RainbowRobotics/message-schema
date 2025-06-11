@@ -865,7 +865,7 @@ out</string>
         </font>
        </property>
        <property name="text">
-        <string>F</string>
+        <string>▲</string>
        </property>
        <property name="autoRepeat">
         <bool>false</bool>
@@ -889,7 +889,7 @@ out</string>
         </font>
        </property>
        <property name="text">
-        <string>B</string>
+        <string>▼</string>
        </property>
        <property name="autoRepeat">
         <bool>false</bool>
@@ -913,7 +913,7 @@ out</string>
         </font>
        </property>
        <property name="text">
-        <string>L</string>
+        <string>◀</string>
        </property>
        <property name="autoRepeat">
         <bool>false</bool>
@@ -937,7 +937,7 @@ out</string>
         </font>
        </property>
        <property name="text">
-        <string>R</string>
+        <string>▶</string>
        </property>
        <property name="autoRepeat">
         <bool>false</bool>

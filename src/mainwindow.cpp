@@ -6,7 +6,6 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , logger(this)
     , unimap(this)
-    , lidar_2d(this)
     , lidar_3d(this)
     , plot_timer(this)
     , ui(new Ui::MainWindow)
@@ -273,8 +272,15 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // load config
-    config.config_path = QCoreApplication::applicationDirPath() + "/configs/" + QString(ROBOT_PLATFORM) + "/config.json";
-    config.load();
+    if(config.load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
+    {
+        config.config_path = QCoreApplication::applicationDirPath() + "/configs/" + config.PLATFORM_NAME + "/config.json";
+        config.load();
+    }
+    else
+    {
+        QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
+    }
 
     // simulation check
     if(config.USE_SIM)
@@ -299,14 +305,14 @@ void MainWindow::init_modules()
     logger.init();
 
     // unimap module init
-    //unimap.config = &config;
-    //unimap.logger = &logger;
+    unimap.config = &config;
+    unimap.logger = &logger;
 
     // obsmap module init
-    //obsmap.config = &config;
-    //obsmap.logger = &logger;
-    //obsmap.unimap = &unimap;
-    //obsmap.init();
+    obsmap.config = &config;
+    obsmap.logger = &logger;
+    obsmap.unimap = &unimap;
+    obsmap.init();
 
     // mobile module init
     mobile.config = &config;
@@ -314,7 +320,7 @@ void MainWindow::init_modules()
     mobile.open();
 
     // lidar 2d module init
-    /*if(config.USE_LIDAR_2D)
+    if(config.USE_LIDAR_2D)
     {
         lidar_2d.config = &config;
         lidar_2d.logger = &logger;
@@ -328,7 +334,6 @@ void MainWindow::init_modules()
     {
         lidar_3d.config = &config;
         lidar_3d.logger = &logger;
-        // lidar_3d.mobile = &mobile;
         lidar_3d.init();
         lidar_3d.open();
     }
@@ -337,7 +342,14 @@ void MainWindow::init_modules()
     loc.config = &config;
     loc.logger = &logger;
     loc.mobile = &mobile;
-    loc.lidar_3d = &lidar_3d;
+    if(config.LOC_MODE == "2D")
+    {
+        loc.lidar_2d = &lidar_2d;
+    }
+    else if(config.LOC_MODE == "3D")
+    {
+        loc.lidar_3d = &lidar_3d;
+    }
     // loc.cam = &cam;
     loc.unimap = &unimap;
     loc.obsmap = &obsmap;
@@ -366,22 +378,22 @@ void MainWindow::init_modules()
     {
         // sim.lidar_2d = &lidar_2d;
     }
-    sim.loc = &loc;*/
+    sim.loc = &loc;
 
     // start jog loop
-    //jog_flag = true;
-    //jog_thread = new std::thread(&MainWindow::jog_loop, this);
+    jog_flag = true;
+    jog_thread = new std::thread(&MainWindow::jog_loop, this);
 
     // start watchdog loop
-    //watch_flag = true;
-    //watch_thread = new std::thread(&MainWindow::watch_loop, this);
+    watch_flag = true;
+    watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
     // auto load
-    //if(config.MAP_PATH.isEmpty())
-    //{
-    //    return;
-    //}
-    //unimap.load_map(config.MAP_PATH);
+    if(config.MAP_PATH.isEmpty())
+    {
+        return;
+    }
+    unimap.load_map(config.MAP_PATH);
     all_update();
 }
 
@@ -1518,10 +1530,10 @@ void MainWindow::watch_loop()
                     lidar_2d.set_sync_flag(true);
                 }
 
-                if(lidar_3d.is_connected)
-                {
-                    lidar_3d.set_sync_flag(true);
-                }
+                // if(lidar_3d.is_connected)
+                // {
+                //     lidar_3d.set_sync_flag(true);
+                // }
 
                 last_sync_time = get_time();
             }
