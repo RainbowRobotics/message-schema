@@ -32,6 +32,7 @@ public:
 
     // sensors
     bool USE_LIDAR_2D = false;
+    bool IS_LIDAR_2D_FLIP = false;
     QString LIDAR_2D_TYPE = "";
     int LIDAR_2D_NUM = 1;
 

@@ -1924,7 +1924,7 @@ void MOBILE::send_loop()
             std::vector<uchar> msg;
             if(msg_que.try_pop(msg))
             {
-                ::send(fd, msg.data(), msg.size(), 0);                
+                ::send(fd, msg.data(), msg.size(), 0);
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

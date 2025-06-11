@@ -58,9 +58,9 @@ public:
     void a_loop_2d();
     void a_loop_3d();
 
-    std::atomic<bool> loc_b_flag = {false};
-    std::thread* loc_b_thread = NULL;
-    void loc_b_loop();
+    std::atomic<bool> b_flag = {false};
+    std::thread* b_thread = NULL;
+    void b_loop();
 
     std::atomic<bool> obs_flag = {false};
     std::thread* obs_thread = NULL;

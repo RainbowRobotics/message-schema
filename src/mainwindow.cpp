@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , logger(this)
     , unimap(this)
+    , lidar_2d(this)
     , lidar_3d(this)
     , plot_timer(this)
     , ui(new Ui::MainWindow)
@@ -66,11 +67,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&ctrl, SIGNAL(signal_local_path_updated()), this, SLOT(slot_local_path_updated()), Qt::QueuedConnection);
     connect(&ctrl, SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);
 
-
-
     // timer
     connect(&plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
-
 
     // set effect
     init_ui_effect();
@@ -301,28 +299,38 @@ void MainWindow::init_modules()
     logger.init();
 
     // unimap module init
-    unimap.config = &config;
-    unimap.logger = &logger;
+    //unimap.config = &config;
+    //unimap.logger = &logger;
 
     // obsmap module init
-    obsmap.config = &config;
-    obsmap.logger = &logger;
-    obsmap.unimap = &unimap;
-    obsmap.init();
+    //obsmap.config = &config;
+    //obsmap.logger = &logger;
+    //obsmap.unimap = &unimap;
+    //obsmap.init();
 
     // mobile module init
     mobile.config = &config;
     mobile.logger = &logger;
     mobile.open();
 
+    // lidar 2d module init
+    /*if(config.USE_LIDAR_2D)
+    {
+        lidar_2d.config = &config;
+        lidar_2d.logger = &logger;
+        lidar_2d.mobile = &mobile;
+        lidar_2d.init();
+        lidar_2d.open();
+    }
+
     // lidar 3d module init
     if(config.USE_LIDAR_3D)
     {
         lidar_3d.config = &config;
         lidar_3d.logger = &logger;
+        // lidar_3d.mobile = &mobile;
         lidar_3d.init();
         lidar_3d.open();
-        // lidar_3d.mobile = &mobile;
     }
 
     // localization module init
@@ -358,22 +366,22 @@ void MainWindow::init_modules()
     {
         // sim.lidar_2d = &lidar_2d;
     }
-    sim.loc = &loc;
+    sim.loc = &loc;*/
 
     // start jog loop
-    jog_flag = true;
-    jog_thread = new std::thread(&MainWindow::jog_loop, this);
+    //jog_flag = true;
+    //jog_thread = new std::thread(&MainWindow::jog_loop, this);
 
     // start watchdog loop
-    watch_flag = true;
-    watch_thread = new std::thread(&MainWindow::watch_loop, this);
+    //watch_flag = true;
+    //watch_thread = new std::thread(&MainWindow::watch_loop, this);
 
     // auto load
-    if(config.MAP_PATH.isEmpty())
-    {
-        return;
-    }
-    unimap.load_map(config.MAP_PATH);
+    //if(config.MAP_PATH.isEmpty())
+    //{
+    //    return;
+    //}
+    //unimap.load_map(config.MAP_PATH);
     all_update();
 }
 
@@ -930,8 +938,11 @@ void MainWindow::bt_MotorInit()
 void MainWindow::bt_Sync()
 {
     mobile.sync();
-    // lidar.sync_f();
-    // lidar.sync_b();
+
+    if(config.USE_LIDAR_2D)
+    {
+        lidar_2d.set_sync_flag(true);
+    }
 
     if(config.USE_LIDAR_3D)
     {
@@ -1470,17 +1481,49 @@ void MainWindow::watch_loop()
                 }
             }
 
-            // check lidar
+            // check lidar 3d
             if(config.USE_LIDAR_3D)
             {
                 if(lidar_3d.is_connected && !lidar_3d.is_sync)
                 {
-                    if(config.LIDAR_3D_TYPE == "LIVOX")
-                    {
-                        lidar_3d.set_sync_flag(true);
-                        logger.write_log("[WATCH] try time sync, pc and livox lidar");
-                    }
+                    lidar_3d.set_sync_flag(true);
+                    QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(config.LIDAR_3D_TYPE);
+                    printf("%s\n", str.toLocal8Bit().data());
                 }
+            }
+
+            // check lidar 2d
+            if(config.USE_LIDAR_2D)
+            {
+                if(lidar_2d.is_connected && !lidar_2d.is_sync)
+                {
+                    lidar_2d.set_sync_flag(true);
+                    QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(config.LIDAR_2D_TYPE);
+                    printf("%s\n", str.toLocal8Bit().data());
+                }
+            }
+
+            // resync for time skew
+            if(get_time() - last_sync_time > 1200.0 && ctrl.is_moving == false)
+            {
+                printf("[WATCH] resync all\n");
+
+                if(mobile.is_connected)
+                {
+                    mobile.sync();
+                }
+
+                if(lidar_2d.is_connected)
+                {
+                    lidar_2d.set_sync_flag(true);
+                }
+
+                /*if(lidar_3d.is_connected)
+                {
+                    lidar_3d.is_sync = true;
+                }*/
+
+                last_sync_time = get_time();
             }
 
             // check loc
@@ -2170,6 +2213,12 @@ void MainWindow::plot_info()
     }
 
     // 3d lidar info
+    if(config.USE_LIDAR_2D)
+    {
+        ui->lb_LidarInfo_2D->setText(lidar_2d.get_info_text());
+    }
+
+    // 3d lidar info
     if(config.USE_LIDAR_3D)
     {
         ui->lb_LidarInfo_3D->setText(lidar_3d.get_info_text());
@@ -2193,7 +2242,65 @@ void MainWindow::plot_info()
     }
 }
 
-void MainWindow::plot_raw()
+void MainWindow::plot_raw_2d()
+{
+    if(lidar_2d.is_connected && ui->cb_ViewType->currentText() == "VIEW_2D" && !loc.is_loc)
+    {
+        for(int idx = 0; idx < config.LIDAR_2D_NUM; idx++)
+        {
+            RAW_FRAME cur_frm = lidar_2d.get_cur_frm(idx);
+
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < cur_frm.pts.size(); p++)
+            {
+                Eigen::Vector3d P;
+                P[0] = cur_frm.pts[p][0];
+                P[1] = cur_frm.pts[p][1];
+                P[2] = cur_frm.pts[p][2];
+
+                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
+
+                pcl::PointXYZRGB pt;
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
+                if(idx == 0)
+                {
+                    pt.r = 0; pt.g = 127; pt.b = 255;
+                }
+                else
+                {
+                    pt.r = 255; pt.g = 55; pt.b = 0;
+                }
+
+                cloud->push_back(pt);
+            }
+
+            QString cloud_id = QString("lidar_2d_cur_pts_%1").arg(idx);
+            if(!viewer->updatePointCloud(cloud, cloud_id.toStdString()))
+            {
+                viewer->addPointCloud(cloud, cloud_id.toStdString());
+            }
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, cloud_id.toStdString());
+        }
+    }
+    else
+    {
+        // remove 3d lidar cloud
+        for(int idx = 0; idx < config.LIDAR_2D_NUM; idx++)
+        {
+            QString cloud_id = QString("lidar_2d_cur_pts_%1").arg(idx);
+            std::string id = cloud_id.toStdString();
+            if(viewer->contains(id))
+            {
+                viewer->removePointCloud(id);
+            }
+        }
+    }
+}
+
+void MainWindow::plot_raw_3d()
 {
     // plot 3d lidar
     if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D" && !loc.is_loc)
@@ -2232,7 +2339,7 @@ void MainWindow::plot_raw()
                 cloud->push_back(pt);
             }
 
-            QString cloud_id = QString("lidar_cur_pts_%1").arg(idx);
+            QString cloud_id = QString("lidar_3d_cur_pts_%1").arg(idx);
             if(!viewer->updatePointCloud(cloud, cloud_id.toStdString()))
             {
                 viewer->addPointCloud(cloud, cloud_id.toStdString());
@@ -2247,7 +2354,7 @@ void MainWindow::plot_raw()
         // remove 3d lidar cloud
         for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
         {
-            QString cloud_id = QString("lidar_cur_pts_%1").arg(idx);
+            QString cloud_id = QString("lidar_3d_cur_pts_%1").arg(idx);
             std::string id = cloud_id.toStdString();
 
             if(viewer->contains(id))
@@ -2655,7 +2762,8 @@ void MainWindow::plot_loop()
     plot_topo();
     plot_pick();
     plot_info();
-    plot_raw();
+    plot_raw_2d();
+    plot_raw_3d();
     plot_loc();
     plot_obs();
     plot_ctrl();

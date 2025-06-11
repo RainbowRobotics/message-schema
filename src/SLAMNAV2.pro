@@ -32,6 +32,8 @@ message($$HOME)
 
 SOURCES += \
     autocontrol.cpp \
+    lidar/SICK/sick.cpp \
+    lidar_2d.cpp \
     localization.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -51,6 +53,8 @@ SOURCES += \
 HEADERS += \
     autocontrol.h \
     comm_data.h \
+    lidar/SICK/sick.h \
+    lidar_2d.h \
     localization.h \
     mainwindow.h \
     config.h \

@@ -2321,7 +2321,7 @@ start</string>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLabel" name="lb_LidarInfo_3D">
+             <widget class="QLabel" name="lb_LidarInfo_2D">
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
@@ -2334,7 +2334,7 @@ start</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[3D LIDAR INFO]</string>
+               <string>[2D LIDAR INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -2356,6 +2356,27 @@ start</string>
               </property>
               <property name="text">
                <string>[SYSTEM_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="lb_LidarInfo_3D">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[3D LIDAR INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

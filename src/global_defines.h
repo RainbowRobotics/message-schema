@@ -784,9 +784,13 @@ struct RAW_FRAME
 {
     double t0 = 0;
     double t1 = 0;
+
+    Eigen::Vector3d pose0;
+    Eigen::Vector3d pose1;
+
     std::vector<double> times;
     std::vector<double> reflects;
-    std::vector<Eigen::Vector3d> dsk; // deskewed local pts
+    std::vector<Eigen::Vector3d> pts; // deskewed local pts
     MOBILE_POSE mo; // mobile pose at t0
 
     RAW_FRAME()
@@ -796,18 +800,22 @@ struct RAW_FRAME
     {
         t0 = p.t0;
         t1 = p.t1;
+        pose0 = p.pose0;
+        pose1 = p.pose1;
         times = p.times;
         reflects = p.reflects;
-        dsk = p.dsk;
+        pts = p.pts;
         mo = p.mo;
     }
     RAW_FRAME& operator=(const RAW_FRAME& p)
     {
         t0 = p.t0;
         t1 = p.t1;
+        pose0 = p.pose0;
+        pose1 = p.pose1;
         times = p.times;
         reflects = p.reflects;
-        dsk = p.dsk;
+        pts = p.pts;
         mo = p.mo;
         return *this;
     }

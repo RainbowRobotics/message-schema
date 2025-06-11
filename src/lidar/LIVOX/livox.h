@@ -59,7 +59,7 @@ public:
 
     // params
     std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_sync = {false};
+    std::atomic<bool> is_sync[2] = {false, false};
 
     std::atomic<double> offset_t[2] = {0, 0};
     std::atomic<double> cur_frm_t[2] = {0, 0};
