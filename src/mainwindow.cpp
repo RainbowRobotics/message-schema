@@ -376,7 +376,7 @@ void MainWindow::init_modules()
     }
     else
     {
-        // sim.lidar_2d = &lidar_2d;
+        sim.lidar_2d = &lidar_2d;
     }
     sim.loc = &loc;
 
@@ -1530,10 +1530,10 @@ void MainWindow::watch_loop()
                     lidar_2d.set_sync_flag(true);
                 }
 
-                // if(lidar_3d.is_connected)
-                // {
-                //     lidar_3d.set_sync_flag(true);
-                // }
+                if(lidar_3d.is_connected)
+                {
+                    lidar_3d.set_sync_flag(true);
+                }
 
                 last_sync_time = get_time();
             }
@@ -1742,7 +1742,6 @@ void MainWindow::watch_loop()
                     QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                     ui->lb_SystemInfo->setText(system_info_str);
                 }
-
 
                 // set led
                 if(is_user_led)

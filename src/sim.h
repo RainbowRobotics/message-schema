@@ -7,7 +7,7 @@
 #include "config.h"
 #include "logger.h"
 #include "mobile.h"
-// #include "lidar_2d.h"
+#include "lidar_2d.h"
 #include "lidar_3d.h"
 #include "localization.h"
 #include "unimap.h"
@@ -26,7 +26,7 @@ public:
     CONFIG *config = NULL;
     LOGGER *logger = NULL;
     MOBILE *mobile = NULL;
-    // LIDAR_2D *lidar_2d = NULL;
+    LIDAR_2D *lidar_2d = NULL;
     LIDAR_3D *lidar_3d = NULL;
     LOCALIZATION *loc = NULL;
     UNIMAP *unimap = NULL;\

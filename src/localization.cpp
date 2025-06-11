@@ -291,7 +291,7 @@ void LOCALIZATION::a_loop_3d()
 {
     IMU pre_imu;
     Eigen::Matrix4d _cur_tf = get_cur_tf();
-    Eigen::Matrix4d _pre_tf = _cur_tf;
+    // Eigen::Matrix4d _pre_tf = _cur_tf;
 
     // lidar localization (10hz)
     lidar_3d->merged_que.clear();
@@ -338,13 +338,13 @@ void LOCALIZATION::a_loop_3d()
                 // for loc b loop
                 TIME_POSE tp;
                 tp.t = frm.t;
-                tp.tf = _cur_tf;
+                tp.tf = G;
                 tp_que.push(tp);
 
                 // for obs loop
                 TIME_POSE_PTS tpp;
                 tpp.t = frm.t;
-                tpp.tf = _cur_tf;
+                tpp.tf = G;
                 tpp.pts = dsk;
                 tpp_que.push(tpp);
 
@@ -362,7 +362,7 @@ void LOCALIZATION::a_loop_3d()
                 plot_cur_pts_que.push(pts);
 
                 // for next
-                _pre_tf = _cur_tf;
+                // _pre_tf = _cur_tf;
                 _cur_tf = G;
                 pre_imu = cur_imu;
             }
