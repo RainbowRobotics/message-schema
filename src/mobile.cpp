@@ -311,6 +311,9 @@ void MOBILE::recv_loop()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
+        }else if(num < 0)
+        {
+            std::cout << "!!!!!!!!!!!!!!! num < 0" << std::endl;
         }
 
         // initial drop
@@ -366,6 +369,8 @@ void MOBILE::recv_loop()
                         }else if(data_size == 179){
                             // Safety
                             robot_type = ROBOT_TYPE_SAFETY;
+                        }else{
+                            std::cout << "robot_type: " << robot_type << ", data_size: " << data_size << std::endl;
                         }
 //                        qDebug() << "robot_type: " << robot_type << ", data_size: " << data_size;
 

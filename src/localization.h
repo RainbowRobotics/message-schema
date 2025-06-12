@@ -91,7 +91,7 @@ public:
     std::atomic<double> proc_time_loc_b = {0};
     std::atomic<double> proc_time_obs = {0};
 
-private:
+// private:
     const int max_iter0 = 50;
     const double lambda0 = 0.1; // 0.1
     const double lambda_dec = 0.1; // 0.01 ~ 0.1

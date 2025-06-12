@@ -14,6 +14,7 @@
 #include "lidar_2d.h"
 #include "lidar_3d.h"
 #include "localization.h"
+#include "mapping.h"
 #include "autocontrol.h"
 #include "sim.h"
 
@@ -52,6 +53,7 @@ public:
     LIDAR_2D lidar_2d;
     LIDAR_3D lidar_3d;
     LOCALIZATION loc;
+    MAPPING mapping;
     AUTOCONTROL ctrl;
     SIM sim;
 
@@ -80,6 +82,7 @@ public:
     void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
 
+    // vars
     std::atomic<double> plot_proc_t = {0};
 
     // flags
@@ -170,11 +173,14 @@ public Q_SLOTS:
     void bt_JogR();
     void bt_JogReleased();
 
-    // mapping & localization
-    void bt_MapLoad();
-
     // for simulation
     void bt_SimInit();
+
+    // mapping
+    void bt_MapBuild();
+    void bt_MapSave();
+     void bt_MapLoad();
+    void bt_MapLastLc();
 
     // localization
     void bt_LocInit();

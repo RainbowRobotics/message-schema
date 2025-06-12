@@ -334,40 +334,58 @@ bool UNIMAP::load_topo()
 
 void UNIMAP::save_map()
 {
-    // get save folder
-    QString path = map_dir;
+    /*
+    // get all points and sampling
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
+    const double voxel_size = config->SLAM_VOXEL_SIZE;
 
-    // save cloud csv
-    QString cloud_csv_path = path + "/cloud.csv";
-    QFile cloud_csv_file(cloud_csv_path);
-    if(cloud_csv_file.open(QIODevice::WriteOnly))
+    std::unordered_map<int64_t, uint8_t> hash_map;
+    std::vector<PT_XYZR> pts;
+    for(size_t p = 0; p < slam.kfrm_storage.size(); p++)
     {
-        mtx.lock();
-        for(size_t p = 0; p < kdtree_cloud.pts.size(); p++)
+        Eigen::Matrix4d G = slam.kfrm_storage[p].opt_G;
+        for(size_t q = 0; q < slam.kfrm_storage[p].pts.size(); q++)
         {
-            if(kdtree_mask[p] == 0)
+            Eigen::Vector3d P;
+            P[0] = slam.kfrm_storage[p].pts[q].x;
+            P[1] = slam.kfrm_storage[p].pts[q].y;
+            P[2] = slam.kfrm_storage[p].pts[q].z;
+
+            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+
+            int64_t x = std::floor(_P[0]/voxel_size);
+            int64_t y = std::floor(_P[1]/voxel_size);
+            int64_t z = std::floor(_P[2]/voxel_size);
+            int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+            if(hash_map.find(key) == hash_map.end())
             {
-                continue;
+                hash_map[key] = 1;
+
+                PT_XYZR pt;
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
+                pt.r = slam.kfrm_storage[p].pts[q].r;
+                pts.push_back(pt);
             }
-
-            PT_XYZR pt = kdtree_cloud.pts[p];
-
-            double x = pt.x;
-            double y = pt.y;
-            double z = pt.z;
-            double r = pt.r;
-
-            QString str;
-            str.sprintf("%f,%f,%f,%f\n", x, y, z, r);
-            cloud_csv_file.write(str.toUtf8());
         }
 
-        for(size_t p = 0; p < additional_cloud.size(); p++)
+        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)slam.kfrm_storage.size());
+    }
+
+    // write file
+    QString cloud_csv_path = map_dir + "/cloud.csv";
+    QFile cloud_csv_file(cloud_csv_path);
+    if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    {
+        for(size_t p = 0; p < pts.size(); p++)
         {
-            double x = additional_cloud[p][0];
-            double y = additional_cloud[p][1];
-            double z = additional_cloud[p][2];
-            double r = 128;
+            double x = pts[p].x;
+            double y = pts[p].y;
+            double z = pts[p].z;
+            double r = pts[p].r;
 
             QString str;
             str.sprintf("%f,%f,%f,%f\n", x, y, z, r);
@@ -375,9 +393,9 @@ void UNIMAP::save_map()
         }
 
         cloud_csv_file.close();
-        printf("[UNIMAP] %s saved\n", cloud_csv_path.toLocal8Bit().data());
-        mtx.unlock();
+        printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
     }
+    */
 }
 
 void UNIMAP::save_annotation()

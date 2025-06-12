@@ -36,8 +36,10 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     config.cpp \
+    mapping.cpp \
     my_utils.cpp \
     imu_filter.cpp \
+    pgo.cpp \
     cv_to_qt.cpp \
     logger.cpp \
     unimap.cpp \
@@ -57,8 +59,10 @@ HEADERS += \
     mainwindow.h \
     config.h \
     global_defines.h \
+    mapping.h \
     my_utils.h \
     imu_filter.h \
+    pgo.h \
     cv_to_qt.h \
     nanoflann.hpp \
     tinycolormap.hpp \

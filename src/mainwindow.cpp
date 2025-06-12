@@ -6,14 +6,17 @@ MainWindow::MainWindow(QWidget *parent)
     , config(this)
     , logger(this)
     , unimap(this)
+    , obsmap(this)
+    , mobile(this)
+    , lidar_2d(this)
     , lidar_3d(this)
+    , loc(this)
+    , mapping(this)
+    , ctrl(this)
     , plot_timer(this)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
-    // mapping
-    connect(ui->bt_MapLoad, SIGNAL(clicked()), this, SLOT(bt_MapLoad()));
 
     // for 3d viewer
     connect(ui->cb_ViewType, SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));
@@ -45,6 +48,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->bt_JogB, SIGNAL(released()), this, SLOT(bt_JogReleased()));
     connect(ui->bt_JogL, SIGNAL(released()), this, SLOT(bt_JogReleased()));
     connect(ui->bt_JogR, SIGNAL(released()), this, SLOT(bt_JogReleased()));
+
+    connect(ui->bt_MapBuild, SIGNAL(clicked()), this, SLOT(bt_MapBuild()));
+    connect(ui->bt_MapSave, SIGNAL(clicked()), this, SLOT(bt_MapSave()));
+    connect(ui->bt_MapLoad, SIGNAL(clicked()), this, SLOT(bt_MapLoad()));
+    connect(ui->bt_MapLastLc, SIGNAL(clicked()), this, SLOT(bt_MapLastLc()));
 
     // localization
     connect(ui->bt_LocInit, SIGNAL(clicked()), this, SLOT(bt_LocInit()));
@@ -353,6 +361,16 @@ void MainWindow::init_modules()
     // loc.cam = &cam;
     loc.unimap = &unimap;
     loc.obsmap = &obsmap;
+
+    // mapping module init
+    if(config.USE_LIDAR_2D)
+    {
+        mapping.config = &config;
+        mapping.logger = &logger;
+        mapping.unimap = &unimap;
+        mapping.lidar_2d = &lidar_2d;
+        mapping.loc = &loc;
+    }
 
     // autocontrol module init
     ctrl.config = &config;
@@ -871,22 +889,6 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
     return cur_vel;
 }
 
-void MainWindow::bt_MapLoad()
-{
-    QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
-    if(!path.isNull())
-    {
-        // slam.localization_stop();
-        // obsmap.clear();
-
-        config.set_map_path(path);
-
-        // map_dir = path;
-        unimap.load_map(path);
-        all_update();
-    }
-}
-
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
@@ -1050,6 +1052,76 @@ void MainWindow::bt_JogReleased()
 {
     is_jog_pressed = false;
     update_jog_values(0, 0, 0);
+}
+
+// mapping
+void MainWindow::bt_MapBuild()
+{
+    if(config.USE_SIM == 1)
+    {
+        logger.write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
+        return;
+    }
+
+    // clear first
+    unimap.clear();
+    all_plot_clear();
+
+    // auto generation dir path
+    QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
+    QDir().mkpath(_map_dir);
+    unimap.map_dir = _map_dir;
+
+    // mapping start
+    mapping.start();
+}
+
+
+void MainWindow::bt_MapSave()
+{
+    if(config.USE_SIM == 1)
+    {
+        logger.write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
+        return;
+    }
+
+    // check
+    if(unimap.map_dir == "")
+    {
+        logger.write_log("[MAIN] no map_dir", "Red", true, false);
+        return;
+    }
+
+    // stop first
+    mapping.stop();
+
+    // check kfrm
+    if(mapping.kfrm_storage.size() == 0)
+    {
+        printf("[MAIN] no keyframe\n");
+        return;
+    }
+}
+
+void MainWindow::bt_MapLoad()
+{
+    QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+    if(!path.isNull())
+    {
+        loc.stop();
+        obsmap.clear();
+
+        config.set_map_path(path);
+
+        // map_dir = path;
+        unimap.load_map(path);
+        all_update();
+    }
+}
+
+void MainWindow::bt_MapLastLc()
+{
+    mapping.last_lc();
 }
 
 // localization
