@@ -181,7 +181,8 @@ int MOBILE::get_imu_storage_size()
 
 // for plot
 
-QString MOBILE::get_pose_text(){
+QString MOBILE::get_pose_text()
+{
     return pose_text;
 }
 
@@ -189,8 +190,6 @@ QString MOBILE::get_status_text()
 {
     return status_text;
 }
-
-
 
 // recv loop
 void MOBILE::recv_loop()
@@ -770,7 +769,9 @@ void MOBILE::recv_loop()
                                             mobile_pose.t,
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D);
+                                mtx.lock();
                                 pose_text = strP;
+                                mtx.unlock();
 
                                 strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
@@ -779,7 +780,9 @@ void MOBILE::recv_loop()
                                             mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                                             mobile_status.power, mobile_status.total_power,
                                             mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
+                                mtx.lock();
                                 status_text = strS;
+                                mtx.unlock();
                             }else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_SAFETY){
                                 QString strP, strS;
                                 strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
@@ -787,7 +790,9 @@ void MOBILE::recv_loop()
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
                                             r[0]*R2D, r[1]*R2D, r[2]*R2D);
+                                mtx.lock();
                                 pose_text = strP;
+                                mtx.unlock();
 
                                 strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
@@ -797,7 +802,9 @@ void MOBILE::recv_loop()
                                             mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                                             mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                                             mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z);
+                                mtx.lock();
                                 status_text = strS;
+                                mtx.unlock();
                             }else if(robot_type == ROBOT_TYPE_MECANUM){
                                 QString strP, strS;
                                 strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
@@ -805,7 +812,9 @@ void MOBILE::recv_loop()
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
                                             r[0]*R2D, r[1]*R2D, r[2]*R2D);
+                                mtx.lock();
                                 pose_text = strP;
+                                mtx.unlock();
 
                                 strS.sprintf("[MOBILE_STATUS]\nconnection:%d,%d,%d,%d\nstatus:%d,%d,%d,%d\ntemp:%d,%d,%d,%d, cur:%.2f,%.2f,%2f,%2f\ncharge,power,emo,remote:%d,%d,%d,%d\ncharge cur,vol:%.2f,%.2f\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\nTFB:%d",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.connection_m2, mobile_status.connection_m3,
@@ -819,7 +828,9 @@ void MOBILE::recv_loop()
                                             mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                                             mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
                                             mobile_status.inter_lock_state);
+                                mtx.lock();
                                 status_text = strS;
+                                mtx.unlock();
                             }
 
 

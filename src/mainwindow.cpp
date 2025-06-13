@@ -1101,6 +1101,67 @@ void MainWindow::bt_MapSave()
         printf("[MAIN] no keyframe\n");
         return;
     }
+
+    // get all points and sampling
+    const int64_t p1 = 73856093;
+    const int64_t p2 = 19349669;
+    const int64_t p3 = 83492791;
+    const double voxel_size = config.SLAM_VOXEL_SIZE;
+
+    std::unordered_map<int64_t, uint8_t> hash_map;
+    std::vector<PT_XYZR> pts;
+    for(size_t p = 0; p < mapping.kfrm_storage.size(); p++)
+    {
+        Eigen::Matrix4d G = mapping.kfrm_storage[p].opt_G;
+        for(size_t q = 0; q < mapping.kfrm_storage[p].pts.size(); q++)
+        {
+            Eigen::Vector3d P;
+            P[0] = mapping.kfrm_storage[p].pts[q].x;
+            P[1] = mapping.kfrm_storage[p].pts[q].y;
+            P[2] = mapping.kfrm_storage[p].pts[q].z;
+
+            Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+
+            int64_t x = std::floor(_P[0]/voxel_size);
+            int64_t y = std::floor(_P[1]/voxel_size);
+            int64_t z = std::floor(_P[2]/voxel_size);
+            int64_t key = x*p1 ^ y*p2 ^ z*p3; // unlimited bucket size
+            if(hash_map.find(key) == hash_map.end())
+            {
+                hash_map[key] = 1;
+
+                PT_XYZR pt;
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
+                pt.r = mapping.kfrm_storage[p].pts[q].r;
+                pts.push_back(pt);
+            }
+        }
+
+        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)mapping.kfrm_storage.size());
+    }
+
+    // write file
+    QString cloud_csv_path = unimap.map_dir + "/cloud.csv";
+    QFile cloud_csv_file(cloud_csv_path);
+    if(cloud_csv_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    {
+        for(size_t p = 0; p < pts.size(); p++)
+        {
+            double x = pts[p].x;
+            double y = pts[p].y;
+            double z = pts[p].z;
+            double r = pts[p].r;
+
+            QString str;
+            str.sprintf("%f,%f,%f,%f\n", x, y, z, r);
+            cloud_csv_file.write(str.toUtf8());
+        }
+
+        cloud_csv_file.close();
+        printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
+    }
 }
 
 void MainWindow::bt_MapLoad()
@@ -1113,7 +1174,6 @@ void MainWindow::bt_MapLoad()
 
         config.set_map_path(path);
 
-        // map_dir = path;
         unimap.load_map(path);
         all_update();
     }
