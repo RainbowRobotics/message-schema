@@ -38,6 +38,7 @@ public:
     void start();
     void stop();
     void clear();
+    QString get_info_text();
 
     // loop
     std::atomic<bool> a_flag = {false};

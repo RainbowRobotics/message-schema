@@ -8,12 +8,7 @@ LOCALIZATION::LOCALIZATION(QObject *parent) : QObject{parent}
 LOCALIZATION::~LOCALIZATION()
 {
     // stop loc loops
-    if(a_thread != NULL)
-    {
-        a_flag = false;
-        a_thread->join();
-        a_thread = NULL;
-    }
+    stop();
 }
 
 void LOCALIZATION::start()
@@ -75,6 +70,20 @@ void LOCALIZATION::stop()
         a_thread = NULL;
     }
 
+    if(b_thread != NULL)
+    {
+        b_flag = false;
+        b_thread->join();
+        b_thread = NULL;
+    }
+
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
+    }
+
     printf("[LOCALIZATION(%s)] stop\n", config->LOC_MODE.toStdString().c_str());
 }
 
@@ -129,7 +138,7 @@ QString LOCALIZATION::get_info_text()
     QString str;
     str.sprintf("[LOC]\npos:%.2f,%.2f,%.2f\nerr:%f\nloc_t: %.3f, %.3f, %.3f\nieir: (%.3f, %.3f)\nloc_state: %s",
                 cur_xi[0], cur_xi[1], cur_xi[2]*R2D,
-                (double)cur_tf_err, (double)proc_time_loc_a, (double)proc_time_loc_b, (double)proc_time_obs,
+                (double)cur_tf_err.load(), (double)proc_time_loc_a.load(), (double)proc_time_loc_b.load(), (double)proc_time_obs.load(),
                 cur_ieir[0], cur_ieir[1],
                 loc_state.toLocal8Bit().data());
     return str;
@@ -273,6 +282,9 @@ void LOCALIZATION::a_loop_2d()
                     pts[p] = _P;
                 }
                 plot_cur_pts_que.push(pts);
+
+                // for next
+                // _cur_tf = G;
             }
 
             // set localization info for plot

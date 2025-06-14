@@ -183,12 +183,24 @@ int MOBILE::get_imu_storage_size()
 
 QString MOBILE::get_pose_text()
 {
-    return pose_text;
+    QString res;
+
+    mtx.lock();
+    res = pose_text;
+    mtx.unlock();
+
+    return res;
 }
 
 QString MOBILE::get_status_text()
 {
-    return status_text;
+    QString res;
+
+    mtx.lock();
+    res = status_text;
+    mtx.unlock();
+
+    return res;
 }
 
 // recv loop

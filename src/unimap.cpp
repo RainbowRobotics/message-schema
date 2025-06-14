@@ -7,11 +7,7 @@ UNIMAP::UNIMAP(QObject *parent) : QObject(parent)
 
 UNIMAP::~UNIMAP()
 {
-    if(tree_3d != NULL)
-    {
-        delete tree_3d;
-        tree_3d = NULL;
-    }
+    clear();
 }
 
 void UNIMAP::clear()
@@ -58,7 +54,7 @@ void UNIMAP::clear()
 void UNIMAP::load_map(QString path)
 {
     // clear flag
-    is_loaded = MAP_LOADING;
+    is_loaded.store(MAP_LOADING);
 
     // set load map dir
     map_dir = path;
@@ -69,15 +65,15 @@ void UNIMAP::load_map(QString path)
 
     if(config->LOC_MODE == "2D" && loaded_2d)
     {
-        is_loaded = MAP_LOADED;
+        is_loaded.store(MAP_LOADED);
     }
     else if(config->LOC_MODE == "3D" && loaded_3d)
     {
-        is_loaded = MAP_LOADED;
+        is_loaded.store(MAP_LOADED);
     }
     else
     {
-        is_loaded = MAP_NOT_LOADED;
+        is_loaded.store(MAP_NOT_LOADED);
     }
 }
 

@@ -1063,6 +1063,9 @@ void MainWindow::bt_MapBuild()
         return;
     }
 
+    // stop first
+    mapping.stop();
+
     // clear first
     unimap.clear();
     all_plot_clear();
@@ -1075,7 +1078,6 @@ void MainWindow::bt_MapBuild()
     // mapping start
     mapping.start();
 }
-
 
 void MainWindow::bt_MapSave()
 {
@@ -1169,6 +1171,7 @@ void MainWindow::bt_MapLoad()
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
     if(!path.isNull())
     {
+        // clear first
         loc.stop();
         obsmap.clear();
 
@@ -1704,6 +1707,7 @@ void MainWindow::watch_loop()
             }
 
             // check system info
+            /*
             {
                 MOBILE_STATUS ms = mobile.get_status();
 
@@ -1874,17 +1878,9 @@ void MainWindow::watch_loop()
                     QString system_info_str = "[SYSTEM_INFO]\n" + temp_str + "\n" + power_str + "\n" + cpu_usage_str;
                     ui->lb_SystemInfo->setText(system_info_str);
                 }
-
-                // set led
-                if(is_user_led)
-                {
-                    mobile.led(0, (int)user_led_color);
-                }
-                else
-                {
-                    mobile.led(0, led_color);
-                }
             }
+            */
+
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -2347,12 +2343,19 @@ void MainWindow::plot_info()
     // plot slam info
     {
         // mapping
+        QString text;
+        if(mapping.is_mapping)
+        {
+            text = mapping.get_info_text();
+        }
 
         // localization
         if(loc.is_loc)
         {
-            ui->lb_SlamInfo->setText(loc.get_info_text());
+            text += "\n" + loc.get_info_text();
         }
+
+        ui->lb_SlamInfo->setText(text);
     }
 
     // 3d lidar info
@@ -2387,7 +2390,7 @@ void MainWindow::plot_info()
 
 void MainWindow::plot_raw_2d()
 {
-    if(lidar_2d.is_connected && ui->cb_ViewType->currentText() == "VIEW_2D" && !loc.is_loc)
+    if(lidar_2d.is_connected && ui->cb_ViewType->currentText() == "VIEW_2D" && !mapping.is_mapping && !loc.is_loc)
     {
         for(int idx = 0; idx < config.LIDAR_2D_NUM; idx++)
         {
@@ -2401,12 +2404,10 @@ void MainWindow::plot_raw_2d()
                 P[1] = cur_frm.pts[p][1];
                 P[2] = cur_frm.pts[p][2];
 
-                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
-
                 pcl::PointXYZRGB pt;
-                pt.x = _P[0];
-                pt.y = _P[1];
-                pt.z = _P[2];
+                pt.x = P[0];
+                pt.y = P[1];
+                pt.z = P[2];
                 if(idx == 0)
                 {
                     pt.r = 0; pt.g = 127; pt.b = 255;
@@ -2446,7 +2447,7 @@ void MainWindow::plot_raw_2d()
 void MainWindow::plot_raw_3d()
 {
     // plot 3d lidar
-    if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D" && !loc.is_loc)
+    if(lidar_3d.is_connected && ui->cb_ViewType->currentText() == "VIEW_3D" && !mapping.is_mapping && !loc.is_loc)
     {
         for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
         {
@@ -2461,12 +2462,10 @@ void MainWindow::plot_raw_3d()
                 P[1] = cur_frm.pts[p].y;
                 P[2] = cur_frm.pts[p].z;
 
-                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
-
                 pcl::PointXYZRGB pt;
-                pt.x = _P[0];
-                pt.y = _P[1];
-                pt.z = _P[2];
+                pt.x = P[0];
+                pt.y = P[1];
+                pt.z = P[2];
                 // pt.r = lidar_color.r;
                 // pt.g = lidar_color.g;
                 // pt.b = lidar_color.b;
@@ -2508,11 +2507,160 @@ void MainWindow::plot_raw_3d()
     }
 }
 
+void MainWindow::plot_mapping()
+{
+    if(mapping.is_mapping)
+    {
+        mapping.mtx.lock();
+
+        // plot live cloud
+        if(ui->ckb_PlotLive->isChecked())
+        {
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            for(size_t p = 0; p < mapping.live_cloud.pts.size(); p++)
+            {
+                // set pos
+                pcl::PointXYZRGB pt;
+                pt.x = mapping.live_cloud.pts[p].x;
+                pt.y = mapping.live_cloud.pts[p].y;
+                pt.z = mapping.live_cloud.pts[p].z;
+
+                // set color
+                double reflect = std::sqrt(mapping.live_cloud.pts[p].r/255);
+                tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+                pt.r = c.r()*255;
+                pt.g = c.g()*255;
+                pt.b = c.b()*255;
+
+                // dynamic object
+                if(mapping.live_cloud.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
+                {
+                    pt.r = 255;
+                    pt.g = 0;
+                    pt.b = 0;
+                }
+
+                cloud->push_back(pt);
+            }
+
+            if(!viewer->updatePointCloud(cloud, "live_tree_pts"))
+            {
+                viewer->addPointCloud(cloud, "live_tree_pts");
+            }
+
+            // point size
+            viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "live_tree_pts");
+        }
+        else
+        {
+            // remove realtime slam pts
+            if(viewer->contains("live_tree_pts"))
+            {
+                viewer->removePointCloud("live_tree_pts");
+            }
+        }
+
+        // plot keyframe pts
+        {
+            int kfrm_id;
+            if(mapping.kfrm_update_que.try_pop(kfrm_id))
+            {
+                QString name;
+                name.sprintf("kfrm_%d", kfrm_id);
+                if(!viewer->contains(name.toStdString()))
+                {
+                    KFRAME kfrm = mapping.kfrm_storage[kfrm_id];
+
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                    for(size_t p = 0; p < kfrm.pts.size(); p++)
+                    {
+                        // no drawing dynamic object
+                        if(kfrm.pts[p].do_cnt < config.SLAM_ICP_DO_ACCUM_NUM)
+                        {
+                            continue;
+                        }
+
+                        // set pos
+                        pcl::PointXYZRGB pt;
+                        pt.x = kfrm.pts[p].x;
+                        pt.y = kfrm.pts[p].y;
+                        pt.z = kfrm.pts[p].z;
+
+                        // set color
+                        double reflect = std::sqrt(kfrm.pts[p].r/255);
+                        tinycolormap::Color c = tinycolormap::GetColor(reflect, tinycolormap::ColormapType::Viridis);
+
+                        pt.r = c.r()*255;
+                        pt.g = c.g()*255;
+                        pt.b = c.b()*255;
+
+                        cloud->push_back(pt);
+                    }
+
+                    if(!viewer->updatePointCloud(cloud, name.toStdString()))
+                    {
+                        viewer->addPointCloud(cloud, name.toStdString());
+                        viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(mapping.kfrm_storage[kfrm_id].opt_G.cast<float>()));
+                        last_plot_kfrms.push_back(name);
+                    }
+
+                    // point size
+                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                }
+                else
+                {
+                    viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(mapping.kfrm_storage[kfrm_id].opt_G.cast<float>()));
+
+                    // point size
+                    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                }
+            }
+        }
+
+        mapping.mtx.unlock();
+    }
+    else
+    {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+    }
+}
+
 void MainWindow::plot_loc()
 {
     loc.plot_cur_pts_que.try_pop(plot_cur_pts);
-    if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0)
+    if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0 && loc.is_loc && !mapping.is_mapping)
     {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(viewer->contains(id.toStdString()))
+            {
+                viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(viewer->contains("live_tree_pts"))
+        {
+            viewer->removePointCloud("live_tree_pts");
+        }
+
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(size_t p = 0; p < plot_cur_pts.size(); p++)
         {
@@ -2907,6 +3055,7 @@ void MainWindow::plot_loop()
     plot_info();
     plot_raw_2d();
     plot_raw_3d();
+    plot_mapping();
     plot_loc();
     plot_obs();
     plot_ctrl();

@@ -110,6 +110,8 @@ public:
     std::atomic<bool> is_jog_pressed = {false};
 
     // plot object names
+    std::vector<QString> last_plot_kfrms;
+
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_names;
 
@@ -133,6 +135,7 @@ public:
     void plot_raw_2d();
     void plot_raw_3d();
     void plot_loc();
+    void plot_mapping();
     void plot_obs();
     void plot_ctrl();
 

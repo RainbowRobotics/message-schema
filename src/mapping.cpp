@@ -16,44 +16,32 @@ MAPPING::~MAPPING()
 
 void MAPPING::start()
 {
+    // clear objects
+    clear();
 
-    if(is_mapping == false)
+    // stop loc
+    loc->stop();
+
+    // start loop
+    if(a_thread == NULL)
     {
-        printf("[MAPPING] start\n");
-
-        // stop first
-        stop();
-
-        // clear objects
-        clear();
-
-        // start loop
-        if(a_thread == NULL)
-        {
-            a_flag = true;
-            a_thread = new std::thread(&MAPPING::a_loop, this);
-        }
-
-        if(b_thread == NULL)
-        {
-            b_flag = true;
-            b_thread = new std::thread(&MAPPING::b_loop, this);
-        }
-
-        // set flag
-        is_mapping = true;
+        a_flag = true;
+        a_thread = new std::thread(&MAPPING::a_loop, this);
     }
-    else
+
+    if(b_thread == NULL)
     {
-        printf("[MAPPING] already running\n");
+        b_flag = true;
+        b_thread = new std::thread(&MAPPING::b_loop, this);
     }
+
+    // set flag
+    is_mapping = true;
+    printf("[MAPPING] start\n");
 }
 
 void MAPPING::stop()
 {
-    // stop loc
-    loc->stop();
-
     // stop slam loops
     if(a_thread != NULL)
     {
@@ -70,6 +58,7 @@ void MAPPING::stop()
     }
 
     is_mapping = false;
+    printf("[MAPPING] stop\n");
 }
 
 void MAPPING::clear()
@@ -93,6 +82,18 @@ void MAPPING::clear()
     mtx.unlock();
 
     loc->set_cur_tf(Eigen::Matrix4d::Identity());
+
+    printf("[MAPPING] clear\n");
+}
+
+QString MAPPING::get_info_text()
+{
+    QString res;
+    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d",
+                (double)proc_time_map_a.load(), (double)proc_time_map_b.load(),
+                (int)kfrm_que.unsafe_size(), (int)kfrm_storage.size());
+
+    return res;
 }
 
 void MAPPING::a_loop()
@@ -129,7 +130,7 @@ void MAPPING::a_loop()
 
                 // local to global
                 std::vector<PT_XYZR> dsk;
-                #pragma omp parallel for
+                // #pragma omp parallel for
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Vector3d _P = frm.pts[p];
@@ -200,7 +201,7 @@ void MAPPING::a_loop()
                     {
                         // local to global
                         std::vector<PT_XYZR> dsk;
-                        #pragma omp parallel for
+                        // #pragma omp parallel for
                         for(size_t p = 0; p < frm.pts.size(); p++)
                         {
                             Eigen::Vector3d _P = frm.pts[p];
