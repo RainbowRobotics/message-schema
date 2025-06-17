@@ -36,7 +36,7 @@ public:
     void open();
     void close();
 
-    LVX_FRM get_cur_frm(int idx);
+    LVX_FRM get_cur_raw(int idx);
     IMU get_cur_imu(int idx);
 
     IMU get_best_imu(double ref_t);

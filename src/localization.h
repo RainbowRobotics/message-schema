@@ -43,6 +43,7 @@ public:
 
     void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
+    Eigen::Matrix4d get_best_tf(double t);
     Eigen::Vector2d get_cur_ieir();
     QString get_cur_loc_state();
     void set_cur_loc_state(QString str);

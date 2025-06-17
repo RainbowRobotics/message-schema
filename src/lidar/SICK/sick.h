@@ -43,7 +43,6 @@ public:
     void close();
     void sync(int idx);
 
-    RAW_FRAME get_cur_frm(int idx);
     QString get_info_text(int idx);
 
     // grab loop
@@ -58,7 +57,7 @@ public:
 
     // params
     std::atomic<double> offset_t[2] = {0, 0};
-    std::atomic<double> cur_frm_t[2] = {0, 0};
+    std::atomic<double> cur_raw_t[2] = {0, 0};
     std::atomic<int> cur_pts_num[2] = {0, 0};
 
     // storage
@@ -66,7 +65,7 @@ public:
 
     // vars
     const double angle_offset = 10.0; // LAKI:8.0, SICK:10.0
-    RAW_FRAME cur_frm[2];
+    RAW_FRAME cur_raw[2];
 };
 
 #endif // SICK_H

@@ -84,14 +84,14 @@ void LIDAR_2D::close()
     }
 }
 
-RAW_FRAME LIDAR_2D::get_cur_frm(int idx)
+RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
 {
     RAW_FRAME res;
 
     if(config->LIDAR_2D_TYPE == "SICK" && sick != nullptr)
     {
         mtx.lock();
-        res = sick->cur_frm[idx];
+        res = sick->cur_raw[idx];
         mtx.unlock();
     }
 
@@ -241,6 +241,7 @@ void LIDAR_2D::a_loop()
                 cur_merged_frm_t = frm.t;
                 cur_merged_num = frm.pts.size();
 
+                // update
                 merged_que.push(frm);
                 if(merged_que.unsafe_size() > 10)
                 {

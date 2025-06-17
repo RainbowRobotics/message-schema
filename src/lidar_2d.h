@@ -34,7 +34,7 @@ public:
     void open();
     void close();
 
-    RAW_FRAME get_cur_frm(int idx);
+    RAW_FRAME get_cur_raw(int idx);
 
     QString get_info_text();
     QString get_cur_state();

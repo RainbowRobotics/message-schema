@@ -103,6 +103,40 @@ Eigen::Matrix4d LOCALIZATION::get_cur_tf()
     return res;
 }
 
+Eigen::Matrix4d LOCALIZATION::get_best_tf(double t)
+{
+    mtx.lock();
+    std::vector<TIME_POSE> _tp_storage = tp_storage;
+    Eigen::Matrix4d _cur_tf = cur_tf;
+    mtx.unlock();
+
+    if(_tp_storage.size() == 0)
+    {
+        return _cur_tf;
+    }
+
+    int min_idx = 0;
+    double min_dt = 99999999;
+    for(size_t p = 0; p < _tp_storage.size(); p++)
+    {
+        double dt = std::abs(_tp_storage[p].t - t);
+        if(dt < min_dt)
+        {
+            min_dt = dt;
+            min_idx = p;
+        }
+    }
+
+    if(min_dt > 1.0)
+    {
+        return _cur_tf;
+    }
+    else
+    {
+        return _tp_storage[min_idx].tf;
+    }
+}
+
 Eigen::Vector2d LOCALIZATION::get_cur_ieir()
 {
     mtx.lock();
@@ -546,6 +580,7 @@ void LOCALIZATION::b_loop()
 void LOCALIZATION::obs_loop()
 {
     printf("[LOCALIZATION] obs_loop start\n");
+
     while(obs_flag)
     {
         double st_time = get_time();
@@ -569,7 +604,47 @@ void LOCALIZATION::obs_loop()
                 continue;
             }
 
-            // todo: add 2D or 3D pts
+            // add 2D pts
+            if(config->USE_LIDAR_2D && config->LOC_MODE != "2D")
+            {
+                FRAME scan;
+                FRAME tmp;
+                while(lidar_2d->merged_que.try_pop(tmp) && obs_flag)
+                {
+                    scan = tmp;
+                }
+                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
+
+                for(size_t p = 0; p < scan.pts.size(); p++)
+                {
+                    Eigen::Vector3d P = scan.pts[p];
+                    Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+                    tpp.pts.push_back(_P);
+                }
+            }
+
+            // add 3D pts
+            if(config->USE_LIDAR_3D && config->LOC_MODE != "3D")
+            {
+                TIME_PTS scan;
+                TIME_PTS tmp;
+                while(lidar_3d->merged_que.try_pop(tmp) && obs_flag)
+                {
+                    scan = tmp;
+                }
+
+                if(scan.pts.size() > 0)
+                {
+                    Eigen::Matrix4d tf0 = tpp.tf.inverse() * get_best_tf(scan.t);
+
+                    for(size_t p = 0; p < scan.pts.size(); p++)
+                    {
+                        Eigen::Vector3d P = scan.pts[p];
+                        Eigen::Vector3d _P = tf0.block(0,0,3,3)*P + tf0.block(0,3,3,1);
+                        tpp.pts.push_back(_P);
+                    }
+                }
+            }
 
             // todo: add cam pts
 

@@ -83,14 +83,14 @@ void LIDAR_3D::close()
     }
 }
 
-LVX_FRM LIDAR_3D::get_cur_frm(int idx)
+LVX_FRM LIDAR_3D::get_cur_raw(int idx)
 {
     LVX_FRM res;
 
     if(config->LIDAR_3D_TYPE == "LIVOX" && livox != NULL)
     {
         mtx.lock();
-        res = livox->cur_frm[idx];
+        res = livox->cur_raw[idx];
         mtx.unlock();
     }
 
@@ -324,6 +324,7 @@ void LIDAR_3D::a_loop()
                 cur_merged_frm_t = frm.t;
                 cur_merged_num = frm.pts.size();
 
+                // update
                 if(merged_que.unsafe_size() > 10)
                 {
                     TIME_PTS tmp;
@@ -470,6 +471,7 @@ void LIDAR_3D::a_loop()
         // save result
         if((int)merge_frm.pts.size() > 0)
         {
+            // update
             merged_que.push(merge_frm);
 
             // watchdog

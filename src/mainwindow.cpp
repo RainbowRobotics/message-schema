@@ -350,14 +350,8 @@ void MainWindow::init_modules()
     loc.config = &config;
     loc.logger = &logger;
     loc.mobile = &mobile;
-    if(config.LOC_MODE == "2D")
-    {
-        loc.lidar_2d = &lidar_2d;
-    }
-    else if(config.LOC_MODE == "3D")
-    {
-        loc.lidar_3d = &lidar_3d;
-    }
+    loc.lidar_2d = &lidar_2d;
+    loc.lidar_3d = &lidar_3d;
     // loc.cam = &cam;
     loc.unimap = &unimap;
     loc.obsmap = &obsmap;
@@ -2394,7 +2388,7 @@ void MainWindow::plot_raw_2d()
     {
         for(int idx = 0; idx < config.LIDAR_2D_NUM; idx++)
         {
-            RAW_FRAME cur_frm = lidar_2d.get_cur_frm(idx);
+            RAW_FRAME cur_frm = lidar_2d.get_cur_raw(idx);
 
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
             for(size_t p = 0; p < cur_frm.pts.size(); p++)
@@ -2404,10 +2398,12 @@ void MainWindow::plot_raw_2d()
                 P[1] = cur_frm.pts[p][1];
                 P[2] = cur_frm.pts[p][2];
 
+                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
+
                 pcl::PointXYZRGB pt;
-                pt.x = P[0];
-                pt.y = P[1];
-                pt.z = P[2];
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
                 if(idx == 0)
                 {
                     pt.r = 0; pt.g = 127; pt.b = 255;
@@ -2452,7 +2448,7 @@ void MainWindow::plot_raw_3d()
         for(int idx = 0; idx < config.LIDAR_3D_NUM; idx++)
         {
             // plot current lidar data
-            LVX_FRM cur_frm = lidar_3d.get_cur_frm(idx);
+            LVX_FRM cur_frm = lidar_3d.get_cur_raw(idx);
 
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
             for(size_t p = 0; p < cur_frm.pts.size(); p++)
@@ -2462,10 +2458,13 @@ void MainWindow::plot_raw_3d()
                 P[1] = cur_frm.pts[p].y;
                 P[2] = cur_frm.pts[p].z;
 
+                Eigen::Vector3d _P = loc.get_cur_tf().block(0,0,3,3)*P + loc.get_cur_tf().block(0,3,3,1);
+
+
                 pcl::PointXYZRGB pt;
-                pt.x = P[0];
-                pt.y = P[1];
-                pt.z = P[2];
+                pt.x = _P[0];
+                pt.y = _P[1];
+                pt.z = _P[2];
                 // pt.r = lidar_color.r;
                 // pt.g = lidar_color.g;
                 // pt.b = lidar_color.b;

@@ -51,29 +51,13 @@ void LIVOX::close()
     }
 }
 
-LVX_FRM LIVOX::get_cur_frm(int idx)
-{
-    mtx.lock();
-    LVX_FRM res = cur_frm[idx];
-    mtx.unlock();
-
-    return res;
-}
-
-IMU LIVOX::get_cur_imu(int idx)
-{
-    mtx.lock();
-    IMU res = cur_imu[idx];
-    mtx.unlock();
-
-    return res;
-}
-
 QString LIVOX::get_info_text(int idx)
 {
     QString res;
 
-    IMU imu = get_cur_imu(idx);
+    mtx.lock();
+    IMU imu =  cur_imu[idx];
+    mtx.unlock();
 
     res += QString().sprintf("[LIDAR %d]\nimu_t: %.3f, pts_t: %.3f (%d)\n", idx, cur_imu_t[idx].load(), cur_frm_t[idx].load(), cur_pts_num[idx].load());
     res += QString().sprintf("acc: %.2f, %.2f, %.2f\n", imu.acc_x, imu.acc_y, imu.acc_z);
@@ -277,7 +261,7 @@ void LIVOX::grab_loop()
 
                 // set raw pts
                 livox->mtx.lock();
-                livox->cur_frm[idx] = frm;
+                livox->cur_raw[idx] = frm;
                 livox->cur_frm_t[idx] = frm.t;
                 livox->cur_pts_num[idx] = frm.pts.size();
                 livox->mtx.unlock();

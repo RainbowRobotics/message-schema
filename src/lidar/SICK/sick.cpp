@@ -56,19 +56,10 @@ void SICK::close()
     }
 }
 
-RAW_FRAME SICK::get_cur_frm(int idx)
-{
-    mtx.lock();
-    RAW_FRAME res = cur_frm[idx];
-    mtx.unlock();
-
-    return res;
-}
-
 QString SICK::get_info_text(int idx)
 {
     QString res;
-    res += QString().sprintf("[SICK %d]\npts_t: %.3f (%d)\n", idx, cur_frm_t[idx].load(), cur_pts_num[idx].load());
+    res += QString().sprintf("[SICK %d]\npts_t: %.3f (%d)\n", idx, cur_raw_t[idx].load(), cur_pts_num[idx].load());
     res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
 
     return res;
@@ -248,7 +239,7 @@ void SICK::grab_loop(int idx)
             }
 
             cur_pts_num[idx] = (int)pts.size();
-            cur_frm_t[idx] = t0;
+            cur_raw_t[idx] = t0;
 
             MOBILE_POSE mo;
             mo.t = t0;
@@ -267,7 +258,7 @@ void SICK::grab_loop(int idx)
             raw_que[idx].push(frm);
 
             mtx.lock();
-            cur_frm[idx] = frm;
+            cur_raw[idx] = frm;
             mtx.unlock();
 
             // que overflow control

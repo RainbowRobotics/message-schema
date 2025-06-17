@@ -44,8 +44,6 @@ public:
     void open();
     void close();
 
-    IMU get_cur_imu(int idx);
-    LVX_FRM get_cur_frm(int idx);
     QString get_info_text(int idx);
 
     // for multi lidar
@@ -73,7 +71,7 @@ public:
     std::vector<IMU> imu_storage[2];
     tbb::concurrent_queue<LVX_FRM> frm_que[2];
 
-    LVX_FRM cur_frm[2];
+    LVX_FRM cur_raw[2];
     IMU cur_imu[2];
 
 private:
