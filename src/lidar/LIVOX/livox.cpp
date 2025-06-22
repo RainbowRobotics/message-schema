@@ -68,6 +68,27 @@ QString LIVOX::get_info_text(int idx)
     return res;
 }
 
+LVX_FRM LIVOX::get_cur_raw(int idx)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    LVX_FRM res = cur_raw[idx];
+    return res;
+}
+
+IMU LIVOX::get_cur_imu(int idx)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    IMU res = cur_imu[idx];
+    return res;
+}
+
+std::vector<IMU> LIVOX::get_imu_storage(int idx)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<IMU> res = imu_storage[idx];
+    return res;
+}
+
 int LIVOX::get_livox_idx(uint32_t handle)
 {
     for(size_t i = 0; i < livox_handles.size(); i++)
@@ -87,7 +108,7 @@ void LIVOX::grab_loop()
     printf("[LIVOX] Disable debug message\n");
 
     // Init Livox SDK2
-    QString path = QDir::currentPath() + "/configs/SEM/mid360_config.json";
+    QString path = QCoreApplication::applicationDirPath() + "/configs/" + config->PLATFORM_NAME + "/mid360_config.json";
     printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
 
     FILE* fp = fopen(path.toLocal8Bit().data(), "r");

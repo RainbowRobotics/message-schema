@@ -20,34 +20,65 @@
 class MAPPING : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(MAPPING)
 public:
+    // make singleton
+    static MAPPING* instance(QObject* parent = nullptr);
+
+    // start mapping module
+    void start();
+
+    // stop mapping module
+    void stop();
+
+    // clear all progress
+    void clear();
+
+    /***********************
+     * interface funcs
+     ***********************/
+    std::shared_ptr<std::vector<PT_XYZR>> get_live_cloud_pts();
+    QString get_info_text();
+    bool get_is_mapping();
+    bool try_pop_kfrm_update_que(int& kfrm_id);
+    const std::vector<KFRAME>& get_kfrm_storage();
+    size_t get_kfrm_storage_size();
+    KFRAME get_kfrm(int kfrm_id);
+
+    void last_lc();
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_mobile_module(MOBILE* _mobile);
+    void set_unimap_module(UNIMAP* _unimap);
+    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_localization_module(LOCALIZATION* _loc);
+
+private:
     explicit MAPPING(QObject *parent = nullptr);
     ~MAPPING();
 
     // mutex
-    std::recursive_mutex mtx;
+    std::mutex mtx;
 
     // other modules
-    CONFIG *config = NULL;
-    LOGGER *logger = NULL;
-    UNIMAP *unimap = NULL;
-    LIDAR_2D *lidar_2d = NULL;
-    LOCALIZATION *loc = NULL;
-
-    // interface functions
-    void start();
-    void stop();
-    void clear();
-    QString get_info_text();
+    CONFIG* config;
+    LOGGER* logger;
+    UNIMAP* unimap;
+    LIDAR_2D* lidar_2d;
+    LOCALIZATION* loc;
 
     // loop
-    std::atomic<bool> a_flag = {false};
-    std::thread* a_thread = NULL;
-    void a_loop();
+    std::atomic<bool> kfrm_flag = {false};
+    std::unique_ptr<std::thread> kfrm_thread;
+    void kfrm_loop();
 
-    std::atomic<bool> b_flag = {false};
-    std::thread* b_thread = NULL;
-    void b_loop();
+    std::atomic<bool> loop_closing_flag = {false};
+    std::unique_ptr<std::thread> loop_closing_thread;
+    void loop_closing_loop();
 
     // algorithms
     double frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
@@ -64,7 +95,8 @@ public:
 
     // live kd_tree
     XYZR_CLOUD live_cloud;
-    KD_TREE_XYZR *live_tree = NULL;
+    std::shared_ptr<std::vector<PT_XYZR>> live_cloud_pts;
+    std::unique_ptr<KD_TREE_XYZR> live_tree;
 
     // for plot
     std::atomic<double> proc_time_map_a = {0};
@@ -72,7 +104,6 @@ public:
 
     // for graph optimization
     void clear_pose_graph();
-    void last_lc();
     PGO pgo;
 };
 

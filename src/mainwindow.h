@@ -43,47 +43,36 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    // modules
+    // picking module: qt gui click event
     PICKING pick;
-    CONFIG config;
-    LOGGER logger;
-    UNIMAP unimap;
-    OBSMAP obsmap;
-    MOBILE mobile;
-    LIDAR_2D lidar_2d;
-    LIDAR_3D lidar_3d;
-    LOCALIZATION loc;
-    MAPPING mapping;
-    AUTOCONTROL ctrl;
-    SIM sim;
 
-    // pcl viewer
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
+    // pcl viewer (point cloud viewer)
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer;
 
-    // jog
+    // qt gui jog func
     std::atomic<bool> jog_flag = {false};
-    std::thread *jog_thread = NULL;
+    std::unique_ptr<std::thread> jog_thread;
     void jog_loop();
 
-    // watchdog
+    // watchdog loop -> planned for future modularization
     std::atomic<bool> watch_flag = {false};
-    std::thread *watch_thread = NULL;
+    std::unique_ptr<std::thread> watch_thread;
     void watch_loop();
 
     // funcs
-    void setup_vtk();
-    void init_modules();
-    void init_ui_effect();
-    void all_plot_clear();
-
-    void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
-    void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
     Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
-    void update_jog_values(double vx, double vy, double wz);
     double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
+    void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
+    void update_jog_values(double vx, double vy, double wz);
+    void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
+    void all_plot_clear();
+    void init_ui_effect();
+    void set_opacity(QWidget* w, double opacity);
+    void init_modules();
+    void setup_vtk();
 
     // vars
-    std::atomic<double> plot_proc_t = {0};
+    std::atomic<double> plot_dt = {0.};
 
     // flags
     std::atomic<bool> is_map_update = {false};
@@ -98,6 +87,9 @@ public:
     std::atomic<bool> is_set_top_view = {false};
 
     // jog
+    std::atomic<bool> is_jog_pressed = {false};
+    std::atomic<double> last_jog_update_time = {0};
+
     std::atomic<double> vx_target = {0.};
     std::atomic<double> vy_target = {0.};
     std::atomic<double> wz_target = {0.};
@@ -106,15 +98,10 @@ public:
     std::atomic<double> vy_current = {0.};
     std::atomic<double> wz_current = {0.};
 
-    std::atomic<double> last_jog_update_t = {0};
-    std::atomic<bool> is_jog_pressed = {false};
-
     // plot object names
     std::vector<QString> last_plot_kfrms;
-
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_names;
-
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
 
@@ -140,7 +127,7 @@ public:
     void plot_ctrl();
 
     // plot timer
-    QTimer plot_timer;
+    QTimer* plot_timer;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
@@ -182,7 +169,7 @@ public Q_SLOTS:
     // mapping
     void bt_MapBuild();
     void bt_MapSave();
-     void bt_MapLoad();
+    void bt_MapLoad();
     void bt_MapLastLc();
 
     // localization

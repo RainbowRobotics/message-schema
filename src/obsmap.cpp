@@ -1,18 +1,33 @@
 #include "obsmap.h"
 
-OBSMAP::OBSMAP(QObject *parent)
-    : QObject{parent}
+OBSMAP* OBSMAP::instance(QObject* parent)
+{
+    static OBSMAP* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new OBSMAP(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+OBSMAP::OBSMAP(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr),
+    unimap(nullptr)
 {
     map_tf.setIdentity();
 }
 
 OBSMAP::~OBSMAP()
 {
-    if(octree != NULL)
+    if(octree)
     {
         octree->clear();
-        delete octree;
-        octree= NULL;
+        octree.reset();
     }
 }
 
@@ -32,23 +47,22 @@ void OBSMAP::init()
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
 
-    octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+    octree = std::make_unique<octomap::OcTree>(config->OBS_MAP_GRID_SIZE);
     octree->setProbHit(P_HIT);
     octree->setProbMiss(P_MISS);
 }
 
 void OBSMAP::clear()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
 
-    if(octree != NULL)
+    if(octree)
     {
         octree->clear();
-        delete octree;
-        octree= NULL;
+        octree.reset();
     }
 
-    octree = new octomap::OcTree(config->OBS_MAP_GRID_SIZE);
+    octree = std::make_unique<octomap::OcTree>(config->OBS_MAP_GRID_SIZE);
     octree->setProbHit(P_HIT);
     octree->setProbMiss(P_MISS);
 
@@ -66,36 +80,40 @@ void OBSMAP::clear()
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     map_tf = Eigen::Matrix4d::Identity();
-
-    mtx.unlock();
 }
 
 void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
 
     Eigen::Matrix4d cur_tf = tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+    Eigen::Matrix3d cur_R = cur_tf_inv.block(0,0,3,3);
+    Eigen::Vector3d cur_t = cur_tf_inv.block(0,3,3,1);
 
     // add static map
     double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
     double sq_radius = config->OBS_MAP_RANGE*config->OBS_MAP_RANGE;
     std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
     nanoflann::SearchParameters params;
-    unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+    unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
+
+    const double obs_map_min_z = config->get_obs_map_min_z() * 0.5;
+    const double obs_map_max_z = config->get_obs_map_max_z();
 
     cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
+    auto kdtree_cloud = unimap->get_kdtree_cloud();
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
         int idx = res_idxs[p].first;
-        double x = unimap->kdtree_cloud.pts[idx].x;
-        double y = unimap->kdtree_cloud.pts[idx].y;
-        double z = unimap->kdtree_cloud.pts[idx].z;
+        double x = kdtree_cloud->pts[idx].x;
+        double y = kdtree_cloud->pts[idx].y;
+        double z = kdtree_cloud->pts[idx].z;
 
         // global to local
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-        if(_P[2] < config->OBS_MAP_MIN_Z*0.5 || _P[2] > config->OBS_MAP_MAX_Z)
+        Eigen::Vector3d _P = cur_R*P + cur_t;
+        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
         {
             continue;
         }
@@ -113,7 +131,6 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
     map_tf = cur_tf;
     wall_map = _wall_map;
-    mtx.unlock();
 
     // signal for redrawing
     Q_EMIT obs_updated();
@@ -124,6 +141,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     mtx.lock();
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
+    Eigen::Matrix3d cur_R = cur_tf_inv.block(0,0,3,3);
+    Eigen::Vector3d cur_t = cur_tf_inv.block(0,3,3,1);
 
     // raw data to range data
     double step = 0.25*D2R;
@@ -174,11 +193,12 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         cloud.push_back(_P[0], _P[1], 0);
     }
 
-    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), config->OBS_MAP_RANGE, false, false);
+    const double obsmap_range = config->get_obs_map_range();
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
 
-    // calc grid map
-    octomap::point3d bbx_min(cur_tf(0,3) - config->OBS_MAP_RANGE, cur_tf(1,3) - config->OBS_MAP_RANGE, -config->OBS_MAP_RANGE);
-    octomap::point3d bbx_max(cur_tf(0,3) + config->OBS_MAP_RANGE, cur_tf(1,3) + config->OBS_MAP_RANGE, config->OBS_MAP_RANGE);
+    // calc grid map    
+    octomap::point3d bbx_min(cur_tf(0,3) - obsmap_range, cur_tf(1,3) - obsmap_range, -obsmap_range);
+    octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range, obsmap_range);
 
     std::vector<Eigen::Vector4d> global_obs_pts;
     std::vector<Eigen::Vector2d> local_obs_pts;
@@ -192,7 +212,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
         // global to local
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+        Eigen::Vector3d _P = cur_R*P + cur_t;
 
         // for plot
         global_obs_pts.push_back(Eigen::Vector4d(x, y, cur_tf(2,3), prob));
@@ -227,23 +247,27 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     // add static map
     double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
-    double sq_radius = config->OBS_MAP_RANGE*config->OBS_MAP_RANGE;
+    double sq_radius = obsmap_range*obsmap_range;
     std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
     nanoflann::SearchParameters params;
-    unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
+    unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
+
+    const double obs_map_min_z = config->get_obs_map_min_z() * 0.5;
+    const double obs_map_max_z = config->get_obs_map_max_z();
 
     cv::Mat _static_map(h, w, CV_8U, cv::Scalar(0));
+    auto kdtree_cloud = unimap->get_kdtree_cloud();
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
         int idx = res_idxs[p].first;
-        double x = unimap->kdtree_cloud.pts[idx].x;
-        double y = unimap->kdtree_cloud.pts[idx].y;
-        double z = unimap->kdtree_cloud.pts[idx].z;
+        double x = kdtree_cloud->pts[idx].x;
+        double y = kdtree_cloud->pts[idx].y;
+        double z = kdtree_cloud->pts[idx].z;
 
         // global to local
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-        if(_P[2] < config->OBS_MAP_MIN_Z*0.5 || _P[2] > config->OBS_MAP_MAX_Z)
+        Eigen::Vector3d _P = cur_R * P + cur_t;
+        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
         {
             continue;
         }
@@ -268,7 +292,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         {
             QString id = obs_nodes[p];
             NODE* node = unimap->get_node_by_id(id);
-            if(node != NULL)
+            if(node != nullptr)
             {
                 QString info = node->info;
                 Eigen::Matrix4d tf = node->tf;
@@ -310,11 +334,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
                     pts[0].push_back(cv::Point(uv3[0], uv3[1]));
 
                     cv::fillPoly(_wall_map, pts, cv::Scalar(255));
-
-                    if(config->USE_SIM == 0)
-                    {
-                        cv::fillPoly(_static_map, pts, cv::Scalar(255));
-                    }
+                    cv::fillPoly(_static_map, pts, cv::Scalar(255));
                 }
             }
         }
@@ -527,151 +547,84 @@ void OBSMAP::update_vobs_map()
     Q_EMIT obs_updated();
 }
 
-/*void OBSMAP::update_vobs_map()
-{
-    mtx.lock();
-    Eigen::Matrix4d cur_tf = map_tf;
-    Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
-
-    // add vobs robots from fms
-    std::vector<Eigen::Vector3d> _vir_pts;
-    cv::Mat _virtual_map(h, w, CV_8U, cv::Scalar(0));
-    for(size_t p = 0; p < vobs_list_robots.size(); p++)
-    {
-        // add global points
-        Eigen::Vector3d center = vobs_list_robots[p];
-
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
-        pts.push_back(center);
-
-        for(size_t q = 0; q < pts.size(); q++)
-        {
-            Eigen::Vector3d P = pts[q];
-            _vir_pts.push_back(P);
-
-            // add local obsmap
-            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-
-            double x = _P[0];
-            double y = _P[1];
-
-            cv::Vec2i uv = xy_uv(x,y);
-            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
-            {
-                continue;
-            }
-            _virtual_map.ptr<uchar>(uv[1])[uv[0]] = 255;
-        }
-    }
-
-    // add vobs closures from fms
-    std::vector<Eigen::Vector3d> _vir_closure_pts;
-    for(size_t p = 0; p < vobs_list_closures.size(); p++)
-    {
-        // add global points
-        Eigen::Vector3d center = vobs_list_closures[p];
-        _vir_closure_pts.push_back(center);
-
-        //std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, 0.05);
-        std::vector<Eigen::Vector3d> pts = circle_iterator_3d(center, config->ROBOT_SIZE_Y[1]);
-        pts.push_back(center);
-
-        for(size_t q = 0; q < pts.size(); q++)
-        {
-            Eigen::Vector3d P = pts[q];
-            _vir_pts.push_back(P);
-
-            // add local obsmap
-            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-
-            double x = _P[0];
-            double y = _P[1];
-
-            cv::Vec2i uv = xy_uv(x,y);
-            if(uv[0] < 0 || uv[0] >= w || uv[1] < 0 || uv[1] >= h)
-            {
-                continue;
-            }
-            _virtual_map.ptr<uchar>(uv[1])[uv[0]] = 255;
-        }
-    }
-
-    obs_pts_virtual = _vir_pts;
-    closure_pts_virtual = _vir_closure_pts;
-    virtual_map = _virtual_map;
-
-    mtx.unlock();
-
-    // signal for redrawing
-    Q_EMIT obs_updated();
-}*/
-
 void OBSMAP::get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     map = wall_map.clone();
     tf = map_tf;
-    mtx.unlock();
 }
 
 void OBSMAP::get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     map = dynamic_map.clone();
     tf = map_tf;
-    mtx.unlock();
 }
 
 void OBSMAP::get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     map = virtual_map.clone();
     tf = map_tf;
-    mtx.unlock();
+}
+
+cv::Mat OBSMAP::get_obs_map()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return wall_map;
+}
+
+cv::Mat OBSMAP::get_dyn_map()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return dynamic_map;
+}
+
+cv::Mat OBSMAP::get_vir_map()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return virtual_map;
+}
+
+Eigen::Matrix4d OBSMAP::get_map_tf()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    Eigen::Matrix4d res = map_tf;
+    return res;
 }
 
 std::vector<Eigen::Vector3d> OBSMAP::get_obs_pts()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector3d> res = obs_pts;
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<Eigen::Vector3d> OBSMAP::get_dyn_pts()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector3d> res = dyn_pts;
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<Eigen::Vector3d> OBSMAP::get_vir_pts()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector3d> res = vir_pts;
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<Eigen::Vector3d> OBSMAP::get_vir_closure_pts()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector3d> res = vir_closure_pts;
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<Eigen::Vector4d> OBSMAP::get_plot_pts()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector4d> res = plot_pts;
-    mtx.unlock();
-
     return res;
 }
 
@@ -747,19 +700,20 @@ bool OBSMAP::is_pos_collision(const Eigen::Vector3d& pos, double radius, bool is
 int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double margin_x, double margin_y)
 {
     // get
-    mtx.lock();
     std::vector<Eigen::Vector3d> pts;
     std::vector<Eigen::Vector3d> pts_vir;
-    if(is_dyn)
     {
-        pts = dyn_pts;
-        pts_vir = vir_pts;
+        std::lock_guard<std::mutex> lock(mtx);
+        if(is_dyn)
+        {
+            pts = dyn_pts;
+            pts_vir = vir_pts;
+        }
+        else
+        {
+            pts = obs_pts;
+        }
     }
-    else
-    {
-        pts = obs_pts;
-    }
-    mtx.unlock();
 
     // robot pts
     const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
@@ -840,19 +794,20 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
 int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
-    mtx.lock();
     std::vector<Eigen::Vector3d> pts;
     std::vector<Eigen::Vector3d> pts_vir;
-    if(is_dyn)
     {
-        pts = dyn_pts;
-        pts_vir = vir_pts;
+        std::lock_guard<std::mutex> lock(mtx);
+        if(is_dyn)
+        {
+            pts = dyn_pts;
+            pts_vir = vir_pts;
+        }
+        else
+        {
+            pts = obs_pts;
+        }
     }
-    else
-    {
-        pts = obs_pts;
-    }
-    mtx.unlock();
 
     // draw trajectory
     const double x_min = config->ROBOT_SIZE_X[0] - margin_x;
@@ -1105,12 +1060,17 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
     const double sampling_dt = 0.05;
     const double sampling_dr = 5.0*D2R;
 
+    Eigen::Matrix4d obs_tf;
+    Eigen::Matrix4d _obs_tf_inv;
+    cv::Mat obs_map;
+
     // get maps
-    mtx.lock();
-    Eigen::Matrix4d obs_tf = map_tf;
-    Eigen::Matrix4d _obs_tf_inv = obs_tf.inverse();
-    cv::Mat obs_map = wall_map.clone();
-    mtx.unlock();
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        obs_tf = map_tf;
+        _obs_tf_inv = obs_tf.inverse();
+        obs_map = wall_map.clone();
+    }
 
     // for debug
     cv::Mat debug_img;
@@ -1387,4 +1347,19 @@ cv::Vec2d OBSMAP::uv_xy(int u, int v)
     double x = (u-cx)*gs;
     double y = -(v-cy)*gs;
     return cv::Vec2d(x, y);
+}
+
+void OBSMAP::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void OBSMAP::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
+}
+
+void OBSMAP::set_unimap_module(UNIMAP* _unimap)
+{
+    unimap = _unimap;
 }

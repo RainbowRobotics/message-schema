@@ -1,5 +1,20 @@
 #include "logger.h"
 
+LOGGER* LOGGER::instance(QObject* parent)
+{
+    static LOGGER* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new LOGGER(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+
 LOGGER::LOGGER(QObject *parent)
     : QObject{parent}
 {
@@ -65,11 +80,13 @@ void LOGGER::init()
     }
     mtx.unlock();
 
-    if(log_thread == NULL)
-    {
-        log_flag = true;
-        log_thread = new std::thread(&LOGGER::log_loop, this);
-    }
+    log_flag = true;
+    log_thread = std::make_unique<std::thread>(&LOGGER::log_loop, this);
+}
+
+void LOGGER::set_log_path(QString path)
+{
+    log_file_name = path;
 }
 
 void LOGGER::log_loop()

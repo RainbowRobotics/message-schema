@@ -17,33 +17,50 @@
 class SIM : public QObject
 {
     Q_OBJECT
-public:
-    explicit SIM(QObject *parent = nullptr);
-    ~SIM();
-    std::recursive_mutex mtx;
+    Q_DISABLE_COPY(SIM)
 
-    // other modules
-    CONFIG *config = NULL;
-    LOGGER *logger = NULL;
-    MOBILE *mobile = NULL;
-    LIDAR_2D *lidar_2d = NULL;
-    LIDAR_3D *lidar_3d = NULL;
-    LOCALIZATION *loc = NULL;
-    UNIMAP *unimap = NULL;\
+public:
+    // make singleton
+    static SIM* instance(QObject* parent = nullptr);
 
     void start();
     void stop();
 
-    std::atomic<bool> a_flag;
-    std::thread* a_thread = NULL;
-    void a_loop();
-
-    Eigen::Matrix4d cur_tf;
     void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
 
-Q_SIGNALS:
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_unimap_module(UNIMAP* _unimap);
+    void set_mobile_module(MOBILE* _mobile);
+    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+    void set_localization_module(LOCALIZATION* _loc);
 
+private:
+    explicit SIM(QObject *parent = nullptr);
+    ~SIM();
+    std::mutex mtx;
+
+    // other modules
+    CONFIG* config;
+    LOGGER* logger;
+    MOBILE* mobile;
+    UNIMAP* unimap;
+    LIDAR_2D* lidar_2d;
+    LIDAR_3D* lidar_3d;
+    LOCALIZATION* loc;
+
+    double calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol=0.0001);
+
+    std::atomic<bool> a_flag;
+    std::unique_ptr<std::thread> a_thread;
+    void a_loop();
+
+    Eigen::Matrix4d cur_tf;
 
 };
 

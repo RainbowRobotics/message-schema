@@ -1235,4 +1235,24 @@ int get_major_axis(Eigen::Vector3d& N)
     return max_idx;
 }
 
+QColor build_time_to_color(const QString& buildTime)
+{
+    uint32_t hash = 2166136261u;
+    for(auto c : buildTime.toUtf8())
+    {
+        hash ^= uint8_t(c);
+        hash *= 16777619u;
+    }
+
+    int r = (hash & 0xFF);
+    int g = (hash >> 8) & 0xFF;
+    int b = (hash >> 16) & 0xFF;
+
+    r = 128 + (r / 2);
+    g = 128 + (g / 2);
+    b = 128 + (b / 2);
+
+    return QColor(r, g, b);
+}
+
 #endif // UTILS_CPP

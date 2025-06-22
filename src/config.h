@@ -3,23 +3,286 @@
 
 #include "global_defines.h"
 
+#include <cmath>
+#include <algorithm>
+#include <shared_mutex>
+
 #include <QObject>
-#include <QMutex>
-#include <QMutexLocker>
+#include <QMessageBox>
+#include <QStringList>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonParseError>
+#include <QDebug>
 
 class CONFIG : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(CONFIG)
+
+public:
+    // make singleton
+    static CONFIG* instance(QObject* parent = nullptr);
+
+    // load robot type
+    bool load_common(QString path);
+
+    // set config path
+    void set_config_path(const QString& path);
+
+    // load config.json
+    void load();
+
+    /***********************
+     * robot unique
+     ***********************/
+    QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
+    QString get_platform_name();        // robot platform name : S100, D400, Mecanum, SEM ...
+    QString get_platform_type();        // robot platform type : b(S100)
+
+    /***********************
+     * robot hardware
+     ***********************/
+    double get_robot_size_x_min();      // robot x-axis minimum size
+    double get_robot_size_x_max();      // robot x-axis maximum size
+    double get_robot_size_y_min();      // robot y-axis minimum size
+    double get_robot_size_y_max();      // robot y-axis maximum size
+    double get_robot_size_z_min();      // robot z-axis minimum size
+    double get_robot_size_z_max();      // robot z-axis maximum size
+    double get_robot_wheel_base();      // the distance between the robot's two wheels
+    double get_robot_wheel_radius();    // robot wheel radius (mm)
+    double get_robot_radius();          // robot radius (auto calc)
+
+    /***********************
+     * sensor common
+     ***********************/
+    bool get_use_lidar_2d();            // check if the robot uses 2d lidar
+    QString get_lidar_2d_type();        // check 2d lidar type
+    int get_lidar_2d_num();             // check 2d lidar number
+    bool get_use_lidar_3d();            // check if the robot uses 3d lidar
+    QString get_lidar_3d_type();        // check 3d lidar type
+    int get_lidar_3d_num();             // check 3d lidar number
+    bool get_use_cam();                 // check if the robot uses cam
+    QString get_cam_type();             // check cam type
+    int get_cam_num();                  // check cam number
+    bool get_use_bqr();                 // check if the robot uses bottom QR sensor
+    bool get_use_imu();                 // check if the robot uses external IMU
+    bool get_use_aruco();               // check if the robot uses aruco marker (must used cam)
+
+    /***********************
+     * localization
+     ***********************/
+    QString get_loc_mode();             // localization mode : 2D, 3D
+
+    /***********************
+     * networking
+     ***********************/
+    bool get_use_multi();               // check if the robot mode is multi control
+    bool get_use_coop();                // check if the robot mode is coop control (cooperation control)
+    bool get_use_rtsp();                // check if the robot uses rtsp streaming (cam img)
+    bool get_use_rrs();                 // check if the robot uses rrs communication (robot repeat server)
+    bool get_use_fms();                 // check if the robot uses fms direct communication (must used test or simulation)
+
+    /***********************
+     * debug & test
+     ***********************/
+    bool get_use_sim();                 // check if the robot uses simulation mode
+    bool get_use_beep();                // check if the robot uses beep sound (internal beep sound when obstacle is detected)
+    QString get_server_ip();
+    QString get_server_id();
+    QString get_server_pw();
+
+    /***********************
+     * 2d lidar sensor
+     ***********************/
+    double get_lidar_2d_min_range();    // 2d lidar min range (defalut: 0.05~0.1m)
+    double get_lidar_2d_max_range();    // 2d lidar max range (defalut: depends on the lidar)
+    QString get_lidar_2d_ip(int idx);   // 2d lidar ip list (maximum lidar number is 2)
+    QString get_lidar_2d_tf(int idx);   // 2d lidar tf list (maximum lidar number is 2)
+
+    /***********************
+     * 3d lidar sensor
+     ***********************/
+    double get_lidar_3d_min_range();    // 3d lidar tf list (maximum lidar number is 2)
+    double get_lidar_3d_max_range();    // 3d lidar ip list (maximum lidar number is 2)
+    QString get_lidar_3d_ip(int idx);   // 3d lidar max range (defalut: depends on the lidar)
+    QString get_lidar_3d_tf(int idx);   // 3d lidar min range (defalut: 0.05~0.1m)
+
+    /***********************
+     * cam sensor
+     ***********************/
+    double get_cam_height_min();              // depth camera min height
+    double get_cam_height_max();              // depth camera max height
+    QString get_cam_serial_number(int idx);   // cam serial number list (maximum cam number is 2)
+    QString get_cam_tf(int idx);              // cam tf list (maximum cam number is 2)
+
+    /***********************
+     * motor
+     ***********************/
+    int get_motor_id_left();
+    int get_motor_id_right();
+    double get_motor_direction();
+    double get_motor_gear_ratio();
+    double get_motor_limit_v();
+    double get_motor_limit_v_acc();
+    double get_motor_limit_w();
+    double get_motor_limit_w_acc();
+    double get_motor_gain_kp();
+    double get_motor_gain_ki();
+    double get_motor_gain_kd();
+
+    /***********************
+     * mapping
+     ***********************/
+    int get_mapping_icp_max_feature_num();
+    int get_mapping_icp_do_erase_gap();
+    int get_mapping_icp_do_accum_num();
+    int get_mapping_kfrm_update_num();
+    int get_mapping_window_size();
+    double get_mapping_icp_cost_threashold();
+    double get_mapping_icp_error_threshold();
+    double get_mapping_icp_view_threashold();
+    double get_mapping_kfrm_lc_try_dist();
+    double get_mapping_kfrm_lc_try_overlap();
+    double get_mapping_voxel_size();
+
+    /***********************
+     * localization 2d
+     ***********************/
+    int get_loc_2d_icp_max_feature_num();
+    int get_loc_2d_surfel_num();
+    double get_loc_2d_icp_odometry_fusion_ratio();
+    double get_loc_2d_icp_cost_threshold();
+    double get_loc_2d_icp_cost_threshold0();
+    double get_loc_2d_icp_error_threshold();
+    double get_loc_2d_aruco_odometry_fusion_ratio();
+    double get_loc_2d_aruco_odometry_fusion_dist();
+    double get_loc_2d_surfel_range();
+    double get_loc_2d_check_dist();
+    double get_loc_2d_check_inlier_ratio();
+    double get_loc_2d_check_inlier_error();
+
+    /***********************
+     * localization 3d
+     ***********************/
+    int get_loc_3d_icp_max_feature_num();
+    int get_loc_3d_surfel_nn_num();
+    double get_loc_3d_surfel_balance();
+    double get_loc_3d_cost_threshold();
+    double get_loc_3d_inlier_check_dist();
+
+    /***********************
+     * obstacle map
+     ***********************/
+    int get_obs_avoid_mode();
+    double get_obs_deadzone();
+    double get_obs_local_goal_dist();
+    double get_obs_safe_margin_x();
+    double get_obs_safe_margin_y();
+    double get_obs_path_margin_x();
+    double get_obs_path_margin_y();
+    double get_obs_map_grid_size();
+    double get_obs_map_range();
+    double get_obs_map_min_v();
+    double get_obs_map_min_z();
+    double get_obs_map_max_z();
+    double get_obs_predict_time();
+
+    /***********************
+     * drive
+     ***********************/
+    double get_drive_goal_approach_gain();
+    double get_drive_goal_dist();
+    double get_drive_goal_th();
+    double get_drive_extended_control_time();
+    double get_drive_v_deadzone();
+    double get_drive_w_deadzone();
+
+    /***********************
+     * docking
+     ***********************/
+    int get_docking_type();
+    int get_docking_map_size();
+    double get_docking_pointdock_margin();
+    double get_docking_goal_dist();
+    double get_docking_goal_th();
+    double get_docking_extended_control_time();
+    double get_docking_undock_reversing_distance();
+    double get_docking_kp_dist();
+    double get_docking_kd_dist();
+    double get_docking_kp_th();
+    double get_docking_kd_th();
+    double get_docking_clust_dist_threshold();
+    double get_docking_clust_dist_threshold_min();
+    double get_docking_clust_dist_threshold_max();
+    double get_docking_clust_angle_threshold();
+    double get_docking_size_x_min();
+    double get_docking_size_x_max();
+    double get_docking_icp_cost_threshold();
+    double get_docking_icp_max_feature_num();
+    double get_docking_grid_size();
+
+    /***********************
+     * map
+     ***********************/
+    QString get_map_path();
+    void set_map_path(const QString& path);
+
+    /***********************
+     * missing variables check
+     ***********************/
+    QStringList get_missing_variables();
+    bool has_missing_variables();
+    void show_missing_variables_dialog();
+
+private:
+
+    /***********************
+     * loading by category
+     ***********************/
+    void load_robot_config(const QJsonObject& obj);
+    void load_sensors_config(const QJsonObject& obj);
+    void load_localization_config(const QJsonObject& obj);
+    void load_network_config(const QJsonObject& obj);
+    void load_debug_config(const QJsonObject& obj);
+    void load_motor_config(const QJsonObject& obj);
+    void load_localization_2d_config(const QJsonObject& obj);
+    void load_localization_3d_config(const QJsonObject& obj);
+    void load_mapping_config(const QJsonObject& obj);
+    void load_obstacle_config(const QJsonObject& obj);
+    void load_control_config(const QJsonObject& obj);
+    void load_docking_config(const QJsonObject& obj);
+    void load_map_config(const QJsonObject& obj);
+    void load_lidar_configs(const QJsonObject& obj);
+    void load_camera_configs(const QJsonObject& obj);
+    void load_sensor_specific_configs(const QJsonObject& obj);
+
+    /***********************
+     * helper functions for loading json
+     ***********************/
+    void check_and_set_string(const QJsonObject& obj, const QString& key, QString& target, const QString& section);
+    void check_and_set_bool(const QJsonObject& obj, const QString& key, bool& target, const QString& section);
+    void check_and_set_int(const QJsonObject& obj, const QString& key, int& target, const QString& section);
+    void check_and_set_double(const QJsonObject& obj, const QString& key, double& target, const QString& section);
+
+    void add_missing_variable(const QString& section, const QString& variable);
+
 public:
     explicit CONFIG(QObject *parent = nullptr);
+    ~CONFIG();
 
-public:
-    QMutex mtx;
+    // mutex
+    std::shared_mutex mtx;
+    QString config_path;
 
-    // unit : meter, degree, second
-    // params (initial value ref from AMR200)
+    /* unit : meter, degree, second
+     * params (initial value ref from AMR200)
+     */
 
     // robot
+    QString ROBOT_SERIAL_NUMBER = "RB-M-";
     QString PLATFORM_NAME = "";
     QString PLATFORM_TYPE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
@@ -28,7 +291,6 @@ public:
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
-    QString ROBOT_SERIAL_NUMBER = "RB-M-";
 
     // sensors
     bool USE_LIDAR_2D = false;
@@ -51,20 +313,18 @@ public:
     bool USE_ARUCO = false;
 
     // Networking
-    bool USE_MULTI = false;
-    bool USE_COOP = false;
-    bool USE_RTSP = false;
-    bool USE_RRS = false;
-    bool USE_FMS = false;
+    bool USE_MULTI     = false;
+    bool USE_COMM_COOP = false;
+    bool USE_COMM_RTSP = false;
+    bool USE_COMM_RRS  = false;
+    bool USE_COMM_FMS  = false;
 
     // debug
     bool USE_SIM = false;
-    bool USE_QTUI = false;
     bool USE_BEEP = false;
     QString SERVER_IP = "127.0.0.1";
     QString SERVER_ID = "rainbow";
     QString SERVER_PW = "rainbow";
-
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;
@@ -97,39 +357,34 @@ public:
     double MOTOR_GAIN_KI = 0.0;
     double MOTOR_GAIN_KD = 100.0;
 
-    // slamnav
-    int SLAM_WINDOW_SIZE = 100;
-    double SLAM_VOXEL_SIZE = 0.05;
+    // mapping
+    int MAPPING_ICP_MAX_FEATURE_NUM = 1000;
+    int MAPPING_ICP_DO_ERASE_GAP = 10;
+    int MAPPING_ICP_DO_ACCUM_NUM = 2;
+    int MAPPING_KFRM_UPDATE_NUM = 50;
+    int MAPPING_WINDOW_SIZE = 100;
+    double MAPPING_ICP_COST_THRESHOLD = 0.5;
+    double MAPPING_ICP_ERROR_THRESHOLD = 0.2;
+    double MAPPING_ICP_VIEW_THRESHOLD = 170.0;
+    double MAPPING_KFRM_LC_TRY_DIST = 3.0;
+    double MAPPING_KFRM_LC_TRY_OVERLAP = 0.25;
+    double MAPPING_VOXEL_SIZE = 0.05;
 
-    double SLAM_ICP_COST_THRESHOLD = 0.5;
-    double SLAM_ICP_ERROR_THRESHOLD = 0.2;
-    int SLAM_ICP_MAX_FEATURE_NUM = 1000;
-    int SLAM_ICP_DO_ERASE_GAP = 10;
-    int SLAM_ICP_DO_ACCUM_NUM = 2;
-    double SLAM_ICP_VIEW_THRESHOLD = 170.0;
+    // localization 2d
+    int LOC_2D_ICP_MAX_FEATURE_NUM = 1000;
+    int LOC_2D_SURFEL_NUM = 3;
+    double LOC_2D_ICP_ODO_FUSION_RATIO = 0.8;
+    double LOC_2D_ICP_COST_THRESHOLD_0 = 1.0;
+    double LOC_2D_ICP_COST_THRESHOLD = 0.3;
+    double LOC_2D_ICP_ERROR_THRESHOLD = 0.2;
+    double LOC_2D_ARUCO_ODO_FUSION_RATIO = 0.8;
+    double LOC_2D_ARUCO_ODO_FUSION_DIST = 2.0;
+    double LOC_2D_SURFEL_RANGE = 0.15;
+    double LOC_2D_CHECK_DIST = 0.3;
+    double LOC_2D_CHECK_IE = 0.2;
+    double LOC_2D_CHECK_IR = 0.3;
 
-    int SLAM_KFRM_UPDATE_NUM = 50;
-    double SLAM_KFRM_LC_TRY_DIST = 3.0;
-    double SLAM_KFRM_LC_TRY_OVERLAP = 0.25;
-
-    // annotation
-    double ANNOT_QA_STEP = 0.3;
-
-    // loc 2d
-    double LOC_ICP_COST_THRESHOLD_0 = 1.0;
-    double LOC_ICP_COST_THRESHOLD = 0.3;
-    double LOC_ICP_ERROR_THRESHOLD = 0.2;
-    int LOC_ICP_MAX_FEATURE_NUM = 1000;
-    int LOC_SURFEL_NUM = 3;
-    double LOC_SURFEL_RANGE = 0.15;
-    double LOC_CHECK_DIST = 0.3;
-    double LOC_CHECK_IE = 0.2;
-    double LOC_CHECK_IR = 0.3;
-    double LOC_ICP_ODO_FUSION_RATIO = 0.8;
-    double LOC_ARUCO_ODO_FUSION_RATIO = 0.8;
-    double LOC_ARUCO_ODO_FUSION_DIST = 2.0;
-
-    // loc 3d
+    // localization 3d
     int LOC_MAX_FEATURE_NUM = 500;
     int LOC_SURFEL_NN_NUM = 1;
     // double LOC_SURFEL_RANGE = 1.0;
@@ -137,11 +392,9 @@ public:
     double LOC_COST_THRESHOLD = 1.0;
     double LOC_INLIER_CHECK_DIST = 0.3;
 
-    // obsmap
+    // obstacle map
     int OBS_AVOID = 0;
-    double OBS_DEADZONE = 0.5;
-    double OBS_DEADZONE_DYN = 0.5; // dynamic obs deadzone
-    double OBS_DEADZONE_VIR = 0.5; // virtual obs deadzone
+    double OBS_DEADZONE = 0.7;
     double OBS_LOCAL_GOAL_D = 4.0;
     double OBS_SAFE_MARGIN_X = 0.1;
     double OBS_SAFE_MARGIN_Y = 0.1;
@@ -163,11 +416,11 @@ public:
     double DRIVE_W_DEADZONE = 0.1;
 
     // docking
+    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
+    int DOCKING_MAP_SIZE = 10; //m
     double DOCKING_POINTDOCK_MARGIN = 0.18;
     double DOCK_GOAL_D = 0.05;
     double DOCK_GOAL_TH = 2.0;
-    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
-
     double DOCK_EXTENDED_CONTROL_TIME = 10.0;
     double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
     double DOCKING_GOAL_D = 0.05;
@@ -181,52 +434,20 @@ public:
     double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.0;
     double DOCKING_CLUST_ANGLE_THRESHOLD = 45.0*D2R;
     double DOCKING_DOCK_SIZE_X[2] = {-0.025, 0.025};
-
-    double DOCKING_ICP_COST_THRESHOLD = 0.5; //3.0;
+    double DOCKING_ICP_COST_THRESHOLD = 0.5;
     double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
     double DOCKING_GRID_SIZE = 0.05;
-    int DOCKING_MAP_SIZE = 10; //m
 
-
-    // Map
+    // map
     QString MAP_PATH = "";
-
-
     std::vector<QString> params;
 
-    // bqr code info (only use mecanum old)
-    double CODE_A1_X = -27.0; double CODE_A1_Y = -27.0;
-    double CODE_A2_X = -27.0; double CODE_A2_Y = -9.0;
-    double CODE_A3_X = -27.0; double CODE_A3_Y = 9.0;
-    double CODE_A4_X = -27.0; double CODE_A4_Y = 27.0;
+    // missing variables tracking
+    QStringList missing_variables;
 
-    double CODE_B1_X = -9.0;  double CODE_B1_Y = -27.0;
-    double CODE_B2_X = -9.0;  double CODE_B2_Y = -9.0;
-    double CODE_B3_X = -9.0;  double CODE_B3_Y = 9.0;
-    double CODE_B4_X = -9.0;  double CODE_B4_Y = 27.0;
-
-    double CODE_C1_X = 9.0;   double CODE_C1_Y = -27.0;
-    double CODE_C2_X = 9.0;   double CODE_C2_Y = -9.0;
-    double CODE_C3_X = 9.0;   double CODE_C3_Y = 9.0;
-    double CODE_C4_X = 9.0;   double CODE_C4_Y = 27.0;
-
-    double CODE_D1_X = 27.0;  double CODE_D1_Y = -27.0;
-    double CODE_D2_X = 27.0;  double CODE_D2_Y = -9.0;
-    double CODE_D3_X = 27.0;  double CODE_D3_Y = 9.0;
-    double CODE_D4_X = 27.0;  double CODE_D4_Y = 27.0;
-
-public:
-
-    // interface
-    bool load_common(QString path);
-    void load();
-    QString config_path = "";
+    // flag
     std::atomic<bool> is_load = {false};    
-
-    void set_map_path(QString path);
-
-Q_SIGNALS:
 
 };
 

@@ -30,6 +30,9 @@ message($$HOME)
 
 SOURCES += \
     autocontrol.cpp \
+    cam.cpp \
+    cam/GEMINI2E/GEMINI2E.cpp \
+    dockcontrol.cpp \
     lidar/SICK/sick.cpp \
     lidar_2d.cpp \
     localization.cpp \
@@ -42,6 +45,8 @@ SOURCES += \
     pgo.cpp \
     cv_to_qt.cpp \
     logger.cpp \
+    qr_sensor.cpp \
+    qr_sensor/GLS611/GLS611.cpp \
     unimap.cpp \
     mobile.cpp \
     lidar_3d.cpp \
@@ -52,7 +57,10 @@ SOURCES += \
 
 HEADERS += \
     autocontrol.h \
+    cam.h \
+    cam/GEMINI2E/GEMINI2E.h \
     comm_data.h \
+    dockcontrol.h \
     lidar/SICK/sick.h \
     lidar_2d.h \
     localization.h \
@@ -65,6 +73,8 @@ HEADERS += \
     pgo.h \
     cv_to_qt.h \
     nanoflann.hpp \
+    qr_sensor.h \
+    qr_sensor/GLS611/GLS611.h \
     tinycolormap.hpp \
     logger.h \
     unimap.h \

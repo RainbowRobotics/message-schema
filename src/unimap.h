@@ -12,119 +12,104 @@
 #include <QObject>
 #include <QDir>
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/prim_minimum_spanning_tree.hpp>
-
-using node_attributes = std::variant<AttributeGoal, AttributeRoute, AttributeVirtualWall, AttributeZone>;
-
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, boost::property<boost::edge_weight_t, double>> Graph;
-typedef boost::graph_traits<Graph>::edge_descriptor Edge;
-typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-
-struct Point
-{
-    double x;
-    double y;
-    Point(double x, double y): x(x), y(y) {}
-};
-
 class UNIMAP : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(UNIMAP)
 public:
-    explicit UNIMAP(QObject *parent = nullptr);
-    ~UNIMAP();
+    // make singleton
+    static UNIMAP* instance(QObject* parent = nullptr);
+
+    // load map from path
+    void load_map(QString path);
+
+    // clear all map params
     void clear();
 
+    /***********************
+     * interface funcs (get)
+     ***********************/
+    int get_nodes_size();
+    bool get_is_loaded();
+    NODE* get_node_by_id(QString id);
+    NODE* get_node_by_name(QString name);
+    QString get_map_path();
+    QString get_node_id(Eigen::Vector3d pos);
+    QString get_goal_id(Eigen::Vector3d pos);
+    QString get_node_id_nn(Eigen::Vector3d pos);
+    QString get_node_id_edge(Eigen::Vector3d pos);
+    QString get_cur_zone(Eigen::Matrix4d tf);
+    std::vector<QString> get_linked_nodes(QString id);
+    std::vector<QString> get_nodes(QString type);
+    std::vector<QString> get_nodes();
+    std::vector<int> get_init_candidates(std::vector<QString> prefix_list);
+    std::shared_ptr<XYZR_CLOUD> get_kdtree_cloud();
+    std::shared_ptr<std::vector<int>> get_kdtree_mask();
+    std::shared_ptr<std::vector<double>> get_map_3d_reflects();
+    std::shared_ptr<std::vector<Eigen::Vector3d>> get_map_3d_normal();
+    std::shared_ptr<std::vector<Eigen::Vector3d>> get_map_3d_pts();
+    Eigen::Vector3d get_normal_3d(int idx);
+    Eigen::Vector3d get_pts_3d(int idx);
+    std::shared_ptr<std::vector<NODE>> get_nodes_origin();
+
+    std::shared_ptr<KD_TREE_XYZR> get_kdtree_index();
+
+    void radius_search_kdtree_idx(double query[], double sq_radius, std::vector<nanoflann::ResultItem<unsigned int, double>>& res_idxs, nanoflann::SearchParameters params);
+    std::vector<int> knn_search_idx(Eigen::Vector3d center, int k, double radius);
+
+    /***********************
+     * interface funcs (set)
+     ***********************/
+    void set_map_path(QString path);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+
+private:
+    explicit UNIMAP(QObject *parent = nullptr);
+    ~UNIMAP();
+
     // mutex
-    std::recursive_mutex mtx;
+    std::mutex mtx;
 
     // map dir
-    QString map_dir;
+    QString map_path;
 
-    // interface func    
-    void load_map(QString path);
+    // interface func
     bool load_2d();
     bool load_3d();
     bool load_topo();
 
     void save_annotation();
-    void save_annotation_with_simplify();
     void set_cloud_mask(Eigen::Vector3d P, double radius, int val);
-
-    // topology
-    std::vector<QString> get_linked_nodes(QString id);
-    std::vector<QString> get_nodes(QString type);    
-    std::vector<QString> get_nodes();
-
-    std::vector<int> get_init_candidates(std::vector<QString> prefix_list);
-
-    int get_nodes_size();
-
-    QString gen_node_id();
-    QString gen_node_name();
-
-    QString get_node_id(Eigen::Vector3d pos);
-    QString get_goal_id(Eigen::Vector3d pos);
-    QString get_node_id_nn(Eigen::Vector3d pos);
-    QString get_node_id_edge(Eigen::Vector3d pos);
-    NODE* get_node_by_id(QString id);
-    NODE* get_node_by_name(QString name);
-
-    QString get_cur_zone(Eigen::Matrix4d tf);
-
-    // for copy links
-    int get_node_idx_by_id(QString id);
-    NODE* get_node_by_idx(int idx);
-
-    QString add_node(Eigen::Matrix4d tf, QString type);
-    void add_node(PICKING pick, QString type, QString info="");
-    QString add_node(Eigen::Matrix4d tf, QString type, int bqr_num);
-    QString add_node(Eigen::Matrix4d tf, QString type, QString name);
-
-    QString add_node(Eigen::Matrix4d tf, TypeNode type, node_attributes attribute, QString name, QString id);
-
-    void del_node(QString id);
-    void del_link(QString id0, QString id1);
-    void edit_node_pos(PICKING pick);
-    void edit_node_pos(QString id, Eigen::Matrix4d tf);
-    void edit_node_type(PICKING pick, QString type);
-    void edit_node_info(PICKING pick, QString info);    
-    void edit_node_info(QString id, QString info);
-    void edit_node_name(PICKING pick);
     void clear_nodes();
-    void add_link1(PICKING pick);
-    void add_link2(PICKING pick);
-    void add_link1(QString id0, QString id1);
-    void add_link2(QString id0, QString id1);
-    void add_link_auto(std::vector<QString> nodes);
-    void add_node_auto(PICKING pick, QString type, double gap);
-
-    std::vector<int> knn_search_idx(Eigen::Vector3d center, int k, double radius);
 
     // annotation
-    std::vector<NODE> nodes;
+    std::shared_ptr<std::vector<NODE>> nodes;
 
     // code ref
     std::map<QString, cv::Vec2d> ref_codes;
 
     // tree for map icp
-    std::vector<int> kdtree_mask;
-    XYZR_CLOUD kdtree_cloud;
-    KD_TREE_XYZR* kdtree_index = NULL;
+    std::shared_ptr<std::vector<int>> kdtree_mask;
+    std::shared_ptr<XYZR_CLOUD> kdtree_cloud;
+    std::shared_ptr<KD_TREE_XYZR> kdtree_index;
 
     // 3D
     CLOUD cloud_3d;
-    KD_TREE *tree_3d = NULL;
+    std::unique_ptr<KD_TREE> tree_3d;
 
     // 3d pts storage
-    std::vector<Eigen::Vector3d> map_pts;
-    std::vector<Eigen::Vector3d> map_nor;
-    std::vector<double> map_reflects;
+    std::shared_ptr<std::vector<Eigen::Vector3d>> map_3d_pts;
+    std::shared_ptr<std::vector<Eigen::Vector3d>> map_3d_normal;
+    std::shared_ptr<std::vector<double>> map_3d_reflects;
 
     // for fast find neareast
     XYZ_NODE kdtree_node;
-    KD_TREE_NODE* kdtree_node_index = NULL;
+    std::unique_ptr<KD_TREE_NODE> kdtree_node_index;
     std::unordered_map<QString, NODE*> nodes_id_map;
     std::unordered_map<QString, NODE*> nodes_name_map;
 
@@ -143,8 +128,8 @@ public:
     std::atomic<int> is_loaded = {MAP_NOT_LOADED};
 
     // other modules
-    CONFIG* config = NULL;
-    LOGGER* logger = NULL;
+    CONFIG* config;
+    LOGGER* logger;
 };
 
 #endif // UNIMAP_H

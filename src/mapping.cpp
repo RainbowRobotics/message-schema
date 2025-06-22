@@ -1,16 +1,36 @@
 #include "mapping.h"
 
-MAPPING::MAPPING(QObject *parent) : QObject{parent}
+MAPPING* MAPPING::instance(QObject* parent)
 {
+    static MAPPING* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new MAPPING(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+MAPPING::MAPPING(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr),
+    unimap(nullptr),
+    lidar_2d(nullptr),
+    loc(nullptr)
+{
+    live_cloud_pts = std::make_shared<std::vector<PT_XYZR>>();
 }
 
 MAPPING::~MAPPING()
 {
     stop();
 
-    if(live_tree != NULL)
+    if(live_tree)
     {
-        delete live_tree;
+        live_tree.reset();
     }
 }
 
@@ -23,17 +43,11 @@ void MAPPING::start()
     loc->stop();
 
     // start loop
-    if(a_thread == NULL)
-    {
-        a_flag = true;
-        a_thread = new std::thread(&MAPPING::a_loop, this);
-    }
+    kfrm_flag = true;
+    kfrm_thread = std::make_unique<std::thread>(&MAPPING::kfrm_loop, this);
 
-    if(b_thread == NULL)
-    {
-        b_flag = true;
-        b_thread = new std::thread(&MAPPING::b_loop, this);
-    }
+    loop_closing_flag = true;
+    loop_closing_thread = std::make_unique<std::thread>(&MAPPING::loop_closing_loop, this);
 
     // set flag
     is_mapping = true;
@@ -42,20 +56,20 @@ void MAPPING::start()
 
 void MAPPING::stop()
 {
-    // stop slam loops
-    if(a_thread != NULL)
+    // stop mapping loops
+    kfrm_flag = false;
+    if(kfrm_thread && kfrm_thread->joinable())
     {
-        a_flag = false;
-        a_thread->join();
-        a_thread = NULL;
+        kfrm_thread->join();
     }
+    kfrm_thread.reset();
 
-    if(b_thread != NULL)
+    loop_closing_flag = false;
+    if(loop_closing_thread && loop_closing_thread->joinable())
     {
-        b_flag = false;
-        b_thread->join();
-        b_thread = NULL;
+        loop_closing_thread->join();
     }
+    loop_closing_thread.reset();
 
     is_mapping = false;
     printf("[MAPPING] stop\n");
@@ -64,26 +78,38 @@ void MAPPING::stop()
 void MAPPING::clear()
 {
     // clear storages
-    mtx.lock();
-    clear_pose_graph();
-
-    kfrm_que.clear();
-    kfrm_update_que.clear();
-    kfrm_storage.clear();
-
-    if(live_tree != NULL)
     {
-        delete live_tree;
-        live_tree = NULL;
-        live_cloud.pts.clear();
+        std::lock_guard<std::mutex> lock(mtx);
+        clear_pose_graph();
+
+        kfrm_que.clear();
+        kfrm_update_que.clear();
+        kfrm_storage.clear();
+
+        if(live_tree)
+        {
+            live_tree.reset();
+            live_cloud.pts.clear();
+        }
+
+        live_tree = std::make_unique<KD_TREE_XYZR>(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+        pgo = PGO();
     }
-    live_tree = new KD_TREE_XYZR(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-    pgo = PGO();
-    mtx.unlock();
 
     loc->set_cur_tf(Eigen::Matrix4d::Identity());
-
     printf("[MAPPING] clear\n");
+}
+
+const std::vector<KFRAME>& MAPPING::get_kfrm_storage()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return kfrm_storage;
+}
+
+size_t MAPPING::get_kfrm_storage_size()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return kfrm_storage.size();
 }
 
 QString MAPPING::get_info_text()
@@ -96,13 +122,55 @@ QString MAPPING::get_info_text()
     return res;
 }
 
-void MAPPING::a_loop()
+bool MAPPING::get_is_mapping()
 {
-    const int window_size = config->SLAM_WINDOW_SIZE;
-    const double voxel_size = config->SLAM_VOXEL_SIZE;
+    return (bool)is_mapping.load();
+}
+
+bool MAPPING::try_pop_kfrm_update_que(int& kfrm_id)
+{
+    if(kfrm_update_que.try_pop(kfrm_id))
+    {
+        return true;
+    }
+
+    kfrm_id = -1;
+    return false;
+}
+
+KFRAME MAPPING::get_kfrm(int kfrm_id)
+{
+    if(kfrm_id < 0 || kfrm_id >= (int)kfrm_storage.size())
+    {
+        return KFRAME();
+    }
+
+    std::lock_guard<std::mutex> lock(mtx);
+    KFRAME res = kfrm_storage[kfrm_id];
+    return res;
+}
+
+std::shared_ptr<std::vector<PT_XYZR>> MAPPING::get_live_cloud_pts()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return live_cloud_pts;
+}
+
+void MAPPING::kfrm_loop()
+{
+    const int accum_num = config->get_mapping_icp_do_accum_num();
+    const int erase_gap = config->get_mapping_icp_do_erase_gap();
+    const int window_size = config->get_mapping_window_size();
+    const double voxel_size = config->get_mapping_voxel_size();
     const double do_cnt_check_range = 1.0*voxel_size;
-    const int erase_gap = config->SLAM_ICP_DO_ERASE_GAP;
-    const int accum_num = config->SLAM_ICP_DO_ACCUM_NUM;
+
+    const double icp_error_threshold = config->get_loc_2d_icp_error_threshold();
+
+    const double x_min = config->get_robot_size_x_min(); const double x_max = config->get_robot_size_x_max();
+    const double y_min = config->get_robot_size_y_min(); const double y_max = config->get_robot_size_y_max();
+    const double z_min = config->get_robot_size_z_min(); const double z_max = config->get_robot_size_z_max();
+
+    const QString platform_type = config->get_platform_type();
 
     int frm_cnt = 0;
     int add_cnt = 0;
@@ -112,13 +180,13 @@ void MAPPING::a_loop()
     FRAME frm0;
 
     // using new lidar frame
-    lidar_2d->merged_que.clear();
+    lidar_2d->clear_merged_queue();
 
     printf("[MAPPING] a_loop start\n");
-    while(a_flag)
+    while(kfrm_flag)
     {
         FRAME frm;
-        if(lidar_2d->merged_que.try_pop(frm))
+        if(lidar_2d->try_pop_merged_queue(frm))
         {
             // for processing time
             double st_time = get_time();
@@ -127,49 +195,51 @@ void MAPPING::a_loop()
             {
                 // get cur_tf
                 Eigen::Matrix4d G = loc->get_cur_tf();
+                Eigen::Matrix3d R0 = G.block(0,0,3,3);
+                Eigen::Vector3d t0 = G.block(0,3,3,1);
 
                 // local to global
-                std::vector<PT_XYZR> dsk;
+                std::vector<PT_XYZR> deskewing_pts;
                 // #pragma omp parallel for
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Vector3d _P = frm.pts[p];
-
-                    if(config->PLATFORM_TYPE == "S100")
+                    if(platform_type == "S100")
                     {
                         double dx = 1.0;
-                        if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
-                           _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                        if(_P[0] > (x_min - dx) && _P[0] < (x_max + dx) &&
+                           _P[1] > y_min        && _P[1] < y_max)
                         {
                             continue;
                         }
                     }
 
-                    Eigen::Vector3d P = G.block(0,0,3,3)*_P + G.block(0,3,3,1);
-                    Eigen::Vector3d V = (P - G.block(0,3,3,1)).normalized();
+                    Eigen::Vector3d P = R0*_P + t0;
+                    Eigen::Vector3d V = (P - t0).normalized();
 
                     PT_XYZR pt;
-                    pt.x = P[0];
-                    pt.y = P[1];
-                    pt.z = P[2];
-                    pt.vx = V[0];
-                    pt.vy = V[1];
-                    pt.vz = V[2];
-                    pt.r = frm.reflects[p];
-                    pt.k0 = add_cnt;
-                    pt.k = add_cnt;
+                    pt.x      = P[0];
+                    pt.y      = P[1];
+                    pt.z      = P[2];
+                    pt.vx     = V[0];
+                    pt.vy     = V[1];
+                    pt.vz     = V[2];
+                    pt.r      = frm.reflects[p];
+                    pt.k0     = add_cnt;
+                    pt.k      = add_cnt;
                     pt.do_cnt = 10;
-                    dsk.push_back(pt);
+                    deskewing_pts.push_back(pt);
                 }
 
                 // add tree
-                mtx.lock();
-                for(size_t p = 0; p < dsk.size(); p++)
                 {
-                    live_cloud.pts.push_back(dsk[p]);
+                    std::lock_guard<std::mutex> lock(mtx);
+                    for(size_t p = 0; p < deskewing_pts.size(); p++)
+                    {
+                        live_cloud.pts.push_back(deskewing_pts[p]);
+                    }
+                    live_tree->buildIndex();
                 }
-                live_tree->buildIndex();
-                mtx.unlock();
 
                 // update global tf
                 loc->set_cur_tf(G);
@@ -189,6 +259,9 @@ void MAPPING::a_loop()
                 Eigen::Matrix4d delta_tf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
                 G = G * delta_tf;
 
+                Eigen::Matrix3d R0 = G.block(0,0,3,3);
+                Eigen::Vector3d t0 = G.block(0,3,3,1);
+
                 // check moving
                 double moving_d = calc_dist_2d(delta_tf.block(0,3,3,1));
                 double moving_th = std::abs(TF_to_se2(delta_tf)[2]);
@@ -197,7 +270,7 @@ void MAPPING::a_loop()
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
                     Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, live_cloud, frm, G);
-                    if(err < config->LOC_ICP_ERROR_THRESHOLD)
+                    if(err < icp_error_threshold)
                     {
                         // local to global
                         std::vector<PT_XYZR> dsk;
@@ -206,29 +279,29 @@ void MAPPING::a_loop()
                         {
                             Eigen::Vector3d _P = frm.pts[p];
 
-                            if(config->PLATFORM_TYPE == "S100")
+                            if(platform_type == "S100")
                             {
                                 double dx = 1.0;
-                                if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
-                                   _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                                if(_P[0] > x_min - dx && _P[0] < x_max + dx &&
+                                   _P[1] > y_min && _P[1] < y_max)
                                 {
                                     continue;
                                 }
                             }
 
-                            Eigen::Vector3d P = G.block(0,0,3,3)*_P + G.block(0,3,3,1);
-                            Eigen::Vector3d V = (P - G.block(0,3,3,1)).normalized();
+                            Eigen::Vector3d P = R0*_P + t0;
+                            Eigen::Vector3d V = (P - t0).normalized();
 
                             PT_XYZR pt;
-                            pt.x = P[0];
-                            pt.y = P[1];
-                            pt.z = P[2];
-                            pt.vx = V[0];
-                            pt.vy = V[1];
-                            pt.vz = V[2];
-                            pt.r = frm.reflects[p];
-                            pt.k0 = add_cnt;
-                            pt.k = add_cnt;
+                            pt.x      = P[0];
+                            pt.y      = P[1];
+                            pt.z      = P[2];
+                            pt.vx     = V[0];
+                            pt.vy     = V[1];
+                            pt.vz     = V[2];
+                            pt.r      = frm.reflects[p];
+                            pt.k0     = add_cnt;
+                            pt.k      = add_cnt;
                             pt.do_cnt = 0;
                             dsk.push_back(pt);
                         }
@@ -326,12 +399,15 @@ void MAPPING::a_loop()
                         }
 
                         // update tree
-                        mtx.lock();
-                        delete live_tree;
-                        live_cloud.pts = pts;
-                        live_tree = new KD_TREE_XYZR(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-                        live_tree->buildIndex();
-                        mtx.unlock();
+                        {
+                            std::lock_guard<std::mutex> lock(mtx);
+                            live_tree.reset();
+                            live_cloud.pts = pts;
+                            live_tree = std::make_unique<KD_TREE_XYZR>(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+                            live_tree->buildIndex();
+
+                            live_cloud_pts = std::make_shared<std::vector<PT_XYZR>>(pts);
+                        }
 
                         // update global tf
                         loc->set_cur_tf(G);
@@ -343,8 +419,10 @@ void MAPPING::a_loop()
                         add_cnt++;
 
                         // make keyframe
-                        if(add_cnt % config->SLAM_KFRM_UPDATE_NUM == 0)
+                        if(add_cnt % config->MAPPING_KFRM_UPDATE_NUM == 0)
                         {
+                            std::lock_guard<std::mutex> lock(mtx);
+
                             // set keyframe
                             KFRAME kfrm;
                             kfrm.id = kfrm_id;
@@ -359,15 +437,15 @@ void MAPPING::a_loop()
                         }
 
                         // update ieir
-                        mtx.lock();
-                        loc->cur_ieir = ieir;
-                        mtx.unlock();
+                        {
+                            std::lock_guard<std::mutex> lock(mtx);
+                            loc->set_cur_ieir(ieir);
+                        }
                     }
                     else
                     {
-                        mtx.lock();
-                        loc->cur_ieir[0] = err;
-                        mtx.unlock();
+                        std::lock_guard<std::mutex> lock(mtx);
+                        loc->get_cur_ieir()[0] = err;
                     }
                 }
             }
@@ -386,10 +464,10 @@ void MAPPING::a_loop()
     printf("[MAPPING] a_loop stop\n");
 }
 
-void MAPPING::b_loop()
+void MAPPING::loop_closing_loop()
 {
     printf("[MAPPING] b_loop start\n");
-    while(b_flag)
+    while(loop_closing_flag)
     {
         KFRAME kfrm;
         if(kfrm_que.try_pop(kfrm))
@@ -399,8 +477,8 @@ void MAPPING::b_loop()
             printf("[MAPPING] kfrm:%d processing start\n", kfrm.id);
 
             // keyframe pts transform global to kfrm local
-            const int k0 = kfrm.id*config->SLAM_KFRM_UPDATE_NUM;
-            const int k1 = kfrm.id*config->SLAM_KFRM_UPDATE_NUM + config->SLAM_KFRM_UPDATE_NUM;
+            const int k0 = kfrm.id*config->MAPPING_KFRM_UPDATE_NUM;
+            const int k1 = kfrm.id*config->MAPPING_KFRM_UPDATE_NUM + config->MAPPING_KFRM_UPDATE_NUM;
 
             std::vector<PT_XYZR> pts;
             Eigen::Matrix4d G_inv = kfrm.G.inverse();
@@ -409,7 +487,7 @@ void MAPPING::b_loop()
                 PT_XYZR pt = kfrm.pts[p];
                 if(pt.k0 >= k0 && pt.k0 < k1)
                 {
-                    if(pt.do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
+                    if(pt.do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
                     {
                         continue;
                     }
@@ -456,7 +534,7 @@ void MAPPING::b_loop()
                     int p1 = kfrm_storage.size()-1;
 
                     double d = (kfrm_storage[p1].opt_G.block(0,3,3,1) - kfrm_storage[p0].opt_G.block(0,3,3,1)).norm();
-                    if(d < config->SLAM_KFRM_LC_TRY_DIST)
+                    if(d < config->MAPPING_KFRM_LC_TRY_DIST)
                     {
                         // check overlap ratio
                         std::vector<Eigen::Vector3d> pts0;
@@ -484,7 +562,7 @@ void MAPPING::b_loop()
                         }
 
                         double overlap_ratio = calc_overlap_ratio(pts0, pts1);
-                        if(overlap_ratio < config->SLAM_KFRM_LC_TRY_OVERLAP)
+                        if(overlap_ratio < config->MAPPING_KFRM_LC_TRY_OVERLAP)
                         {
                             printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, d, overlap_ratio);
                             continue;
@@ -494,7 +572,7 @@ void MAPPING::b_loop()
 
                         Eigen::Matrix4d dG = kfrm_storage[p0].opt_G.inverse()*kfrm_storage[p1].opt_G;
                         double err = kfrm_icp(kfrm_storage[p0], kfrm_storage[p1], dG);
-                        if(err < config->SLAM_ICP_ERROR_THRESHOLD)
+                        if(err < config->MAPPING_ICP_ERROR_THRESHOLD)
                         {
                             pgo.add_lc(kfrm_storage[p0].id, kfrm_storage[p1].id, dG, err);
                             printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, err);
@@ -559,15 +637,15 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     Eigen::Matrix4d _G = Eigen::Matrix4d::Identity();
 
     // optimization param
-    const int max_iter = loc->max_iter0;
-    double lambda = loc->lambda0;
-    double first_err = 9999;
-    double last_err = 9999;
-    double convergence = 9999;
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
+    double first_err = std::numeric_limits<double>::max();
+    double last_err = std::numeric_limits<double>::max();
+    double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD*config->SLAM_ICP_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
+    const double cost_threshold = config->MAPPING_ICP_COST_THRESHOLD*config->MAPPING_ICP_COST_THRESHOLD;
+    const int num_feature = std::min<int>(idx_list.size(), config->MAPPING_ICP_MAX_FEATURE_NUM);
 
     // for rmt
     double tm0 = 0;
@@ -595,7 +673,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->LOC_SURFEL_NUM;
+                const int pt_num = config->LOC_2D_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -607,7 +685,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
+                double sq_d_max = config->LOC_2D_SURFEL_RANGE*config->LOC_2D_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
@@ -626,7 +704,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // view filter
-            if(compare_view_vector(V0, V1, config->SLAM_ICP_VIEW_THRESHOLD*D2R))
+            if(compare_view_vector(V0, V1, config->MAPPING_ICP_VIEW_THRESHOLD*D2R))
             {
                 continue;
             }
@@ -644,7 +722,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + loc->rmt_sigma)
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -662,7 +740,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
             {
                 continue;
             }
@@ -707,16 +785,16 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < loc->sigma_eps)
+        if(sigma < sigma_eps)
         {
-            sigma = loc->sigma_eps;
+            sigma = sigma_eps;
         }
 
         // calc weight
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = loc->t_dist_v0;
+            double V0 = t_dist_v0;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -766,11 +844,11 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         // lambda update
         if(err < last_err)
         {
-            lambda *= loc->lambda_dec;
+            lambda *= lambda_dec;
         }
         else
         {
-            lambda *= loc->lambda_inc;
+            lambda *= lambda_inc;
         }
         last_err = err;
 
@@ -798,12 +876,12 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->MAPPING_ICP_ERROR_THRESHOLD)
     {
         printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
 
-        return 9999;
+        return std::numeric_limits<double>::max();
     }
 
     return last_err;
@@ -845,15 +923,15 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     Eigen::Matrix4d _dG = Eigen::Matrix4d::Identity();
 
     // optimization param
-    const int max_iter = loc->max_iter0;
-    double lambda = loc->lambda0;
-    double first_err = 9999;
-    double last_err = 9999;
-    double convergence = 9999;
+    const int max_iter = max_iter0;
+    double lambda = lambda0;
+    double first_err = std::numeric_limits<double>::max();
+    double last_err = std::numeric_limits<double>::max();
+    double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    const double cost_threshold = config->SLAM_ICP_COST_THRESHOLD*config->SLAM_ICP_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->SLAM_ICP_MAX_FEATURE_NUM);
+    const double cost_threshold = config->MAPPING_ICP_COST_THRESHOLD*config->MAPPING_ICP_COST_THRESHOLD;
+    const int num_feature = std::min<int>(idx_list.size(), config->MAPPING_ICP_MAX_FEATURE_NUM);
 
     // for rmt
     double tm0 = 0;
@@ -880,7 +958,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = 0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->LOC_SURFEL_NUM;
+                const int pt_num = config->LOC_2D_SURFEL_NUM;
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -891,7 +969,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max = config->LOC_SURFEL_RANGE*config->LOC_SURFEL_RANGE;
+                double sq_d_max = config->LOC_2D_SURFEL_RANGE*config->LOC_2D_SURFEL_RANGE;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
@@ -922,7 +1000,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
             // point to point distance
             double cost = (_P1 - P0).squaredNorm();
-            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + loc->rmt_sigma)
+            if(cost > cost_threshold || std::abs(cost) > rmt*std::abs(cost) + rmt_sigma)
             {
                 continue;
             }
@@ -940,7 +1018,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt < config->SLAM_ICP_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
             {
                 continue;
             }
@@ -984,16 +1062,16 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         }
         std::nth_element(vars.begin(), vars.begin() + vars.size() / 2, vars.end());
         double sigma = vars[vars.size() / 2];
-        if(sigma < loc->sigma_eps)
+        if(sigma < sigma_eps)
         {
-            sigma = loc->sigma_eps;
+            sigma = sigma_eps;
         }
 
         // calc weight
         for (size_t p = 0; p < cj_set.size(); p++)
         {
             double c = cj_set[p].c;
-            double V0 = loc->t_dist_v0;
+            double V0 = t_dist_v0;
             double w = (V0 + 1.0) / (V0 + ((c - mu) / sigma) * ((c - mu) / sigma));
             cj_set[p].w *= w;
         }
@@ -1043,11 +1121,11 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         // lambda update
         if(err < last_err)
         {
-            lambda *= loc->lambda_dec;
+            lambda *= lambda_dec;
         }
         else
         {
-            lambda *= loc->lambda_inc;
+            lambda *= lambda_inc;
         }
         last_err = err;
 
@@ -1166,7 +1244,7 @@ void MAPPING::last_lc()
         printf("[LAST_LC] dxi: %f, %f, %f\n", dxi[0], dxi[1], dxi[2]*R2D);
 
         double err = kfrm_icp(kfrm0, kfrm1, dG);
-        if(err < config->SLAM_ICP_ERROR_THRESHOLD)
+        if(err < config->MAPPING_ICP_ERROR_THRESHOLD)
         {
             pgo.add_lc(kfrm0.id, kfrm1.id, dG, err);
             printf("[LAST_LC] pose graph optimization, id:%d-%d, err:%f\n", kfrm0.id, kfrm1.id, err);
@@ -1188,4 +1266,29 @@ void MAPPING::last_lc()
             printf("[LAST_LC] failed\n");
         }
     }
+}
+
+void MAPPING::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void MAPPING::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
+}
+
+void MAPPING::set_unimap_module(UNIMAP* _unimap)
+{
+    unimap = _unimap;
+}
+
+void MAPPING::set_lidar_2d_module(LIDAR_2D *_lidar_2d)
+{
+    lidar_2d = _lidar_2d;
+}
+
+void MAPPING::set_localization_module(LOCALIZATION *_loc)
+{
+    loc = _loc;
 }

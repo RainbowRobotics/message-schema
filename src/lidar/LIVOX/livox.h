@@ -28,12 +28,13 @@ public:
     // mutex
     std::mutex mtx;
 
+
     // imu filter
     imu_tools::ComplementaryFilter imu_filter[2];
 
     // other modules
     CONFIG* config = NULL;
-    LOGGER *logger = NULL;
+    LOGGER* logger = NULL;
 
     // extrinsics
     Eigen::Matrix4d pts_tf[2];
@@ -44,7 +45,10 @@ public:
     void open();
     void close();
 
+    IMU get_cur_imu(int idx);
+    LVX_FRM get_cur_raw(int idx);
     QString get_info_text(int idx);
+    std::vector<IMU> get_imu_storage(int idx);
 
     // for multi lidar
     std::array<uint32_t, 2> livox_handles = {0, 0};

@@ -1,44 +1,29 @@
 #include "config.h"
 
-CONFIG::CONFIG(QObject *parent)
-    : QObject{parent}
+CONFIG* CONFIG::instance(QObject* parent)
 {
+    static CONFIG* _instance = nullptr;
+    if(!_instance)
+    {
+        _instance = new CONFIG(parent);
+    }
+    return _instance;
 }
 
-bool CONFIG::load_common(QString path)
+CONFIG::CONFIG(QObject* parent) : QObject(parent)
 {
-    QFile common_file(path);
-    if(!common_file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qWarning() << "[CONFIG] Failed to open common file:" << config_path;
-        return false;
-    }
 
-    QByteArray data = common_file.readAll();
-    common_file.close();
+}
 
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    if(parseError.error != QJsonParseError::NoError)
-    {
-        qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
-        return false;
-    }
+CONFIG::~CONFIG()
+{
 
-    QJsonObject obj = doc.object();
-
-    if(obj.contains("PLATFORM_NAME"))
-    {
-        PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
-    }
-
-    // complete
-    common_file.close();
-    return true;
 }
 
 void CONFIG::load()
 {
+    missing_variables.clear();
+
     QFile config_file(config_path);
     if(!config_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -59,122 +44,211 @@ void CONFIG::load()
 
     QJsonObject obj = doc.object();
 
+    load_robot_config(obj);
+    load_sensors_config(obj);
+    load_localization_config(obj);
+    load_network_config(obj);
+    load_debug_config(obj);
+    load_motor_config(obj);
+    load_mapping_config(obj);
+    load_obstacle_config(obj);
+    load_control_config(obj);
+    load_docking_config(obj);
+    load_map_config(obj);
+    load_lidar_configs(obj);
+    load_camera_configs(obj);
+    load_sensor_specific_configs(obj);
+
+    is_load = true;
+    printf("[CONFIG] %s, load successed\n", qUtf8Printable(config_path));
+
+    if(has_missing_variables())
+    {
+        show_missing_variables_dialog();
+    }
+}
+
+void CONFIG::load_robot_config(const QJsonObject &obj)
+{
     QJsonObject obj_robot = obj["robot"].toObject();
-    {
-        PLATFORM_NAME = obj_robot["PLATFORM_NAME"].toString();
-        printf("[CONFIG] PLATFORM_NAME, %s\n", obj_robot["PLATFORM_NAME"].toString().toLocal8Bit().data());
 
-        PLATFORM_TYPE = obj_robot["PLATFORM_TYPE"].toString();
-        printf("[CONFIG] PLATFORM_TYPE, %s\n", obj_robot["PLATFORM_TYPE"].toString().toLocal8Bit().data());
+    check_and_set_string(obj_robot, "PLATFORM_NAME",        PLATFORM_NAME,      "robot");
+    check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
-        ROBOT_SIZE_X[0] = obj_robot["ROBOT_SIZE_MIN_X"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MIN_X, %s\n", obj_robot["ROBOT_SIZE_MIN_X"].toString().toLocal8Bit().data());
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_Y",     ROBOT_SIZE_Y[0],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Y",     ROBOT_SIZE_Y[1],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_Z",     ROBOT_SIZE_Z[0],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Z",     ROBOT_SIZE_Z[1],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_WHEEL_RADIUS",   ROBOT_WHEEL_RADIUS, "robot");
+    check_and_set_double(obj_robot, "ROBOT_WHEEL_BASE",     ROBOT_WHEEL_BASE,   "robot");
 
-        ROBOT_SIZE_X[1] = obj_robot["ROBOT_SIZE_MAX_X"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MAX_X, %s\n", obj_robot["ROBOT_SIZE_MAX_X"].toString().toLocal8Bit().data());
+    double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
+    double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
+    ROBOT_RADIUS = std::sqrt(lx * lx + ly * ly);
+    printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
+}
 
-        ROBOT_SIZE_Y[0] = obj_robot["ROBOT_SIZE_MIN_Y"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MIN_Y, %s\n", obj_robot["ROBOT_SIZE_MIN_Y"].toString().toLocal8Bit().data());
-
-        ROBOT_SIZE_Y[1] = obj_robot["ROBOT_SIZE_MAX_Y"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MAX_Y, %s\n", obj_robot["ROBOT_SIZE_MAX_Y"].toString().toLocal8Bit().data());
-
-        ROBOT_SIZE_Z[0] = obj_robot["ROBOT_SIZE_MIN_Z"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MIN_Z, %s\n", obj_robot["ROBOT_SIZE_MIN_Z"].toString().toLocal8Bit().data());
-
-        ROBOT_SIZE_Z[1] = obj_robot["ROBOT_SIZE_MAX_Z"].toString().toDouble();
-        printf("[CONFIG] ROBOT_SIZE_MAX_Z, %s\n", obj_robot["ROBOT_SIZE_MAX_Z"].toString().toLocal8Bit().data());
-
-        // robot radius calculation
-        double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
-        double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
-        ROBOT_RADIUS = std::sqrt(lx*lx + ly*ly);
-        printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
-
-        ROBOT_WHEEL_RADIUS = obj_robot["ROBOT_WHEEL_RADIUS"].toString().toDouble();
-        printf("[CONFIG] ROBOT_WHEEL_RADIUS, %s\n", obj_robot["ROBOT_WHEEL_RADIUS"].toString().toLocal8Bit().data());
-
-        ROBOT_WHEEL_BASE = obj_robot["ROBOT_WHEEL_BASE"].toString().toDouble();
-        printf("[CONFIG] ROBOT_WHEEL_BASE, %s\n", obj_robot["ROBOT_WHEEL_BASE"].toString().toLocal8Bit().data());
-    }
-
+void CONFIG::load_sensors_config(const QJsonObject &obj)
+{
     QJsonObject obj_sensors = obj["sensors"].toObject();
-    {
-        USE_LIDAR_2D = obj_sensors["USE_LIDAR_2D"].toBool();
-        printf("[CONFIG] USE_LIDAR_2D, %s\n", USE_LIDAR_2D ? "true" : "false");
 
-        LIDAR_2D_TYPE = obj_sensors["LIDAR_2D_TYPE"].toString();
-        printf("[CONFIG] LIDAR_2D_TYPE, %s\n", LIDAR_2D_TYPE.toLocal8Bit().data());
+    check_and_set_bool(obj_sensors,   "USE_LIDAR_2D",   USE_LIDAR_2D,  "sensors");
+    check_and_set_bool(obj_sensors,   "USE_LIDAR_3D",   USE_LIDAR_3D,  "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
+    check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
+    check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
+    check_and_set_bool(obj_sensors,   "USE_ARUCO",      USE_ARUCO,     "sensors");
+    check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
+    check_and_set_int(obj_sensors,    "LIDAR_3D_NUM",   LIDAR_3D_NUM,  "sensors");
+    check_and_set_int(obj_sensors,    "CAM_NUM",        CAM_NUM,       "sensors");
+    check_and_set_string(obj_sensors, "LIDAR_2D_TYPE",  LIDAR_2D_TYPE, "sensors");
+    check_and_set_string(obj_sensors, "LIDAR_3D_TYPE",  LIDAR_3D_TYPE, "sensors");
+    check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
+}
 
-        LIDAR_2D_NUM = obj_sensors["LIDAR_2D_NUM"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_NUM, %s\n", obj_sensors["LIDAR_2D_NUM"].toString().toLocal8Bit().data());
-
-        USE_LIDAR_3D = obj_sensors["USE_LIDAR_3D"].toBool();
-        printf("[CONFIG] USE_LIDAR_3D, %s\n", USE_LIDAR_3D ? "true" : "false");
-
-        LIDAR_3D_TYPE = obj_sensors["LIDAR_3D_TYPE"].toString();
-        printf("[CONFIG] LIDAR_3D_TYPE, %s\n", LIDAR_3D_TYPE.toLocal8Bit().data());
-
-        LIDAR_3D_NUM = obj_sensors["LIDAR_3D_NUM"].toString().toDouble();
-        printf("[CONFIG] LIDAR_3D_NUM, %s\n", obj_sensors["LIDAR_3D_NUM"].toString().toLocal8Bit().data());
-
-        USE_CAM = obj_sensors["USE_CAM"].toBool();
-        printf("[CONFIG] USE_CAM, %s\n", USE_CAM ? "true" : "false");
-
-        CAM_NUM = obj_sensors["CAM_NUM"].toString().toDouble();
-        printf("[CONFIG] CAM_NUM, %s\n", obj_sensors["CAM_NUM"].toString().toLocal8Bit().data());
-
-        USE_BQR = obj_sensors["USE_BQR"].toBool();
-        printf("[CONFIG] USE_BQR, %s\n", obj_sensors["USE_BQR"].toString().toLocal8Bit().data());
-
-        USE_IMU = obj_sensors["USE_IMU"].toBool();
-        printf("[CONFIG] USE_IMU, %s\n", obj_sensors["USE_IMU"].toString().toLocal8Bit().data());
-    }
-
+void CONFIG::load_localization_config(const QJsonObject &obj)
+{
     QJsonObject obj_loc = obj["localization"].toObject();
+
+    check_and_set_string(obj_loc, "MODE", LOC_MODE, "localization");
+
+    if(LOC_MODE == "2D")
     {
-        LOC_MODE = obj_loc["MODE"].toString();
-        printf("[CONFIG] LOC_MODE, %s\n", obj_loc["MODE"].toString().toLocal8Bit().data());
-
-        USE_ARUCO = obj_loc["USE_ARUCO"].toBool();
-        printf("[CONFIG] USE_ARUCO, %s\n", USE_ARUCO ? "true" : "false");
+        load_localization_2d_config(obj);
     }
+    else if(LOC_MODE == "3D")
+    {
+        load_localization_3d_config(obj);
+    }
+}
 
+void CONFIG::load_network_config(const QJsonObject &obj)
+{
     QJsonObject obj_net = obj["network"].toObject();
-    {
-        USE_MULTI = obj_net["USE_MULTI"].toBool();
-        printf("[CONFIG] USE_MULTI, %s\n", USE_MULTI ? "true" : "false");
 
-        USE_COOP = obj_net["USE_COOP"].toBool();
-        printf("[CONFIG] USE_COOP, %s\n", USE_COOP ? "true" : "false");
+    check_and_set_bool(obj_net, "USE_MULTI", USE_MULTI,     "network");
+    check_and_set_bool(obj_net, "USE_COOP",  USE_COMM_COOP, "network");
+    check_and_set_bool(obj_net, "USE_RTSP",  USE_COMM_RTSP, "network");
+    check_and_set_bool(obj_net, "USE_RRS",   USE_COMM_RRS,  "network");
+    check_and_set_bool(obj_net, "USE_FMS",   USE_COMM_FMS,  "network");
+}
 
-        USE_RTSP = obj_net["USE_RTSP"].toBool();
-        printf("[CONFIG] USE_RTSP, %s\n", USE_RTSP ? "true" : "false");
-
-        USE_RRS = obj_net["USE_RRS"].toBool();
-        printf("[CONFIG] USE_RRS, %s\n", USE_RRS ? "true" : "false");
-
-        USE_FMS = obj_net["USE_FMS"].toBool();
-        printf("[CONFIG] USE_FMS, %s\n", USE_FMS ? "true" : "false");
-    }
-
+void CONFIG::load_debug_config(const QJsonObject &obj)
+{
     QJsonObject obj_debug = obj["debug"].toObject();
-    {
-        USE_SIM = obj_debug["USE_SIM"].toBool();
-        printf("[CONFIG] USE_SIM, %s\n", USE_SIM ? "true" : "false");
 
-        USE_QTUI = obj_debug["USE_QTUI"].toBool();
-        printf("[CONFIG] USE_QTUI, %s\n", USE_QTUI ? "true" : "false");
+    check_and_set_bool(obj_debug,   "USE_SIM",   USE_SIM,   "debug");
+    check_and_set_bool(obj_debug,   "USE_BEEP",  USE_BEEP,  "debug");
+    check_and_set_string(obj_debug, "SERVER_IP", SERVER_IP, "debug");
+    check_and_set_string(obj_debug, "SERVER_ID", SERVER_ID, "debug");
+    check_and_set_string(obj_debug, "SERVER_PW", SERVER_PW, "debug");
+}
 
-        USE_BEEP = obj_debug["USE_BEEP"].toBool();
-        printf("[CONFIG] USE_BEEP, %s\n", USE_BEEP ? "true" : "false");
-    }
+void CONFIG::load_motor_config(const QJsonObject &obj)
+{
+    QJsonObject obj_motor = obj["motor"].toObject();
 
-    QJsonObject obj_path = obj["map"].toObject();
-    {
-        MAP_PATH = obj_path["MAP_PATH"].toString();
-    }
+    check_and_set_int(obj_motor,    "MOTOR_ID_L",        MOTOR_ID_L,        "motor");
+    check_and_set_int(obj_motor,    "MOTOR_ID_R",        MOTOR_ID_R,        "motor");
+    check_and_set_double(obj_motor, "MOTOR_DIR",         MOTOR_DIR,         "motor");
+    check_and_set_double(obj_motor, "MOTOR_GEAR_RATIO",  MOTOR_GEAR_RATIO,  "motor");
+    check_and_set_double(obj_motor, "MOTOR_LIMIT_V",     MOTOR_LIMIT_V,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_LIMIT_V_ACC", MOTOR_LIMIT_V_ACC, "motor");
+    check_and_set_double(obj_motor, "MOTOR_LIMIT_W",     MOTOR_LIMIT_W,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_LIMIT_W_ACC", MOTOR_LIMIT_W_ACC, "motor");
+    check_and_set_double(obj_motor, "MOTOR_GAIN_KP",     MOTOR_GAIN_KP,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_GAIN_KI",     MOTOR_GAIN_KI,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_GAIN_KD",     MOTOR_GAIN_KD,     "motor");
+}
 
+void CONFIG::load_mapping_config(const QJsonObject &obj)
+{
+    QJsonObject obj_mapping = obj["mapping"].toObject();
+
+    check_and_set_int(obj_mapping,      "SLAM_WINDOW_SIZE",         MAPPING_WINDOW_SIZE,         "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_VOXEL_SIZE",          MAPPING_VOXEL_SIZE,          "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_ICP_COST_THRESHOLD",  MAPPING_ICP_COST_THRESHOLD,  "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_ICP_ERROR_THRESHOLD", MAPPING_ICP_ERROR_THRESHOLD, "mapping");
+    check_and_set_int(obj_mapping,      "SLAM_ICP_MAX_FEATURE_NUM", MAPPING_ICP_MAX_FEATURE_NUM, "mapping");
+    check_and_set_int(obj_mapping,      "SLAM_ICP_DO_ERASE_GAP",    MAPPING_ICP_DO_ERASE_GAP,    "mapping");
+    check_and_set_int(obj_mapping,      "SLAM_ICP_DO_ACCUM_NUM",    MAPPING_ICP_DO_ACCUM_NUM,    "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_ICP_VIEW_THRESHOLD",  MAPPING_ICP_VIEW_THRESHOLD,  "mapping");
+    check_and_set_int(obj_mapping,      "SLAM_KFRM_UPDATE_NUM",     MAPPING_KFRM_UPDATE_NUM,     "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_KFRM_LC_TRY_DIST",    MAPPING_KFRM_LC_TRY_DIST,    "mapping");
+    check_and_set_double(obj_mapping,   "SLAM_KFRM_LC_TRY_OVERLAP", MAPPING_KFRM_LC_TRY_OVERLAP, "mapping");
+}
+
+void CONFIG::load_obstacle_config(const QJsonObject &obj)
+{
+    QJsonObject obj_obs = obj["obs"].toObject();
+
+    check_and_set_int(obj_obs,    "OBS_AVOID",         OBS_AVOID,         "obs");
+    check_and_set_double(obj_obs, "OBS_DEADZONE",      OBS_DEADZONE,      "obs");
+    check_and_set_double(obj_obs, "OBS_LOCAL_GOAL_D",  OBS_LOCAL_GOAL_D,  "obs");
+    check_and_set_double(obj_obs, "OBS_SAFE_MARGIN_X", OBS_SAFE_MARGIN_X, "obs");
+    check_and_set_double(obj_obs, "OBS_SAFE_MARGIN_Y", OBS_SAFE_MARGIN_Y, "obs");
+    check_and_set_double(obj_obs, "OBS_PATH_MARGIN_X", OBS_PATH_MARGIN_X, "obs");
+    check_and_set_double(obj_obs, "OBS_PATH_MARGIN_Y", OBS_PATH_MARGIN_Y, "obs");
+    check_and_set_double(obj_obs, "OBS_MAP_GRID_SIZE", OBS_MAP_GRID_SIZE, "obs");
+    check_and_set_double(obj_obs, "OBS_MAP_RANGE",     OBS_MAP_RANGE,     "obs");
+    check_and_set_double(obj_obs, "OBS_MAP_MIN_V",     OBS_MAP_MIN_V,     "obs");
+    check_and_set_double(obj_obs, "OBS_MAP_MIN_Z",     OBS_MAP_MIN_Z,     "obs");
+    check_and_set_double(obj_obs, "OBS_MAP_MAX_Z",     OBS_MAP_MAX_Z,     "obs");
+    check_and_set_double(obj_obs, "OBS_PREDICT_TIME",  OBS_PREDICT_TIME,  "obs");
+}
+
+void CONFIG::load_control_config(const QJsonObject &obj)
+{
+    QJsonObject obj_control = obj["control"].toObject();
+
+    check_and_set_double(obj_control, "DRIVE_GOAL_APPROACH_GAIN", DRIVE_GOAL_APPROACH_GAIN, "control");
+    check_and_set_double(obj_control, "DRIVE_GOAL_D", DRIVE_GOAL_D, "control");
+    check_and_set_double(obj_control, "DRIVE_GOAL_TH", DRIVE_GOAL_TH, "control");
+    check_and_set_double(obj_control, "DRIVE_EXTENDED_CONTROL_TIME", DRIVE_EXTENDED_CONTROL_TIME, "control");
+    check_and_set_double(obj_control, "DRIVE_V_DEADZONE", DRIVE_V_DEADZONE, "control");
+    check_and_set_double(obj_control, "DRIVE_W_DEADZONE", DRIVE_W_DEADZONE, "control");
+}
+
+void CONFIG::load_docking_config(const QJsonObject &obj)
+{
+    QJsonObject obj_dock = obj["docking"].toObject();
+
+    check_and_set_int(obj_dock, "DOCKING_TYPE", DOCKING_TYPE, "docking");
+    check_and_set_int(obj_dock, "DOCKING_MAP_SIZE", DOCKING_MAP_SIZE, "docking");
+    check_and_set_double(obj_dock, "DOCKING_POINTDOCK_MARGIN", DOCKING_POINTDOCK_MARGIN, "docking");
+    check_and_set_double(obj_dock, "DOCK_GOAL_D", DOCK_GOAL_D, "docking");
+    check_and_set_double(obj_dock, "DOCK_GOAL_TH", DOCK_GOAL_TH, "docking");
+    check_and_set_double(obj_dock, "DOCK_EXTENDED_CONTROL_TIME", DOCK_EXTENDED_CONTROL_TIME, "docking");
+    check_and_set_double(obj_dock, "DOCK_UNDOCK_REVERSING_DISTANCE", DOCK_UNDOCK_REVERSING_DISTANCE, "docking");
+    check_and_set_double(obj_dock, "DOCKING_GOAL_D", DOCKING_GOAL_D, "docking");
+    check_and_set_double(obj_dock, "DOCKING_GOAL_TH", DOCKING_GOAL_TH, "docking");
+    check_and_set_double(obj_dock, "DOCKING_KP_d", DOCKING_KP_d, "docking");
+    check_and_set_double(obj_dock, "DOCKING_KD_d", DOCKING_KD_d, "docking");
+    check_and_set_double(obj_dock, "DOCKING_KP_th", DOCKING_KP_th, "docking");
+    check_and_set_double(obj_dock, "DOCKING_KD_th", DOCKING_KD_th, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CLUST_D_THRESHOLD", DOCKING_CLUST_D_THRESHOLD, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MIN", DOCKING_CLUST_DIST_THRESHOLD_MIN, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MAX", DOCKING_CLUST_DIST_THRESHOLD_MAX, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CLUST_ANGLE_THRESHOLD", DOCKING_CLUST_ANGLE_THRESHOLD, "docking");
+    check_and_set_double(obj_dock, "DOCKING_DOCK_SIZE_X_MIN", DOCKING_DOCK_SIZE_X[0], "docking");
+    check_and_set_double(obj_dock, "DOCKING_DOCK_SIZE_X_MAX", DOCKING_DOCK_SIZE_X[1], "docking");
+    check_and_set_double(obj_dock, "DOCKING_ICP_COST_THRESHOLD", DOCKING_ICP_COST_THRESHOLD, "docking");
+    check_and_set_double(obj_dock, "DOCKING_ICP_MAX_FEATURE_NUM", DOCKING_ICP_MAX_FEATURE_NUM, "docking");
+    check_and_set_double(obj_dock, "DOCKING_EXTENDED_CONTROL_TIME", DOCKING_EXTENDED_CONTROL_TIME, "docking");
+    check_and_set_double(obj_dock, "DOCKING_GRID_SIZE", DOCKING_GRID_SIZE, "docking");
+}
+
+void CONFIG::load_map_config(const QJsonObject &obj)
+{
+    QJsonObject obj_map = obj["map"].toObject();
+
+    check_and_set_string(obj_map, "MAP_PATH", MAP_PATH, "map");
+}
+
+void CONFIG::load_lidar_configs(const QJsonObject &obj)
+{
     if(USE_LIDAR_2D)
     {
         QJsonArray lidar_arr = obj["lidar_2d_config"].toArray();
@@ -183,7 +257,7 @@ void CONFIG::load()
             QJsonObject obj_lidar_2d = lidar_arr[i].toObject();
             LIDAR_2D_IP[i] = obj_lidar_2d["IP"].toString();
             LIDAR_2D_TF[i] = obj_lidar_2d["TF"].toString();
-            printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n",i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
+            printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
         }
     }
 
@@ -195,10 +269,13 @@ void CONFIG::load()
             QJsonObject obj_lidar_3d = lidar_arr[i].toObject();
             LIDAR_3D_IP[i] = obj_lidar_3d["IP"].toString();
             LIDAR_3D_TF[i] = obj_lidar_3d["TF"].toString();
-            printf("[CONFIG] LIDAR_3D[%d] IP: %s, TF: %s\n",i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
+            printf("[CONFIG] LIDAR_3D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
         }
     }
+}
 
+void CONFIG::load_camera_configs(const QJsonObject &obj)
+{
     if(USE_CAM)
     {
         QJsonArray cam_arr = obj["cam_config"].toArray();
@@ -210,357 +287,947 @@ void CONFIG::load()
             printf("[CONFIG] CAM[%d] Serial: %s, TF: %s\n", i, qUtf8Printable(CAM_SERIAL_NUMBER[i]), qUtf8Printable(CAM_TF[i]));
         }
     }
+}
 
+void CONFIG::load_sensor_specific_configs(const QJsonObject &obj)
+{
     if(LIDAR_2D_TYPE == "SICK" && obj.contains("SICK"))
     {
         QJsonObject obj_sick = obj["SICK"].toObject();
-
-        LIDAR_2D_MIN_RANGE = obj_sick["LIDAR_2D_MIN_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MIN_RANGE(SICK), %s\n", obj_sick["LIDAR_2D_MIN_RANGE"].toString().toLocal8Bit().data());
-
-        LIDAR_2D_MAX_RANGE = obj_sick["LIDAR_2D_MAX_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MAX_RANGE(SICK), %s\n", obj_sick["LIDAR_2D_MAX_RANGE"].toString().toLocal8Bit().data());
+        check_and_set_double(obj_sick, "LIDAR_2D_MIN_RANGE", LIDAR_2D_MIN_RANGE, "SICK");
+        check_and_set_double(obj_sick, "LIDAR_2D_MAX_RANGE", LIDAR_2D_MAX_RANGE, "SICK");
     }
     else if(LIDAR_2D_TYPE == "LAKI" && obj.contains("LAKI"))
     {
         QJsonObject obj_laki = obj["LAKI"].toObject();
-
-        LIDAR_2D_MIN_RANGE = obj_laki["LIDAR_2D_MIN_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MIN_RANGE(LAKI), %s\n", obj_laki["LIDAR_2D_MIN_RANGE"].toString().toLocal8Bit().data());
-
-        LIDAR_2D_MAX_RANGE = obj_laki["LIDAR_2D_MAX_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MAX_RANGE(LAKI), %s\n", obj_laki["LIDAR_2D_MAX_RANGE"].toString().toLocal8Bit().data());
+        check_and_set_double(obj_laki, "LIDAR_2D_MIN_RANGE", LIDAR_2D_MIN_RANGE, "LAKI");
+        check_and_set_double(obj_laki, "LIDAR_2D_MAX_RANGE", LIDAR_2D_MAX_RANGE, "LAKI");
     }
     else if(LIDAR_2D_TYPE == "RPLIDAR" && obj.contains("RPLIDAR"))
     {
         QJsonObject obj_rplidar = obj["RPLIDAR"].toObject();
-
-        LIDAR_2D_MIN_RANGE = obj_rplidar["LIDAR_2D_MIN_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MIN_RANGE(RPLIDAR), %s\n", obj_rplidar["LIDAR_2D_MIN_RANGE"].toString().toLocal8Bit().data());
-
-        LIDAR_2D_MAX_RANGE = obj_rplidar["LIDAR_2D_MAX_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_2D_MAX_RANGE(RPLIDAR), %s\n", obj_rplidar["LIDAR_2D_MAX_RANGE"].toString().toLocal8Bit().data());
+        check_and_set_double(obj_rplidar, "LIDAR_2D_MIN_RANGE", LIDAR_2D_MIN_RANGE, "RPLIDAR");
+        check_and_set_double(obj_rplidar, "LIDAR_2D_MAX_RANGE", LIDAR_2D_MAX_RANGE, "RPLIDAR");
     }
 
     if(LIDAR_3D_TYPE == "LIVOX" && obj.contains("LIVOX"))
     {
         QJsonObject obj_lvx = obj["LIVOX"].toObject();
-
-        LIDAR_3D_MIN_RANGE = obj_lvx["LIDAR_3D_MIN_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_3D_MIN_RANGE(LIVOX), %s\n", obj_lvx["LIDAR_3D_MIN_RANGE"].toString().toLocal8Bit().data());
-
-        LIDAR_3D_MAX_RANGE = obj_lvx["LIDAR_3D_MAX_RANGE"].toString().toDouble();
-        printf("[CONFIG] LIDAR_3D_MAX_RANGE(LIVOX), %s\n", obj_lvx["LIDAR_3D_MAX_RANGE"].toString().toLocal8Bit().data());
+        check_and_set_double(obj_lvx, "LIDAR_3D_MIN_RANGE", LIDAR_3D_MIN_RANGE, "LIVOX");
+        check_and_set_double(obj_lvx, "LIDAR_3D_MAX_RANGE", LIDAR_3D_MAX_RANGE, "LIVOX");
     }
 
     if(CAM_TYPE == "ORBBEC" && obj.contains("ORBBEC"))
     {
         QJsonObject obj_cam = obj["ORBBEC"].toObject();
-
-        CAM_HEIGHT_MAX = obj_cam["CAM_HEIGHT_MAX"].toString().toDouble();
-        printf("[CONFIG] CAM_HEIGHT_MAX(ORBBEC), %s\n", obj_cam["CAM_HEIGHT_MAX"].toString().toLocal8Bit().data());
-
-        CAM_HEIGHT_MIN = obj_cam["CAM_HEIGHT_MIN"].toString().toDouble();
-        printf("[CONFIG] CAM_HEIGHT_MIN(ORBBEC), %s\n", obj_cam["CAM_HEIGHT_MIN"].toString().toLocal8Bit().data());
+        check_and_set_double(obj_cam, "CAM_HEIGHT_MAX", CAM_HEIGHT_MAX, "ORBBEC");
+        check_and_set_double(obj_cam, "CAM_HEIGHT_MIN", CAM_HEIGHT_MIN, "ORBBEC");
     }
-
-    QJsonObject obj_motor = obj["motor"].toObject();
-    {
-        MOTOR_ID_L = obj_motor["MOTOR_ID_L"].toString().toInt();
-        printf("[CONFIG] MOTOR_ID_L, %s\n", obj_motor["MOTOR_ID_L"].toString().toLocal8Bit().data());
-
-        MOTOR_ID_R = obj_motor["MOTOR_ID_R"].toString().toInt();
-        printf("[CONFIG] MOTOR_ID_R, %s\n", obj_motor["MOTOR_ID_R"].toString().toLocal8Bit().data());
-
-        MOTOR_DIR = obj_motor["MOTOR_DIR"].toString().toDouble();
-        printf("[CONFIG] MOTOR_DIR, %s\n", obj_motor["MOTOR_DIR"].toString().toLocal8Bit().data());
-
-        MOTOR_GEAR_RATIO = obj_motor["MOTOR_GEAR_RATIO"].toString().toDouble();
-        printf("[CONFIG] MOTOR_GEAR_RATIO, %s\n", obj_motor["MOTOR_GEAR_RATIO"].toString().toLocal8Bit().data());
-
-        MOTOR_LIMIT_V = obj_motor["MOTOR_LIMIT_V"].toString().toDouble();
-        printf("[CONFIG] MOTOR_LIMIT_V, %s\n", obj_motor["MOTOR_LIMIT_V"].toString().toLocal8Bit().data());
-
-        MOTOR_LIMIT_V_ACC = obj_motor["MOTOR_LIMIT_V_ACC"].toString().toDouble();
-        printf("[CONFIG] MOTOR_LIMIT_V_ACC, %s\n", obj_motor["MOTOR_LIMIT_V_ACC"].toString().toLocal8Bit().data());
-
-        MOTOR_LIMIT_W = obj_motor["MOTOR_LIMIT_W"].toString().toDouble();
-        printf("[CONFIG] MOTOR_LIMIT_W, %s\n", obj_motor["MOTOR_LIMIT_W"].toString().toLocal8Bit().data());
-
-        MOTOR_LIMIT_W_ACC = obj_motor["MOTOR_LIMIT_W_ACC"].toString().toDouble();
-        printf("[CONFIG] MOTOR_LIMIT_W_ACC, %s\n", obj_motor["MOTOR_LIMIT_W_ACC"].toString().toLocal8Bit().data());
-
-        MOTOR_GAIN_KP = obj_motor["MOTOR_GAIN_KP"].toString().toDouble();
-        printf("[CONFIG] MOTOR_GAIN_KP, %s\n", obj_motor["MOTOR_GAIN_KP"].toString().toLocal8Bit().data());
-
-        MOTOR_GAIN_KI = obj_motor["MOTOR_GAIN_KI"].toString().toDouble();
-        printf("[CONFIG] MOTOR_GAIN_KI, %s\n", obj_motor["MOTOR_GAIN_KI"].toString().toLocal8Bit().data());
-
-        MOTOR_GAIN_KD = obj_motor["MOTOR_GAIN_KD"].toString().toDouble();
-        printf("[CONFIG] MOTOR_GAIN_KD, %s\n", obj_motor["MOTOR_GAIN_KD"].toString().toLocal8Bit().data());
-    }
-
-    QJsonObject obj_annot = obj["annotation"].toObject();
-    {
-        ANNOT_QA_STEP = obj_annot["ANNOT_QA_STEP"].toString().toDouble();
-        printf("[CONFIG] ANNOT_QA_STEP, %s\n", obj_annot["ANNOT_QA_STEP"].toString().toLocal8Bit().data());
-    }
-
-    if(LOC_MODE == "2D")
-    {
-        QJsonObject obj_loc_2d = obj["loc_2d"].toObject();
-        {
-            LOC_SURFEL_NUM = obj_loc_2d["LOC_SURFEL_NUM"].toString().toInt();
-            printf("[CONFIG] LOC_SURFEL_NUM, %s\n", obj_loc_2d["LOC_SURFEL_NUM"].toString().toLocal8Bit().data());
-
-            LOC_SURFEL_RANGE = obj_loc_2d["LOC_SURFEL_RANGE"].toString().toDouble();
-            printf("[CONFIG] LOC_SURFEL_RANGE, %s\n", obj_loc_2d["LOC_SURFEL_RANGE"].toString().toLocal8Bit().data());
-
-            LOC_ICP_COST_THRESHOLD_0 = obj_loc_2d["LOC_ICP_COST_THRESHOLD_0"].toString().toDouble();
-            printf("[CONFIG] LOC_ICP_COST_THRESHOLD_0, %s\n", obj_loc_2d["LOC_ICP_COST_THRESHOLD_0"].toString().toLocal8Bit().data());
-
-            LOC_ICP_COST_THRESHOLD = obj_loc_2d["LOC_ICP_COST_THRESHOLD"].toString().toDouble();
-            printf("[CONFIG] LOC_ICP_COST_THRESHOLD, %s\n", obj_loc_2d["LOC_ICP_COST_THRESHOLD"].toString().toLocal8Bit().data());
-
-            LOC_ICP_ERROR_THRESHOLD = obj_loc_2d["LOC_ICP_ERROR_THRESHOLD"].toString().toDouble();
-            printf("[CONFIG] LOC_ICP_ERROR_THRESHOLD, %s\n", obj_loc_2d["LOC_ICP_ERROR_THRESHOLD"].toString().toLocal8Bit().data());
-
-            LOC_ICP_MAX_FEATURE_NUM = obj_loc_2d["LOC_ICP_MAX_FEATURE_NUM"].toString().toInt();
-            printf("[CONFIG] LOC_ICP_MAX_FEATURE_NUM, %s\n", obj_loc_2d["LOC_ICP_MAX_FEATURE_NUM"].toString().toLocal8Bit().data());
-
-            LOC_CHECK_DIST = obj_loc_2d["LOC_CHECK_DIST"].toString().toDouble();
-            printf("[CONFIG] LOC_CHECK_DIST, %s\n", obj_loc_2d["LOC_CHECK_DIST"].toString().toLocal8Bit().data());
-
-            LOC_CHECK_IE = obj_loc_2d["LOC_CHECK_IE"].toString().toDouble();
-            printf("[CONFIG] LOC_CHECK_IE, %s\n", obj_loc_2d["LOC_CHECK_IE"].toString().toLocal8Bit().data());
-
-            LOC_CHECK_IR = obj_loc_2d["LOC_CHECK_IR"].toString().toDouble();
-            printf("[CONFIG] LOC_CHECK_IR, %s\n", obj_loc_2d["LOC_CHECK_IR"].toString().toLocal8Bit().data());
-
-            LOC_ICP_ODO_FUSION_RATIO = obj_loc_2d["LOC_ICP_ODO_FUSION_RATIO"].toString().toDouble();
-            printf("[CONFIG] LOC_ICP_ODO_FUSION_RATIO, %s\n", obj_loc_2d["LOC_ICP_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
-
-            LOC_ARUCO_ODO_FUSION_RATIO = obj_loc_2d["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toDouble();
-            printf("[CONFIG] LOC_ARUCO_ODO_FUSION_RATIO, %s\n", obj_loc_2d["LOC_ARUCO_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
-
-            LOC_ARUCO_ODO_FUSION_DIST = obj_loc_2d["LOC_ARUCO_ODO_FUSION_DIST"].toString().toDouble();
-            printf("[CONFIG] LOC_ARUCO_ODO_FUSION_DIST, %s\n", obj_loc_2d["LOC_ARUCO_ODO_FUSION_DIST"].toString().toLocal8Bit().data());
-        }
-    }
-    else if(LOC_MODE == "3D")
-    {
-        QJsonObject obj_loc_3d = obj["loc_3d"].toObject();
-        {
-            LOC_MAX_FEATURE_NUM = obj_loc_3d["LVX_MAX_FEATURE_NUM"].toString().toInt();
-            printf("[CONFIG] LOC_MAX_FEATURE_NUM, %s\n", obj_loc_3d["LOC_MAX_FEATURE_NUM"].toString().toLocal8Bit().data());
-
-            LOC_SURFEL_NN_NUM = obj_loc_3d["LOC_SURFEL_NN_NUM"].toString().toInt();
-            printf("[CONFIG] LOC_SURFEL_NN_NUM, %s\n", obj_loc_3d["LOC_SURFEL_NN_NUM"].toString().toLocal8Bit().data());
-
-            LOC_SURFEL_RANGE = obj_loc_3d["LOC_SURFEL_RANGE"].toString().toDouble();
-            printf("[CONFIG] LOC_SURFEL_RANGE, %s\n", obj_loc_3d["LOC_SURFEL_RANGE"].toString().toLocal8Bit().data());
-
-            LOC_SURFEL_BALANCE = obj_loc_3d["LOC_SURFEL_BALANCE"].toString().toDouble();
-            printf("[CONFIG] LOC_SURFEL_BALANCE, %s\n", obj_loc_3d["LOC_SURFEL_BALANCE"].toString().toLocal8Bit().data());
-
-            LOC_COST_THRESHOLD = obj_loc_3d["LOC_COST_THRESHOLD"].toString().toDouble();
-            printf("[CONFIG] LOC_COST_THRESHOLD, %s\n", obj_loc_3d["LOC_COST_THRESHOLD"].toString().toLocal8Bit().data());
-
-            LOC_INLIER_CHECK_DIST = obj_loc_3d["LOC_INLIER_CHECK_DIST"].toString().toDouble();
-            printf("[CONFIG] LOC_INLIER_CHECK_DIST, %s\n", obj_loc_3d["LOC_INLIER_CHECK_DIST"].toString().toLocal8Bit().data());
-
-            LOC_ICP_ODO_FUSION_RATIO = obj_loc_3d["LOC_ICP_ODO_FUSION_RATIO"].toString().toDouble();
-            printf("[CONFIG] LOC_ICP_ODO_FUSION_RATIO, %s\n", obj_loc_3d["LOC_ICP_ODO_FUSION_RATIO"].toString().toLocal8Bit().data());
-        }
-    }
-
-    QJsonObject obj_mapping = obj["mapping"].toObject();
-    {
-        SLAM_WINDOW_SIZE = obj_mapping["SLAM_WINDOW_SIZE"].toString().toInt();
-        printf("[CONFIG] SLAM_WINDOW_SIZE, %s\n", obj_mapping["SLAM_WINDOW_SIZE"].toString().toLocal8Bit().data());
-
-        SLAM_VOXEL_SIZE = obj_mapping["SLAM_VOXEL_SIZE"].toString().toDouble();
-        printf("[CONFIG] SLAM_VOXEL_SIZE, %s\n", obj_mapping["SLAM_VOXEL_SIZE"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_COST_THRESHOLD = obj_mapping["SLAM_ICP_COST_THRESHOLD"].toString().toDouble();
-        printf("[CONFIG] SLAM_ICP_COST_THRESHOLD, %s\n", obj_mapping["SLAM_ICP_COST_THRESHOLD"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_ERROR_THRESHOLD = obj_mapping["SLAM_ICP_ERROR_THRESHOLD"].toString().toDouble();
-        printf("[CONFIG] SLAM_ICP_ERROR_THRESHOLD, %s\n", obj_mapping["SLAM_ICP_ERROR_THRESHOLD"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_MAX_FEATURE_NUM = obj_mapping["SLAM_ICP_MAX_FEATURE_NUM"].toString().toInt();
-        printf("[CONFIG] SLAM_ICP_MAX_FEATURE_NUM, %s\n", obj_mapping["SLAM_ICP_MAX_FEATURE_NUM"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_DO_ERASE_GAP = obj_mapping["SLAM_ICP_DO_ERASE_GAP"].toString().toInt();
-        printf("[CONFIG] SLAM_ICP_DO_ERASE_GAP, %s\n", obj_mapping["SLAM_ICP_DO_ERASE_GAP"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_DO_ACCUM_NUM = obj_mapping["SLAM_ICP_DO_ACCUM_NUM"].toString().toInt();
-        printf("[CONFIG] SLAM_ICP_DO_ACCUM_NUM, %s\n", obj_mapping["SLAM_ICP_DO_ACCUM_NUM"].toString().toLocal8Bit().data());
-
-        SLAM_ICP_VIEW_THRESHOLD = obj_mapping["SLAM_ICP_VIEW_THRESHOLD"].toString().toDouble();
-        printf("[CONFIG] SLAM_ICP_VIEW_THRESHOLD, %s\n", obj_mapping["SLAM_ICP_VIEW_THRESHOLD"].toString().toLocal8Bit().data());
-
-        SLAM_KFRM_UPDATE_NUM = obj_mapping["SLAM_KFRM_UPDATE_NUM"].toString().toInt();
-        printf("[CONFIG] SLAM_KFRM_UPDATE_NUM, %s\n", obj_mapping["SLAM_KFRM_UPDATE_NUM"].toString().toLocal8Bit().data());
-
-        SLAM_KFRM_LC_TRY_DIST = obj_mapping["SLAM_KFRM_LC_TRY_DIST"].toString().toDouble();
-        printf("[CONFIG] SLAM_KFRM_LC_TRY_DIST, %s\n", obj_mapping["SLAM_KFRM_LC_TRY_DIST"].toString().toLocal8Bit().data());
-
-        SLAM_KFRM_LC_TRY_OVERLAP = obj_mapping["SLAM_KFRM_LC_TRY_OVERLAP"].toString().toDouble();
-        printf("[CONFIG] SLAM_KFRM_LC_TRY_OVERLAP, %s\n", obj_mapping["SLAM_KFRM_LC_TRY_OVERLAP"].toString().toLocal8Bit().data());
-    }
-
-    QJsonObject obj_obs = obj["obs"].toObject();
-    {
-        OBS_AVOID = obj_obs["OBS_AVOID"].toString().toInt();
-        printf("[CONFIG] OBS_AVOID, %s\n", obj_obs["OBS_AVOID"].toString().toLocal8Bit().data());
-
-        OBS_DEADZONE = obj_obs["OBS_DEADZONE"].toString().toDouble();
-        printf("[CONFIG] OBS_DEADZONE, %s\n", obj_obs["OBS_DEADZONE"].toString().toLocal8Bit().data());
-
-        OBS_DEADZONE_DYN = obj_obs["OBS_DEADZONE_DYN"].toString().toDouble();
-        printf("[CONFIG] OBS_DEADZONE_DYN, %s\n", obj_obs["OBS_DEADZONE_DYN"].toString().toLocal8Bit().data());
-
-        OBS_DEADZONE_VIR = obj_obs["OBS_DEADZONE_VIR"].toString().toDouble();
-        printf("[CONFIG] OBS_DEADZONE_VIR, %s\n", obj_obs["OBS_DEADZONE_VIR"].toString().toLocal8Bit().data());
-
-        OBS_LOCAL_GOAL_D = obj_obs["OBS_LOCAL_GOAL_D"].toString().toDouble();
-        printf("[CONFIG] OBS_LOCAL_GOAL_D, %s\n", obj_obs["OBS_LOCAL_GOAL_D"].toString().toLocal8Bit().data());
-
-        OBS_SAFE_MARGIN_X = obj_obs["OBS_SAFE_MARGIN_X"].toString().toDouble();
-        printf("[CONFIG] OBS_SAFE_MARGIN_X, %s\n", obj_obs["OBS_SAFE_MARGIN_X"].toString().toLocal8Bit().data());
-
-        OBS_SAFE_MARGIN_Y = obj_obs["OBS_SAFE_MARGIN_Y"].toString().toDouble();
-        printf("[CONFIG] OBS_SAFE_MARGIN_Y, %s\n", obj_obs["OBS_SAFE_MARGIN_Y"].toString().toLocal8Bit().data());
-
-        OBS_PATH_MARGIN_X = obj_obs["OBS_PATH_MARGIN_X"].toString().toDouble();
-        printf("[CONFIG] OBS_PATH_MARGIN_X, %s\n", obj_obs["OBS_PATH_MARGIN_X"].toString().toLocal8Bit().data());
-
-        OBS_PATH_MARGIN_Y = obj_obs["OBS_PATH_MARGIN_Y"].toString().toDouble();
-        printf("[CONFIG] OBS_PATH_MARGIN_Y, %s\n", obj_obs["OBS_PATH_MARGIN_Y"].toString().toLocal8Bit().data());
-
-        OBS_MAP_GRID_SIZE = obj_obs["OBS_MAP_GRID_SIZE"].toString().toDouble();
-        printf("[CONFIG] OBS_MAP_GRID_SIZE, %s\n", obj_obs["OBS_MAP_GRID_SIZE"].toString().toLocal8Bit().data());
-
-        OBS_MAP_RANGE = obj_obs["OBS_MAP_RANGE"].toString().toDouble();
-        printf("[CONFIG] OBS_MAP_RANGE, %s\n", obj_obs["OBS_MAP_RANGE"].toString().toLocal8Bit().data());
-
-        OBS_MAP_MIN_V = obj_obs["OBS_MAP_MIN_V"].toString().toDouble();
-        printf("[CONFIG] OBS_MAP_MIN_V, %s\n", obj_obs["OBS_MAP_MIN_V"].toString().toLocal8Bit().data());
-
-        OBS_MAP_MIN_Z = obj_obs["OBS_MAP_MIN_Z"].toString().toDouble();
-        printf("[CONFIG] OBS_MAP_MIN_Z, %s\n", obj_obs["OBS_MAP_MIN_Z"].toString().toLocal8Bit().data());
-
-        OBS_MAP_MAX_Z = obj_obs["OBS_MAP_MAX_Z"].toString().toDouble();
-        printf("[CONFIG] OBS_MAP_MAX_Z, %s\n", obj_obs["OBS_MAP_MAX_Z"].toString().toLocal8Bit().data());
-
-        OBS_PREDICT_TIME = obj_obs["OBS_PREDICT_TIME"].toString().toDouble();
-        printf("[CONFIG] OBS_PREDICT_TIME, %s\n", obj_obs["OBS_PREDICT_TIME"].toString().toLocal8Bit().data());
-    }
-
-    QJsonObject obj_control = obj["control"].toObject();
-    {
-        DRIVE_GOAL_APPROACH_GAIN = obj_control["DRIVE_GOAL_APPROACH_GAIN"].toString().toDouble();
-        printf("[CONFIG] DRIVE_GOAL_APPROACH_GAIN, %s\n", obj_control["DRIVE_GOAL_APPROACH_GAIN"].toString().toLocal8Bit().data());
-
-        DRIVE_GOAL_D = obj_control["DRIVE_GOAL_D"].toString().toDouble();
-        printf("[CONFIG] DRIVE_GOAL_D, %s\n", obj_control["DRIVE_GOAL_D"].toString().toLocal8Bit().data());
-
-        DRIVE_GOAL_TH = obj_control["DRIVE_GOAL_TH"].toString().toDouble();
-        printf("[CONFIG] DRIVE_GOAL_TH, %s\n", obj_control["DRIVE_GOAL_TH"].toString().toLocal8Bit().data());
-
-        DRIVE_EXTENDED_CONTROL_TIME = obj_control["DRIVE_EXTENDED_CONTROL_TIME"].toString().toDouble();
-        printf("[CONFIG] DRIVE_EXTENDED_CONTROL_TIME, %s\n", obj_control["DRIVE_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
-
-        DRIVE_V_DEADZONE = obj_control["DRIVE_V_DEADZONE"].toString().toDouble();
-        printf("[CONFIG] DRIVE_V_DEADZONE, %s\n", obj_control["DRIVE_V_DEADZONE"].toString().toLocal8Bit().data());
-
-        DRIVE_W_DEADZONE = obj_control["DRIVE_W_DEADZONE"].toString().toDouble();
-        printf("[CONFIG] DRIVE_W_DEADZONE, %s\n", obj_control["DRIVE_W_DEADZONE"].toString().toLocal8Bit().data());
-    }
-
-    QJsonObject obj_dock = obj["docking"].toObject();
-    {
-        DOCKING_GOAL_D = obj_dock["DOCKING_GOAL_D"].toString().toDouble();
-        printf("[CONFIG] DOCKING_GOAL_D, %s\n", obj_dock["DOCKING_GOAL_D"].toString().toLocal8Bit().data());
-
-        DOCKING_GOAL_TH = obj_dock["DOCKING_GOAL_TH"].toString().toDouble();
-        printf("[CONFIG] DOCKING_GOAL_TH, %s\n", obj_dock["DOCKING_GOAL_TH"].toString().toLocal8Bit().data());
-
-        DOCKING_EXTENDED_CONTROL_TIME = obj_dock["DOCKING_EXTENDED_CONTROL_TIME"].toString().toDouble();
-        printf("[CONFIG] DOCKING_EXTENDED_CONTROL_TIME, %s\n", obj_dock["DOCKING_EXTENDED_CONTROL_TIME"].toString().toLocal8Bit().data());
-
-        DOCKING_POINTDOCK_MARGIN = obj_dock["DOCKING_POINTDOCK_MARGIN"].toString().toDouble();
-        printf("[CONFIG] DOCKING_POINTDOCK_MARGIN, %s\n", obj_dock["DOCKING_POINTDOCK_MARGIN"].toString().toLocal8Bit().data());
-
-        DOCKING_TYPE = obj_dock["DOCKING_TYPE"].toString().toInt();
-        printf("[CONFIG] DOCKING_TYPE, %s\n", obj_dock["DOCKING_TYPE"].toString().toLocal8Bit().data());
-    }
-
-    QJsonObject obj_map = obj["map"].toObject();
-    {
-        MAP_PATH = obj_map["MAP_PATH"].toString();
-        printf("[CONFIG] MAP_PATH, %s\n", obj_map["MAP_PATH"].toString().toLocal8Bit().data());
-    }
-
-    // complete
-    is_load = true;
-    config_file.close();
-    printf("[CONFIG] %s, load successed\n", qUtf8Printable(config_path));
 }
 
-void CONFIG::set_map_path(QString path)
+void CONFIG::add_missing_variable(const QString& section, const QString& variable)
 {
-    if(config_path.isEmpty())
+    missing_variables.append(section + "." + variable);
+}
+
+void CONFIG::check_and_set_string(const QJsonObject& obj, const QString& key, QString& target, const QString& section)
+{
+    if(obj.contains(key) && !obj[key].toString().isEmpty())
     {
-        return;
-    }
-
-    MAP_PATH = path;
-
-    QMutexLocker locker(&mtx);
-    QFile config_file(config_path);
-
-    if(!config_file.open(QIODevice::ReadWrite))
-    {
-        printf("[config] failed to open config file for reading and writing.\n");
-        return;
-    }
-
-    QString data;
-    {
-        QTextStream in(&config_file);
-        data = in.readAll();
-        config_file.close();
-    }
-
-    QString pattern = R"("MAP_PATH"\s*:\s*".*?")";
-    QRegularExpression re(pattern);
-    QRegularExpressionMatch match = re.match(data);
-
-    if(match.hasMatch())
-    {
-        data.replace(re, R"("MAP_PATH": ")" + path + R"(")");
+        target = obj[key].toString();
+        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), qUtf8Printable(target));
     }
     else
     {
-        QRegularExpression mapRe(R"("map"\s*:\s*\{)");
-        QRegularExpressionMatch mapMatch = mapRe.match(data);
-        if (mapMatch.hasMatch())
-        {
-            int insertPos = mapMatch.capturedEnd();
-            data.insert(insertPos, QString(R"(
-            "MAP_PATH": ")") + path + R"(",)");
-        }
+        add_missing_variable(section, key);
     }
+}
 
-    if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+void CONFIG::check_and_set_bool(const QJsonObject& obj, const QString& key, bool& target, const QString& section)
+{
+    if(obj.contains(key))
     {
-        printf("[config] failed to open config file for writing.\n");
+        target = obj[key].toBool();
+        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), target ? "true" : "false");
+    }
+    else
+    {
+        add_missing_variable(section, key);
+    }
+}
+
+void CONFIG::check_and_set_int(const QJsonObject& obj, const QString& key, int& target, const QString& section)
+{
+    if(obj.contains(key))
+    {
+        target = obj[key].toString().toInt();
+        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+    }
+    else
+    {
+        add_missing_variable(section, key);
+    }
+}
+
+void CONFIG::check_and_set_double(const QJsonObject& obj, const QString& key, double& target, const QString& section)
+{
+    if(obj.contains(key))
+    {
+        target = obj[key].toString().toDouble();
+        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+    }
+    else
+    {
+        add_missing_variable(section, key);
+    }
+}
+
+QStringList CONFIG::get_missing_variables()
+{
+    return missing_variables;
+}
+
+bool CONFIG::has_missing_variables()
+{
+    return !missing_variables.isEmpty();
+}
+
+void CONFIG::show_missing_variables_dialog()
+{
+    if(missing_variables.isEmpty())
+    {
         return;
     }
 
-    QTextStream out(&config_file);
-    out << data;
-    config_file.close();
+    QString message = "Missing variables in config:\n";
+    for(const QString& var : missing_variables)
+    {
+        message += "- " + var + "\n";
+    }
+
+    printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
 }
+
+void CONFIG::set_config_path(const QString &path)
+{
+    config_path = path;
+}
+
+bool CONFIG::load_common(QString path)
+{
+    QFile common_file(path);
+    if(!common_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "[CONFIG] Failed to open common file:" << path;
+        return false;
+    }
+
+    QByteArray data = common_file.readAll();
+    common_file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        qWarning() << "[CONFIG] JSON parse error:" << parseError.errorString();
+        return false;
+    }
+
+    QJsonObject obj = doc.object();
+    QJsonArray params_array = obj["params"].toArray();
+
+    params.clear();
+    for(const QJsonValue& value : params_array)
+    {
+        params.push_back(value.toString());
+    }
+
+    printf("[CONFIG] %s, load common successed\n", qUtf8Printable(path));
+    return true;
+}
+
+void CONFIG::set_map_path(const QString &path)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    MAP_PATH = path;
+}
+
+QString CONFIG::get_robot_serial_number()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SERIAL_NUMBER;
+}
+
+QString CONFIG::get_platform_name()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return PLATFORM_NAME;
+}
+
+QString CONFIG::get_platform_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return PLATFORM_TYPE;
+}
+
+double CONFIG::get_robot_size_x_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_X[0];
+}
+
+double CONFIG::get_robot_size_x_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_X[1];
+}
+
+double CONFIG::get_robot_size_y_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_Y[0];
+}
+
+double CONFIG::get_robot_size_y_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_Y[1];
+}
+
+double CONFIG::get_robot_size_z_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_Z[0];
+}
+
+double CONFIG::get_robot_size_z_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_Z[1];
+}
+
+double CONFIG::get_robot_wheel_base()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_WHEEL_BASE;
+}
+
+double CONFIG::get_robot_wheel_radius()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_WHEEL_RADIUS;
+}
+
+double CONFIG::get_robot_radius()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_RADIUS;
+}
+
+bool CONFIG::get_use_lidar_2d()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_LIDAR_2D;
+}
+
+QString CONFIG::get_lidar_2d_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_TYPE;
+}
+
+int CONFIG::get_lidar_2d_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_NUM;
+}
+
+bool CONFIG::get_use_lidar_3d()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_LIDAR_3D;
+}
+
+QString CONFIG::get_lidar_3d_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_3D_TYPE;
+}
+
+int CONFIG::get_lidar_3d_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_3D_NUM;
+}
+
+bool CONFIG::get_use_cam()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CAM;
+}
+
+QString CONFIG::get_cam_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_TYPE;
+}
+
+int CONFIG::get_cam_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_NUM;
+}
+
+bool CONFIG::get_use_bqr()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_BQR;
+}
+
+bool CONFIG::get_use_imu()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_IMU;
+}
+
+bool CONFIG::get_use_aruco()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_ARUCO;
+}
+
+QString CONFIG::get_loc_mode()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_MODE;
+}
+
+int CONFIG::get_loc_2d_icp_max_feature_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ICP_MAX_FEATURE_NUM;
+}
+
+int CONFIG::get_loc_2d_surfel_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_SURFEL_NUM;
+}
+
+double CONFIG::get_loc_2d_icp_odometry_fusion_ratio()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ICP_ODO_FUSION_RATIO;
+}
+
+double CONFIG::get_loc_2d_icp_cost_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ICP_COST_THRESHOLD;
+}
+
+double CONFIG::get_loc_2d_icp_cost_threshold0()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ICP_COST_THRESHOLD_0;
+}
+
+double CONFIG::get_loc_2d_icp_error_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ICP_ERROR_THRESHOLD;
+}
+
+double CONFIG::get_loc_2d_aruco_odometry_fusion_ratio()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ARUCO_ODO_FUSION_RATIO;
+}
+
+double CONFIG::get_loc_2d_aruco_odometry_fusion_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ARUCO_ODO_FUSION_DIST;
+}
+
+double CONFIG::get_loc_2d_surfel_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_SURFEL_RANGE;
+}
+
+double CONFIG::get_loc_2d_check_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_CHECK_DIST;
+}
+
+double CONFIG::get_loc_2d_check_inlier_ratio()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_CHECK_IR;
+}
+
+double CONFIG::get_loc_2d_check_inlier_error()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_CHECK_IE;
+}
+
+int CONFIG::get_loc_3d_icp_max_feature_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_MAX_FEATURE_NUM;
+}
+
+int CONFIG::get_loc_3d_surfel_nn_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_SURFEL_NN_NUM;
+}
+
+double CONFIG::get_loc_3d_surfel_balance()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_SURFEL_BALANCE;
+}
+
+double CONFIG::get_loc_3d_cost_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_COST_THRESHOLD;
+}
+
+double CONFIG::get_loc_3d_inlier_check_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_INLIER_CHECK_DIST;
+}
+
+bool CONFIG::get_use_multi()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_MULTI;
+}
+
+bool CONFIG::get_use_coop()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_COOP;
+}
+
+bool CONFIG::get_use_rtsp()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_RTSP;
+}
+
+bool CONFIG::get_use_rrs()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_RRS;
+}
+
+bool CONFIG::get_use_fms()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_FMS;
+}
+
+bool CONFIG::get_use_sim()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_SIM;
+}
+
+bool CONFIG::get_use_beep()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_BEEP;
+}
+
+QString CONFIG::get_server_ip()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return SERVER_IP;
+}
+
+QString CONFIG::get_server_id()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return SERVER_ID;
+}
+
+QString CONFIG::get_server_pw()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return SERVER_PW;
+}
+
+double CONFIG::get_lidar_2d_min_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_MIN_RANGE;
+}
+
+double CONFIG::get_lidar_2d_max_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_MAX_RANGE;
+}
+
+QString CONFIG::get_lidar_2d_ip(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return LIDAR_2D_IP[idx];
+    }
+    return "";
+}
+
+QString CONFIG::get_lidar_2d_tf(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return LIDAR_2D_TF[idx];
+    }
+    return "";
+}
+
+double CONFIG::get_lidar_3d_min_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_3D_MIN_RANGE;
+}
+
+double CONFIG::get_lidar_3d_max_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_3D_MAX_RANGE;
+}
+
+QString CONFIG::get_lidar_3d_ip(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return LIDAR_3D_IP[idx];
+    }
+    return "";
+}
+
+QString CONFIG::get_lidar_3d_tf(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return LIDAR_3D_TF[idx];
+    }
+    return "";
+}
+
+double CONFIG::get_cam_height_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_HEIGHT_MIN;
+}
+
+double CONFIG::get_cam_height_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_HEIGHT_MAX;
+}
+
+QString CONFIG::get_cam_serial_number(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return CAM_SERIAL_NUMBER[idx];
+    }
+    return "";
+}
+
+QString CONFIG::get_cam_tf(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(idx >= 0 && idx < 2)
+    {
+        return CAM_TF[idx];
+    }
+    return "";
+}
+
+int CONFIG::get_motor_id_left()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_ID_L;
+}
+
+int CONFIG::get_motor_id_right()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_ID_R;
+}
+
+double CONFIG::get_motor_direction()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_DIR;
+}
+
+double CONFIG::get_motor_gear_ratio()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_GEAR_RATIO;
+}
+
+double CONFIG::get_motor_limit_v()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_LIMIT_V;
+}
+
+double CONFIG::get_motor_limit_v_acc()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_LIMIT_V_ACC;
+}
+
+double CONFIG::get_motor_limit_w()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_LIMIT_W;
+}
+
+double CONFIG::get_motor_limit_w_acc()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_LIMIT_W_ACC;
+}
+
+double CONFIG::get_motor_gain_kp()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_GAIN_KP;
+}
+
+double CONFIG::get_motor_gain_ki()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_GAIN_KI;
+}
+
+double CONFIG::get_motor_gain_kd()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_GAIN_KD;
+}
+
+int CONFIG::get_mapping_icp_max_feature_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_MAX_FEATURE_NUM;
+}
+
+int CONFIG::get_mapping_icp_do_erase_gap()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_DO_ERASE_GAP;
+}
+
+int CONFIG::get_mapping_icp_do_accum_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_DO_ACCUM_NUM;
+}
+
+int CONFIG::get_mapping_kfrm_update_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_KFRM_UPDATE_NUM;
+}
+
+int CONFIG::get_mapping_window_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_WINDOW_SIZE;
+}
+
+double CONFIG::get_mapping_icp_cost_threashold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_COST_THRESHOLD;
+}
+
+double CONFIG::get_mapping_icp_error_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_ERROR_THRESHOLD;
+}
+
+double CONFIG::get_mapping_icp_view_threashold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_ICP_VIEW_THRESHOLD;
+}
+
+double CONFIG::get_mapping_kfrm_lc_try_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_KFRM_LC_TRY_DIST;
+}
+
+double CONFIG::get_mapping_kfrm_lc_try_overlap()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_KFRM_LC_TRY_OVERLAP;
+}
+
+double CONFIG::get_mapping_voxel_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAPPING_VOXEL_SIZE;
+}
+
+int CONFIG::get_obs_avoid_mode()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_AVOID;
+}
+
+double CONFIG::get_obs_deadzone()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_DEADZONE;
+}
+
+double CONFIG::get_obs_local_goal_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_LOCAL_GOAL_D;
+}
+
+double CONFIG::get_obs_safe_margin_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_SAFE_MARGIN_X;
+}
+
+double CONFIG::get_obs_safe_margin_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_SAFE_MARGIN_Y;
+}
+
+double CONFIG::get_obs_path_margin_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_PATH_MARGIN_X;
+}
+
+double CONFIG::get_obs_path_margin_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_PATH_MARGIN_Y;
+}
+
+double CONFIG::get_obs_map_grid_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_MAP_GRID_SIZE;
+}
+
+double CONFIG::get_obs_map_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_MAP_RANGE;
+}
+
+double CONFIG::get_obs_map_min_v()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_MAP_MIN_V;
+}
+
+double CONFIG::get_obs_map_min_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_MAP_MIN_Z;
+}
+
+double CONFIG::get_obs_map_max_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_MAP_MAX_Z;
+}
+
+double CONFIG::get_obs_predict_time()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_PREDICT_TIME;
+}
+
+double CONFIG::get_drive_goal_approach_gain()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_GOAL_APPROACH_GAIN;
+}
+
+double CONFIG::get_drive_goal_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_GOAL_D;
+}
+
+double CONFIG::get_drive_goal_th()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_GOAL_TH;
+}
+
+double CONFIG::get_drive_extended_control_time()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_EXTENDED_CONTROL_TIME;
+}
+
+double CONFIG::get_drive_v_deadzone()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_V_DEADZONE;
+}
+
+double CONFIG::get_drive_w_deadzone()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DRIVE_W_DEADZONE;
+}
+
+int CONFIG::get_docking_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_TYPE;
+}
+
+int CONFIG::get_docking_map_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_MAP_SIZE;
+}
+
+double CONFIG::get_docking_pointdock_margin()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_POINTDOCK_MARGIN;
+}
+
+double CONFIG::get_docking_goal_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_GOAL_D;
+}
+
+double CONFIG::get_docking_goal_th()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_GOAL_TH;
+}
+
+double CONFIG::get_docking_extended_control_time()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_EXTENDED_CONTROL_TIME;
+}
+
+double CONFIG::get_docking_undock_reversing_distance()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCK_UNDOCK_REVERSING_DISTANCE;
+}
+
+double CONFIG::get_docking_kp_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_KP_d;
+}
+
+double CONFIG::get_docking_kd_dist()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_KD_d;
+}
+
+double CONFIG::get_docking_kp_th()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_KP_th;
+}
+
+double CONFIG::get_docking_kd_th()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_KD_th;
+}
+
+double CONFIG::get_docking_clust_dist_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CLUST_D_THRESHOLD;
+}
+
+double CONFIG::get_docking_clust_dist_threshold_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CLUST_DIST_THRESHOLD_MIN;
+}
+
+double CONFIG::get_docking_clust_dist_threshold_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CLUST_DIST_THRESHOLD_MAX;
+}
+
+double CONFIG::get_docking_clust_angle_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CLUST_ANGLE_THRESHOLD;
+}
+
+double CONFIG::get_docking_size_x_min()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_DOCK_SIZE_X[0];
+}
+
+double CONFIG::get_docking_size_x_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_DOCK_SIZE_X[1];
+}
+
+double CONFIG::get_docking_icp_cost_threshold()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_ICP_COST_THRESHOLD;
+}
+
+double CONFIG::get_docking_icp_max_feature_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_ICP_MAX_FEATURE_NUM;
+}
+
+double CONFIG::get_docking_grid_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_GRID_SIZE;
+}
+
+QString CONFIG::get_map_path()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MAP_PATH;
+} 

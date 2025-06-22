@@ -17,61 +17,96 @@
 
 #include <QObject>
 
+constexpr double lambda0    = 0.1;   // 0.1
+constexpr double lambda_dec = 0.1;   // 0.01 ~ 0.1
+constexpr double lambda_inc = 150;   // 100 ~ 300
+constexpr double t_dist_v0  = 15;    // 5~30
+constexpr double rmt_sigma  = 0.01;  // 0.01 good
+constexpr double sigma_eps  = 1e-6;
+constexpr int near_pt_num   = 10;    // 5~10
+constexpr int maginal_cnt   = 300;   // 100~300
+constexpr int max_iter0     = 50;
+
 class LOCALIZATION : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(LOCALIZATION)
 public:
-    explicit LOCALIZATION(QObject *parent = nullptr);
-    ~LOCALIZATION();
+    // make singleton
+    static LOCALIZATION* instance(QObject* parent = nullptr);
 
-    // mutex
-    std::recursive_mutex mtx;
-
-    // other modules
-    CONFIG *config = NULL;
-    LOGGER *logger = NULL;
-    MOBILE *mobile = NULL;
-    LIDAR_2D *lidar_2d = NULL;
-    LIDAR_3D *lidar_3d = NULL;
-    // CAM *cam = NULL;
-    UNIMAP *unimap = NULL;
-    OBSMAP *obsmap = NULL;
-
-    // interface functions
+    // start localization module
     void start();
+
+    // stop localization module
     void stop();
 
-    void set_cur_tf(Eigen::Matrix4d tf);
+    /***********************
+     * interface funcs
+     ***********************/
+    std::vector<Eigen::Vector3d> get_cur_global_scan();
     Eigen::Matrix4d get_cur_tf();
     Eigen::Matrix4d get_best_tf(double t);
     Eigen::Vector2d get_cur_ieir();
     QString get_cur_loc_state();
-    void set_cur_loc_state(QString str);
     QString get_info_text();
+    bool get_is_loc();
 
-    Eigen::Vector2d calc_ieir(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);
+    void set_cur_tf(Eigen::Matrix4d tf);
+    void set_cur_loc_state(QString str);
+    void set_cur_ieir(Eigen::Vector2d ieir);
+
+    Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const  Eigen::Matrix4d& G);
     Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_mobile_module(MOBILE* _mobile);
+    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+    void set_unimap_module(UNIMAP* _unimap);
+    void set_obsmap_module(OBSMAP* _obsmap);
+
+private:
+    explicit LOCALIZATION(QObject *parent = nullptr);
+    ~LOCALIZATION();
+
+    // mutex
+    std::mutex mtx;
+
+    // other modules
+    CONFIG* config;
+    LOGGER* logger;
+    MOBILE* mobile;
+    LIDAR_2D* lidar_2d;
+    LIDAR_3D* lidar_3d;
+    // CAM *cam = NULL;
+    UNIMAP* unimap;
+    OBSMAP* obsmap;
 
     // algorithm for localization
     double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G); //2D
     double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G); // 3D
 
     // loop
-    std::atomic<bool> a_flag = {false};
-    std::thread* a_thread = NULL;
-    void a_loop_2d();
-    void a_loop_3d();
+    std::atomic<bool> localization_flag = {false};
+    std::unique_ptr<std::thread> localization_thread;
+    void localization_loop_2d();
+    void localization_loop_3d();
 
-    std::atomic<bool> b_flag = {false};
-    std::thread* b_thread = NULL;
-    void b_loop();
+    std::atomic<bool> odometry_flag = {false};
+    std::unique_ptr<std::thread> odometry_thread;
+    void odometry_loop();
 
     std::atomic<bool> obs_flag = {false};
-    std::thread* obs_thread = NULL;
+    std::unique_ptr<std::thread> obs_thread;
     void obs_loop();
 
     // for plot
-    tbb::concurrent_queue<std::vector<Eigen::Vector3d>> plot_cur_pts_que;
+    std::vector<Eigen::Vector3d> cur_global_scan;
 
     // flag
     std::atomic<bool> is_loc = {false};
@@ -91,17 +126,6 @@ public:
     std::atomic<double> proc_time_loc_a = {0};
     std::atomic<double> proc_time_loc_b = {0};
     std::atomic<double> proc_time_obs = {0};
-
-// private:
-    const int max_iter0 = 50;
-    const double lambda0 = 0.1; // 0.1
-    const double lambda_dec = 0.1; // 0.01 ~ 0.1
-    const double lambda_inc = 150; // 100 ~ 300
-    const double t_dist_v0 = 15; // 5~30
-    const int near_pt_num = 10; // 5~10
-    const int maginal_cnt = 300; // 100~300
-    const double rmt_sigma = 0.01; // 0.01 good
-    const double sigma_eps = 1e-6;
 
 };
 

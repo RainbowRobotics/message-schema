@@ -1,6 +1,22 @@
 #include "mobile.h"
 
-MOBILE::MOBILE(QObject *parent) : QObject{parent}
+MOBILE* MOBILE::instance(QObject* parent)
+{
+    static MOBILE* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new MOBILE(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+MOBILE::MOBILE(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr)
 {
     cur_imu = Eigen::Vector3d(0,0,0);
 }
@@ -10,20 +26,19 @@ MOBILE::~MOBILE()
     is_connected = false;
     msg_que.clear();
 
-    // loops destroy
-    if(recv_thread != NULL)
+    recv_flag = false;
+    if(recv_thread && recv_thread->joinable())
     {
-        recv_flag = false;
         recv_thread->join();
-        recv_thread = NULL;
     }
+    recv_thread.reset();
 
-    if(send_thread != NULL)
+    send_flag = false;
+    if(send_thread && send_thread->joinable())
     {
-        send_flag = false;
         send_thread->join();
-        send_thread = NULL;
     }
+    send_thread.reset();
 }
 
 // interface func
@@ -37,17 +52,11 @@ void MOBILE::open()
     }
 
     // start loops
-    if(recv_thread == NULL)
-    {
-        recv_flag = true;
-        recv_thread = new std::thread(&MOBILE::recv_loop, this);
-    }
+    recv_flag = true;
+    recv_thread = std::make_unique<std::thread>(&MOBILE::recv_loop, this);
 
-    if(send_thread == NULL)
-    {
-        send_flag = true;
-        send_thread = new std::thread(&MOBILE::send_loop, this);
-    }
+    send_flag = true;
+    send_thread = std::make_unique<std::thread>(&MOBILE::send_loop, this);
 }
 
 void MOBILE::sync()
@@ -63,32 +72,49 @@ void MOBILE::sync()
 
 QString MOBILE::get_cur_pdu_state()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     QString res = cur_pdu_state; // none, fail, good
-    mtx.unlock();
-
     return res;
 }
 
 void MOBILE::set_cur_pdu_state(QString str)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     cur_pdu_state = str; // none, fail, good
-    mtx.unlock();
+}
+
+void MOBILE::set_is_connected(bool val)
+{
+    is_connected.store(val);
+}
+
+void MOBILE::set_is_synced(bool val)
+{
+    is_synced.store(val);
+}
+
+void MOBILE::set_cur_pose(MOBILE_POSE mp)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    cur_pose = mp;
+}
+
+void MOBILE::set_cur_status(MOBILE_STATUS ms)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    cur_status = ms;
 }
 
 MOBILE_POSE MOBILE::get_pose()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     MOBILE_POSE res = cur_pose;
-    mtx.unlock();
-
     return res;
 }
 
 MOBILE_POSE MOBILE::get_best_mo(double ref_t)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
 
     MOBILE_POSE res;
     double min_dt = 99999999;
@@ -102,104 +128,92 @@ MOBILE_POSE MOBILE::get_best_mo(double ref_t)
         }
     }
 
-    mtx.unlock();
-
     return res;
 }
 
 MOBILE_STATUS MOBILE::get_status()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     MOBILE_STATUS res = cur_status;
-    mtx.unlock();
-
     return res;
 }
 
 MOBILE_SETTING MOBILE::get_setting()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     MOBILE_SETTING res = cur_setting;
-    mtx.unlock();
-
     return res;
 }
 
 Eigen::Vector3d MOBILE::get_imu()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     Eigen::Vector3d res = cur_imu;
-    mtx.unlock();
-
     return res;
 }
 
 Eigen::Vector3d MOBILE::get_control_input()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     Eigen::Vector3d res(vx0, vy0, wz0);
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<MOBILE_IMU> MOBILE::get_imu_storage()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<MOBILE_IMU> res = imu_storage;
-    mtx.unlock();
-
     return res;
 }
 
 std::vector<MOBILE_POSE> MOBILE::get_pose_storage()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<MOBILE_POSE> res = pose_storage;
-    mtx.unlock();
-
     return res;
 }
 
 int MOBILE::get_pose_storage_size()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     int res = pose_storage.size();
-    mtx.unlock();
-
     return res;
 }
 
 int MOBILE::get_imu_storage_size()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     int res = imu_storage.size();
-    mtx.unlock();
-
     return res;
 }
 
-// for plot
+bool MOBILE::get_is_connected()
+{
+    return (bool)is_connected.load();
+}
 
+bool MOBILE::get_is_synced()
+{
+    return (bool)is_synced.load();
+}
+
+double MOBILE::get_last_pose_t()
+{
+    return (double)last_pose_t.load();
+}
+
+// for plot
 QString MOBILE::get_pose_text()
 {
-    QString res;
-
-    mtx.lock();
-    res = pose_text;
-    mtx.unlock();
-
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = pose_text;
     return res;
 }
 
 QString MOBILE::get_status_text()
 {
-    QString res;
-
-    mtx.lock();
-    res = status_text;
-    mtx.unlock();
-
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = status_text;
     return res;
 }
 
@@ -2014,4 +2028,14 @@ int MOBILE::calc_battery_percentage(float voltage)
         printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", config->PLATFORM_TYPE.toStdString().c_str());
         return -1;
     }
+}
+
+void MOBILE::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void MOBILE::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
 }

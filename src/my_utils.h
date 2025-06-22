@@ -86,4 +86,7 @@ std::vector<Eigen::Vector3d> sampling_line(Eigen::Vector3d P0, Eigen::Vector3d P
 
 int get_major_axis(Eigen::Vector3d& N);
 
+QColor build_time_to_color(const QString& buildTime);
+
+
 #endif // MY_UTILS_H

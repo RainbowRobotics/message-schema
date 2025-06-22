@@ -129,7 +129,7 @@ void SICK::grab_loop(int idx)
             }
 
             // check lidar, mobile sync
-            if(!is_synced[idx].load() || !mobile->is_synced.load())
+            if(!is_synced[idx].load() || !mobile->get_is_synced())
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
@@ -145,7 +145,7 @@ void SICK::grab_loop(int idx)
             double t1 = t0 + scan_time;
 
             // wait until t1 <= mobile->last_pose_t
-            while(t1 > mobile->last_pose_t.load() && grab_flag[idx].load())
+            while(t1 > mobile->get_last_pose_t() && grab_flag[idx].load())
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }

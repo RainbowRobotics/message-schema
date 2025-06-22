@@ -1,21 +1,36 @@
 #include "lidar_2d.h"
 
-LIDAR_2D::LIDAR_2D(QObject *parent)
-    : QObject{parent}
+LIDAR_2D* LIDAR_2D::instance(QObject* parent)
+{
+    static LIDAR_2D* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new LIDAR_2D(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+LIDAR_2D::LIDAR_2D(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr),
+    mobile(nullptr),
+    sick(nullptr)
 {
 
 }
 
 LIDAR_2D::~LIDAR_2D()
 {
-    is_connected = false;
+    is_connected.store(false);
 
     // close lidar
-    if(sick != NULL)
+    if(sick != nullptr)
     {
         sick->close();
-        delete sick;
-        sick = NULL;
     }
 
     close();
@@ -27,7 +42,7 @@ void LIDAR_2D::init()
     {
         if(sick == nullptr)
         {
-            sick = new SICK();
+            sick = new SICK(this);
             sick->config = this->config;
             sick->logger = this->logger;
             sick->mobile = this->mobile;
@@ -44,85 +59,85 @@ void LIDAR_2D::open()
     // stop first
     close();
 
-    // dsk loop start
-    for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+    // deskewing loop start
+    int lidar_num = config->get_lidar_2d_num();
+    for(int idx = 0; idx < lidar_num; idx++)
     {
-        if(dsk_thread[idx] == NULL)
-        {
-            dsk_flag[idx] = true;
-            dsk_thread[idx] = new std::thread(&LIDAR_2D::dsk_loop, this, idx);
-        }
+        deskewing_flag[idx] = true;
+        deskewing_thread[idx] = std::make_unique<std::thread>(&LIDAR_2D::deskewing_loop, this, idx);
     }
 
-    // a loop start
-    if(a_thread == NULL)
-    {
-        a_flag = true;
-        a_thread = new std::thread(&LIDAR_2D::a_loop, this);
-    }
+    // merge loop start
+    merge_flag = true;
+    merge_thread = std::make_unique<std::thread>(&LIDAR_2D::merge_loop, this);
 }
 
 void LIDAR_2D::close()
 {
     is_connected = false;
 
-    for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+    int lidar_num = config->get_lidar_2d_num();
+    for(int idx = 0; idx < lidar_num; idx++)
     {
-        if(dsk_thread[idx] != NULL)
+        deskewing_flag[idx] = false;
+        if(deskewing_thread[idx] && deskewing_thread[idx]->joinable())
         {
-            dsk_flag[idx] = false;
-            dsk_thread[idx]->join();
-            dsk_thread[idx] = NULL;
+            deskewing_thread[idx]->join();
         }
+        deskewing_thread[idx].reset();
     }
 
-    if(a_thread != NULL)
+    merge_flag = false;
+    if(merge_thread && merge_thread->joinable())
     {
-        a_flag = false;
-        a_thread->join();
-        a_thread = NULL;
+        merge_thread->join();
     }
+    merge_thread.reset();
 }
 
 RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
 {
     RAW_FRAME res;
-
-    if(config->LIDAR_2D_TYPE == "SICK" && sick != nullptr)
+    if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
-        mtx.lock();
+        std::lock_guard<std::mutex> lock(mtx);
         res = sick->cur_raw[idx];
-        mtx.unlock();
     }
-
     return res;
 }
 
 QString LIDAR_2D::get_info_text()
 {
     QString res;
-
-    if(config->LIDAR_2D_TYPE == "SICK" && sick != nullptr)
+    if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
         for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
         {
             res += sick->get_info_text(idx);
-            res += QString().sprintf("dq: %d\n\n", (int)dsk_que[idx].unsafe_size());
+            res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
         }
     }
-
-    res += QString().sprintf("mq: %d (%d)",(int)merged_que.unsafe_size(), cur_merged_num.load());
-
+    res += QString("mq: %1 (%2)").arg((int)merged_que.unsafe_size()).arg(cur_merged_num.load());
     return res;
+}
+
+bool LIDAR_2D::get_is_connected()
+{
+    return (bool)is_connected.load();
+}
+
+bool LIDAR_2D::get_is_sync()
+{
+    return (bool)is_sync.load();
 }
 
 void LIDAR_2D::set_sync_flag(bool flag)
 {
     is_sync = flag;
-
-    if(config->LIDAR_2D_TYPE == "SICK" && sick != nullptr)
+    int lidar_num = config->get_lidar_2d_num();
+    if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
-        for(int p=0; p<config->LIDAR_2D_NUM; p++)
+        for(int p=0; p<lidar_num; p++)
         {
             sick->is_sync[p].store(flag);
             printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
@@ -130,10 +145,30 @@ void LIDAR_2D::set_sync_flag(bool flag)
     }
 }
 
-void LIDAR_2D::dsk_loop(int idx)
+void LIDAR_2D::set_is_connected(bool val)
+{
+    is_connected.store(val);
+}
+
+void LIDAR_2D::clear_merged_queue()
+{
+    merged_que.clear();
+}
+
+bool LIDAR_2D::try_pop_merged_queue(FRAME& frm)
+{
+    if(merged_que.try_pop(frm))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void LIDAR_2D::deskewing_loop(int idx)
 {
     printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
-    while(dsk_flag[idx])
+    while(deskewing_flag[idx])
     {
         if(!is_connected)
         {
@@ -154,33 +189,33 @@ void LIDAR_2D::dsk_loop(int idx)
             double t1 = frm.t1;
 
             // deskewing
-            std::vector<Eigen::Vector3d> dsk;
+            std::vector<Eigen::Vector3d> deskewing_pts;
             {
                 // precise deskewing
                 Eigen::Matrix4d tf0 = se2_to_TF(frm.pose0);
                 Eigen::Matrix4d tf1 = se2_to_TF(frm.pose1);
-                Eigen::Matrix4d dtf = tf0.inverse()*tf1;
+                Eigen::Matrix4d dtf = tf0.inverse() * tf1;
 
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     double t = frm.times[p];
-                    double alpha = (t-t0)/(t1-t0);
+                    double alpha = (t-t0)/((t1-t0) + 1e-06);
                     Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-                    dsk.push_back(tf.block(0,0,3,3)*frm.pts[p] + tf.block(0,3,3,1));
+                    deskewing_pts.push_back(tf.block(0,0,3,3)*frm.pts[p] + tf.block(0,3,3,1));
                 }
             }
 
             std::vector<double> filtered_time;
             std::vector<double> filtered_reflects;
-            std::vector<Eigen::Vector3d> filetered_dsk0;
+            std::vector<Eigen::Vector3d> filetered_deskewing;
 
-            auto filtered_dsk = scan_shadow_filter(dsk, 5);
+            auto filtered_dsk = scan_shadow_filter(deskewing_pts, 5);
             for(size_t p = 0; p < filtered_dsk.size(); p++)
             {
                 if(filtered_dsk[p].second)
                 {
                     Eigen::Vector3d P = filtered_dsk[p].first;
-                    filetered_dsk0.push_back(P);
+                    filetered_deskewing.push_back(P);
 
                     filtered_reflects.push_back(frm.reflects[p]);
                     filtered_time.push_back(frm.times[p]);
@@ -188,62 +223,64 @@ void LIDAR_2D::dsk_loop(int idx)
             }
 
             // make frame
-            RAW_FRAME dsk_frm;
-            dsk_frm.t0 = frm.t0;
-            dsk_frm.t1 = frm.t1;
-            dsk_frm.mo = frm.mo;
-            dsk_frm.reflects = filtered_reflects;
-            dsk_frm.times = filtered_time;
-            dsk_frm.pts = filetered_dsk0;
+            RAW_FRAME deskewing_frm;
+            deskewing_frm.t0 = frm.t0;
+            deskewing_frm.t1 = frm.t1;
+            deskewing_frm.mo = frm.mo;
+            deskewing_frm.reflects = filtered_reflects;
+            deskewing_frm.times = filtered_time;
+            deskewing_frm.pts = filetered_deskewing;
 
             // printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
 
             // set queue
-            dsk_que[idx].push(dsk_frm);
+            deskewing_que[idx].push(deskewing_frm);
 
             // for queue overflow
-            if(dsk_que[idx].unsafe_size() > 10)
+            if(deskewing_que[idx].unsafe_size() > deskewing_que_max_size)
             {
                 RAW_FRAME tmp;
-                dsk_que[idx].try_pop(tmp);
+                deskewing_que[idx].try_pop(tmp);
             }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_2D] dsk_loop[%d] stop\n", idx);
+    printf("[LIDAR_2D] deskewing_loop[%d] stop\n", idx);
 }
 
-void LIDAR_2D::a_loop()
+void LIDAR_2D::merge_loop()
 {
+    const int lidar_num = config->get_lidar_2d_num();
+
     // 10ms
     double timeout = 0.05;
     double wait_timeout = 0.15;
-    double last_recv_t[config->LIDAR_2D_NUM];
+    double last_recv_t[lidar_num];
 
-    std::vector<RAW_FRAME> storage[2];
+    std::vector<RAW_FRAME> storage[lidar_num];
 
-    printf("[LIDAR_2D] a_loop start\n");
-    while(a_flag)
+    printf("[LIDAR_2D] merge_loop start\n");
+    while(merge_flag)
     {
         // if single lidar
-        if(config->LIDAR_2D_NUM == 1)
+        if(lidar_num == 1)
         {
             RAW_FRAME raw_frm;
-            if(dsk_que[0].try_pop(raw_frm))
+            if(deskewing_que[0].try_pop(raw_frm))
             {
                 FRAME frm;
-                frm.t = raw_frm.mo.t;
-                frm.mo = raw_frm.mo;
+                frm.t   = raw_frm.mo.t;
+                frm.mo  = raw_frm.mo;
                 frm.pts = raw_frm.pts;
                 frm.reflects = raw_frm.reflects;
 
                 cur_merged_frm_t = frm.t;
-                cur_merged_num = frm.pts.size();
+                cur_merged_num   = frm.pts.size();
 
                 // update
                 merged_que.push(frm);
-                if(merged_que.unsafe_size() > 10)
+                if(merged_que.unsafe_size() > merge_que_max_size)
                 {
                     FRAME tmp;
                     merged_que.try_pop(tmp);
@@ -257,15 +294,15 @@ void LIDAR_2D::a_loop()
         // if pair lidar
         if(sick->is_connected[0].load() && sick->is_connected[1].load())
         {
-            for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+            for(int idx = 0; idx < lidar_num; idx++)
             {
                 RAW_FRAME frm;
-                if(dsk_que[idx].try_pop(frm))
+                if(deskewing_que[idx].try_pop(frm))
                 {
                     last_recv_t[idx] = frm.mo.t;
 
                     storage[idx].push_back(frm);
-                    if(storage[idx].size() > 10)
+                    if(storage[idx].size() > deskewing_storage_max_size)
                     {
                         storage[idx].erase(storage[idx].begin());
                     }
@@ -275,12 +312,12 @@ void LIDAR_2D::a_loop()
         else
         {
             RAW_FRAME frm;
-            if(dsk_que[0].try_pop(frm))
+            if(deskewing_que[0].try_pop(frm))
             {
                 last_recv_t[0] = frm.mo.t;
 
                 storage[0].push_back(frm);
-                if(storage[0].size() > 10)
+                if(storage[0].size() > deskewing_storage_max_size)
                 {
                     storage[0].erase(storage[0].begin());
                 }
@@ -389,7 +426,7 @@ void LIDAR_2D::a_loop()
             cur_merged_frm_t = merge_frm.t;
             cur_merged_num = merge_frm.pts.size();
 
-            if(merged_que.unsafe_size() > 10)
+            if(merged_que.unsafe_size() > merge_que_max_size)
             {
                 FRAME tmp;
                 merged_que.try_pop(tmp);
@@ -398,7 +435,7 @@ void LIDAR_2D::a_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_2D] a_loop stop\n");
+    printf("[LIDAR_2D] merge_loop stop\n");
 }
 
 bool LIDAR_2D::is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan)
@@ -469,4 +506,19 @@ std::vector<std::pair<Eigen::Vector3d, bool>> LIDAR_2D::scan_shadow_filter(const
     }
 
     return filtered_pts;
+}
+
+void LIDAR_2D::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void LIDAR_2D::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
+}
+
+void LIDAR_2D::set_mobile_module(MOBILE *_mobile)
+{
+    mobile = _mobile;
 }

@@ -20,36 +20,53 @@
 class MOBILE : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(MOBILE)
 public:
-    explicit MOBILE(QObject *parent = nullptr);
-    ~MOBILE();
+    // make singleton
+    static MOBILE* instance(QObject* parent = nullptr);
 
-    // mutex
-    std::recursive_mutex mtx;
-
-    // socket
-    int fd = 0;
-
-    // interface func
+    // start mobile module
     void open();
-    void sync();
-    QString get_cur_pdu_state();
-    void set_cur_pdu_state(QString str);
 
+    // software sync to pdu & pc
+    void sync();
+
+    /***********************
+     * interface funcs
+     ***********************/
+    int get_pose_storage_size();
+    int get_imu_storage_size();
+    bool get_is_connected();
+    bool get_is_synced();
+    double get_last_pose_t();
+    QString get_cur_pdu_state();
+    QString get_status_text();
+    QString get_pose_text();
     MOBILE_POSE get_pose();
     MOBILE_POSE get_best_mo(double ref_t);
     MOBILE_STATUS get_status();
     MOBILE_SETTING get_setting();
-    QString get_pose_text();
-    QString get_status_text();
     Eigen::Vector3d get_imu();
     Eigen::Vector3d get_control_input();
     std::vector<MOBILE_IMU> get_imu_storage();
     std::vector<MOBILE_POSE> get_pose_storage();
-    int get_pose_storage_size();
-    int get_imu_storage_size();
+    void set_cur_pdu_state(QString str);
+    void set_is_connected(bool val);
+    void set_is_synced(bool val);
 
-    // command func
+    // this func only use simulation mode
+    void set_cur_pose(MOBILE_POSE mp);
+    void set_cur_status(MOBILE_STATUS ms);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+
+    /***********************
+     * mobile command (common)
+     ***********************/
     void motor_on();
     void motor_off();
     void move(double vx, double vy, double wz);
@@ -61,7 +78,9 @@ public:
     void time_sync();
     void stop_charge();
 
-    // command safety
+    /***********************
+     * mobile command (safty)
+     ***********************/
     void robot_initialize();
     void robot_request();
     void clearmismatch();
@@ -83,17 +102,28 @@ public:
     void set_detect_mode(double var);
     void set_IO_output(unsigned char[]);
 
+private:
+    explicit MOBILE(QObject *parent = nullptr);
+    ~MOBILE();
+
+    // mutex
+    std::mutex mtx;
+
+    // other modules
+    CONFIG* config;
+    LOGGER* logger;
+
+    // socket
+    int fd = 0;
 
     // recv loop
     std::atomic<bool> recv_flag = {false};
-    std::thread* recv_thread = NULL;
+    std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
-
-    int calc_battery_percentage(float voltage);
 
     // send loop
     std::atomic<bool> send_flag = {false};
-    std::thread* send_thread = NULL;
+    std::unique_ptr<std::thread> send_thread;
     void send_loop();
 
     // storage
@@ -101,6 +131,8 @@ public:
     std::vector<MOBILE_POSE> pose_storage;
     std::vector<MOBILE_IMU> imu_storage;
 
+    // calc battery percentage
+    int calc_battery_percentage(float voltage);
     std::atomic<bool> is_first_receive = {true};
     double input_voltage = 999.0;
 
@@ -124,11 +156,6 @@ public:
     std::atomic<double> vx0 = {0};
     std::atomic<double> vy0 = {0};
     std::atomic<double> wz0 = {0};
-
-    // other modules
-    CONFIG* config = NULL;
-    LOGGER* logger = NULL;
-
 
     QString pose_text;
     QString status_text;

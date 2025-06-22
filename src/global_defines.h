@@ -111,15 +111,16 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 // #include "node_lidar.h"
 
 // defines
-#define ACC_G 9.80665
-#define N2S (1.0e-9) // nanosec to sec
-#define S2N (1.0e9) // sec to nanosec
-#define U2S (1.0e-6) // microsec to sec
-#define S2U (1.0e6) // sec to microsec
-#define M2S (1.0e-3) // millisec to sec
-#define S2M (1.0e3) // sec to millisec
-#define D2R (M_PI/180.0)
-#define R2D (180.0/M_PI)
+constexpr double ACC_G  = 9.80665;
+constexpr double N2S  = 1.0e-9; // nanosec to sec
+constexpr double S2N  = 1.0e9; // sec to nanosec
+constexpr double U2S  = 1.0e-6; // microsec to sec
+constexpr double S2U  = 1.0e6; // sec to microsec
+constexpr double M2S  = 1.0e-3; // millisec to sec
+constexpr double S2M  = 1.0e3; // sec to millisec
+constexpr double D2R  = M_PI/180.0;
+constexpr double R2D  = 180.0/M_PI;
+
 #define toWrap(rad) (std::atan2(std::sin(rad), std::cos(rad)))
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
@@ -143,18 +144,12 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 // enumulator
 enum DOCKING_CHARGE_STATE
 {
-    CHARGE_STATE_IDLE =0,
+    CHARGE_STATE_IDLE=0,
     CHARGE_STATE_TRIG_TO_CHARGE,
     CHARGE_STATE_BATTERY_ON,
     CHARGE_STATE_CHARGING,
     CHARGE_STATE_TRIG_TO_STOP_CHARGE,
     CHARGE_STATE_FAIL,
-};
-
-enum DOCKING_METHOD
-{
-    GOAL=0,
-    STATION=1,
 };
 
 enum AUTO_FSM_STATE
@@ -263,12 +258,12 @@ enum ROBOT_OPERATING_MODE
 
 enum CHARGING_STATION_STATE
 {
-    CHARGING_STATION_IDLE = 0,
-    CHARGING_STATION_TRIG_TO_CHARGE = 1,
-    CHARGING_STATION_BATTERY_ON = 2,
-    CHARGING_STATION_CHARGING = 3,
-    CHARGING_STATION_TRIG_TO_STOP_CHARGE= 4,
-    CHARGING_STATION_FAIL = 5,
+    CHARGING_STATION_IDLE                 = 0,
+    CHARGING_STATION_TRIG_TO_CHARGE       = 1,
+    CHARGING_STATION_BATTERY_ON           = 2,
+    CHARGING_STATION_CHARGING             = 3,
+    CHARGING_STATION_TRIG_TO_STOP_CHARGE  = 4,
+    CHARGING_STATION_FAIL                 = 5,
 };
 
 enum SEMIAUTOINIT_STATE

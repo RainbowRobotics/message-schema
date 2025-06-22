@@ -1,54 +1,68 @@
 #include "sim.h"
 
-SIM::SIM(QObject *parent)
-    : QObject{parent}
+SIM* SIM::instance(QObject* parent)
+{
+    static SIM* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new SIM(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
+SIM::SIM(QObject *parent) : QObject{parent},
+    config(nullptr),
+    logger(nullptr),
+    mobile(nullptr),
+    unimap(nullptr),
+    lidar_2d(nullptr),
+    lidar_3d(nullptr),
+    loc(nullptr)
 {
     cur_tf = Eigen::Matrix4d::Identity();
 }
 
 SIM::~SIM()
 {
-    if(a_thread != NULL)
+    a_flag = false;
+    if(a_thread && a_thread->joinable())
     {
-        a_flag = false;
         a_thread->join();
-        a_thread = NULL;
     }
+    a_thread.reset();
 }
 
 void SIM::set_cur_tf(Eigen::Matrix4d tf)
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     cur_tf = tf;
-    mtx.unlock();
 }
 
 Eigen::Matrix4d SIM::get_cur_tf()
 {
-    mtx.lock();
+    std::lock_guard<std::mutex> lock(mtx);
     Eigen::Matrix4d res = cur_tf;
-    mtx.unlock();
-
     return res;
 }
 
 void SIM::start()
 {
-    if(a_thread == NULL)
-    {
-        a_flag = true;
-        a_thread = new std::thread(&SIM::a_loop, this);
-    }
+    a_flag = true;
+    a_thread = std::make_unique<std::thread>(&SIM::a_loop, this);
 }
 
 void SIM::stop()
 {
-    if(a_thread != NULL)
+    a_flag = false;
+    if(a_thread && a_thread->joinable())
     {
-        a_flag = false;
         a_thread->join();
-        a_thread = NULL;
     }
+    a_thread.reset();
 }
 
 void SIM::a_loop()
@@ -60,102 +74,33 @@ void SIM::a_loop()
     double vy0 = 0;
     double wz0 = 0;
 
-    double last_lidar_t = 0;
-
     Eigen::Matrix4d _cur_tf = get_cur_tf();
 
     printf("[SIM] a_loop start\n");
+
+    const double motor_limit_v = config->get_motor_limit_v();
+    const double motor_limit_w = config->get_motor_limit_w()*D2R;
+
+    const double motor_limit_v_acc = config->get_motor_limit_v_acc();
+    const double motor_limit_w_acc = config->get_motor_limit_w_acc()*D2R;
 
     int cnt = 0;
     while(a_flag)
     {
         cnt++;
-        if(cnt % 500 == 0)
-        {
-            // qDebug() << "sim alive";
-        }
-
         double sim_t = get_time();
 
+        Eigen::Vector3d control_input = mobile->get_control_input();
+
         // get input
-        double vx1 = saturation(mobile->vx0, -config->MOTOR_LIMIT_V, config->MOTOR_LIMIT_V);
-        double vy1 = saturation(mobile->vy0, -config->MOTOR_LIMIT_V, config->MOTOR_LIMIT_V);
-        double wz1 = saturation(mobile->wz0, -config->MOTOR_LIMIT_W*D2R, config->MOTOR_LIMIT_W*D2R);
+        double vx1 = saturation(control_input[0], -motor_limit_v, motor_limit_v);
+        double vy1 = saturation(control_input[1], -motor_limit_v, motor_limit_v);
+        double wz1 = saturation(control_input[2], -motor_limit_w, motor_limit_w);
 
-        // calc vx
-        double vx = 0;
-        if(vx1-vx0 > 0.0001)
-        {
-            double dvx = config->MOTOR_LIMIT_V_ACC*dt;
-            vx = vx0 + dvx;
-            if(vx > vx1)
-            {
-                vx = vx1;
-            }
-        }
-        else if(vx1-vx0 < -0.0001)
-        {
-            double dvx = -config->MOTOR_LIMIT_V_ACC*dt;
-            vx = vx0 + dvx;
-            if(vx < vx1)
-            {
-                vx = vx1;
-            }
-        }
-        else
-        {
-            vx = vx1;
-        }
-
-        // calc vy
-        double vy = 0;
-        if(vy1-vy0 > 0.0001)
-        {
-            double dvy = config->MOTOR_LIMIT_V_ACC*dt;
-            vy = vy0 + dvy;
-            if(vy > vy1)
-            {
-                vy = vy1;
-            }
-        }
-        else if(vy1-vy0 < -0.0001)
-        {
-            double dvy = -config->MOTOR_LIMIT_V_ACC*dt;
-            vy = vy0 + dvy;
-            if(vy < vy1)
-            {
-                vy = vy1;
-            }
-        }
-        else
-        {
-            vy = vy1;
-        }
-
-        // calc wz
-        double wz = 0;
-        if(wz1-wz0 > 0.0001)
-        {
-            double dwz = (config->MOTOR_LIMIT_W_ACC*D2R)*dt;
-            wz = wz0 + dwz;
-            if(wz > wz1)
-            {
-                wz = wz1;
-            }
-        }
-        else if(wz1-wz0 < -0.0001)
-        {
-            double dwz = -(config->MOTOR_LIMIT_W_ACC*D2R)*dt;
-            wz = wz0 + dwz;
-            if(wz < wz1)
-            {
-                wz = wz1;
-            }
-        }
-        else
-        {
-            wz = wz1;
-        }
+        // calc vx, vy, wz
+        double vx = calc_limit(vx0, vx1, motor_limit_v_acc, dt);
+        double vy = calc_limit(vy0, vy1, motor_limit_v_acc, dt);
+        double wz = calc_limit(wz0, wz1, motor_limit_w_acc, dt);
 
         // calc delta pose
         double dth = wz*dt;
@@ -190,86 +135,9 @@ void SIM::a_loop()
         status.power_state = 1;
         status.remote_state = 1;
 
-        #if defined (USE_MECANUM)
-        status.t = sim_t;
-        status.connection_m0 = 1;
-        status.connection_m1 = 1;
-        status.connection_m2 = 1;
-        status.connection_m3 = 1;
-        status.status_m0 = 1;
-        status.status_m1 = 1;
-        status.status_m2 = 1;
-        status.status_m3 = 1;
-        status.charge_state = 0;
-        status.motor_stop_state = 1;
-        status.power_state = 1;
-        status.remote_state = 1;
-        #endif
-
         // storing
-        mobile->mtx.lock();
-        mobile->cur_pose = pose;
-        mobile->cur_status = status;
-        mobile->mtx.unlock();
-
-        /*
-        if(unimap->is_loaded == MAP_LOADED && sim_t - last_lidar_t > 0.1)
-        {
-            // generate lidar frame
-            double query_pt[3] = {cur_xi[0], cur_xi[1], 0};
-            //double sq_radius = config->LIDAR_MAX_RANGE*config->LIDAR_MAX_RANGE;
-
-            double radius = std::min<double>(10.0, config->LIDAR_MAX_RANGE);
-            double sq_radius = radius*radius;
-            std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
-            nanoflann::SearchParameters params;
-            unimap->kdtree_index->radiusSearch(&query_pt[0], sq_radius, res_idxs, params);
-            if(res_idxs.size() > 0)
-            {
-                std::vector<double> reflects;
-                std::vector<Eigen::Vector3d> pts;
-                for(size_t p = 0; p < res_idxs.size(); p+=10)
-                {
-                    unsigned int idx = res_idxs[p].first;
-                    double x = unimap->kdtree_cloud.pts[idx].x;
-                    double y = unimap->kdtree_cloud.pts[idx].y;
-                    double z = unimap->kdtree_cloud.pts[idx].z;
-                    double r = unimap->kdtree_cloud.pts[idx].r;
-
-                    Eigen::Vector3d P(x,y,z);
-                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-                    pts.push_back(_P);
-                    reflects.push_back(r);
-
-                    if(pts.size() >= 360)
-                    {
-                        break;
-                    }
-                }
-
-                // update
-                FRAME frm;
-                frm.t = sim_t;
-                frm.mo = pose;
-                frm.pts = pts;
-                frm.reflects = reflects;
-
-                lidar->scan_que.push(frm);
-                if(lidar->scan_que.unsafe_size() > 50)
-                {
-                    FRAME dummy;
-                    lidar->scan_que.try_pop(dummy);
-                }
-
-                lidar->mtx.lock();
-                lidar->cur_scan = pts;
-                lidar->cur_scan_f = pts;
-                lidar->cur_scan_b = pts;
-                lidar->mtx.unlock();
-            }
-            last_lidar_t = sim_t;
-        }
-        */
+        mobile->set_cur_pose(pose);
+        mobile->set_cur_status(status);
 
         // for real time loop
         double cur_loop_time = get_time();
@@ -286,4 +154,69 @@ void SIM::a_loop()
         pre_loop_time = get_time();
     }
     printf("[SIM] a_loop stop\n");
+}
+
+double SIM::calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol)
+{
+    if(v1 - v0 > tol)
+    {
+        double dv = v_acc_limit * dt;
+        double v = v0 + dv;
+        if(v > v1)
+        {
+            v = v1;
+        }
+        return v;
+    }
+    else if(v1 - v0 < -tol)
+    {
+        double dv = -v_acc_limit * dt;
+        double v = v0 + dv;
+        if(v < v1)
+        {
+            v = v1;
+        }
+        return v;
+    }
+    else
+    {
+        return v1;
+    }
+
+    return 0.0;
+}
+
+void SIM::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void SIM::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
+}
+
+void SIM::set_mobile_module(MOBILE* _mobile)
+{
+    mobile = _mobile;
+}
+
+void SIM::set_unimap_module(UNIMAP* _unimap)
+{
+    unimap = _unimap;
+}
+
+void SIM::set_lidar_2d_module(LIDAR_2D *_lidar_2d)
+{
+    lidar_2d = _lidar_2d;
+}
+
+void SIM::set_lidar_3d_module(LIDAR_3D *_lidar_3d)
+{
+    lidar_3d = _lidar_3d;
+}
+
+void SIM::set_localization_module(LOCALIZATION *_loc)
+{
+    loc = _loc;
 }
