@@ -1,5 +1,19 @@
 #include "livox.h"
 
+LIVOX* LIVOX::instance(QObject* parent)
+{
+    static LIVOX* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new LIVOX(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
 LIVOX::LIVOX(QObject *parent) : QObject{parent}
 {
 
@@ -12,8 +26,13 @@ LIVOX::~LIVOX()
     close();
 }
 
-void LIVOX::init()
+void LIVOX::open()
 {
+    printf("[LIVOX] open\n");
+
+    // stop first
+    close();
+
     for(int i = 0; i < config->get_lidar_3d_num(); i++)
     {
         QString tf_str = config->get_lidar_3d_tf(i);
@@ -23,42 +42,33 @@ void LIVOX::init()
     }
 
     printf("[LIVOX] init\n");
-}
-
-void LIVOX::open()
-{
-    printf("[LIVOX] open\n");
-
-    // stop first
-    close();
 
     // loop start
-    if(grab_thread == NULL)
-    {
-        grab_flag = true;
-        grab_thread = new std::thread(&LIVOX::grab_loop, this);
-    }
+    grab_flag = true;
+    grab_thread = std::make_unique<std::thread>(&LIVOX::grab_loop, this);
 }
 
 void LIVOX::close()
 {
     is_connected = false;
 
-    if(grab_thread != NULL)
+    grab_flag = false;
+    if(grab_thread && grab_thread->joinable())
     {
-        grab_flag = false;
         grab_thread->join();
-        grab_thread = NULL;
     }
+    grab_thread.reset();
 }
 
 QString LIVOX::get_info_text(int idx)
 {
     QString res;
 
-    mtx.lock();
-    IMU imu =  cur_imu[idx];
-    mtx.unlock();
+    IMU imu;
+    {
+        std::shared_lock<std::shared_mutex> lock(mtx);
+        imu = cur_imu[idx];
+    }
 
     res += QString().sprintf("[LIDAR %d]\nimu_t: %.3f, pts_t: %.3f (%d)\n", idx, cur_imu_t[idx].load(), cur_frm_t[idx].load(), cur_pts_num[idx].load());
     res += QString().sprintf("acc: %.2f, %.2f, %.2f\n", imu.acc_x, imu.acc_y, imu.acc_z);
@@ -71,21 +81,21 @@ QString LIVOX::get_info_text(int idx)
 
 LVX_FRM LIVOX::get_cur_raw(int idx)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     LVX_FRM res = cur_raw[idx];
     return res;
 }
 
 IMU LIVOX::get_cur_imu(int idx)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     IMU res = cur_imu[idx];
     return res;
 }
 
 std::vector<IMU> LIVOX::get_imu_storage(int idx)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     std::vector<IMU> res = imu_storage[idx];
     return res;
 }
@@ -100,6 +110,40 @@ int LIVOX::get_livox_idx(uint32_t handle)
         }
     }
     return -1;
+}
+
+bool LIVOX::get_is_connected(int idx)
+{
+    return true;//(bool)is_connected[idx].load();
+}
+
+void LIVOX::set_is_connected(int idx, bool val)
+{
+    //is_connected[idx].store(val);
+}
+
+bool LIVOX::get_is_sync(int idx)
+{
+    return (bool)is_sync[idx].load();
+}
+
+void LIVOX::set_is_sync(int idx, bool val)
+{
+    is_sync[idx].store(val);
+}
+
+int LIVOX::get_time_type(int idx)
+{
+    return (int)time_type[idx].load();
+}
+
+bool LIVOX::try_pop_frm_que(int idx, LVX_FRM& frm)
+{
+    if(frm_que[idx].try_pop(frm))
+    {
+        return true;
+    }
+    return false;
 }
 
 void LIVOX::grab_loop()
@@ -282,11 +326,12 @@ void LIVOX::grab_loop()
                 }
 
                 // set raw pts
-                livox->mtx.lock();
-                livox->cur_raw[idx] = frm;
-                livox->cur_frm_t[idx] = frm.t;
-                livox->cur_pts_num[idx] = frm.pts.size();
-                livox->mtx.unlock();
+                {
+                    std::unique_lock<std::shared_mutex> lock(livox->mtx);
+                    livox->cur_raw[idx] = frm;
+                    livox->cur_frm_t[idx] = frm.t;
+                    livox->cur_pts_num[idx] = frm.pts.size();
+                }
 
                 // clear
                 livox->pts_storage[idx].clear();
@@ -407,4 +452,14 @@ void LIVOX::grab_loop()
     LivoxLidarSdkUninit();
 
     printf("[LIVOX] grab_loop stop\n");
+}
+
+void LIVOX::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void LIVOX::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
 }

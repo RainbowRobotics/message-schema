@@ -463,7 +463,9 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                    //pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
+                    pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
+
+                    std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
 
                     // update last mouse button
                     pick.last_btn = 0;
@@ -598,6 +600,8 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
 
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                         pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
+
+                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
 
                         // update last mouse button
                         pick.last_btn = 0;
@@ -903,7 +907,7 @@ void MainWindow::bt_Sync()
 
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-        LIDAR_3D::instance()->set_sync_flag(true);
+        LIDAR_3D::instance()->set_is_sync(true);
     }
 }
 
@@ -1526,7 +1530,7 @@ void MainWindow::watch_loop()
             {
                 if(LIDAR_3D::instance()->get_is_connected() && !LIDAR_3D::instance()->get_is_sync())
                 {
-                    LIDAR_3D::instance()->set_sync_flag(true);
+                    LIDAR_3D::instance()->set_is_sync(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_3d_type());
                     printf("%s\n", str.toLocal8Bit().data());
                 }
@@ -1560,7 +1564,7 @@ void MainWindow::watch_loop()
 
                 if(LIDAR_3D::instance()->get_is_connected())
                 {
-                    LIDAR_3D::instance()->set_sync_flag(true);
+                    LIDAR_3D::instance()->set_is_sync(true);
                 }
 
                 last_sync_time = get_time();
@@ -1745,10 +1749,12 @@ void MainWindow::plot_topo()
             last_plot_names.clear();
         }
 
+        std::cout << "0" << std::endl;
         // draw
         auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
         if(unimap_nodes && unimap_nodes->size() > 0)
         {            
+            std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {
                 double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();

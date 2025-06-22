@@ -39,7 +39,7 @@ void ORBBEC::init()
         extrinsic[i] = string_to_TF(config->get_cam_tf(i));
     }
 
-    printf("[GEMINI2E] init\n");
+    printf("[ORBBEC] init\n");
 }
 
 void ORBBEC::open()
@@ -47,7 +47,7 @@ void ORBBEC::open()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[GEMINI2E] simulation mode\n");
+        printf("[ORBBEC] simulation mode\n");
         return;
     }
 
@@ -69,10 +69,10 @@ void ORBBEC::close()
 QString ORBBEC::get_cam_info_str()
 {
     QString str;
-    str.sprintf("[GEMINI2E]\nconnection(0,1):%d,%d, color(w,h):%d,%d\ndepth(w,h):%d,%d, pts(0,1):%d,%d",
+    str.sprintf("[ORBBEC]\nconnection(0,1):%d,%d, color(w,h):%d,%d\ndepth(w,h):%d,%d, pts(0,1):%d,%d",
                 (int)is_connected[0], (int)is_connected[1],
-                (int)cur_w_color, (int)cur_h_color,
-                (int)cur_w_depth, (int)cur_h_depth, (int)cur_pts_size0, (int)cur_pts_size1);
+            (int)cur_w_color, (int)cur_h_color,
+            (int)cur_w_depth, (int)cur_h_depth, (int)cur_pts_size0, (int)cur_pts_size1);
 
     return str;
 }
@@ -112,6 +112,26 @@ Eigen::Matrix4d ORBBEC::get_extrinsic(int cam_idx)
     return res;
 }
 
+bool ORBBEC::try_pop_depth_que(int idx, TIME_PTS &tp)
+{
+    if(depth_que[idx].try_pop(tp))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool ORBBEC::try_pop_img_que(int idx, TIME_IMG &ti)
+{
+    if(img_que[idx].try_pop(ti))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void ORBBEC::grab_loop()
 {
     // check device
@@ -122,7 +142,7 @@ void ORBBEC::grab_loop()
     int dev_count = dev_list->deviceCount();
     if(dev_count == 0)
     {
-        logger->write_log("[GEMINI2E] no camera", "Red");
+        logger->write_log("[ORBBEC] no camera", "Red");
         return;
     }
     else if(dev_count == 1)
@@ -130,11 +150,11 @@ void ORBBEC::grab_loop()
         // set property
         int cam_idx0 = 0;
         QString sn = dev_list->getDevice(0)->getDeviceInfo()->serialNumber();
-        logger->write_log(QString("[GEMINI2E] detected serial number, sn:%1").arg(sn));
+        logger->write_log(QString("[ORBBEC] detected serial number, sn:%1").arg(sn));
 
         if(sn != config->get_cam_serial_number(0))
         {
-            logger->write_log("[GEMINI2E] invalid serial number");
+            logger->write_log("[ORBBEC] invalid serial number");
             return;
         }
 
@@ -165,13 +185,13 @@ void ORBBEC::grab_loop()
         */
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[GEMINI2E] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
+        printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
         cur_w_depth = depth_profile0->width();
         cur_h_depth = depth_profile0->height();
 
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[GEMINI2E] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+        printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         cur_w_color = color_profile0->width();
         cur_h_color = color_profile0->height();
@@ -225,7 +245,7 @@ void ORBBEC::grab_loop()
                                 Eigen::Vector3d _P = TF0.block(0,0,3,3)*P + TF0.block(0,3,3,1);
 
                                 if(_P[0] > x_min && _P[0] < x_max &&
-                                   _P[1] > y_min && _P[1] < y_max)
+                                        _P[1] > y_min && _P[1] < y_max)
                                 {
                                     continue;
                                 }
@@ -250,6 +270,13 @@ void ORBBEC::grab_loop()
                     TIME_PTS scan;
                     scan.t = t;
                     scan.pts = pts;
+
+                    depth_que[0].push(scan);
+                    if(depth_que[0].unsafe_size() > 10)
+                    {
+                        TIME_PTS dummy;
+                        depth_que[0].try_pop(dummy);
+                    }
 
                     {
                         std::lock_guard<std::mutex> lock(mtx);
@@ -282,6 +309,13 @@ void ORBBEC::grab_loop()
                         time_img.t = t;
                         time_img.img = img.clone();
 
+                        img_que[0].push(time_img);
+                        if(img_que[0].unsafe_size() > 10)
+                        {
+                            TIME_IMG dummy;
+                            img_que[0].try_pop(dummy);
+                        }
+
                         // flip for plot
                         cv::Mat plot_img;
                         cv::resize(img, plot_img, cv::Size(160, 100));
@@ -296,7 +330,7 @@ void ORBBEC::grab_loop()
             catch(const ob::Error &e)
             {
                 QString str = QString::fromLocal8Bit(e.getMessage());
-                logger->write_log("[GEMINI2E] " + str, "Red");
+                logger->write_log("[ORBBEC] " + str, "Red");
             }
         });
 
@@ -322,18 +356,18 @@ void ORBBEC::grab_loop()
 
             extrinsic[0] = string_to_TF(config->get_cam_tf(0));
         }
-        printf("[GEMINI2E] intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[0].fx, intrinsic[0].fy, intrinsic[0].cx, intrinsic[0].cy);
+        printf("[ORBBEC] intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[0].fx, intrinsic[0].fy, intrinsic[0].cx, intrinsic[0].cy);
 
         is_param_loaded = true;
 
-        printf("[GEMINI2E] grab loop started\n");
+        printf("[ORBBEC] grab loop started\n");
         while(grab_flag)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(40));
         }
 
         pipe0->stop();
-        printf("[GEMINI2E] grab loop stopped\n");
+        printf("[ORBBEC] grab loop stopped\n");
     }
     else if(dev_count == 2)
     {
@@ -355,12 +389,12 @@ void ORBBEC::grab_loop()
                 cam_idx1 = p;
                 serial_valid_cnt++;
             }
-            logger->write_log(QString("[GEMINI2E] detected serial number, sn:%1").arg(sn));
+            logger->write_log(QString("[ORBBEC] detected serial number, sn:%1").arg(sn));
         }
 
         if(serial_valid_cnt != 2)
         {
-            logger->write_log("[GEMINI2E] invalid serial number");
+            logger->write_log("[ORBBEC] invalid serial number");
             return;
         }
 
@@ -398,13 +432,13 @@ void ORBBEC::grab_loop()
         */
 
         auto depth_profile0 = depth_profile_list0->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[GEMINI2E] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
+        printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile0->width(), depth_profile0->height(), depth_profile0->fps(), depth_profile0->format());
 
         cur_w_depth = depth_profile0->width();
         cur_h_depth = depth_profile0->height();
 
         auto color_profile0 = color_profile_list0->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-        printf("[GEMINI2E] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
+        printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile0->width(), color_profile0->height(), color_profile0->fps(), color_profile0->format());
 
         cur_w_color = color_profile0->width();
         cur_h_color = color_profile0->height();
@@ -490,6 +524,14 @@ void ORBBEC::grab_loop()
                     TIME_PTS scan;
                     scan.t = t;
                     scan.pts = std::move(pts);
+
+                    depth_que[0].push(scan);
+                    if(depth_que[0].unsafe_size() > 10)
+                    {
+                        TIME_PTS dummy;
+                        depth_que[0].try_pop(dummy);
+                    }
+
                     {
                         std::lock_guard<std::mutex> lock(mtx);
                         cur_scan[0] = std::move(scan);
@@ -517,6 +559,12 @@ void ORBBEC::grab_loop()
                         time_img.t = t;
                         time_img.img = img;
 
+                        if(img_que[0].unsafe_size() > 10)
+                        {
+                            TIME_IMG dummy;
+                            img_que[0].try_pop(dummy);
+                        }
+
                         cv::Mat plot_img;
                         cv::resize(img, plot_img, cv::Size(160, 90));
                         {
@@ -530,7 +578,7 @@ void ORBBEC::grab_loop()
             catch(const ob::Error &e)
             {
                 QString str = QString::fromLocal8Bit(e.getMessage());
-                logger->write_log("[GEMINI2E] " + str, "Red");
+                logger->write_log("[ORBBEC] " + str, "Red");
             }
         });
 
@@ -633,6 +681,13 @@ void ORBBEC::grab_loop()
                     scan.t = t;
                     scan.pts = std::move(pts);
 
+                    depth_que[1].push(scan);
+                    if(depth_que[1].unsafe_size() > 10)
+                    {
+                        TIME_PTS dummy;
+                        depth_que[1].try_pop(dummy);
+                    }
+
                     {
                         std::lock_guard<std::mutex> lock(mtx);
                         cur_scan[1] = std::move(scan);
@@ -660,6 +715,12 @@ void ORBBEC::grab_loop()
                         time_img.t = t;
                         time_img.img = img;
 
+                        if(img_que[1].unsafe_size() > 10)
+                        {
+                            TIME_IMG dummy;
+                            img_que[1].try_pop(dummy);
+                        }
+
                         cv::Mat plot_img;
                         cv::resize(img, plot_img, cv::Size(160, 90));
                         {
@@ -673,7 +734,7 @@ void ORBBEC::grab_loop()
             catch(const ob::Error &e)
             {
                 QString str = QString::fromLocal8Bit(e.getMessage());
-                logger->write_log("[GEMINI2E] " + str, "Red");
+                logger->write_log("[ORBBEC] " + str, "Red");
             }
         });
 
@@ -698,7 +759,7 @@ void ORBBEC::grab_loop()
 
             extrinsic[0] = string_to_TF(config->get_cam_tf(0));
         }
-        printf("[GEMINI2E] intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[0].fx, intrinsic[0].fy, intrinsic[0].cx, intrinsic[0].cy);
+        printf("[ORBBEC] intrinsic0, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[0].fx, intrinsic[0].fy, intrinsic[0].cx, intrinsic[0].cy);
 
         // get intrinsic cam 1
         {
@@ -722,11 +783,11 @@ void ORBBEC::grab_loop()
 
             extrinsic[1] = string_to_TF(config->get_cam_tf(1));
         }
-        printf("[GEMINI2E] intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[1].fx, intrinsic[1].fy, intrinsic[1].cx, intrinsic[1].cy);
+        printf("[ORBBEC] intrinsic1, fx:%f, fy:%f, cx:%f, cy:%f\n", intrinsic[1].fx, intrinsic[1].fy, intrinsic[1].cx, intrinsic[1].cy);
 
         is_param_loaded = true;
 
-        printf("[GEMINI2E] grab loop started\n");
+        printf("[ORBBEC] grab loop started\n");
         while(grab_flag)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(40));
@@ -735,7 +796,7 @@ void ORBBEC::grab_loop()
         pipe0->stop();
         pipe1->stop();
 
-        printf("[GEMINI2E] grab loop stopped\n");
+        printf("[ORBBEC] grab loop stopped\n");
     }
 }
 

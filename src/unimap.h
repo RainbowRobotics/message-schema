@@ -30,7 +30,7 @@ public:
      * interface funcs (get)
      ***********************/
     int get_nodes_size();
-    bool get_is_loaded();
+    int get_is_loaded();
     NODE* get_node_by_id(QString id);
     NODE* get_node_by_name(QString name);
     QString get_map_path();
@@ -135,6 +135,10 @@ private:
     // other modules
     CONFIG* config;
     LOGGER* logger;
+
+    // helper functions for goal search
+    bool is_goal_node_type(const QString& node_type);
+    double calculate_distance_squared(const Eigen::Vector3d& pos1, const Eigen::Vector3d& pos2);
 };
 
 #endif // UNIMAP_H

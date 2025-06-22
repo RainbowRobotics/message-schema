@@ -28,10 +28,10 @@ public:
 
     void init();
 
-    // start gemini2e module
+    // start ORBBEC module
     void open();
 
-    // stop gemini2e module
+    // stop ORBBEC module
     void close();
 
     /***********************
@@ -43,6 +43,9 @@ public:
     Eigen::Matrix4d get_extrinsic(int cam_idx);
     TIME_PTS get_scan(int cam_idx);
     QString get_cam_info_str();
+
+    bool try_pop_depth_que(int idx, TIME_PTS& tp);
+    bool try_pop_img_que(int idx, TIME_IMG& ti);
 
     /***********************
      * set other modules
@@ -84,6 +87,9 @@ private:
 
     CAM_INTRINSIC intrinsic[2];
     Eigen::Matrix4d extrinsic[2];
+
+    tbb::concurrent_queue<TIME_PTS> depth_que[2];
+    tbb::concurrent_queue<TIME_IMG> img_que[2];
 
 private:
 

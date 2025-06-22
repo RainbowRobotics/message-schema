@@ -10,7 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 
-#include "cam/GEMINI2E/ORBBEC.h"
+#include "cam/ORBBEC/ORBBEC.h"
 
 #include <QObject>
 
@@ -37,6 +37,9 @@ public:
      ***********************/
     QString get_info_text();
     QString get_cur_state();
+    TIME_IMG get_time_img(int idx);
+    TIME_PTS get_scan(int idx);
+
     void set_cur_state(QString str);
     void set_sync_flag(bool flag);
     void set_is_connected(bool val);
@@ -47,7 +50,6 @@ public:
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
-
 
 private:
     explicit CAM(QObject *parent = nullptr);
@@ -60,16 +62,19 @@ private:
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
-    ORBBEC* gemini_2e;
+    ORBBEC* orbbec;
 
     // merge loop
-    std::atomic<bool> merge_flag = {false};
-    std::unique_ptr<std::thread> merge_thread;
-    void merge_loop();
+    std::atomic<bool> post_process_flag[2] = {false, false};
+    std::array<std::unique_ptr<std::thread>, 2> post_process_thread;
+    void post_process_loop(int idx);
 
     // params
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};
+
+    TIME_IMG cur_time_img[2];
+    TIME_PTS cur_scan[2];
 
     tbb::concurrent_queue<FRAME> merged_que;
 

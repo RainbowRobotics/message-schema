@@ -95,14 +95,17 @@ void UNIMAP::load_map(QString path)
     QString loc_mode = config->get_loc_mode();
     if(loc_mode == "2D" && loaded_2d)
     {
+        std::cout << "0-0" << std::endl;
         is_loaded.store(MAP_LOADED);
     }
     else if(loc_mode == "3D" && loaded_3d)
     {
+        std::cout << "1-0" << std::endl;
         is_loaded.store(MAP_LOADED);
     }
     else
     {
+        std::cout << "2-0" << std::endl;
         is_loaded.store(MAP_NOT_LOADED);
     }
 }
@@ -626,9 +629,9 @@ QString UNIMAP::get_map_path()
     return res;
 }
 
-bool UNIMAP::get_is_loaded()
+int UNIMAP::get_is_loaded()
 {
-    return (bool)is_loaded.load();
+    return (int)is_loaded.load();
 }
 
 void UNIMAP::set_map_path(QString path)
@@ -793,7 +796,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         }
     }
 
-    if(is_found && min_d < 3.0)
+    if(is_found && min_d)
     {
         double d0 = calc_dist_2d(_P0-pos);
         double d1 = calc_dist_2d(_P1-pos);
@@ -811,7 +814,7 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         if(ret_near_idxs[0] < kdtree_node.pos.size())
         {
             Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[0]];
-            if((pos-pos0).norm() < 10.0)
+            if((pos-pos0).norm())
             {
                 if(ret_near_idxs[0] < kdtree_node.id.size())
                 {
@@ -827,44 +830,130 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 
 QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
 {
-    return "";
-    /*if(nodes->size() == 0)
+    if(!nodes || nodes->empty())
     {
+        std::cout << "node empty" << std::endl;
         return "";
     }
 
     // find node
     int min_idx = -1;
-    double min_d = std::numeric_limits<double>::max();
+    double min_d = 99999999;
     for(size_t p = 0; p < nodes->size(); p++)
     {
-        if(nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
+        double d = ((*nodes)[p].tf.block(0,3,3,1) - pos).norm();
+        if(d < config->get_robot_radius()*2 && d < min_d)
         {
-            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
-            if(d < config->ROBOT_RADIUS*2 && d < min_d)
-            {
-                min_d = d;
-                min_idx = p;
-            }
+            min_d = d;
+            min_idx = p;
         }
     }
 
     if(min_idx != -1)
     {
-        return nodes[min_idx].id;
+        return (*nodes)[min_idx].id;
     }
-    return "";*/
+    return "";
+
+    /*if(!nodes || nodes->empty())
+    {
+        std::cout << "node empty" << std::endl;
+        return "";
+    }
+
+    if(!kdtree_node_index || kdtree_node.pos.empty())
+    {
+        std::cout << "kdtree empty" << std::endl;
+        return "";
+    }
+
+    const double search_radius = config ? config->get_robot_radius() * 2.0 : 2.0;
+
+    std::shared_lock<std::shared_mutex> lock(mtx);
+
+    const int max_candidates = std::max<int>(20, nodes->size()); // Limit search candidates for performance
+    std::vector<unsigned int> candidate_indices(max_candidates);
+    std::vector<double> candidate_distances(max_candidates);
+
+    // Search for nearest nodes using KD-tree
+    double query_point[3] = {pos[0], pos[1], pos[2]};
+    const int found_count = kdtree_node_index->knnSearch(query_point, max_candidates, candidate_indices.data(), candidate_distances.data());
+    if(found_count == 0)
+    {
+        std::cout << "found count 0" << std::endl;
+        return "";
+    }
+
+    const double search_radius_squared = search_radius * search_radius;
+    NODE* nearest_node = nullptr;
+    double min_distance_squared = std::numeric_limits<double>::max();
+
+    // Check each candidate node
+    for(int i = 0; i < found_count; ++i)
+    {
+        const unsigned int node_idx = candidate_indices[i];
+        const double distance_squared = candidate_distances[i];
+
+        // Skip if outside search radius
+        if(distance_squared > search_radius_squared)
+        {
+            continue;
+        }
+
+        // Get node ID from KD-tree
+        if(node_idx >= kdtree_node.id.size())
+        {
+            continue;
+        }
+
+        const QString& node_id = kdtree_node.id[node_idx];
+
+        // Find the actual node object
+        auto it = nodes_id_map.find(node_id);
+        if(it == nodes_id_map.end())
+        {
+            continue;
+        }
+
+        NODE* node = it->second;
+        if(!node || !is_goal_node_type(node->type))
+        {
+            continue;
+        }
+
+        // Update nearest node if this one is closer
+        if(distance_squared < min_distance_squared)
+        {
+            min_distance_squared = distance_squared;
+            nearest_node = node;
+        }
+    }
+
+    // Log the result for debugging
+    if(logger && nearest_node)
+    {
+        const double actual_distance = std::sqrt(min_distance_squared);
+        logger->write_log(QString("[UNIMAP] Found nearest goal node (KD-tree): %1 (distance: %.3f)")
+                         .arg(nearest_node->id)
+                         .arg(actual_distance), "Green");
+    }
+
+    return nearest_node? nearest_node->id : "";*/
+}
+
+bool UNIMAP::is_goal_node_type(const QString& node_type)
+{
+    return node_type == "GOAL" || node_type == "INIT" || node_type == "STATION";
+}
+
+double UNIMAP::calculate_distance_squared(const Eigen::Vector3d& pos1, const Eigen::Vector3d& pos2)
+{
+    const Eigen::Vector3d diff = pos1 - pos2;
+    return diff.squaredNorm();
 }
 
 NODE* UNIMAP::get_node_by_id(QString id)
 {
-    if(id == "")
-    {
-        return nullptr;
-    }
-
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    
     NODE *node = nullptr;
 
     auto it = nodes_id_map.find(id);
@@ -927,8 +1016,8 @@ QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
             double z = res_tf(2,3);
 
             if(x > -res.sz[0]/2 && x < res.sz[0]/ 2 &&
-               y > -res.sz[1]/2 && y < res.sz[1]/ 2 &&
-               z > -res.sz[2]/2 && z < res.sz[2]/ 2)
+                    y > -res.sz[1]/2 && y < res.sz[1]/ 2 &&
+                    z > -res.sz[2]/2 && z < res.sz[2]/ 2)
             {
                 zone_type = node->type;
                 break;

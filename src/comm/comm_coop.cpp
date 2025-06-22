@@ -15,23 +15,20 @@ COMM_COOP* COMM_COOP::instance(QObject* parent)
     return inst;
 }
 
-COMM_COOP::COMM_COOP(QObject *parent) : QObject{parent}
+COMM_COOP::COMM_COOP(QObject *parent) 
+    : QObject{parent}
     , main(parent)
-    , config(nullptr)
-    , logger(nullptr)
-    , mobile(nullptr)
-    , loc(nullptr)
-    , unimap(nullptr)
-    , obsmap(nullptr)
-    , reconnect_timer(nullptr)
+    , reconnect_timer(std::make_unique<QTimer>(this))
 {
-    reconnect_timer = new QTimer(this);
-
+    // Connect WebSocket signals
     connect(&client, &QWebSocket::connected, this, &COMM_COOP::connected);
     connect(&client, &QWebSocket::disconnected, this, &COMM_COOP::disconnected);
-    connect(reconnect_timer, SIGNAL(timeout()), this, SLOT(reconnect_loop()));
-
-    connect(this, SIGNAL(signal_send_info()), this, SLOT(slot_send_info()));
+    
+    // Connect timer signal
+    connect(reconnect_timer.get(), &QTimer::timeout, this, &COMM_COOP::reconnect_loop);
+    
+    // Connect internal signals
+    connect(this, &COMM_COOP::signal_send_info, this, &COMM_COOP::slot_send_info);
 }
 
 COMM_COOP::~COMM_COOP()
@@ -41,160 +38,257 @@ COMM_COOP::~COMM_COOP()
         reconnect_timer->stop();
     }
 
-    if(is_connected)
+    if(is_connected_flag)
     {
         client.close();
     }
 }
 
-QString COMM_COOP::get_json(QJsonObject& json, QString key)
+QString COMM_COOP::get_json(const QJsonObject& json, const QString& key) const
 {
     return json[key].toString();
 }
 
+QString COMM_COOP::get_robot_id() const
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return robot_id;
+}
+
+bool COMM_COOP::is_connected() const
+{
+    return is_connected_flag;
+}
+
 void COMM_COOP::init()
 {
+    if(!config)
+    {
+        printf("[COMM_COOP] Warning: config module not set\n");
+        return;
+    }
+
     if(!config->get_use_coop())
     {
         return;
     }
 
-    // make robot id
-    QString _robot_id;
-    _robot_id.sprintf("R_%lld", (long long)(get_time()*1000));
+    // Generate robot ID with timestamp
+    const double current_time = get_time();
+    robot_id = QString("R_%1").arg(static_cast<long long>(current_time * 1000));
 
-    // update robot id
-    robot_id = _robot_id;
-    printf("[COMM_CP] ID: %s\n", robot_id.toLocal8Bit().data());
+    // Log robot ID
+    printf("[COMM_COOP] ID: %s\n", robot_id.toLocal8Bit().constData());
 
-    // start reconnect loop
+    // Start reconnect timer
     reconnect_timer->start(3000);
-    printf("[COMM_CP] start reconnect timer\n");
+    printf("[COMM_COOP] start reconnect timer\n");
 }
 
 void COMM_COOP::reconnect_loop()
 {
-    if(is_connected == false)
+    if(!is_connected_flag)
     {
-        //QString server_addr;
-        //server_addr.sprintf("ws://%s:13334", config->SERVER_IP.toLocal8Bit().data());
-
-        QString server_addr = "ws://127.0.0.1:13334";
+        const QString server_addr = "ws://127.0.0.1:13334";
         client.open(QUrl(server_addr));
     }
 }
 
 void COMM_COOP::connected()
 {
-    if(!is_connected)
+    if(!is_connected_flag)
     {
+        // Connect binary message handler
         connect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_COOP::recv_message);
-        is_connected = true;
-        printf("[COMM_CP] connected\n");
+        is_connected_flag = true;
+        printf("[COMM_COOP] connected\n");
     }
 }
 
 void COMM_COOP::disconnected()
 {
-    if(is_connected)
+    if(is_connected_flag)
     {
-        is_connected = false;
+        is_connected_flag = false;
         disconnect(&client, &QWebSocket::binaryMessageReceived, this, &COMM_COOP::recv_message);
-        printf("[COMM_CP] disconnected\n");
+        printf("[COMM_COOP] disconnected\n");
     }
 }
 
-// recv callback
 void COMM_COOP::recv_message(const QByteArray &buf)
 {
-    QString message = qUncompress(buf);
-    QJsonObject data = QJsonDocument::fromJson(message.toUtf8()).object();
+    // Decompress and parse message
+    const QString message = qUncompress(buf);
+    const QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+    
+    if(doc.isNull())
+    {
+        printf("[COMM_COOP] Warning: Invalid JSON received\n");
+        return;
+    }
+
+    const QJsonObject data = doc.object();
+    
+    // Check if message is for this robot
     if(get_json(data, "rid") != robot_id)
     {
         return;
     }
 
-    // parsing
-    if(get_json(data, "type") == "control")
+    // Parse message based on type
+    const QString message_type = get_json(data, "type");
+    if(message_type == "control")
     {
-        QString vel_str = get_json(data, "vel");
-        double time = get_json(data, "t").toDouble()/1000;
-
-        QStringList str_list = vel_str.split(",");
-        if(str_list.size() == 3)
-        {
-            double vx = str_list[0].toDouble();
-            double vy = str_list[1].toDouble();
-            double wz = str_list[2].toDouble()*D2R;
-
-            mobile->move(vx, vy, wz);
-        }
+        parse_control_message(data);
     }
 }
 
-// send slots
+void COMM_COOP::parse_control_message(const QJsonObject& data)
+{
+    const QString vel_str = get_json(data, "vel");
+    const double timestamp = get_json(data, "t").toDouble() / 1000.0;
+    
+    process_velocity_command(vel_str, timestamp);
+}
+
+void COMM_COOP::process_velocity_command(const QString& vel_str, double timestamp)
+{
+    if(!mobile)
+    {
+        printf("[COMM_COOP] Warning: mobile module not set\n");
+        return;
+    }
+
+    const QStringList str_list = vel_str.split(",", Qt::SkipEmptyParts);
+    if(str_list.size() == 3)
+    {
+        const double vx = str_list[0].toDouble();
+        const double vy = str_list[1].toDouble();
+        const double wz = str_list[2].toDouble() * D2R;
+
+        mobile->move(vx, vy, wz);
+        
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_COOP] Received velocity command: vx=%1, vy=%2, wz=%3")
+                             .arg(vx, 0, 'f', 3)
+                             .arg(vy, 0, 'f', 3)
+                             .arg(wz * R2D, 0, 'f', 3), "Green");
+        }
+    }
+    else
+    {
+        printf("[COMM_COOP] Warning: Invalid velocity string format: %s\n", 
+               vel_str.toLocal8Bit().constData());
+    }
+}
+
 void COMM_COOP::slot_send_info()
 {
-    if(!is_connected)
+    if(!is_connected_flag)
     {
         return;
     }
 
-    double time = get_time();
-    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-    QString state = "move";
+    send_robot_info();
+}
 
-    // Creating the JSON object
+void COMM_COOP::send_robot_info()
+{
+    if(!loc)
+    {
+        printf("[COMM_COOP] Warning: localization module not set\n");
+        return;
+    }
+
+    const double current_time = get_time();
+    
+    // Check if we should send message (rate limiting)
+    if(!should_send_message(current_time))
+    {
+        return;
+    }
+
+    // Get current robot state
+    const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+    const QString state = "move";
+
+    // Create JSON object
     QJsonObject rootObj;
-
-    // Adding the command and time
     rootObj["type"] = "info";
     rootObj["rid"] = robot_id;
     rootObj["ctf"] = TF_to_string(cur_tf);
     rootObj["st"] = state;
-    rootObj["t"] = QString::number((long long)(time*1000), 10);
+    rootObj["t"] = QString::number(static_cast<long long>(current_time * 1000));
 
-    // send
-    if(time - last_send_time >= 0.05)
-    {
-        QJsonDocument doc(rootObj);
-        QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
-        client.sendBinaryMessage(buf);
-        last_send_time = time;
-    }
+    // Send compressed message
+    const QJsonDocument doc(rootObj);
+    const QByteArray buf = qCompress(doc.toJson(QJsonDocument::Compact));
+    client.sendBinaryMessage(buf);
+    
+    // Update last send time
+    last_send_time = current_time;
 }
 
+bool COMM_COOP::should_send_message(double current_time) const
+{
+    const double time_diff = current_time - last_send_time;
+    return time_diff >= 0.05; // 50ms rate limiting
+}
+
+// Setter functions with null pointer checks
 void COMM_COOP::set_config_module(CONFIG* _config)
 {
-    config = _config;
+    if(_config)
+    {
+        config = _config;
+    }
 }
 
 void COMM_COOP::set_logger_module(LOGGER* _logger)
 {
-    logger = _logger;
+    if(_logger)
+    {
+        logger = _logger;
+    }
 }
 
 void COMM_COOP::set_mobile_module(MOBILE* _mobile)
 {
-    mobile = _mobile;
+    if(_mobile)
+    {
+        mobile = _mobile;
+    }
 }
 
 void COMM_COOP::set_unimap_module(UNIMAP* _unimap)
 {
-    unimap = _unimap;
+    if(_unimap)
+    {
+        unimap = _unimap;
+    }
 }
 
 void COMM_COOP::set_obsmap_module(OBSMAP* _obsmap)
 {
-    obsmap = _obsmap;
+    if(_obsmap)
+    {
+        obsmap = _obsmap;
+    }
 }
 
-void COMM_COOP::set_localization_module(LOCALIZATION *_loc)
+void COMM_COOP::set_localization_module(LOCALIZATION* _loc)
 {
-    loc = _loc;
+    if(_loc)
+    {
+        loc = _loc;
+    }
 }
 
-void COMM_COOP::set_autocontrol_module(AUTOCONTROL *_ctrl)
+void COMM_COOP::set_autocontrol_module(AUTOCONTROL* _ctrl)
 {
-    ctrl= _ctrl;
+    if(_ctrl)
+    {
+        ctrl = _ctrl;
+    }
 }

@@ -49,10 +49,10 @@ void LIDAR_3D::init()
     {
         if(livox == nullptr)
         {
-            livox = new LIVOX(this);
-            livox->config = this->config;
-            livox->logger = this->logger;
-            livox->init();
+            LIVOX::instance(this);
+            livox = LIVOX::instance();
+            livox->set_config_module(this->config);
+            livox->set_logger_module(this->logger);
             livox->open();
         }
     }
@@ -241,7 +241,7 @@ QString LIDAR_3D::get_info_text()
     return res;
 }
 
-void LIDAR_3D::set_sync_flag(bool flag)
+void LIDAR_3D::set_is_sync(bool flag)
 {
     is_sync = flag;
 
@@ -251,7 +251,7 @@ void LIDAR_3D::set_sync_flag(bool flag)
     {
         if(lidar_type == "LIVOX" && livox != nullptr)
         {
-            livox->is_sync[idx].store(flag);
+            livox->set_is_sync(idx, flag);
             printf("[LIDAR_3D] set livox->is_sync[%d] = %d\n",idx, flag);
         }
     }
@@ -279,13 +279,14 @@ void LIDAR_3D::deskewing_loop(int idx)
     printf("[LIDAR_3D] dsk_loop[%d] start\n", idx);
     while(deskewing_flag[idx])
     {
-        if(!is_connected && livox->is_connected)
+        if(!is_connected && !livox->get_is_connected(idx))
         {
             is_connected = true;
+            livox->set_is_connected(idx, true);
         }
 
         LVX_FRM frm;
-        if(livox->frm_que[idx].try_pop(frm))
+        if(livox->try_pop_frm_que(idx, frm))
         {
             // imu
             IMU _cur_imu = get_best_imu(frm.t, idx);
@@ -373,7 +374,7 @@ void LIDAR_3D::merge_loop()
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
-        else if((livox->time_type[0].load() == 1 && livox->time_type[1].load() == 1))
+        else if((livox->get_time_type(0) == 1 && livox->get_time_type(0) == 1))
         {
             for(int idx = 0; idx < lidar_3d_num; idx++)
             {

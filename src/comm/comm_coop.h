@@ -4,8 +4,8 @@
 // global defines
 #include "global_defines.h"
 #include "my_utils.h"
+#include "comm_data.h"
 
-// other modules
 #include "config.h"
 #include "logger.h"
 #include "localization.h"
@@ -22,6 +22,11 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
+// stl
+#include <shared_mutex>
+#include <atomic>
+#include <memory>
+
 class COMM_COOP : public QObject
 {
     Q_OBJECT
@@ -33,6 +38,10 @@ public:
     // start coop module
     void init();
 
+    // getter functions
+    QString get_robot_id() const;
+    bool is_connected() const;
+
     /***********************
      * set other modules
      ***********************/
@@ -42,46 +51,47 @@ public:
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
     void set_localization_module(LOCALIZATION* _loc);
-    void set_autocontrol_module(AUTOCONTROL *_ctrl);
+    void set_autocontrol_module(AUTOCONTROL* _ctrl);
 
 private:
     explicit COMM_COOP(QObject *parent = nullptr);
     ~COMM_COOP();
 
-    std::mutex mtx;
+    mutable std::shared_mutex mtx;
     QWebSocket client;
-    QTimer* reconnect_timer;
+    std::unique_ptr<QTimer> reconnect_timer;
 
     // other modules
-    QObject* main;
-    CONFIG* config;
-    LOGGER* logger;
-    MOBILE* mobile;
-    LOCALIZATION *loc;
-    UNIMAP *unimap;
-    OBSMAP *obsmap;
-    AUTOCONTROL *ctrl;
+    QObject* main{nullptr};
+    CONFIG* config{nullptr};
+    LOGGER* logger{nullptr};
+    MOBILE* mobile{nullptr};
+    LOCALIZATION* loc{nullptr};
+    UNIMAP* unimap{nullptr};
+    OBSMAP* obsmap{nullptr};
+    AUTOCONTROL* ctrl{nullptr};
 
     // vars
-    std::atomic<bool> is_connected = {false};
-    std::atomic<double> last_send_time = {0};
-    QString robot_id = "";
+    std::atomic<bool> is_connected_flag{false};
+    std::atomic<double> last_send_time{0.0};
+    QString robot_id;
 
-    // funcs
-    QString get_json(QJsonObject& json, QString key);
+    // utility functions
+    QString get_json(const QJsonObject& json, const QString& key) const;
+    void send_robot_info();
+    void parse_control_message(const QJsonObject& data);
+    void process_velocity_command(const QString& vel_str, double timestamp);
+    bool should_send_message(double current_time) const;
 
 Q_SIGNALS:
     void signal_send_info();
 
 private Q_SLOTS:
     void slot_send_info();
-
-private Q_SLOTS:
     void reconnect_loop();
     void connected();
     void disconnected();
     void recv_message(const QByteArray &buf);
-
 };
 
 #endif // COMM_COOP_H

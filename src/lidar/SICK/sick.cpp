@@ -1,5 +1,19 @@
 #include "sick.h"
 
+SICK* SICK::instance(QObject* parent)
+{
+    static SICK* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new SICK(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
 SICK::SICK(QObject *parent) : QObject{parent}
 {
 }
@@ -14,16 +28,6 @@ SICK::~SICK()
     close();
 }
 
-void SICK::init()
-{
-    for(int i = 0; i < config->get_lidar_2d_num(); i++)
-    {
-        pts_tf[i] = string_to_TF(config->get_lidar_2d_tf(i));
-    }
-
-    printf("[LIVOX] init\n");
-}
-
 void SICK::open()
 {
     printf("[SICK] open\n");
@@ -31,13 +35,20 @@ void SICK::open()
     // stop first
     close();
 
+    for(int i = 0; i < config->get_lidar_2d_num(); i++)
+    {
+        pts_tf[i] = string_to_TF(config->get_lidar_2d_tf(i));
+    }
+
+    printf("[LIVOX] init\n");
+
     // loop start
     for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         if(grab_thread[idx] == nullptr)
         {
             grab_flag[idx] = true;
-            grab_thread[idx] = new std::thread(&SICK::grab_loop, this, idx);
+            grab_thread[idx] = make_unique<std::thread>(&SICK::grab_loop, this, idx);
         }
     }
 }
@@ -47,12 +58,13 @@ void SICK::close()
     for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         is_connected[idx] = false;
-        if(grab_thread[idx] != nullptr)
+
+        grab_flag[idx] = false;
+        if(grab_thread[idx] && grab_thread[idx]->joinable())
         {
-            grab_flag[idx] = false;
             grab_thread[idx]->join();
-            grab_thread[idx] = nullptr;
         }
+        grab_thread[idx].reset();
     }
 }
 
@@ -63,6 +75,37 @@ QString SICK::get_info_text(int idx)
     res += QString().sprintf("fq: %d,", (int)raw_que[idx].unsafe_size());
 
     return res;
+}
+
+RAW_FRAME SICK::get_cur_raw(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    RAW_FRAME res = cur_raw[idx];
+    return res;
+}
+
+bool SICK::get_is_connected(int idx)
+{
+    return (bool)is_connected[idx].load();
+}
+
+bool SICK::get_is_sync(int idx)
+{
+    return (bool)is_sync[idx].load();
+}
+
+void SICK::set_is_sync(int idx, bool val)
+{
+    is_sync[idx].store(val);
+}
+
+bool SICK::try_pop_raw_que(int idx, RAW_FRAME& frm)
+{
+    if(raw_que[idx].try_pop(frm))
+    {
+        return true;
+    }
+    return false;
 }
 
 void SICK::sync(int idx)
@@ -263,9 +306,10 @@ void SICK::grab_loop(int idx)
             frm.mo = mo;
             raw_que[idx].push(frm);
 
-            mtx.lock();
-            cur_raw[idx] = frm;
-            mtx.unlock();
+            {
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                cur_raw[idx] = frm;
+            }
 
             // que overflow control
             if(raw_que[idx].unsafe_size() > 50)
@@ -279,4 +323,19 @@ void SICK::grab_loop(int idx)
     }
 
     printf("[SICK] stop grab loop: %d\n", idx);
+}
+
+void SICK::set_config_module(CONFIG* _config)
+{
+    config = _config;
+}
+
+void SICK::set_logger_module(LOGGER* _logger)
+{
+    logger = _logger;
+}
+
+void SICK::set_mobile_module(MOBILE *_mobile)
+{
+    mobile = _mobile;
 }

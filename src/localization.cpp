@@ -65,6 +65,9 @@ void LOCALIZATION::start()
     obs_flag = true;
     obs_thread = std::make_unique<std::thread>(&LOCALIZATION::obs_loop, this);
 
+    node_flag = true;
+    node_thread = std::make_unique<std::thread>(&LOCALIZATION::node_loop, this);
+
     printf("[LOCALIZATION(%s)] start\n", loc_mode.toStdString().c_str());
 }
 
@@ -92,6 +95,13 @@ void LOCALIZATION::stop()
         obs_thread->join();
     }
     obs_thread.reset();
+
+    node_flag = false;
+    if(node_thread && node_thread->joinable())
+    {
+        node_thread->join();
+    }
+    node_thread.reset();
 
     QString loc_mode = config->get_loc_mode();
     printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
@@ -191,7 +201,7 @@ QString LOCALIZATION::get_info_text()
     QString str;
     str.sprintf("[LOC]\npos:%.2f,%.2f,%.2f\nerr:%f\nloc_t: %.3f, %.3f, %.3f\nieir: (%.3f, %.3f)\nloc_state: %s",
                 cur_xi[0], cur_xi[1], cur_xi[2]*R2D,
-                (double)cur_tf_err.load(), (double)proc_time_loc_a.load(), (double)proc_time_loc_b.load(), (double)proc_time_obs.load(),
+                (double)cur_tf_err.load(), (double)proc_time_localization.load(), (double)proc_time_odometry.load(), (double)proc_time_obs.load(),
                 cur_ieir[0], cur_ieir[1],
                 loc_state.toLocal8Bit().data());
     return str;
@@ -207,7 +217,7 @@ bool LOCALIZATION::get_is_busy()
     return (bool)is_busy.load();
 }
 
-void LOCALIZATION::semi_auto_init_start()
+void LOCALIZATION::start_semiauto_init()
 {
 
 }
@@ -379,7 +389,7 @@ void LOCALIZATION::localization_loop_2d()
 
             // set localization info for plot
             cur_tf_err = err;
-            proc_time_loc_a = get_time() - st_time;
+            proc_time_localization = get_time() - st_time;
 
             // for speed
             lidar_2d->clear_merged_queue();
@@ -475,7 +485,7 @@ void LOCALIZATION::localization_loop_3d()
 
             // set localization info for plot
             cur_tf_err = err;
-            proc_time_loc_a = get_time() - st_time;
+            proc_time_localization = get_time() - st_time;
 
 
             // for speed
@@ -616,7 +626,7 @@ void LOCALIZATION::odometry_loop()
             pre_mo = cur_mo;
 
             // update processing time
-            proc_time_loc_b = get_time() - st_time;
+            proc_time_odometry = get_time() - st_time;
         }
 
 
@@ -673,6 +683,7 @@ void LOCALIZATION::obs_loop()
                 {
                     scan = tmp;
                 }
+
                 Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
                 Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
                 Eigen::Vector3d t0 = tf0.block(0,3,3,1);
@@ -686,7 +697,7 @@ void LOCALIZATION::obs_loop()
             }
 
             // add 3D pts
-            if(config->get_use_lidar_3d() && config->get_loc_mode()  != "3D")
+            if(config->get_use_lidar_3d() && config->get_loc_mode() != "3D")
             {
                 TIME_PTS scan;
                 TIME_PTS tmp;
@@ -695,12 +706,12 @@ void LOCALIZATION::obs_loop()
                     scan = tmp;
                 }
 
+                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
+                Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+                Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
                 if(scan.pts.size() > 0)
                 {
-                    Eigen::Matrix4d tf0 = tpp.tf.inverse() * get_best_tf(scan.t);
-                    Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
-                    Eigen::Vector3d t0 = tf0.block(0,3,3,1);
-
                     for(size_t p = 0; p < scan.pts.size(); p++)
                     {
                         Eigen::Vector3d P = scan.pts[p];
@@ -710,7 +721,26 @@ void LOCALIZATION::obs_loop()
                 }
             }
 
-            // todo: add cam pts
+            if(config->get_use_cam())
+            {
+                for(int p = 0; p < config->get_cam_num(); p++)
+                {
+                    TIME_PTS scan = cam->get_scan(p);
+                    if(scan.pts.size() > 0)
+                    {
+                        Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
+                        Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+                        Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+                        for(size_t p = 0; p < scan.pts.size(); p++)
+                        {
+                            Eigen::Vector3d P = scan.pts[p];
+                            Eigen::Vector3d _P = R0*P + t0;
+                            tpp.pts.push_back(_P);
+                        }
+                    }
+                }
+            }
 
             // update obstacle map
             obsmap->update_obs_map(tpp);
@@ -725,6 +755,67 @@ void LOCALIZATION::obs_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[LOCALIZATION] obs_loop stop\n");
+}
+
+void LOCALIZATION::node_loop()
+{
+    // loop params
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+    QString pre_node_id = "";
+
+    logger->write_log("[NODE] node loop start");
+    while(node_flag)
+    {
+        if(unimap->get_is_loaded() == MAP_LOADED)
+        {
+            Eigen::Matrix4d cur_tf = get_cur_tf();
+            QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+            if(pre_node_id == "")
+            {
+                pre_node_id = cur_node_id;
+
+                // update
+                std::lock_guard<std::mutex> lock(mtx);
+                last_node_id = pre_node_id;
+            }
+            else
+            {
+                // calc pre node id
+                NODE *node = unimap->get_node_by_id(cur_node_id);
+                if(node != nullptr)
+                {
+                    double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                    if(d < config->get_robot_radius())
+                    {
+                        if(pre_node_id != cur_node_id)
+                        {
+                            pre_node_id = cur_node_id;
+
+                            // update
+                            std::lock_guard<std::mutex> lock(mtx);
+                            last_node_id = pre_node_id;
+                        }
+                    }
+                }
+            }
+        }
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            //printf("[NODE] loop time drift, dt:%f\n", delta_loop_time);
+        }
+        pre_loop_time = get_time();
+    }
+    logger->write_log("[NODE] node loop stop");
 }
 
 // 2D

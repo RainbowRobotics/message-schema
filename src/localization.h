@@ -11,7 +11,7 @@
 #include "mobile.h"
 #include "lidar_2d.h"
 #include "lidar_3d.h"
-// #include "cam.h"
+#include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
 
@@ -44,23 +44,23 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    std::vector<Eigen::Vector3d> get_cur_global_scan();
-    Eigen::Matrix4d get_cur_tf();
-    Eigen::Matrix4d get_best_tf(double t);
-    Eigen::Vector2d get_cur_ieir();
-    QString get_cur_loc_state();
-    QString get_info_text();
-    bool get_is_loc();
-    bool get_is_busy();
+    bool get_is_loc();                                  // check if connected lidar
+    bool get_is_busy();                                 // check if semiauto init busy
+    QString get_cur_loc_state();                        // get localization state (none, fail, good)
+    QString get_info_text();                            // get all localization info
+    Eigen::Matrix4d get_cur_tf();                       // get current tf (4x4 matrix)
+    Eigen::Matrix4d get_best_tf(double t);              // get nearest time tf (4x4 matrix)
+    Eigen::Vector2d get_cur_ieir();                     // get cur inlier error, inlier ratio
+    std::vector<Eigen::Vector3d> get_cur_global_scan(); // get cur global scan
 
-    void set_cur_tf(Eigen::Matrix4d tf);
-    void set_cur_loc_state(QString str);
-    void set_cur_ieir(Eigen::Vector2d ieir);
+    void set_cur_loc_state(QString str);                // set loc state
+    void set_cur_tf(Eigen::Matrix4d tf);                // set current tf
+    void set_cur_ieir(Eigen::Vector2d ieir);            // set current inlier error, inlier ratio (only use simulation)
 
-    Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const  Eigen::Matrix4d& G);
-    Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
+    Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);   // 2D calc ieir
+    Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const  Eigen::Matrix4d& G);      // 3D calc ieir
 
-    void semi_auto_init_start();
+    void start_semiauto_init();     // start semi-auto init
 
     /***********************
      * set other modules
@@ -86,30 +86,34 @@ private:
     MOBILE* mobile;
     LIDAR_2D* lidar_2d;
     LIDAR_3D* lidar_3d;
-    // CAM *cam = NULL;
+    CAM* cam;
     UNIMAP* unimap;
     OBSMAP* obsmap;
 
     // algorithm for localization
-    double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G); //2D
-    double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G); // 3D
+    double map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);  // 2D icp
+    double map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d& G);                  // 3D icp
 
     // loop
-    std::atomic<bool> localization_flag = {false};
-    std::unique_ptr<std::thread> localization_thread;
-    void localization_loop_2d();
-    void localization_loop_3d();
+    std::atomic<bool> localization_flag = {false};      // localization thread flag (lidar localization)
+    std::unique_ptr<std::thread> localization_thread;   // localization thread
+    void localization_loop_2d();                        // 2D localization loop
+    void localization_loop_3d();                        // 3D localization loop
 
-    std::atomic<bool> odometry_flag = {false};
-    std::unique_ptr<std::thread> odometry_thread;
-    void odometry_loop();
+    std::atomic<bool> odometry_flag = {false};          // odometry thread flag (wheel odometry)
+    std::unique_ptr<std::thread> odometry_thread;       // odometry thread
+    void odometry_loop();                               // odometry loop
 
-    std::atomic<bool> obs_flag = {false};
-    std::unique_ptr<std::thread> obs_thread;
-    void obs_loop();
+    std::atomic<bool> obs_flag = {false};               // obstacle thread flag (obstacle map update)
+    std::unique_ptr<std::thread> obs_thread;            // obstacle thread
+    void obs_loop();                                    // obstacle loop
+
+    std::atomic<bool> node_flag = {false};              // node thread flag (calc nearest node)
+    std::unique_ptr<std::thread> node_thread;           // node thread
+    void node_loop();                                   // node loop
 
     // for plot
-    std::vector<Eigen::Vector3d> cur_global_scan;
+    std::vector<Eigen::Vector3d> cur_global_scan;       // cur global scan
 
     // flag
     std::atomic<bool> is_loc = {false};
@@ -120,6 +124,7 @@ private:
     Eigen::Vector2d cur_ieir;
     std::atomic<double> cur_tf_err = {0};
     QString cur_loc_state = "none";
+    QString last_node_id = "";
 
     // for loc
     std::vector<TIME_POSE> tp_storage;
@@ -127,8 +132,8 @@ private:
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
 
     // loop processing time
-    std::atomic<double> proc_time_loc_a = {0};
-    std::atomic<double> proc_time_loc_b = {0};
+    std::atomic<double> proc_time_localization = {0};
+    std::atomic<double> proc_time_odometry = {0};
     std::atomic<double> proc_time_obs = {0};
 
 };

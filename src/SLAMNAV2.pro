@@ -33,7 +33,7 @@ SOURCES += \
     comm/comm_rrs.cpp \
     autocontrol.cpp \
     cam.cpp \
-    cam/GEMINI2E/ORBBEC.cpp \
+    cam/ORBBEC/ORBBEC.cpp \
     dockcontrol.cpp \
     lidar/SICK/sick.cpp \
     lidar_2d.cpp \
@@ -62,7 +62,7 @@ HEADERS += \
     comm/comm_rrs.h \
     autocontrol.h \
     cam.h \
-    cam/GEMINI2E/ORBBEC.h \
+    cam/ORBBEC/ORBBEC.h \
     comm_data.h \
     dockcontrol.h \
     lidar/SICK/sick.h \

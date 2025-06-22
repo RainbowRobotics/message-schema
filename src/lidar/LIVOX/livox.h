@@ -21,34 +21,58 @@
 class LIVOX : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(LIVOX)
+
 public:
-    explicit LIVOX(QObject *parent = nullptr);
-    ~LIVOX();
+    // make singleton
+    static LIVOX* instance(QObject* parent = nullptr);
 
-    // mutex
-    std::mutex mtx;
-
-
-    // imu filter
-    imu_tools::ComplementaryFilter imu_filter[2];
-
-    // other modules
-    CONFIG* config = NULL;
-    LOGGER* logger = NULL;
-
-    // extrinsics
-    Eigen::Matrix4d pts_tf[2];
-    Eigen::Matrix4d imu_tf[2];
-
-    // interface functions
-    void init();
+    // start livox module
     void open();
+
+    // stop livox module
     void close();
 
+    /***********************
+     * interface funcs
+     ***********************/
     IMU get_cur_imu(int idx);
     LVX_FRM get_cur_raw(int idx);
     QString get_info_text(int idx);
     std::vector<IMU> get_imu_storage(int idx);
+
+    bool get_is_connected(int idx);
+    void set_is_connected(int idx, bool val);
+    bool get_is_sync(int idx);
+    void set_is_sync(int idx, bool val);
+
+    int get_time_type(int idx);
+
+    bool try_pop_frm_que(int idx, LVX_FRM& frm);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+
+private:
+    explicit LIVOX(QObject *parent = nullptr);
+    ~LIVOX();
+
+    // mutex
+    std::shared_mutex mtx;
+
+    // imu filter (complementary Filter)
+    imu_tools::ComplementaryFilter imu_filter[2];
+
+    // other modules
+    CONFIG* config;
+    LOGGER* logger;
+
+    // extrinsics
+    Eigen::Matrix4d pts_tf[2];
+    Eigen::Matrix4d imu_tf[2];
 
     // for multi lidar
     std::array<uint32_t, 2> livox_handles = {0, 0};
@@ -56,7 +80,7 @@ public:
 
     // grab loop
     std::atomic<bool> grab_flag = {false};
-    std::thread* grab_thread = NULL;
+    std::unique_ptr<std::thread> grab_thread;
     void grab_loop();
 
     // params

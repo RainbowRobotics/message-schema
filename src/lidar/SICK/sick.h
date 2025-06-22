@@ -22,32 +22,57 @@
 class SICK : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(SICK)
+
 public:
+    // make singleton
+    static SICK* instance(QObject* parent = nullptr);
+
+    // start sick module
+    void open();
+
+    // stop sick module
+    void close();
+
+    // sync between mobile, sick
+    void sync(int idx);
+
+    /***********************
+     * interface funcs
+     ***********************/
+    QString get_info_text(int idx);
+    RAW_FRAME get_cur_raw(int idx);
+    bool get_is_connected(int idx);
+    bool get_is_sync(int idx);
+    void set_is_sync(int idx, bool val);
+
+    bool try_pop_raw_que(int idx, RAW_FRAME& frm);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_mobile_module(MOBILE *_mobile);
+
+private:
     explicit SICK(QObject *parent = nullptr);
     ~SICK();
 
     // mutex
-    std::mutex mtx;
+    std::shared_mutex mtx;
 
     // other modules
-    CONFIG *config = NULL;
-    LOGGER *logger = NULL;
-    MOBILE *mobile = NULL;
+    CONFIG* config;
+    LOGGER* logger;
+    MOBILE* mobile;
 
     // extrinsics
     Eigen::Matrix4d pts_tf[2];
 
-    // interface funcs
-    void init();
-    void open();
-    void close();
-    void sync(int idx);
-
-    QString get_info_text(int idx);
-
     // grab loop
     std::atomic<bool> grab_flag[2] = {false, false};
-    std::thread* grab_thread[2] = {nullptr, nullptr};
+    std::array<std::unique_ptr<std::thread>, 2> grab_thread;
     void grab_loop(int idx);
 
     // flags

@@ -49,11 +49,12 @@ void LIDAR_2D::init()
     {
         if(sick == nullptr)
         {
-            sick = new SICK(this);
-            sick->config = this->config;
-            sick->logger = this->logger;
-            sick->mobile = this->mobile;
-            sick->init();
+            SICK::instance(this);
+
+            sick = SICK::instance();
+            sick->set_config_module(this->config);
+            sick->set_logger_module(this->logger);
+            sick->set_mobile_module(this->mobile);
             sick->open();
         }
     }
@@ -121,7 +122,7 @@ RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
     if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
         std::lock_guard<std::mutex> lock(mtx);
-        res = sick->cur_raw[idx];
+        res = sick->get_cur_raw(idx);
     }
     return res;
 }
@@ -159,7 +160,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
     {
         for(int p=0; p<lidar_num; p++)
         {
-            sick->is_sync[p].store(flag);
+            sick->set_is_sync(p, flag);
             printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
         }
     }
@@ -203,7 +204,7 @@ void LIDAR_2D::deskewing_loop(int idx)
         }
 
         RAW_FRAME frm;
-        if(sick->raw_que[idx].try_pop(frm))
+        if(sick->try_pop_raw_que(idx, frm))
         {
             double t0 = frm.t0;
             double t1 = frm.t1;
@@ -312,7 +313,7 @@ void LIDAR_2D::merge_loop()
         }
 
         // if pair lidar
-        if(sick->is_connected[0].load() && sick->is_connected[1].load())
+        if(sick->get_is_connected(0) && sick->get_is_connected(1))
         {
             for(int idx = 0; idx < lidar_num; idx++)
             {

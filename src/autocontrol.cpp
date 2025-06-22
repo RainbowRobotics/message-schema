@@ -480,7 +480,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         is_path_overlap = true;
         control_flag = false;
         control_thread->join();
-        control_thread = NULL;
+        control_thread.reset();
 
         if(is_curve)
         {
@@ -842,7 +842,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
     // set st node, ed node
     NODE* st_node = unimap->get_node_by_id(st_node_id);
     NODE* ed_node = unimap->get_node_by_id(ed_node_id);
-    if(st_node == NULL || ed_node == NULL)
+    if(st_node == nullptr || ed_node == nullptr)
     {
         printf("[AUTO] st_node or ed_node null\n");
         return std::vector<QString>();
@@ -935,7 +935,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         {
             // calc heuristics
             NODE* node = unimap->get_node_by_id(around[p]);
-            if(node == NULL)
+            if(node == nullptr)
             {
                 continue;
             }
@@ -996,7 +996,7 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::path_resampling(const std::vector<Eige
     }
 
     std::vector<Eigen::Vector3d> sampled_path;
-    sampled_path.push_back(src.front()); // 시작 점 추가
+    sampled_path.push_back(src.front());
 
     Eigen::Vector3d pre = src.front();
     double accumulated_dist = 0.0;
@@ -1023,7 +1023,7 @@ std::vector<Eigen::Vector3d> AUTOCONTROL::path_resampling(const std::vector<Eige
 
     if (sampled_path.back() != src.back())
     {
-        sampled_path.push_back(src.back()); // 끝 점 추가
+        sampled_path.push_back(src.back());
     }
 
     return sampled_path;
@@ -1755,68 +1755,6 @@ int AUTOCONTROL::is_everything_fine()
 
     return DRIVING_FINE;
 }
-
-// loops
-/*void AUTOCONTROL::a_loop()
-{
-    // loop params
-    const double dt = 0.05; // 20hz
-    double pre_loop_time = get_time();
-    QString pre_node_id = "";
-
-    logger->write_log("[AUTO] a loop start");
-    while(a_flag)
-    {
-        if(unimap->is_loaded == MAP_LOADED)
-        {
-            Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-            QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
-            if(pre_node_id == "")
-            {
-                pre_node_id = cur_node_id;
-
-                // update
-                std::lock_guard<std::mutex> lock(mtx);
-                last_node_id = pre_node_id;
-            }
-            else
-            {
-                // calc pre node id
-                NODE *node = unimap->get_node_by_id(cur_node_id);
-                if(node != NULL)
-                {
-                    double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                    if(d < config->ROBOT_RADIUS)
-                    {
-                        if(pre_node_id != cur_node_id)
-                        {
-                            pre_node_id = cur_node_id;
-
-                            // update
-                            std::lock_guard<std::mutex> lock(mtx);
-                            last_node_id = pre_node_id;
-                        }
-                    }
-                }
-            }
-        }
-
-        // for real time loop
-        double cur_loop_time = get_time();
-        double delta_loop_time = cur_loop_time - pre_loop_time;
-        if(delta_loop_time < dt)
-        {
-            int sleep_ms = (dt-delta_loop_time)*1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-        }
-        else
-        {
-            //printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
-        }
-        pre_loop_time = get_time();
-    }
-    logger->write_log("[AUTO] a loop stop");
-}*/
 
 void AUTOCONTROL::control_loop()
 {

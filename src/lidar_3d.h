@@ -8,7 +8,7 @@
 // modules
 #include "config.h"
 #include "logger.h"
- #include "mobile.h"
+#include "mobile.h"
 #include "lidar/LIVOX/livox.h"
 
 // imu filter
@@ -36,19 +36,22 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    QString get_info_text();
-    QString get_cur_state();
-    LVX_FRM get_cur_raw(int idx);
-    bool get_is_connected();
-    bool get_is_sync();
-    IMU get_cur_imu(int idx);
-    IMU get_best_imu(double ref_t);
-    IMU get_best_imu(double ref_t, int idx);
-    void set_cur_state(QString str);
-    void set_sync_flag(bool flag);
+    IMU get_cur_imu(int idx);                   // get cur imu info (built-in lidar)
+    IMU get_best_imu(double ref_t);             // get nearest time(ref_t) imu info (Compare values ​​in all storages)
+    IMU get_best_imu(double ref_t, int idx);    // get nearest time(ref_t) imu info (Compare values ​​in specific storage)
+    bool get_is_sync();                         // check if synced lidar to mobile
+    bool get_is_connected();                    // check if connected lidar
+    QString get_info_text();                    // get all lidar info
+    QString get_cur_state();                    // get lidar state
+    LVX_FRM get_cur_raw(int idx);               // get cur raw frame (LVX_FRM, global pts, not deskewing)
 
-    void clear_merged_queue();
-    bool try_pop_merged_queue(TIME_PTS& frm);
+    // setter func
+    void set_is_sync(bool flag);                // set sync
+    void set_cur_state(QString str);            // set cur state
+
+    // related queue func
+    void clear_merged_queue();                  // clear merge queue (for access from outside)
+    bool try_pop_merged_queue(TIME_PTS& frm);   // try_pop merge queue (for access from outside)
 
     /***********************
      * set other modules
@@ -71,28 +74,28 @@ private:
     LIVOX* livox;
 
     // deskewing loop
-    std::atomic<bool> deskewing_flag[2] = {false, false};
-    std::array<std::unique_ptr<std::thread>, 2> deskewing_thread;
-    void deskewing_loop(int idx);
+    std::atomic<bool> deskewing_flag[2] = {false, false};           // deskewing thread flag
+    std::array<std::unique_ptr<std::thread>, 2> deskewing_thread;   // deskewing thread
+    void deskewing_loop(int idx);                                   // deskewing loop (raw_frame to deskewing frame)
 
     // merge loop
-    std::atomic<bool> merge_flag = {false};
-    std::unique_ptr<std::thread> merge_thread;
-    void merge_loop();
+    std::atomic<bool> merge_flag = {false};         // merge thread flag
+    std::unique_ptr<std::thread> merge_thread;      // merge thread
+    void merge_loop();                              // merge loop (raw_frame array cnt is 2, merge)
 
     // watchdog
     QString cur_state = "none";
 
     // params
-    std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_sync = {false};
+    std::atomic<bool> is_connected = {false};       // is connected lidar
+    std::atomic<bool> is_sync = {false};            // is synced lidar
 
-    std::atomic<double> cur_merged_frm_t = 0;
-    std::atomic<int> cur_merged_num = 0;
+    std::atomic<double> cur_merged_frm_t = 0;       // last merge_que pop time
+    std::atomic<int> cur_merged_num = 0;            // last merge_que point size
 
     // storage
-    tbb::concurrent_queue<TIME_PTS> deskewing_que[2];
-    tbb::concurrent_queue<TIME_PTS> merged_que;
+    tbb::concurrent_queue<TIME_PTS> deskewing_que[2];   // deskewing queue (used in merge loop)
+    tbb::concurrent_queue<TIME_PTS> merged_que;         // merged queue (used in other modules)
 };
 
 #endif // LIDAR_3D_H

@@ -1374,7 +1374,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 
         if(loc)
         {
-            semi_auto_init_thread = std::make_unique<std::thread>(&LOCALIZATION::semi_auto_init_start, loc);
+            semi_auto_init_thread = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc);
         }
     }
     else if(command == "init")
