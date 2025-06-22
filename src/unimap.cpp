@@ -22,6 +22,7 @@ UNIMAP::UNIMAP(QObject *parent) : QObject(parent),
 
     // init related 2d map params
     kdtree_cloud    = std::make_shared<XYZR_CLOUD>();
+    kdtree_mask     = std::make_shared<std::vector<int>>();
 
     // init related 3d map params
     tree_3d         = std::make_unique<KD_TREE>(3, cloud_3d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
@@ -37,11 +38,19 @@ UNIMAP::~UNIMAP()
 
 void UNIMAP::clear()
 {
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    
     is_loaded.store(MAP_NOT_LOADED);
 
     // 2d cloud
-    kdtree_mask->clear();
-    kdtree_cloud->pts.clear();
+    if(kdtree_mask)
+    {
+        kdtree_mask->clear();
+    }
+    if(kdtree_cloud)
+    {
+        kdtree_cloud->pts.clear();
+    }
 
     kdtree_node.pos.clear();
     if(kdtree_node_index)
@@ -49,7 +58,10 @@ void UNIMAP::clear()
         kdtree_node_index.reset();
     }
 
-    nodes->clear();
+    if(nodes)
+    {
+        nodes->clear();
+    }
     nodes_id_map.clear();
 
     map_min_x =  std::numeric_limits<double>::max();
@@ -80,11 +92,12 @@ void UNIMAP::load_map(QString path)
     bool loaded_3d = load_3d();
     load_topo();
 
-    if(config->LOC_MODE == "2D" && loaded_2d)
+    QString loc_mode = config->get_loc_mode();
+    if(loc_mode == "2D" && loaded_2d)
     {
         is_loaded.store(MAP_LOADED);
     }
-    else if(config->LOC_MODE == "3D" && loaded_3d)
+    else if(loc_mode == "3D" && loaded_3d)
     {
         is_loaded.store(MAP_LOADED);
     }
@@ -105,8 +118,17 @@ bool UNIMAP::load_2d()
         if(cloud_csv_info.exists() && cloud_csv_info.isFile())
         {
             // clear first
-            kdtree_mask->clear();
-            kdtree_cloud->pts.clear();
+            {
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                if(kdtree_mask)
+                {
+                    kdtree_mask->clear();
+                }
+                if(kdtree_cloud)
+                {
+                    kdtree_cloud->pts.clear();
+                }
+            }
 
             // clear additional cloud
             additional_cloud.clear();
@@ -138,8 +160,17 @@ bool UNIMAP::load_2d()
                 }
                 cloud_csv_file.close();
 
-                kdtree_cloud->pts = voxel_filtering(pts, 0.05);
-                kdtree_mask->resize(kdtree_cloud->pts.size(), 1);
+                {
+                    std::unique_lock<std::shared_mutex> lock(mtx);
+                    if(kdtree_cloud)
+                    {
+                        kdtree_cloud->pts = voxel_filtering(pts, 0.05);
+                    }
+                    if(kdtree_mask)
+                    {
+                        kdtree_mask->resize(kdtree_cloud->pts.size(), 1);
+                    }
+                }
 
                 printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud->pts.size());
             }
@@ -153,45 +184,49 @@ bool UNIMAP::load_2d()
 
     // set KDTree
     {
-        kdtree_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-        kdtree_index->buildIndex();
-
-        // set boundary
-        KD_TREE_XYZR::BoundingBox bbox;
-        kdtree_index->computeBoundingBox(bbox);
-
-        map_min_x = bbox[0].low;
-        map_max_x = bbox[0].high;
-        map_min_y = bbox[1].low;
-        map_max_y = bbox[1].high;
-        map_min_z = bbox[2].low;
-        map_max_z = bbox[2].high;
-
-        // boundary loosing
-        double gap_x = map_max_x - map_min_x;
-        if(std::abs(gap_x) < 1.0)
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        if(kdtree_cloud)
         {
-            map_min_x -= 0.5;
-            map_max_x += 0.5;
-        }
+            kdtree_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+            kdtree_index->buildIndex();
 
-        double gap_y = map_max_y - map_min_y;
-        if(std::abs(gap_y) < 1.0)
-        {
-            map_min_y -= 0.5;
-            map_max_y += 0.5;
-        }
+            // set boundary
+            KD_TREE_XYZR::BoundingBox bbox;
+            kdtree_index->computeBoundingBox(bbox);
 
-        double gap_z = map_max_z - map_min_z;
-        if(std::abs(gap_z) < 1.0)
-        {
-            map_min_z -= 0.5;
-            map_max_z += 0.5;
-        }
+            map_min_x = bbox[0].low;
+            map_max_x = bbox[0].high;
+            map_min_y = bbox[1].low;
+            map_max_y = bbox[1].high;
+            map_min_z = bbox[2].low;
+            map_max_z = bbox[2].high;
 
-        printf("[UNIMAP(2D)] build kdtree for map icp\n");
-        printf("[UNIMAP(2D)] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
-               map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
+            // boundary loosing
+            double gap_x = map_max_x - map_min_x;
+            if(std::abs(gap_x) < 1.0)
+            {
+                map_min_x -= 0.5;
+                map_max_x += 0.5;
+            }
+
+            double gap_y = map_max_y - map_min_y;
+            if(std::abs(gap_y) < 1.0)
+            {
+                map_min_y -= 0.5;
+                map_max_y += 0.5;
+            }
+
+            double gap_z = map_max_z - map_min_z;
+            if(std::abs(gap_z) < 1.0)
+            {
+                map_min_z -= 0.5;
+                map_max_z += 0.5;
+            }
+
+            printf("[UNIMAP(2D)] build kdtree for map icp\n");
+            printf("[UNIMAP(2D)] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
+                   map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
+        }
     }
 
     if(kdtree_node_index)
@@ -267,17 +302,19 @@ bool UNIMAP::load_3d()
         colors[id]   = cv::Vec3b(blue, green, red);
     }
 
-
     // update
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::unique_lock<std::shared_mutex> lock(mtx);
         cloud_3d.pts = pts;
-        tree_3d->buildIndex();
+        if(tree_3d)
+        {
+            tree_3d->buildIndex();
+        }
 
         // set plot storage
-        map_3d_pts      = std::make_unique<std::vector<Eigen::Vector3d>>(pts);
-        map_3d_normal   = std::make_unique<std::vector<Eigen::Vector3d>>(nor);
-        map_3d_reflects = std::make_unique<std::vector<double>>(reflects);
+        map_3d_pts      = std::make_shared<std::vector<Eigen::Vector3d>>(pts);
+        map_3d_normal   = std::make_shared<std::vector<Eigen::Vector3d>>(nor);
+        map_3d_reflects = std::make_shared<std::vector<double>>(reflects);
     }
 
     std::cout << "[UNIMAP(3D)] Loaded " << pts.size() << " points from " << file_path.toStdString() << std::endl;
@@ -286,7 +323,14 @@ bool UNIMAP::load_3d()
 
 bool UNIMAP::load_topo()
 {
-    nodes->clear();
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        if(nodes)
+        {
+            nodes->clear();
+        }
+    }
+    
     QString topo_path = map_path + "/topo.json";
     QFileInfo topo_info(topo_path);
     if(!topo_info.exists() || !topo_info.isFile())
@@ -301,6 +345,7 @@ bool UNIMAP::load_topo()
         QJsonDocument doc = QJsonDocument::fromJson(data);
 
         QJsonArray arr = doc.array();
+        std::vector<NODE> temp_nodes;
         Q_FOREACH(const QJsonValue &val, arr)
         {
             QJsonObject obj = val.toObject();
@@ -312,29 +357,38 @@ bool UNIMAP::load_topo()
             node.info = obj["info"].toString();
             node.tf = string_to_TF(obj["pose"].toString());
             node.linked = array_to_links(obj["links"].toArray());
-            nodes->push_back(node);
+            temp_nodes.push_back(node);
         }
         topo_file.close();
-        logger->write_log(QString("[UNIMAP] %1 loaded").arg(topo_path), "Green", true, false);
-
-        std::vector<Eigen::Vector3d> node_pos; node_pos.resize(nodes->size());
-        std::vector<QString> node_id; node_id.resize(nodes->size());
-        for(size_t p=0; p<nodes->size(); p++)
+        
         {
-            NODE node = (*nodes)[p];
-            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+            std::unique_lock<std::shared_mutex> lock(mtx);
+            if(nodes)
             {
-                node_pos[p] = node.tf.block(0,3,3,1);
-                node_id[p] = node.id;
+                *nodes = temp_nodes;
+            }
+            
+            std::vector<Eigen::Vector3d> node_pos; node_pos.resize(nodes->size());
+            std::vector<QString> node_id; node_id.resize(nodes->size());
+            for(size_t p=0; p<nodes->size(); p++)
+            {
+                NODE node = (*nodes)[p];
+                if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+                {
+                    node_pos[p] = node.tf.block(0,3,3,1);
+                    node_id[p] = node.id;
+                }
+
+                NODE* ptr = &(*nodes)[p];
+                nodes_id_map[ptr->id] = ptr;
+                nodes_name_map[ptr->name] = ptr;
             }
 
-            NODE* ptr = &(*nodes)[p];
-            nodes_id_map[ptr->id] = ptr;
-            nodes_name_map[ptr->name] = ptr;
+            kdtree_node.pos = node_pos;
+            kdtree_node.id = node_id;
         }
-
-        kdtree_node.pos = node_pos;
-        kdtree_node.id = node_id;
+        
+        logger->write_log(QString("[UNIMAP] %1 loaded").arg(topo_path), "Green", true, false);
     }
     return true;
 }
@@ -372,7 +426,14 @@ void UNIMAP::save_annotation()
 
 void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
 {
-    if(is_loaded != MAP_LOADED || kdtree_mask->size() == 0)
+    if(is_loaded != MAP_LOADED)
+    {
+        return;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    if(!kdtree_mask || kdtree_mask->size() == 0 || !kdtree_index)
     {
         return;
     }
@@ -386,13 +447,21 @@ void UNIMAP::set_cloud_mask(Eigen::Vector3d P, double radius, int val)
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
         int idx = res_idxs[p].first;
-        (*kdtree_mask)[idx] = val;
+        if(idx < (int)kdtree_mask->size())
+        {
+            (*kdtree_mask)[idx] = val;
+        }
     }
 }
 
 void UNIMAP::clear_nodes()
 {
-    nodes->clear();
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    
+    if(nodes)
+    {
+        nodes->clear();
+    }
     nodes_id_map.clear();
     nodes_name_map.clear();
 
@@ -401,6 +470,8 @@ void UNIMAP::clear_nodes()
 
 std::vector<QString> UNIMAP::get_linked_nodes(QString id)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     if(!nodes)
     {
         return std::vector<QString>();
@@ -441,6 +512,8 @@ std::vector<QString> UNIMAP::get_linked_nodes(QString id)
 
 std::vector<QString> UNIMAP::get_nodes(QString type)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     if(!nodes)
     {
         return std::vector<QString>();
@@ -459,6 +532,8 @@ std::vector<QString> UNIMAP::get_nodes(QString type)
 
 std::vector<QString> UNIMAP::get_nodes()
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     if(!nodes)
     {
         return std::vector<QString>();
@@ -475,13 +550,44 @@ std::vector<QString> UNIMAP::get_nodes()
 
 std::shared_ptr<std::vector<NODE>> UNIMAP::get_nodes_origin()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return nodes;
+}
+
+double UNIMAP::get_map_min_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_min_x;
+}
+
+double UNIMAP::get_map_max_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_max_x;
+}
+
+double UNIMAP::get_map_min_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_min_y;
+}
+
+double UNIMAP::get_map_max_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_max_y;
 }
 
 std::vector<int> UNIMAP::get_init_candidates(std::vector<QString> prefix_list)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     std::vector<int> res;
+    if(!nodes)
+    {
+        return res;
+    }
+    
     for(size_t p = 0; p < nodes->size(); p++)
     {
         if((*nodes)[p].type == "INIT")
@@ -504,14 +610,18 @@ std::vector<int> UNIMAP::get_init_candidates(std::vector<QString> prefix_list)
 
 int UNIMAP::get_nodes_size()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    if(!nodes)
+    {
+        return 0;
+    }
     int res = (int)nodes->size();
     return res;
 }
 
 QString UNIMAP::get_map_path()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     QString res = map_path;
     return res;
 }
@@ -523,31 +633,37 @@ bool UNIMAP::get_is_loaded()
 
 void UNIMAP::set_map_path(QString path)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::unique_lock<std::shared_mutex> lock(mtx);
     map_path = path;
+}
+
+std::shared_ptr<std::vector<int>> UNIMAP::get_kdtree_mask()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return kdtree_mask;
 }
 
 std::shared_ptr<XYZR_CLOUD> UNIMAP::get_kdtree_cloud()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return kdtree_cloud;
 }
 
 std::shared_ptr<std::vector<Eigen::Vector3d>> UNIMAP::get_map_3d_pts()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return map_3d_pts;
 }
 
 std::shared_ptr<std::vector<Eigen::Vector3d>> UNIMAP::get_map_3d_normal()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return map_3d_normal;
 }
 
 Eigen::Vector3d UNIMAP::get_normal_3d(int idx)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     if(!map_3d_normal)
     {
         return Eigen::Vector3d(0,0,0);
@@ -564,7 +680,7 @@ Eigen::Vector3d UNIMAP::get_normal_3d(int idx)
 
 Eigen::Vector3d UNIMAP::get_pts_3d(int idx)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     if(!map_3d_pts)
     {
         return Eigen::Vector3d(0,0,0);
@@ -581,24 +697,33 @@ Eigen::Vector3d UNIMAP::get_pts_3d(int idx)
 
 std::shared_ptr<std::vector<double>> UNIMAP::get_map_3d_reflects()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return map_3d_reflects;
 }
 
 std::shared_ptr<KD_TREE_XYZR> UNIMAP::get_kdtree_index()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return kdtree_index;
 }
 
 void UNIMAP::radius_search_kdtree_idx(double query[], double sq_radius, std::vector<nanoflann::ResultItem<unsigned int, double>>& res_idxs, nanoflann::SearchParameters params)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    if(!kdtree_index)
+    {
+        return;
+    }
+    
     kdtree_index->radiusSearch(&query[0], sq_radius, res_idxs, params);
 }
 
 QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 {
-    if(nodes->size() == 0)
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    if(!nodes || nodes->size() == 0 || !kdtree_node_index)
     {
         return "";
     }
@@ -619,6 +744,11 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     bool is_found = false;
     for(int p = 0; p < cnt_num; p++)
     {
+        if(ret_near_idxs[p] >= kdtree_node.id.size())
+        {
+            continue;
+        }
+        
         QString id0 = kdtree_node.id[ret_near_idxs[p]];
 
         NODE* node0 = get_node_by_id(id0);
@@ -627,6 +757,11 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
             continue;
         }
 
+        if(ret_near_idxs[p] >= kdtree_node.pos.size())
+        {
+            continue;
+        }
+        
         Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[p]];
 
         for(size_t q=0; q<node0->linked.size(); q++)
@@ -673,18 +808,52 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     }
     else
     {
-        Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[0]];
-        if((pos-pos0).norm() < 10.0)
+        if(ret_near_idxs[0] < kdtree_node.pos.size())
         {
-            return kdtree_node.id[ret_near_idxs[0]];
+            Eigen::Vector3d pos0 = kdtree_node.pos[ret_near_idxs[0]];
+            if((pos-pos0).norm() < 10.0)
+            {
+                if(ret_near_idxs[0] < kdtree_node.id.size())
+                {
+                    return kdtree_node.id[ret_near_idxs[0]];
+                }
+            }
         }
-        else
-        {
-            return "";
-        }
+        return "";
     }
 
     return "";
+}
+
+QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
+{
+    return "";
+    /*if(nodes->size() == 0)
+    {
+        return "";
+    }
+
+    // find node
+    int min_idx = -1;
+    double min_d = std::numeric_limits<double>::max();
+    for(size_t p = 0; p < nodes->size(); p++)
+    {
+        if(nodes[p].type == "GOAL" || nodes[p].type == "INIT" || nodes[p].type == "STATION")
+        {
+            double d = (nodes[p].tf.block(0,3,3,1) - pos).norm();
+            if(d < config->ROBOT_RADIUS*2 && d < min_d)
+            {
+                min_d = d;
+                min_idx = p;
+            }
+        }
+    }
+
+    if(min_idx != -1)
+    {
+        return nodes[min_idx].id;
+    }
+    return "";*/
 }
 
 NODE* UNIMAP::get_node_by_id(QString id)
@@ -694,6 +863,8 @@ NODE* UNIMAP::get_node_by_id(QString id)
         return nullptr;
     }
 
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     NODE *node = nullptr;
 
     auto it = nodes_id_map.find(id);
@@ -712,6 +883,8 @@ NODE* UNIMAP::get_node_by_name(QString name)
         return nullptr;
     }
 
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     NODE *node = nullptr;
 
     auto it = nodes_name_map.find(name);
@@ -725,7 +898,14 @@ NODE* UNIMAP::get_node_by_name(QString name)
 
 QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
     QString zone_type = "";
+
+    if(!nodes)
+    {
+        return zone_type;
+    }
 
     std::vector<QString> zones = get_nodes("ZONE");
     for(size_t p=0; p<zones.size(); p++)
@@ -761,6 +941,13 @@ QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
 
 std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double radius)
 {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    if(!tree_3d)
+    {
+        return std::vector<int>();
+    }
+    
     const double sq_radius = radius*radius;
 
     std::vector<unsigned int> res_idxs(k);
@@ -772,14 +959,17 @@ std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double ra
     std::vector<int> res;
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
-        double dx = cloud_3d.pts[res_idxs[p]][0] - cloud_3d.pts[res_idxs[0]][0];
-        double dy = cloud_3d.pts[res_idxs[p]][1] - cloud_3d.pts[res_idxs[0]][1];
-        double dz = cloud_3d.pts[res_idxs[p]][2] - cloud_3d.pts[res_idxs[0]][2];
-        double sq_d = dx*dx + dy*dy + dz*dz;
-
-        if(sq_d < sq_radius)
+        if(res_idxs[p] < cloud_3d.pts.size())
         {
-            res.push_back(res_idxs[p]);
+            double dx = cloud_3d.pts[res_idxs[p]][0] - cloud_3d.pts[res_idxs[0]][0];
+            double dy = cloud_3d.pts[res_idxs[p]][1] - cloud_3d.pts[res_idxs[0]][1];
+            double dz = cloud_3d.pts[res_idxs[p]][2] - cloud_3d.pts[res_idxs[0]][2];
+            double sq_d = dx*dx + dy*dy + dz*dz;
+
+            if(sq_d < sq_radius)
+            {
+                res.push_back(res_idxs[p]);
+            }
         }
     }
     return res;

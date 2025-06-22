@@ -43,11 +43,18 @@ CAM::~CAM()
 
 void CAM::init()
 {
-    if(config->CAM_TYPE == "gemini_2e")
+    // check simulation mode
+    if(config->get_use_sim())
+    {
+        printf("[CAM] simulation mode\n");
+        return;
+    }
+
+    if(config->get_cam_type() == "gemini_2e")
     {
         if(gemini_2e == nullptr)
         {
-            gemini_2e = GEMINI2E::instance(this);
+            gemini_2e = ORBBEC::instance(this);
             gemini_2e->set_config_module(this->config);
             gemini_2e->set_logger_module(this->logger);
             gemini_2e->set_mobile_module(this->mobile);

@@ -36,6 +36,8 @@ public:
 
     // update obs map (virtual)
     void update_vobs_map();
+    void update_vobs_list_robots(const std::vector<Eigen::Vector3d>& vobs_r);
+    void update_vobs_list_closures(const std::vector<Eigen::Vector3d>& vobs_c);
 
     // update obs map (simulation)
     void update_obs_map_sim(Eigen::Matrix4d tf);
@@ -80,7 +82,7 @@ private:
     ~OBSMAP();
 
     // mutex
-    std::mutex mtx;
+    std::shared_mutex mtx;
 
     // other modules
     CONFIG* config;
@@ -117,8 +119,8 @@ private:
     int cy = 150;
     double gs = 0.05;
 
-    cv::Vec2i xy_uv(double x, double y);
-    cv::Vec2d uv_xy(int u, int v);
+    inline cv::Vec2i xy_uv(double x, double y);
+    inline cv::Vec2d uv_xy(int u, int v);
 
 Q_SIGNALS:
     void obs_updated();

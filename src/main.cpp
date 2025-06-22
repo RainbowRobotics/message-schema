@@ -88,20 +88,21 @@ int main(int argc, char *argv[])
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     // init qt app
-//    qRegisterMetaType<Eigen::Matrix4d>();
+    qRegisterMetaType<Eigen::Matrix4d>();
 
-//    qRegisterMetaType<DATA_MOVE>();
-//    qRegisterMetaType<DATA_LOCALIZATION>();
-//    qRegisterMetaType<DATA_LOAD>();
-//    qRegisterMetaType<DATA_RANDOMSEQ>();
-//    qRegisterMetaType<DATA_MAPPING>();
-//    qRegisterMetaType<DATA_DOCK>();
-//    qRegisterMetaType<DATA_VIEW_LIDAR>();
-//    qRegisterMetaType<DATA_VIEW_PATH>();
-//    qRegisterMetaType<DATA_LED>();
-//    qRegisterMetaType<DATA_MOTOR>();
-//    qRegisterMetaType<DATA_PATH>();
-//    qRegisterMetaType<DATA_VOBS>();
+    qRegisterMetaType<DATA_MOVE>();
+    qRegisterMetaType<DATA_LOCALIZATION>();
+    qRegisterMetaType<DATA_LOAD>();
+    qRegisterMetaType<DATA_RANDOMSEQ>();
+    qRegisterMetaType<DATA_MAPPING>();
+    qRegisterMetaType<DATA_DOCK>();
+    qRegisterMetaType<DATA_VIEW_LIDAR>();
+    qRegisterMetaType<DATA_VIEW_PATH>();
+    qRegisterMetaType<DATA_LED>();
+    qRegisterMetaType<DATA_MOTOR>();
+    qRegisterMetaType<DATA_PATH>();
+    qRegisterMetaType<DATA_VOBS>();
+    qRegisterMetaType<DATA_SOFTWARE>();
 
     QApplication a(argc, argv);
 

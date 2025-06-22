@@ -19,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     LOCALIZATION::instance(this);
     MAPPING::instance(this);
     AUTOCONTROL::instance(this);
+    SIM::instance(this);
+
+    COMM_COOP::instance(this);
+    COMM_RRS::instance(this);
 
     // for 3d viewer
     connect(ui->cb_ViewType,         SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -88,11 +92,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     plot_timer = new QTimer(this);
     connect(plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     plot_timer->start(50);
-
-    /*ui->lb_Version->setText("build time: " BUILD_TIME);
-    QColor version_color = build_time_to_color(QString(BUILD_TIME));
-    QString version_color_str = version_color.name();
-    ui->lb_Version->setStyleSheet("background-color: " + version_color_str + ";");*/
 }
 
 MainWindow::~MainWindow()
@@ -187,14 +186,14 @@ void MainWindow::init_modules()
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
     {
-        QString platform_name = CONFIG::instance()->get_platform_name();
-        if(platform_name.isEmpty())
+        QString platform_type = CONFIG::instance()->get_platform_type();
+        if(platform_type.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
-            QString path = QCoreApplication::applicationDirPath() + "/configs/" + platform_name + "/config.json";
+            QString path = QCoreApplication::applicationDirPath() + "/configs/" + platform_type + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
         }
@@ -223,88 +222,132 @@ void MainWindow::init_modules()
     }
 
     // log module init
-    LOGGER::instance()->set_log_path(QCoreApplication::applicationDirPath() + "/snlog/");
-    LOGGER::instance()->init();
+    {
+        LOGGER::instance()->set_log_path(QCoreApplication::applicationDirPath() + "/snlog/");
+        LOGGER::instance()->init();
+    }
 
     // unimap module init
-    UNIMAP::instance()->set_config_module(CONFIG::instance());
-    UNIMAP::instance()->set_logger_module(LOGGER::instance());
+    {
+        UNIMAP::instance()->set_config_module(CONFIG::instance());
+        UNIMAP::instance()->set_logger_module(LOGGER::instance());
+    }
 
     // obsmap module init
-    OBSMAP::instance()->set_config_module(CONFIG::instance());
-    OBSMAP::instance()->set_logger_module(LOGGER::instance());
-    OBSMAP::instance()->set_unimap_module(UNIMAP::instance());
-    OBSMAP::instance()->init();
+    {
+        OBSMAP::instance()->set_config_module(CONFIG::instance());
+        OBSMAP::instance()->set_logger_module(LOGGER::instance());
+        OBSMAP::instance()->set_unimap_module(UNIMAP::instance());
+        OBSMAP::instance()->init();
+    }
 
     // mobile module init
-    MOBILE::instance()->set_config_module(CONFIG::instance());
-    MOBILE::instance()->set_logger_module(LOGGER::instance());
-    MOBILE::instance()->open();
+    {
+        MOBILE::instance()->set_config_module(CONFIG::instance());
+        MOBILE::instance()->set_logger_module(LOGGER::instance());
+        MOBILE::instance()->open();
+    }
 
     // lidar 2d module init
-    if(CONFIG::instance()->get_use_lidar_2d())
     {
-        LIDAR_2D::instance()->set_config_module(CONFIG::instance());
-        LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
-        LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
-        LIDAR_2D::instance()->init();
-        LIDAR_2D::instance()->open();
+        if(CONFIG::instance()->get_use_lidar_2d())
+        {
+            LIDAR_2D::instance()->set_config_module(CONFIG::instance());
+            LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
+            LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
+            LIDAR_2D::instance()->init();
+            LIDAR_2D::instance()->open();
+        }
     }
 
     // lidar 3d module init
-    if(CONFIG::instance()->get_use_lidar_3d())
     {
-        LIDAR_3D::instance()->set_config_module(CONFIG::instance());
-        LIDAR_3D::instance()->set_logger_module(LOGGER::instance());
-        LIDAR_3D::instance()->init();
-        LIDAR_3D::instance()->open();
+        if(CONFIG::instance()->get_use_lidar_3d())
+        {
+            LIDAR_3D::instance()->set_config_module(CONFIG::instance());
+            LIDAR_3D::instance()->set_logger_module(LOGGER::instance());
+            LIDAR_3D::instance()->init();
+            LIDAR_3D::instance()->open();
+        }
     }
 
     // localization module init
-    LOCALIZATION::instance()->set_config_module(CONFIG::instance());
-    LOCALIZATION::instance()->set_logger_module(LOGGER::instance());
-    LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
-    LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-    LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-    // LOCALIZATION::instance()->cam = cam;
-    LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
-    LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
+    {
+        LOCALIZATION::instance()->set_config_module(CONFIG::instance());
+        LOCALIZATION::instance()->set_logger_module(LOGGER::instance());
+        LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
+        LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+        // LOCALIZATION::instance()->cam = cam;
+        LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
+        LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
+    }
 
     // mapping module init
-    if(CONFIG::instance()->get_use_lidar_2d())
     {
-        MAPPING::instance()->set_config_module(CONFIG::instance());
-        MAPPING::instance()->set_logger_module(LOGGER::instance());
-        MAPPING::instance()->set_unimap_module(UNIMAP::instance());
-        MAPPING::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        MAPPING::instance()->set_localization_module(LOCALIZATION::instance());
+        if(CONFIG::instance()->get_use_lidar_2d())
+        {
+            MAPPING::instance()->set_config_module(CONFIG::instance());
+            MAPPING::instance()->set_logger_module(LOGGER::instance());
+            MAPPING::instance()->set_unimap_module(UNIMAP::instance());
+            MAPPING::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+            MAPPING::instance()->set_localization_module(LOCALIZATION::instance());
+        }
     }
 
     // autocontrol module init
-    AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
-    AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
-    AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
-    // ctrl->lidar = lidar;
-    // ctrl->cam = cam;
-    AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
-    AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
-    AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
-    AUTOCONTROL::instance()->init();
+    {
+        AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
+        AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
+        AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
+        // ctrl->lidar = lidar;
+        // ctrl->cam = cam;
+        AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
+        AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
+        AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
+        AUTOCONTROL::instance()->init();
+    }
 
     // simulation module init
-    SIM::instance()->set_config_module(CONFIG::instance());
-    SIM::instance()->set_logger_module(LOGGER::instance());
-    SIM::instance()->set_unimap_module(UNIMAP::instance());
-    SIM::instance()->set_mobile_module(MOBILE::instance());
-    if(CONFIG::instance()->get_loc_mode() == "3D")
     {
-        SIM::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+        SIM::instance()->set_config_module(CONFIG::instance());
+        SIM::instance()->set_logger_module(LOGGER::instance());
+        SIM::instance()->set_unimap_module(UNIMAP::instance());
+        SIM::instance()->set_mobile_module(MOBILE::instance());
+        if(CONFIG::instance()->get_loc_mode() == "3D")
+        {
+            SIM::instance()->set_lidar_3d_module(LIDAR_3D::instance());
+        }
+        else
+        {
+            SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        }
+        SIM::instance()->set_localization_module(LOCALIZATION::instance());
     }
-    else
+
+    // comm cooperative module init
     {
-        SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_COOP::instance()->set_config_module(CONFIG::instance());
+        COMM_COOP::instance()->set_logger_module(LOGGER::instance());
+        COMM_COOP::instance()->set_mobile_module(MOBILE::instance());
+        COMM_COOP::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_COOP::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_COOP::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
     }
-    SIM::instance()->set_localization_module(LOCALIZATION::instance());
+
+    // comm cooperative module init
+    {
+        COMM_RRS::instance()->set_config_module(CONFIG::instance());
+        COMM_RRS::instance()->set_logger_module(LOGGER::instance());
+        COMM_RRS::instance()->set_mobile_module(MOBILE::instance());
+        COMM_RRS::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_RRS::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_RRS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_RRS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_RRS::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
+    }
 
     // start jog loop
     jog_flag = true;
@@ -420,7 +463,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                    pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
+                    //pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
 
                     // update last mouse button
                     pick.last_btn = 0;
@@ -2820,3 +2863,16 @@ void MainWindow::plot_loop()
 
     plot_timer->start();
 }
+
+QString MainWindow::get_map_path()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_path;
+}
+
+void MainWindow::set_map_path(const QString& path)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    map_path = path;
+}
+

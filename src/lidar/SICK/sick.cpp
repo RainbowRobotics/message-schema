@@ -6,7 +6,7 @@ SICK::SICK(QObject *parent) : QObject{parent}
 
 SICK::~SICK()
 {
-    for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+    for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         is_connected[idx] = false;
     }
@@ -16,9 +16,9 @@ SICK::~SICK()
 
 void SICK::init()
 {
-    for(int i = 0; i < config->LIDAR_2D_NUM; i++)
+    for(int i = 0; i < config->get_lidar_2d_num(); i++)
     {
-        pts_tf[i] = string_to_TF(config->LIDAR_2D_TF[i]);
+        pts_tf[i] = string_to_TF(config->get_lidar_2d_tf(i));
     }
 
     printf("[LIVOX] init\n");
@@ -32,7 +32,7 @@ void SICK::open()
     close();
 
     // loop start
-    for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+    for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         if(grab_thread[idx] == nullptr)
         {
@@ -44,7 +44,7 @@ void SICK::open()
 
 void SICK::close()
 {
-    for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+    for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         is_connected[idx] = false;
         if(grab_thread[idx] != nullptr)
@@ -82,7 +82,7 @@ void SICK::grab_loop(int idx)
     comm_settings.publishing_frequency = 2; // 1:25 hz, 2:12.5 hz;
 
     /* set sensor ip & port */
-    std::string ip_str = config->LIDAR_2D_IP[idx].toStdString();
+    std::string ip_str = config->get_lidar_2d_ip(idx).toStdString();
     sick::types::ip_address_t sensor_ip = boost::asio::ip::address_v4::from_string(ip_str);
     sick::types::port_t tcp_port{2122};
 
@@ -97,6 +97,9 @@ void SICK::grab_loop(int idx)
         printf("[SICK] failed to connect lidar %d\n", idx);
         return;
     }
+
+    Eigen::Matrix3d R_ = pts_tf[idx].block(0,0,3,3);
+    Eigen::Vector3d t_ = pts_tf[idx].block(0,3,3,1);
 
     is_connected[idx] = true;
     printf("[SICK] start grab loop, %d\n", idx);
@@ -188,7 +191,10 @@ void SICK::grab_loop(int idx)
             std::vector<double> reflects;
             std::vector<Eigen::Vector3d> pts;
 
-            // parsing            
+            double x_min = config->get_robot_size_x_min(); double x_max = config->get_robot_size_x_max();
+            double y_min = config->get_robot_size_y_min(); double y_max = config->get_robot_size_y_max();
+
+            // parsing
             for(size_t p = 0; p < sp.size(); p++)
             {
                 // check sick invaild pts
@@ -203,7 +209,7 @@ void SICK::grab_loop(int idx)
 
                 // dist filter
                 double dist = (double)sp[p].getDistance()/1000.0; // mm to meter
-                if(dist < config->LIDAR_2D_MIN_RANGE || dist > config->LIDAR_2D_MAX_RANGE)
+                if(dist < config->get_lidar_2d_min_range() || dist > config->get_lidar_2d_max_range())
                 {
                     continue;
                 }
@@ -223,9 +229,9 @@ void SICK::grab_loop(int idx)
                 }
 
                 Eigen::Vector3d _P = Eigen::Vector3d(x, y, 0);
-                Eigen::Vector3d P = pts_tf[idx].block(0,0,3,3)*_P + pts_tf[idx].block(0,3,3,1);
-                if(P[0] > config->ROBOT_SIZE_X[0] && P[0] < config->ROBOT_SIZE_X[1] &&
-                   P[1] > config->ROBOT_SIZE_Y[0] && P[1] < config->ROBOT_SIZE_Y[1])
+                Eigen::Vector3d P = R_ * _P + t_;
+                if(P[0] > x_min && P[0] < x_max &&
+                   P[1] > y_min && P[1] < y_max)
                 {
                     continue;
                 }

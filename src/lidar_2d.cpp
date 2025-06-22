@@ -38,7 +38,14 @@ LIDAR_2D::~LIDAR_2D()
 
 void LIDAR_2D::init()
 {
-    if(config->LIDAR_2D_TYPE == "SICK")
+    // check simulation mode
+    if(config->get_use_sim())
+    {
+        printf("[LIDAR_2D] simulation mode\n");
+        return;
+    }
+
+    if(config->get_lidar_2d_type() == "SICK")
     {
         if(sick == nullptr)
         {
@@ -54,6 +61,13 @@ void LIDAR_2D::init()
 
 void LIDAR_2D::open()
 {
+    // check simulation mode
+    if(config->get_use_sim())
+    {
+        printf("[LIDAR_2D] simulation mode\n");
+        return;
+    }
+
     printf("[LIDAR_2D] open\n");
 
     // stop first
@@ -80,12 +94,9 @@ void LIDAR_2D::close()
     for(int idx = 0; idx < lidar_num; idx++)
     {
         deskewing_flag[idx] = false;
-        if(deskewing_thread[idx] && deskewing_thread[idx]->joinable())
-        {
-            deskewing_thread[idx]->join();
-        }
-        deskewing_thread[idx].reset();
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     merge_flag = false;
     if(merge_thread && merge_thread->joinable())
@@ -93,6 +104,15 @@ void LIDAR_2D::close()
         merge_thread->join();
     }
     merge_thread.reset();
+
+    for(int idx = 0; idx < lidar_num; idx++)
+    {
+        if(deskewing_thread[idx] && deskewing_thread[idx]->joinable())
+        {
+            deskewing_thread[idx]->join();
+        }
+        deskewing_thread[idx].reset();
+    }
 }
 
 RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
@@ -111,7 +131,7 @@ QString LIDAR_2D::get_info_text()
     QString res;
     if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
-        for(int idx = 0; idx < config->LIDAR_2D_NUM; idx++)
+        for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
         {
             res += sick->get_info_text(idx);
             res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());

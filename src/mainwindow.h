@@ -18,6 +18,9 @@
 #include "autocontrol.h"
 #include "sim.h"
 
+#include "comm/comm_coop.h"
+#include "comm/comm_rrs.h"
+
 // qt
 #include <QMainWindow>
 #include <QKeyEvent>
@@ -27,9 +30,6 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGraphicsOpacityEffect>
-
-#include <QMediaPlayer>
-#include <QMediaPlaylist>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,6 +70,9 @@ public:
     void set_opacity(QWidget* w, double opacity);
     void init_modules();
     void setup_vtk();
+
+    QString get_map_path();
+    void set_map_path(const QString& path);
 
     // vars
     std::atomic<double> plot_dt = {0.};
@@ -195,9 +198,10 @@ public Q_SLOTS:
     // timer loops
     void plot_loop();
 
-public:
+private:
     Ui::MainWindow *ui;
-    std::recursive_mutex mtx;
+    std::shared_mutex mtx;
 
+    QString map_path = "";
 };
 #endif // MAINWINDOW_H

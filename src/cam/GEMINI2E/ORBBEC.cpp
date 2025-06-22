@@ -1,11 +1,11 @@
-#include "GEMINI2E.h"
+#include "ORBBEC.h"
 
-GEMINI2E* GEMINI2E::instance(QObject* parent)
+ORBBEC* ORBBEC::instance(QObject* parent)
 {
-    static GEMINI2E* inst = nullptr;
+    static ORBBEC* inst = nullptr;
     if(!inst && parent)
     {
-        inst = new GEMINI2E(parent);
+        inst = new ORBBEC(parent);
     }
     else if(inst && parent && inst->parent() == nullptr)
     {
@@ -14,7 +14,7 @@ GEMINI2E* GEMINI2E::instance(QObject* parent)
     return inst;
 }
 
-GEMINI2E::GEMINI2E(QObject *parent) : QObject(parent)
+ORBBEC::ORBBEC(QObject *parent) : QObject(parent)
 {
     for(int p = 0; p < 2; p++)
     {
@@ -22,7 +22,7 @@ GEMINI2E::GEMINI2E(QObject *parent) : QObject(parent)
     }
 }
 
-GEMINI2E::~GEMINI2E()
+ORBBEC::~ORBBEC()
 {
     grab_flag = false;
     if(grab_thread && grab_thread->joinable())
@@ -32,7 +32,7 @@ GEMINI2E::~GEMINI2E()
     grab_thread.reset();
 }
 
-void GEMINI2E::init()
+void ORBBEC::init()
 {
     for(int i = 0; i < config->get_cam_num(); i++)
     {
@@ -42,7 +42,7 @@ void GEMINI2E::init()
     printf("[GEMINI2E] init\n");
 }
 
-void GEMINI2E::open()
+void ORBBEC::open()
 {
     // check simulation mode
     if(config->get_use_sim())
@@ -53,10 +53,10 @@ void GEMINI2E::open()
 
     // start grab loop
     grab_flag = true;
-    grab_thread = std::make_unique<std::thread>(&GEMINI2E::grab_loop, this);
+    grab_thread = std::make_unique<std::thread>(&ORBBEC::grab_loop, this);
 }
 
-void GEMINI2E::close()
+void ORBBEC::close()
 {
     grab_flag = false;
     if(grab_thread && grab_thread->joinable())
@@ -66,7 +66,7 @@ void GEMINI2E::close()
     grab_thread.reset();
 }
 
-QString GEMINI2E::get_cam_info_str()
+QString ORBBEC::get_cam_info_str()
 {
     QString str;
     str.sprintf("[GEMINI2E]\nconnection(0,1):%d,%d, color(w,h):%d,%d\ndepth(w,h):%d,%d, pts(0,1):%d,%d",
@@ -77,42 +77,42 @@ QString GEMINI2E::get_cam_info_str()
     return str;
 }
 
-cv::Mat GEMINI2E::get_img(int cam_idx)
+cv::Mat ORBBEC::get_img(int cam_idx)
 {
     std::lock_guard<std::mutex> lock(mtx);
     cv::Mat res = cur_img[cam_idx].clone();
     return res;
 }
 
-TIME_IMG GEMINI2E::get_time_img(int cam_idx)
+TIME_IMG ORBBEC::get_time_img(int cam_idx)
 {
     std::lock_guard<std::mutex> lock(mtx);
     TIME_IMG res = cur_time_img[cam_idx];
     return res;
 }
 
-TIME_PTS GEMINI2E::get_scan(int cam_idx)
+TIME_PTS ORBBEC::get_scan(int cam_idx)
 {
     std::lock_guard<std::mutex> lock(mtx);
     TIME_PTS res = cur_scan[cam_idx];
     return res;
 }
 
-CAM_INTRINSIC GEMINI2E::get_intrinsic(int cam_idx)
+CAM_INTRINSIC ORBBEC::get_intrinsic(int cam_idx)
 {
     std::lock_guard<std::mutex> lock(mtx);
     CAM_INTRINSIC res = intrinsic[cam_idx];
     return res;
 }
 
-Eigen::Matrix4d GEMINI2E::get_extrinsic(int cam_idx)
+Eigen::Matrix4d ORBBEC::get_extrinsic(int cam_idx)
 {
     std::lock_guard<std::mutex> lock(mtx);
     Eigen::Matrix4d res = extrinsic[cam_idx];
     return res;
 }
 
-void GEMINI2E::grab_loop()
+void ORBBEC::grab_loop()
 {
     // check device
     ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_FATAL);
@@ -182,6 +182,10 @@ void GEMINI2E::grab_loop()
         config0->enableStream(color_profile0);
         config0->setAlignMode(ALIGN_DISABLE);
 
+        double x_min = config->get_robot_size_x_min(); double x_max = config->get_robot_size_x_max();
+        double y_min = config->get_robot_size_y_min(); double y_max = config->get_robot_size_y_max();
+        double z_min = config->get_cam_height_min();   double z_max = config->get_cam_height_max();
+
         pipe0->start(config0, [&](std::shared_ptr<ob::FrameSet> fs)
         {
             try
@@ -220,13 +224,13 @@ void GEMINI2E::grab_loop()
                                 Eigen::Vector3d P(x,y,z);
                                 Eigen::Vector3d _P = TF0.block(0,0,3,3)*P + TF0.block(0,3,3,1);
 
-                                if(_P[0] > config->ROBOT_SIZE_X[0] && _P[0] < config->ROBOT_SIZE_X[1] &&
-                                   _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+                                if(_P[0] > x_min && _P[0] < x_max &&
+                                   _P[1] > y_min && _P[1] < y_max)
                                 {
                                     continue;
                                 }
 
-                                if(_P[2] < config->CAM_HEIGHT_MIN || _P[2] > config->CAM_HEIGHT_MAX)
+                                if(_P[2] < z_min || _P[2] > z_max)
                                 {
                                     continue;
                                 }
@@ -735,17 +739,17 @@ void GEMINI2E::grab_loop()
     }
 }
 
-void GEMINI2E::set_config_module(CONFIG* _config)
+void ORBBEC::set_config_module(CONFIG* _config)
 {
     config = _config;
 }
 
-void GEMINI2E::set_logger_module(LOGGER* _logger)
+void ORBBEC::set_logger_module(LOGGER* _logger)
 {
     logger = _logger;
 }
 
-void GEMINI2E::set_mobile_module(MOBILE *_mobile)
+void ORBBEC::set_mobile_module(MOBILE *_mobile)
 {
     mobile = _mobile;
 }

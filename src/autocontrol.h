@@ -66,6 +66,9 @@ public:
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
 
+    // [single robot] calc global path
+    PATH calc_global_path(Eigen::Matrix4d goal);
+
     /***********************
      * set other modules
      ***********************/
@@ -77,8 +80,11 @@ public:
     void set_localization_module(LOCALIZATION* _localization);
 
 public Q_SLOTS:
-    // slot func move (start control loop)
+    // slot func move(receive goal) (start control loop)
     void slot_move(DATA_MOVE msg);
+
+    // slot func move(receive path) (start control loop)
+    void slot_path(DATA_PATH msg);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -138,7 +144,7 @@ private:
     Eigen::Matrix4d get_approach_pose(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, Eigen::Matrix4d cur_tf);
 
     // [single robot] calc global path
-    PATH calc_global_path(Eigen::Matrix4d goal);
+    //PATH calc_global_path(Eigen::Matrix4d goal);
 
     // [multi robot] calc global path (node path -> global path)
     PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
@@ -196,6 +202,7 @@ private:
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
+    void signal_path(DATA_PATH msg);
     void signal_move_response(DATA_MOVE msg);
     void signal_global_path_updated();
     void signal_local_path_updated();

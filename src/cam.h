@@ -10,7 +10,7 @@
 #include "logger.h"
 #include "mobile.h"
 
-#include "cam/GEMINI2E/GEMINI2E.h"
+#include "cam/GEMINI2E/ORBBEC.h"
 
 #include <QObject>
 
@@ -60,7 +60,7 @@ private:
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
-    GEMINI2E* gemini_2e;
+    ORBBEC* gemini_2e;
 
     // merge loop
     std::atomic<bool> merge_flag = {false};

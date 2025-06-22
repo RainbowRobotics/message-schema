@@ -14,11 +14,12 @@ LIVOX::~LIVOX()
 
 void LIVOX::init()
 {
-    for(int i = 0; i < config->LIDAR_3D_NUM; i++)
+    for(int i = 0; i < config->get_lidar_3d_num(); i++)
     {
-        pts_tf[i] = string_to_TF(config->LIDAR_3D_TF[i]);
+        QString tf_str = config->get_lidar_3d_tf(i);
+        pts_tf[i] = string_to_TF(tf_str);
         // imu_tf[i] = string_to_TF(config->LIDAR_IMU_TF[i]);
-        imu_tf[i] = string_to_TF(config->LIDAR_3D_TF[i]);
+        imu_tf[i] = string_to_TF(tf_str);
     }
 
     printf("[LIVOX] init\n");
@@ -108,7 +109,7 @@ void LIVOX::grab_loop()
     printf("[LIVOX] Disable debug message\n");
 
     // Init Livox SDK2
-    QString path = QCoreApplication::applicationDirPath() + "/configs/" + config->PLATFORM_NAME + "/mid360_config.json";
+    QString path = QCoreApplication::applicationDirPath() + "/configs/" + config->get_platform_name() + "/mid360_config.json";
     printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
 
     FILE* fp = fopen(path.toLocal8Bit().data(), "r");
@@ -137,11 +138,11 @@ void LIVOX::grab_loop()
             std::string ip(info->lidar_ip);
             int idx = -1;
 
-            if(ip == livox->config->LIDAR_3D_IP[0].toStdString())
+            if(ip == livox->config->get_lidar_3d_ip(0).toStdString())
             {
                 idx = 0;
             }
-            else if(ip == livox->config->LIDAR_3D_IP[1].toStdString())
+            else if(ip == livox->config->get_lidar_3d_ip(1).toStdString())
             {
                 idx = 1;
             }
@@ -224,7 +225,7 @@ void LIVOX::grab_loop()
                 double d = _P.norm();
 
                 // double d = P.norm();
-                if(d < livox->config->LIDAR_3D_MIN_RANGE || d > livox->config->LIDAR_3D_MAX_RANGE)
+                if(d < livox->config->get_lidar_3d_min_range() || d > livox->config->get_lidar_3d_max_range())
                 {
                     continue;
                 }

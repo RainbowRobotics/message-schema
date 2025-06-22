@@ -419,7 +419,7 @@ void MAPPING::kfrm_loop()
                         add_cnt++;
 
                         // make keyframe
-                        if(add_cnt % config->MAPPING_KFRM_UPDATE_NUM == 0)
+                        if(add_cnt % config->get_mapping_kfrm_update_num() == 0)
                         {
                             std::lock_guard<std::mutex> lock(mtx);
 
@@ -477,24 +477,27 @@ void MAPPING::loop_closing_loop()
             printf("[MAPPING] kfrm:%d processing start\n", kfrm.id);
 
             // keyframe pts transform global to kfrm local
-            const int k0 = kfrm.id*config->MAPPING_KFRM_UPDATE_NUM;
-            const int k1 = kfrm.id*config->MAPPING_KFRM_UPDATE_NUM + config->MAPPING_KFRM_UPDATE_NUM;
+            const int k0 = kfrm.id*config->get_mapping_kfrm_update_num();
+            const int k1 = kfrm.id*config->get_mapping_kfrm_update_num() + config->get_mapping_kfrm_update_num();
 
             std::vector<PT_XYZR> pts;
             Eigen::Matrix4d G_inv = kfrm.G.inverse();
+            Eigen::Matrix3d R0 = G_inv.block(0,0,3,3);
+            Eigen::Vector3d t0 = G_inv.block(0,3,3,1);
+
             for(size_t p = 0; p < kfrm.pts.size(); p++)
             {
                 PT_XYZR pt = kfrm.pts[p];
                 if(pt.k0 >= k0 && pt.k0 < k1)
                 {
-                    if(pt.do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
+                    if(pt.do_cnt < config->get_mapping_icp_do_accum_num())
                     {
                         continue;
                     }
 
                     // global to keyframe local
                     Eigen::Vector3d P(pt.x, pt.y, pt.z);
-                    Eigen::Vector3d _P = G_inv.block(0,0,3,3)*P + G_inv.block(0,3,3,1);
+                    Eigen::Vector3d _P = R0*P + t0;
 
                     pt.x = _P[0];
                     pt.y = _P[1];
@@ -534,7 +537,7 @@ void MAPPING::loop_closing_loop()
                     int p1 = kfrm_storage.size()-1;
 
                     double d = (kfrm_storage[p1].opt_G.block(0,3,3,1) - kfrm_storage[p0].opt_G.block(0,3,3,1)).norm();
-                    if(d < config->MAPPING_KFRM_LC_TRY_DIST)
+                    if(d < config->get_mapping_kfrm_lc_try_dist())
                     {
                         // check overlap ratio
                         std::vector<Eigen::Vector3d> pts0;
@@ -562,7 +565,7 @@ void MAPPING::loop_closing_loop()
                         }
 
                         double overlap_ratio = calc_overlap_ratio(pts0, pts1);
-                        if(overlap_ratio < config->MAPPING_KFRM_LC_TRY_OVERLAP)
+                        if(overlap_ratio < config->get_mapping_kfrm_lc_try_overlap())
                         {
                             printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, d, overlap_ratio);
                             continue;
@@ -572,7 +575,7 @@ void MAPPING::loop_closing_loop()
 
                         Eigen::Matrix4d dG = kfrm_storage[p0].opt_G.inverse()*kfrm_storage[p1].opt_G;
                         double err = kfrm_icp(kfrm_storage[p0], kfrm_storage[p1], dG);
-                        if(err < config->MAPPING_ICP_ERROR_THRESHOLD)
+                        if(err < config->get_mapping_icp_error_threshold())
                         {
                             pgo.add_lc(kfrm_storage[p0].id, kfrm_storage[p1].id, dG, err);
                             printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, err);
@@ -611,25 +614,33 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // for processing time
     double t_st = get_time();
 
+    double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
+    double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
+    double z_min = config->get_robot_size_z_min(), z_max = config->get_robot_size_z_max();
+
+    QString platform_type = config->get_platform_type();
+
+    Eigen::Matrix3d R0 = G.block(0,0,3,3);
+    Eigen::Vector3d t0 = G.block(0,3,3,1);
+
     // for random selection
     std::vector<int> idx_list;
     std::vector<Eigen::Vector3d> pts;
     for(size_t p = 0; p < frm.pts.size(); p++)
     {
         Eigen::Vector3d _P = frm.pts[p];
-
-        if(config->PLATFORM_TYPE == "S100")
+        if(platform_type == "S100")
         {
             double dx = 1.0;
-            if(_P[0] > config->ROBOT_SIZE_X[0] - dx && _P[0] < config->ROBOT_SIZE_X[1] + dx &&
-                    _P[1] > config->ROBOT_SIZE_Y[0] && _P[1] < config->ROBOT_SIZE_Y[1])
+            if(_P[0] > x_min - dx && _P[0] < x_max + dx &&
+               _P[1] > y_min      && _P[1] < y_max)
             {
                 continue;
             }
         }
 
         idx_list.push_back(p);
-        Eigen::Vector3d P = G.block(0,0,3,3)*_P + G.block(0,3,3,1);
+        Eigen::Vector3d P = R0*_P + t0;
         pts.push_back(P);
     }
 
@@ -644,8 +655,9 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    const double cost_threshold = config->MAPPING_ICP_COST_THRESHOLD*config->MAPPING_ICP_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->MAPPING_ICP_MAX_FEATURE_NUM);
+    double cost_threshold0 = config->get_mapping_icp_cost_threshold();
+    const double cost_threshold = cost_threshold0*cost_threshold0;
+    const int num_feature = std::min<int>(idx_list.size(), config->get_mapping_icp_max_feature_num());
 
     // for rmt
     double tm0 = 0;
@@ -673,7 +685,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             Eigen::Vector3d V0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->LOC_2D_SURFEL_NUM;
+                const int pt_num = config->get_loc_2d_surfel_num();
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -685,7 +697,8 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max = config->LOC_2D_SURFEL_RANGE*config->LOC_2D_SURFEL_RANGE;
+                double sq_d_max0 = config->get_loc_2d_surfel_range();
+                double sq_d_max = sq_d_max0*sq_d_max0;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
@@ -704,7 +717,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // view filter
-            if(compare_view_vector(V0, V1, config->MAPPING_ICP_VIEW_THRESHOLD*D2R))
+            if(compare_view_vector(V0, V1, config->get_mapping_icp_view_threshold()*D2R))
             {
                 continue;
             }
@@ -740,7 +753,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt > 0 && cloud.pts[nn_idx].do_cnt < config->get_mapping_icp_do_accum_num())
             {
                 continue;
             }
@@ -876,7 +889,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     // update
     G = _G*G;
 
-    if(last_err > first_err+0.01 || last_err > config->MAPPING_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->get_mapping_icp_error_threshold())
     {
         printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
                first_err, last_err, convergence, get_time()-t_st);
@@ -930,8 +943,9 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    const double cost_threshold = config->MAPPING_ICP_COST_THRESHOLD*config->MAPPING_ICP_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->MAPPING_ICP_MAX_FEATURE_NUM);
+    double cost_threshold0 = config->get_mapping_icp_cost_threshold();
+    const double cost_threshold = cost_threshold0 * cost_threshold0;
+    const int num_feature = std::min<int>(idx_list.size(), config->get_mapping_icp_max_feature_num());
 
     // for rmt
     double tm0 = 0;
@@ -958,7 +972,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             int nn_idx = 0;
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->LOC_2D_SURFEL_NUM;
+                const int pt_num = config->get_loc_2d_surfel_num();
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -969,7 +983,8 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max = config->LOC_2D_SURFEL_RANGE*config->LOC_2D_SURFEL_RANGE;
+                double sq_d_max0 = config->get_loc_2d_surfel_range();
+                double sq_d_max = sq_d_max0*sq_d_max0;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
@@ -1018,7 +1033,7 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
             }
 
             // dynamic object filter
-            if(cloud.pts[nn_idx].do_cnt < config->MAPPING_ICP_DO_ACCUM_NUM)
+            if(cloud.pts[nn_idx].do_cnt < config->get_mapping_icp_do_accum_num())
             {
                 continue;
             }
@@ -1244,7 +1259,7 @@ void MAPPING::last_lc()
         printf("[LAST_LC] dxi: %f, %f, %f\n", dxi[0], dxi[1], dxi[2]*R2D);
 
         double err = kfrm_icp(kfrm0, kfrm1, dG);
-        if(err < config->MAPPING_ICP_ERROR_THRESHOLD)
+        if(err < config->get_mapping_icp_error_threshold())
         {
             pgo.add_lc(kfrm0.id, kfrm1.id, dG, err);
             printf("[LAST_LC] pose graph optimization, id:%d-%d, err:%f\n", kfrm0.id, kfrm1.id, err);

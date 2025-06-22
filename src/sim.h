@@ -56,9 +56,9 @@ private:
 
     double calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol=0.0001);
 
-    std::atomic<bool> a_flag;
-    std::unique_ptr<std::thread> a_thread;
-    void a_loop();
+    std::atomic<bool> simulation_flag;
+    std::unique_ptr<std::thread> simulation_thread;
+    void simulation_loop();
 
     Eigen::Matrix4d cur_tf;
 

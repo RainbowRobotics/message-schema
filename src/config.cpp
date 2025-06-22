@@ -46,7 +46,8 @@ void CONFIG::load()
 
     load_robot_config(obj);
     load_sensors_config(obj);
-    load_localization_config(obj);
+    load_localization_2d_config(obj);
+    load_localization_3d_config(obj);
     load_network_config(obj);
     load_debug_config(obj);
     load_motor_config(obj);
@@ -73,7 +74,6 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     QJsonObject obj_robot = obj["robot"].toObject();
 
     check_and_set_string(obj_robot, "PLATFORM_NAME",        PLATFORM_NAME,      "robot");
-    check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
@@ -108,20 +108,33 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
 }
 
-void CONFIG::load_localization_config(const QJsonObject &obj)
+void CONFIG::load_localization_2d_config(const QJsonObject &obj)
 {
-    QJsonObject obj_loc = obj["localization"].toObject();
+    QJsonObject obj_loc = obj["loc_2d"].toObject();
 
-    check_and_set_string(obj_loc, "MODE", LOC_MODE, "localization");
+    check_and_set_int(obj_loc,    "LOC_SURFEL_NUM",             LOC_2D_SURFEL_NUM,             "loc_2d");
+    check_and_set_int(obj_loc,    "LOC_ICP_MAX_FEATURE_NUM",    LOC_2D_ICP_MAX_FEATURE_NUM,    "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ARUCO_ODO_FUSION_DIST",  LOC_2D_ARUCO_ODO_FUSION_DIST,  "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ARUCO_ODO_FUSION_RATIO", LOC_2D_ARUCO_ODO_FUSION_RATIO, "loc_2d");
+    check_and_set_double(obj_loc, "LOC_CHECK_DIST",             LOC_2D_CHECK_DIST,             "loc_2d");
+    check_and_set_double(obj_loc, "LOC_CHECK_IE",               LOC_2D_CHECK_IE,               "loc_2d");
+    check_and_set_double(obj_loc, "LOC_CHECK_IR",               LOC_2D_CHECK_IR,               "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ICP_COST_THRESHOLD",     LOC_2D_ICP_COST_THRESHOLD,     "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ICP_COST_THRESHOLD_0",   LOC_2D_ICP_COST_THRESHOLD_0,   "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ICP_ERROR_THRESHOLD",    LOC_2D_ICP_ERROR_THRESHOLD,    "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ICP_ODO_FUSION_RATIO",   LOC_2D_ICP_ODO_FUSION_RATIO,   "loc_2d");
+    check_and_set_double(obj_loc, "LOC_SURFEL_RANGE",           LOC_2D_SURFEL_RANGE,           "loc_2d");
+}
 
-    if(LOC_MODE == "2D")
-    {
-        load_localization_2d_config(obj);
-    }
-    else if(LOC_MODE == "3D")
-    {
-        load_localization_3d_config(obj);
-    }
+void CONFIG::load_localization_3d_config(const QJsonObject &obj)
+{
+    QJsonObject obj_loc = obj["loc_3d"].toObject();
+
+    check_and_set_int(obj_loc,    "LOC_MAX_FEATURE_NUM",        LOC_MAX_FEATURE_NUM,      "loc_3d");
+    check_and_set_int(obj_loc,    "LOC_SURFEL_NN_NUM",          LOC_SURFEL_NN_NUM,        "loc_3d");
+    check_and_set_double(obj_loc, "LOC_SURFEL_BALANCE",         LOC_SURFEL_BALANCE,       "loc_3d");
+    check_and_set_double(obj_loc, "LOC_COST_THRESHOLD",         LOC_COST_THRESHOLD,       "loc_3d");
+    check_and_set_double(obj_loc, "LOC_INLIER_CHECK_DIST",      LOC_INLIER_CHECK_DIST,    "loc_3d");
 }
 
 void CONFIG::load_network_config(const QJsonObject &obj)
@@ -429,20 +442,20 @@ bool CONFIG::load_common(QString path)
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        qWarning() << "[CONFIG] JSON parse error:" << parseError.errorString();
+        qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
         return false;
     }
 
     QJsonObject obj = doc.object();
-    QJsonArray params_array = obj["params"].toArray();
-
-    params.clear();
-    for(const QJsonValue& value : params_array)
+    if(obj.contains("PLATFORM_TYPE"))
     {
-        params.push_back(value.toString());
+        PLATFORM_TYPE = obj["PLATFORM_TYPE"].toString();
     }
 
-    printf("[CONFIG] %s, load common successed\n", qUtf8Printable(path));
+    std::cout << "p " << PLATFORM_TYPE.toStdString() << std::endl;
+
+    // complete
+    common_file.close();
     return true;
 }
 
@@ -956,7 +969,7 @@ int CONFIG::get_mapping_window_size()
     return MAPPING_WINDOW_SIZE;
 }
 
-double CONFIG::get_mapping_icp_cost_threashold()
+double CONFIG::get_mapping_icp_cost_threshold()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAPPING_ICP_COST_THRESHOLD;
@@ -968,7 +981,7 @@ double CONFIG::get_mapping_icp_error_threshold()
     return MAPPING_ICP_ERROR_THRESHOLD;
 }
 
-double CONFIG::get_mapping_icp_view_threashold()
+double CONFIG::get_mapping_icp_view_threshold()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAPPING_ICP_VIEW_THRESHOLD;

@@ -121,107 +121,107 @@ public:
     /***********************
      * motor
      ***********************/
-    int get_motor_id_left();
-    int get_motor_id_right();
-    double get_motor_direction();
-    double get_motor_gear_ratio();
-    double get_motor_limit_v();
-    double get_motor_limit_v_acc();
-    double get_motor_limit_w();
-    double get_motor_limit_w_acc();
-    double get_motor_gain_kp();
-    double get_motor_gain_ki();
-    double get_motor_gain_kd();
+    int get_motor_id_left();                  // get left motor id (0,1,2,3)
+    int get_motor_id_right();                 // get right motor id (0,1,2,3)
+    double get_motor_direction();             // get motor direction (1, -1)
+    double get_motor_gear_ratio();            // get motor gear ratio
+    double get_motor_limit_v();               // get motor limit v (hardware limit, Software speed limit cannot exceed this value)
+    double get_motor_limit_v_acc();           // get motor limit v acc (hardware limit, Software speed limit cannot exceed this value)
+    double get_motor_limit_w();               // get motor limit w (hardware limit, Software speed limit cannot exceed this value)
+    double get_motor_limit_w_acc();           // get motor limit w acc (hardware limit, Software speed limit cannot exceed this value)
+    double get_motor_gain_kp();               // get motor internal position control pid p gain
+    double get_motor_gain_ki();               // get motor internal position control pid i gain
+    double get_motor_gain_kd();               // get motor internal position control pid d gain
 
     /***********************
      * mapping
      ***********************/
-    int get_mapping_icp_max_feature_num();
-    int get_mapping_icp_do_erase_gap();
-    int get_mapping_icp_do_accum_num();
-    int get_mapping_kfrm_update_num();
-    int get_mapping_window_size();
-    double get_mapping_icp_cost_threashold();
-    double get_mapping_icp_error_threshold();
-    double get_mapping_icp_view_threashold();
-    double get_mapping_kfrm_lc_try_dist();
-    double get_mapping_kfrm_lc_try_overlap();
-    double get_mapping_voxel_size();
+    int get_mapping_icp_max_feature_num();      // Number of points involved in calculation when performing ICP (iterate closest points)
+    int get_mapping_icp_do_erase_gap();         // Dynamic Obstacle removal gap
+    int get_mapping_icp_do_accum_num();         // Cumulative number of dynamic obstacle judgments
+    int get_mapping_kfrm_update_num();          // Number of frames required to update a keyframe
+    int get_mapping_window_size();              // Mapping window size
+    double get_mapping_icp_cost_threshold();   // ICP cost threadhold
+    double get_mapping_icp_error_threshold();   // ICP error threadhold
+    double get_mapping_icp_view_threshold();   // ICP view threadhold
+    double get_mapping_kfrm_lc_try_dist();      // Loop Closing try distance
+    double get_mapping_kfrm_lc_try_overlap();   // Loop Closing try overlap
+    double get_mapping_voxel_size();            // common voxel size
 
     /***********************
      * localization 2d
      ***********************/
-    int get_loc_2d_icp_max_feature_num();
-    int get_loc_2d_surfel_num();
-    double get_loc_2d_icp_odometry_fusion_ratio();
-    double get_loc_2d_icp_cost_threshold();
-    double get_loc_2d_icp_cost_threshold0();
-    double get_loc_2d_icp_error_threshold();
-    double get_loc_2d_aruco_odometry_fusion_ratio();
-    double get_loc_2d_aruco_odometry_fusion_dist();
-    double get_loc_2d_surfel_range();
-    double get_loc_2d_check_dist();
-    double get_loc_2d_check_inlier_ratio();
-    double get_loc_2d_check_inlier_error();
+    int get_loc_2d_icp_max_feature_num();               // Number of points involved in calculation when performing ICP (iterate closest points)
+    int get_loc_2d_surfel_num();                        // Number of surfel judgment points
+    double get_loc_2d_icp_odometry_fusion_ratio();      // Odometry(wheel) and Lidar positioning fusion rate
+    double get_loc_2d_icp_cost_threshold();             // ICP cost threadhold
+    double get_loc_2d_icp_cost_threshold0();            // ICP cost threadhold (Initial location estimation)
+    double get_loc_2d_icp_error_threshold();            // ICP error threadhold
+    double get_loc_2d_aruco_odometry_fusion_ratio();    // Odometry(aruco marker) and Lidar positioning fusion rate
+    double get_loc_2d_aruco_odometry_fusion_dist();     // Odometry(aruco marker) and Lidar positioning fusion possible distance
+    double get_loc_2d_surfel_range();                   // Surfel judgment range
+    double get_loc_2d_check_dist();                     // ICP possible distance
+    double get_loc_2d_check_inlier_ratio();             // ICP inlier ratio
+    double get_loc_2d_check_inlier_error();             // ICP inlier error
 
     /***********************
      * localization 3d
      ***********************/
-    int get_loc_3d_icp_max_feature_num();
-    int get_loc_3d_surfel_nn_num();
-    double get_loc_3d_surfel_balance();
-    double get_loc_3d_cost_threshold();
-    double get_loc_3d_inlier_check_dist();
+    int get_loc_3d_icp_max_feature_num();               // Number of points involved in calculation when performing ICP (iterate closest points)
+    int get_loc_3d_surfel_nn_num();                     // Number of surfel judgment points
+    double get_loc_3d_surfel_balance();                 // surfel balance (To avoid being biased towards one axis)
+    double get_loc_3d_cost_threshold();                 // ICP cost threadhold
+    double get_loc_3d_inlier_check_dist();              // ICP possible distance
 
     /***********************
      * obstacle map
      ***********************/
-    int get_obs_avoid_mode();
-    double get_obs_deadzone();
-    double get_obs_local_goal_dist();
-    double get_obs_safe_margin_x();
-    double get_obs_safe_margin_y();
-    double get_obs_path_margin_x();
-    double get_obs_path_margin_y();
-    double get_obs_map_grid_size();
-    double get_obs_map_range();
-    double get_obs_map_min_v();
-    double get_obs_map_min_z();
-    double get_obs_map_max_z();
-    double get_obs_predict_time();
+    int get_obs_avoid_mode();               // is avoid mode (0: not avoie, 1: avoid mode)
+    double get_obs_deadzone();              // obstacle stopping distance
+    double get_obs_local_goal_dist();       //
+    double get_obs_safe_margin_x();         //
+    double get_obs_safe_margin_y();         //
+    double get_obs_path_margin_x();         //
+    double get_obs_path_margin_y();         //
+    double get_obs_map_grid_size();         //
+    double get_obs_map_range();             //
+    double get_obs_map_min_v();             //
+    double get_obs_map_min_z();             //
+    double get_obs_map_max_z();             //
+    double get_obs_predict_time();          //
 
     /***********************
      * drive
      ***********************/
-    double get_drive_goal_approach_gain();
-    double get_drive_goal_dist();
-    double get_drive_goal_th();
-    double get_drive_extended_control_time();
-    double get_drive_v_deadzone();
-    double get_drive_w_deadzone();
+    double get_drive_goal_approach_gain();      //
+    double get_drive_goal_dist();               //
+    double get_drive_goal_th();                 //
+    double get_drive_extended_control_time();   //
+    double get_drive_v_deadzone();              //
+    double get_drive_w_deadzone();              //
 
     /***********************
      * docking
      ***********************/
-    int get_docking_type();
-    int get_docking_map_size();
-    double get_docking_pointdock_margin();
-    double get_docking_goal_dist();
-    double get_docking_goal_th();
-    double get_docking_extended_control_time();
-    double get_docking_undock_reversing_distance();
-    double get_docking_kp_dist();
-    double get_docking_kd_dist();
-    double get_docking_kp_th();
-    double get_docking_kd_th();
-    double get_docking_clust_dist_threshold();
-    double get_docking_clust_dist_threshold_min();
-    double get_docking_clust_dist_threshold_max();
-    double get_docking_clust_angle_threshold();
-    double get_docking_size_x_min();
-    double get_docking_size_x_max();
-    double get_docking_icp_cost_threshold();
-    double get_docking_icp_max_feature_num();
+    int get_docking_type();                         //
+    int get_docking_map_size();                     //
+    double get_docking_pointdock_margin();          //
+    double get_docking_goal_dist();                 //
+    double get_docking_goal_th();                   //
+    double get_docking_extended_control_time();     //
+    double get_docking_undock_reversing_distance(); //
+    double get_docking_kp_dist();                   //
+    double get_docking_kd_dist();                   //
+    double get_docking_kp_th();                     //
+    double get_docking_kd_th();                     //
+    double get_docking_clust_dist_threshold();      //
+    double get_docking_clust_dist_threshold_min();  //
+    double get_docking_clust_dist_threshold_max();  //
+    double get_docking_clust_angle_threshold();     //
+    double get_docking_size_x_min();                //
+    double get_docking_size_x_max();                //
+    double get_docking_icp_cost_threshold();        //
+    double get_docking_icp_max_feature_num();       //
     double get_docking_grid_size();
 
     /***********************
@@ -269,7 +269,7 @@ private:
 
     void add_missing_variable(const QString& section, const QString& variable);
 
-public:
+private:
     explicit CONFIG(QObject *parent = nullptr);
     ~CONFIG();
 

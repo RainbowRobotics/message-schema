@@ -1,5 +1,5 @@
-#ifndef GEMINI2E_H
-#define GEMINI2E_H
+#ifndef ORBBEC_H
+#define ORBBEC_H
 
 #include "global_defines.h"
 #include "my_utils.h"
@@ -17,14 +17,14 @@
 constexpr int depth_profile_idx = 55; // depth_profile(55), w:640, h:480, fps:30, format:11
 constexpr int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
 
-class GEMINI2E : public QObject
+class ORBBEC : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(GEMINI2E)
+    Q_DISABLE_COPY(ORBBEC)
 
 public:
     // make singleton
-    static GEMINI2E* instance(QObject* parent = nullptr);
+    static ORBBEC* instance(QObject* parent = nullptr);
 
     void init();
 
@@ -52,8 +52,8 @@ public:
     void set_mobile_module(MOBILE* _mobile);
 
 private:
-    explicit GEMINI2E(QObject *parent = nullptr);
-    ~GEMINI2E();
+    explicit ORBBEC(QObject *parent = nullptr);
+    ~ORBBEC();
     std::mutex mtx;
 
     // other modules
@@ -90,4 +90,4 @@ private:
 
 };
 
-#endif // GEMINI2E_H
+#endif // ORBBEC_H

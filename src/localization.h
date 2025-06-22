@@ -51,6 +51,7 @@ public:
     QString get_cur_loc_state();
     QString get_info_text();
     bool get_is_loc();
+    bool get_is_busy();
 
     void set_cur_tf(Eigen::Matrix4d tf);
     void set_cur_loc_state(QString str);
@@ -58,6 +59,8 @@ public:
 
     Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const  Eigen::Matrix4d& G);
     Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);
+
+    void semi_auto_init_start();
 
     /***********************
      * set other modules
@@ -110,6 +113,7 @@ private:
 
     // flag
     std::atomic<bool> is_loc = {false};
+    std::atomic<bool> is_busy = {false};
 
     // result
     Eigen::Matrix4d cur_tf;

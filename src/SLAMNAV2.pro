@@ -1,4 +1,4 @@
-QT       += core gui websockets multimedia
+QT       += core gui websockets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -29,9 +29,11 @@ HOME = $$system(echo $HOME)
 message($$HOME)
 
 SOURCES += \
+    comm/comm_coop.cpp \
+    comm/comm_rrs.cpp \
     autocontrol.cpp \
     cam.cpp \
-    cam/GEMINI2E/GEMINI2E.cpp \
+    cam/GEMINI2E/ORBBEC.cpp \
     dockcontrol.cpp \
     lidar/SICK/sick.cpp \
     lidar_2d.cpp \
@@ -56,9 +58,11 @@ SOURCES += \
 
 
 HEADERS += \
+    comm/comm_coop.h \
+    comm/comm_rrs.h \
     autocontrol.h \
     cam.h \
-    cam/GEMINI2E/GEMINI2E.h \
+    cam/GEMINI2E/ORBBEC.h \
     comm_data.h \
     dockcontrol.h \
     lidar/SICK/sick.h \

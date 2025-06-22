@@ -41,19 +41,21 @@ void LOCALIZATION::start()
 
     // set flag
     is_loc = true;
-    if(config->LOC_MODE == "2D")
+
+    QString loc_mode = config->get_loc_mode();
+    if(loc_mode == "2D")
     {
         localization_flag = true;
         localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_2d, this);
     }
-    else if(config->LOC_MODE == "3D")
+    else if(loc_mode == "3D")
     {
         localization_flag = true;
         localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_3d, this);
     }
     else
     {
-        printf("[LOCALIZATION] unknown LOC_MODE: %s\n", config->LOC_MODE.toStdString().c_str());
+        printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
         is_loc = false;
     }
 
@@ -63,7 +65,7 @@ void LOCALIZATION::start()
     obs_flag = true;
     obs_thread = std::make_unique<std::thread>(&LOCALIZATION::obs_loop, this);
 
-    printf("[LOCALIZATION(%s)] start\n", config->LOC_MODE.toStdString().c_str());
+    printf("[LOCALIZATION(%s)] start\n", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::stop()
@@ -91,7 +93,8 @@ void LOCALIZATION::stop()
     }
     obs_thread.reset();
 
-    printf("[LOCALIZATION(%s)] stop\n", config->LOC_MODE.toStdString().c_str());
+    QString loc_mode = config->get_loc_mode();
+    printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::set_cur_tf(Eigen::Matrix4d tf)
@@ -199,6 +202,16 @@ bool LOCALIZATION::get_is_loc()
     return (bool)is_loc.load();
 }
 
+bool LOCALIZATION::get_is_busy()
+{
+    return (bool)is_busy.load();
+}
+
+void LOCALIZATION::semi_auto_init_start()
+{
+
+}
+
 Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G)
 {
     if(pts.size() < 100)
@@ -251,6 +264,8 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts,
 
 Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G)
 {
+    const double check_dist = config->get_loc_2d_check_dist();
+
     int err_num = 0;
     double err_sum = 0;
     for(size_t p = 0; p < frm.pts.size(); p++)
@@ -267,7 +282,7 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, F
 
         // point to point distance
         double err = std::sqrt(ret_near_sq_dists[0]);
-        if(err > config->LOC_2D_CHECK_DIST)
+        if(err > check_dist)
         {
             continue;
         }
@@ -326,7 +341,7 @@ void LOCALIZATION::localization_loop_2d()
             cur_ieir = calc_ieir((*kdtree_index), (*kdtree_cloud), frm, G);
 
             // check error
-            if(err < config->LOC_2D_ICP_ERROR_THRESHOLD)
+            if(err < config->get_loc_2d_icp_error_threshold())
             {
                 // for loc b loop
                 TIME_POSE tp;
@@ -420,7 +435,7 @@ void LOCALIZATION::localization_loop_3d()
             cur_ieir = calc_ieir(dsk, G);
 
             // check error
-            if(err < config->LOC_2D_ICP_ERROR_THRESHOLD)
+            if(err < config->get_loc_2d_icp_error_threshold())
             {
                 // for loc b loop
                 TIME_POSE tp;
@@ -494,7 +509,7 @@ void LOCALIZATION::odometry_loop()
     while(odometry_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
-        if(cur_mo.t > pre_mo.t && config->LOC_2D_ICP_ODO_FUSION_RATIO != 0.0)
+        if(cur_mo.t > pre_mo.t && config->get_loc_2d_icp_odometry_fusion_ratio() != 0.0)
         {
             double st_time = get_time();
 
@@ -511,7 +526,7 @@ void LOCALIZATION::odometry_loop()
 
             // icp-odometry fusion
             TIME_POSE tp;
-            if(tp_que.try_pop(tp) && !config->USE_SIM)
+            if(tp_que.try_pop(tp) && !config->get_use_sim())
             {
                 // time delay compensation
                 Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
@@ -519,7 +534,7 @@ void LOCALIZATION::odometry_loop()
                 Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
                 Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
 
-                double alpha = config->LOC_2D_ICP_ODO_FUSION_RATIO; // 1.0 means odo_tf 100%
+                double alpha = config->get_loc_2d_icp_odometry_fusion_ratio(); // 1.0 means odo_tf 100%
 
                 // for odometry slip
                 Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
@@ -650,7 +665,7 @@ void LOCALIZATION::obs_loop()
             }
 
             // add 2D pts
-            if(config->USE_LIDAR_2D && config->LOC_MODE != "2D")
+            if(config->get_use_lidar_2d() && config->get_loc_mode() != "2D")
             {
                 FRAME scan;
                 FRAME tmp;
@@ -671,7 +686,7 @@ void LOCALIZATION::obs_loop()
             }
 
             // add 3D pts
-            if(config->USE_LIDAR_3D && config->LOC_MODE != "3D")
+            if(config->get_use_lidar_3d() && config->get_loc_mode()  != "3D")
             {
                 TIME_PTS scan;
                 TIME_PTS tmp;
@@ -735,13 +750,14 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
     // optimization param
     const int max_iter = max_iter0;
     double lambda = lambda0;
-    double first_err = 9999;
-    double last_err = 9999;
-    double convergence = 9999;
+    double first_err   = std::numeric_limits<double>::max();
+    double last_err    = std::numeric_limits<double>::max();
+    double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    const double cost_threshold = config->LOC_2D_ICP_COST_THRESHOLD*config->LOC_2D_ICP_COST_THRESHOLD;
-    const int num_feature = std::min<int>(idx_list.size(), config->LOC_2D_ICP_MAX_FEATURE_NUM);
+    double cost_threshold0 = config->get_loc_2d_icp_cost_threshold();
+    const double cost_threshold = cost_threshold0 * cost_threshold0;
+    const int num_feature = std::min<int>(idx_list.size(), config->get_loc_2d_icp_max_feature_num());
 
     // for rmt
     double tm0 = 0;
@@ -757,7 +773,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
             // get index
             int i = idx_list[p];
             double dist = calc_dist_2d(frm.pts[i]);
-            if(dist < config->LIDAR_2D_MIN_RANGE)
+            if(dist < config->get_lidar_2d_min_range())
             {
                 continue;
             }
@@ -769,7 +785,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
             // knn points
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->LOC_2D_SURFEL_NUM;
+                const int pt_num = config->get_loc_2d_surfel_num();
                 std::vector<unsigned int> ret_near_idxs(pt_num);
                 std::vector<double> ret_near_sq_dists(pt_num);
 
@@ -778,7 +794,8 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max = config->LOC_2D_SURFEL_RANGE*config->LOC_2D_SURFEL_RANGE;
+                double sq_d_max0 = config->get_loc_2d_surfel_range();
+                double sq_d_max = sq_d_max0 * sq_d_max0;
                 for(int q = 0; q < pt_num; q++)
                 {
                     int idx = ret_near_idxs[q];
@@ -850,7 +867,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
         if(num_correspondence < 100)
         {
             printf("[map_icp] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
-            return 9999;
+            return std::numeric_limits<double>::max();
         }
 
         // calc mu
@@ -955,7 +972,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
     // update
     G = _G*G;
 
-    if(last_err > first_err+0.01 || last_err > config->LOC_2D_ICP_ERROR_THRESHOLD)
+    if(last_err > first_err+0.01 || last_err > config->get_loc_2d_icp_error_threshold())
     {
         printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
         //return 9999;

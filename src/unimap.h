@@ -52,6 +52,11 @@ public:
     Eigen::Vector3d get_pts_3d(int idx);
     std::shared_ptr<std::vector<NODE>> get_nodes_origin();
 
+    double get_map_min_x();
+    double get_map_max_x();
+    double get_map_min_y();
+    double get_map_max_y();
+
     std::shared_ptr<KD_TREE_XYZR> get_kdtree_index();
 
     void radius_search_kdtree_idx(double query[], double sq_radius, std::vector<nanoflann::ResultItem<unsigned int, double>>& res_idxs, nanoflann::SearchParameters params);
@@ -73,7 +78,7 @@ private:
     ~UNIMAP();
 
     // mutex
-    std::mutex mtx;
+    std::shared_mutex mtx;
 
     // map dir
     QString map_path;

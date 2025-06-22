@@ -41,11 +41,10 @@ MOBILE::~MOBILE()
     send_thread.reset();
 }
 
-// interface func
 void MOBILE::open()
 {
     // check simulation mode
-    if(config->USE_SIM)
+    if(config->get_use_sim())
     {
         printf("[MOBILE] simulation mode\n");
         return;
@@ -981,8 +980,8 @@ void MOBILE::motor_on()
 {
     // set id
     {
-        int id_l = config->MOTOR_ID_L;
-        int id_r = config->MOTOR_ID_R;
+        int id_l = config->get_motor_id_left();
+        int id_r = config->get_motor_id_right();
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1000,7 +999,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &id_l, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && config->get_use_sim() == 0)
         {
             msg_que.push(send_byte);
         }
@@ -1008,8 +1007,8 @@ void MOBILE::motor_on()
 
     // set wheel dir, gear ratio
     {
-        float wheel_dir = config->MOTOR_DIR;
-        float gear_ratio = config->MOTOR_GEAR_RATIO;
+        float wheel_dir = config->get_motor_direction();
+        float gear_ratio = config->get_motor_gear_ratio();
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1027,7 +1026,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &gear_ratio, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
@@ -1035,8 +1034,8 @@ void MOBILE::motor_on()
 
     // set wheel base, wheel radius
     {
-        float wheel_base = config->ROBOT_WHEEL_BASE;
-        float wheel_radius = config->ROBOT_WHEEL_RADIUS;
+        float wheel_base = config->get_robot_wheel_base();
+        float wheel_radius = config->get_robot_wheel_radius();
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1054,7 +1053,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &wheel_radius, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
@@ -1062,8 +1061,8 @@ void MOBILE::motor_on()
 
     // set limit vel
     {
-        float limit_v = config->MOTOR_LIMIT_V;
-        float limit_w = config->MOTOR_LIMIT_W * D2R;
+        float limit_v = config->get_motor_limit_v();
+        float limit_w = config->get_motor_limit_w() * D2R;
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1081,7 +1080,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
@@ -1089,8 +1088,8 @@ void MOBILE::motor_on()
 
     // set limit acc
     {
-        float limit_v_acc = config->MOTOR_LIMIT_V_ACC;
-        float limit_w_acc = config->MOTOR_LIMIT_W_ACC * D2R;
+        float limit_v_acc = config->get_motor_limit_v_acc();
+        float limit_w_acc = config->get_motor_limit_w_acc() * D2R;
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1108,7 +1107,7 @@ void MOBILE::motor_on()
         memcpy(&send_byte[12], &limit_w_acc, 4);
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
@@ -1116,9 +1115,9 @@ void MOBILE::motor_on()
 
     // set init + gain
     {
-        float kp = config->MOTOR_GAIN_KP;
-        float ki = config->MOTOR_GAIN_KI;
-        float kd = config->MOTOR_GAIN_KD;
+        float kp = config->get_motor_gain_kp();
+        float ki = config->get_motor_gain_ki();
+        float kd = config->get_motor_gain_kd();
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1138,7 +1137,7 @@ void MOBILE::motor_on()
 
         send_byte[24] = 0x25;
 
-        if(is_connected && config->USE_SIM == 0)
+        if(is_connected && !config->get_use_sim())
         {
             msg_que.push(send_byte);
         }
@@ -1163,7 +1162,7 @@ void MOBILE::motor_off()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1195,12 +1194,14 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-    if(config->PLATFORM_TYPE == "S100" || config->PLATFORM_TYPE == "D400")
+    QString platform_type = config->get_platform_type();
+
+    if(platform_type == "S100" || platform_type == "D400")
     {
         memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
         memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
     }
-    else if(config->PLATFORM_TYPE == "MECANUM")
+    else if(platform_type == "MECANUM")
     {
         memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
         memcpy(&send_byte[12], &_vy, 4); // param2 linear vel
@@ -1209,7 +1210,7 @@ void MOBILE::move(double vx, double vy, double wz)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1242,7 +1243,7 @@ void MOBILE::move_linear_x(double d, double v)
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1250,7 +1251,12 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    # if defined(USE_MECANUM)
+    QString platform_type = config->get_platform_type();
+    if(platform_type != "MECANUM")
+    {
+        return;
+    }
+
     // set last v,w
     vx0 = 0;
     vy0 = 0;
@@ -1276,16 +1282,20 @@ void MOBILE::move_linear_y(double d, double v)
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
-    #endif
 }
 
 void MOBILE::stop_charge()
 {
-    # if defined(USE_MECANUM)
+    QString platform_type = config->get_platform_type();
+    if(platform_type != "MECANUM")
+    {
+        return;
+    }
+
     std::vector<uchar> send_byte(25, 0);
     send_byte[0] = 0x24;
 
@@ -1299,11 +1309,10 @@ void MOBILE::stop_charge()
     send_byte[7] = 130; // cmd stop charge
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
-    #endif
 }
 
 void MOBILE::move_rotate(double th, double w)
@@ -1327,19 +1336,22 @@ void MOBILE::move_rotate(double th, double w)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    #if defined(USE_MECANUM)
-    send_byte[7] = 119; // cmd move rotate
-    #endif
 
-    #if defined(USE_S100) || defined(USE_D400) || defined(USE_D400_LAKI)
-    send_byte[7] = 118; // cmd move rotate
-    #endif
+    QString platform_type = config->get_platform_type();
+    if(platform_type == "MECANUM")
+    {
+        send_byte[7] = 119; // cmd move rotate
+    }
+    else
+    {
+        send_byte[7] = 118; // cmd move rotate
+    }
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1365,7 +1377,7 @@ void MOBILE::stop()
     send_byte[7] = 20; // cmd stop
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.clear();
         msg_que.push(send_byte);
@@ -1388,7 +1400,7 @@ void MOBILE::led(int target, int mode)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1413,7 +1425,7 @@ void MOBILE::time_sync()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1437,7 +1449,7 @@ void MOBILE::robot_initialize()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1460,7 +1472,7 @@ void MOBILE::robot_request()
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1484,7 +1496,7 @@ void MOBILE::clearmismatch()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1508,7 +1520,7 @@ void MOBILE::clearoverspd()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1532,7 +1544,7 @@ void MOBILE::clearobs()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1557,7 +1569,7 @@ void MOBILE::clearfieldmis()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1582,7 +1594,7 @@ void MOBILE::clearinterlockstop()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1607,7 +1619,7 @@ void MOBILE::clearbumperstop()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1632,7 +1644,7 @@ void MOBILE::recover()
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1656,7 +1668,7 @@ void MOBILE::setlidarfield(unsigned int field)
     memcpy(&send_byte[8], &para1, 4); // param1 rad
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1688,7 +1700,7 @@ void MOBILE::set_limit_v_acc(double v, double a, double w, double b)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1721,7 +1733,7 @@ void MOBILE::set_limit_v_acc_jog(double v, double a, double w, double b)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1749,7 +1761,7 @@ void MOBILE::set_safety_v_acc_monitor(double v, double w)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1778,7 +1790,7 @@ void MOBILE::set_safety_v_acc(double v, double w)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1805,11 +1817,10 @@ void MOBILE::set_opmode(double opmode)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
-
 }
 
 void MOBILE::set_wheel(double w_s, double w_r)
@@ -1835,7 +1846,7 @@ void MOBILE::set_wheel(double w_s, double w_r)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1861,7 +1872,7 @@ void MOBILE::set_motor_onoff(double param)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1887,7 +1898,7 @@ void MOBILE::make_ref_offset(double param)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1913,7 +1924,7 @@ void MOBILE::set_detect_mode(double param)
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
@@ -1942,17 +1953,11 @@ void MOBILE::set_IO_output(unsigned char [])
 
     send_byte[24] = 0x25;
 
-    if(is_connected && config->USE_SIM == 0)
+    if(is_connected && !config->get_use_sim())
     {
         msg_que.push(send_byte);
     }
-
-    qDebug() << "sending..";
 }
-
-
-
-
 
 // send loop
 void MOBILE::send_loop()
@@ -1976,57 +1981,51 @@ void MOBILE::send_loop()
 
 int MOBILE::calc_battery_percentage(float voltage)
 {
-    if(config->PLATFORM_TYPE == "D400" || config->PLATFORM_TYPE == "MECANUM")
+    QString platform_type = config->get_platform_type();
+    if(platform_type == "D400" || platform_type == "MECANUM")
     {
-        float capacity = -1;
-        for (const auto& entry : voltage_lookup_table)
+        if(voltage <= voltage_lookup_table.front().voltage)
         {
-            if (voltage == entry.voltage)
-            {
-                capacity = entry.capacity;
-                break;
-            }
+            return voltage_lookup_table.front().capacity;
+        }
+        if(voltage >= voltage_lookup_table.back().voltage)
+        {
+            return voltage_lookup_table.back().capacity;
         }
 
-        if (capacity == -1)
+        for(int i = 0; i < voltage_lookup_table.size() - 1; i++)
         {
-            for (int i = 0; i < voltage_lookup_table.size() - 1; ++i)
+            float v1 = voltage_lookup_table[i].voltage;
+            float v2 = voltage_lookup_table[i+1].voltage;
+            if (voltage >= v1 && voltage <= v2)
             {
-                if (voltage > voltage_lookup_table[i].voltage && voltage < voltage_lookup_table[i + 1].voltage)
-                {
-                    double x1 = voltage_lookup_table[i].voltage;
-                    double y1 = voltage_lookup_table[i].capacity;
-                    double x2 = voltage_lookup_table[i + 1].voltage;
-                    double y2 = voltage_lookup_table[i + 1].capacity;
+                float c1 = voltage_lookup_table[i].capacity;
+                float c2 = voltage_lookup_table[i+1].capacity;
+                float ratio = (voltage - v1) / (v2 - v1 + 1e-6);
 
-                    capacity = static_cast<int>(y1 + (voltage - x1) * (y2 - y1) / (x2 - x1));
-                    break;
-                }
+                return static_cast<int>(c1 + ratio * (c2 - c1) + 0.5f);
             }
         }
-
-        return capacity;
-
+        return 0;
     }
-    else if(config->PLATFORM_TYPE == "S100")
+    else if(platform_type == "S100")
     {
-        if ((double)voltage >= S100_BAT_MAX_VOLTAGE)
+        if (voltage >= S100_BAT_MAX_VOLTAGE)
         {
             return 100;
         }
-
-        if ((double)voltage <= S100_BAT_MIN_VOLTAGE)
+        if (voltage <= S100_BAT_MIN_VOLTAGE)
         {
             return 0;
         }
+        double percentage = (voltage - S100_BAT_MIN_VOLTAGE) / (S100_BAT_MAX_VOLTAGE - S100_BAT_MIN_VOLTAGE + 1e-6) * 100.0;
 
-        int percentage = (int)(((double)voltage - S100_BAT_MIN_VOLTAGE) / (S100_BAT_MAX_VOLTAGE - S100_BAT_MIN_VOLTAGE + 1e-06) * 100.0);
-        return percentage;
+        return static_cast<int>(percentage + 0.5);
     }
     else
     {
-        printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", config->PLATFORM_TYPE.toStdString().c_str());
-        return -1;
+        printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", platform_type.toStdString().c_str());
+        return 0;
     }
 }
 

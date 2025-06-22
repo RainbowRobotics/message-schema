@@ -23,6 +23,7 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     loc(nullptr)
 {
     connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
+    connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -46,7 +47,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     CTRL_PARAM res;
 
     // read
-    QString preset_path = QCoreApplication::applicationDirPath() + "/configs/" + config->PLATFORM_NAME + "/preset_" + QString::number(preset) + ".json";
+    QString preset_path = QCoreApplication::applicationDirPath() + "/configs/" + config->get_platform_name() + "/preset_" + QString::number(preset) + ".json";
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
@@ -290,7 +291,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
 
     if(msg.command == "goal")
     {
-        if(is_rrs && config->USE_MULTI)
+        if(is_rrs && config->get_use_multi())
         {
             qDebug() << "[AUTO] req_path, move";
             set_multi_req("req_path");
@@ -306,6 +307,23 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     {
         qDebug() << "[AUTO] just change goal";
     }
+}
+
+void AUTOCONTROL::slot_path(DATA_PATH msg)
+{
+    const QString path_str = msg.path;
+    const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
+
+    std::vector<QString> path;
+    path.reserve(path_str_list.size());
+    for(const QString& path_item : path_str_list)
+    {
+        path.push_back(path_item);
+    }
+
+    const int preset = msg.preset;
+
+    move(path, preset);
 }
 
 void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
@@ -1501,7 +1519,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     // get global path segment
     std::vector<Eigen::Matrix4d> _path_pose;
     std::vector<Eigen::Vector3d> _path_pos;
-    int range = config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
+    int range = config->get_obs_local_goal_dist()/GLOBAL_PATH_STEP;
     int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
     int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
     for(int p = st_idx; p <= ed_idx; p++)
@@ -1550,7 +1568,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
 
         // check global path end
         double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
-        if(d < config->DRIVE_GOAL_D)
+        if(d < config->get_drive_goal_dist())
         {
             ref_v.back() = params.ED_V;
         }
@@ -1580,7 +1598,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
 
     // get local goal
-    int tgt_idx = cur_idx + config->OBS_LOCAL_GOAL_D/GLOBAL_PATH_STEP;
+    int tgt_idx = cur_idx + config->get_obs_local_goal_dist()/GLOBAL_PATH_STEP;
     if(tgt_idx > (int)global_path.pose.size()-1)
     {
         tgt_idx = global_path.pose.size()-1;
@@ -1597,7 +1615,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
             for(int q = 0; q <= range; q++)
             {
                 int i = p + q;
-                if(obsmap->is_tf_collision(global_path.pose[i], false, config->OBS_PATH_MARGIN_X, config->OBS_PATH_MARGIN_Y))
+                if(obsmap->is_tf_collision(global_path.pose[i], false, config->get_obs_path_margin_x(), config->get_obs_path_margin_y()))
                 {
                     is_collision = true;
                     break;
@@ -1675,12 +1693,6 @@ int AUTOCONTROL::is_everything_fine()
         logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
         return DRIVING_FAILED;
     }
-
-    // if(loc->is_qa == true)
-    // {
-    //     logger->write_log("[AUTO] qa working, auto-drive stop", "Red", true, false);
-    //     return DRIVING_FAILED;
-    // }
 
     MOBILE_STATUS ms = mobile->get_status();
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
@@ -1854,7 +1866,7 @@ void AUTOCONTROL::control_loop()
         Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*goal_tf);
         double err_d = calc_dist_2d(dxi);
         double err_th = std::abs(dxi[2]);
-        if(err_d < config->DRIVE_GOAL_D)
+        if(err_d < config->get_drive_goal_dist())
         {
             if(!global_path.is_final)
             {
@@ -1874,7 +1886,7 @@ void AUTOCONTROL::control_loop()
                 return;
             }
 
-            if(err_th < config->DRIVE_GOAL_TH*D2R)
+            if(err_th < config->get_drive_goal_th()*D2R)
             {
                 // final goal reached
                 mobile->move(0, 0, 0);
@@ -2032,7 +2044,7 @@ void AUTOCONTROL::control_loop()
             {
                 // clear avoid path
                 double goal_err_d = calc_dist_2d(avoid_path.pos.back() - goal_pos);
-                if(goal_err_d >= config->DRIVE_GOAL_D)
+                if(goal_err_d >= config->get_drive_goal_dist())
                 {
                     int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
                     if(avoid_idx > avoid_path.pos.size()*0.9)
@@ -2105,7 +2117,7 @@ void AUTOCONTROL::control_loop()
             }
 
             // goal check
-            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
+            if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
             {
                 extend_dt = 0;
                 pre_err_th = 0;
@@ -2135,7 +2147,7 @@ void AUTOCONTROL::control_loop()
             }
 
             // obs check
-            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->OBS_PREDICT_TIME, cur_tf);
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
             cur_obs_val = obsmap->is_path_collision(traj, true);
             if(cur_obs_val != OBS_NONE)
             {
@@ -2180,12 +2192,12 @@ void AUTOCONTROL::control_loop()
             {
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
                 double v0 = cur_vel[0];
-                double v = saturation(config->DRIVE_GOAL_APPROACH_GAIN*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
+                double v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
                 v = saturation(v, -params.ED_V, params.ED_V);
                 mobile->move(v, 0, 0);
 
                 extend_dt += dt;
-                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                if(extend_dt > config->get_drive_extended_control_time())
                 {
                     double goal_err_d = calc_dist_2d(_goal_pos);
 
@@ -2287,15 +2299,15 @@ void AUTOCONTROL::control_loop()
 
             // obs decel
             QString _obs_condition = "none";
-            double obs_v = config->OBS_MAP_MIN_V;
-            for(double vv = config->OBS_MAP_MIN_V; vv <= params.LIMIT_V+0.01; vv += 0.025)
+            double obs_v = config->get_obs_map_min_v();
+            for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->OBS_PREDICT_TIME, cur_tf);
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
 
                 bool is_collision = false;
                 for(size_t p = 0; p < traj.size(); p++)
                 {
-                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->OBS_SAFE_MARGIN_X, config->OBS_SAFE_MARGIN_Y);
+                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
                     if(cur_obs_val != OBS_NONE)
                     {
                         is_collision = true;
@@ -2314,7 +2326,7 @@ void AUTOCONTROL::control_loop()
 
             // obs stop
             {
-                int chk_idx = cur_idx + config->OBS_DEADZONE/LOCAL_PATH_STEP;
+                int chk_idx = cur_idx + config->get_obs_deadzone()/LOCAL_PATH_STEP;
                 if(chk_idx > (int)local_path.pos.size()-1)
                 {
                     chk_idx = local_path.pos.size()-1;
@@ -2365,7 +2377,7 @@ void AUTOCONTROL::control_loop()
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
             v = saturation(v, 0.0, obs_v);
-            v = saturation(v, v0 - config->MOTOR_LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
             double th = (params.DRIVE_A * err_th)
@@ -2386,14 +2398,14 @@ void AUTOCONTROL::control_loop()
             w *= scale_w;
 
             // deadzone v
-            double d_v = config->DRIVE_V_DEADZONE;
+            double d_v = config->get_drive_v_deadzone();
             if(std::abs(v) < d_v)
             {
                 v = sgn(v)*d_v;
             }
 
             // deadzone w
-            double d_w = config->DRIVE_W_DEADZONE*D2R;
+            double d_w = config->get_drive_w_deadzone()*D2R;
             if(std::abs(w) < d_w)
             {
                 w = 0;
@@ -2420,10 +2432,10 @@ void AUTOCONTROL::control_loop()
             }
 
             // goal check
-            if(std::abs(err_th) < config->DRIVE_GOAL_TH*D2R)
+            if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
             {
                 extend_dt += dt;
-                if(extend_dt > config->DRIVE_EXTENDED_CONTROL_TIME)
+                if(extend_dt > config->get_drive_extended_control_time())
                 {
                     mobile->move(0, 0, 0);
                     is_moving = false;
@@ -2499,7 +2511,7 @@ void AUTOCONTROL::control_loop()
                     // for mobile server
                     set_obs_condition("near");
 
-                    if(config->OBS_AVOID == 0)
+                    if(config->get_obs_avoid_mode() == 0)
                     {
                         // mode 0, just wait
                         obs_wait_st_time = get_time();
@@ -2622,8 +2634,11 @@ void AUTOCONTROL::control_loop()
                     }
                 }
 
-                double margin_d = std::sqrt(config->OBS_SAFE_MARGIN_X*config->OBS_SAFE_MARGIN_X + config->OBS_SAFE_MARGIN_Y*config->OBS_SAFE_MARGIN_Y);
-                if(max_d > config->ROBOT_RADIUS + margin_d)
+                double margin_dx = config->get_obs_safe_margin_x();
+                double margin_dy = config->get_obs_safe_margin_y();
+
+                double margin_d = std::sqrt(margin_dx*margin_dx+ margin_dy*margin_dy);
+                if(max_d > config->get_robot_radius() + margin_d)
                 {
                     mobile->move(0, 0, 0);
                     obs_state = AUTO_OBS_AVOID;
@@ -2719,7 +2734,7 @@ void AUTOCONTROL::control_loop()
                 double v = -0.1*sgn(min_pt[0]);
 
                 // check
-                if(min_d >= config->ROBOT_RADIUS + 0.05 || get_time() - obs_wait_st_time > 0.5)
+                if(min_d >= config->get_robot_radius() + 0.05 || get_time() - obs_wait_st_time > 0.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;

@@ -38,7 +38,14 @@ LIDAR_3D::~LIDAR_3D()
 
 void LIDAR_3D::init()
 {
-    if(config->LIDAR_3D_TYPE == "LIVOX")
+    // check simulation mode
+    if(config->get_use_sim())
+    {
+        printf("[LIDAR_3D] simulation mode\n");
+        return;
+    }
+
+    if(config->get_lidar_3d_type() == "LIVOX")
     {
         if(livox == nullptr)
         {
@@ -54,6 +61,13 @@ void LIDAR_3D::init()
 
 void LIDAR_3D::open()
 {
+    // check simulation mode
+    if(config->get_use_sim())
+    {
+        printf("[LIDAR_3D] simulation mode\n");
+        return;
+    }
+
     printf("[LIDAR_3D] open\n");
 
     // stop first
@@ -80,12 +94,9 @@ void LIDAR_3D::close()
     for(int idx = 0; idx < lidar_num; idx++)
     {
         deskewing_flag[idx] = false;
-        if(deskewing_thread[idx] && deskewing_thread[idx]->joinable())
-        {
-            deskewing_thread[idx]->join();
-        }
-        deskewing_thread[idx].reset();
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     merge_flag = false;
     if(merge_thread && merge_thread->joinable())
@@ -93,12 +104,21 @@ void LIDAR_3D::close()
         merge_thread->join();
     }
     merge_thread.reset();
+
+    for(int idx = 0; idx < lidar_num; idx++)
+    {
+        if(deskewing_thread[idx] && deskewing_thread[idx]->joinable())
+        {
+            deskewing_thread[idx]->join();
+        }
+        deskewing_thread[idx].reset();
+    }
 }
 
 LVX_FRM LIDAR_3D::get_cur_raw(int idx)
 {
     LVX_FRM res;
-    if(config->LIDAR_3D_TYPE == "LIVOX" && livox != nullptr)
+    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
     {
         res = livox->get_cur_raw(idx);
     }
@@ -119,7 +139,7 @@ bool LIDAR_3D::get_is_sync()
 IMU LIDAR_3D::get_cur_imu(int idx)
 {
     IMU res;
-    if(config->LIDAR_3D_TYPE == "LIVOX" && livox != nullptr)
+    if(config->get_lidar_3d_type() == "LIVOX" && livox != nullptr)
     {
         res = livox->get_cur_imu(idx);
     }
@@ -319,9 +339,10 @@ void LIDAR_3D::deskewing_loop(int idx)
 void LIDAR_3D::merge_loop()
 {
     // 10ms
+    const int lidar_3d_num = config->get_lidar_3d_num();
     double timeout = 0.05;
     double wait_timeout = 0.15;
-    double last_recv_t[config->LIDAR_3D_NUM];
+    double last_recv_t[lidar_3d_num];
 
     std::vector<TIME_PTS> storage[2];
 
@@ -332,7 +353,7 @@ void LIDAR_3D::merge_loop()
         merge_frm.pts.clear();
 
         // set storage
-        if(config->LIDAR_3D_NUM == 1)
+        if(lidar_3d_num == 1)
         {
             TIME_PTS frm;
             if(deskewing_que[0].try_pop(frm))
@@ -354,7 +375,7 @@ void LIDAR_3D::merge_loop()
         }
         else if((livox->time_type[0].load() == 1 && livox->time_type[1].load() == 1))
         {
-            for(int idx = 0; idx < config->LIDAR_3D_NUM; idx++)
+            for(int idx = 0; idx < lidar_3d_num; idx++)
             {
                 TIME_PTS frm;
                 if(deskewing_que[idx].try_pop(frm))

@@ -16,8 +16,6 @@ struct DATA_MOVE
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
     Eigen::Vector3d jog_val; // vx, vy, wz
 
-    QString escape_dir; // BL, BR, FL, FR, OR, OF, OB
-
     double remaining_dist;
     double eta; // estimated time of arrival
     int bat_percent; // battery percentage
@@ -38,8 +36,6 @@ struct DATA_MOVE
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
-
-        escape_dir = "";
 
         remaining_dist = 0.0;
         eta = 9999.0;
@@ -62,7 +58,6 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
-        escape_dir = p.escape_dir;
 
         eta = p.eta;
         bat_percent = p.bat_percent;
@@ -84,7 +79,6 @@ struct DATA_MOVE
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
-        escape_dir = p.escape_dir;
 
         eta = p.eta;
         bat_percent = p.bat_percent;
@@ -562,6 +556,43 @@ struct DATA_VOBS
     }
 };
 
+struct DATA_SOFTWARE
+{
+    double time;
+    QString version;
+
+    QString result;
+    QString message;
+
+    DATA_SOFTWARE()
+    {
+        time = 0.0;
+        version = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_SOFTWARE(const DATA_SOFTWARE& p)
+    {
+        time = p.time;
+        version = p.version;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_SOFTWARE& operator=(const DATA_SOFTWARE& p)
+    {
+        time = p.time;
+        version = p.version;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
 Q_DECLARE_METATYPE(DATA_MOVE)
 Q_DECLARE_METATYPE(DATA_LOCALIZATION)
 Q_DECLARE_METATYPE(DATA_LOAD)
@@ -574,5 +605,6 @@ Q_DECLARE_METATYPE(DATA_LED)
 Q_DECLARE_METATYPE(DATA_MOTOR)
 Q_DECLARE_METATYPE(DATA_PATH)
 Q_DECLARE_METATYPE(DATA_VOBS)
+Q_DECLARE_METATYPE(DATA_SOFTWARE)
 
 #endif // COMM_DATA_H

@@ -28,12 +28,12 @@ SIM::SIM(QObject *parent) : QObject{parent},
 
 SIM::~SIM()
 {
-    a_flag = false;
-    if(a_thread && a_thread->joinable())
+    simulation_flag = false;
+    if(simulation_thread && simulation_thread->joinable())
     {
-        a_thread->join();
+        simulation_thread->join();
     }
-    a_thread.reset();
+    simulation_thread.reset();
 }
 
 void SIM::set_cur_tf(Eigen::Matrix4d tf)
@@ -51,21 +51,21 @@ Eigen::Matrix4d SIM::get_cur_tf()
 
 void SIM::start()
 {
-    a_flag = true;
-    a_thread = std::make_unique<std::thread>(&SIM::a_loop, this);
+    simulation_flag = true;
+    simulation_thread = std::make_unique<std::thread>(&SIM::simulation_loop, this);
 }
 
 void SIM::stop()
 {
-    a_flag = false;
-    if(a_thread && a_thread->joinable())
+    simulation_flag = false;
+    if(simulation_thread && simulation_thread->joinable())
     {
-        a_thread->join();
+        simulation_thread->join();
     }
-    a_thread.reset();
+    simulation_thread.reset();
 }
 
-void SIM::a_loop()
+void SIM::simulation_loop()
 {
     const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
@@ -76,7 +76,7 @@ void SIM::a_loop()
 
     Eigen::Matrix4d _cur_tf = get_cur_tf();
 
-    printf("[SIM] a_loop start\n");
+    printf("[SIM] simultation_loop start\n");
 
     const double motor_limit_v = config->get_motor_limit_v();
     const double motor_limit_w = config->get_motor_limit_w()*D2R;
@@ -85,7 +85,7 @@ void SIM::a_loop()
     const double motor_limit_w_acc = config->get_motor_limit_w_acc()*D2R;
 
     int cnt = 0;
-    while(a_flag)
+    while(simulation_flag)
     {
         cnt++;
         double sim_t = get_time();
@@ -153,7 +153,7 @@ void SIM::a_loop()
         }
         pre_loop_time = get_time();
     }
-    printf("[SIM] a_loop stop\n");
+    printf("[SIM] simulation_loop stop\n");
 }
 
 double SIM::calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol)
