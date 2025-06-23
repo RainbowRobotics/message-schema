@@ -1163,7 +1163,7 @@ void MainWindow::bt_AutoMove()
     if(pick.cur_node != "")
     {
         NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-        if(node != NULL)
+        if(node)
         {
             Eigen::Vector3d xi = TF_to_se2(node->tf);
 
@@ -1625,8 +1625,7 @@ void MainWindow::plot_map()
         // 2D map plot
         {
             auto kdtree_cloud = UNIMAP::instance()->get_kdtree_cloud();
-            auto kdtree_mask = UNIMAP::instance()->get_kdtree_mask();
-            if(kdtree_cloud && kdtree_mask)
+            if(kdtree_cloud)
             {
                 const int sampling_size = 4;
 
@@ -1634,10 +1633,6 @@ void MainWindow::plot_map()
                 cloud->reserve(kdtree_cloud->pts.size() / sampling_size);
                 for(size_t p = 0; p < kdtree_cloud->pts.size(); p += sampling_size) // sampling
                 {
-                    if((*kdtree_mask)[p] == 0)
-                    {
-                        continue;
-                    }
 
                     pcl::PointXYZRGB pt;
                     pt.x = kdtree_cloud->pts[p].x;
@@ -2092,7 +2087,7 @@ void MainWindow::plot_info()
     // 3d lidar info
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-        ui->lb_LidarInfo_3D->setText(LIDAR_2D::instance()->get_info_text());
+        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
     }
 
     // plot auto info
@@ -2107,7 +2102,7 @@ void MainWindow::plot_info()
                               AUTOCONTROL::instance()->get_is_pause() ? "1" : "0",
                               AUTOCONTROL::instance()->get_obs_condition().toLocal8Bit().data(),
                               CONFIG::instance()->get_use_multi(),
-                              AUTOCONTROL::instance()->get_multi_req().toLocal8Bit().data(),
+                              AUTOCONTROL::instance()->get_multi_reqest_state().toLocal8Bit().data(),
                               _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
     }
@@ -2799,7 +2794,7 @@ void MainWindow::plot_ctrl()
 
     // plot goal info
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
-                                                        arg(AUTOCONTROL::instance()->get_cur_goal_state()));
+                                                        arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
 
 void MainWindow::plot_loop()

@@ -9,8 +9,6 @@ class DOCKCONTROL : public QObject
 public:
     explicit DOCKCONTROL(QObject *parent = nullptr);
 
-
-
 };
 
 #endif // DOCKCONTROL_H

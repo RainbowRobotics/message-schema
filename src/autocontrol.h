@@ -31,7 +31,7 @@ public:
     // make singleton
     static AUTOCONTROL* instance(QObject* parent = nullptr);
 
-    // initialization control module
+    // init control module
     void init();
 
     // stop control loop
@@ -40,28 +40,27 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    int get_fsm_state();
-    PATH get_cur_global_path();
-    PATH get_cur_local_path();
-    QString get_cur_node_id();
-    QString get_multi_req();
-    QString get_obs_condition();
-    QString get_cur_goal_state();
-    DATA_MOVE get_cur_move_info();
-    Eigen::Vector3d get_last_cur_pos();
-    Eigen::Vector3d get_last_tgt_pos();
-    Eigen::Vector3d get_last_local_goal();
-    bool get_is_moving();
-    bool get_is_pause();
-    bool get_is_debug();
+    int get_fsm_state();                    // get current Finit State Machine state
+    bool get_is_debug();                    // check if debug
+    bool get_is_pause();                    // check if paused
+    bool get_is_moving();                   // check if moving
+    PATH get_cur_global_path();             // get current global path
+    PATH get_cur_local_path();              // get current local path
+    QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
+    QString get_obs_condition();            // get current obstacle condition (none, near, far, vir)
+    QString get_cur_move_state();           // get current move state (none, move, complete, fail, obstacle, cancel)
+    DATA_MOVE get_cur_move_info();          // get last received move msg
+    Eigen::Vector3d get_last_cur_pos();     // get last current pos
+    Eigen::Vector3d get_last_tgt_pos();     // get last target pos
+    Eigen::Vector3d get_last_local_goal();  // get last local goal
 
+    void set_is_rrs(bool flag);
+    void set_is_pause(bool val);
+    void set_is_debug(bool val);
+    void set_is_moving(bool val);
     void set_multi_req(QString str);
     void set_obs_condition(QString str);
     void set_cur_goal_state(QString str);
-    void set_is_rrs(bool flag);
-    void set_is_moving(bool val);
-    void set_is_pause(bool val);
-    void set_is_debug(bool val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
@@ -177,10 +176,10 @@ private:
     std::unique_ptr<std::thread> obs_thread;
     void obs_loop();
 
+    // for plot
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
-    QString last_node_id = "";
 
     tbb::concurrent_queue<PATH> global_path_que;
 
@@ -196,7 +195,7 @@ private:
     DATA_MOVE cur_move_info;
     QString cur_multi_req     = "none"; // none, req_path, recv_path
     QString cur_obs_condition = "none"; // none, near, far, vir
-    QString cur_goal_state    = "none"; // none, move, complete, fail, obstacle, cancel
+    QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
     PATH cur_global_path;
     PATH cur_local_path;
 

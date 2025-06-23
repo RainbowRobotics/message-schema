@@ -174,21 +174,18 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     const double obsmap_min_z = config->get_obs_map_min_z();
     const double obsmap_max_z = config->get_obs_map_max_z();
 
-    // raw data to range data - 최적화
     const double step = 0.25*D2R;
     const double lidar_max_range = (config->get_loc_mode() == "2D") ? config->get_lidar_2d_max_range() : config->get_lidar_3d_max_range();
     const size_t range_data_size = static_cast<size_t>((2*M_PI)/step);
     
     std::vector<double> range_data(range_data_size, lidar_max_range);
     
-    // 포인트 처리 최적화 - 범위 체크를 먼저 수행
     const size_t pts_size = tpp.pts.size();
     for(size_t p = 0; p < pts_size; p++)
     {
-        const auto& pt = tpp.pts[p]; // 참조로 접근
+        const auto& pt = tpp.pts[p];
         const double z = pt[2];
         
-        // Z 범위 체크를 먼저 수행하여 불필요한 계산 방지
         if(z < obsmap_min_z || z > obsmap_max_z)
         {
             continue;
@@ -209,7 +206,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // pts 벡터 생성 최적화 - 크기 예약
     std::vector<Eigen::Vector3d> pts;
     pts.reserve(range_data_size);
     
@@ -219,16 +215,14 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         const double th = p*step - M_PI;
         const double x = d*std::cos(th);
         const double y = d*std::sin(th);
-        pts.emplace_back(x, y, 0); // emplace_back 사용으로 복사 최소화
+        pts.emplace_back(x, y, 0);
     }
 
-    // update octomap - 최적화
     octomap::Pointcloud cloud;
-    cloud.reserve(pts.size()); // 크기 예약
+    cloud.reserve(pts.size());
     
-    for(const auto& pt : pts) // 범위 기반 for 루프 사용
+    for(const auto& pt : pts)
     {
-        // local to global - 블록 접근 최적화
         const Eigen::Vector3d _P = cur_tf.block<3,3>(0,0)*pt + cur_tf.block<3,1>(0,3);
         cloud.push_back(_P[0], _P[1], 0);
     }
@@ -239,14 +233,12 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
     }
 
-    // calc grid map - 최적화
     octomap::point3d bbx_min(cur_tf(0,3) - obsmap_range, cur_tf(1,3) - obsmap_range, -obsmap_range);
     octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range, obsmap_range);
 
     std::vector<Eigen::Vector4d> global_obs_pts;
     std::vector<Eigen::Vector2d> local_obs_pts;
     
-    // 벡터 크기 예약 (대략적인 추정)
     const size_t estimated_octree_points = static_cast<size_t>((2*obsmap_range/0.05) * (2*obsmap_range/0.05));
     global_obs_pts.reserve(estimated_octree_points);
     local_obs_pts.reserve(estimated_octree_points);
@@ -285,7 +277,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
     }
 
-    // make wall map - 최적화
     cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
     const double* map_ptr;
     uchar* wall_ptr;
@@ -451,38 +442,31 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         _dynamic_map = _dynamic_map2;
     }
 
-    // single point filtering - OpenCV morphology 연산으로 최적화
+    // single point filtering
     {
-        // 3x3 커널 생성
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
         
-        // 각 맵에 대해 단일 픽셀 필터링
         cv::Mat wall_eroded, static_eroded, dynamic_eroded;
         cv::Mat wall_dilated, static_dilated, dynamic_dilated;
         
-        // Erode 연산으로 3x3 윈도우에서 1개만 있는 픽셀 찾기
         cv::erode(_wall_map, wall_eroded, kernel);
         cv::erode(_static_map, static_eroded, kernel);
         cv::erode(_dynamic_map, dynamic_eroded, kernel);
         
-        // Dilate 연산으로 3x3 윈도우에서 1개만 있는 픽셀 찾기
         cv::dilate(_wall_map, wall_dilated, kernel);
         cv::dilate(_static_map, static_dilated, kernel);
         cv::dilate(_dynamic_map, dynamic_dilated, kernel);
         
-        // 단일 픽셀 마스크 생성 (erode와 dilate가 같으면 단일 픽셀)
         cv::Mat wall_single_mask, static_single_mask, dynamic_single_mask;
         cv::compare(wall_eroded, wall_dilated, wall_single_mask, cv::CMP_EQ);
         cv::compare(static_eroded, static_dilated, static_single_mask, cv::CMP_EQ);
         cv::compare(dynamic_eroded, dynamic_dilated, dynamic_single_mask, cv::CMP_EQ);
         
-        // 원본 맵과 AND 연산하여 단일 픽셀만 선택
         cv::Mat wall_single_pixels, static_single_pixels, dynamic_single_pixels;
         cv::bitwise_and(_wall_map, wall_single_mask, wall_single_pixels);
         cv::bitwise_and(_static_map, static_single_mask, static_single_pixels);
         cv::bitwise_and(_dynamic_map, dynamic_single_mask, dynamic_single_pixels);
         
-        // 단일 픽셀을 0으로 설정
         cv::subtract(_wall_map, wall_single_pixels, _wall_map);
         cv::subtract(_static_map, static_single_pixels, _static_map);
         cv::subtract(_dynamic_map, dynamic_single_pixels, _dynamic_map);
@@ -537,7 +521,6 @@ void OBSMAP::update_vobs_map()
     }
     cur_tf_inv = cur_tf.inverse();
 
-    // 스레드 안전한 데이터 복사 - 참조로 복사하여 메모리 효율성 향상
     std::vector<Eigen::Vector3d> vobs_list_robots_copy, vobs_list_closures_copy;
     {
         std::shared_lock<std::shared_mutex> lock(mtx);
@@ -545,13 +528,11 @@ void OBSMAP::update_vobs_map()
         vobs_list_closures_copy = vobs_list_closures;
     }
 
-    // 전체 크기 예측하여 메모리 예약
     size_t total_robots_size = vobs_list_robots_copy.size();
     size_t total_closures_size = vobs_list_closures_copy.size();
     
-    // 예상 크기 계산 (대략적인 추정)
     double y_max = config->get_robot_size_y_max();
-    size_t estimated_pts_per_robot = static_cast<size_t>(M_PI * y_max * y_max * 4); // 원형 영역 추정
+    size_t estimated_pts_per_robot = static_cast<size_t>(M_PI * y_max * y_max * 4);
     
     std::vector<Eigen::Vector3d> _vir_pts;
     std::vector<Eigen::Vector3d> _vir_closure_pts;
@@ -569,7 +550,6 @@ void OBSMAP::update_vobs_map()
         std::vector<std::vector<Eigen::Vector3d>> local_closure_pts(num_threads);
         std::vector<std::vector<cv::Point>> local_pixels(num_threads);
         
-        // 각 스레드별 벡터 크기 예약
         size_t pts_per_thread = list.size() / num_threads + 1;
         for(int tid = 0; tid < num_threads; ++tid)
         {
@@ -581,23 +561,20 @@ void OBSMAP::update_vobs_map()
             local_pixels[tid].reserve(pts_per_thread * estimated_pts_per_robot);
         }
 
-        // 변환 행렬을 미리 계산 - 블록 접근을 한 번만 수행
         const Eigen::Matrix3d R_inv = cur_tf_inv.block<3,3>(0,0);
         const Eigen::Vector3d t_inv = cur_tf_inv.block<3,1>(0,3);
 
-        // OpenMP 최적화 - 스케줄링 추가
         #pragma omp parallel for num_threads(num_threads) schedule(dynamic, 1)
         for(int i = 0; i < static_cast<int>(list.size()); i++)
         {
             int tid = omp_get_thread_num();
             if(tid >= 0 && tid < num_threads)
             {
-                const Eigen::Vector3d& center = list[i]; // 참조로 접근
+                const Eigen::Vector3d& center = list[i];
 
                 auto pts = circle_iterator_3d(center, y_max);
                 pts.push_back(center);
 
-                // 벡터 크기 예약으로 재할당 최소화
                 local_pts[tid].reserve(local_pts[tid].size() + pts.size());
                 if(is_closure)
                 {
@@ -613,7 +590,6 @@ void OBSMAP::update_vobs_map()
                         local_closure_pts[tid].push_back(pt);
                     }
 
-                    // 미리 계산된 변환 행렬 사용 - 블록 접근 없음
                     const Eigen::Vector3d _P = R_inv * pt + t_inv;
                     const cv::Vec2i uv = xy_uv(_P[0], _P[1]);
                     if(uv[0] >= 0 && uv[0] < w && uv[1] >= 0 && uv[1] < h)
@@ -638,7 +614,6 @@ void OBSMAP::update_vobs_map()
                                       std::make_move_iterator(local_closure_pts[tid].end()));
             }
 
-            // 픽셀 설정 최적화 - 범위 체크 제거 (이미 위에서 체크됨)
             for(const auto& px : local_pixels[tid])
             {
                 _virtual_map.ptr<uchar>(px.y)[px.x] = 255;
@@ -646,7 +621,6 @@ void OBSMAP::update_vobs_map()
         }
     };
 
-    // 두 리스트를 순차적으로 처리
     if(!vobs_list_robots_copy.empty())
     {
         process_vobs(vobs_list_robots_copy, false);
@@ -657,12 +631,11 @@ void OBSMAP::update_vobs_map()
         process_vobs(vobs_list_closures_copy, true);
     }
 
-    // 데이터 업데이트 - move semantics 사용
     {
         std::unique_lock<std::shared_mutex> lock(mtx);
         vir_pts = std::move(_vir_pts);
         vir_closure_pts = std::move(_vir_closure_pts);
-        virtual_map = std::move(_virtual_map); // clone() 대신 move 사용
+        virtual_map = std::move(_virtual_map);
     }
 
     // signal for redrawing

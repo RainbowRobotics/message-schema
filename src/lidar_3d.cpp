@@ -279,7 +279,7 @@ void LIDAR_3D::deskewing_loop(int idx)
     printf("[LIDAR_3D] dsk_loop[%d] start\n", idx);
     while(deskewing_flag[idx])
     {
-        if(!is_connected && !livox->get_is_connected(idx))
+        if(!is_connected)
         {
             is_connected = true;
             livox->set_is_connected(idx, true);

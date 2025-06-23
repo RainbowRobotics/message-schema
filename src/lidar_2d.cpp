@@ -47,7 +47,7 @@ void LIDAR_2D::init()
 
     if(config->get_lidar_2d_type() == "SICK")
     {
-        if(sick == nullptr)
+        if(!sick)
         {
             SICK::instance(this);
 

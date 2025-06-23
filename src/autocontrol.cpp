@@ -132,17 +132,10 @@ PATH AUTOCONTROL::get_cur_local_path()
     return res;
 }
 
-QString AUTOCONTROL::get_cur_node_id()
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    QString res = last_node_id;
-    return res;
-}
-
 void AUTOCONTROL::set_cur_goal_state(QString str)
 {
     std::lock_guard<std::mutex> lock(mtx);
-    cur_goal_state = str;
+    cur_move_state = str;
 }
 
 void AUTOCONTROL::set_is_rrs(bool val)
@@ -165,10 +158,10 @@ void AUTOCONTROL::set_is_debug(bool val)
     is_debug.store(val);
 }
 
-QString AUTOCONTROL::get_cur_goal_state()
+QString AUTOCONTROL::get_cur_move_state()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    QString res = cur_goal_state;
+    QString res = cur_move_state;
     return res;
 }
 
@@ -218,7 +211,7 @@ void AUTOCONTROL::set_obs_condition(QString str)
     cur_obs_condition = str;
 }
 
-QString AUTOCONTROL::get_multi_req()
+QString AUTOCONTROL::get_multi_reqest_state()
 {
     std::lock_guard<std::mutex> lock(mtx);
     QString res = cur_multi_req;
@@ -278,7 +271,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
     {
         NODE* node = unimap->get_node_by_id(msg.goal_node_id);
-        if(node != NULL)
+        if(node)
         {
             msg.goal_node_name = node->name;
         }
@@ -695,7 +688,7 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     {
         QString node_id = node_path[p];
         NODE* node = unimap->get_node_by_id(node_id);
-        if(node == NULL)
+        if(!node)
         {
             logger->write_log(QString("[AUTO] %s: node null").arg(node_id));
             return PATH();

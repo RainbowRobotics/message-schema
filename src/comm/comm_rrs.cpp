@@ -603,7 +603,7 @@ void COMM_RRS::send_move_status()
     // Creating the JSON object
     QJsonObject rootObj;
 
-    QString cur_node_id0 = ctrl->get_cur_node_id();
+    QString cur_node_id = loc->get_cur_node_id();
 
     // Adding the move state object
     QString auto_state = "stop";
@@ -631,7 +631,7 @@ void COMM_RRS::send_move_status()
         auto_state = "vir";
     }
 
-    if(cur_node_id0.isEmpty())
+    if(cur_node_id.isEmpty())
     {
         auto_state = "error";
     }
@@ -645,7 +645,7 @@ void COMM_RRS::send_move_status()
     moveStateObj["dock_move"] = dock_state;
     moveStateObj["jog_move"] = jog_state;
     moveStateObj["obs"] = ctrl->get_obs_condition();
-    moveStateObj["path"] = ctrl->get_multi_req(); // "none", "req_path", "recv_path"
+    moveStateObj["path"] = ctrl->get_multi_reqest_state(); // "none", "req_path", "recv_path"
     rootObj["move_state"] = moveStateObj;
 
     // Adding the pose object
@@ -666,7 +666,6 @@ void COMM_RRS::send_move_status()
     rootObj["vel"] = velObj;
 
     // Adding the cur_node object
-    QString cur_node_id = ctrl->get_cur_node_id();
     QString cur_node_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
     {
@@ -687,7 +686,7 @@ void COMM_RRS::send_move_status()
     rootObj["cur_node"] = curNodeObj;
 
     // Adding the goal_node object
-    QString goal_state = ctrl->get_cur_goal_state();
+    QString goal_state = ctrl->get_cur_move_state();
     QString goal_node_id = ctrl->get_cur_move_info().goal_node_id;
     QString goal_node_name = "";
     Eigen::Vector3d goal_xi(0, 0, 0);

@@ -48,6 +48,7 @@ public:
     bool get_is_busy();                                 // check if semiauto init busy
     QString get_cur_loc_state();                        // get localization state (none, fail, good)
     QString get_info_text();                            // get all localization info
+    QString get_cur_node_id();                          // get current node id
     Eigen::Matrix4d get_cur_tf();                       // get current tf (4x4 matrix)
     Eigen::Matrix4d get_best_tf(double t);              // get nearest time tf (4x4 matrix)
     Eigen::Vector2d get_cur_ieir();                     // get cur inlier error, inlier ratio
@@ -124,7 +125,7 @@ private:
     Eigen::Vector2d cur_ieir;
     std::atomic<double> cur_tf_err = {0};
     QString cur_loc_state = "none";
-    QString last_node_id = "";
+    QString cur_node_id = "";
 
     // for loc
     std::vector<TIME_POSE> tp_storage;

@@ -35,11 +35,12 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    QString get_info_text();
-    QString get_cur_state();
-    TIME_IMG get_time_img(int idx);
-    TIME_PTS get_scan(int idx);
+    QString get_info_text();            // get all cam info
+    QString get_cur_state();            // get current state
+    TIME_IMG get_time_img(int idx);     // get current image (with time)
+    TIME_PTS get_scan(int idx);         // get current depth (with time)
 
+    // interface func (set)
     void set_cur_state(QString str);
     void set_sync_flag(bool flag);
     void set_is_connected(bool val);

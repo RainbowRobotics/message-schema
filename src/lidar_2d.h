@@ -37,13 +37,15 @@ public:
     void close();
 
     /***********************
-     * interface funcs
+     * interface funcs (get)
      ***********************/
     RAW_FRAME get_cur_raw(int idx);
     QString get_info_text();
     QString get_cur_state();
-    bool get_is_connected();
     bool get_is_sync();
+    bool get_is_connected();
+
+    // interface funcs (set)
     void set_cur_state(QString str);
     void set_sync_flag(bool flag);
     void set_is_connected(bool val);

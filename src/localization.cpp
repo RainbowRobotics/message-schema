@@ -207,6 +207,12 @@ QString LOCALIZATION::get_info_text()
     return str;
 }
 
+QString LOCALIZATION::get_cur_node_id()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return cur_node_id;
+}
+
 bool LOCALIZATION::get_is_loc()
 {
     return (bool)is_loc.load();
@@ -341,7 +347,7 @@ void LOCALIZATION::localization_loop_2d()
             // initial guess
             Eigen::Matrix4d G = get_cur_tf();
 
-            auto kdtree_index = unimap->get_kdtree_index();
+            auto kdtree_index = unimap->get_kdtree_cloud_index();
             auto kdtree_cloud = unimap->get_kdtree_cloud();
 
             // icp
@@ -777,7 +783,7 @@ void LOCALIZATION::node_loop()
 
                 // update
                 std::lock_guard<std::mutex> lock(mtx);
-                last_node_id = pre_node_id;
+                cur_node_id = pre_node_id;
             }
             else
             {
@@ -794,7 +800,7 @@ void LOCALIZATION::node_loop()
 
                             // update
                             std::lock_guard<std::mutex> lock(mtx);
-                            last_node_id = pre_node_id;
+                            cur_node_id = pre_node_id;
                         }
                     }
                 }

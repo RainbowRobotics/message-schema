@@ -1982,7 +1982,7 @@ void MOBILE::send_loop()
 int MOBILE::calc_battery_percentage(float voltage)
 {
     QString platform_type = config->get_platform_type();
-    if(platform_type == "D400" || platform_type == "MECANUM")
+    if(platform_type == "D400" || platform_type == "MECANUM" || platform_type == "SEM")
     {
         if(voltage <= voltage_lookup_table.front().voltage)
         {
@@ -2024,7 +2024,7 @@ int MOBILE::calc_battery_percentage(float voltage)
     }
     else
     {
-        printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", platform_type.toStdString().c_str());
+        //printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", platform_type.toStdString().c_str());
         return 0;
     }
 }
