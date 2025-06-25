@@ -37,8 +37,12 @@ void LIVOX::open()
     {
         QString tf_str = config->get_lidar_3d_tf(i);
         pts_tf[i] = string_to_TF(tf_str);
+        pts_R[i] = pts_tf[i].block(0,0,3,3);
+        pts_t[i] = pts_tf[i].block(0,3,3,1);
         // imu_tf[i] = string_to_TF(config->LIDAR_IMU_TF[i]);
         imu_tf[i] = string_to_TF(tf_str);
+        imu_R[i] = imu_tf[i].block(0,0,3,3);
+        imu_t[i] = imu_tf[i].block(0,3,3,1);
     }
 
     printf("[LIVOX] init\n");
@@ -66,7 +70,7 @@ QString LIVOX::get_info_text(int idx)
 
     IMU imu;
     {
-        std::shared_lock<std::shared_mutex> lock(mtx);
+        std::shared_lock<std::shared_mutex> lock(lidar_mtx);
         imu = cur_imu[idx];
     }
 
@@ -81,21 +85,21 @@ QString LIVOX::get_info_text(int idx)
 
 LVX_FRM LIVOX::get_cur_raw(int idx)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(lidar_mtx);
     LVX_FRM res = cur_raw[idx];
     return res;
 }
 
 IMU LIVOX::get_cur_imu(int idx)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(imu_mtx);
     IMU res = cur_imu[idx];
     return res;
 }
 
 std::vector<IMU> LIVOX::get_imu_storage(int idx)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(imu_mtx);
     std::vector<IMU> res = imu_storage[idx];
     return res;
 }
@@ -265,7 +269,7 @@ void LIVOX::grab_loop()
                 P[1] = p_point_data[i].y/1000.0;
                 P[2] = p_point_data[i].z/1000.0;
 
-                Eigen::Vector3d _P = livox->pts_tf[idx].block(0,0,3,3)*P + livox->pts_tf[idx].block(0,3,3,1);
+                Eigen::Vector3d _P = livox->pts_R[idx]*P + livox->pts_t[idx];
                 double d = _P.norm();
 
                 // double d = P.norm();
@@ -273,15 +277,6 @@ void LIVOX::grab_loop()
                 {
                     continue;
                 }
-
-                // self collision filter
-                // if(check_self_collision(_P(0), _P(1), _P(2),
-                //                         livox->config->ROBOT_SIZE_X[0], livox->config->ROBOT_SIZE_X[1],
-                //                         livox->config->ROBOT_SIZE_Y[0], livox->config->ROBOT_SIZE_Y[1],
-                //                         livox->config->ROBOT_SIZE_Z[0], livox->config->ROBOT_SIZE_Z[1]))
-                // {
-                //     continue;
-                // }
 
                 LVX_PT pt;
                 pt.t = (time_base + i * time_interval)*N2S + livox->offset_t[idx]; // nanosec to sec
@@ -327,7 +322,7 @@ void LIVOX::grab_loop()
 
                 // set raw pts
                 {
-                    std::unique_lock<std::shared_mutex> lock(livox->mtx);
+                    std::unique_lock<std::shared_mutex> lock(livox->lidar_mtx);
                     livox->cur_raw[idx] = frm;
                     livox->cur_frm_t[idx] = frm.t;
                     livox->cur_pts_num[idx] = frm.pts.size();
@@ -414,26 +409,21 @@ void LIVOX::grab_loop()
         imu.rz = r[2];
 
         // update storage
-        livox->mtx.lock();
-
         if(livox->offset_t[idx] != 0)
         {
-            livox->cur_imu[idx] = imu;
-            livox->cur_imu_t[idx] = imu.t;
+            std::unique_lock<std::shared_mutex> lock(livox->imu_mtx);
+            {
+                livox->cur_imu[idx] = imu;
+                livox->cur_imu_t[idx] = imu.t;
 
-            livox->imu_storage[idx].push_back(imu);
-            // if(livox->imu_storage.front().t < imu.t - 3.0)
-            // {
-            //     livox->imu_storage.erase(livox->imu_storage.begin());
-            // }
+                livox->imu_storage[idx].push_back(imu);
+            }
 
             if(livox->imu_storage[idx].size() > 200)
             {
                 livox->imu_storage[idx].erase(livox->imu_storage[idx].begin());
             }
         }
-
-        livox->mtx.unlock();
     };
 
     // Register callbacks
@@ -441,11 +431,10 @@ void LIVOX::grab_loop()
     SetLivoxLidarImuDataCallback(imu_data_callback, this); // client_data is unused
     printf("[LIVOX] callback registered\n");
 
-
     printf("[LIVOX] grab_loop start\n");
     while(grab_flag)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(90));
     }
 
     // uninit

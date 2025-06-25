@@ -119,7 +119,7 @@ public:
 
     // plot funcs
     void plot_map();
-    void plot_topo();
+    void plot_node();
     void plot_pick();
     void plot_info();
     void plot_raw_2d();
@@ -128,6 +128,7 @@ public:
     void plot_mapping();
     void plot_obs();
     void plot_ctrl();
+    void plot_process_time();
 
     // plot timer
     QTimer* plot_timer;
@@ -146,6 +147,8 @@ public Q_SLOTS:
     void topo_update();
     void pick_update();
     void all_update();
+
+    void vtk_viewer_update(int val);
 
     // config
     void bt_ConfigLoad();

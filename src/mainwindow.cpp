@@ -76,8 +76,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_AutoPause,        SIGNAL(clicked()),                    this, SLOT(bt_AutoPause()));                                     // pause auto-control
     connect(ui->bt_AutoResume,       SIGNAL(clicked()),                    this, SLOT(bt_AutoResume()));                                    // resume auto-control
     connect(ui->bt_ReturnToCharging, SIGNAL(clicked()),                    this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
-    connect(AUTOCONTROL::instance(), SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()), Qt::QueuedConnection);    // if local path changed, plot update
+    connect(AUTOCONTROL::instance(), SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(), SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
+
+    connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
     // set effect
     init_ui_effect();
@@ -128,6 +130,18 @@ void MainWindow::all_update()
     topo_update();
     pick_update();
     obs_update();
+}
+
+void MainWindow::vtk_viewer_update(int val)
+{
+    if(val == 0)
+    {
+        all_plot_clear();
+    }
+    else
+    {
+        all_update();
+    }
 }
 
 void MainWindow::set_opacity(QWidget* w, double opacity)
@@ -186,16 +200,24 @@ void MainWindow::init_modules()
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
     {
-        QString platform_type = CONFIG::instance()->get_platform_type();
-        if(platform_type.isEmpty())
+        QString platform_name = CONFIG::instance()->get_platform_name();
+        if(platform_name.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
-            QString path = QCoreApplication::applicationDirPath() + "/configs/" + platform_type + "/config.json";
+            QString path = QCoreApplication::applicationDirPath() + "/configs/" + platform_name + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
+
+            QString path_version = QCoreApplication::applicationDirPath() + "/version.json";
+            CONFIG::instance()->set_version_path(path_version);
+            CONFIG::instance()->load_version();
+
+            QString path_serial_number = QCoreApplication::applicationDirPath() + "/configs/" + platform_name + "/config_sn.json";
+            CONFIG::instance()->set_serial_number_path(path_serial_number);
+            CONFIG::instance()->load_serial_number();
         }
     }
     else
@@ -278,7 +300,7 @@ void MainWindow::init_modules()
         LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
         LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        // LOCALIZATION::instance()->cam = cam;
+        //LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
         LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
     }
@@ -1057,19 +1079,19 @@ void MainWindow::bt_MapSave()
     const int64_t p2 = 19349669;
     const int64_t p3 = 83492791;
     const double voxel_size = CONFIG::instance()->get_mapping_voxel_size();
-    const std::vector<KFRAME>& kfrm_storage = MAPPING::instance()->get_kfrm_storage();
+    const auto kfrm_storage = MAPPING::instance()->get_kfrm_storage();
 
     std::unordered_map<int64_t, uint8_t> hash_map;
     std::vector<PT_XYZR> pts;
-    for(size_t p = 0; p < kfrm_storage.size(); p++)
+    for(size_t p = 0; p < kfrm_storage->size(); p++)
     {
-        Eigen::Matrix4d G = kfrm_storage[p].opt_G;
-        for(size_t q = 0; q < kfrm_storage[p].pts.size(); q++)
+        Eigen::Matrix4d G = (*kfrm_storage)[p].opt_G;
+        for(size_t q = 0; q < (*kfrm_storage)[p].pts.size(); q++)
         {
             Eigen::Vector3d P;
-            P[0] = kfrm_storage[p].pts[q].x;
-            P[1] = kfrm_storage[p].pts[q].y;
-            P[2] = kfrm_storage[p].pts[q].z;
+            P[0] = (*kfrm_storage)[p].pts[q].x;
+            P[1] = (*kfrm_storage)[p].pts[q].y;
+            P[2] = (*kfrm_storage)[p].pts[q].z;
 
             Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
 
@@ -1085,12 +1107,12 @@ void MainWindow::bt_MapSave()
                 pt.x = _P[0];
                 pt.y = _P[1];
                 pt.z = _P[2];
-                pt.r = kfrm_storage[p].pts[q].r;
+                pt.r = (*kfrm_storage)[p].pts[q].r;
                 pts.push_back(pt);
             }
         }
 
-        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage.size());
+        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
     }
 
     // write file
@@ -1132,7 +1154,7 @@ void MainWindow::bt_MapLoad()
 
 void MainWindow::bt_MapLastLc()
 {
-    MAPPING::instance()->last_lc();
+    MAPPING::instance()->last_loop_closing();
 }
 
 // localization
@@ -1352,7 +1374,7 @@ void MainWindow::jog_loop()
     while(jog_flag)
     {
         // check autodrive
-        if(!AUTOCONTROL::instance()->get_is_moving() || AUTOCONTROL::instance()->get_is_debug())
+        if(!AUTOCONTROL::instance()->get_is_moving() /*|| AUTOCONTROL::instance()->get_is_debug()*/)
         {
             // action
             double v_acc   = ui->spb_AccV->value();
@@ -1378,7 +1400,6 @@ void MainWindow::jog_loop()
                     printf("[JOG] no input, stop\n");
                 }
             }
-
             MOBILE::instance()->move(vx, vy, wz);
         }
 
@@ -1450,6 +1471,11 @@ void MainWindow::watch_loop()
                             move_info.result = "emo";
                             move_info.message = "pushed";
                             move_info.time = get_time();
+
+                            if(AUTOCONTROL::instance())
+                            {
+                                AUTOCONTROL::instance()->set_multi_inter_lock(true);
+                            }
 
                             Q_EMIT signal_move_response(move_info);
                         }
@@ -1704,7 +1730,7 @@ void MainWindow::plot_map()
     }
 }
 
-void MainWindow::plot_topo()
+void MainWindow::plot_node()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
@@ -2072,7 +2098,7 @@ void MainWindow::plot_info()
         // localization
         if(LOCALIZATION::instance()->get_is_loc())
         {
-            text += "\n" + LOCALIZATION::instance()->get_info_text();
+            text += LOCALIZATION::instance()->get_info_text();
         }
 
         ui->lb_SlamInfo->setText(text);
@@ -2238,6 +2264,98 @@ void MainWindow::plot_raw_3d()
             }
         }
     }
+}
+
+void MainWindow::plot_process_time()
+{
+    QString ctrl_time_str;
+    {
+        if(AUTOCONTROL::instance())
+        {
+            double ctrl_control_time = AUTOCONTROL::instance()->get_process_time_control() * 1000;
+            double ctrl_obs_time = AUTOCONTROL::instance()->get_process_time_obs() * 1000;
+
+            ctrl_time_str = QString::asprintf("[AUTO] control:%.3f, obs:%.3f\n", ctrl_control_time, ctrl_obs_time);
+        }
+    }
+
+    QString cam_time_str;
+    {
+        if(CAM::instance())
+        {
+            double cam_post_time = CAM::instance()->get_process_time_post() * 1000;
+            cam_time_str = QString::asprintf("[CAM] post:%.3f\n", cam_post_time);
+        }
+    }
+
+    QString lidar_2d_time_str;
+    {
+        if(LIDAR_2D::instance())
+        {
+            double lidar_2d_deskewing_time[2] = {0.0, 0.0};
+            for(size_t p = 0; p < CONFIG::instance()->get_lidar_2d_num(); p++)
+            {
+                lidar_2d_deskewing_time[p] = LIDAR_2D::instance()->get_process_time_deskewing(p) * 1000;
+            }
+            double lidar_2d_merge_time = LIDAR_2D::instance()->get_process_time_merge() * 1000;
+
+            lidar_2d_time_str = QString::asprintf("[LIDAR_2D] dsk(0,1):%.3f,%.3f, merge:%.3f\n",
+                                    lidar_2d_deskewing_time[0], lidar_2d_deskewing_time[1], lidar_2d_merge_time);
+        }
+    }
+
+    QString lidar_3d_time_str;
+    {
+        if(LIDAR_3D::instance())
+        {
+            double lidar_3d_deskewing_time[2] = {0.0, 0.0};
+            for(size_t p = 0; p < CONFIG::instance()->get_lidar_3d_num(); p++)
+            {
+                lidar_3d_deskewing_time[p] = LIDAR_3D::instance()->get_process_time_deskewing(p) * 1000;
+            }
+            double lidar_3d_merge_time = LIDAR_3D::instance()->get_process_time_merge() * 1000;
+
+            lidar_3d_time_str = QString::asprintf("[LIDAR_3D] dsk(0,1):%.3f,%.3f, merge:%.3f\n",
+                                    lidar_3d_deskewing_time[0], lidar_3d_deskewing_time[1], lidar_3d_merge_time);
+        }
+    }
+
+    QString loc_time_str;
+    {
+        if(LOCALIZATION::instance())
+        {
+            double loc_localizaion_time = LOCALIZATION::instance()->get_process_time_localization() * 1000;
+            double loc_odometry_time = LOCALIZATION::instance()->get_process_time_odometry() * 1000;
+            double loc_obs_time = LOCALIZATION::instance()->get_process_time_obs() * 1000;
+            double loc_node_time = LOCALIZATION::instance()->get_process_time_node() * 1000;
+
+            loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f, node:%.3f\n",
+                                loc_localizaion_time, loc_odometry_time, loc_obs_time, loc_node_time);
+        }
+    }
+
+    QString mobile_time_str;
+    {
+        if(MOBILE::instance())
+        {
+            double mobile_time = MOBILE::instance()->get_process_time_mobile() * 1000;
+            mobile_time_str = QString::asprintf("[MOBILE] mobile:%.3f\n", mobile_time);
+        }
+    }
+
+    QString obs_time_str;
+    {
+        if(OBSMAP::instance())
+        {
+            double obs_obs_update_time = OBSMAP::instance()->get_last_obs_update_time() * 1000;
+            double obs_vobs_update_time = OBSMAP::instance()->get_last_vobs_update_time() * 1000;
+
+            obs_time_str = QString::asprintf("[OBS] obs:%.3f, vobs:%.3f\n", obs_obs_update_time, obs_vobs_update_time);
+        }
+    }
+
+    QString process_str = "[PROC]\n" + ctrl_time_str + cam_time_str + lidar_2d_time_str + lidar_3d_time_str + loc_time_str + mobile_time_str + obs_time_str;
+    ui->lb_ProcTimeInfo->setText(process_str);
 }
 
 void MainWindow::plot_mapping()
@@ -2802,8 +2920,15 @@ void MainWindow::plot_loop()
     plot_timer->stop();
     double st_time = get_time();
 
+    if(!ui->ckb_PlotEnable->isChecked())
+    {
+        plot_process_time();
+        plot_timer->start();
+        return;
+    }
+
     plot_map();
-    plot_topo();
+    plot_node();
     plot_pick();
     plot_info();
     plot_raw_2d();
@@ -2812,6 +2937,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
+    plot_process_time();
 
     // camera reset
     if(is_set_top_view)

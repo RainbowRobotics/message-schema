@@ -193,17 +193,20 @@ void LOCALIZATION::set_cur_ieir(Eigen::Vector2d ieir)
 
 QString LOCALIZATION::get_info_text()
 {
+    Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());
     Eigen::Vector2d cur_ieir = get_cur_ieir();
     QString loc_state = get_cur_loc_state();
-    Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());
-
-
-    QString str;
-    str.sprintf("[LOC]\npos:%.2f,%.2f,%.2f\nerr:%f\nloc_t: %.3f, %.3f, %.3f\nieir: (%.3f, %.3f)\nloc_state: %s",
-                cur_xi[0], cur_xi[1], cur_xi[2]*R2D,
-                (double)cur_tf_err.load(), (double)proc_time_localization.load(), (double)proc_time_odometry.load(), (double)proc_time_obs.load(),
-                cur_ieir[0], cur_ieir[1],
-                loc_state.toLocal8Bit().data());
+    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11").arg(cur_xi[0], 0, 'f', 2)
+                                                                                                         .arg(cur_xi[1], 0, 'f', 2)
+                                                                                                         .arg(cur_xi[2]*R2D, 0, 'f', 2)
+                                                                                                         .arg((double)cur_tf_err.load(), 0, 'f', 3)
+                                                                                                         .arg((double)process_time_localization.load(), 0, 'f', 3)
+                                                                                                         .arg((double)process_time_odometry.load(), 0, 'f', 3)
+                                                                                                         .arg((double)process_time_obs.load(), 0, 'f', 3)
+                                                                                                         .arg((double)process_time_node.load(), 0, 'f', 3)
+                                                                                                         .arg(cur_ieir[0], 0, 'f', 3)
+                                                                                                         .arg(cur_ieir[1], 0, 'f', 3)
+                                                                                                         .arg(loc_state);
     return str;
 }
 
@@ -223,9 +226,165 @@ bool LOCALIZATION::get_is_busy()
     return (bool)is_busy.load();
 }
 
+double LOCALIZATION::get_process_time_localization()
+{
+    return (double)process_time_localization.load();
+}
+
+double LOCALIZATION::get_process_time_odometry()
+{
+    return (double)process_time_odometry.load();
+}
+
+double LOCALIZATION::get_process_time_obs()
+{
+    return (double)process_time_obs.load();
+}
+
+double LOCALIZATION::get_process_time_node()
+{
+    return (double)process_time_node.load();
+}
+
 void LOCALIZATION::start_semiauto_init()
 {
+    is_busy = true;
 
+    QString loc_mode = config->get_loc_mode();
+    if(loc_mode != "2D" && loc_mode != "3D")
+    {
+        is_busy = false;
+        return;
+    }
+
+    if(!unimap || unimap->get_is_loaded() != MAP_LOADED)
+    {
+        is_busy = false;
+        return;
+    }
+
+    const int timeout_cnt = 30;
+    int wait_cnt = 0;
+
+    if(loc_mode == "2D")
+    {
+        auto kdtree_index = unimap->get_kdtree_cloud_index();
+        auto kdtree_cloud = unimap->get_kdtree_cloud();
+        if(!kdtree_cloud || !kdtree_index || kdtree_cloud->pts.empty())
+        {
+            is_busy = false;
+            return;
+        }
+
+        FRAME frm = lidar_2d->get_cur_frm();
+        while(frm.pts.empty() && ++wait_cnt <= timeout_cnt)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            frm = lidar_2d->get_cur_frm();
+        }
+
+        if(frm.pts.empty())
+        {
+            is_busy = false;
+            return;
+        }
+
+        std::vector<QString> prefix_list = {"CHARGING"};
+        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
+        if(idxs.empty())
+        {
+            is_busy = false;
+            return;
+        }
+
+        Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+        double min_cost = std::numeric_limits<double>::max();
+        Eigen::Vector2d min_ieir(1.0, 0.0);
+
+        auto nodes = unimap->get_nodes_origin();
+        for(int i : idxs)
+        {
+            Eigen::Matrix4d tf = (*nodes)[i].tf;
+            for(double th = -180.0; th < 180.0; th += 20.0)
+            {
+                Eigen::Matrix4d _tf = tf * se2_to_TF({0, 0, th*D2R});
+                double err = map_icp(*kdtree_index, *kdtree_cloud, frm, _tf);
+                if(err < config->get_loc_2d_icp_error_threshold())
+                {
+                    Eigen::Vector2d ieir = calc_ieir(*kdtree_index, frm, _tf);
+                    double cost = (ieir[0]/config->get_loc_2d_icp_error_threshold()) + (1.0 - ieir[1]);
+                    if(cost < min_cost)
+                    {
+                        min_cost = cost;
+                        min_ieir = ieir;
+                        min_tf = _tf;
+                        auto pose = TF_to_se2(min_tf);
+                        printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", pose[0], pose[1], pose[2]*R2D, cost);
+                    }
+                }
+            }
+        }
+
+        auto ieir = calc_ieir(frm.pts, min_tf);
+        if(ieir[0] < config->get_loc_2d_check_inlier_error() && ieir[1] > config->get_loc_2d_check_inlier_ratio())
+        {
+            set_cur_tf(min_tf);
+            start();
+            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+        }
+    }
+    else // "3D"
+    {
+        TIME_PTS cur_frm = lidar_3d->get_cur_frm();
+        while(cur_frm.pts.empty() && ++wait_cnt <= timeout_cnt)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            cur_frm = lidar_3d->get_cur_frm();
+        }
+        if(cur_frm.pts.empty())
+        {
+            is_busy = false;
+            return;
+        }
+
+        std::vector<QString> prefix_list = {config->get_robot_serial_number(), "CHARGING"};
+        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
+        if(idxs.empty())
+        {
+            is_busy = false;
+            return;
+        }
+
+        auto nodes = unimap->get_nodes_origin();
+        Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
+        double min_err = std::numeric_limits<double>::max();
+        for(int i : idxs)
+        {
+            Eigen::Matrix4d tf = (*nodes)[i].tf;
+            for(double th = -180.0; th < 180.0; th += 90.0)
+            {
+                Eigen::Matrix4d _tf = tf * se2_to_TF({0, 0, th*D2R});
+                double err = map_icp(cur_frm.pts, _tf);
+                if(err < min_err)
+                {
+                    min_err = err;
+                    min_tf = _tf;
+                    auto xi = TF_to_se2(min_tf);
+                    printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", xi[0], xi[1], xi[2]*R2D, err);
+                }
+            }
+        }
+
+        auto ieir = calc_ieir(cur_frm.pts, min_tf);
+        if(ieir[0] < config->get_loc_2d_check_inlier_error() && ieir[1] > config->get_loc_2d_check_inlier_ratio())
+        {
+            set_cur_tf(min_tf);
+            start();
+            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+        }
+    }
+
+    is_busy = false;
 }
 
 Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G)
@@ -258,7 +417,7 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts,
             continue;
         }
 
-        Eigen::Vector3d nn_pt = (*nn_pts)[p];
+        Eigen::Vector3d nn_pt = (*nn_pts)[nn_idxs[0]];
         double d = (nn_pt - _P).norm();
         if(d < inlier_check_dist)
         {
@@ -278,7 +437,7 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts,
     return res;
 }
 
-Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G)
+Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, FRAME& frm, Eigen::Matrix4d& G)
 {
     const double check_dist = config->get_loc_2d_check_dist();
 
@@ -325,9 +484,6 @@ Eigen::Vector2d LOCALIZATION::calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, F
 
 void LOCALIZATION::localization_loop_2d()
 {
-    // Eigen::Matrix4d _cur_tf = get_cur_tf();
-    // Eigen::Matrix4d _pre_tf = _cur_tf;
-
     lidar_2d->clear_merged_queue();
 
     printf("[LOCALIZATION(2D)] a_loop start\n");
@@ -354,7 +510,7 @@ void LOCALIZATION::localization_loop_2d()
             double err = map_icp((*kdtree_index), (*kdtree_cloud), frm, G);
 
             // check ieir
-            cur_ieir = calc_ieir((*kdtree_index), (*kdtree_cloud), frm, G);
+            cur_ieir = calc_ieir((*kdtree_index), frm, G);
 
             // check error
             if(err < config->get_loc_2d_icp_error_threshold())
@@ -395,7 +551,7 @@ void LOCALIZATION::localization_loop_2d()
 
             // set localization info for plot
             cur_tf_err = err;
-            proc_time_localization = get_time() - st_time;
+            process_time_localization = get_time() - st_time;
 
             // for speed
             lidar_2d->clear_merged_queue();
@@ -411,6 +567,8 @@ void LOCALIZATION::localization_loop_3d()
     Eigen::Matrix4d _cur_tf = get_cur_tf();
     // Eigen::Matrix4d _pre_tf = _cur_tf;
 
+    double pre_loop_time = get_time();
+
     // lidar localization (10hz)
     lidar_3d->clear_merged_queue();
 
@@ -425,8 +583,6 @@ void LOCALIZATION::localization_loop_3d()
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
-
-            double st_time = get_time();
 
             // initial guess
             // Eigen::Vector3d delta_xi = TF_to_se2(_pre_tf.inverse()*_cur_tf);
@@ -464,7 +620,7 @@ void LOCALIZATION::localization_loop_3d()
                 tpp.t = frm.t;
                 tpp.tf = G;
                 tpp.pts = dsk;
-                tpp_que.push(tpp);
+                //tpp_que.push(tpp);
 
                 // update
                 set_cur_tf(G);
@@ -491,12 +647,13 @@ void LOCALIZATION::localization_loop_3d()
 
             // set localization info for plot
             cur_tf_err = err;
-            proc_time_localization = get_time() - st_time;
 
+            double cur_loop_time = get_time();
+            process_time_localization = cur_loop_time - pre_loop_time;
+            pre_loop_time = cur_loop_time;
 
             // for speed
             lidar_3d->clear_merged_queue();
-
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -506,13 +663,14 @@ void LOCALIZATION::localization_loop_3d()
 void LOCALIZATION::odometry_loop()
 {
     // loop params
-    const double dt = 0.02;
+    const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
     // clear storage
-    mtx.lock();
-    tp_storage.clear();
-    mtx.unlock();
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        tp_storage.clear();
+    }
 
     // for aruco fusion
     double pre_aruco_t = 0;
@@ -521,14 +679,12 @@ void LOCALIZATION::odometry_loop()
     // params
     MOBILE_POSE pre_mo = mobile->get_pose();
 
-    printf("[LOCALIZATION] b_loop start\n");
+    printf("[LOCALIZATION] odometry loop start\n");
     while(odometry_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
         if(cur_mo.t > pre_mo.t && config->get_loc_2d_icp_odometry_fusion_ratio() != 0.0)
         {
-            double st_time = get_time();
-
             Eigen::Matrix4d pre_mo_tf = se2_to_TF(pre_mo.pose);
             Eigen::Matrix4d cur_mo_tf = se2_to_TF(cur_mo.pose);
 
@@ -616,25 +772,21 @@ void LOCALIZATION::odometry_loop()
 
             // update
             set_cur_tf(_cur_tf);
-
-            mtx.lock();
-            TIME_POSE fused_tp;
-            fused_tp.t = cur_mo.t;
-            fused_tp.tf = _cur_tf;
-            tp_storage.push_back(fused_tp);
-            if(tp_storage.size() > 300)
             {
-                tp_storage.erase(tp_storage.begin());
+                std::lock_guard<std::mutex> lock(mtx);
+                TIME_POSE fused_tp;
+                fused_tp.t = cur_mo.t;
+                fused_tp.tf = _cur_tf;
+                tp_storage.push_back(fused_tp);
+                if(tp_storage.size() > 300)
+                {
+                    tp_storage.erase(tp_storage.begin());
+                }
             }
-            mtx.unlock();
 
             // for next operation
             pre_mo = cur_mo;
-
-            // update processing time
-            proc_time_odometry = get_time() - st_time;
         }
-
 
         // for real time loop
         double cur_loop_time = get_time();
@@ -646,21 +798,26 @@ void LOCALIZATION::odometry_loop()
         }
         else
         {
-            printf("[LOCALIZATION] b_loop loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
         }
-        pre_loop_time = get_time();
+
+        // update processing time
+        process_time_odometry = delta_loop_time;
+        pre_loop_time = cur_loop_time;
     }
-    printf("[LOCALIZATION] b_loop stop\n");
+    printf("[LOCALIZATION] odometry loop stop\n");
 }
 
 void LOCALIZATION::obs_loop()
 {
     printf("[LOCALIZATION] obs_loop start\n");
+    double pre_loop_time = get_time();
+
+    std::vector<Eigen::Vector3d> temp_pts;
+    temp_pts.reserve(10000);
 
     while(obs_flag)
     {
-        double st_time = get_time();
-
         if(config->get_use_sim())
         {
             if(unimap->get_is_loaded() == MAP_LOADED)
@@ -672,96 +829,215 @@ void LOCALIZATION::obs_loop()
             continue;
         }
 
-        TIME_POSE_PTS tpp;
-        if(tpp_que.try_pop(tpp))
+        Eigen::Matrix4d _cur_tf = get_cur_tf();
+        if(config->get_use_lidar_2d())
         {
-            if(tpp.pts.size() == 0)
+            FRAME scan = lidar_2d->get_cur_frm();
+            if(!scan.pts.empty())
             {
-                continue;
-            }
-
-            // add 2D pts
-            if(config->get_use_lidar_2d() && config->get_loc_mode() != "2D")
-            {
-                FRAME scan;
-                FRAME tmp;
-                while(lidar_2d->try_pop_merged_queue(tmp) && obs_flag)
-                {
-                    scan = tmp;
-                }
-
-                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
+                Eigen::Matrix4d tf0 = _cur_tf.inverse() * get_best_tf(scan.t);
                 Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
                 Eigen::Vector3d t0 = tf0.block(0,3,3,1);
 
-                for(size_t p = 0; p < scan.pts.size(); p++)
+                std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+                #pragma omp parallel for
+                for(size_t i = 0; i < scan.pts.size(); i++)
                 {
-                    Eigen::Vector3d P = scan.pts[p];
-                    Eigen::Vector3d _P = R0*P + t0;
-                    tpp.pts.push_back(_P);
+                    transformed_pts[i] = R0 * scan.pts[i] + t0;
                 }
+
+                temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
             }
-
-            // add 3D pts
-            if(config->get_use_lidar_3d() && config->get_loc_mode() != "3D")
-            {
-                TIME_PTS scan;
-                TIME_PTS tmp;
-                while(lidar_3d->try_pop_merged_queue(tmp) && obs_flag)
-                {
-                    scan = tmp;
-                }
-
-                Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
-                Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
-                Eigen::Vector3d t0 = tf0.block(0,3,3,1);
-
-                if(scan.pts.size() > 0)
-                {
-                    for(size_t p = 0; p < scan.pts.size(); p++)
-                    {
-                        Eigen::Vector3d P = scan.pts[p];
-                        Eigen::Vector3d _P = R0*P + t0;
-                        tpp.pts.push_back(_P);
-                    }
-                }
-            }
-
-            if(config->get_use_cam())
-            {
-                for(int p = 0; p < config->get_cam_num(); p++)
-                {
-                    TIME_PTS scan = cam->get_scan(p);
-                    if(scan.pts.size() > 0)
-                    {
-                        Eigen::Matrix4d tf0 = tpp.tf.inverse()*get_best_tf(scan.t);
-                        Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
-                        Eigen::Vector3d t0 = tf0.block(0,3,3,1);
-
-                        for(size_t p = 0; p < scan.pts.size(); p++)
-                        {
-                            Eigen::Vector3d P = scan.pts[p];
-                            Eigen::Vector3d _P = R0*P + t0;
-                            tpp.pts.push_back(_P);
-                        }
-                    }
-                }
-            }
-
-            // update obstacle map
-            obsmap->update_obs_map(tpp);
-
-            // for speed
-            tpp_que.clear();
-
-            // update processing time
-            proc_time_obs = get_time() - st_time;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if(config->get_use_lidar_3d())
+        {
+            TIME_PTS scan = lidar_3d->get_cur_frm();
+            if(!scan.pts.empty())
+            {
+                Eigen::Matrix4d tf0 = _cur_tf.inverse() * get_best_tf(scan.t);
+                Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+                Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+                std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+                #pragma omp parallel for
+                for(size_t i = 0; i < scan.pts.size(); i++)
+                {
+                    transformed_pts[i] = R0 * scan.pts[i] + t0;
+                }
+
+                temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
+            }
+        }
+
+        if(config->get_use_cam())
+        {
+            for(int i = 0; i < config->get_cam_num(); ++i)
+            {
+                TIME_PTS scan = cam->get_scan(i);
+                if(!scan.pts.empty())
+                {
+                    Eigen::Matrix4d tf0 = _cur_tf.inverse() * get_best_tf(scan.t);
+                    Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+                    Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+                    std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+                    #pragma omp parallel for
+                    for(size_t i = 0; i < scan.pts.size(); i++)
+                    {
+                        transformed_pts[i] = R0 * scan.pts[i] + t0;
+                    }
+
+                    temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
+                }
+            }
+        }
+
+        std::cout << "temp_pts size: " << temp_pts.size() << std::endl;
+
+        TIME_POSE_PTS tpp;
+        tpp.tf = _cur_tf;
+        tpp.pts = std::move(temp_pts);
+
+        // update obstacle map
+        obsmap->update_obs_map(tpp);
+
+        // update processing time
+        process_time_obs = get_time() - pre_loop_time;
+        pre_loop_time = get_time();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+
     printf("[LOCALIZATION] obs_loop stop\n");
 }
+
+//void LOCALIZATION::obs_loop()
+//{
+//    printf("[LOCALIZATION] obs_loop start\n");
+//    double pre_loop_time = get_time();
+
+//    std::vector<Eigen::Vector3d> temp_pts;
+//    temp_pts.reserve(3000);
+
+//    while(obs_flag)
+//    {
+//        if(config->get_use_sim())
+//        {
+//            if(unimap->get_is_loaded() == MAP_LOADED)
+//            {
+//                Eigen::Matrix4d _cur_tf = get_cur_tf();
+//                obsmap->update_obs_map_sim(_cur_tf);
+//            }
+//            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//            continue;
+//        }
+
+//        TIME_POSE_PTS tpp;
+//        if(!tpp_que.try_pop(tpp))
+//        {
+//            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//            continue;
+//        }
+
+//        if(tpp.pts.empty())
+//        {
+//            continue;
+//        }
+
+//        temp_pts.clear();
+//        temp_pts.reserve(tpp.pts.size() + 3000);
+
+//        if(config->get_use_lidar_2d() /*&& config->get_loc_mode() != "2D"*/)
+//        {
+//            /*FRAME scan, tmp;
+//            while(lidar_2d->try_pop_merged_queue(tmp) && obs_flag)
+//            {
+//                scan = tmp;
+//            }*/
+
+//            FRAME scan = lidar_2d->get_cur_frm();
+//            if(!scan.pts.empty())
+//            {
+//                Eigen::Matrix4d tf0 = tpp.tf.inverse() * get_best_tf(scan.t);
+//                Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+//                Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+//                std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+//                #pragma omp parallel for
+//                for(size_t i = 0; i < scan.pts.size(); i++)
+//                {
+//                    transformed_pts[i] = R0 * scan.pts[i] + t0;
+//                }
+
+//                temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
+//            }
+//        }
+
+//        if(config->get_use_lidar_3d() /* && config->get_loc_mode() != "3D"*/)
+//        {
+//            /*TIME_PTS scan, tmp;
+//            while(lidar_3d->try_pop_merged_queue(tmp) && obs_flag)
+//            {
+//                scan = tmp;
+//            }*/
+
+//            TIME_PTS scan = lidar_3d->get_cur_frm();
+//            if(!scan.pts.empty())
+//            {
+//                Eigen::Matrix4d tf0 = tpp.tf.inverse() * get_best_tf(scan.t);
+//                Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+//                Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+//                std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+//                #pragma omp parallel for
+//                for(size_t i = 0; i < scan.pts.size(); i++)
+//                {
+//                    transformed_pts[i] = R0 * scan.pts[i] + t0;
+//                }
+
+//                temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
+//            }
+//        }
+
+//        if(config->get_use_cam())
+//        {
+//            for(int i = 0; i < config->get_cam_num(); ++i)
+//            {
+//                TIME_PTS scan = cam->get_scan(i);
+//                if(!scan.pts.empty())
+//                {
+//                    Eigen::Matrix4d tf0 = tpp.tf.inverse() * get_best_tf(scan.t);
+//                    Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
+//                    Eigen::Vector3d t0 = tf0.block(0,3,3,1);
+
+//                    std::vector<Eigen::Vector3d> transformed_pts(scan.pts.size());
+//                    #pragma omp parallel for
+//                    for(size_t i = 0; i < scan.pts.size(); i++)
+//                    {
+//                        transformed_pts[i] = R0 * scan.pts[i] + t0;
+//                    }
+
+//                    temp_pts.insert(temp_pts.end(), transformed_pts.begin(), transformed_pts.end());
+//                }
+//            }
+//        }
+
+//        tpp.pts.swap(temp_pts);
+
+//        // update obstacle map
+//        obsmap->update_obs_map(tpp);
+
+//        tpp_que.clear();
+
+//        // update processing time
+//        process_time_obs = get_time() - pre_loop_time;
+//        pre_loop_time = get_time();
+
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//    }
+//    printf("[LOCALIZATION] obs_loop stop\n");
+//}
 
 void LOCALIZATION::node_loop()
 {
@@ -819,7 +1095,9 @@ void LOCALIZATION::node_loop()
         {
             //printf("[NODE] loop time drift, dt:%f\n", delta_loop_time);
         }
-        pre_loop_time = get_time();
+
+        process_time_node = delta_loop_time;
+        pre_loop_time = cur_loop_time;
     }
     logger->write_log("[NODE] node loop stop");
 }
@@ -852,9 +1130,11 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
     double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
-    double cost_threshold0 = config->get_loc_2d_icp_cost_threshold();
+    const double cost_threshold0 = config->get_loc_2d_icp_cost_threshold();
     const double cost_threshold = cost_threshold0 * cost_threshold0;
     const int num_feature = std::min<int>(idx_list.size(), config->get_loc_2d_icp_max_feature_num());
+    const int pt_surfel_num = config->get_loc_2d_surfel_num();
+    const double sq_d_max0 = config->get_loc_2d_surfel_range();
 
     // for rmt
     double tm0 = 0;
@@ -863,6 +1143,12 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
     int iter = 0;
     for(iter = 0; iter < max_iter; iter++)
     {
+        // shuffle
+        std::shuffle(idx_list.begin(), idx_list.end(), std::default_random_engine());
+
+        Eigen::Matrix3d _R0 = _G.block(0,0,3,3);
+        Eigen::Vector3d _t0 = _G.block(0,3,3,1);
+
         std::vector<double> costs;
         std::vector<COST_JACOBIAN> cj_set;
         for(size_t p = 0; p < idx_list.size(); p++)
@@ -877,23 +1163,21 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
 
             // local to global
             Eigen::Vector3d P1 = pts[i];
-            Eigen::Vector3d _P1 = _G.block(0,0,3,3)*P1 + _G.block(0,3,3,1);
+            Eigen::Vector3d _P1 = _R0*P1 + _t0;
 
             // knn points
             Eigen::Vector3d P0(0, 0, 0);
             {
-                const int pt_num = config->get_loc_2d_surfel_num();
-                std::vector<unsigned int> ret_near_idxs(pt_num);
-                std::vector<double> ret_near_sq_dists(pt_num);
+                std::vector<unsigned int> ret_near_idxs(pt_surfel_num);
+                std::vector<double> ret_near_sq_dists(pt_surfel_num);
 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
-                tree.knnSearch(&near_query_pt[0], pt_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
+                tree.knnSearch(&near_query_pt[0], pt_surfel_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
-                double sq_d_max0 = config->get_loc_2d_surfel_range();
                 double sq_d_max = sq_d_max0 * sq_d_max0;
-                for(int q = 0; q < pt_num; q++)
+                for(int q = 0; q < pt_surfel_num; q++)
                 {
                     int idx = ret_near_idxs[q];
                     double dx = cloud.pts[idx].x - cloud.pts[idx0].x;
@@ -963,7 +1247,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[map_icp] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
+            printf("[map_icp(2D)] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
             return std::numeric_limits<double>::max();
         }
 
@@ -1098,9 +1382,9 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
     // optimization param
     const int max_iter = max_iter0;
     double lambda = lambda0;
-    double first_err = 9999;
-    double last_err = 9999;
-    double convergence = 9999;
+    double first_err = std::numeric_limits<double>::max();
+    double last_err = std::numeric_limits<double>::max();
+    double convergence = std::numeric_limits<double>::max();
     int num_correspondence = 0;
 
     // for rmt
@@ -1223,7 +1507,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[map_icp] not enough correspondences, iter: %d, num: %d!!\n", iter, num_correspondence);
+            printf("[map_icp(3D)] not enough correspondences, iter: %d, num: %d!!\n", iter, num_correspondence);
             return 9999;
         }
 
@@ -1331,7 +1615,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
     G = _G;
 
     // for debug
-    // printf("[SLAM_3D] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    //printf("[map_icp(3D)] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

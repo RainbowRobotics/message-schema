@@ -218,6 +218,26 @@ QString AUTOCONTROL::get_multi_reqest_state()
     return res;
 }
 
+double AUTOCONTROL::get_process_time_control()
+{
+    return (double)process_time_control.load();
+}
+
+double AUTOCONTROL::get_process_time_obs()
+{
+    return (double)process_time_obs.load();
+}
+
+bool AUTOCONTROL::get_multi_inter_lock()
+{
+    return (bool)multi_inter_lock.load();
+}
+
+void AUTOCONTROL::set_multi_inter_lock(bool val)
+{
+    multi_inter_lock.store(val);
+}
+
 void AUTOCONTROL::set_multi_req(QString str)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -1751,6 +1771,8 @@ int AUTOCONTROL::is_everything_fine()
 
 void AUTOCONTROL::control_loop()
 {
+    multi_inter_lock = false;
+
     // set flag
     is_moving = true;
 
@@ -2697,6 +2719,7 @@ void AUTOCONTROL::control_loop()
         {
             logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
         }
+        process_time_control = delta_loop_time;
         pre_loop_time = get_time();
     }
 
@@ -2738,6 +2761,30 @@ void AUTOCONTROL::control_loop()
 
     fsm_state = AUTO_FSM_COMPLETE;
     logger->write_log("[AUTO] path stop, b_loop_pp stop");
+}
+
+void AUTOCONTROL::obs_loop()
+{
+    const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+
+    while(obs_flag)
+    {
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+        }
+        process_time_obs = delta_loop_time;
+        pre_loop_time = get_time();
+    }
 }
 
 void AUTOCONTROL::set_config_module(CONFIG* _config)

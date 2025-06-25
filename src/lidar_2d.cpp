@@ -121,10 +121,15 @@ RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
     RAW_FRAME res;
     if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
-        std::lock_guard<std::mutex> lock(mtx);
         res = sick->get_cur_raw(idx);
     }
     return res;
+}
+
+FRAME LIDAR_2D::get_cur_frm()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return cur_frm;
 }
 
 QString LIDAR_2D::get_info_text()
@@ -150,6 +155,16 @@ bool LIDAR_2D::get_is_connected()
 bool LIDAR_2D::get_is_sync()
 {
     return (bool)is_sync.load();
+}
+
+double LIDAR_2D::get_process_time_deskewing(int idx)
+{
+    return (double)process_time_deskewing[idx].load();
+}
+
+double LIDAR_2D::get_process_time_merge()
+{
+    return (double)process_time_merge.load();
 }
 
 void LIDAR_2D::set_sync_flag(bool flag)
@@ -188,6 +203,8 @@ bool LIDAR_2D::try_pop_merged_queue(FRAME& frm)
 
 void LIDAR_2D::deskewing_loop(int idx)
 {
+    double pre_loop_time = get_time();
+
     printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
     while(deskewing_flag[idx])
     {
@@ -263,6 +280,9 @@ void LIDAR_2D::deskewing_loop(int idx)
                 RAW_FRAME tmp;
                 deskewing_que[idx].try_pop(tmp);
             }
+
+            process_time_deskewing[idx] = (double)(get_time() - pre_loop_time);
+            pre_loop_time = get_time();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -280,6 +300,8 @@ void LIDAR_2D::merge_loop()
     double last_recv_t[lidar_num];
 
     std::vector<RAW_FRAME> storage[lidar_num];
+
+    double pre_loop_time = get_time();
 
     printf("[LIDAR_2D] merge_loop start\n");
     while(merge_flag)
@@ -306,7 +328,13 @@ void LIDAR_2D::merge_loop()
                     FRAME tmp;
                     merged_que.try_pop(tmp);
                 }
+
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                cur_frm = frm;
             }
+
+            process_time_merge = (double)(get_time() - pre_loop_time);
+            pre_loop_time = get_time();
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
@@ -452,7 +480,13 @@ void LIDAR_2D::merge_loop()
                 FRAME tmp;
                 merged_que.try_pop(tmp);
             }
+
+            std::unique_lock<std::shared_mutex> lock(mtx);
+            cur_frm = merge_frm;
         }
+
+        process_time_merge = (double)(get_time() - pre_loop_time);
+        pre_loop_time = get_time();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

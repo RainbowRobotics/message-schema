@@ -559,6 +559,7 @@ struct DATA_VOBS
 struct DATA_SOFTWARE
 {
     double time;
+    QString branch;
     QString version;
 
     QString result;
@@ -567,6 +568,7 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE()
     {
         time = 0.0;
+        branch = "";
         version = "";
 
         result = "";
@@ -576,6 +578,7 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE(const DATA_SOFTWARE& p)
     {
         time = p.time;
+        branch = p.branch;
         version = p.version;
 
         result = p.result;
@@ -585,6 +588,7 @@ struct DATA_SOFTWARE
     DATA_SOFTWARE& operator=(const DATA_SOFTWARE& p)
     {
         time = p.time;
+        branch = p.branch;
         version = p.version;
 
         result = p.result;

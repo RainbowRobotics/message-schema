@@ -40,6 +40,8 @@ public:
     TIME_IMG get_time_img(int idx);     // get current image (with time)
     TIME_PTS get_scan(int idx);         // get current depth (with time)
 
+    double get_process_time_post();
+
     // interface func (set)
     void set_cur_state(QString str);
     void set_sync_flag(bool flag);
@@ -65,14 +67,20 @@ private:
     MOBILE* mobile;
     ORBBEC* orbbec;
 
-    // merge loop
+    // post process loop
     std::atomic<bool> post_process_flag[2] = {false, false};
     std::array<std::unique_ptr<std::thread>, 2> post_process_thread;
     void post_process_loop(int idx);
 
+    // rtsp loop (Real Time Streaming Protocol to RRS)
+    std::atomic<bool> rtsp_flag = {false};
+    std::unique_ptr<std::thread> rtsp_thread;
+    void rtsp_loop();
+
     // params
-    std::atomic<bool> is_connected = {false};
-    std::atomic<bool> is_sync = {false};
+    std::atomic<bool> is_connected[2] = {false, false};
+
+    std::atomic<double> process_time_post = {0.0};
 
     TIME_IMG cur_time_img[2];
     TIME_PTS cur_scan[2];

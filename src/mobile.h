@@ -39,6 +39,7 @@ public:
     bool get_is_connected();
     bool get_is_synced();
     double get_last_pose_t();
+    double get_process_time_mobile();
     QString get_cur_pdu_state();
     QString get_status_text();
     QString get_pose_text();
@@ -50,6 +51,8 @@ public:
     Eigen::Vector3d get_control_input();
     std::vector<MOBILE_IMU> get_imu_storage();
     std::vector<MOBILE_POSE> get_pose_storage();
+
+
     void set_cur_pdu_state(QString str);
     void set_is_connected(bool val);
     void set_is_synced(bool val);
@@ -148,6 +151,8 @@ private:
     std::atomic<bool> is_synced = {false};
     std::atomic<double> sync_st_time = {0};
     std::atomic<double> offset_t = {0};
+
+    std::atomic<double> process_time_mobile = {0.0};
 
     std::atomic<double> last_pose_t = {0};
     std::atomic<double> last_imu_t = {0};

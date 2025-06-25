@@ -790,6 +790,102 @@ out</string>
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
             </widget>
+            <widget class="QPushButton" name="bt_JogR">
+             <property name="geometry">
+              <rect>
+               <x>100</x>
+               <y>630</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▶</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogB">
+             <property name="geometry">
+              <rect>
+               <x>60</x>
+               <y>630</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▼</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogF">
+             <property name="geometry">
+              <rect>
+               <x>60</x>
+               <y>590</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▲</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogL">
+             <property name="geometry">
+              <rect>
+               <x>20</x>
+               <y>630</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>◀</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>
@@ -850,102 +946,6 @@ out</string>
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <widget class="QPushButton" name="bt_JogF">
-       <property name="geometry">
-        <rect>
-         <x>50</x>
-         <y>10</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▲</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogB">
-       <property name="geometry">
-        <rect>
-         <x>50</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▼</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogL">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>◀</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogR">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▶</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
       <widget class="QDoubleSpinBox" name="spb_JogV">
        <property name="geometry">
         <rect>
@@ -1196,6 +1196,9 @@ stop</string>
           <property name="spacing">
            <number>0</number>
           </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetFixedSize</enum>
+          </property>
           <property name="rightMargin">
            <number>0</number>
           </property>
@@ -1222,7 +1225,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">

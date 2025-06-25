@@ -61,7 +61,8 @@ private:
     ~LIVOX();
 
     // mutex
-    std::shared_mutex mtx;
+    std::shared_mutex lidar_mtx;
+    std::shared_mutex imu_mtx;
 
     // imu filter (complementary Filter)
     imu_tools::ComplementaryFilter imu_filter[2];
@@ -72,7 +73,11 @@ private:
 
     // extrinsics
     Eigen::Matrix4d pts_tf[2];
+    Eigen::Matrix3d pts_R[2];
+    Eigen::Vector3d pts_t[2];
     Eigen::Matrix4d imu_tf[2];
+    Eigen::Matrix3d imu_R[2];
+    Eigen::Vector3d imu_t[2];
 
     // for multi lidar
     std::array<uint32_t, 2> livox_handles = {0, 0};

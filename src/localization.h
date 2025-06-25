@@ -54,12 +54,17 @@ public:
     Eigen::Vector2d get_cur_ieir();                     // get cur inlier error, inlier ratio
     std::vector<Eigen::Vector3d> get_cur_global_scan(); // get cur global scan
 
+    double get_process_time_localization();
+    double get_process_time_odometry();
+    double get_process_time_obs();
+    double get_process_time_node();
+
     void set_cur_loc_state(QString str);                // set loc state
     void set_cur_tf(Eigen::Matrix4d tf);                // set current tf
     void set_cur_ieir(Eigen::Vector2d ieir);            // set current inlier error, inlier ratio (only use simulation)
 
-    Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen::Matrix4d& G);   // 2D calc ieir
-    Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const  Eigen::Matrix4d& G);      // 3D calc ieir
+    Eigen::Vector2d calc_ieir(KD_TREE_XYZR& tree, FRAME& frm, Eigen::Matrix4d& G);   // 2D calc ieir
+    Eigen::Vector2d calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G);      // 3D calc ieir
 
     void start_semiauto_init();     // start semi-auto init
 
@@ -123,7 +128,7 @@ private:
     // result
     Eigen::Matrix4d cur_tf;
     Eigen::Vector2d cur_ieir;
-    std::atomic<double> cur_tf_err = {0};
+    std::atomic<double> cur_tf_err = {0.0};
     QString cur_loc_state = "none";
     QString cur_node_id = "";
 
@@ -133,9 +138,10 @@ private:
     tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
 
     // loop processing time
-    std::atomic<double> proc_time_localization = {0};
-    std::atomic<double> proc_time_odometry = {0};
-    std::atomic<double> proc_time_obs = {0};
+    std::atomic<double> process_time_localization = {0.0};
+    std::atomic<double> process_time_odometry = {0.0};
+    std::atomic<double> process_time_obs = {0.0};
+    std::atomic<double> process_time_node = {0.0};
 
 };
 

@@ -39,11 +39,14 @@ public:
     /***********************
      * interface funcs (get)
      ***********************/
-    RAW_FRAME get_cur_raw(int idx);
-    QString get_info_text();
-    QString get_cur_state();
     bool get_is_sync();
     bool get_is_connected();
+    double get_process_time_deskewing(int idx);
+    double get_process_time_merge();
+    QString get_info_text();
+    QString get_cur_state();
+    RAW_FRAME get_cur_raw(int idx);
+    FRAME get_cur_frm();
 
     // interface funcs (set)
     void set_cur_state(QString str);
@@ -65,7 +68,7 @@ private:
     ~LIDAR_2D();
 
     // mutex
-    std::mutex mtx;
+    std::shared_mutex mtx;
 
     // other modules
     CONFIG* config;
@@ -96,6 +99,11 @@ private:
     // storage
     tbb::concurrent_queue<RAW_FRAME> deskewing_que[2];
     tbb::concurrent_queue<FRAME> merged_que;
+
+    FRAME cur_frm;
+
+    std::atomic<double> process_time_deskewing[2] = {0.0, 0.0};
+    std::atomic<double> process_time_merge        = {0.0};
 
     // https://www.researchgate.net/figure/Schematic-of-shadows-created-by-a-moving-LIDAR-Vehicle-graphic-credit-ShapeNet-23_fig1_364897453
     std::vector<std::pair<Eigen::Vector3d, bool>> scan_shadow_filter(const std::vector<Eigen::Vector3d>& dsk, int shadow_window);

@@ -20,14 +20,60 @@ CONFIG::~CONFIG()
 
 }
 
+void CONFIG::load_version()
+{
+    QFileInfo version_info(path_version);
+    if(version_info.exists() && version_info.isFile())
+    {
+        QFile version_file(path_version);
+        if(version_file.open(QIODevice::ReadOnly))
+        {
+            QByteArray data = version_file.readAll();
+            VERSION_INFO = QString(data);
+        }
+    }
+}
+
+void CONFIG::load_serial_number()
+{
+    // read config
+    QFile config_sn_file(path_serial_number);
+    if(config_sn_file.open(QIODevice::ReadOnly))
+    {
+        QByteArray data = config_sn_file.readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        QJsonObject obj = doc.object();
+
+        QJsonObject obj_cam = obj["cam"].toObject();
+        {
+            CAM_SERIAL_NUMBER[0] = obj_cam["CAM_SERIAL_NUMBER_0"].toString();
+            printf("[CONFIG] CAM_SERIAL_NUMBER_0, %s\n", obj_cam["CAM_SERIAL_NUMBER_0"].toString().toLocal8Bit().data());
+
+            CAM_SERIAL_NUMBER[1] = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
+            printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
+        }
+
+        QJsonObject obj_robot = obj["robot"].toObject();
+        {
+            ROBOT_SERIAL_NUMBER = obj_robot["ROBOT_SERIAL_NUMBER"].toString();
+            printf("[CONFIG] ROBOT_SERIAL_NUMBER, %s\n", obj_robot["ROBOT_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+        }
+
+        // complete
+        is_load = true;
+        config_sn_file.close();
+        printf("[CONFIG] %s, load successed\n", path_serial_number.toLocal8Bit().data());
+    }
+}
+
 void CONFIG::load()
 {
     missing_variables.clear();
 
-    QFile config_file(config_path);
+    QFile config_file(path_config);
     if(!config_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qWarning() << "[CONFIG] Failed to open config file:" << config_path;
+        qWarning() << "[CONFIG] Failed to open config file:" << path_config;
         return;
     }
 
@@ -61,7 +107,7 @@ void CONFIG::load()
     load_sensor_specific_configs(obj);
 
     is_load = true;
-    printf("[CONFIG] %s, load successed\n", qUtf8Printable(config_path));
+    printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
 
     if(has_missing_variables())
     {
@@ -73,7 +119,7 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
 {
     QJsonObject obj_robot = obj["robot"].toObject();
 
-    check_and_set_string(obj_robot, "PLATFORM_NAME",        PLATFORM_NAME,      "robot");
+    check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
@@ -295,9 +341,8 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
         for(int i = 0; i < cam_arr.size(); i++)
         {
             QJsonObject obj_cam = cam_arr[i].toObject();
-            CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
             CAM_TF[i] = obj_cam["TF"].toString();
-            printf("[CONFIG] CAM[%d] Serial: %s, TF: %s\n", i, qUtf8Printable(CAM_SERIAL_NUMBER[i]), qUtf8Printable(CAM_TF[i]));
+            printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
         }
     }
 }
@@ -423,7 +468,17 @@ void CONFIG::show_missing_variables_dialog()
 
 void CONFIG::set_config_path(const QString &path)
 {
-    config_path = path;
+    path_config = path;
+}
+
+void CONFIG::set_version_path(const QString &path)
+{
+    path_version = path;
+}
+
+void CONFIG::set_serial_number_path(const QString &path)
+{
+    path_serial_number = path;
 }
 
 bool CONFIG::load_common(QString path)
@@ -447,12 +502,12 @@ bool CONFIG::load_common(QString path)
     }
 
     QJsonObject obj = doc.object();
-    if(obj.contains("PLATFORM_TYPE"))
+    if(obj.contains("PLATFORM_NAME"))
     {
-        PLATFORM_TYPE = obj["PLATFORM_TYPE"].toString();
+        PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
     }
 
-    std::cout << "p " << PLATFORM_TYPE.toStdString() << std::endl;
+    printf("[CONFIG] PLATFORM_NAME, %s\n", PLATFORM_NAME.toStdString());
 
     // complete
     common_file.close();

@@ -37,15 +37,15 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    std::shared_ptr<std::vector<PT_XYZR>> get_live_cloud_pts();
-    QString get_info_text();
-    bool get_is_mapping();
-    bool try_pop_kfrm_update_que(int& kfrm_id);
-    const std::vector<KFRAME>& get_kfrm_storage();
-    size_t get_kfrm_storage_size();
-    KFRAME get_kfrm(int kfrm_id);
+    bool get_is_mapping();                                      // check if mapping
+    bool try_pop_kfrm_update_que(int& kfrm_id);                 // try pop key-frame update number
+    size_t get_kfrm_storage_size();                             // get key-frame storage size
+    KFRAME get_kfrm(int kfrm_id);                               // get key-frame input index
+    QString get_info_text();                                    // get all mapping info
+    std::shared_ptr<std::vector<PT_XYZR>> get_live_cloud_pts(); // get live cloud (mapping-cloud)
+    std::shared_ptr<std::vector<KFRAME>> get_kfrm_storage();    // get key frame storage
 
-    void last_lc();
+    void last_loop_closing();
 
     /***********************
      * set other modules
@@ -62,7 +62,7 @@ private:
     ~MAPPING();
 
     // mutex
-    std::mutex mtx;
+    std::shared_mutex mtx;
 
     // other modules
     CONFIG* config;
@@ -91,7 +91,7 @@ private:
     // storage
     tbb::concurrent_queue<KFRAME> kfrm_que;
     tbb::concurrent_queue<int> kfrm_update_que;
-    std::vector<KFRAME> kfrm_storage;
+    std::shared_ptr<std::vector<KFRAME>> kfrm_storage;
 
     // live kd_tree
     XYZR_CLOUD live_cloud;

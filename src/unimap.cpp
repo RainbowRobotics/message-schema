@@ -26,7 +26,6 @@ UNIMAP::UNIMAP(QObject *parent) : QObject(parent),
     kdtree_cloud_2d_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud_2d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
     // init related 3d map params
-    kdtree_cloud_3d_index = std::make_unique<KD_TREE>(3, kdtree_cloud_3d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     map_3d_pts            = std::make_shared<std::vector<Eigen::Vector3d>>();
     map_3d_normal         = std::make_shared<std::vector<Eigen::Vector3d>>();
     map_3d_reflects       = std::make_shared<std::vector<double>>();
@@ -334,11 +333,9 @@ bool UNIMAP::load_3d()
     {
         std::unique_lock<std::shared_mutex> lock(mtx);
         kdtree_cloud_3d.pts = pts;
-        if(kdtree_cloud_3d_index)
-        {
-            kdtree_cloud_3d_index = std::make_unique<KD_TREE>(3, kdtree_cloud_3d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-            kdtree_cloud_3d_index->buildIndex();
-        }
+
+        kdtree_cloud_3d_index = std::make_unique<KD_TREE>(3, kdtree_cloud_3d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+        kdtree_cloud_3d_index->buildIndex();
 
         // set plot storage
         map_3d_pts      = std::make_shared<std::vector<Eigen::Vector3d>>(pts);
@@ -796,7 +793,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
     if(logger && nearest_node)
     {
         const double actual_distance = std::sqrt(min_distance_squared);
-        logger->write_log(QString("[UNIMAP] Found nearest goal node (KD-tree): %1 (distance: %.3f)")
+        logger->write_log(QString("[UNIMAP] Found nearest goal node (KD-tree): %1 (distance: %2)")
                          .arg(nearest_node->id)
                          .arg(actual_distance), "Green");
     }
@@ -918,6 +915,7 @@ std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double ra
     double query_pt[3] = {center[0], center[1], center[2]};
 
     kdtree_cloud_3d_index->knnSearch(&query_pt[0], k, &res_idxs[0], &res_sq_dists[0]);
+
 
     std::vector<int> res;
     for(size_t p = 0; p < res_idxs.size(); p++)

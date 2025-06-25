@@ -126,6 +126,12 @@ LVX_FRM LIDAR_3D::get_cur_raw(int idx)
     return res;
 }
 
+TIME_PTS LIDAR_3D::get_cur_frm()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    return cur_frm;
+}
+
 bool LIDAR_3D::get_is_connected()
 {
     return (bool)is_connected.load();
@@ -134,6 +140,16 @@ bool LIDAR_3D::get_is_connected()
 bool LIDAR_3D::get_is_sync()
 {
     return (bool)is_sync.load();
+}
+
+double LIDAR_3D::get_process_time_deskewing(int idx)
+{
+    return (double)process_time_deskewing[idx].load();
+}
+
+double LIDAR_3D::get_process_time_merge()
+{
+    return (double)process_time_merge.load();
 }
 
 IMU LIDAR_3D::get_cur_imu(int idx)
@@ -276,6 +292,8 @@ void LIDAR_3D::deskewing_loop(int idx)
 {
     IMU _pre_imu;
 
+    double pre_loop_time = get_time();
+
     printf("[LIDAR_3D] dsk_loop[%d] start\n", idx);
     while(deskewing_flag[idx])
     {
@@ -303,12 +321,14 @@ void LIDAR_3D::deskewing_loop(int idx)
                 Eigen::Matrix4d dG = Eigen::Matrix4d::Identity();
                 dG.block(0,0,3,3) = dR;
 
+                dsk.resize(frm.pts.size());
+                #pragma omp parallel for
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Matrix4d G_i = intp_tf(frm.pts[p].alpha, Eigen::Matrix4d::Identity(), dG);
                     Eigen::Vector3d P(frm.pts[p].x, frm.pts[p].y, frm.pts[p].z);
                     Eigen::Vector3d _P = G_i.block(0,0,3,3)*P + G_i.block(0,3,3,1);
-                    dsk.push_back(_P);
+                    dsk[p] = _P;
                 }
             }
 
@@ -330,6 +350,9 @@ void LIDAR_3D::deskewing_loop(int idx)
 
             // for next
             _pre_imu = _cur_imu;
+
+            process_time_deskewing[idx] = (double)(get_time() - pre_loop_time);
+            pre_loop_time = get_time();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -346,6 +369,8 @@ void LIDAR_3D::merge_loop()
     double last_recv_t[lidar_3d_num];
 
     std::vector<TIME_PTS> storage[2];
+
+    double pre_loop_time = get_time();
 
     printf("[LIDAR_3D] a_loop start\n");
     while(merge_flag)
@@ -369,7 +394,13 @@ void LIDAR_3D::merge_loop()
                     TIME_PTS tmp;
                     merged_que.try_pop(tmp);
                 }
+
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_frm = frm;
             }
+
+            process_time_merge = (double)(get_time() - pre_loop_time);
+            pre_loop_time = get_time();
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
@@ -522,7 +553,13 @@ void LIDAR_3D::merge_loop()
                 TIME_PTS tmp;
                 merged_que.try_pop(tmp);
             }
+
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_frm = merge_frm;
         }
+
+        process_time_merge = (double)(get_time() - pre_loop_time);
+        pre_loop_time = get_time();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

@@ -616,7 +616,7 @@ void COMM_RRS::send_move_status()
         auto_state = "move";
     }
 
-    if(mobile->get_cur_pdu_state() != "good")
+    if(mobile->get_cur_pdu_state() != "good" || ctrl->get_multi_inter_lock())
     {
         auto_state = "not ready";        
     }
@@ -779,30 +779,26 @@ void COMM_RRS::send_lidar()
         return;
     }
 
-    const double time = get_time();
-
-    /*TIME_POSE_PTS tpp = loc->get_cur_tpp();
-    if(slam->is_loc && tpp.pts.size() > 0)
+    std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
+    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    if(pts.size() > 0)
     {
-        // Adding the pose object
-        const Eigen::Matrix4d cur_tf = tpp.tf;
-        const Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-
         sio::object_message::ptr rootObject = sio::object_message::create();
         sio::object_message::ptr poseObject = sio::object_message::create();
         poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
         poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
-        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2] * R2D, 'f', 3).toStdString());
+        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
         rootObject->get_map()["pose"] = poseObject;
 
         sio::array_message::ptr jsonArray = sio::array_message::create();
-        for(const Eigen::Vector3d& pt : tpp.pts)
+        for(size_t p = 0; p < pts.size(); p++)
         {
             sio::array_message::ptr jsonObj = sio::array_message::create();
 
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[0], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[1], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[2], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
             jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
 
             jsonArray->get_vector().push_back(jsonObj);
@@ -813,39 +809,7 @@ void COMM_RRS::send_lidar()
         // send
         io->socket()->emit("lidarCloud", rootObject);
     }
-    else
-    {             
-        const std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_scan();
 
-        // Adding the pose object
-        const Eigen::Matrix4d cur_tf = slam->get_cur_tf();
-        const Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-
-        sio::object_message::ptr rootObject = sio::object_message::create();
-        sio::object_message::ptr poseObject = sio::object_message::create();
-        poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
-        poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
-        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2] * R2D, 'f', 3).toStdString());
-        rootObject->get_map()["pose"] = poseObject;
-
-        sio::array_message::ptr jsonArray = sio::array_message::create();
-        for(const Eigen::Vector3d& pt : pts)
-        {
-            sio::array_message::ptr jsonObj = sio::array_message::create();
-
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[0], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[1], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pt[2], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
-
-            jsonArray->get_vector().push_back(jsonObj);
-        }
-
-        rootObject->get_map()["data"] = jsonArray;
-
-        // send
-        io->socket()->emit("lidarCloud", rootObject);
-    }*/
 }
 
 void COMM_RRS::send_mapping_cloud()
@@ -1424,8 +1388,19 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 
         send_localization_response(msg);
 
+        if(loc->get_is_loc())
+        {
+            loc->stop();
+        }
+
+        const double x = msg.tgt_pose_vec[0];
+        const double y = msg.tgt_pose_vec[1];
+        const double rz = msg.tgt_pose_vec[3];
+        const Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz * D2R));
+
         if(loc)
         {
+            loc->set_cur_tf(tf);
             loc->start();
         }
     }
@@ -1720,54 +1695,73 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
     }
 
     MOBILE_STATUS ms = mobile->get_status();
-    if(ms.charge_state != 1)
+    if(ms.charge_state == 0 || ms.motor_stop_state >= 1)
     {
-        msg.result = "false";
-        msg.message = "not charging";
-        send_software_update_response(msg);
-        return;
-    }
-    if(ms.motor_stop_state != 1)
-    {
-        msg.result = "false";
-        msg.message = "emo released";
-        send_software_update_response(msg);
+        //bool is_not_charging = ms.charge_state != 1 ? true : false;
+        if(ms.charge_state == 0)
+        {
+            msg.result = "false";
+            msg.message = "not charging";
+            send_software_update_response(msg);
+        }
+
+        if(ms.motor_stop_state >= 1)
+        {
+            msg.result = "false";
+            msg.message = "emo released";
+            send_software_update_response(msg);
+        }
         return;
     }
 
     const QString version_str = "--version=" + msg.version;
+    QString homePath = QDir::homePath();
+    QString scriptPath = homePath + "/rainbow-deploy-kit/slamnav2/slamnav2-update.sh";
+
     QProcess process;
     QStringList arguments;
     arguments << version_str;
-    process.start("bash", QStringList() << "~/rainbow-deploy-kit/slamnav2/slamnav2-update.sh" << arguments);
-    process.waitForFinished();
 
-    if(!process.waitForStarted() || !process.waitForFinished())
+    process.start("bash", QStringList() << scriptPath << arguments);
+
+    if(!process.waitForStarted())
     {
         msg.result = "false";
-        msg.message = "process failed";
+        msg.message = "process failed to start";
         send_software_update_response(msg);
         return;
     }
+
+    if(!process.waitForFinished())
+    {
+        msg.result = "false";
+        msg.message = "process did not finish";
+        send_software_update_response(msg);
+        return;
+    }
+
+    const int exitCode = process.exitCode();
+    const QProcess::ExitStatus exitStatus = process.exitStatus();
+
+    if(exitStatus == QProcess::NormalExit && exitCode == 0)
+    {
+        msg.result = "true";
+        msg.message = "update succeeded";
+    }
     else
     {
-        const int exitCode = process.exitCode();
-        const QProcess::ExitStatus exitStatus = process.exitStatus();
-        if (exitStatus == QProcess::NormalExit && exitCode == 0)
-        {
-            msg.result = "true";
-            msg.message = QString("fail exitCode:%1").arg(exitCode);
-            send_software_update_response(msg);
-            return;
-        }
-        else
-        {
-            msg.result = "false";
-            msg.message = QString("fail exitCode:%1").arg(exitCode);
-            send_software_update_response(msg);
-            return;
-        }
+        msg.result = "false";
+
+        QString stdOut = process.readAllStandardOutput();
+        QString stdErr = process.readAllStandardError();
+
+        msg.message = QString("exitCode:%1\nstdout:\n%2\nstderr:\n%3")
+            .arg(exitCode)
+            .arg(QString(stdOut))
+            .arg(QString(stdErr));
     }
+
+    send_software_update_response(msg);
 }
 
 void COMM_RRS::send_move_response(const DATA_MOVE& msg)

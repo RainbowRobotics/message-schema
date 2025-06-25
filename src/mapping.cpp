@@ -21,7 +21,10 @@ MAPPING::MAPPING(QObject *parent) : QObject{parent},
     lidar_2d(nullptr),
     loc(nullptr)
 {
+    kfrm_storage = std::make_shared<std::vector<KFRAME>>();
     live_cloud_pts = std::make_shared<std::vector<PT_XYZR>>();
+
+    live_tree = std::make_unique<KD_TREE_XYZR>(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 }
 
 MAPPING::~MAPPING()
@@ -79,12 +82,16 @@ void MAPPING::clear()
 {
     // clear storages
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::unique_lock<std::shared_mutex> lock(mtx);
         clear_pose_graph();
 
         kfrm_que.clear();
         kfrm_update_que.clear();
-        kfrm_storage.clear();
+
+        if(kfrm_storage)
+        {
+            kfrm_storage->clear();
+        }
 
         if(live_tree)
         {
@@ -92,6 +99,7 @@ void MAPPING::clear()
             live_cloud.pts.clear();
         }
 
+        live_cloud_pts = std::make_shared<std::vector<PT_XYZR>>();
         live_tree = std::make_unique<KD_TREE_XYZR>(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         pgo = PGO();
     }
@@ -100,16 +108,16 @@ void MAPPING::clear()
     printf("[MAPPING] clear\n");
 }
 
-const std::vector<KFRAME>& MAPPING::get_kfrm_storage()
-{
-    std::lock_guard<std::mutex> lock(mtx);
+std::shared_ptr<std::vector<KFRAME>> MAPPING::get_kfrm_storage()
+{    
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return kfrm_storage;
 }
 
 size_t MAPPING::get_kfrm_storage_size()
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    return kfrm_storage.size();
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return kfrm_storage->size();
 }
 
 QString MAPPING::get_info_text()
@@ -117,7 +125,7 @@ QString MAPPING::get_info_text()
     QString res;
     res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d",
                 (double)proc_time_map_a.load(), (double)proc_time_map_b.load(),
-                (int)kfrm_que.unsafe_size(), (int)kfrm_storage.size());
+                (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size());
 
     return res;
 }
@@ -140,19 +148,19 @@ bool MAPPING::try_pop_kfrm_update_que(int& kfrm_id)
 
 KFRAME MAPPING::get_kfrm(int kfrm_id)
 {
-    if(kfrm_id < 0 || kfrm_id >= (int)kfrm_storage.size())
+    if(kfrm_id < 0 || kfrm_id >= get_kfrm_storage_size())
     {
         return KFRAME();
     }
 
-    std::lock_guard<std::mutex> lock(mtx);
-    KFRAME res = kfrm_storage[kfrm_id];
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    KFRAME res = (*kfrm_storage)[kfrm_id];
     return res;
 }
 
 std::shared_ptr<std::vector<PT_XYZR>> MAPPING::get_live_cloud_pts()
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::shared_lock<std::shared_mutex> lock(mtx);
     return live_cloud_pts;
 }
 
@@ -233,7 +241,7 @@ void MAPPING::kfrm_loop()
 
                 // add tree
                 {
-                    std::lock_guard<std::mutex> lock(mtx);
+                    std::unique_lock<std::shared_mutex> lock(mtx);
                     for(size_t p = 0; p < deskewing_pts.size(); p++)
                     {
                         live_cloud.pts.push_back(deskewing_pts[p]);
@@ -269,7 +277,7 @@ void MAPPING::kfrm_loop()
                 {
                     // pose estimation
                     double err = frm_icp(*live_tree, live_cloud, frm, G);
-                    Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, live_cloud, frm, G);
+                    Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                     if(err < icp_error_threshold)
                     {
                         // local to global
@@ -400,7 +408,7 @@ void MAPPING::kfrm_loop()
 
                         // update tree
                         {
-                            std::lock_guard<std::mutex> lock(mtx);
+                            std::unique_lock<std::shared_mutex> lock(mtx);
                             live_tree.reset();
                             live_cloud.pts = pts;
                             live_tree = std::make_unique<KD_TREE_XYZR>(3, live_cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
@@ -421,7 +429,7 @@ void MAPPING::kfrm_loop()
                         // make keyframe
                         if(add_cnt % config->get_mapping_kfrm_update_num() == 0)
                         {
-                            std::lock_guard<std::mutex> lock(mtx);
+                            std::shared_lock<std::shared_mutex> lock(mtx);
 
                             // set keyframe
                             KFRAME kfrm;
@@ -437,14 +445,10 @@ void MAPPING::kfrm_loop()
                         }
 
                         // update ieir
-                        {
-                            std::lock_guard<std::mutex> lock(mtx);
-                            loc->set_cur_ieir(ieir);
-                        }
+                        loc->set_cur_ieir(ieir);
                     }
                     else
                     {
-                        std::lock_guard<std::mutex> lock(mtx);
                         loc->get_cur_ieir()[0] = err;
                     }
                 }
@@ -455,7 +459,6 @@ void MAPPING::kfrm_loop()
 
             // update processing time
             proc_time_map_a = get_time() - st_time;
-
             continue;
         }
 
@@ -511,80 +514,90 @@ void MAPPING::loop_closing_loop()
             kfrm.pts = pts;
 
             // make pose graph
-            if(kfrm_storage.size() == 0)
+            size_t kfrm_storage_size = get_kfrm_storage_size();
+            if(kfrm_storage_size == 0)
             {
                 pgo.add_node(kfrm.id, Eigen::Matrix4d::Identity(), kfrm.G, 0.1);
-                kfrm_storage.push_back(kfrm);
                 kfrm_update_que.push(kfrm.id);
+
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                kfrm_storage->push_back(kfrm);
             }
             else
             {
-                Eigen::Matrix4d dG = kfrm_storage.back().G.inverse()*kfrm.G;
-                kfrm.opt_G = kfrm_storage.back().opt_G*dG;
+                Eigen::Matrix4d dG = Eigen::Matrix4d::Identity();
+                {
+                    std::shared_lock<std::shared_mutex> lock(mtx);
+                    dG = kfrm_storage->back().G.inverse()*kfrm.G;
+                    kfrm.opt_G = kfrm_storage->back().opt_G*dG;
+                }
 
-                pgo.add_node(kfrm.id, dG, kfrm.G, 0.1);
-                kfrm_storage.push_back(kfrm);
-                kfrm_update_que.push(kfrm.id);
+                {
+                    std::unique_lock<std::shared_mutex> lock(mtx);
+                    pgo.add_node(kfrm.id, dG, kfrm.G, 0.1);
+                    kfrm_storage->push_back(kfrm);
+                    kfrm_update_que.push(kfrm.id);
+                }
             }
 
             // loop closing process
-            if(kfrm_storage.size() >= 2)
+            if(kfrm_storage_size >= 2)
             {
                 // check loop closure
-                for(size_t p = 0; p < kfrm_storage.size()-1; p++)
+                for(size_t p = 0; p < kfrm_storage_size-1; p++)
                 {
                     int p0 = p;
-                    int p1 = kfrm_storage.size()-1;
+                    int p1 = kfrm_storage_size-1;
 
-                    double d = (kfrm_storage[p1].opt_G.block(0,3,3,1) - kfrm_storage[p0].opt_G.block(0,3,3,1)).norm();
+                    double d = ((*kfrm_storage)[p1].opt_G.block(0,3,3,1) - (*kfrm_storage)[p0].opt_G.block(0,3,3,1)).norm();
                     if(d < config->get_mapping_kfrm_lc_try_dist())
                     {
                         // check overlap ratio
                         std::vector<Eigen::Vector3d> pts0;
-                        for(size_t i = 0; i < kfrm_storage[p0].pts.size(); i+=4)
+                        for(size_t i = 0; i < (*kfrm_storage)[p0].pts.size(); i+=4)
                         {
                             Eigen::Vector3d P;
-                            P[0] = kfrm_storage[p0].pts[i].x;
-                            P[1] = kfrm_storage[p0].pts[i].y;
-                            P[2] = kfrm_storage[p0].pts[i].z;
+                            P[0] = (*kfrm_storage)[p0].pts[i].x;
+                            P[1] = (*kfrm_storage)[p0].pts[i].y;
+                            P[2] = (*kfrm_storage)[p0].pts[i].z;
 
-                            Eigen::Vector3d _P = kfrm_storage[p0].opt_G.block(0,0,3,3)*P + kfrm_storage[p0].opt_G.block(0,3,3,1);
+                            Eigen::Vector3d _P = (*kfrm_storage)[p0].opt_G.block(0,0,3,3)*P + (*kfrm_storage)[p0].opt_G.block(0,3,3,1);
                             pts0.push_back(_P);
                         }
 
                         std::vector<Eigen::Vector3d> pts1;
-                        for(size_t i = 0; i < kfrm_storage[p1].pts.size(); i+=4)
+                        for(size_t i = 0; i < (*kfrm_storage)[p1].pts.size(); i+=4)
                         {
                             Eigen::Vector3d P;
-                            P[0] = kfrm_storage[p1].pts[i].x;
-                            P[1] = kfrm_storage[p1].pts[i].y;
-                            P[2] = kfrm_storage[p1].pts[i].z;
+                            P[0] = (*kfrm_storage)[p1].pts[i].x;
+                            P[1] = (*kfrm_storage)[p1].pts[i].y;
+                            P[2] = (*kfrm_storage)[p1].pts[i].z;
 
-                            Eigen::Vector3d _P = kfrm_storage[p1].opt_G.block(0,0,3,3)*P + kfrm_storage[p1].opt_G.block(0,3,3,1);
+                            Eigen::Vector3d _P = (*kfrm_storage)[p1].opt_G.block(0,0,3,3)*P + (*kfrm_storage)[p1].opt_G.block(0,3,3,1);
                             pts1.push_back(_P);
                         }
 
                         double overlap_ratio = calc_overlap_ratio(pts0, pts1);
                         if(overlap_ratio < config->get_mapping_kfrm_lc_try_overlap())
                         {
-                            printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, d, overlap_ratio);
+                            printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
                             continue;
                         }
 
-                        printf("[MAPPING] try loop closing, id:%d-%d, d:%f, overlap:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, d, overlap_ratio);
+                        printf("[MAPPING] try loop closing, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
 
-                        Eigen::Matrix4d dG = kfrm_storage[p0].opt_G.inverse()*kfrm_storage[p1].opt_G;
-                        double err = kfrm_icp(kfrm_storage[p0], kfrm_storage[p1], dG);
+                        Eigen::Matrix4d dG = (*kfrm_storage)[p0].opt_G.inverse()*(*kfrm_storage)[p1].opt_G;
+                        double err = kfrm_icp((*kfrm_storage)[p0], (*kfrm_storage)[p1], dG);
                         if(err < config->get_mapping_icp_error_threshold())
                         {
-                            pgo.add_lc(kfrm_storage[p0].id, kfrm_storage[p1].id, dG, err);
-                            printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", kfrm_storage[p0].id, kfrm_storage[p1].id, err);
+                            pgo.add_lc((*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, dG, err);
+                            printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, err);
 
                             // optimal pose update
                             std::vector<Eigen::Matrix4d> opt_poses = pgo.get_optimal_poses();
-                            for(int q = kfrm_storage[p0].id; q < (int)kfrm_storage.size(); q++)
+                            for(int q = (*kfrm_storage)[p0].id; q < (int)(*kfrm_storage).size(); q++)
                             {
-                                kfrm_storage[q].opt_G = opt_poses[q];
+                                (*kfrm_storage)[q].opt_G = opt_poses[q];
                                 kfrm_update_que.push(q);
                             }
                             break;
@@ -1245,13 +1258,14 @@ void MAPPING::clear_pose_graph()
     pgo.clear();
 }
 
-void MAPPING::last_lc()
+void MAPPING::last_loop_closing()
 {
     // try last lc
-    if(kfrm_storage.size() >= 2)
+    int kfrm_storage_size = get_kfrm_storage_size();
+    if(kfrm_storage_size >= 2)
     {
-        KFRAME kfrm0 = kfrm_storage.front();
-        KFRAME kfrm1 = kfrm_storage.back();
+        KFRAME kfrm0 = kfrm_storage->front();
+        KFRAME kfrm1 = kfrm_storage->back();
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Matrix4d dG = kfrm0.opt_G.inverse()*(cur_tf.inverse()*kfrm1.G);
@@ -1266,9 +1280,9 @@ void MAPPING::last_lc()
 
             // optimal pose update
             std::vector<Eigen::Matrix4d> opt_poses = pgo.get_optimal_poses();
-            for(size_t p = 0; p < kfrm_storage.size(); p++)
+            for(size_t p = 0; p < kfrm_storage_size; p++)
             {
-                kfrm_storage[p].opt_G = opt_poses[p];
+                (*kfrm_storage)[p].opt_G = opt_poses[p];
                 kfrm_update_que.push(p);
 
                 printf("[LAST_LC] optimal pose update, id:%d\n", (int)p);

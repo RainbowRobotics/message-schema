@@ -31,9 +31,13 @@ public:
 
     // set config path
     void set_config_path(const QString& path);
+    void set_version_path(const QString& path);
+    void set_serial_number_path(const QString& path);
 
     // load config.json
     void load();
+    void load_version();
+    void load_serial_number();
 
     /***********************
      * robot unique
@@ -275,7 +279,9 @@ private:
 
     // mutex
     std::shared_mutex mtx;
-    QString config_path;
+    QString path_config;
+    QString path_version;
+    QString path_serial_number;
 
     /* unit : meter, degree, second
      * params (initial value ref from AMR200)
@@ -441,7 +447,9 @@ private:
 
     // map
     QString MAP_PATH = "";
-    std::vector<QString> params;
+
+    // version info
+    QString VERSION_INFO;
 
     // missing variables tracking
     QStringList missing_variables;

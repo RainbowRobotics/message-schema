@@ -48,6 +48,8 @@ public:
     void get_obs_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_dyn_map(cv::Mat& map, Eigen::Matrix4d& tf);
     void get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf);
+    double get_last_obs_update_time();
+    double get_last_vobs_update_time();
     cv::Mat get_obs_map();
     cv::Mat get_dyn_map();
     cv::Mat get_vir_map();
@@ -112,6 +114,9 @@ private:
     cv::Mat static_map;
     cv::Mat dynamic_map;
     cv::Mat virtual_map;
+
+    std::atomic<double> last_obs_update_time = {0.0};
+    std::atomic<double> last_vobs_update_time = {0.0};
 
     int w = 300;
     int h = 300;

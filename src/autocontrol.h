@@ -44,8 +44,11 @@ public:
     bool get_is_debug();                    // check if debug
     bool get_is_pause();                    // check if paused
     bool get_is_moving();                   // check if moving
+    bool get_multi_inter_lock();            // (if emo push->released:[true] new move cmd come:[false]) to keep it in "not ready" state until a new move command comes.
     PATH get_cur_global_path();             // get current global path
     PATH get_cur_local_path();              // get current local path
+    double get_process_time_control();      // get control loop processing time
+    double get_process_time_obs();          // get obs loop processing time
     QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
     QString get_obs_condition();            // get current obstacle condition (none, near, far, vir)
     QString get_cur_move_state();           // get current move state (none, move, complete, fail, obstacle, cancel)
@@ -61,6 +64,7 @@ public:
     void set_multi_req(QString str);
     void set_obs_condition(QString str);
     void set_cur_goal_state(QString str);
+    void set_multi_inter_lock(bool val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
@@ -184,12 +188,16 @@ private:
     tbb::concurrent_queue<PATH> global_path_que;
 
     // flags
-    std::atomic<bool> is_path_overlap = {false};
-    std::atomic<bool> is_moving       = {false};
-    std::atomic<bool> is_debug        = {false};
-    std::atomic<bool> is_pause        = {false};
-    std::atomic<bool> is_rrs          = {false};
-    std::atomic<int>  fsm_state       = {AUTO_FSM_COMPLETE};
+    std::atomic<bool> is_path_overlap  = {false};
+    std::atomic<bool> is_moving        = {false};
+    std::atomic<bool> is_debug         = {false};
+    std::atomic<bool> is_pause         = {false};
+    std::atomic<bool> is_rrs           = {false};
+    std::atomic<int>  fsm_state        = {AUTO_FSM_COMPLETE};
+    std::atomic<bool> multi_inter_lock = {false};
+
+    std::atomic<double> process_time_control = {0.0};
+    std::atomic<double> process_time_obs = {0.0};
 
     // params for rrs & plot
     DATA_MOVE cur_move_info;

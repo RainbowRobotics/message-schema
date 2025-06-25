@@ -41,9 +41,12 @@ public:
     IMU get_best_imu(double ref_t, int idx);    // get nearest time(ref_t) imu info (Compare values ​​in specific storage)
     bool get_is_sync();                         // check if synced lidar to mobile
     bool get_is_connected();                    // check if connected lidar
+    double get_process_time_deskewing(int idx);
+    double get_process_time_merge();
     QString get_info_text();                    // get all lidar info
     QString get_cur_state();                    // get lidar state
     LVX_FRM get_cur_raw(int idx);               // get cur raw frame (LVX_FRM, global pts, not deskewing)
+    TIME_PTS get_cur_frm();
 
     // setter func
     void set_is_sync(bool flag);                // set sync
@@ -90,8 +93,13 @@ private:
     std::atomic<bool> is_connected = {false};       // is connected lidar
     std::atomic<bool> is_sync = {false};            // is synced lidar
 
+    std::atomic<double> process_time_deskewing[2] = {0.0, 0.0};
+    std::atomic<double> process_time_merge        = {0.0};
+
     std::atomic<double> cur_merged_frm_t = 0;       // last merge_que pop time
     std::atomic<int> cur_merged_num = 0;            // last merge_que point size
+
+    TIME_PTS cur_frm;
 
     // storage
     tbb::concurrent_queue<TIME_PTS> deskewing_que[2];   // deskewing queue (used in merge loop)

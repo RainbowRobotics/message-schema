@@ -201,6 +201,11 @@ double MOBILE::get_last_pose_t()
     return (double)last_pose_t.load();
 }
 
+double MOBILE::get_process_time_mobile()
+{
+    return (double)process_time_mobile.load();
+}
+
 // for plot
 QString MOBILE::get_pose_text()
 {
@@ -324,6 +329,8 @@ void MOBILE::recv_loop()
 
     std::vector<uchar> buf;
     int drop_cnt = 10;
+
+    double pre_loop_time = get_time();
 
     printf("[MOBILE] recv loop start\n");
     while(recv_flag)
@@ -969,6 +976,11 @@ void MOBILE::recv_loop()
                 buf.erase(buf.begin(), buf.begin()+1);
             }
         }
+
+        double cur_loop_time = get_time();
+        process_time_mobile = cur_loop_time - pre_loop_time;
+        pre_loop_time = cur_loop_time;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     printf("[MOBILE] recv loop stop\n");
@@ -1982,7 +1994,7 @@ void MOBILE::send_loop()
 int MOBILE::calc_battery_percentage(float voltage)
 {
     QString platform_type = config->get_platform_type();
-    if(platform_type == "D400" || platform_type == "MECANUM" || platform_type == "SEM")
+    if(platform_type == "D400" || platform_type == "MECANUM" || platform_type == "S100")
     {
         if(voltage <= voltage_lookup_table.front().voltage)
         {

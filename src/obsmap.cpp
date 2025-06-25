@@ -165,6 +165,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 {
     std::unique_lock<std::shared_mutex> lock(mtx);
+    double start_time = get_time();
     
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
@@ -220,10 +221,14 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     octomap::Pointcloud cloud;
     cloud.reserve(pts.size());
-    
+
+    Eigen::Matrix3d R0 = cur_tf.block(0,0,3,3);
+    Eigen::Vector3d t0 = cur_tf.block(0,3,3,1);
+
+    #pragma omp parallel for
     for(const auto& pt : pts)
     {
-        const Eigen::Vector3d _P = cur_tf.block<3,3>(0,0)*pt + cur_tf.block<3,1>(0,3);
+        const Eigen::Vector3d _P = R0*pt + t0;
         cloud.push_back(_P[0], _P[1], 0);
     }
 
@@ -234,7 +239,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     }
 
     octomap::point3d bbx_min(cur_tf(0,3) - obsmap_range, cur_tf(1,3) - obsmap_range, -obsmap_range);
-    octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range, obsmap_range);
+    octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range,  obsmap_range);
 
     std::vector<Eigen::Vector4d> global_obs_pts;
     std::vector<Eigen::Vector2d> local_obs_pts;
@@ -510,10 +515,14 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     // signal for redrawing
     Q_EMIT obs_updated();
+
+    double end_time = get_time();
+    last_obs_update_time = end_time - start_time;
 }
 
 void OBSMAP::update_vobs_map()
 {
+    double start_time = get_time();
     Eigen::Matrix4d cur_tf, cur_tf_inv;
     {
         std::shared_lock<std::shared_mutex> lock(mtx);
@@ -640,6 +649,9 @@ void OBSMAP::update_vobs_map()
 
     // signal for redrawing
     Q_EMIT obs_updated();
+
+    double end_time = get_time();
+    last_vobs_update_time = end_time - start_time;
 }
 
 void OBSMAP::update_vobs_list_robots(const std::vector<Eigen::Vector3d>& vobs_r)
@@ -673,6 +685,16 @@ void OBSMAP::get_vir_map(cv::Mat& map, Eigen::Matrix4d& tf)
     std::shared_lock<std::shared_mutex> lock(mtx);
     map = virtual_map.clone();
     tf = map_tf;
+}
+
+double OBSMAP::get_last_obs_update_time()
+{
+    return (double)last_obs_update_time.load();
+}
+
+double OBSMAP::get_last_vobs_update_time()
+{
+    return (double)last_vobs_update_time.load();
 }
 
 cv::Mat OBSMAP::get_obs_map()
