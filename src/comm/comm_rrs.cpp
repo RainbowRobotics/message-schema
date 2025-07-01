@@ -779,8 +779,8 @@ void COMM_RRS::send_lidar()
         return;
     }
 
-    std::vector<Eigen::Vector3d> pts = lidar->get_cur_scan();
-    Eigen::Matrix4d cur_tf = slam->get_cur_tf();
+    std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
+    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
     if(pts.size() > 0)
     {
