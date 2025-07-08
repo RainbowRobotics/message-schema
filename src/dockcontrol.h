@@ -3,12 +3,135 @@
 
 #include <QObject>
 
+#include "global_defines.h"
+#include "my_utils.h"
+
+// other modules
+#include "config.h"
+#include "logger.h"
+#include "mobile.h"
+#include "lidar_2d.h"
+#include "qr_sensor.h"
+#include "obsmap.h"
+#include "comm_data.h"
+
 class DOCKCONTROL : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(DOCKCONTROL)
 public:
-    explicit DOCKCONTROL(QObject *parent = nullptr);
+    // make singleton
+    static DOCKCONTROL* instance(QObject* parent = nullptr);
 
+    // start dock control module
+    void init();
+
+    /***********************
+     * interface funcs
+     ***********************/
+    void move();
+    void stop();
+    bool undock();
+    KFRAME generate_vkframe(int type); // type 0 -oneque, 1 - aline
+    Eigen::Vector3d calculate_center(const KFRAME& frame);
+    double vfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG);
+    bool is_everything_fine(); 
+    Eigen::Matrix4d find_vmark();
+    Eigen::Matrix4d straight_path(const Eigen::Matrix4d& e_p);
+    XYZR_CLOUD generate_sample_points(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, int n);
+    Eigen::Matrix4d calculate_translation_matrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to); 
+    bool sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
+    bool cluster_candidate(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
+
+    /***********************
+     * set other modules
+     ***********************/
+    void set_config_module(CONFIG* _config);
+    void set_logger_module(LOGGER* _logger);
+    void set_mobile_module(MOBILE* _mobile);
+    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_qr_sensor_module(QR_SENSOR* _qr_sensor);
+    void set_obsmap_module(OBSMAP* _obsmap);
+
+private:
+    explicit DOCKCONTROL(QObject *parent = nullptr);
+    ~DOCKCONTROL();
+
+
+    // dock control loop
+    std::atomic<bool> a_flag = {false};
+    void a_loop();
+    std::unique_ptr<std::thread> a_thread;
+
+    // undock control loop
+    std::atomic<bool> b_flag = {false};
+    void b_loop();
+    std::unique_ptr<std::thread> b_thread;
+
+
+    // flags
+    std::atomic<bool> is_moving     = {false};
+    std::atomic<bool> is_pause      = {false};
+    std::atomic<int> fsm_state      = {DOCKING_FSM_OFF};
+    bool dock = false;
+    bool path_flag = false;
+    bool oneque_dock = false;
+    bool undock_flag = false;
+    double undock_waiting_time = 0.0;
+    Eigen::Matrix4d docking_station;
+    Eigen::Matrix4d docking_station_m;
+    Eigen::Matrix4d docking_station_o;
+
+
+    // for cluster
+    int check_oneque();
+    std::queue<std::vector<Eigen::Vector3d>> clusters_queue;
+    int clust_size_min = 60;
+    int clust_size_max = 500;
+    float clust_d_threshold = 0.05;
+
+    // for icp
+    KFRAME vfrm; // vmark frame for icp
+    Eigen::Vector3d frm1_center;
+    KFRAME oneque_vfrm; // oneque vmark frame for icp
+    Eigen::Vector3d oneque_frm1_center;
+    int ICP_MAX_FEATURE_NUM = 1000;
+    double ICP_COST_THRESHOLD = 3.0;
+    int ICP_CORRESPONDENCE_THRESHOLD = 10;
+    
+    // for control
+    void dockControl(const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
+    void pointdockControl(bool final_dock, const Eigen::Matrix4d& err_tf, double&cmd_v, double& cmd_w);
+
+    //for l_control
+    double limit_accel = 0.1;
+    double limit_vel = 0.1;
+    double oneque_limit_vel = 0.5;
+    double limit_th_acc = 45;
+    double limit_th = 0.785;
+    double err_th_old = 0.0;
+    double err_v_old = 0.0;
+    double undock_time =0.0;
+
+    Eigen::Matrix4d odom_start_tf;
+    
+    
+    // params for rrs & plot
+    QString obs_condition       = "none";
+    QString failed_reason       = "";
+    std::vector<Eigen::Vector3d> get_cur_clust();
+    std::vector<Eigen::Vector3d> debug_frame;
+
+    // mutex
+    std::mutex mtx;
+
+    // other modules
+    CONFIG* config;
+    LOGGER* logger;
+    MOBILE* mobile;
+    LIDAR_2D* lidar_2d;
+    QR_SENSOR* qr_sensor;
+    OBSMAP* obsmap;
 };
 
 #endif // DOCKCONTROL_H

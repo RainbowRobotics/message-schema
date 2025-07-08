@@ -208,7 +208,6 @@ public:
      * docking
      ***********************/
     int get_docking_type();                         //
-    int get_docking_map_size();                     //
     double get_docking_pointdock_margin();          //
     double get_docking_goal_dist();                 //
     double get_docking_goal_th();                   //
@@ -224,10 +223,12 @@ public:
     double get_docking_clust_angle_threshold();     //
     double get_docking_size_x_min();                //
     double get_docking_size_x_max();                //
-    double get_docking_icp_cost_threshold();        //
-    double get_docking_icp_max_feature_num();       //
-    double get_docking_grid_size();
-
+    double get_docking_icp_err_threshold();
+    double get_docking_k_alpha();                   
+    double get_docking_k_beta();
+    double get_docking_k_rho();
+    double get_docking_find_vmark_dist_threshold_max();
+    double get_docking_chg_length();
     /***********************
      * map
      ***********************/
@@ -422,29 +423,27 @@ private:
     double DRIVE_W_DEADZONE = 0.1;
 
     // docking
-    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
-    int DOCKING_MAP_SIZE = 10; //m
-    double DOCKING_POINTDOCK_MARGIN = 0.18;
-    double DOCK_GOAL_D = 0.05;
-    double DOCK_GOAL_TH = 2.0;
-    double DOCK_EXTENDED_CONTROL_TIME = 10.0;
-    double DOCK_UNDOCK_REVERSING_DISTANCE = -0.5;
-    double DOCKING_GOAL_D = 0.05;
+    double DOCKING_CHG_LENGTH = 0.472;
+    double DOCKING_K_ALPHA = 4.5;
+    double DOCKING_K_BETA = 1.5;
+    double DOCKING_K_RHO = 0.6;
+    double DOCKING_GOAL_D = 0.03; //3cm
     double DOCKING_GOAL_TH = 0.01745; //0.1*D2R;
     double DOCKING_KP_d = 0.15;
     double DOCKING_KD_d = 0.1;
     double DOCKING_KP_th = 0.35;
     double DOCKING_KD_th = 0.15;
     double DOCKING_CLUST_D_THRESHOLD = 0.05;
-    double DOCKING_CLUST_DIST_THRESHOLD_MIN = 0.45;
-    double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.0;
+    double DOCKING_FIND_VMARK_DIST_THRESHOLD_MIN = 1.0;
+    double DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX = 2.5;
+    double DOCKING_CLUST_DIST_THRESHOLD_MIN = 0.4;
+    double DOCKING_CLUST_DIST_THRESHOLD_MAX = 2.5;
     double DOCKING_CLUST_ANGLE_THRESHOLD = 45.0*D2R;
     double DOCKING_DOCK_SIZE_X[2] = {-0.025, 0.025};
-    double DOCKING_ICP_COST_THRESHOLD = 0.5;
-    double DOCKING_ICP_MAX_FEATURE_NUM = 1000;
+    double DOCKING_POINTDOCK_MARGIN = 0.18;
+    double DOCKING_ICP_ERR_THRESHOLD = 0.003;
+    int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
-    double DOCKING_GRID_SIZE = 0.05;
-
     // map
     QString MAP_PATH = "";
 

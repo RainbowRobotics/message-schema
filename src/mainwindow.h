@@ -17,6 +17,8 @@
 #include "mapping.h"
 #include "autocontrol.h"
 #include "sim.h"
+#include "dockcontrol.h"
+
 
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"
@@ -194,6 +196,11 @@ public Q_SLOTS:
     void bt_AutoPause();
     void bt_AutoResume();
     void bt_ReturnToCharging();
+
+    // for dockcontrol
+    void bt_DockStart();
+    void bt_DockStop();
+    void bt_UnDockStart();
 
     void slot_local_path_updated();
     void slot_global_path_updated();

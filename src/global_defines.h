@@ -193,7 +193,8 @@ enum DOCK_FSM_STATE
     DOCKING_FSM_WAIT,
     DOCKING_FSM_COMPLETE,
     DOCKING_FSM_FAILED,
-    DOCKING_FSM_POINTDOCK_FOR_CHRGE
+    DOCKING_FSM_POINTDOCK_FOR_CHRGE,
+    DOCKING_FSM_CHKCHARGE,
 };
 
 enum AUTO_OBS_STATE
@@ -703,6 +704,17 @@ struct MOBILE_STATUS
 
     unsigned char adc_value[4] ={0,};
     unsigned char dac_value[4] ={0,};
+
+    float tabos_voltage =0.; //v
+    float tabos_current =0.; //a
+    uint16_t tabos_status = 0;
+    unsigned short tabos_ttf = 0; // time to full-min
+    unsigned short tabos_tte = 0; // time to empty-min
+    unsigned char tabos_soc = 0; // state of charge-%
+    unsigned char tabos_soh = 0; // state of health-%
+    float tabos_temperature = 0.; // battery temperature-c
+    float tabos_rc = 0.; // remain capacity -ah
+    float tabos_ae = 0; // availiable energy -wh
 };
 
 struct MOBILE_POSE

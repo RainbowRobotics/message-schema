@@ -532,6 +532,17 @@ void COMM_RRS::send_status()
     powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
     powerObj["power"] = QString::number(ms.power, 'f', 3);
     powerObj["bat_percent"] = QString::number(ms.bat_percent);
+    powerObj["tabos_voltage"]   = QString::number(ms.tabos_voltage, 'f', 3);
+    powerObj["tabos_current"]   = QString::number(ms.tabos_current, 'f', 3);
+    powerObj["tabos_status"]    = QString::number(ms.tabos_status);
+    powerObj["tabos_ttf"]       = QString::number(ms.tabos_ttf);
+    powerObj["tabos_tte"]       = QString::number(ms.tabos_tte);
+    powerObj["tabos_soc"]       = QString::number(ms.tabos_soc);
+    powerObj["tabos_soh"]       = QString::number(ms.tabos_soh);
+    powerObj["tabos_temp"]      = QString::number(ms.tabos_temperature, 'f', 3);
+    powerObj["tabos_rc"]        = QString::number(ms.tabos_rc, 'f', 3);
+    powerObj["tabos_ae"]        = QString::number(ms.tabos_ae, 'f' ,3);
+
     if(platform_type == "D400" || platform_type == "MECANUM")
     {
         powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
@@ -1444,7 +1455,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
-            //_main->bt_DockStart();
+            _main->bt_DockStart();
         }
       
         send_dock_response(msg);
@@ -1457,7 +1468,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
-            //_main->bt_UnDockStart();
+            _main->bt_UnDockStart();
         }
       
         send_dock_response(msg);

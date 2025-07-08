@@ -275,28 +275,22 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     QJsonObject obj_dock = obj["docking"].toObject();
 
     check_and_set_int(obj_dock, "DOCKING_TYPE", DOCKING_TYPE, "docking");
-    check_and_set_int(obj_dock, "DOCKING_MAP_SIZE", DOCKING_MAP_SIZE, "docking");
     check_and_set_double(obj_dock, "DOCKING_POINTDOCK_MARGIN", DOCKING_POINTDOCK_MARGIN, "docking");
-    check_and_set_double(obj_dock, "DOCK_GOAL_D", DOCK_GOAL_D, "docking");
-    check_and_set_double(obj_dock, "DOCK_GOAL_TH", DOCK_GOAL_TH, "docking");
-    check_and_set_double(obj_dock, "DOCK_EXTENDED_CONTROL_TIME", DOCK_EXTENDED_CONTROL_TIME, "docking");
-    check_and_set_double(obj_dock, "DOCK_UNDOCK_REVERSING_DISTANCE", DOCK_UNDOCK_REVERSING_DISTANCE, "docking");
     check_and_set_double(obj_dock, "DOCKING_GOAL_D", DOCKING_GOAL_D, "docking");
     check_and_set_double(obj_dock, "DOCKING_GOAL_TH", DOCKING_GOAL_TH, "docking");
     check_and_set_double(obj_dock, "DOCKING_KP_d", DOCKING_KP_d, "docking");
     check_and_set_double(obj_dock, "DOCKING_KD_d", DOCKING_KD_d, "docking");
     check_and_set_double(obj_dock, "DOCKING_KP_th", DOCKING_KP_th, "docking");
     check_and_set_double(obj_dock, "DOCKING_KD_th", DOCKING_KD_th, "docking");
-    check_and_set_double(obj_dock, "DOCKING_CLUST_D_THRESHOLD", DOCKING_CLUST_D_THRESHOLD, "docking");
-    check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MIN", DOCKING_CLUST_DIST_THRESHOLD_MIN, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MAX", DOCKING_CLUST_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_ANGLE_THRESHOLD", DOCKING_CLUST_ANGLE_THRESHOLD, "docking");
-    check_and_set_double(obj_dock, "DOCKING_DOCK_SIZE_X_MIN", DOCKING_DOCK_SIZE_X[0], "docking");
-    check_and_set_double(obj_dock, "DOCKING_DOCK_SIZE_X_MAX", DOCKING_DOCK_SIZE_X[1], "docking");
-    check_and_set_double(obj_dock, "DOCKING_ICP_COST_THRESHOLD", DOCKING_ICP_COST_THRESHOLD, "docking");
-    check_and_set_double(obj_dock, "DOCKING_ICP_MAX_FEATURE_NUM", DOCKING_ICP_MAX_FEATURE_NUM, "docking");
     check_and_set_double(obj_dock, "DOCKING_EXTENDED_CONTROL_TIME", DOCKING_EXTENDED_CONTROL_TIME, "docking");
-    check_and_set_double(obj_dock, "DOCKING_GRID_SIZE", DOCKING_GRID_SIZE, "docking");
+    check_and_set_double(obj_dock, "DOCKING_K_ALPHA", DOCKING_K_ALPHA, "docking");
+    check_and_set_double(obj_dock, "DOCKING_K_BETA", DOCKING_K_BETA, "docking");
+    check_and_set_double(obj_dock, "DOCKING_K_RHO", DOCKING_K_RHO, "docking");
+    check_and_set_double(obj_dock, "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX", DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CHG_LENGTH", DOCKING_CHG_LENGTH, "docking");
+    check_and_set_double(obj_dock, "DOCKING_ICP_ERR_THRESHOLD", DOCKING_ICP_ERR_THRESHOLD, "docking");
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -1180,12 +1174,6 @@ int CONFIG::get_docking_type()
     return DOCKING_TYPE;
 }
 
-int CONFIG::get_docking_map_size()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_MAP_SIZE;
-}
-
 double CONFIG::get_docking_pointdock_margin()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1208,12 +1196,6 @@ double CONFIG::get_docking_extended_control_time()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DOCKING_EXTENDED_CONTROL_TIME;
-}
-
-double CONFIG::get_docking_undock_reversing_distance()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCK_UNDOCK_REVERSING_DISTANCE;
 }
 
 double CONFIG::get_docking_kp_dist()
@@ -1276,23 +1258,43 @@ double CONFIG::get_docking_size_x_max()
     return DOCKING_DOCK_SIZE_X[1];
 }
 
-double CONFIG::get_docking_icp_cost_threshold()
+double CONFIG::get_docking_icp_err_threshold()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_ICP_COST_THRESHOLD;
+    return DOCKING_ICP_ERR_THRESHOLD;
 }
 
-double CONFIG::get_docking_icp_max_feature_num()
+
+double CONFIG::get_docking_k_alpha()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_ICP_MAX_FEATURE_NUM;
+    return DOCKING_K_ALPHA;
 }
 
-double CONFIG::get_docking_grid_size()
+double CONFIG::get_docking_k_beta()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_GRID_SIZE;
+    return DOCKING_K_BETA;
 }
+
+double CONFIG::get_docking_k_rho()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_K_RHO;
+}
+
+double CONFIG::get_docking_find_vmark_dist_threshold_max()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX;
+}
+
+double CONFIG::get_docking_chg_length()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CHG_LENGTH;
+}
+
 
 QString CONFIG::get_map_path()
 {

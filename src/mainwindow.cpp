@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     MAPPING::instance(this);
     AUTOCONTROL::instance(this);
     SIM::instance(this);
+    DOCKCONTROL::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -79,6 +80,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(), SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(), SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
 
+    // dockcontrol
+    connect(ui->bt_DockStart,        SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
+    connect(ui->bt_DockStop,         SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
+    connect(ui->bt_UnDockStart,      SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
+                    // start docking
     connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
     // set effect
@@ -1286,6 +1292,31 @@ void MainWindow::bt_AutoResume()
     AUTOCONTROL::instance()->set_is_pause(false);
 }
 
+//docking
+void MainWindow::bt_DockStart()
+{
+    AUTOCONTROL::instance()->set_is_moving(true);
+    DOCKCONTROL::instance()->move();
+}
+
+void MainWindow::bt_DockStop()
+{
+    DOCKCONTROL::instance()->stop();
+    AUTOCONTROL::instance()->set_is_moving(false);
+}
+
+void MainWindow::bt_UnDockStart()
+{
+    AUTOCONTROL::instance()->set_is_moving(true);
+    DOCKCONTROL::instance()->undock();
+
+    double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 0.5;
+    QTimer::singleShot(t*1000, [&]()
+    {
+        AUTOCONTROL::instance()->set_is_moving(false);
+    });
+}
+
 void MainWindow::bt_ReturnToCharging()
 {
     QString robot_serial_number = CONFIG::instance()->get_robot_serial_number();
@@ -1534,7 +1565,7 @@ void MainWindow::watch_loop()
                     // when motor status 0, emo released, no charging
                     if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
-                        MOBILE::instance()->motor_on();
+//                        MOBILE::instance()->motor_on();
                     }
 
                     if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
@@ -1774,7 +1805,7 @@ void MainWindow::plot_node()
         // draw
         auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
         if(unimap_nodes && unimap_nodes->size() > 0)
-        {            
+        {
             std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {

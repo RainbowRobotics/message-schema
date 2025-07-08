@@ -370,14 +370,16 @@ void MOBILE::recv_loop()
         // D400 total 133 -> data 126
         // S100 total 92  -> data 85
         // Mecanum total 136 -> data 129
-        // Safety total 186 -> data 179
+        // Safety total 186 -> data 199
         while((int)buf.size() > min_packet_size && recv_flag)
         {
             if(buf[0] == 0x24){
                 // Header
                 int data_size = (unsigned short)(buf[1]|(buf[2]<<8));
-                if(data_size+7 <= buf.size()){
-                    if(buf[data_size+6] == 0x25){
+                if(data_size+7 <= buf.size())
+                {
+                    if(buf[data_size+6] == 0x25)
+                    {
                         // Footer
 
                         int index=6;
@@ -388,25 +390,35 @@ void MOBILE::recv_loop()
                         uchar *_buf = (uchar*)buf.data();
 
                         int robot_type = ROBOT_TYPE_UNKNOWN;
-                        if(data_size == 126){
+                        if(data_size == 126)
+                        {
                             // D400
                             robot_type = ROBOT_TYPE_D400;
-                        }else if(data_size == 85){
+                        }
+                        else if(data_size == 85)
+                        {
                             // S100
                             robot_type = ROBOT_TYPE_S100;
-                        }else if(data_size == 129){
+                        }
+                        else if(data_size == 129)
+                        {
                             // Mecanum
                             robot_type = ROBOT_TYPE_MECANUM;
-                        }else if(data_size == 179){
+                        }
+                        else if(data_size == 199)
+                        {
                             // Safety
                             robot_type = ROBOT_TYPE_SAFETY;
-                        }else{
+                        }
+                        else
+                        {
                             std::cout << "robot_type: " << robot_type << ", data_size: " << data_size << std::endl;
                         }
 //                        qDebug() << "robot_type: " << robot_type << ", data_size: " << data_size;
 
 
-                        if(_buf[5] == 0xA2){
+                        if(_buf[5] == 0xA2)
+                        {
                             // Normal Data
 
                             uint32_t tick;
@@ -416,7 +428,8 @@ void MOBILE::recv_loop()
 
                             uint32_t recv_tick;
                             float return_time;
-                            if(robot_type != ROBOT_TYPE_MECANUM){
+                            if(robot_type != ROBOT_TYPE_MECANUM)
+                            {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
                             }
@@ -425,7 +438,8 @@ void MOBILE::recv_loop()
                             uint8_t connection_status_m2, connection_status_m3;
                             connection_status_m0 = _buf[index];     index=index+dlc;
                             connection_status_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 connection_status_m2 = _buf[index];     index=index+dlc;
                                 connection_status_m3 = _buf[index];     index=index+dlc;
                             }
@@ -442,11 +456,14 @@ void MOBILE::recv_loop()
 
                             float local_v, local_w;
                             float local_vx, local_vy, local_wz;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 memcpy(&local_vx, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&local_vy, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&local_wz, &_buf[index], dlc_f);     index=index+dlc_f;
-                            }else{
+                            }
+                            else
+                            {
                                 memcpy(&local_v, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&local_w, &_buf[index], dlc_f);     index=index+dlc_f;
                             }
@@ -455,7 +472,8 @@ void MOBILE::recv_loop()
                             uint8_t stat_m2, stat_m3;
                             stat_m0 = _buf[index];     index=index+dlc;
                             stat_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 stat_m2 = _buf[index];     index=index+dlc;
                                 stat_m3 = _buf[index];     index=index+dlc;
                             }
@@ -464,13 +482,15 @@ void MOBILE::recv_loop()
                             uint8_t temp_m2, temp_m3;
                             temp_m0 = _buf[index];     index=index+dlc;
                             temp_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 temp_m2 = _buf[index];     index=index+dlc;
                                 temp_m3 = _buf[index];     index=index+dlc;
                             }
 
                             uint8_t esti_temp_m0, esti_temp_m1;
-                            if(robot_type == ROBOT_TYPE_D400){
+                            if(robot_type == ROBOT_TYPE_D400)
+                            {
                                 memcpy(&esti_temp_m0, &_buf[index], dlc);     index=index+dlc;
                                 memcpy(&esti_temp_m1, &_buf[index], dlc);     index=index+dlc;
                             }
@@ -479,7 +499,8 @@ void MOBILE::recv_loop()
                             uint8_t cur_m2, cur_m3;
                             cur_m0 = _buf[index];     index=index+dlc;
                             cur_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 cur_m2 = _buf[index];     index=index+dlc;
                                 cur_m3 = _buf[index];     index=index+dlc;
                             }
@@ -492,7 +513,8 @@ void MOBILE::recv_loop()
                             uint8_t safety_emo_pressed_2, safety_ref_meas_mismatch_2, safety_over_speed_2,safety_obs_detect_2,
                                     safety_speed_field_mismatch_2, safety_stop_state_flag_2, safety_interlock_stop_2, safety_bumper_stop_2;
 
-                            if(robot_type == ROBOT_TYPE_SAFETY){
+                            if(robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 memcpy(&auto_manual_sw, &_buf[index], dlc);       index=index+dlc;
                                 memcpy(&brake_sw, &_buf[index], dlc);             index=index+dlc;
                                 memcpy(&reset_sw, &_buf[index], dlc);             index=index+dlc;
@@ -522,7 +544,9 @@ void MOBILE::recv_loop()
                                 memcpy(&safety_stop_state_flag_2, &_buf[index], dlc);         index=index+dlc;
                                 memcpy(&safety_interlock_stop_2, &_buf[index] ,dlc);          index=index+dlc;
                                 memcpy(&safety_bumper_stop_2, &_buf[index], dlc);             index=index+dlc;
-                            }else{
+                            }
+                            else
+                            {
                                 charge_state = _buf[index];     index=index+dlc;
                                 power_state = _buf[index];      index=index+dlc;
                                 motor_stop_state = _buf[index];        index=index+dlc;
@@ -538,7 +562,8 @@ void MOBILE::recv_loop()
                             memcpy(&bat_out, &_buf[index], dlc_f);              index=index+dlc_f;
                             memcpy(&bat_cur, &_buf[index], dlc_f);              index=index+dlc_f;
 
-                            if(robot_type == ROBOT_TYPE_SAFETY){
+                            if(robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 memcpy(&lift_voltage_in, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&lift_voltage_out, &_buf[index], dlc_f);              index=index+dlc_f;
                                 memcpy(&lift_current, &_buf[index], dlc_f);                  index=index+dlc_f;
@@ -556,10 +581,13 @@ void MOBILE::recv_loop()
                                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
                             }
 
-                            if(robot_type == ROBOT_TYPE_D400){
+                            if(robot_type == ROBOT_TYPE_D400)
+                            {
                                 memcpy(&charge_current, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&contact_voltage, &_buf[index], dlc_f);               index=index+dlc_f;
-                            }else if(robot_type == ROBOT_TYPE_S100 || robot_type == ROBOT_TYPE_SAFETY){
+                            }
+                            else if(robot_type == ROBOT_TYPE_S100 || robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 memcpy(&motor_core_temp0, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&motor_core_temp1, &_buf[index], dlc_f);     index=index+dlc_f;
                             }
@@ -568,9 +596,12 @@ void MOBILE::recv_loop()
                             float q0, q1, q2, q3;
                             float imu_gyr_x=0.0, imu_gyr_y=0.0, imu_gyr_z=0.0;
                             float imu_acc_x=0.0, imu_acc_y=0.0, imu_acc_z=0.0;
-                            if(robot_type == ROBOT_TYPE_S100){
+                            if(robot_type == ROBOT_TYPE_S100)
+                            {
                                 state = _buf[index];     index=index+dlc;
-                            }else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_MECANUM){
+                            }
+                            else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
                                 memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
                                 memcpy(&q2, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -586,7 +617,8 @@ void MOBILE::recv_loop()
                             }
 
                             uint8_t inter_lock_state;
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 inter_lock_state = _buf[index];     index=index+dlc;
                             }
 
@@ -598,25 +630,54 @@ void MOBILE::recv_loop()
                             uint8_t io_din[16];
                             uint8_t io_adc[4];
                             uint8_t io_dac[4];
-                            if(robot_type == ROBOT_TYPE_SAFETY){
+
+                            unsigned short _tabos_voltage;
+                            short _tabos_current;
+                            uint16_t _tabos_status;
+                            unsigned short _tabos_ttf;
+                            unsigned short _tabos_tte;
+                            unsigned char _tabos_soc;
+                            unsigned char _tabos_soh;
+                            short _tabos_temperature;
+                            unsigned short _tabos_rc;
+                            unsigned short _tabos_ae;
+
+
+                            if(robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 memcpy(&lidar_field, &_buf[index], dlc);                index=index+dlc;
                                 memcpy(&ref_dps_0, &_buf[index], dlc_s);                index=index+dlc_s;
                                 memcpy(&ref_dps_1, &_buf[index], dlc_s);                index=index+dlc_s;
                                 memcpy(&meas_dps_0, &_buf[index], dlc_s);                index=index+dlc_s;
                                 memcpy(&meas_dps_1, &_buf[index], dlc_s);                index=index+dlc_s;
 
-                                for(int i=0; i<16; i++){
+                                for(int i=0; i<16; i++)
+                                {
                                     memcpy(&io_dout[i], &_buf[index], dlc);                  index=index+dlc;
                                 }
-                                for(int i=0; i<16; i++){
+                                for(int i=0; i<16; i++)
+                                {
                                     memcpy(&io_din[i], &_buf[index], dlc);                  index=index+dlc;
                                 }
-                                for(int i=0; i<4; i++){
+                                for(int i=0; i<4; i++)
+                                {
                                     memcpy(&io_adc[i], &_buf[index], dlc);                  index=index+dlc;
                                 }
-                                for(int i=0; i<4; i++){
+                                for(int i=0; i<4; i++)
+                                {
                                     memcpy(&io_dac[i], &_buf[index], dlc);                  index=index+dlc;
                                 }
+
+                                memcpy(&_tabos_voltage, &_buf[index], dlc_s);     index=index+dlc_s;
+                                memcpy(&_tabos_current, &_buf[index], dlc_s);     index=index+dlc_s;
+                                memcpy(&_tabos_status, &_buf[index], dlc_s);      index=index+dlc_s;
+                                memcpy(&_tabos_ttf, &_buf[index], dlc_s);         index=index+dlc_s;
+                                memcpy(&_tabos_tte, &_buf[index], dlc_s);         index=index+dlc_s;
+                                memcpy(&_tabos_soc, &_buf[index], dlc);           index=index+dlc;
+                                memcpy(&_tabos_soh, &_buf[index], dlc);           index=index+dlc;
+                                memcpy(&_tabos_temperature, &_buf[index], dlc_s);  index=index+dlc_s;
+                                memcpy(&_tabos_rc, &_buf[index], dlc_s);           index=index+dlc_s;
+                                memcpy(&_tabos_ae, &_buf[index], dlc_s);           index=index+dlc_s;
                             }
 
 
@@ -681,10 +742,12 @@ void MOBILE::recv_loop()
                             mobile_status.cur_m3 = cur_m3;
                             mobile_status.charge_state = charge_state;
                             mobile_status.power_state = power_state;
-                            if(robot_type == ROBOT_TYPE_SAFETY){
+                            if(robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 mobile_status.motor_stop_state = !(safety_emo_pressed_1||safety_emo_pressed_2);
                             }
-                            else{
+                            else
+                            {
                                 mobile_status.motor_stop_state =  motor_stop_state;
                             }
                             mobile_status.remote_state = remote_state;
@@ -765,6 +828,17 @@ void MOBILE::recv_loop()
                                 mobile_status.mcu0_din[i] = io_din[i+8];
                             }
 
+                            mobile_status.tabos_voltage = _tabos_voltage * 0.01f;
+                            mobile_status.tabos_current = _tabos_current * 0.01f;
+                            mobile_status.tabos_status = _tabos_status;
+                            mobile_status.tabos_ttf = _tabos_ttf;
+                            mobile_status.tabos_tte = _tabos_tte;
+                            mobile_status.tabos_soc = _tabos_soc;
+                            mobile_status.tabos_soh = _tabos_soh;
+                            mobile_status.tabos_temperature = _tabos_temperature * 0.1f;
+                            mobile_status.tabos_rc = _tabos_rc * 0.01f;
+                            mobile_status.tabos_ae = _tabos_ae * 0.1f;
+                            
                             // imu
                             mobile_status.imu_gyr_x = imu_gyr_x * D2R;
                             mobile_status.imu_gyr_y = imu_gyr_y * D2R;
@@ -795,7 +869,8 @@ void MOBILE::recv_loop()
 
 
                             // pose & status text
-                            if(robot_type == ROBOT_TYPE_S100){
+                            if(robot_type == ROBOT_TYPE_S100)
+                            {
                                 QString strP, strS;
                                 strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
@@ -815,7 +890,9 @@ void MOBILE::recv_loop()
                                 mtx.lock();
                                 status_text = strS;
                                 mtx.unlock();
-                            }else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_SAFETY){
+                            }
+                            else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_SAFETY)
+                            {
                                 QString strP, strS;
                                 strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
@@ -826,18 +903,29 @@ void MOBILE::recv_loop()
                                 pose_text = strP;
                                 mtx.unlock();
 
-                                strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f",
+                                strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
+                                             "temp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\n"
+                                             "charge,power,emo,remote:%d,%d,%d,%d\n"
+                                             "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
+                                             "power:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\n"
+                                             "gyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\n"
+                                             "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n" 
+                                             "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d)",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
                                             (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
                                             mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
                                             mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                                             mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                                             mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                            mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z);
+                                            mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
+                                            mobile_status.tabos_voltage, mobile_status.tabos_current, mobile_status.tabos_ttf, mobile_status.tabos_tte, mobile_status.tabos_soc, mobile_status.tabos_soh,
+                                            mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status);
                                 mtx.lock();
                                 status_text = strS;
                                 mtx.unlock();
-                            }else if(robot_type == ROBOT_TYPE_MECANUM){
+                            }
+                            else if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 QString strP, strS;
                                 strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
@@ -865,9 +953,6 @@ void MOBILE::recv_loop()
                                 mtx.unlock();
                             }
 
-
-
-
                             // storing
                             mtx.lock();
                             cur_pose = mobile_pose;
@@ -890,7 +975,9 @@ void MOBILE::recv_loop()
                             // update last t
                             last_pose_t = mobile_pose.t;
                             last_imu_t = imu.t;
-                        }else if(_buf[5] == 0xA3){
+                        }
+                        else if(_buf[5] == 0xA3)
+                        {
                             // Safety Data
 
                             unsigned int _version;
@@ -963,15 +1050,21 @@ void MOBILE::recv_loop()
                         }
 
                         buf.erase(buf.begin(), buf.begin()+data_size+7);
-                    }else{
+                    }
+                    else
+                    {
                         qDebug() << "Footer Fail";
                         buf.erase(buf.begin(), buf.begin()+1);
                     }
-                }else{
+                }
+                else
+                {
                     qDebug() << "Size Fail";
                     break;
                 }
-            }else{
+            }
+            else
+            {
                 qDebug() << "Header Fail";
                 buf.erase(buf.begin(), buf.begin()+1);
             }
