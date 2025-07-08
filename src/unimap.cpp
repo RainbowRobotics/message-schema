@@ -756,7 +756,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
         return "";
     }
 
-    const double search_radius = config ? config->get_robot_radius() * 2.0 : 2.0;
+    const double search_radius = config ? config->get_robot_radius() * 5.0 : 2.0;
 
     std::shared_lock<std::shared_mutex> lock(mtx);
 

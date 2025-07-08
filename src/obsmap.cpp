@@ -924,26 +924,109 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
 int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
+    mtx.lock();
     std::vector<Eigen::Vector3d> pts;
     std::vector<Eigen::Vector3d> pts_vir;
+    if(is_dyn)
     {
-        std::shared_lock<std::shared_mutex> lock(mtx);
-        if(is_dyn)
-        {
-            pts = dyn_pts;
-            pts_vir = vir_pts;
-        }
-        else
-        {
-            pts = obs_pts;
-        }
+        pts = dyn_pts;
+        pts_vir = vir_pts;
     }
+    else
+    {
+        pts = obs_pts;
+    }
+    mtx.unlock();
 
     // draw trajectory
     const double x_min = config->get_robot_size_x_min() - margin_x;
     const double x_max = config->get_robot_size_x_max() + margin_x;
     const double y_min = config->get_robot_size_y_min() - margin_y;
     const double y_max = config->get_robot_size_y_max() + margin_y;
+
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
+
+    // check collision
+    for(int i = st_idx; i < (int)robot_tfs.size(); i++)
+    {
+        if(i == st_idx || i == (int)robot_tfs.size()-1 || i%idx_step == 0)
+        {
+            Eigen::Matrix4d G = robot_tfs[i];
+
+            std::vector<Eigen::Vector3d> robot_pts;
+            robot_pts.push_back(G.block(0,0,3,3)*P0 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P1 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P2 + G.block(0,3,3,1));
+            robot_pts.push_back(G.block(0,0,3,3)*P3 + G.block(0,3,3,1));
+
+            for(size_t p = 0; p < pts.size(); p++)
+            {
+                bool is_collision = false;
+                for(size_t q = 0; q < robot_pts.size(); q++)
+                {
+                    Eigen::Vector3d pt = pts[p];
+                    Eigen::Vector3d pt0 = robot_pts[q];
+                    Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
+
+                    if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+                         (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
+                    {
+                        is_collision = !is_collision;
+                    }
+                }
+
+                // collision
+                if(is_collision)
+                {
+                    return OBS_DYN;
+                }
+            }
+        }
+    }
+
+    // check multi-robot collision
+    if(is_dyn)
+    {
+        for(int i = st_idx; i < (int)robot_tfs.size(); i++)
+        {
+            if(i == st_idx || i == (int)robot_tfs.size()-1 || i%idx_step == 0)
+            {
+                Eigen::Matrix4d G = robot_tfs[i];
+
+                std::vector<Eigen::Vector3d> robot_pts;
+                robot_pts.push_back(G.block(0,0,3,3)*P0 + G.block(0,3,3,1));
+                robot_pts.push_back(G.block(0,0,3,3)*P1 + G.block(0,3,3,1));
+                robot_pts.push_back(G.block(0,0,3,3)*P2 + G.block(0,3,3,1));
+                robot_pts.push_back(G.block(0,0,3,3)*P3 + G.block(0,3,3,1));
+
+                for(size_t p = 0; p < pts_vir.size(); p++)
+                {
+                    bool is_collision = false;
+                    for(size_t q = 0; q < robot_pts.size(); q++)
+                    {
+                        Eigen::Vector3d pt = pts_vir[p];
+                        Eigen::Vector3d pt0 = robot_pts[q];
+                        Eigen::Vector3d pt1 = robot_pts[(q+1) % robot_pts.size()];
+
+                        if (((pt0[1] >= pt[1] && pt1[1] < pt[1]) || (pt0[1] < pt[1] && pt1[1] >= pt[1])) &&
+                             (pt[0] < (pt1[0]-pt0[0])*(pt[1]-pt0[1])/(pt1[1]-pt0[1]) + pt0[0]))
+                        {
+                            is_collision = !is_collision;
+                        }
+                    }
+
+                    // collision
+                    if(is_collision)
+                    {
+                        return OBS_VIR;
+                    }
+                }
+            }
+        }
+    }
 
     // no collision
     return OBS_NONE;

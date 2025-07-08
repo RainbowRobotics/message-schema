@@ -866,16 +866,17 @@ void MOBILE::recv_loop()
                             imu.ry = r[1];
                             imu.rz = r[2];
 
-
+                            Eigen::Vector3d cmd = get_control_input();
 
                             // pose & status text
                             if(robot_type == ROBOT_TYPE_S100)
                             {
                                 QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f",
+                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                            mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D);
+                                            mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                                            cmd[0], cmd[1], cmd[2]*R2D);
                                 mtx.lock();
                                 pose_text = strP;
                                 mtx.unlock();
@@ -894,11 +895,11 @@ void MOBILE::recv_loop()
                             else if(robot_type == ROBOT_TYPE_D400 || robot_type == ROBOT_TYPE_SAFETY)
                             {
                                 QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
+                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                            r[0]*R2D, r[1]*R2D, r[2]*R2D);
+                                            cmd[0], cmd[1], cmd[2]*R2D);
                                 mtx.lock();
                                 pose_text = strP;
                                 mtx.unlock();
@@ -927,11 +928,11 @@ void MOBILE::recv_loop()
                             else if(robot_type == ROBOT_TYPE_MECANUM)
                             {
                                 QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f,\nimu:%.2f, %.2f, %.2f",
+                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                             mobile_pose.t,
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                            r[0]*R2D, r[1]*R2D, r[2]*R2D);
+                                            cmd[0], cmd[1], cmd[2]*R2D);
                                 mtx.lock();
                                 pose_text = strP;
                                 mtx.unlock();
