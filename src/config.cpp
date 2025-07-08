@@ -500,8 +500,7 @@ bool CONFIG::load_common(QString path)
     {
         PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
     }
-
-    printf("[CONFIG] PLATFORM_NAME, %s\n", PLATFORM_NAME.toStdString());
+    printf("[CONFIG] PLATFORM_NAME, %s\n", qUtf8Printable(PLATFORM_NAME));
 
     // complete
     common_file.close();

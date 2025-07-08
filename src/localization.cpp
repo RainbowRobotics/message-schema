@@ -893,7 +893,7 @@ void LOCALIZATION::obs_loop()
             }
         }
 
-        std::cout << "temp_pts size: " << temp_pts.size() << std::endl;
+        // std::cout << "temp_pts size: " << temp_pts.size() << std::endl;
 
         TIME_POSE_PTS tpp;
         tpp.tf = _cur_tf;

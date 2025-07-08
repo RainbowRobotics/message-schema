@@ -3,13 +3,13 @@
         "PLATFORM_NAME": "SEM",
         "PLATFORM_TYPE": "D400",
         
-        "ROBOT_SIZE_MAX_X": "0.56",
-        "ROBOT_SIZE_MAX_Y": "0.375",
-        "ROBOT_SIZE_MAX_Z": "0.465",
-        "ROBOT_SIZE_MIN_X": "-0.56",
-        "ROBOT_SIZE_MIN_Y": "-0.375",
+        "ROBOT_SIZE_MAX_X": "0.51",
+        "ROBOT_SIZE_MAX_Y": "0.35",
+        "ROBOT_SIZE_MAX_Z": "0.22",
+        "ROBOT_SIZE_MIN_X": "-0.51",
+        "ROBOT_SIZE_MIN_Y": "-0.35",
         "ROBOT_SIZE_MIN_Z": "0",
-        "ROBOT_WHEEL_BASE": "0.6585",
+        "ROBOT_WHEEL_BASE": "0.510",
         "ROBOT_WHEEL_RADIUS": "0.075"
     },
     "sensors": {
@@ -57,11 +57,11 @@
     "lidar_3d_config": [
         {
             "IP": "192.168.1.100",
-            "TF": "0.4515, -0.3265, 0.516, 0.0, 0.0, -45.0"
+            "TF": "0.360, -0.2228, 0.880, 0.0, 0.0, -90.0"
         },
         {
             "IP": "192.168.1.101",
-            "TF": "-0.4515, 0.3265, 0.516, 0.0, 0.0, 135.0"
+            "TF": "-0.360, 0.2228, 0.880, 0.0, 0.0, 180.0"
         }
     ],
     "cam_config": [
@@ -103,9 +103,9 @@
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
         "MOTOR_LIMIT_V": "2.0",
-        "MOTOR_LIMIT_V_ACC": "0.2",
+        "MOTOR_LIMIT_V_ACC": "2.0",
         "MOTOR_LIMIT_W": "180",
-        "MOTOR_LIMIT_W_ACC": "5"
+        "MOTOR_LIMIT_W_ACC": "360"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -173,9 +173,16 @@
     },
     "docking": {
     	"DOCKING_POINTDOCK_MARGIN": "0.18",
-    	"DOCKING_GOAL_D": "0.05",
+    	"DOCKING_GOAL_D": "0.03",
     	"DOCKING_GOAL_TH": "0.01745",
-    	"DOCKING_TYPE": "0"
+    	"DOCKING_TYPE": "0",
+    	"DOCKING_CHG_LENGTH": "0.472",
+    	"DOCKING_K_ALPHA": "4.5",
+    	"DOCKING_K_BETA": "1.5",
+    	"DOCKING_K_RHO": "0.6",
+    	"DOCKING_CLUST_DIST_THRESHOLD_MAX" : "2.5",
+    	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX" : "2.5",
+    	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
         "MAP_PATH": "/home/juyeon/maps/250411_coop_test"

@@ -426,6 +426,38 @@ bool UNIMAP::load_node()
     return true;
 }
 
+void UNIMAP::save_node()
+{
+    // get save folder
+    QString path = map_path;
+
+    // save topo.json
+    QString topo_path = path + "/topo.json";
+    QFile topo_file(topo_path);
+    if(topo_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    {
+        QJsonArray arr;
+        for(size_t p = 0; p < nodes->size(); p++)
+        {
+            QJsonObject obj;
+            obj["id"] = (*nodes)[p].id;
+            obj["name"] = (*nodes)[p].name;
+            obj["type"] = (*nodes)[p].type;
+            obj["info"] = (*nodes)[p].info;
+            obj["pose"] = TF_to_string((*nodes)[p].tf);
+            obj["links"] = links_to_array((*nodes)[p].linked);
+
+            arr.append(obj);
+        }
+
+        QJsonDocument doc(arr);
+        topo_file.write(doc.toJson());
+        topo_file.close();
+
+        printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+    }
+}
+
 void UNIMAP::clear_nodes()
 {
     std::unique_lock<std::shared_mutex> lock(mtx);
@@ -472,6 +504,13 @@ std::shared_ptr<std::vector<NODE>> UNIMAP::get_nodes_origin()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return nodes;
+}
+
+QString UNIMAP::gen_node_id()
+{
+    QString res;
+    res.sprintf("N_%lld", (long long)(get_time()*1000));
+    return res;
 }
 
 double UNIMAP::get_map_min_x()
@@ -1084,6 +1123,16 @@ bool UNIMAP::add_node(const NODE& node)
     }
     
     return true;
+}
+
+bool UNIMAP::add_node(const Eigen::Matrix4d tf, const QString type)
+{
+    NODE node;
+    node.id = gen_node_id();
+    node.type = type;
+    node.tf = tf;
+
+    return add_node(node);
 }
 
 bool UNIMAP::remove_node(const QString& id)

@@ -24,6 +24,7 @@ public:
 
     // load map from path
     void load_map(QString path);
+    void save_node();
 
     // clear all map params
     void clear();
@@ -63,6 +64,7 @@ public:
 
     // interface funcs (node)
     bool add_node(const NODE& node);
+    bool add_node(const Eigen::Matrix4d tf, const QString type);
     bool remove_node(const QString& id);
 
     /***********************
@@ -146,6 +148,8 @@ private:
     bool update_node(const QString& id, const NODE& new_node);
     void update_node_in_maps(const NODE& node, size_t index);
     void remove_node_from_maps(const QString& id, const QString& name);
+
+    QString gen_node_id();
 };
 
 #endif // UNIMAP_H

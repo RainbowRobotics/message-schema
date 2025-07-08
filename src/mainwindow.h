@@ -202,6 +202,11 @@ public Q_SLOTS:
     void bt_DockStop();
     void bt_UnDockStart();
 
+    // for annotation
+    void bt_DelNode();
+    void bt_AnnotSave();
+    void bt_QuickAddNode();
+
     void slot_local_path_updated();
     void slot_global_path_updated();
 

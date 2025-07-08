@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // for 3d viewer
     connect(ui->cb_ViewType,         SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
+    connect(ui->spb_PointSize,       SIGNAL(valueChanged(int)), this, SLOT(map_update()));              // change point size -> update map rendering elements
 
     // for simulation
     connect(ui->bt_SimInit,          SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
@@ -86,6 +87,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_UnDockStart,      SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
                     // start docking
     connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
+
+    // annotation
+    connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
+    connect(ui->bt_AnnotSave, SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
+    connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
     // set effect
     init_ui_effect();
@@ -1377,6 +1383,70 @@ void MainWindow::bt_ReturnToCharging()
     Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
 }
 
+// annotation
+void MainWindow::bt_DelNode()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[Del_Node] check map load\n");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        printf("[Del_Node] check localization\n");
+        return;
+    }
+
+    if(pick.cur_node == "")
+    {
+        printf("[Del_Node] check pick node\n");
+        return;
+    }
+
+    UNIMAP::instance()->remove_node(pick.cur_node);
+    topo_update();
+}
+
+void MainWindow::bt_AnnotSave()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[Del_Node] check map load\n");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        printf("[Del_Node] check localization\n");
+        return;
+    }
+
+     UNIMAP::instance()->save_node();
+}
+
+void MainWindow::bt_QuickAddNode()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[QA_Node] check map load\n");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        printf("[QA_Node] check localization\n");
+        return;
+    }
+
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+    UNIMAP::instance()->add_node(cur_tf, "GOAL");
+
+    topo_update();
+    printf("[QA_Node] quick add node\n");
+}
+
+
 void MainWindow::slot_local_path_updated()
 {
     is_local_path_update = true;
@@ -1748,7 +1818,7 @@ void MainWindow::plot_map()
                 }
 
                 // point size
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "map_3d_pts");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, ui->spb_PointSize->value(), "map_3d_pts");
             }
         }
         else
@@ -1851,7 +1921,7 @@ void MainWindow::plot_node()
                     {
                         pcl_viewer->addCube(x_min, x_max,
                                             y_min, y_max,
-                                              0.0,   0.1, 0.0, 1.0, 1.0, id.toStdString());
+                                            z_min, z_max, 0.0, 1.0, 1.0, id.toStdString());
                         pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
 
                         Eigen::Vector3d front_dot = R * Eigen::Vector3d(x_max - 0.05, 0, 0) + t;
@@ -1869,7 +1939,7 @@ void MainWindow::plot_node()
                     {
                         pcl_viewer->addCube(x_min, x_max,
                                             y_min, y_max,
-                                                0,   0.1, 0.5, 1.0, 0.0, id.toStdString());
+                                            z_min, z_max, 0.5, 1.0, 0.0, id.toStdString());
                         pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
 
                         Eigen::Vector3d front_dot = R*Eigen::Vector3d(x_max - 0.05, 0, 0) + t;
@@ -1887,7 +1957,7 @@ void MainWindow::plot_node()
                     {
                         pcl_viewer->addCube(x_min, x_max,
                                             y_min, y_max,
-                                                 0,  0.1, 0.5, 1.0, 0.5, id.toStdString());
+                                            z_min, z_max, 0.5, 1.0, 0.5, id.toStdString());
                         pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
 
                         Eigen::Vector3d front_dot = R * Eigen::Vector3d(x_max - 0.05, 0, 0) + t;
