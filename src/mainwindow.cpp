@@ -1872,12 +1872,11 @@ void MainWindow::plot_node()
             last_plot_names.clear();
         }
 
-        std::cout << "0" << std::endl;
         // draw
         auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
         if(unimap_nodes && unimap_nodes->size() > 0)
         {
-            std::cout << "1" << std::endl;
+            // std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {
                 double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
@@ -2718,6 +2717,11 @@ void MainWindow::plot_obs()
             ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
             ui->lb_Screen1->setScaledContents(true);
             ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+
+            // debug
+            cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
+            cv::resizeWindow("OBS MAP", 700, 700);
+            cv::imshow("OBS MAP", plot_obs_map);
         }
 
         // plot obs pts

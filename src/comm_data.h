@@ -604,7 +604,7 @@ struct DATA_FOOT
     bool connection = false;
     int position;
     bool is_down = false;
-    QString state;
+    int state;
 
     QString result;
     QString message;
@@ -616,7 +616,7 @@ struct DATA_FOOT
         connection = false;
         position = 0;
         is_down = false;
-        state = "";
+        state = 0;
 
         result = "";
         message = "";

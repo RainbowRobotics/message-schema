@@ -70,6 +70,11 @@ Eigen::Vector2d dTdR(Eigen::Matrix4d G0, Eigen::Matrix4d G1);
 std::vector<Eigen::Vector3d> voxel_filtering(std::vector<Eigen::Vector3d> &src, double voxel_size);
 std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_size);
 
+bool check_self_collision(double x, double y, double z,
+                          double robot_min_x, double robot_max_x,
+                          double robot_min_y, double robot_max_y,
+                          double robot_min_z, double robot_max_z);
+
 bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
 
 QJsonArray pose_to_array(Eigen::Vector3d pose);

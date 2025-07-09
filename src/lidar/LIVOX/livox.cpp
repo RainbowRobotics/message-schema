@@ -278,6 +278,15 @@ void LIVOX::grab_loop()
                     continue;
                 }
 
+                // self collision filter
+                if(check_self_collision(_P(0), _P(1), _P(2),
+                                        livox->config->get_robot_size_x_min(), livox->config->get_robot_size_x_max(),
+                                        livox->config->get_robot_size_y_min(), livox->config->get_robot_size_y_max(),
+                                        livox->config->get_robot_size_z_min(), livox->config->get_robot_size_z_max()))
+                {
+                    continue;
+                }
+
                 LVX_PT pt;
                 pt.t = (time_base + i * time_interval)*N2S + livox->offset_t[idx]; // nanosec to sec
                 pt.x = _P[0];

@@ -1044,6 +1044,21 @@ std::vector<PT_XYZR> voxel_filtering(std::vector<PT_XYZR> &src, double voxel_siz
     return res;
 }
 
+bool check_self_collision(double x, double y, double z,
+                          double robot_min_x, double robot_max_x,
+                          double robot_min_y, double robot_max_y,
+                          double robot_min_z, double robot_max_z)
+{
+    if(x >= robot_min_x - 0.001 && x <= robot_max_x + 0.001 &&
+       y >= robot_min_y - 0.001 && y <= robot_max_y + 0.001 &&
+       z >= robot_min_z - 0.001 && z <= robot_max_z + 0.001)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
 {
     QStringList lines = info.split("\n");
