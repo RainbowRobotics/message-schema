@@ -1314,6 +1314,8 @@ void MainWindow::bt_AutoResume()
 //docking
 void MainWindow::bt_DockStart()
 {
+    // no use OSSD
+    MOBILE::instance()->set_detect_mode(0.0);
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->move();
 }
@@ -1322,10 +1324,16 @@ void MainWindow::bt_DockStop()
 {
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
+
+    // use OSSD
+    MOBILE::instance()->set_detect_mode(1.0);
 }
 
 void MainWindow::bt_UnDockStart()
 {
+    // no use OSSD
+    MOBILE::instance()->set_detect_mode(0.0);
+
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->undock();
 
@@ -1333,6 +1341,9 @@ void MainWindow::bt_UnDockStart()
     QTimer::singleShot(t*1000, [&]()
     {
         AUTOCONTROL::instance()->set_is_moving(false);
+
+        // use OSSD
+        MOBILE::instance()->set_detect_mode(1.0);
     });
 }
 

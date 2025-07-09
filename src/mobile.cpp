@@ -2053,7 +2053,7 @@ void MOBILE::set_detect_mode(double param)
     send_byte[6] = 0x00; // 0~1
     send_byte[7] = 218; // cmd
 
-    float parameter = (float)param; // 1 -detect mode || 2 - detect mode not used
+    float parameter = (float)param; // 1 -detect mode || 0 - detect mode not used
 
     memcpy(&send_byte[8], &parameter, 4);
 

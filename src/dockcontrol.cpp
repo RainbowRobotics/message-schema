@@ -52,8 +52,6 @@ void DOCKCONTROL::init()
 void DOCKCONTROL::move()
 {
 
-    mobile->set_detect_mode(2);
-
     if(config->get_docking_type() == 0) // 0 - lidar docking
     {
         //stop first
