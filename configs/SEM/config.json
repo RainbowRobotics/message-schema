@@ -29,7 +29,7 @@
         "USE_IMU": false
     },
     "localization": {
-        "MODE": "2D",
+        "MODE": "3D",
         "USE_ARUCO": false
     },
     "network": {
@@ -102,10 +102,10 @@
         "MOTOR_GEAR_RATIO": "12",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
-        "MOTOR_LIMIT_V": "2.0",
-        "MOTOR_LIMIT_V_ACC": "0.2",
-        "MOTOR_LIMIT_W": "180",
-        "MOTOR_LIMIT_W_ACC": "5"
+        "MOTOR_LIMIT_V": "1.2",
+        "MOTOR_LIMIT_V_ACC": "1.0",
+        "MOTOR_LIMIT_W": "90",
+        "MOTOR_LIMIT_W_ACC": "90"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"

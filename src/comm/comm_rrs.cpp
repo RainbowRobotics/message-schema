@@ -53,7 +53,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "path",            std::bind(&COMM_RRS::recv_path,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "footState",        std::bind(&COMM_RRS::recv_foot,             this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,             this, _1, _2, _3, _4));
 
 
     // connect recv signals -> recv slots
