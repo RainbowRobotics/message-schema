@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<DATA_PATH>();
     qRegisterMetaType<DATA_VOBS>();
     qRegisterMetaType<DATA_SOFTWARE>();
+    qRegisterMetaType<DATA_FOOT>();
 
     QApplication a(argc, argv);
 

@@ -68,6 +68,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_path,            this, &COMM_RRS::slot_path);
     connect(this, &COMM_RRS::signal_vobs,            this, &COMM_RRS::slot_vobs);
     connect(this, &COMM_RRS::signal_software_update, this, &COMM_RRS::slot_software_update);
+    connect(this, &COMM_RRS::signal_foot,            this, &COMM_RRS::slot_foot);
 }
 
 COMM_RRS::~COMM_RRS()
@@ -172,6 +173,23 @@ void COMM_RRS::sio_error()
 }
 
 // recv parser -> emit recv signals
+void COMM_RRS::recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        DATA_FOOT msg;
+        msg.state = get_json(data, "foot_state");
+        msg.time = get_json(data, "time").toDouble() / 1000;
+
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_RRS] recv footState, state: %1, time: %2").arg(msg.state).arg(msg.time), "Green");
+        }
+        Q_EMIT signal_foot(msg);
+    }
+}
+
 void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data && data->get_flag() == sio::message::flag_object)
@@ -198,6 +216,7 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         Q_EMIT signal_move(msg);
     }
 }
+
 
 void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -866,6 +885,21 @@ void COMM_RRS::send_mapping_cloud()
     }
 }
 
+void COMM_RRS::slot_foot(DATA_FOOT msg)
+{
+    int state = msg.state.toInt();
+    if(state == FOOT_STATE_DOWN_DONE || state == FOOT_STATE_MOVING)
+    {
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(state), "Green");
+        mobile->set_is_inter_lock_foot(true);
+    }
+    else
+    {
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(state), "Green");
+        mobile->set_is_inter_lock_foot(false);
+    }
+}
+
 void COMM_RRS::slot_move(DATA_MOVE msg)
 {
     if(!mobile || !unimap || !obsmap || !ctrl || !loc)
@@ -987,6 +1021,15 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 msg.result = "reject";
                 msg.message = "[R0Px2000]no localization";
                 msg.bat_percent = bat_percent;
+
+                send_move_response(msg);
+                return;
+            }
+
+            if(!mobile->get_is_inter_lock_foot())
+            {
+                msg.result = "reject";
+                msg.message = "inter lock foot";
 
                 send_move_response(msg);
                 return;

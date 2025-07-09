@@ -128,6 +128,7 @@ public Q_SLOTS:
     void recv_view_path_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_led(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
@@ -143,6 +144,7 @@ public Q_SLOTS:
     void slot_view_path(DATA_VIEW_PATH msg);
     void slot_led(DATA_LED msg);
     void slot_motor(DATA_MOTOR msg);
+    void slot_foot(DATA_FOOT msg);
 
     void slot_path(DATA_PATH msg);
     void slot_vobs(DATA_VOBS msg);
@@ -169,6 +171,7 @@ Q_SIGNALS:
     void signal_view_path(DATA_VIEW_PATH msg);
     void signal_led(DATA_LED msg);
     void signal_motor(DATA_MOTOR msg);
+    void signal_foot(DATA_FOOT msg);
 
     void signal_path(DATA_PATH msg);
     void signal_vobs(DATA_VOBS msg);

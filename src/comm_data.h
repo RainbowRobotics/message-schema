@@ -597,6 +597,44 @@ struct DATA_SOFTWARE
     }
 };
 
+struct DATA_FOOT
+{
+    double time;
+    QString state;
+
+    QString result;
+    QString message;
+
+    DATA_FOOT()
+    {
+        time = 0.0;
+        state = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_FOOT(const DATA_FOOT& p)
+    {
+        time = p.time;
+        state = p.state;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_FOOT& operator=(const DATA_FOOT& p)
+    {
+        time = p.time;
+        state = p.state;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+
 Q_DECLARE_METATYPE(DATA_MOVE)
 Q_DECLARE_METATYPE(DATA_LOCALIZATION)
 Q_DECLARE_METATYPE(DATA_LOAD)
@@ -610,5 +648,6 @@ Q_DECLARE_METATYPE(DATA_MOTOR)
 Q_DECLARE_METATYPE(DATA_PATH)
 Q_DECLARE_METATYPE(DATA_VOBS)
 Q_DECLARE_METATYPE(DATA_SOFTWARE)
+Q_DECLARE_METATYPE(DATA_FOOT)
 
 #endif // COMM_DATA_H

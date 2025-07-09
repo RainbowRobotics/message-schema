@@ -82,6 +82,12 @@ void MOBILE::set_cur_pdu_state(QString str)
     cur_pdu_state = str; // none, fail, good
 }
 
+void MOBILE::set_is_inter_lock_foot(bool val)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    is_inter_lock_foot = val;
+}
+
 void MOBILE::set_is_connected(bool val)
 {
     is_connected.store(val);
@@ -194,6 +200,11 @@ bool MOBILE::get_is_connected()
 bool MOBILE::get_is_synced()
 {
     return (bool)is_synced.load();
+}
+
+bool MOBILE::get_is_inter_lock_foot()
+{
+    return (bool)is_inter_lock_foot.load();
 }
 
 double MOBILE::get_last_pose_t()
@@ -1282,6 +1293,13 @@ void MOBILE::move(double vx, double vy, double wz)
     vx0 = vx;
     vy0 = vy;
     wz0 = wz;
+
+    bool is_inter_lock_foot = mobile->get_is_inter_lock_foot();
+    if(is_inter_lock_foot)
+    {
+        logger->write_log("[MOBILE] motor inter lock foot", "Orange");
+        return;
+    }
 
     // packet
     float _vx = vx;

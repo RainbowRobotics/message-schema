@@ -38,6 +38,7 @@ public:
     int get_imu_storage_size();
     bool get_is_connected();
     bool get_is_synced();
+    bool get_is_inter_lock_foot();
     double get_last_pose_t();
     double get_process_time_mobile();
     QString get_cur_pdu_state();
@@ -52,10 +53,10 @@ public:
     std::vector<MOBILE_IMU> get_imu_storage();
     std::vector<MOBILE_POSE> get_pose_storage();
 
-
-    void set_cur_pdu_state(QString str);
-    void set_is_connected(bool val);
     void set_is_synced(bool val);
+    void set_is_connected(bool val);
+    void set_cur_pdu_state(QString str);
+    void set_is_inter_lock_foot(bool val);
 
     // this func only use simulation mode
     void set_cur_pose(MOBILE_POSE mp);
@@ -145,6 +146,8 @@ private:
     MOBILE_SETTING cur_setting;
     Eigen::Vector3d cur_imu;
     QString cur_pdu_state = "none";
+
+    std::atomic<bool> is_inter_lock_foot = {false};
 
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};
