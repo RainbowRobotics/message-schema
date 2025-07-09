@@ -133,8 +133,6 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
     Eigen::Matrix4d cur_tf = tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
-    Eigen::Matrix3d cur_R = cur_tf_inv.block(0,0,3,3);
-    Eigen::Vector3d cur_t = cur_tf_inv.block(0,3,3,1);
 
     // add static map
     double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
@@ -142,10 +140,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
     double sq_radius = sq_radius0*sq_radius0;
     std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
     nanoflann::SearchParameters params;
-    if(unimap)
-    {
-        unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
-    }
+    unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
 
     double obs_map_min_z = config->get_obs_map_min_z();
     double obs_map_max_z = config->get_obs_map_max_z();
@@ -166,7 +161,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
         // global to local
         Eigen::Vector3d P(x,y,z);
-        Eigen::Vector3d _P = cur_R*P + cur_t;
+        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
         if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
         {
             continue;
@@ -183,12 +178,8 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
         _wall_map.ptr<uchar>(v)[u] = 255;
     }
 
-
-    {
-        std::unique_lock<std::shared_mutex> lock(mtx);
-        map_tf = cur_tf;
-        wall_map = _wall_map;
-    }
+    map_tf = cur_tf;
+    wall_map = _wall_map;
 
     // signal for redrawing
     Q_EMIT obs_updated();
@@ -225,7 +216,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         int idx = (int)(th/step);
         if(idx >= 0 && idx < (int)range_data_size)
         {
-            const double d = std::sqrt(x*x + y*y);
+            double d = std::sqrt(x*x + y*y);
             if(d < range_data[idx])
             {
                 range_data[idx] = d;
@@ -236,28 +227,28 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     std::vector<Eigen::Vector3d> pts;    
     for(size_t p = 0; p < range_data_size; p++)
     {
-        const double d = range_data[p];
-        const double th = p*step - M_PI;
-        const double x = d*std::cos(th);
-        const double y = d*std::sin(th);
+        double d = range_data[p];
+        double th = p*step - M_PI;
+        double x = d*std::cos(th);
+        double y = d*std::sin(th);
         pts.push_back(Eigen::Vector3d(x, y, 0));
     }
 
+    // update octomap
     octomap::Pointcloud cloud;
-    #pragma omp parallel for
     for(size_t p = 0; p < pts.size(); p++)
     {
+        // local to global
         Eigen::Vector3d P = pts[p];
         Eigen::Vector3d _P = cur_tf.block(0,0,3,3)*P + cur_tf.block(0,3,3,1);
         cloud.push_back(_P[0], _P[1], 0);
     }
 
     const double obsmap_range = config->get_obs_map_range();
-    if(octree)
-    {
-        octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
-    }
 
+    octree->insertPointCloud(cloud, octomap::point3d(cur_tf(0,3), cur_tf(1,3), 0), obsmap_range, false, false);
+
+    // calc grid map
     octomap::point3d bbx_min(cur_tf(0,3) - obsmap_range, cur_tf(1,3) - obsmap_range, -obsmap_range);
     octomap::point3d bbx_max(cur_tf(0,3) + obsmap_range, cur_tf(1,3) + obsmap_range,  obsmap_range);
 
@@ -283,13 +274,14 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         cv::Vec2i uv = xy_uv(_P[0], _P[1]);
         int u = uv[0];
         int v = uv[1];
-        if(u >= 0 && u < w && v >= 0 && v < h)
+        if(u < 0 || u >= w || v < 0 || v >= h)
         {
-            double* map_ptr = _map.ptr<double>(v);
-            if(map_ptr[u] == 0 || prob > map_ptr[u])
-            {
-                map_ptr[u] = prob;
-            }
+            continue;
+        }
+
+        if(_map.ptr<double>(v)[u] == 0 || prob > _map.ptr<double>(v)[u])
+        {
+            _map.ptr<double>(v)[u] = prob;
         }
     }
 
