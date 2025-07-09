@@ -35,6 +35,14 @@ AUTOCONTROL::~AUTOCONTROL()
         control_thread->join();
     }
     control_thread.reset();
+
+    // obs loop stop
+    obs_flag = false;
+    if(obs_thread && obs_thread->joinable())
+    {
+        obs_thread->join();
+    }
+    obs_thread.reset();
 }
 
 void AUTOCONTROL::init()
@@ -172,6 +180,13 @@ QString AUTOCONTROL::get_obs_condition()
     return res;
 }
 
+QString AUTOCONTROL::get_obs_far_condition()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = cur_obs_far_condition;
+    return res;
+}
+
 int AUTOCONTROL::get_fsm_state()
 {
     return (int)fsm_state.load();
@@ -253,6 +268,15 @@ void AUTOCONTROL::stop()
         control_thread->join();
         control_thread = NULL;
     }
+
+    // obs loop stop
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
+    }
+
 
     // stop
     mobile->move(0, 0, 0);
@@ -361,6 +385,12 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     {
         control_flag = true;
         control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+    }
+
+    if(obs_flag == false)
+    {
+        obs_flag = true;
+        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
     }
 }
 
@@ -506,6 +536,14 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         }
     }
 
+    // obs loop shutdown but robot still moving
+    if(obs_flag)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread.reset();
+    }
+
     // set global path
     global_path_que.clear();
     for(size_t p = 0; p < tmp_storage.size(); p++)
@@ -521,6 +559,13 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
     {
         control_flag = true;
         control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+    }
+
+    // start obs loop
+    if(obs_flag == false)
+    {
+        obs_flag = true;
+        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
     }
 }
 
@@ -2253,6 +2298,7 @@ void AUTOCONTROL::control_loop()
             // obs decel
             QString _obs_condition = "none";
             double obs_v = config->get_obs_map_min_v();
+            double min_obs_dist = 9999.0;
             for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
@@ -2770,6 +2816,77 @@ void AUTOCONTROL::obs_loop()
 
     while(obs_flag)
     {
+        if(!is_moving)
+        {
+            return;
+        }
+
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cur_vel = mobile->get_control_input();
+        // Eigen::Vector3d cur_vel = mobile->get_pose().vel;
+
+        // apply virtual vel
+        double v_norm = cur_vel.head<2>().norm();
+        if(v_norm < 0.05)
+        {
+            cur_vel = Eigen::Vector3d(0.5, 0.0, 0.0);
+        }
+
+        double predict_time = 2.5 / cur_vel.head<2>().norm();
+        predict_time = std::clamp(predict_time, 2.0, 7.0);
+
+        // check trajectory
+        std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
+
+        double min_obs_dist = 9999.0;
+        QString obs_far_state = "none";
+
+        for(size_t p = 0; p < check_traj.size(); p++)
+        {
+            int val = obsmap->is_tf_collision(check_traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
+            if(val != OBS_NONE)
+            {
+                double d = calc_dist_2d(check_traj[p].block(0,3,3,1) - cur_pos);
+                printf("[OBS_LOOP] Obstacle at traj[%lu]: d = %.2f\n", p, d);
+
+                if(d < min_obs_dist)
+                {
+                    min_obs_dist = d;
+                }
+                break;
+            }
+        }
+
+        if(min_obs_dist < 1.0)
+        {
+            obs_far_state = "1m";
+        }
+        else if(min_obs_dist < 2.0)
+        {
+            obs_far_state = "2m";
+        }
+        else if(min_obs_dist < 9999.0)
+        {
+            obs_far_state = "far";
+        }
+
+        // store result
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_obs_far_condition = obs_far_state;
+        }
+
+        // debug
+        if(obs_far_state != "none")
+        {
+            printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
+        }
+        else
+        {
+            printf("[OBS_LOOP] No obstacle detected, vx = %.2f\n", cur_vel[0]);
+        }
+
         // for real time loop
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;

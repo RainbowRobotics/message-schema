@@ -51,6 +51,7 @@ public:
     double get_process_time_obs();          // get obs loop processing time
     QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
     QString get_obs_condition();            // get current obstacle condition (none, near, far, vir)
+    QString get_obs_far_condition();        // get current obstacle far condition (1m, 2m)
     QString get_cur_move_state();           // get current move state (none, move, complete, fail, obstacle, cancel)
     DATA_MOVE get_cur_move_info();          // get last received move msg
     Eigen::Vector3d get_last_cur_pos();     // get last current pos
@@ -206,6 +207,9 @@ private:
     QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
     PATH cur_global_path;
     PATH cur_local_path;
+
+    // debug
+    QString cur_obs_far_condition = "none";
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
