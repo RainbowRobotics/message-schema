@@ -53,6 +53,8 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "path",            std::bind(&COMM_RRS::recv_path,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "footState",        std::bind(&COMM_RRS::recv_foot,             this, _1, _2, _3, _4));
+
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -177,23 +179,6 @@ void COMM_RRS::sio_error()
 }
 
 // recv parser -> emit recv signals
-void COMM_RRS::recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
-{
-    if(data && data->get_flag() == sio::message::flag_object)
-    {
-        // parsing
-        DATA_FOOT msg;
-        msg.state = get_json(data, "foot_state");
-        msg.time = get_json(data, "time").toDouble() / 1000;
-
-        if(logger)
-        {
-            logger->write_log(QString("[COMM_RRS] recv footState, state: %1, time: %2").arg(msg.state).arg(msg.time), "Green");
-        }
-        Q_EMIT signal_foot(msg);
-    }
-}
-
 void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data && data->get_flag() == sio::message::flag_object)
@@ -438,6 +423,48 @@ void COMM_RRS::recv_software_update(std::string const& name, sio::message::ptr c
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         Q_EMIT signal_software_update(msg);
+    }
+}
+
+void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
+{
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        double time_sec = get_json(data, "time").toDouble() / 1000;
+
+        // get foot
+        sio::message::ptr foot_arr = data->get_map()["foot"];
+        if(!foot_arr || foot_arr->get_flag() != sio::message::flag_array)
+        {
+            return;
+        }
+
+        for(const auto& item : foot_arr->get_vector())
+        {
+            if(!item || item->get_flag() != sio::message::flag_object)
+            {
+                continue;
+            }
+
+            DATA_FOOT msg;
+            msg.connection = get_json(item, "connection") == "true";
+            msg.position   = get_json(item, "position").toInt();
+            msg.is_down    = get_json(item, "is_down") == "true";
+            msg.state      = get_json(item, "foot_state");
+            msg.time       = time_sec;
+
+            if(logger)
+            {
+                logger->write_log(QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+                                  .arg(msg.connection)
+                                  .arg(msg.position)
+                                  .arg(msg.is_down)
+                                  .arg(msg.state)
+                                  .arg(msg.time), "Green");
+            }
+
+            Q_EMIT signal_foot(msg);
+        }
     }
 }
 
@@ -886,21 +913,6 @@ void COMM_RRS::send_mapping_cloud()
         // send
         io->socket()->emit("mappingCloud", jsonArray);
         last_send_kfrm_idx++;
-    }
-}
-
-void COMM_RRS::slot_foot(DATA_FOOT msg)
-{
-    int state = msg.state.toInt();
-    if(state == FOOT_STATE_DOWN_DONE || state == FOOT_STATE_MOVING)
-    {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(state), "Green");
-        mobile->set_is_inter_lock_foot(true);
-    }
-    else
-    {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(state), "Green");
-        mobile->set_is_inter_lock_foot(false);
     }
 }
 
@@ -1820,6 +1832,21 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
     }
 
     send_software_update_response(msg);
+}
+
+void COMM_RRS::slot_foot(DATA_FOOT msg)
+{
+    int state = msg.state.toInt();
+    if((state == FOOT_STATE_DONE && msg.is_down == true) || state == FOOT_STATE_MOVING)
+    {
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(state), "Green");
+        mobile->set_is_inter_lock_foot(true);
+    }
+    else
+    {
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(state), "Green");
+        mobile->set_is_inter_lock_foot(false);
+    }
 }
 
 void COMM_RRS::send_move_response(const DATA_MOVE& msg)
