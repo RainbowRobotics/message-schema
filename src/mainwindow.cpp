@@ -381,6 +381,7 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
         COMM_RRS::instance()->set_localization_module(LOCALIZATION::instance());
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
+        COMM_RRS::instance()->init();
     }
 
     // start jog loop

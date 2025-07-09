@@ -600,6 +600,10 @@ struct DATA_SOFTWARE
 struct DATA_FOOT
 {
     double time;
+
+    bool connection = false;
+    int position;
+    bool is_down = false;
     QString state;
 
     QString result;
@@ -608,6 +612,10 @@ struct DATA_FOOT
     DATA_FOOT()
     {
         time = 0.0;
+
+        connection = false;
+        position = 0;
+        is_down = false;
         state = "";
 
         result = "";
@@ -617,6 +625,10 @@ struct DATA_FOOT
     DATA_FOOT(const DATA_FOOT& p)
     {
         time = p.time;
+
+        connection = p.connection;
+        position = p.position;
+        is_down = p.is_down;
         state = p.state;
 
         result = p.result;
@@ -626,6 +638,10 @@ struct DATA_FOOT
     DATA_FOOT& operator=(const DATA_FOOT& p)
     {
         time = p.time;
+
+        connection = p.connection;
+        position = p.position;
+        is_down = p.is_down;
         state = p.state;
 
         result = p.result;
