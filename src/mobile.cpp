@@ -1294,7 +1294,7 @@ void MOBILE::move(double vx, double vy, double wz)
     vy0 = vy;
     wz0 = wz;
 
-    bool is_inter_lock_foot = mobile->get_is_inter_lock_foot();
+    bool is_inter_lock_foot = get_is_inter_lock_foot();
     if(is_inter_lock_foot)
     {
         logger->write_log("[MOBILE] motor inter lock foot", "Orange");

@@ -99,6 +99,9 @@ private:
     LOCALIZATION* loc;
     MAPPING* mapping;
 
+    QTimer* send_timer;
+    int send_cnt = 0;
+
     // vars    
     std::unique_ptr<sio::client> io;    
     std::atomic<int> last_send_kfrm_idx{0};
@@ -159,6 +162,8 @@ public Q_SLOTS:
     void send_dock_response(const DATA_DOCK& msg);
     void send_path_response(const DATA_PATH& msg);
     void send_software_update_response(const DATA_SOFTWARE& msg);
+
+    void send_loop();
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

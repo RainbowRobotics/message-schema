@@ -69,6 +69,10 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_vobs,            this, &COMM_RRS::slot_vobs);
     connect(this, &COMM_RRS::signal_software_update, this, &COMM_RRS::slot_software_update);
     connect(this, &COMM_RRS::signal_foot,            this, &COMM_RRS::slot_foot);
+
+    send_timer = new QTimer(this);
+    connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
+    send_timer->start(100);
 }
 
 COMM_RRS::~COMM_RRS()
@@ -216,7 +220,6 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         Q_EMIT signal_move(msg);
     }
 }
-
 
 void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -618,6 +621,7 @@ void COMM_RRS::send_status()
     if(!doc.isNull())
     {
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+        std::cout << doc.toJson().toStdString() << std::endl;
         io->socket()->emit("status", res);
     }
 }
@@ -2124,3 +2128,25 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
+void COMM_RRS::send_loop()
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    if(send_cnt % 2 == 0)
+    {
+        send_move_status();
+    }
+
+    if(send_cnt % 5 == 0)
+    {
+        send_status();
+    }
+
+    if(send_cnt > 10000)
+    {
+        send_cnt = 0;
+    }
+}
