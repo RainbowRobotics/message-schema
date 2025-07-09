@@ -922,7 +922,9 @@ void MOBILE::recv_loop()
                                              "power:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\n"
                                              "gyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\n"
                                              "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n" 
-                                             "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d)",
+                                             "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
+                                             "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
+                                             "bumper:{%d,%d} lidar_field:%d)",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
                                             (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
                                             mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
@@ -931,7 +933,16 @@ void MOBILE::recv_loop()
                                             mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
                                             mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
                                             mobile_status.tabos_voltage, mobile_status.tabos_current, mobile_status.tabos_ttf, mobile_status.tabos_tte, mobile_status.tabos_soc, mobile_status.tabos_soh,
-                                            mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status);
+                                            mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status,
+                                            mobile_status.safety_state_emo_pressed_1,         mobile_status.safety_state_emo_pressed_2,
+                                            mobile_status.safety_state_ref_meas_mismatch_1,   mobile_status.safety_state_ref_meas_mismatch_2,
+                                            mobile_status.safety_state_over_speed_1,          mobile_status.safety_state_over_speed_2,
+                                            mobile_status.safety_state_obstacle_detected_1,   mobile_status.safety_state_obstacle_detected_2,
+                                            mobile_status.safety_state_speed_field_mismatch_1,mobile_status.safety_state_speed_field_mismatch_2,
+                                            mobile_status.safety_state_interlock_stop_1,      mobile_status.safety_state_interlock_stop_2,
+                                            mobile_status.operational_stop_state_flag_1,      mobile_status.operational_stop_state_flag_2,
+                                            mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
+                                            mobile_status.lidar_field);
                                 mtx.lock();
                                 status_text = strS;
                                 mtx.unlock();

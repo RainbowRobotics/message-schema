@@ -93,6 +93,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_AnnotSave, SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
+    // safety debug -- Todo remove
+    connect(ui->bt_ClearMismatch, SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
+    connect(ui->bt_ClearOverSpd, SIGNAL(clicked()), this, SLOT(bt_ClearOverSpd()));
+    connect(ui->bt_ClearObs, SIGNAL(clicked()), this, SLOT(bt_ClearObs()));
+    connect(ui->bt_ClearFieldMis, SIGNAL(clicked()), this, SLOT(bt_ClearFieldMis()));
+    connect(ui->bt_ClearInterlockStop, SIGNAL(clicked()), this, SLOT(bt_ClearInterlockStop()));
+    connect(ui->bt_BumperStop, SIGNAL(clicked()), this, SLOT(bt_BumperStop()));
+    connect(ui->bt_Recover, SIGNAL(clicked()), this, SLOT(bt_Recover()));
+    connect(ui->bt_SetDetectModeT, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
+    connect(ui->bt_SetDetectModeF, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
+
+
     // set effect
     init_ui_effect();
 
@@ -1322,6 +1334,52 @@ void MainWindow::bt_UnDockStart()
     {
         AUTOCONTROL::instance()->set_is_moving(false);
     });
+}
+
+//for safety
+void MainWindow::bt_ClearMismatch()
+{
+    MOBILE::instance()->clearmismatch();
+}
+
+void MainWindow::bt_ClearOverSpd()
+{
+    MOBILE::instance()->clearoverspd();
+}
+
+void MainWindow::bt_ClearObs()
+{
+    MOBILE::instance()->clearobs();
+}
+
+void MainWindow::bt_ClearFieldMis()
+{
+    MOBILE::instance()->clearfieldmis();
+}
+
+void MainWindow::bt_ClearInterlockStop()
+{
+    MOBILE::instance()->clearinterlockstop();
+}
+
+void MainWindow::bt_BumperStop()
+{
+    MOBILE::instance()->clearbumperstop();
+}
+
+void MainWindow::bt_Recover()
+{
+    MOBILE::instance()->recover();
+}
+
+void MainWindow::bt_SetDetectModeT()
+{
+    MOBILE::instance()->set_detect_mode(1.0);
+}
+
+void MainWindow::bt_SetDetectModeF()
+{
+    MOBILE::instance()->set_detect_mode(0.0);
 }
 
 void MainWindow::bt_ReturnToCharging()

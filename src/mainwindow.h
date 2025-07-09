@@ -207,6 +207,17 @@ public Q_SLOTS:
     void bt_AnnotSave();
     void bt_QuickAddNode();
 
+    // for safety debug
+    void bt_ClearMismatch();
+    void bt_ClearOverSpd();
+    void bt_ClearObs();
+    void bt_ClearFieldMis();
+    void bt_ClearInterlockStop();
+    void bt_BumperStop();
+    void bt_Recover();
+    void bt_SetDetectModeT();
+    void bt_SetDetectModeF();
+
     void slot_local_path_updated();
     void slot_global_path_updated();
 
