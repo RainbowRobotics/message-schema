@@ -162,7 +162,8 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
         // global to local
         Eigen::Vector3d P(x,y,z);
         Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-        if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
+        // if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
+        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
         {
             continue;
         }
@@ -325,7 +326,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         // global to local
         Eigen::Vector3d P(x,y,z);
         Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-        if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
+        //if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
+        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
         {
             continue;
         }

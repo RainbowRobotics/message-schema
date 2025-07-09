@@ -53,7 +53,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "path",            std::bind(&COMM_RRS::recv_path,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,             this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
 
 
     // connect recv signals -> recv slots
@@ -107,9 +107,26 @@ QString COMM_RRS::get_json(sio::message::ptr const& data, const QString& key)
         return "";
     }
 
-    if(it->second->get_flag() == sio::message::flag_string)
+    sio::message::ptr val = it->second;
+
+    if(val->get_flag() == sio::message::flag_string)
     {
         return QString::fromStdString(it->second->get_string());
+    }
+
+    if(val->get_flag() == sio::message::flag_integer)
+    {
+        return QString::number(val->get_int());
+    }
+
+    if(val->get_flag() == sio::message::flag_double)
+    {
+        return QString::number(val->get_double());
+    }
+
+    if(val->get_flag() == sio::message::flag_boolean)
+    {
+        return val->get_bool() ? "true" : "false";
     }
 
     return "";
@@ -428,43 +445,48 @@ void COMM_RRS::recv_software_update(std::string const& name, sio::message::ptr c
 
 void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
 {
+    // printf("[COMM_RRS][DEBUG] recv_foot called\n");
+
     if(data && data->get_flag() == sio::message::flag_object)
     {
+        QString time_str = get_json(data, "time");
         double time_sec = get_json(data, "time").toDouble() / 1000;
 
+        // printf("[COMM_RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
+
         // get foot
-        sio::message::ptr foot_arr = data->get_map()["foot"];
-        if(!foot_arr || foot_arr->get_flag() != sio::message::flag_array)
+        sio::message::ptr foot_msg = data->get_map()["foot"];
+        if(!foot_msg || foot_msg->get_flag() != sio::message::flag_object)
         {
+            // printf("[COMM_RRS][DEBUG] 'foot' field missing or not object\n");
             return;
         }
 
-        for(const auto& item : foot_arr->get_vector())
+        DATA_FOOT msg;
+        msg.connection = get_json(foot_msg, "connection") == "true";
+        msg.position   = get_json(foot_msg, "position").toInt();
+        msg.is_down    = get_json(foot_msg, "is_down") == "true";
+        msg.state      = get_json(foot_msg, "foot_state").toInt();
+        msg.time       = time_sec;
+
+        // debug
+        // printf("[COMM_RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
+        //        msg.connection, msg.position, msg.is_down, msg.state, msg.time);
+
+        if(logger)
         {
-            if(!item || item->get_flag() != sio::message::flag_object)
-            {
-                continue;
-            }
-
-            DATA_FOOT msg;
-            msg.connection = get_json(item, "connection") == "true";
-            msg.position   = get_json(item, "position").toInt();
-            msg.is_down    = get_json(item, "is_down") == "true";
-            msg.state      = get_json(item, "foot_state");
-            msg.time       = time_sec;
-
-            if(logger)
-            {
-                logger->write_log(QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
-                                  .arg(msg.connection)
-                                  .arg(msg.position)
-                                  .arg(msg.is_down)
-                                  .arg(msg.state)
-                                  .arg(msg.time), "Green");
-            }
-
-            Q_EMIT signal_foot(msg);
+            logger->write_log(
+                        QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+                        .arg(msg.connection)
+                        .arg(msg.position)
+                        .arg(msg.is_down)
+                        .arg(msg.state)
+                        .arg(msg.time),
+                        "Green"
+                        );
         }
+
+        Q_EMIT signal_foot(msg);
     }
 }
 
@@ -648,7 +670,7 @@ void COMM_RRS::send_status()
     if(!doc.isNull())
     {
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-        std::cout << doc.toJson().toStdString() << std::endl;
+        // std::cout << doc.toJson().toStdString() << std::endl;
         io->socket()->emit("status", res);
     }
 }
@@ -1836,15 +1858,14 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
 
 void COMM_RRS::slot_foot(DATA_FOOT msg)
 {
-    int state = msg.state.toInt();
-    if((state == FOOT_STATE_DONE && msg.is_down == true) || state == FOOT_STATE_MOVING)
+    if((msg.state == FOOT_STATE_DONE && msg.is_down == true) || msg.state == FOOT_STATE_MOVING)
     {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(state), "Green");
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
         mobile->set_is_inter_lock_foot(true);
     }
     else
     {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(state), "Green");
+        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(msg.state), "Green");
         mobile->set_is_inter_lock_foot(false);
     }
 }
