@@ -5,7 +5,7 @@
         
         "ROBOT_SIZE_MAX_X": "0.56",
         "ROBOT_SIZE_MAX_Y": "0.375",
-        "ROBOT_SIZE_MAX_Z": "0.465",
+        "ROBOT_SIZE_MAX_Z": "1.5",
         "ROBOT_SIZE_MIN_X": "-0.56",
         "ROBOT_SIZE_MIN_Y": "-0.375",
         "ROBOT_SIZE_MIN_Z": "0",
@@ -154,12 +154,12 @@
         "OBS_LOCAL_GOAL_D": "4.0",
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
-        "OBS_MAP_MIN_V": "0.3",
+        "OBS_MAP_MIN_V": "0.1",
         "OBS_MAP_MIN_Z": "0.0",
         "OBS_MAP_RANGE": "5.0",
         "OBS_PATH_MARGIN_X": "0.05",
         "OBS_PATH_MARGIN_Y": "0.0",
-        "OBS_PREDICT_TIME": "3.0",
+        "OBS_PREDICT_TIME": "5.0",
         "OBS_SAFE_MARGIN_X": "0.1",
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
