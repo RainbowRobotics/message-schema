@@ -104,6 +104,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_SetDetectModeT, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
     connect(ui->bt_SetDetectModeF, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
 
+    // test
+    connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
+
 
     // set effect
     init_ui_effect();
@@ -1393,6 +1396,12 @@ void MainWindow::bt_SetDetectModeF()
     MOBILE::instance()->set_detect_mode(0.0);
 }
 
+void MainWindow::bt_TestLed()
+{
+    MOBILE::instance()->led(0, ui->spb_Led->value());
+    printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+}
+
 void MainWindow::bt_ReturnToCharging()
 {
     QString robot_serial_number = CONFIG::instance()->get_robot_serial_number();
@@ -1686,6 +1695,20 @@ void MainWindow::watch_loop()
                 else
                 {
                     led_color = LED_WHITE;
+                }
+
+                // test
+                if(AUTOCONTROL::instance()->get_obs_far_condition() == "1m")
+                {
+                    MOBILE::instance()->led(0, SAFETY_LED_RED);
+                }
+                else if(AUTOCONTROL::instance()->get_obs_far_condition() == "2m")
+                {
+                    MOBILE::instance()->led(0, SAFETY_LED_YELLOW);
+                }
+                else
+                {
+                    MOBILE::instance()->led(0, SAFETY_LED_OFF);
                 }
             }
 

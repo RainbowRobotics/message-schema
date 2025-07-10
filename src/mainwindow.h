@@ -220,6 +220,9 @@ public Q_SLOTS:
     void bt_SetDetectModeT();
     void bt_SetDetectModeF();
 
+    // for test
+    void bt_TestLed();
+
     void slot_local_path_updated();
     void slot_global_path_updated();
 

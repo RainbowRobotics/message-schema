@@ -1503,6 +1503,67 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     return res;
 }
 
+/*
+std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, double path_step)
+{
+    const double v_limit = params.LIMIT_V;
+    const double v_acc = params.LIMIT_V_ACC;
+    const double v_dcc = params.LIMIT_V_DCC;
+    const double v_end = params.ED_V;
+
+    std::vector<double> list0(src.size());
+    double v0 = src.front();
+    for(int p = 0; p < (int)src.size(); p++)
+    {
+        double v1 = std::sqrt(2*v_acc*path_step + v0*v0);
+        if(v1 > v_limit)
+        {
+            v1 = v_limit;
+        }
+
+        if(src[p] > v0)
+        {
+            v0 = v1;
+        }
+        else
+        {
+            v0 = src[p];
+        }
+
+        list0[p] = v0;
+    }
+
+    std::vector<double> list1(src.size());
+    v0 = v_end;
+    for(int p = (int)src.size()-1; p >= 0; p--)
+    {
+        double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);
+        if(v1 > v_limit)
+        {
+            v1 = v_limit;
+        }
+
+        if(src[p] > v0)
+        {
+            v0 = v1;
+        }
+        else
+        {
+            v0 = src[p];
+        }
+
+        list1[p] = v0;
+    }
+
+    std::vector<double> res(src.size());
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        res[p] = std::min<double>(list0[p], list1[p]);
+    }
+    return res;
+}
+*/
+
 // for local path planning
 std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf)
 {
@@ -1636,10 +1697,24 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         if(d < config->get_drive_goal_dist())
         {
             ref_v.back() = params.ED_V;
-        }
 
+            int edv_padding_num = std::min((int)(GLOBAL_PATH_STEP/LOCAL_PATH_STEP*2), (int)ref_v.size());
+            for(size_t i = 0; i < edv_padding_num; i++)
+            {
+                ref_v[ref_v.size() - i - 1] = params.ED_V;
+            }
+
+        }
         // smoothing ref_v
         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+        // debug
+        printf("ref v(%zu):", ref_v.size());
+        for(size_t i = 0; i < ref_v.size(); i++)
+        {
+            printf("%f,",ref_v[i]);
+        }
+        printf("\n");
 
         // set result
         PATH res;
@@ -2198,7 +2273,26 @@ void AUTOCONTROL::control_loop()
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
                 double v0 = cur_vel[0];
                 double v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
-                v = saturation(v, -params.ED_V, params.ED_V);
+
+                double temp_v = v0;
+                if(v0 > 0)
+                {
+                    temp_v -= params.LIMIT_V_DCC/dt;
+                    if(temp_v < params.ED_V)
+                    {
+                        temp_v = params.ED_V;
+                    }
+                    v = saturation(v, -temp_v, temp_v);
+                }
+//                else
+//                {
+//                    temp_v += params.LIMIT_V_DCC;
+//                    if(temp_v > -params.ED_V)
+//                    {
+//                        temp_v = -params.ED_V;
+//                    }
+//                }
+//                v = saturation(v, -params.ED_V, params.ED_V);
                 mobile->move(v, 0, 0);
 
                 extend_dt += dt;
@@ -2821,6 +2915,7 @@ void AUTOCONTROL::obs_loop()
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
 
+    logger->write_log("[AUTO] obs loop start");
     while(obs_flag)
     {
         if(!is_moving)
@@ -2850,8 +2945,6 @@ void AUTOCONTROL::obs_loop()
             if(val != OBS_NONE)
             {
                 double d = calc_dist_2d(check_traj[p].block(0,3,3,1) - cur_pos);
-                printf("[OBS_LOOP] Obstacle at traj[%lu]: d = %.2f\n", p, d);
-
                 if(d < min_obs_dist)
                 {
                     min_obs_dist = d;
@@ -2878,10 +2971,10 @@ void AUTOCONTROL::obs_loop()
         }
 
         // debug
-        if(obs_far_state != "none")
-        {
-            printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
-        }
+        // if(obs_far_state != "none")
+        // {
+        //     printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
+        // }
 
         // for real time loop
         double cur_loop_time = get_time();
@@ -2893,11 +2986,16 @@ void AUTOCONTROL::obs_loop()
         }
         else
         {
-            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+            logger->write_log(QString("[AUTO] obs loop time drift, dt:%1").arg(delta_loop_time));
         }
         process_time_obs = delta_loop_time;
         pre_loop_time = get_time();
     }
+
+    // clear
+    std::lock_guard<std::mutex> lock(mtx);
+    cur_obs_far_condition = "none";
+    logger->write_log("[AUTO]  obs_loop stop");
 }
 
 void AUTOCONTROL::set_config_module(CONFIG* _config)
