@@ -178,9 +178,7 @@ void DOCKCONTROL::a_loop()
                     fsm_state = DOCKING_FSM_WAIT;
                     wait_start_time = get_time();
                     continue;
-
                 }
-
 
                 //first middle point set
                 if(!middle_set)
@@ -189,7 +187,6 @@ void DOCKCONTROL::a_loop()
                     middle_point = straight_path(vmark_tf);
                     middle_point_odom = se2_to_TF(mobile->get_pose().pose) * middle_point;
                 }
-
 
                 // target check logic/////////////////////////////////////////////////////
                 if(!final_dock)
