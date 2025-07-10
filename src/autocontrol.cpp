@@ -187,6 +187,13 @@ QString AUTOCONTROL::get_obs_far_condition()
     return res;
 }
 
+std::vector<Eigen::Matrix4d> AUTOCONTROL::get_obs_traj()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<Eigen::Matrix4d> res = obs_traj;
+    return res;
+}
+
 int AUTOCONTROL::get_fsm_state()
 {
     return (int)fsm_state.load();
@@ -2826,18 +2833,13 @@ void AUTOCONTROL::obs_loop()
         Eigen::Vector3d cur_vel = mobile->get_control_input();
         // Eigen::Vector3d cur_vel = mobile->get_pose().vel;
 
-        // apply virtual vel
-        double v_norm = cur_vel.head<2>().norm();
-        if(v_norm < 0.05)
-        {
-            cur_vel = Eigen::Vector3d(0.5, 0.0, 0.0);
-        }
-
         double predict_time = 2.5 / cur_vel.head<2>().norm();
         predict_time = std::clamp(predict_time, 2.0, 7.0);
 
         // check trajectory
         std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
+        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.2, 3.0, cur_tf);
+        check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
 
         double min_obs_dist = 9999.0;
         QString obs_far_state = "none";
@@ -2866,25 +2868,19 @@ void AUTOCONTROL::obs_loop()
         {
             obs_far_state = "2m";
         }
-        else if(min_obs_dist < 9999.0)
-        {
-            obs_far_state = "far";
-        }
 
         // store result
         {
             std::lock_guard<std::mutex> lock(mtx);
             cur_obs_far_condition = obs_far_state;
+            obs_traj = check_traj;
+
         }
 
         // debug
         if(obs_far_state != "none")
         {
             printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
-        }
-        else
-        {
-            printf("[OBS_LOOP] No obstacle detected, vx = %.2f\n", cur_vel[0]);
         }
 
         // for real time loop

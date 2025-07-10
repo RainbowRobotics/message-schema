@@ -52,6 +52,7 @@ public:
     QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
     QString get_obs_condition();            // get current obstacle condition (none, near, far, vir)
     QString get_obs_far_condition();        // get current obstacle far condition (1m, 2m)
+    std::vector<Eigen::Matrix4d> get_obs_traj();
     QString get_cur_move_state();           // get current move state (none, move, complete, fail, obstacle, cancel)
     DATA_MOVE get_cur_move_info();          // get last received move msg
     Eigen::Vector3d get_last_cur_pos();     // get last current pos
@@ -209,7 +210,8 @@ private:
     PATH cur_local_path;
 
     // debug
-    QString cur_obs_far_condition = "none";
+    QString cur_obs_far_condition = "none";\
+    std::vector<Eigen::Matrix4d> obs_traj;
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

@@ -2494,7 +2494,7 @@ Save</string>
       </widget>
       <widget class="QWidget" name="tab_B">
        <attribute name="title">
-        <string>Page</string>
+        <string/>
        </attribute>
        <widget class="QLineEdit" name="le_Safety_Emo_Pressed">
         <property name="geometry">

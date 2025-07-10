@@ -138,15 +138,21 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
     double query_pt[3] = {cur_tf(0,3), cur_tf(1,3), cur_tf(2,3)};
     double sq_radius0 = config->get_obs_map_range();
     double sq_radius = sq_radius0*sq_radius0;
-    std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
-    nanoflann::SearchParameters params;
-    unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
 
     double obs_map_min_z = config->get_obs_map_min_z();
     double obs_map_max_z = config->get_obs_map_max_z();
 
-    cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
+    std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
+    nanoflann::SearchParameters params;
+    unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
+
     std::shared_ptr<XYZR_CLOUD> kdtree_cloud = unimap->get_kdtree_cloud();
+
+    // prepare
+    cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
+    std::vector<Eigen::Vector3d> _obs_pts;
+    std::vector<Eigen::Vector3d> _vir_pts;
+
     for(size_t p = 0; p < res_idxs.size(); p++)
     {
         int idx = res_idxs[p].first;
@@ -177,10 +183,62 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
         }
 
         _wall_map.ptr<uchar>(v)[u] = 255;
+        _obs_pts.push_back(P);
+    }
+
+    // virtual obs
+    std::vector<QString> obs_nodes = unimap->get_nodes("OBS");
+    for(size_t i = 0; i < obs_nodes.size(); i++)
+    {
+        NODE* node = unimap->get_node_by_id(obs_nodes[i]);
+        if(node == nullptr) continue;
+
+        NODE_INFO info;
+        if(parse_info(node->info, "SIZE", info))
+        {
+            Eigen::Matrix4d tf = node->tf;
+            double sx = info.sz[0];
+            double sy = info.sz[1];
+            double sz = info.sz[2];
+
+            double step = 0.1;
+
+            for(double x = -sx/2.0; x <= sx/2.0; x += step)
+            {
+                for(double y = -sy/2.0; y <= sy/2.0; y += step)
+                {
+                    for(double z = -sz/2.0; z <= sz/2.0; z += step)
+                    {
+                        // global
+                        Eigen::Vector3d P = tf.block(0,0,3,3)*Eigen::Vector3d(x, y, z) + tf.block(0,3,3,1);
+
+                        // global to local
+                        Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+                        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
+                        {
+                            continue;
+                        }
+
+                        cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+                        int u = uv[0];
+                        int v = uv[1];
+                        if(u < 0 || u >= w || v < 0 || v >= h)
+                        {
+                            continue;
+                        }
+
+                        _wall_map.ptr<uchar>(v)[u] = 255;
+                        _vir_pts.push_back(P);
+                    }
+                }
+            }
+        }
     }
 
     map_tf = cur_tf;
     wall_map = _wall_map;
+    obs_pts = _obs_pts;
+    vir_pts = _vir_pts;
 
     // signal for redrawing
     Q_EMIT obs_updated();

@@ -109,6 +109,7 @@ public:
     std::vector<QString> last_plot_names;
     std::vector<QString> last_plot_local_path;
     std::vector<QString> last_plot_tactile;
+    std::vector<QString> last_obs_plot_tactile;
 
     atomic<double> last_sync_time = {0.};
 
@@ -130,6 +131,7 @@ public:
     void plot_mapping();
     void plot_obs();
     void plot_ctrl();
+    void plot_tractile();
     void plot_process_time();
 
     // plot timer

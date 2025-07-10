@@ -1689,6 +1689,7 @@ void MainWindow::watch_loop()
                 }
             }
 
+
             // check mobile
             if(MOBILE::instance()->get_is_connected())
             {
@@ -2789,9 +2790,9 @@ void MainWindow::plot_obs()
             ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 
             // debug
-            cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
-            cv::resizeWindow("OBS MAP", 700, 700);
-            cv::imshow("OBS MAP", plot_obs_map);
+            // cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
+            // cv::resizeWindow("OBS MAP", 700, 700);
+            // cv::imshow("OBS MAP", plot_obs_map);
         }
 
         // plot obs pts
@@ -3053,6 +3054,21 @@ void MainWindow::plot_ctrl()
         }
     }
 
+
+    // plot goal info
+    ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
+                                                        arg(AUTOCONTROL::instance()->get_cur_move_state()));
+}
+
+void MainWindow::plot_tractile()
+{
+    double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
+    double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
+    double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
+
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+
+    /*
     // plot tactile
     {
         // erase first
@@ -3085,10 +3101,40 @@ void MainWindow::plot_ctrl()
             last_plot_tactile.push_back(name);
         }
     }
+    */
 
-    // plot goal info
-    ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
-                                                        arg(AUTOCONTROL::instance()->get_cur_move_state()));
+    // plot obs tactile
+    {
+        // erase first
+        if(last_obs_plot_tactile.size() > 0)
+        {
+            for(size_t p = 0; p < last_obs_plot_tactile.size(); p++)
+            {
+                QString name = last_obs_plot_tactile[p];
+                if(pcl_viewer->contains(name.toStdString()))
+                {
+                    pcl_viewer->removeShape(name.toStdString());
+                }
+            }
+            last_obs_plot_tactile.clear();
+        }
+
+        if(AUTOCONTROL::instance()->get_is_moving())
+        {
+            std::vector<Eigen::Matrix4d> traj = AUTOCONTROL::instance()->get_obs_traj();
+            for(size_t p = 0; p < traj.size(); p++)
+            {
+                QString name = QString("traj_%1").arg(p);
+                std::string name_str = name.toStdString();
+
+                pcl_viewer->addCube(x_min, x_max, y_min, y_max, z_min, z_max, 0.8, 0.8, 0.8, name_str);
+
+                pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
+                pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
+                last_obs_plot_tactile.push_back(name);
+            }
+        }
+    }
 }
 
 void MainWindow::plot_loop()
@@ -3113,6 +3159,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
+    plot_tractile();
     plot_process_time();
 
     // camera reset
