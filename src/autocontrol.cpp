@@ -1699,7 +1699,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
             ref_v.back() = params.ED_V;
 
             int edv_padding_num = std::min((int)(GLOBAL_PATH_STEP/LOCAL_PATH_STEP*2), (int)ref_v.size());
-            for(size_t i = 0; i < edv_padding_num; i++)
+            for(int i = 0; i < edv_padding_num; i++)
             {
                 ref_v[ref_v.size() - i - 1] = params.ED_V;
             }
