@@ -509,8 +509,57 @@ bool CONFIG::load_common(QString path)
 
 void CONFIG::set_map_path(const QString &path)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    MAP_PATH = path;
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        MAP_PATH = path;
+    }
+
+    // write path
+    QMutexLocker locker(&q_mtx);
+    QFile config_file(path_config);
+
+    if(!config_file.open(QIODevice::ReadWrite))
+    {
+        printf("[config] failed to open config file for reading and writing.\n");
+        return;
+    }
+
+    QString data;
+    {
+        QTextStream in(&config_file);
+        data = in.readAll();
+        config_file.close();
+    }
+
+    QString pattern = R"("MAP_PATH"\s*:\s*".*?")";
+    QRegularExpression re(pattern);
+    QRegularExpressionMatch match = re.match(data);
+
+    if(match.hasMatch())
+    {
+        data.replace(re, R"("MAP_PATH": ")" + path + R"(")");
+    }
+    else
+    {
+        QRegularExpression mapRe(R"("map"\s*:\s*\{)");
+        QRegularExpressionMatch mapMatch = mapRe.match(data);
+        if (mapMatch.hasMatch())
+        {
+            int insertPos = mapMatch.capturedEnd();
+            data.insert(insertPos, QString(R"(
+            "MAP_PATH": ")") + path + R"(",)");
+        }
+    }
+
+    if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+    {
+        printf("[config] failed to open config file for writing.\n");
+        return;
+    }
+
+    QTextStream out(&config_file);
+    out << data;
+    config_file.close();
 }
 
 QString CONFIG::get_robot_serial_number()

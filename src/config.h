@@ -16,6 +16,8 @@
 #include <QJsonArray>
 #include <QJsonParseError>
 #include <QDebug>
+#include <QMutex>
+#include <QMutexLocker>
 
 class CONFIG : public QObject
 {
@@ -23,6 +25,8 @@ class CONFIG : public QObject
     Q_DISABLE_COPY(CONFIG)
 
 public:
+    QMutex q_mtx;
+
     // make singleton
     static CONFIG* instance(QObject* parent = nullptr);
 

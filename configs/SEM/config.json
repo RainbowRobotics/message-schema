@@ -36,7 +36,7 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": false,
+        "USE_RRS": true,
         "USE_FMS": false
     },
     "debug": {
@@ -190,7 +190,7 @@
     	"DOCKING_KP_d": "0.15"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250411_coop_test"
+        "MAP_PATH": "/home/juyeon/maps/250519_unicos"
     }
 }
 
