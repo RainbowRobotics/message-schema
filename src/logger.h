@@ -31,6 +31,9 @@ public:
     void write_log(QString user_log, QString color_code="white", bool time = true, bool hide = false);
     void write_log_list(std::vector<QString> user_log_list, QString color_code="white", bool time = true, bool hide = false);
 
+    // spdlog
+    void write_log_to_txt(const QString& msg);
+
 private:
     std::mutex mtx;
 
@@ -53,6 +56,10 @@ private:
     std::atomic<bool> log_flag = {false};
     std::unique_ptr<std::thread> log_thread;
     void log_loop();
+
+    // spdlog
+    std::shared_ptr<spdlog::logger> spd_logger = nullptr;
+
 
 Q_SIGNALS:
     void signal_write_log(QString user_log, QString color_code);

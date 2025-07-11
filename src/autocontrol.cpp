@@ -180,10 +180,10 @@ QString AUTOCONTROL::get_obs_condition()
     return res;
 }
 
-QString AUTOCONTROL::get_obs_far_condition()
+double AUTOCONTROL::get_obs_dist()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    QString res = cur_obs_far_condition;
+    double res = cur_obs_dist;
     return res;
 }
 
@@ -1709,12 +1709,12 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
 
         // debug
-        printf("ref v(%zu):", ref_v.size());
-        for(size_t i = 0; i < ref_v.size(); i++)
-        {
-            printf("%f,",ref_v[i]);
-        }
-        printf("\n");
+        // printf("ref v(%zu):", ref_v.size());
+        // for(size_t i = 0; i < ref_v.size(); i++)
+        // {
+        //     printf("%f,",ref_v[i]);
+        // }
+        // printf("\n");
 
         // set result
         PATH res;
@@ -2399,7 +2399,6 @@ void AUTOCONTROL::control_loop()
             // obs decel
             QString _obs_condition = "none";
             double obs_v = config->get_obs_map_min_v();
-            double min_obs_dist = 9999.0;
             for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
                 std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
@@ -2953,25 +2952,26 @@ void AUTOCONTROL::obs_loop()
             }
         }
 
+        // logging
         if(min_obs_dist < 1.0)
         {
-            obs_far_state = "1m";
+            logger->write_log_to_txt(QString("\tObstacle distance\t%1").arg(min_obs_dist, 0, 'f', 3));
         }
         else if(min_obs_dist < 2.0)
         {
-            obs_far_state = "2m";
+            logger->write_log_to_txt(QString("\tObstacle distance\t%1").arg(min_obs_dist, 0, 'f', 3));
         }
 
         // store result
         {
             std::lock_guard<std::mutex> lock(mtx);
-            cur_obs_far_condition = obs_far_state;
+            cur_obs_dist = min_obs_dist;
             obs_traj = check_traj;
 
         }
 
         // debug
-        // if(obs_far_state != "none")
+        // if(min_obs_dist < 2.0)
         // {
         //     printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
         // }
@@ -2992,9 +2992,6 @@ void AUTOCONTROL::obs_loop()
         pre_loop_time = get_time();
     }
 
-    // clear
-    std::lock_guard<std::mutex> lock(mtx);
-    cur_obs_far_condition = "none";
     logger->write_log("[AUTO]  obs_loop stop");
 }
 

@@ -222,3 +222,6 @@ INCLUDEPATH += /usr/local/include/
 LIBS += -L/usr/local/lib/
 LIBS += -llivox_lidar_sdk_static
 
+# spdlog
+INCLUDEPATH += $$HOME/spdlog/include/
+

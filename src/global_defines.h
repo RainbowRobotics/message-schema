@@ -91,6 +91,10 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 #include <pdal/io/LasReader.hpp>
 #include <pdal/StageFactory.hpp>
 
+// spdlog
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
 // qt
 #include <QApplication>
 #include <QStandardPaths>

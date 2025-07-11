@@ -77,6 +77,39 @@ void LOGGER::init()
 
             fclose(pFile);
         }
+
+        // spdlog
+        QDir sem_dir("snlog");
+        if(!sem_dir.exists())
+        {
+            sem_dir.mkpath(".");
+        }
+
+        try
+        {
+            QString sem_log_path = "snlog/sem_log.txt";
+
+            // header
+            if(!QFile::exists(sem_log_path))
+            {
+                QFile file(sem_log_path);
+                if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+                {
+                    QTextStream out(&file);
+                    out << "SEM_LOG_VERSION=2.0\n";
+                    file.close();
+                }
+            }
+
+            spd_logger = spdlog::basic_logger_mt("sem_logger", "snlog/sem_log.txt");
+            spd_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
+            spdlog::flush_on(spdlog::level::info);
+        }
+        catch(const spdlog::spdlog_ex& ex)
+        {
+            printf("[LOGGER] SPDLOG init failed: %s\n", ex.what());
+        }
+
     }
     mtx.unlock();
 
@@ -86,7 +119,7 @@ void LOGGER::init()
 
 void LOGGER::set_log_path(QString path)
 {
-    log_file_name = path;
+    log_path = path;
 }
 
 void LOGGER::log_loop()
@@ -195,5 +228,14 @@ void LOGGER::check_system_time(QString& _log_file_name)
             fprintf(pFile, "<body bgcolor=\"#252831\"></body>");
             fclose(pFile);
         }
+    }
+}
+
+// spdlog
+void LOGGER::write_log_to_txt(const QString& msg)
+{
+    if(spd_logger)
+    {
+        spd_logger->info(msg.toStdString());
     }
 }

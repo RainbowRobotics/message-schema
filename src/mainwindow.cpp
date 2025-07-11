@@ -1698,13 +1698,17 @@ void MainWindow::watch_loop()
                 }
 
                 // test
-                if(AUTOCONTROL::instance()->get_obs_far_condition() == "1m")
+                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+                QString obs_state = AUTOCONTROL::instance()->get_obs_condition();
+                if(obs_d < 1.0)
                 {
                     MOBILE::instance()->led(0, SAFETY_LED_RED);
+                    // LOGGER::instance()->write_log_to_txt(QString("\tObstacle distance").arg(obs_d, 0, 'f', 3));
                 }
-                else if(AUTOCONTROL::instance()->get_obs_far_condition() == "2m")
+                else if(obs_d < 2.0)
                 {
                     MOBILE::instance()->led(0, SAFETY_LED_YELLOW);
+                    // LOGGER::instance()->write_log_to_txt(QString("\tObstacle distance\t%1").arg(obs_d, 0, 'f', 3));
                 }
                 else
                 {
@@ -2316,12 +2320,12 @@ void MainWindow::plot_info()
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
         QString auto_info_str;
-        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%s),\nis_multi: %d, request: %s, multi_state: %s",
+        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
                               AUTOCONTROL::instance()->get_is_moving() ? "1" : "0",
                               AUTOCONTROL::instance()->get_is_pause() ? "1" : "0",
                               AUTOCONTROL::instance()->get_obs_condition().toLocal8Bit().data(),
-                              AUTOCONTROL::instance()->get_obs_far_condition().toLocal8Bit().data(),
+                              AUTOCONTROL::instance()->get_obs_dist(),
                               CONFIG::instance()->get_use_multi(),
                               AUTOCONTROL::instance()->get_multi_reqest_state().toLocal8Bit().data(),
                               _multi_state.toLocal8Bit().data());
