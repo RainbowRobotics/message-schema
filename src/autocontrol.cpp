@@ -1982,15 +1982,14 @@ void AUTOCONTROL::control_loop()
                 // move response
                 Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
                 {
-                    DATA_MOVE _move_info;
-                    _move_info.cur_pos = cur_pos;
-                    _move_info.result = "success";
-                    _move_info.message = "already goal";
-                    _move_info.time = get_time();
-                    Q_EMIT signal_move_response(_move_info);
-
-                    std::lock_guard<std::mutex> lock(mtx);
-                    cur_move_info = _move_info;
+                    {
+                        std::lock_guard<std::mutex> lock(mtx);
+                        cur_move_info.cur_pos = cur_pos;
+                        cur_move_info.result = "success";
+                        cur_move_info.message = "already goal";
+                        cur_move_info.time = get_time();
+                    }
+                    Q_EMIT signal_move_response(cur_move_info);
                 }
 
                 fsm_state = AUTO_FSM_COMPLETE;
@@ -2063,15 +2062,14 @@ void AUTOCONTROL::control_loop()
 
             // send move response
             {
-                DATA_MOVE _move_info;
-                _move_info.cur_pos = cur_pos;
-                _move_info.result = "fail";
-                _move_info.message = "something wrong";
-                _move_info.time = get_time();
-                Q_EMIT signal_move_response(_move_info);
-
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_move_info = _move_info;
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_move_info.cur_pos = cur_pos;
+                    cur_move_info.result = "fail";
+                    cur_move_info.message = "something wrong";
+                    cur_move_info.time = get_time();
+                }
+                Q_EMIT signal_move_response(cur_move_info);
             }
 
             fsm_state = AUTO_FSM_COMPLETE;
@@ -2094,13 +2092,13 @@ void AUTOCONTROL::control_loop()
             // move response
             //if(config->USE_RRS)
             {
-                mtx.lock();
-                cur_move_info.cur_pos = cur_pos;
-                cur_move_info.result = "fail";
-                cur_move_info.message = "not ready";
-                cur_move_info.time = get_time();
-                mtx.unlock();
-
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_move_info.cur_pos = cur_pos;
+                    cur_move_info.result = "fail";
+                    cur_move_info.message = "not ready";
+                    cur_move_info.time = get_time();
+                }
                 Q_EMIT signal_move_response(cur_move_info);
             }
 
@@ -2549,14 +2547,14 @@ void AUTOCONTROL::control_loop()
                     // response
                     //if(config->USE_RRS)
                     {
-                        DATA_MOVE _move_info;
-                        _move_info.cur_pos = cur_pos;
-                        _move_info.result = "success";
-                        _move_info.message = "very good";
-                        _move_info.time = get_time();
-                        Q_EMIT signal_move_response(_move_info);
-
-                        std::lock_guard<std::mutex> lock(mtx);
+                        {
+                            std::lock_guard<std::mutex> lock(mtx);
+                            cur_move_info.cur_pos = cur_pos;
+                            cur_move_info.result = "success";
+                            cur_move_info.message = "very good";
+                            cur_move_info.time = get_time();
+                        }
+                        Q_EMIT signal_move_response(cur_move_info);
                     }
 
                     fsm_state = AUTO_FSM_COMPLETE;
@@ -2894,15 +2892,14 @@ void AUTOCONTROL::control_loop()
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-        DATA_MOVE _move_info;
-        _move_info.cur_pos = cur_pos;
-        _move_info.result = "fail";
-        _move_info.message = "manual stopped";
-        _move_info.time = get_time();
-        Q_EMIT signal_move_response(_move_info);
-
-        std::lock_guard<std::mutex> lock(mtx);
-        cur_move_info = _move_info;
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_move_info.cur_pos = cur_pos;
+            cur_move_info.result = "fail";
+            cur_move_info.message = "manual stopped";
+            cur_move_info.time = get_time();
+        }
+        Q_EMIT signal_move_response(cur_move_info);
     }
 
     fsm_state = AUTO_FSM_COMPLETE;
