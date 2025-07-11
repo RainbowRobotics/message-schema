@@ -475,15 +475,15 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
 
         if(logger)
         {
-            logger->write_log(
-                        QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
-                        .arg(msg.connection)
-                        .arg(msg.position)
-                        .arg(msg.is_down)
-                        .arg(msg.state)
-                        .arg(msg.time),
-                        "Green"
-                        );
+            // logger->write_log(
+            //             QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+            //             .arg(msg.connection)
+            //             .arg(msg.position)
+            //             .arg(msg.is_down)
+            //             .arg(msg.state)
+            //             .arg(msg.time),
+            //             "Green"
+            //             );
         }
 
         Q_EMIT signal_foot(msg);
@@ -680,6 +680,7 @@ void COMM_RRS::send_move_status()
 {
     if(!is_connected || !ctrl || !mobile || !unimap || !dctrl)
     {
+        printf("is_connected : %d\n", (int)is_connected.load());
         return;
     }
 
@@ -1125,13 +1126,13 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(global_path.pos.size() < 2)
             {
                 msg.result = "accept";
-                msg.message = "just change goal";
+                msg.message = "success";
                 msg.eta = 0.0;
             }
             else
             {
                 msg.result = "accept";
-                msg.message = "";
+                msg.message = "success";
             }
 
             send_move_response(msg);
@@ -1860,12 +1861,12 @@ void COMM_RRS::slot_foot(DATA_FOOT msg)
 {
     if((msg.state == FOOT_STATE_DONE && msg.is_down == true) || msg.state == FOOT_STATE_MOVING)
     {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
+        // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
         mobile->set_is_inter_lock_foot(true);
     }
     else
     {
-        logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(msg.state), "Green");
+        // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(msg.state), "Green");
         mobile->set_is_inter_lock_foot(false);
     }
 }
@@ -2197,4 +2198,6 @@ void COMM_RRS::send_loop()
     {
         send_cnt = 0;
     }
+
+    send_cnt ++;
 }

@@ -1052,10 +1052,10 @@ void LOCALIZATION::node_loop()
         if(unimap->get_is_loaded() == MAP_LOADED)
         {
             Eigen::Matrix4d cur_tf = get_cur_tf();
-            QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+            QString _cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
             if(pre_node_id == "")
             {
-                pre_node_id = cur_node_id;
+                pre_node_id = _cur_node_id;
 
                 // update
                 std::lock_guard<std::mutex> lock(mtx);
@@ -1064,15 +1064,15 @@ void LOCALIZATION::node_loop()
             else
             {
                 // calc pre node id
-                NODE *node = unimap->get_node_by_id(cur_node_id);
+                NODE *node = unimap->get_node_by_id(_cur_node_id);
                 if(node != nullptr)
                 {
                     double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
-                        if(pre_node_id != cur_node_id)
+                        if(pre_node_id != _cur_node_id)
                         {
-                            pre_node_id = cur_node_id;
+                            pre_node_id = _cur_node_id;
 
                             // update
                             std::lock_guard<std::mutex> lock(mtx);

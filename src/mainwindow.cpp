@@ -88,6 +88,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
                     // start docking
     connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
+    // for response
+    connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+
     // annotation
     connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave, SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
@@ -297,7 +304,7 @@ void MainWindow::init_modules()
         MOBILE::instance()->open();
     }
 
-    // lidar 2d module init
+    // lidSEQ_COBOT_R_WAIT_2ar 2d module init
     {
         if(CONFIG::instance()->get_use_lidar_2d())
         {
@@ -396,6 +403,7 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
         COMM_RRS::instance()->set_localization_module(LOCALIZATION::instance());
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
+        COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
     }
 
@@ -3199,7 +3207,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
-    plot_tractile();
+    // plot_tractile();
     plot_process_time();
 
     // camera reset
