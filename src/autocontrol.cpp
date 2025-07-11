@@ -2952,16 +2952,6 @@ void AUTOCONTROL::obs_loop()
             }
         }
 
-        // logging
-        if(min_obs_dist < 1.0)
-        {
-            logger->write_log_to_txt(QString("\tObstacle distance\t%1").arg(min_obs_dist, 0, 'f', 3));
-        }
-        else if(min_obs_dist < 2.0)
-        {
-            logger->write_log_to_txt(QString("\tObstacle distance\t%1").arg(min_obs_dist, 0, 'f', 3));
-        }
-
         // store result
         {
             std::lock_guard<std::mutex> lock(mtx);

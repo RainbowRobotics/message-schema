@@ -1664,6 +1664,20 @@ void MainWindow::watch_loop()
                     }
                 }
             }
+
+            // obs logging
+            if(AUTOCONTROL::instance()->get_is_moving())
+            {
+                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+                if(obs_d < 1.0)
+                {
+                    LOGGER::instance()->write_log_to_txt(QString("\tObstacle distance").arg(obs_d, 0, 'f', 3));
+                }
+                else if(obs_d < 2.0)
+                {
+                    LOGGER::instance()->write_log_to_txt(QString("\tObstacle distance\t%1").arg(obs_d, 0, 'f', 3));
+                }
+            }
         }
 
         // for 1000ms loop
@@ -1699,7 +1713,6 @@ void MainWindow::watch_loop()
 
                 // test
                 double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-                QString obs_state = AUTOCONTROL::instance()->get_obs_condition();
                 if(obs_d < 1.0)
                 {
                     MOBILE::instance()->led(0, SAFETY_LED_RED);
