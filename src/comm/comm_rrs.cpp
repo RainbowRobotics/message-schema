@@ -1064,7 +1064,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 return;
             }
 
-            if(!mobile->get_is_inter_lock_foot())
+            if(mobile->get_is_inter_lock_foot())
             {
                 msg.result = "reject";
                 msg.message = "inter lock foot";
