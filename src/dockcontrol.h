@@ -53,6 +53,11 @@ public:
     void set_qr_sensor_module(QR_SENSOR* _qr_sensor);
     void set_obsmap_module(OBSMAP* _obsmap);
 
+    //for debug
+    std::vector<Eigen::Vector3d> get_cur_clust();
+    std::vector<Eigen::Vector3d> debug_frame;
+    std::vector<Eigen::Vector3d> get_debug_frame();
+
 private:
     explicit DOCKCONTROL(QObject *parent = nullptr);
     ~DOCKCONTROL();
@@ -101,7 +106,7 @@ private:
     
     // for control
     void dockControl(const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
-    void pointdockControl(bool final_dock, const Eigen::Matrix4d& err_tf, double&cmd_v, double& cmd_w);
+    void pointdockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, double&cmd_v, double& cmd_w);
 
     //for l_control
     double limit_accel = 0.1;
@@ -119,8 +124,6 @@ private:
     // params for rrs & plot
     QString obs_condition       = "none";
     QString failed_reason       = "";
-    std::vector<Eigen::Vector3d> get_cur_clust();
-    std::vector<Eigen::Vector3d> debug_frame;
 
     // mutex
     std::mutex mtx;
@@ -132,6 +135,10 @@ private:
     LIDAR_2D* lidar_2d;
     QR_SENSOR* qr_sensor;
     OBSMAP* obsmap;
+
+Q_SIGNALS:
+    void signal_dock_response(DATA_DOCK msg);
+
 };
 
 #endif // DOCKCONTROL_H

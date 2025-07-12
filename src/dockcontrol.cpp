@@ -56,7 +56,6 @@ void DOCKCONTROL::move()
     {
         //stop first
         stop();
-
         //obs clear -- delete renew
         
         //set flags
@@ -67,7 +66,6 @@ void DOCKCONTROL::move()
 
         vfrm = generate_vkframe(1); // generate aline vmark frame
         frm1_center = calculate_center(vfrm);
-
         oneque_vfrm = generate_vkframe(0); // generate oneque vmark frame
         oneque_frm1_center = calculate_center(oneque_vfrm);
 
@@ -79,6 +77,8 @@ void DOCKCONTROL::move()
         fsm_state = DOCKING_FSM_CHKCHARGE;
         a_thread = std::make_unique<std::thread>(&DOCKCONTROL::a_loop, this);
     }
+
+    return;
 }
 
 void DOCKCONTROL::a_loop()
@@ -98,7 +98,6 @@ void DOCKCONTROL::a_loop()
 
     while(a_flag)
     {
-
         double pre_loop_time = get_time();
 
         //use odom frame
@@ -119,34 +118,37 @@ void DOCKCONTROL::a_loop()
 
             if(l_dock_type == 0) // NORMAL
             {
+                qDebug() <<"normal";
                 normal_dock_cnt++;
                 oneque_dock_cnt =0;
                 notfind_dock_cnt =0;
             }
             else if(l_dock_type == 1) //ONE QUE
             {
+                qDebug() <<"oneque";
                 normal_dock_cnt =0;
                 oneque_dock_cnt ++;
                 notfind_dock_cnt =0;
             }
             else if (l_dock_type == -1)
             {
+                qDebug() <<"not find";
                 normal_dock_cnt =0;
                 oneque_dock_cnt =0;
                 notfind_dock_cnt ++;
             }
 
-            if(normal_dock_cnt > 10)
+            if(normal_dock_cnt > 5)
             {
                 fsm_state = DOCKING_FSM_POINTDOCK;
                 oneque_dock = false;
             }
-            if(oneque_dock_cnt > 10)
+            if(oneque_dock_cnt > 5)
             {
                 fsm_state = DOCKING_FSM_POINTDOCK;
                 oneque_dock = true;
             }
-            if(notfind_dock_cnt > 10)
+            if(notfind_dock_cnt > 100)
             {
                 failed_reason = "FIND CHECK WRONG";
                 fsm_state = DOCKING_FSM_FAILED;
@@ -161,67 +163,66 @@ void DOCKCONTROL::a_loop()
             if(oneque_dock)
             {
                 Eigen::Matrix4d target_tf;
-
                 Eigen::Matrix4d vmark_tf;
                 Eigen::Matrix4d middle_point;
 
-                vmark_tf = find_vmark();
+                vmark_tf = find_vmark(); // vamrk_tf -> base_frame
 
-                double dist = std::sqrt(std::pow(vmark_tf(0, 3), 2) + std::pow(vmark_tf(1, 3), 2));
-                double theta = std::atan2(vmark_tf(1, 0), vmark_tf(0, 0));
+//                double dist = std::sqrt(std::pow(vmark_tf(0, 3), 2) + std::pow(vmark_tf(1, 3), 2));
+//                double theta = std::atan2(vmark_tf(1, 0), vmark_tf(0, 0));
 
-
-                //dock check
-                if(dist < config->get_docking_goal_dist())  //&& theta < config->DOCKING_GOAL_TH)
+                if(path_flag)
                 {
-                    mobile->move(0,0,0);
-                    fsm_state = DOCKING_FSM_WAIT;
-                    wait_start_time = get_time();
-                    continue;
-                }
+                    Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
-                //first middle point set
-                if(!middle_set)
-                {
-                    middle_set = true;
-                    middle_point = straight_path(vmark_tf);
-                    middle_point_odom = se2_to_TF(mobile->get_pose().pose) * middle_point;
-                }
-
-                // target check logic/////////////////////////////////////////////////////
-                if(!final_dock)
-                {
-                    Eigen::Vector3d odom_pose = mobile->get_pose().pose;
-                    Eigen::Matrix4d cur_pos_odom = se2_to_TF(odom_pose);
-
-                    //middle point - from odom to base frame
-                    target_tf = cur_pos_odom * middle_point;
-                    
-                    //midlle point arrive check
-                    double mid_dist = std::sqrt(std::pow(target_tf(0, 3), 2) + std::pow(target_tf(1, 3), 2));
-                    double mid_theta = std::atan2(target_tf(1, 0), target_tf(0, 0));
-
-                    if(mid_dist < config->get_docking_goal_dist() && mid_theta < config->get_docking_goal_th())
+                    //dock check
+                    if(dtdr(0) < config->get_docking_goal_dist())  //&& theta < config->DOCKING_GOAL_TH)
                     {
-                        final_dock = true;
+                        mobile->move(0,0,0);
+                        fsm_state = DOCKING_FSM_WAIT;
+                        wait_start_time = get_time();
+                        continue;
                     }
-                }
 
-                else
-                {
-                    target_tf = vmark_tf;
 
+                    //--MIDDLEPOINT ----------------------TODO: Code clean------------------------------------------------//
+                    if(!middle_set)
+                    {
+                        middle_set = true;
+                        middle_point = straight_path(vmark_tf);
+                        middle_point_odom = se2_to_TF(mobile->get_pose().pose) * middle_point;
+                    }
+
+                    if(!final_dock)
+                    {
+                        Eigen::Vector2d dtdr = dTdR(cur_pos_odom,middle_point_odom);
+
+                        // TO do --COMPENSATE LOGIC ADD
+                        if(dtdr(0) < config->get_docking_goal_dist() && dtdr(1) < config->get_docking_goal_th())
+                        {
+                            final_dock = true;
+                        }
+                    }
+                    //----------------------------------------------------------------------------------------------------//
+
+
+                    //--FINAL DOCK----------------------------------------------------------------------------------------//
+                    else
+                    {
+                        target_tf = cur_pos_odom * docking_station_o;
+                    }
+                    //----------------------------------------------------------------------------------------------------//
+
+                    pointdockControl(final_dock,cur_pos_odom,cmd_v,cmd_w); // TODo -- target_tf delete
+                    mobile->move(cmd_v,0,cmd_w);
+                    qDebug() << "{v,w}" << cmd_v << cmd_w;
                 }
-                //////////////////////////////////////////////////////////////////////////
-    
-                pointdockControl(final_dock,target_tf,cmd_v,cmd_w);
-                mobile->move(cmd_v,0,cmd_w);
-                
             }
 
             else
             {
                 find_vmark();
+
                 if(path_flag)
                 {
                     // use odom_frame
@@ -246,7 +247,7 @@ void DOCKCONTROL::a_loop()
                         ddock.result = "fail";
                         ddock.message = failed_reason;
                         ddock.time = get_time();
-                        // Q_EMIT signal_dock_response(ddock);
+                        Q_EMIT signal_dock_response(ddock);
                     }
                 }
             }
@@ -313,7 +314,7 @@ void DOCKCONTROL::a_loop()
                 ddock.message = "";
                 ddock.time = get_time();
 
-                // Q_EMIT signal_dock_response(ddock);
+                 Q_EMIT signal_dock_response(ddock);
             }
 
             else if (get_time() - wait_start_time > 8.0)
@@ -338,7 +339,7 @@ void DOCKCONTROL::a_loop()
                         ddock.message = failed_reason;
                         ddock.time = get_time();
 
-                        // Q_EMIT signal_dock_response(ddock);
+                        Q_EMIT signal_dock_response(ddock);
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
@@ -411,7 +412,7 @@ void DOCKCONTROL::b_loop()
                 ddock.message = "";
                 ddock.time = get_time();
 
-                // Q_EMIT signal_dock_response(ddock);
+                 Q_EMIT signal_dock_response(ddock);
                 fsm_state = DOCKING_FSM_OFF;
             }
         }
@@ -431,7 +432,7 @@ void DOCKCONTROL::b_loop()
             ddock.message = failed_reason;
             ddock.time = get_time();
 
-            // Q_EMIT signal_dock_response(ddock);
+             Q_EMIT signal_dock_response(ddock);
         }
 
         // for real time loop
@@ -650,7 +651,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark()
         int num = cluster.size();
 
         // TODO -- CLUSTER SIZE LOGIC
-        // if(num > clust_size_min && num < clust_size_max) g_clusters.push_back(cluster);
+        qDebug() << " cluster size: "<< cluster.size();
+        if(num > clust_size_min && num < clust_size_max) g_clusters.push_back(cluster);
     }
 
     for(auto& clust : g_clusters)
@@ -680,28 +682,26 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark()
             filtered_clusters.push_back(clust);
         }
     }
-
+    qDebug() << "find_vmark filtered_size:" << filtered_clusters.size();
     std::vector<Eigen::Vector3d> docking_clust; // finally docking cluster
 
     // Todo - Test check candidate->sizefilter
     if(!sizefilter(filtered_clusters,docking_clust))
     {
+        qDebug() << "size filter out" ;
         return out_;
     }
 
     if(oneque_dock)
     {
 
-        if(clusters_queue.size() >=10)
-        {
-            clusters_queue.pop();
-        }
-
-
         clusters_queue.push(docking_clust);
 
-        if(clusters_queue.size() == 10)
+        qDebug() << "oneque_dock: clusters size" << clusters_queue.size();
+
+        if(clusters_queue.size() > 10)
         {
+
             KFRAME cur_frm;
 
             while (!clusters_queue.empty())
@@ -735,10 +735,14 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark()
 
             if(err > config->get_docking_icp_err_threshold()) //CHANGE
             {
+                qDebug() << "findvmark {err}" << err;
                 return out_;
             }
 
-            out_ = dock_tf;
+//            out_ = dock_tf; // use base_frame
+            docking_station = dock_tf;
+            docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
+            path_flag = true;
 
             return out_;
         }
@@ -828,20 +832,20 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
         for (const auto& pt : res1.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
         for (const auto& pt : res2.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
         for (const auto& pt : res3.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
     }
 
@@ -859,20 +863,20 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
         for (const auto& pt : res1.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
         for (const auto& pt : res2.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
         for (const auto& pt : res3.pts)
         {
             frame.pts.push_back(pt);
-            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-            debug_frame.push_back(debug_pt);
+//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
+//            debug_frame.push_back(debug_pt);
         }
     }
 
@@ -1181,6 +1185,7 @@ bool DOCKCONTROL::is_everything_fine()
 
 int DOCKCONTROL::check_oneque()
 {
+    qDebug() << "check one que";
     std::vector<std::vector<Eigen::Vector3d>>filtered_clusters;
     std::vector<Eigen::Vector3d> c_lidar;
 
@@ -1192,7 +1197,7 @@ int DOCKCONTROL::check_oneque()
     
 
     std::vector<Eigen::Vector3d> filtered_lidar;
-
+    qDebug() << "c_lidar size " << c_lidar.size();
     //ROI
     for(unsigned int i=0; i<c_lidar.size(); i++)
     {
@@ -1311,7 +1316,8 @@ int DOCKCONTROL::check_oneque()
         int num = cluster.size();
 
         // change size filter
-        // if(num > clust_size_min && num < clust_size_max) g_clusters.push_back(cluster);
+//         if(num > clust_size_min && num < clust_size_max) g_clusters.push_back(cluster);
+        g_clusters.push_back(cluster);
     }
 
     for(auto& clust : g_clusters)
@@ -1342,17 +1348,20 @@ int DOCKCONTROL::check_oneque()
             filtered_clusters.push_back(clust);
         }
     }
-
+    qDebug() << "filtered size:" << filtered_clusters.size();
     std::vector<Eigen::Vector3d> docking_clust;
 
     if(!sizefilter(filtered_clusters,docking_clust))
     {
+        qDebug() << "size filter error";
         return 3;
     }
 
+    qDebug() << "docking_clust size:" << docking_clust.size();
+
     clusters_queue.push(docking_clust);
 
-    if(clusters_queue.size() > 20) // first hard check
+    if(clusters_queue.size() > 10) // first hard check
     {
         KFRAME cur_frm;
 
@@ -1387,6 +1396,7 @@ int DOCKCONTROL::check_oneque()
 
         if(err > config->get_docking_icp_err_threshold()) //0.002
         {
+            qDebug() << "not find";
             return -1; // NOT FIND
         }
 
@@ -1401,11 +1411,13 @@ int DOCKCONTROL::check_oneque()
 
         if(orein_err_th <=10.0 && head_err_th <=10.0)
         {
+            qDebug() << "1";
             return 1; // ONEQUE DOCK CNT
         }
 
         else
         {
+            qDebug() << "0";
             return 0; // NORMAL DOCK CNT
         }
 
@@ -1414,7 +1426,7 @@ int DOCKCONTROL::check_oneque()
     return 3; // NO VMARK
 }
 
-void DOCKCONTROL::pointdockControl(bool final_dock, const Eigen::Matrix4d& err_tf , double& cmd_v, double& cmd_w)
+void DOCKCONTROL::pointdockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, double& cmd_v, double& cmd_w)
 {
     //last control input -- Todo maybe use observation output?
     Eigen::Vector3d cur_vel = mobile->get_control_input();
@@ -1428,12 +1440,22 @@ void DOCKCONTROL::pointdockControl(bool final_dock, const Eigen::Matrix4d& err_t
     double w =0.0;
 
 
-//------------------point--------------------------------------------------------------
-    double dx = err_tf(0,3);
-    double dy = err_tf(1,3);
+//------------------used base--------------------------------------
+//    double dx = err_tf(0,3);
+//    double dy = err_tf(1,3);
+//    double dist = std::sqrt(dx*dx + dy*dy);
+//    double heading_err = std::atan2(dy,dx);
+//    double orien_err = std::atan2(err_tf(1,0),err_tf(0,0));
+//-------------------------------------------------------------
+
+//-----------------used odom-----------------------------------
+    Eigen::Matrix4d dist_base_frame = cur_pose.inverse()*docking_station_o;
+    double dx = dist_base_frame(0,3);
+    double dy = dist_base_frame(1,3);
     double dist = std::sqrt(dx*dx + dy*dy);
     double heading_err = std::atan2(dy,dx);
-    double orien_err = std::atan2(err_tf(1,0),err_tf(0,0));
+    double orien_err = std::atan2(dist_base_frame(1,0),dist_base_frame(0,0));
+//-------------------------------------------------------------
 
 
     double dist_min = 0.05;
@@ -1583,6 +1605,7 @@ bool DOCKCONTROL::sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in
 
             total_length += std::sqrt(dx *dx + dy* dy);
         }
+
         lengths.push_back(total_length);
     }
 
@@ -1602,7 +1625,7 @@ bool DOCKCONTROL::sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in
         }
     }
 
-    if(min_error > len_error_tolerance || best_idx <0)
+    if(min_error > len_error_tolerance || best_idx < 0)
     {
         return false;
     }
@@ -1628,6 +1651,8 @@ Eigen::Matrix4d DOCKCONTROL::straight_path(const Eigen::Matrix4d& end_pose)
 
     return out_;
 }
+
+
 
 bool DOCKCONTROL::undock()
 {
@@ -1656,4 +1681,14 @@ bool DOCKCONTROL::undock()
         undock_time = get_time();
         return true;
     }
+}
+
+std::vector<Eigen::Vector3d> DOCKCONTROL::get_cur_clust()
+{
+    mtx.lock();
+    std::vector<Eigen::Vector3d> debug_p = debug_frame;
+    debug_frame.clear();
+    mtx.unlock();
+
+    return debug_p;
 }
