@@ -285,9 +285,6 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MAX", DOCKING_CLUST_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_ANGLE_THRESHOLD", DOCKING_CLUST_ANGLE_THRESHOLD, "docking");
     check_and_set_double(obj_dock, "DOCKING_EXTENDED_CONTROL_TIME", DOCKING_EXTENDED_CONTROL_TIME, "docking");
-    check_and_set_double(obj_dock, "DOCKING_K_ALPHA", DOCKING_K_ALPHA, "docking");
-    check_and_set_double(obj_dock, "DOCKING_K_BETA", DOCKING_K_BETA, "docking");
-    check_and_set_double(obj_dock, "DOCKING_K_RHO", DOCKING_K_RHO, "docking");
     check_and_set_double(obj_dock, "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX", DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CHG_LENGTH", DOCKING_CHG_LENGTH, "docking");
     check_and_set_double(obj_dock, "DOCKING_ICP_ERR_THRESHOLD", DOCKING_ICP_ERR_THRESHOLD, "docking");
@@ -1310,25 +1307,6 @@ double CONFIG::get_docking_icp_err_threshold()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DOCKING_ICP_ERR_THRESHOLD;
-}
-
-
-double CONFIG::get_docking_k_alpha()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_K_ALPHA;
-}
-
-double CONFIG::get_docking_k_beta()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_K_BETA;
-}
-
-double CONFIG::get_docking_k_rho()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_K_RHO;
 }
 
 double CONFIG::get_docking_find_vmark_dist_threshold_max()

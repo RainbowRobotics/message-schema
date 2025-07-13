@@ -1169,7 +1169,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_S">
        <attribute name="title">
@@ -3031,6 +3031,45 @@ Save</string>
         </property>
         <property name="text">
          <string>OP Mode</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="bt_DockApproach">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>510</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>approach</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="bt_DockCompensate">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>540</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>compensate</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="bt_Dock">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>570</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>dock</string>
         </property>
        </widget>
       </widget>

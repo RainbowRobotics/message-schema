@@ -14,6 +14,12 @@
 #include "qr_sensor.h"
 #include "obsmap.h"
 #include "comm_data.h"
+struct DWA_Trajectory
+{
+    std::vector<Eigen::Matrix4d> poses;
+    double v;
+    double w;
+};
 
 class DOCKCONTROL : public QObject
 {
@@ -36,12 +42,16 @@ public:
     Eigen::Vector3d calculate_center(const KFRAME& frame);
     double vfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG);
     bool is_everything_fine(); 
-    Eigen::Matrix4d find_vmark();
-    Eigen::Matrix4d straight_path(const Eigen::Matrix4d& e_p);
+    Eigen::Matrix4d find_vmark(int& dock_check);
     XYZR_CLOUD generate_sample_points(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, int n);
     Eigen::Matrix4d calculate_translation_matrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to); 
     bool sizefilter(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
     bool cluster_candidate(const std::vector<std::vector<Eigen::Vector3d>>& in, std::vector<Eigen::Vector3d>& out);
+
+    //DWA
+    std::map<std::pair<double, double>, std::vector<Eigen::Matrix4d>> DWA_TABLE;
+    std::map<std::pair<double,double>, std::vector<Eigen::Matrix4d>> generate_dwa_traj_table(double min_v, double max_v, double v_step, double min_w_deg, double max_w_deg ,double w_step_deg,double dt ,int steps);
+    double wrapToPi(double angle);
 
     /***********************
      * set other modules
@@ -83,10 +93,11 @@ private:
     bool oneque_dock = false;
     bool undock_flag = false;
     double undock_waiting_time = 0.0;
+    bool find_check = false;
     Eigen::Matrix4d docking_station;
     Eigen::Matrix4d docking_station_m;
     Eigen::Matrix4d docking_station_o;
-
+    Eigen::Matrix4d first_aline;
 
     // for cluster
     int check_oneque();
@@ -105,22 +116,17 @@ private:
     int ICP_CORRESPONDENCE_THRESHOLD = 10;
     
     // for control
-    void dockControl(const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
-    void pointdockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, double&cmd_v, double& cmd_w);
-
-    //for l_control
+    void dockControl(bool final_dock, const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
     double limit_accel = 0.1;
     double limit_vel = 0.1;
     double oneque_limit_vel = 0.5;
-    double limit_th_acc = 45;
-    double limit_th = 0.785;
+    double limit_th_acc = 25;
+    double limit_th = 1.57;
     double err_th_old = 0.0;
     double err_v_old = 0.0;
     double undock_time =0.0;
 
-    Eigen::Matrix4d odom_start_tf;
-    
-    
+
     // params for rrs & plot
     QString obs_condition       = "none";
     QString failed_reason       = "";

@@ -85,7 +85,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_DockStart,        SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
     connect(ui->bt_DockStop,         SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
     connect(ui->bt_UnDockStart,      SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
-                    // start docking
+    connect(ui->bt_DockApproach,      SIGNAL(clicked()),                    this, SLOT(bt_DockApproach()));
+    connect(ui->bt_DockCompensate,      SIGNAL(clicked()),                    this, SLOT(bt_DockCompensate()));
+    connect(ui->bt_Dock,      SIGNAL(clicked()),                    this, SLOT(bt_Dock()));
+
+    // start docking
     connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
     // for response
@@ -405,6 +409,17 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
     }
+
+    // docking module init
+    {
+        DOCKCONTROL::instance()->set_config_module(CONFIG::instance());
+        DOCKCONTROL::instance()->set_logger_module(LOGGER::instance());
+        DOCKCONTROL::instance()->set_mobile_module(MOBILE::instance());
+        DOCKCONTROL::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        DOCKCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
+    }
+
+
 
     // start jog loop
     jog_flag = true;
@@ -2392,6 +2407,34 @@ void MainWindow::plot_raw_2d()
 
                 cloud->push_back(pt);
             }
+
+            // for debug docking clust
+            std::vector<Eigen::Vector3d> cluster_point;
+            cluster_point = DOCKCONTROL::instance()->get_cur_clust();
+
+            for (const auto& pt : cluster_point)
+            {
+                Eigen::Vector3d _P = cur_R * pt + cur_t;
+
+                pcl::PointXYZRGB pcl_pt;
+                pcl_pt.x = _P.x();
+                pcl_pt.y = _P.y();
+                pcl_pt.r = 0;
+                pcl_pt.g = 255;
+                pcl_pt.b = 0;
+
+                cloud->push_back(pcl_pt);
+//                pcl::PointXYZRGB pcl_pt;
+//                pcl_pt.x = pt.x();
+//                pcl_pt.y = pt.y();
+//                pcl_pt.z = pt.z();
+//                pcl_pt.r = 0;
+//                pcl_pt.g = 255;
+//                pcl_pt.b = 0;
+
+//                cloud->push_back(pcl_pt);
+            }
+
 
             QString cloud_id = QString("lidar_2d_cur_pts_%1").arg(idx);
             if(!pcl_viewer->updatePointCloud(cloud, cloud_id.toStdString()))

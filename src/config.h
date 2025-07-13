@@ -228,9 +228,6 @@ public:
     double get_docking_size_x_min();                //
     double get_docking_size_x_max();                //
     double get_docking_icp_err_threshold();
-    double get_docking_k_alpha();                   
-    double get_docking_k_beta();
-    double get_docking_k_rho();
     double get_docking_find_vmark_dist_threshold_max();
     double get_docking_chg_length();
     /***********************
@@ -428,9 +425,6 @@ private:
 
     // docking
     double DOCKING_CHG_LENGTH = 0.472;
-    double DOCKING_K_ALPHA = 4.5;
-    double DOCKING_K_BETA = 1.5;
-    double DOCKING_K_RHO = 0.6;
     double DOCKING_GOAL_D = 0.03; //3cm
     double DOCKING_GOAL_TH = 0.01745; //0.1*D2R;
     double DOCKING_KP_d = 0.15;
@@ -447,6 +441,7 @@ private:
     double DOCKING_POINTDOCK_MARGIN = 0.18;
     double DOCKING_ICP_ERR_THRESHOLD = 0.003;
     int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
+    double DOCKING_DWA_YAW_WEIGHT = 0.25;
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
     // map
     QString MAP_PATH = "";
