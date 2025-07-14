@@ -356,6 +356,7 @@ void DOCKCONTROL::a_loop()
         {
             if(failed_flag)
             {
+                failed_flag = false;
                 DATA_DOCK ddock;
                 ddock.command = "dock";
                 ddock.result = "fail";
