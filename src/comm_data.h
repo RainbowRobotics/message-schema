@@ -651,6 +651,42 @@ struct DATA_FOOT
 };
 
 
+struct DATA_TEMPERATURE
+{
+    double time;
+
+    bool connection = false;
+    float temperature_value;
+
+    DATA_TEMPERATURE()
+    {
+        time = 0.0;
+
+        connection = false;
+        temperature_value = 0;
+    }
+
+    DATA_TEMPERATURE(const DATA_TEMPERATURE& p)
+    {
+        time = p.time;
+
+        connection = p.connection;
+        temperature_value = p.temperature_value;
+    }
+
+    DATA_TEMPERATURE& operator=(const DATA_TEMPERATURE& p)
+    {
+        time = p.time;
+
+        connection = p.connection;
+        temperature_value = p.temperature_value;
+
+        return *this;
+    }
+};
+
+
+
 Q_DECLARE_METATYPE(DATA_MOVE)
 Q_DECLARE_METATYPE(DATA_LOCALIZATION)
 Q_DECLARE_METATYPE(DATA_LOAD)
