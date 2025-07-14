@@ -26,6 +26,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
   , lidar_2d(nullptr)
   , loc(nullptr)
   , mapping(nullptr)
+  , dctrl(nullptr)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -509,7 +510,7 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
 // send functions
 void COMM_RRS::send_status()
 {
-    if(!is_connected || !config || !mobile || !unimap)
+    if(!is_connected || !config || !mobile || !unimap || !dctrl)
     {
         return;
     }
@@ -601,7 +602,7 @@ void COMM_RRS::send_status()
             charge_st_string = "charging";
         }
     }
-    bool is_dock = false;
+    bool is_dock = dctrl->get_dock_state();
 
     QJsonObject robotStateObj;
     robotStateObj["charge"]       = charge_st_string;

@@ -66,6 +66,8 @@ void DOCKCONTROL::move()
         undock_flag = false;
         path_flag = false; // for pointdock pathflag
         dock = false; // for pointdock pdu linear move flag
+        failed_flag = false;
+
 
         first_aline = Eigen::Matrix4d::Identity();
 
@@ -112,6 +114,7 @@ void DOCKCONTROL::a_loop()
 
         if(is_good_everything == DRIVING_FAILED)
         {
+            failed_flag =true;
             failed_reason = "IS_GOOD_ERROR";
             fsm_state = DOCKING_FSM_FAILED;
         }
@@ -154,6 +157,7 @@ void DOCKCONTROL::a_loop()
             }
             if(notfind_dock_cnt * 0.2 > config->get_docking_waiting_time())
             {
+                failed_flag =true;
                 failed_reason = "FIND CHECK WRONG";
                 fsm_state = DOCKING_FSM_FAILED;
             }
@@ -169,12 +173,8 @@ void DOCKCONTROL::a_loop()
                 Eigen::Matrix4d target_tf;
                 Eigen::Matrix4d vmark_tf;
 
-                if(!findvmark_toggle)
-                {
-                    int t;
-                    vmark_tf = find_vmark(t); // vamrk_tf -> base_frame
-                }
-
+                int t;
+                vmark_tf = find_vmark(t); // vamrk_tf -> base_frame
 
                 if(path_flag)
                 {
@@ -184,7 +184,6 @@ void DOCKCONTROL::a_loop()
                     if(dtdr(0) < 0.35)
                     {
                         final_dock = true;
-                        findvmark_toggle = true;
                         first_aline = cur_pos_odom;
                     }
 
@@ -281,14 +280,15 @@ void DOCKCONTROL::a_loop()
         {
             if(dock)
             {
+                failed_flag =true;
                 failed_reason = "LOGIC WRONG";
                 fsm_state = DOCKING_FSM_FAILED;
             }
 
             else
             {
-                mobile->move_linear_x(config->get_docking_pointdock_margin(), 0.05);
                 dock = true;
+                mobile->move_linear_x(config->get_docking_pointdock_margin(), 0.05);
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
             }
@@ -301,6 +301,7 @@ void DOCKCONTROL::a_loop()
             qDebug() << "{c_s,m0,m1}" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
             mobile->move(0, 0, 0);
             double check_motor_a = config->get_docking_check_motor_a();
+
             if (ms.charge_state == 3 && ms.cur_m0 < check_motor_a && ms.cur_m1 < check_motor_a)
             {
                 fsm_state = DOCKING_FSM_COMPLETE;
@@ -328,8 +329,11 @@ void DOCKCONTROL::a_loop()
                     double t = std::abs(config->get_robot_size_x_max() /0.05) + 0.5;
                     if(get_time() - undock_waiting_time > t)
                     {
+
+                        dock = true; // undock done;
                         qDebug() << "no charge[charge_state,cur_m0,cur_m1]" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
                         failed_reason = "NOT CONNECTED";
+                        failed_flag =true;
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
@@ -350,13 +354,16 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_FAILED)
         {
-            DATA_DOCK ddock;
-            ddock.command = "dock";
-            ddock.result = "fail";
-            ddock.message = failed_reason;
-            ddock.time = get_time();
+            if(failed_flag)
+            {
+                DATA_DOCK ddock;
+                ddock.command = "dock";
+                ddock.result = "fail";
+                ddock.message = failed_reason;
+                ddock.time = get_time();
 
-            Q_EMIT signal_dock_response(ddock);
+                Q_EMIT signal_dock_response(ddock);
+            }
         }
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
@@ -399,6 +406,8 @@ void DOCKCONTROL::b_loop()
 
             if(get_time() - undock_time > t)
             {
+                dock = true; // undock done
+
                 printf("[DOCKING] UNDOCK SUCCESS\n");
 
                 DATA_DOCK ddock;
@@ -470,6 +479,7 @@ void DOCKCONTROL::stop()
     }
 
     mobile->move(0, 0, 0);
+    dock = false;
     is_moving = false;
     is_pause = false;
 
@@ -1446,8 +1456,6 @@ std::vector<Eigen::Vector3d> DOCKCONTROL::get_cur_clust()
     return debug_p;
 }
 
-
-
 std::map<std::pair<double, double>, std::vector<Eigen::Matrix4d>>
 DOCKCONTROL::generate_dwa_traj_table(double min_v, double max_v, double v_step,
                                      double min_w_deg, double max_w_deg, double w_step_deg,
@@ -1487,6 +1495,18 @@ DOCKCONTROL::generate_dwa_traj_table(double min_v, double max_v, double v_step,
 
     return table;
 }
+
+bool DOCKCONTROL::get_dock_state()
+{
+    bool out_;
+
+    mtx.lock();
+    out_ = dock;
+    mtx.unlock();
+
+    return out_;
+}
+
 
 double DOCKCONTROL::wrapToPi(double angle)
 {

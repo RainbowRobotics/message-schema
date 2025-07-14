@@ -67,6 +67,7 @@ public:
     std::vector<Eigen::Vector3d> get_cur_clust();
     std::vector<Eigen::Vector3d> debug_frame;
     std::vector<Eigen::Vector3d> get_debug_frame();
+    bool get_dock_state();
 
 private:
     explicit DOCKCONTROL(QObject *parent = nullptr);
@@ -94,6 +95,7 @@ private:
     bool undock_flag = false;
     double undock_waiting_time = 0.0;
     bool find_check = false;
+    bool failed_flag = false;
     Eigen::Matrix4d docking_station;
     Eigen::Matrix4d docking_station_m;
     Eigen::Matrix4d docking_station_o;
