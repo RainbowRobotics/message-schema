@@ -183,7 +183,6 @@ void DOCKCONTROL::a_loop()
                     if(dtdr(0) < 0.35)
                     {
                         final_dock = true;
-//                        findvmark_toggle = true;
                         first_aline = cur_pos_odom;
                     }
 
@@ -195,7 +194,6 @@ void DOCKCONTROL::a_loop()
 
                         double dist_x = target_tf(0,3);
                         double dist_y = target_tf(1,3);
-                        qDebug() << "dist_y:" <<dist_y;
 
                         if(fabs(dist_y) < 0.005)
                         {
@@ -212,7 +210,6 @@ void DOCKCONTROL::a_loop()
                     }
 
                     dockControl(final_dock,cur_pos_odom,cmd_v,cmd_w);
-                    qDebug() << "{v,w}" << cmd_v << cmd_w;
                     mobile->move(cmd_v,0,cmd_w);
                 }
             }
@@ -232,11 +229,9 @@ void DOCKCONTROL::a_loop()
 
                 double dist_x = target_tf(0,3);
                 double dist_y = target_tf(1,3);
-                qDebug() << "{d_x,d_y}" << dist_x << dist_y ;
 
                 if(dist_x > 0.05)
                 {
-                    qDebug()<< "why?";
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_POINTDOCK;
                 }
@@ -269,7 +264,6 @@ void DOCKCONTROL::a_loop()
                 // use odom_frame
                 Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
-                qDebug() << " compen err" << dtdr(1);
                 if(std::abs(dtdr(1)) < config->get_docking_goal_th())
                 {
                     mobile->move(0,0,0);
@@ -304,8 +298,8 @@ void DOCKCONTROL::a_loop()
             MOBILE_STATUS ms = mobile->get_status();
             qDebug() << "{c_s,m0,m1}" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
             mobile->move(0, 0, 0);
-
-            if (ms.charge_state == 3 && ms.cur_m0 < 60 && ms.cur_m1 < 60)
+            double check_motor_a = config->get_docking_check_motor_a();
+            if (ms.charge_state == 3 && ms.cur_m0 < check_motor_a && ms.cur_m1 < check_motor_a)
             {
                 fsm_state = DOCKING_FSM_COMPLETE;
 
@@ -367,7 +361,7 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
         {
-            //TODO what?
+
         }
 
         // for real time loop
@@ -801,20 +795,16 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
         for (const auto& pt : res1.pts)
         {
             frame.pts.push_back(pt);
-//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-//            debug_frame.push_back(debug_pt);
+
         }
         for (const auto& pt : res2.pts)
         {
             frame.pts.push_back(pt);
-//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-//            debug_frame.push_back(debug_pt);
+
         }
         for (const auto& pt : res3.pts)
         {
             frame.pts.push_back(pt);
-//            Eigen::Vector3d debug_pt(pt.x, pt.y, pt.z);
-//            debug_frame.push_back(debug_pt);
         }
     }
 
@@ -1192,7 +1182,7 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
         if (final_dock)
         {       //final PID Controller
-            qDebug() << "final_dock";
+
             double direction = 1.0;
 
             if (std::abs(err_th) > M_PI_2)
@@ -1215,23 +1205,17 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
             if (yaw_diff < -yaw_limit || yaw_diff > yaw_limit)
             {
                 fsm_state = DOCKING_FSM_YCOMPENSATE;
-//                w = 0.0;
-//                if (direction > 0)
-//                {
-//                    v = 0.0;
-//                }
             }
         }
 
         else
         {       //DWA Controller
-            qDebug() << "dwa";
             Eigen::Vector3d target_pos = target_tf.block<3,1>(0,3);
             double target_yaw = atan2(target_tf(1,0), target_tf(0,0));
 
             double min_cost = std::numeric_limits<double>::max();
             std::pair<double, double> best_vw = {0.0, 0.0};
-            const double yaw_weight = 0.25;
+            double yaw_weight = config->get_docking_dwa_yaw_weight();
 
             for (const auto& [vw, traj] : DWA_TABLE)
             {
@@ -1260,7 +1244,6 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
     else if( fsm_state == DOCKING_FSM_YCOMPENSATE)
     {
-        qDebug() <<"y compensate";
         v = - 0.05;
         if (dist_y * dist_x > 0)
         {
@@ -1271,7 +1254,6 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
             w = config->get_docking_kp_th() * std::abs(dist_y);  // 왼쪽 회전
         }
 
-        qDebug() << "compenY{v,w}" << v << w;
     }
 
     else if(fsm_state == DOCKING_FSM_COMPENSATE)

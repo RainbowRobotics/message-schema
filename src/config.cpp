@@ -288,6 +288,8 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX", DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CHG_LENGTH", DOCKING_CHG_LENGTH, "docking");
     check_and_set_double(obj_dock, "DOCKING_ICP_ERR_THRESHOLD", DOCKING_ICP_ERR_THRESHOLD, "docking");
+    check_and_set_double(obj_dock, "DOCKING_DWA_YAW_WEIGTH", DOCKING_DWA_YAW_WEIGHT, "docking");
+    check_and_set_double(obj_dock, "DOCKING_CHECK_MOTOR_A", DOCKING_CHECK_MOTOR_A, "docking");
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -1321,6 +1323,17 @@ double CONFIG::get_docking_chg_length()
     return DOCKING_CHG_LENGTH;
 }
 
+double CONFIG::get_docking_dwa_yaw_weight()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_DWA_YAW_WEIGHT;
+}
+
+double CONFIG::get_docking_check_motor_a()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_CHECK_MOTOR_A;
+}
 
 QString CONFIG::get_map_path()
 {
