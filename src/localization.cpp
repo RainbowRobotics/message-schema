@@ -196,16 +196,7 @@ QString LOCALIZATION::get_info_text()
     Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());
     Eigen::Vector2d cur_ieir = get_cur_ieir();
     QString loc_state = get_cur_loc_state();
-    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11").arg(cur_xi[0], 0, 'f', 2)
-                                                                                                         .arg(cur_xi[1], 0, 'f', 2)
-                                                                                                         .arg(cur_xi[2]*R2D, 0, 'f', 2)
-                                                                                                         .arg((double)cur_tf_err.load(), 0, 'f', 3)
-                                                                                                         .arg((double)process_time_localization.load(), 0, 'f', 3)
-                                                                                                         .arg((double)process_time_odometry.load(), 0, 'f', 3)
-                                                                                                         .arg((double)process_time_obs.load(), 0, 'f', 3)
-                                                                                                         .arg((double)process_time_node.load(), 0, 'f', 3)
-                                                                                                         .arg(cur_ieir[0], 0, 'f', 3)
-                                                                                                         .arg(cur_ieir[1], 0, 'f', 3)
+    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11").arg(cur_xi[0], 0, 'f', 2)                                                                                                   .arg(cur_xi[1], 0, 'f', 2)
                                                                                                          .arg(loc_state);
     return str;
 }

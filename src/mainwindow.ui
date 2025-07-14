@@ -874,7 +874,7 @@ out</string>
         <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>1.000000000000000</double>
+        <double>0.300000000000000</double>
        </property>
       </widget>
       <widget class="QDoubleSpinBox" name="spb_JogW">
@@ -1225,7 +1225,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">

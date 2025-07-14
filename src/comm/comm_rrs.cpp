@@ -470,7 +470,6 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         msg.state      = get_json(foot_msg, "foot_state").toInt();
         msg.time       = time_sec;
 
-
         // get temperature_sensor
         sio::message::ptr temperature_sensor = data->get_map()["temperature_sensor"];
         if(!temperature_sensor || temperature_sensor->get_flag() != sio::message::flag_object)
@@ -479,10 +478,15 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
             return;
         }
 
-        DATA_TEMPERATURE temprature_msg;
-        temprature_msg.connection = get_json(temperature_sensor, "connection") == "true";
-        temprature_msg.temperature_value   = get_json(temperature_sensor, "temperature_value").toFloat();
-        temprature_msg.time       = time_sec;
+        DATA_TEMPERATURE temperature_msg;
+        temperature_msg.connection = get_json(temperature_sensor, "connection") == "true";
+        temperature_msg.temperature_value   = get_json(temperature_sensor, "temperature_value").toFloat();
+        temperature_msg.time       = time_sec;
+
+//        qDebug()<<QString::number(temperature_msg.temperature_value);
+
+        MainWindow* _main = qobject_cast<MainWindow*>(main);
+        _main->temperature_value = temperature_msg.temperature_value;
 
 //        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
 

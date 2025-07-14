@@ -105,6 +105,28 @@ void LOGGER::init()
             spd_logger = spdlog::basic_logger_mt("sem_logger", "snlog/sem_log.log");
             spd_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
             spdlog::flush_on(spdlog::level::info);
+
+            QString sem_temperature_log_path = "snlog/sem_temperature_log.log";
+
+            // header
+            if(!QFile::exists(sem_temperature_log_path))
+            {
+                QFile temp_file(sem_temperature_log_path);
+                if(temp_file.open(QIODevice::WriteOnly | QIODevice::Text))
+                {
+                    QTextStream out(&temp_file);
+                    out << "SEM_LOG_VERSION=2.0\n";
+                    out << "Time\tMotor 1 Temperature(C)\tMotor 2 Temperature(C)\tBattery(C)\tTemperature sensor(C)\tSoc(%)\n";
+
+//                    out << "Time\tMotor 1 Temperature(°C)\tMotor 2 Temperature(°C)\tPDU Temperature(°C)\tTemperature sensor(°C)\tSoc(%)\n";
+                    temp_file.close();
+                }
+            }
+
+            spd_temperature_logger = spdlog::basic_logger_mt("sem_temperature_log", "snlog/sem_temperature_log.log");
+            spd_temperature_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
+            spdlog::flush_on(spdlog::level::info);
+
         }
         catch(const spdlog::spdlog_ex& ex)
         {
@@ -240,3 +262,14 @@ void LOGGER::write_log_to_txt(const QString& msg)
         spd_logger->info(msg.toStdString());
     }
 }
+
+
+// spdlog
+void LOGGER::write_temperature_log_to_txt(const QString& msg)
+{
+    if(spd_logger)
+    {
+        spd_temperature_logger->info(msg.toStdString());
+    }
+}
+

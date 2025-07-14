@@ -34,6 +34,8 @@ public:
     // spdlog
     void write_log_to_txt(const QString& msg);
 
+    void write_temperature_log_to_txt(const QString& msg);
+
 private:
     std::mutex mtx;
 
@@ -59,9 +61,12 @@ private:
 
     // spdlog
     std::shared_ptr<spdlog::logger> spd_logger = nullptr;
+    std::shared_ptr<spdlog::logger> spd_temperature_logger = nullptr;
 
 
 Q_SIGNALS:
+
+//    void signal_write_temperature_log(const QString& msg);
     void signal_write_log(QString user_log, QString color_code);
 };
 

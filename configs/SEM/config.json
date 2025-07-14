@@ -36,11 +36,11 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": false,
+        "USE_RRS": true,
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": true,
+        "USE_SIM": false,
         "USE_QTUI": false,
         "USE_BEEP": true
     },

@@ -1857,27 +1857,33 @@ void MainWindow::watch_loop()
         if(AUTOCONTROL::instance()->get_is_moving())
         {
             double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-            int obs_state = (obs_d < 1.0) ? 0 : 1;  // 거리 기준 상태 설정
 
-            QString log = QString("\t%1\t%2")
-                    .arg(obs_state)
-                    .arg(obs_state == 0 ? 0.0 : obs_d, 0, 'f', 3);
+            if(obs_d < 2.0 + 1e-6)
+            {
+                QString log = QString("\t%1\t%2")
+                        .arg(int(obs_d))
+                        .arg(obs_d, 0, 'f', 3);
 
-            LOGGER::instance()->write_log_to_txt(log);
+                LOGGER::instance()->write_log_to_txt(log);
+            }
+        }
 
-            //            double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-            //            if(obs_d < 1.0)
-            //            {
-            //                 LOGGER::instance()->write_log_to_txt(QString("\t0\t%1").arg(obs_d, 0, 'f', 3));
-            ////                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - stop\t%1").arg(obs_d, 0, 'f', 3));
-            //            }
-            //            else if(obs_d < 2.0)
-            //            {
-            ////                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - warning\t%1").arg(obs_d, 0, 'f', 3));
-            //                LOGGER::instance()->write_log_to_txt(QString("\t%1\t%2")
-            //                        .arg(obs_state)
-            //                        .arg(obs_state == 0 ? 0.0 : obs_d, 0, 'f', 3));
-            //            }
+        //for temperature status
+        {
+            MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
+
+//            //m1 m2 battery usb sensor
+            QString log = QString("\t%1\t%2\t%3\t%4\t%5")
+                    .arg(mobile_log.temp_m0)
+                    .arg(mobile_log.temp_m1)
+                    .arg(mobile_log.tabos_temperature)
+                    .arg(QString::number(temperature_value))
+                    .arg(mobile_log.tabos_soc, 0, 'f', 3);
+
+//            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
+//            qDebug()<<temperature_value.load();
+
+            LOGGER::instance()->write_temperature_log_to_txt(log);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

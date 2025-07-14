@@ -844,6 +844,7 @@ void MOBILE::recv_loop()
                             mobile_status.tabos_status = _tabos_status;
                             mobile_status.tabos_ttf = _tabos_ttf;
                             mobile_status.tabos_tte = _tabos_tte;
+
                             mobile_status.tabos_soc = _tabos_soc;
                             mobile_status.tabos_soh = _tabos_soh;
                             mobile_status.tabos_temperature = _tabos_temperature * 0.1f;
