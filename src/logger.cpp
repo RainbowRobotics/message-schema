@@ -97,6 +97,7 @@ void LOGGER::init()
                 {
                     QTextStream out(&file);
                     out << "SEM_LOG_VERSION=2.0\n";
+                    out << "Time\tObstacleStatus\tDistance(m)\n";
                     file.close();
                 }
             }

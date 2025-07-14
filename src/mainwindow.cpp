@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+  , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -821,8 +821,8 @@ void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz,
     Eigen::Vector3d focal_new = tf_new.block<3, 1>(0, 2)*d + pos_new;
 
     pcl_viewer->setCameraPosition(pos_new[0], pos_new[1], pos_new[2],
-                              focal_new[0], focal_new[1], focal_new[2],
-                              up_new[0], up_new[1], up_new[2]);
+            focal_new[0], focal_new[1], focal_new[2],
+            up_new[0], up_new[1], up_new[2]);
 
 
     pcl_viewer->setCameraClipDistances(2.0, 1000.0);
@@ -1454,8 +1454,8 @@ void MainWindow::bt_ReturnToCharging()
     if(found_ids.size() > 1)
     {
         LOGGER::instance()->write_log(QString("[RTC] Multiple charging nodes found for serial: %1 (count: %2)")
-                         .arg(robot_serial_number)
-                         .arg(found_ids.size()), "Red");
+                                      .arg(robot_serial_number)
+                                      .arg(found_ids.size()), "Red");
         return;
     }
 
@@ -1523,7 +1523,7 @@ void MainWindow::bt_AnnotSave()
         return;
     }
 
-     UNIMAP::instance()->save_node();
+    UNIMAP::instance()->save_node();
 }
 
 void MainWindow::bt_QuickAddNode()
@@ -1754,12 +1754,12 @@ void MainWindow::watch_loop()
                     // when motor status 0, emo released, no charging
                     if((ms.status_m0 == 0 || ms.status_m1 == 0) && ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
-//                        MOBILE::instance()->motor_on();
+                        //                        MOBILE::instance()->motor_on();
                     }
 
                     if(ms.connection_m0 == 1 && ms.connection_m1 == 1 &&
-                       ms.status_m0 == 1 && ms.status_m1 == 1 &&
-                       ms.motor_stop_state == 1 && ms.charge_state == 0)
+                            ms.status_m0 == 1 && ms.status_m1 == 1 &&
+                            ms.motor_stop_state == 1 && ms.charge_state == 0)
                     {
                         MOBILE::instance()->set_cur_pdu_state("good");
                     }
@@ -1833,7 +1833,7 @@ void MainWindow::watch_loop()
                 {
                     Eigen::Vector2d ieir = LOCALIZATION::instance()->get_cur_ieir();
                     if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_ratio() ||
-                       ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_error())
+                            ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_error())
                     {
                         loc_fail_cnt++;
                         if(loc_fail_cnt > 3)
@@ -1855,16 +1855,28 @@ void MainWindow::watch_loop()
         // obs logging
         if(AUTOCONTROL::instance()->get_is_moving())
         {
-            // double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-            double obs_d = std::round(AUTOCONTROL::instance()->get_obs_dist() * 1000.0) / 1000.0;
-            if(obs_d <= 1.0)
-            {
-                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - stop\t%1").arg(obs_d, 0, 'f', 3));
-            }
-            else if(obs_d < 2.0)
-            {
-                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - warning\t%1").arg(obs_d, 0, 'f', 3));
-            }
+            double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+            int obs_state = (obs_d < 1.0) ? 0 : 1;  // 거리 기준 상태 설정
+
+            QString log = QString("\t%1\t%2")
+                    .arg(obs_state)
+                    .arg(obs_state == 0 ? 0.0 : obs_d, 0, 'f', 3);
+
+            LOGGER::instance()->write_log_to_txt(log);
+
+            //            double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+            //            if(obs_d < 1.0)
+            //            {
+            //                 LOGGER::instance()->write_log_to_txt(QString("\t0\t%1").arg(obs_d, 0, 'f', 3));
+            ////                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - stop\t%1").arg(obs_d, 0, 'f', 3));
+            //            }
+            //            else if(obs_d < 2.0)
+            //            {
+            ////                LOGGER::instance()->write_log_to_txt(QString("\tObstacle - warning\t%1").arg(obs_d, 0, 'f', 3));
+            //                LOGGER::instance()->write_log_to_txt(QString("\t%1\t%2")
+            //                        .arg(obs_state)
+            //                        .arg(obs_state == 0 ? 0.0 : obs_d, 0, 'f', 3));
+            //            }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -2113,8 +2125,8 @@ void MainWindow::plot_node()
                         if(parse_info(info, "SIZE", res))
                         {
                             pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                                                -res.sz[1]/2, res.sz[1]/2,
-                                                -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
+                                    -res.sz[1]/2, res.sz[1]/2,
+                                    -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
 
                             pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
                             pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
@@ -2127,8 +2139,8 @@ void MainWindow::plot_node()
                         if(parse_info(info, "SIZE", res))
                         {
                             pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                                                -res.sz[1]/2, res.sz[1]/2,
-                                                -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
+                                    -res.sz[1]/2, res.sz[1]/2,
+                                    -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
 
                             pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
                             pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
@@ -2373,7 +2385,7 @@ void MainWindow::plot_info()
 void MainWindow::plot_raw_2d()
 {
     if(LIDAR_2D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_2D" &&
-           !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
+            !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
     {
         Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
         Eigen::Matrix3d cur_R = cur_tf.block(0,0,3,3);
@@ -2426,15 +2438,15 @@ void MainWindow::plot_raw_2d()
                 pcl_pt.b = 0;
 
                 cloud->push_back(pcl_pt);
-//                pcl::PointXYZRGB pcl_pt;
-//                pcl_pt.x = pt.x();
-//                pcl_pt.y = pt.y();
-//                pcl_pt.z = pt.z();
-//                pcl_pt.r = 0;
-//                pcl_pt.g = 255;
-//                pcl_pt.b = 0;
+                //                pcl::PointXYZRGB pcl_pt;
+                //                pcl_pt.x = pt.x();
+                //                pcl_pt.y = pt.y();
+                //                pcl_pt.z = pt.z();
+                //                pcl_pt.r = 0;
+                //                pcl_pt.g = 255;
+                //                pcl_pt.b = 0;
 
-//                cloud->push_back(pcl_pt);
+                //                cloud->push_back(pcl_pt);
             }
 
 
@@ -2466,7 +2478,7 @@ void MainWindow::plot_raw_3d()
 {
     // plot 3d lidar
     if(LIDAR_3D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_3D" &&
-           !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
+            !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
     {
         Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
         Eigen::Matrix3d cur_R = cur_tf.block(0,0,3,3);
@@ -2564,7 +2576,7 @@ void MainWindow::plot_process_time()
             double lidar_2d_merge_time = LIDAR_2D::instance()->get_process_time_merge() * 1000;
 
             lidar_2d_time_str = QString::asprintf("[LIDAR_2D] dsk(0,1):%.3f,%.3f, merge:%.3f\n",
-                                    lidar_2d_deskewing_time[0], lidar_2d_deskewing_time[1], lidar_2d_merge_time);
+                                                  lidar_2d_deskewing_time[0], lidar_2d_deskewing_time[1], lidar_2d_merge_time);
         }
     }
 
@@ -2580,7 +2592,7 @@ void MainWindow::plot_process_time()
             double lidar_3d_merge_time = LIDAR_3D::instance()->get_process_time_merge() * 1000;
 
             lidar_3d_time_str = QString::asprintf("[LIDAR_3D] dsk(0,1):%.3f,%.3f, merge:%.3f\n",
-                                    lidar_3d_deskewing_time[0], lidar_3d_deskewing_time[1], lidar_3d_merge_time);
+                                                  lidar_3d_deskewing_time[0], lidar_3d_deskewing_time[1], lidar_3d_merge_time);
         }
     }
 
@@ -2594,7 +2606,7 @@ void MainWindow::plot_process_time()
             double loc_node_time = LOCALIZATION::instance()->get_process_time_node() * 1000;
 
             loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f, node:%.3f\n",
-                                loc_localizaion_time, loc_odometry_time, loc_obs_time, loc_node_time);
+                                             loc_localizaion_time, loc_odometry_time, loc_obs_time, loc_node_time);
         }
     }
 
@@ -2835,8 +2847,8 @@ void MainWindow::plot_obs()
         cv::Mat vir_map = OBSMAP::instance()->get_vir_map();
 
         if((obs_map.rows == 0 || obs_map.cols == 0) ||
-           (dyn_map.rows == 0 || dyn_map.cols == 0) ||
-           (vir_map.rows == 0 || vir_map.cols == 0))
+                (dyn_map.rows == 0 || dyn_map.cols == 0) ||
+                (vir_map.rows == 0 || vir_map.cols == 0))
         {
             return;
         }
@@ -2998,8 +3010,8 @@ void MainWindow::plot_ctrl()
 
                     pcl_viewer->updateShapePose(name.toStdString(), Eigen::Affine3f(tf.cast<float>()));
                     pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION,
-                                                        pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
-                                                        name.toStdString());
+                                                            pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME,
+                                                            name.toStdString());
                     last_plot_local_path.push_back(name);
                 }
             }
@@ -3110,8 +3122,8 @@ void MainWindow::plot_ctrl()
                     double z = tf(2,3);
 
                     if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
-                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
-                       z > -res.sz[2]/2 && z < res.sz[2]/2)
+                            y > -res.sz[1]/2 && y < res.sz[1]/2 &&
+                            z > -res.sz[2]/2 && z < res.sz[2]/2)
                     {
                         // current zone
                         zone = name;
@@ -3149,7 +3161,7 @@ void MainWindow::plot_ctrl()
 
     // plot goal info
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
-                                                        arg(AUTOCONTROL::instance()->get_cur_move_state()));
+                              arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
 
 void MainWindow::plot_tractile()
@@ -3285,8 +3297,8 @@ void MainWindow::plot_loop()
         Eigen::Vector3d cam_up(1,0,0);
 
         pcl_viewer->setCameraPosition(cam_pos[0], cam_pos[1], cam_pos[2],
-                                      cam_tgt[0], cam_tgt[1], cam_tgt[2],
-                                      cam_up[0], cam_up[1], cam_up[2]);
+                cam_tgt[0], cam_tgt[1], cam_tgt[2],
+                cam_up[0], cam_up[1], cam_up[2]);
 
         double near = 2.0;
         double far  = 2.0*d;

@@ -17,15 +17,15 @@ COMM_RRS* COMM_RRS::instance(QObject* parent)
 }
 
 COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
-    , main(parent)
-    , config(nullptr)
-    , logger(nullptr)
-    , mobile(nullptr)
-    , unimap(nullptr)
-    , obsmap(nullptr)
-    , lidar_2d(nullptr)
-    , loc(nullptr)
-    , mapping(nullptr)
+  , main(parent)
+  , config(nullptr)
+  , logger(nullptr)
+  , mobile(nullptr)
+  , unimap(nullptr)
+  , obsmap(nullptr)
+  , lidar_2d(nullptr)
+  , loc(nullptr)
+  , mapping(nullptr)
 {
     // set recv callbacks
     using std::placeholders::_1;
@@ -469,6 +469,22 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         msg.state      = get_json(foot_msg, "foot_state").toInt();
         msg.time       = time_sec;
 
+
+        // get temperature_sensor
+        sio::message::ptr temperature_sensor = data->get_map()["temperature_sensor"];
+        if(!temperature_sensor || temperature_sensor->get_flag() != sio::message::flag_object)
+        {
+            // printf("[COMM_RRS][DEBUG] 'temperature_sensor' field missing or not object\n");
+            return;
+        }
+
+        DATA_TEMPERATURE temprature_msg;
+        temprature_msg.connection = get_json(temperature_sensor, "connection") == "true";
+        temprature_msg.temperature_value   = get_json(temperature_sensor, "temperature_value").toFloat();
+        temprature_msg.time       = time_sec;
+
+//        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
+
         // debug
         // printf("[COMM_RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
         //        msg.connection, msg.position, msg.is_down, msg.state, msg.time);
@@ -662,6 +678,11 @@ void COMM_RRS::send_status()
     mapObj["map_status"] = map_status;
     rootObj["map"] = mapObj;
 
+    // usb temp sensor
+    QJsonObject tempObj;
+    tempObj["connection"] = QString::number(ms.bat_in, 'f', 3);
+    tempObj["temp_sensor"] = QString::number(ms.bat_out, 'f', 3);
+
     // Adding the time object
     const double time = get_time();
     rootObj["time"] = QString::number(static_cast<long long>(time * 1000));
@@ -702,7 +723,7 @@ void COMM_RRS::send_move_status()
 
     if(mobile->get_cur_pdu_state() != "good" || ctrl->get_multi_inter_lock())
     {
-        auto_state = "not ready";        
+        auto_state = "not ready";
     }
 
     if(loc->get_cur_loc_state() != "good")
@@ -830,7 +851,7 @@ void COMM_RRS::send_local_path()
     }
 
     // send
-    io->socket()->emit("localPath", jsonArray);    
+    io->socket()->emit("localPath", jsonArray);
 }
 
 void COMM_RRS::send_global_path()
@@ -1101,7 +1122,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
                 // convert name to id
                 msg.goal_node_id = node->id;
-                msg.goal_node_name = node->name;                
+                msg.goal_node_name = node->name;
             }
             else
             {
@@ -1533,13 +1554,13 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
     {
         msg.result = "accept";
         msg.message = "";
-      
+
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
             _main->bt_DockStart();
         }
-      
+
         send_dock_response(msg);
     }
     else if(command == "undock")
@@ -1552,7 +1573,7 @@ void COMM_RRS::slot_dock(DATA_DOCK msg)
         {
             _main->bt_UnDockStart();
         }
-      
+
         send_dock_response(msg);
     }
 }
@@ -1849,14 +1870,16 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
         QString stdErr = process.readAllStandardError();
 
         msg.message = QString("exitCode:%1\nstdout:\n%2\nstderr:\n%3")
-            .arg(exitCode)
-            .arg(QString(stdOut))
-            .arg(QString(stdErr));
+                .arg(exitCode)
+                .arg(QString(stdOut))
+                .arg(QString(stdErr));
     }
 
     send_software_update_response(msg);
 }
 
+
+// for interlock
 void COMM_RRS::slot_foot(DATA_FOOT msg)
 {
     if((msg.state == FOOT_STATE_DONE && msg.is_down == true) || msg.state == FOOT_STATE_MOVING)
@@ -2079,9 +2102,9 @@ void COMM_RRS::send_software_update_response(const DATA_SOFTWARE& msg)
     obj["applyReqUpdate"] = msg.result;
     obj["rejectReason"] = msg.message;
 
-    printf("[SEND_SW_RESPONSE] version:%s, applyReqUpdate:%s, rejectReason:%s\n", 
-           msg.version.toStdString().c_str(), 
-           msg.result.toStdString().c_str(), 
+    printf("[SEND_SW_RESPONSE] version:%s, applyReqUpdate:%s, rejectReason:%s\n",
+           msg.version.toStdString().c_str(),
+           msg.result.toStdString().c_str(),
            msg.message.toStdString().c_str());
 
     QJsonDocument doc(obj);
