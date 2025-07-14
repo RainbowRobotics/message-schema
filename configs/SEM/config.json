@@ -6,7 +6,7 @@
         "ROBOT_SIZE_MAX_X": "0.56",
         "ROBOT_SIZE_MAX_Y": "0.375",
         "ROBOT_SIZE_MAX_Z": "1.5",
-        "ROBOT_SIZE_MIN_X": "-0.56",
+        "ROBOT_SIZE_MIN_X": "-0.6",
         "ROBOT_SIZE_MIN_Y": "-0.375",
         "ROBOT_SIZE_MIN_Z": "0",
         "ROBOT_WHEEL_BASE": "0.6585",
@@ -186,7 +186,8 @@
     	"DOCKING_KD_d": "0.2",
     	"DOCKING_KP_d": "0.35",
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
-    	"DOCKING_CHECK_MOTOR_A": "60.0"
+    	"DOCKING_CHECK_MOTOR_A": "120.0",
+    	"DOCKING_WAITING_TIME": "600"
     },
     "map": {
         "MAP_PATH": "/home/juyeon/maps/250519_unicos"

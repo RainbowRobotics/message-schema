@@ -290,6 +290,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_ICP_ERR_THRESHOLD", DOCKING_ICP_ERR_THRESHOLD, "docking");
     check_and_set_double(obj_dock, "DOCKING_DWA_YAW_WEIGTH", DOCKING_DWA_YAW_WEIGHT, "docking");
     check_and_set_double(obj_dock, "DOCKING_CHECK_MOTOR_A", DOCKING_CHECK_MOTOR_A, "docking");
+    check_and_set_double(obj_dock, "DOCKING_WAITING_TIME", DOCKING_WAITING_TIME, "docking");
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -1333,6 +1334,12 @@ double CONFIG::get_docking_check_motor_a()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DOCKING_CHECK_MOTOR_A;
+}
+
+double CONFIG::get_docking_waiting_time()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_WAITING_TIME;
 }
 
 QString CONFIG::get_map_path()

@@ -232,7 +232,7 @@ public:
     double get_docking_chg_length();
     double get_docking_dwa_yaw_weight();
     double get_docking_check_motor_a();
-
+    double get_docking_waiting_time();
     /***********************
      * map
      ***********************/
@@ -446,7 +446,8 @@ private:
     int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
     double DOCKING_DWA_YAW_WEIGHT = 0.25;
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
-    double DOCKING_CHECK_MOTOR_A = 60.0;
+    double DOCKING_CHECK_MOTOR_A = 120.0;
+    double DOCKING_WAITING_TIME = 10.0; //second
     // map
     QString MAP_PATH = "";
 

@@ -1362,13 +1362,14 @@ void MainWindow::bt_UnDockStart()
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->undock();
 
-    double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 0.5;
+    double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
     QTimer::singleShot(t*1000, [&]()
     {
         AUTOCONTROL::instance()->set_is_moving(false);
 
         // use OSSD
         MOBILE::instance()->set_detect_mode(1.0);
+        DOCKCONTROL::instance()->stop();
     });
 }
 

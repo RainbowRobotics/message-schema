@@ -112,12 +112,13 @@ void DOCKCONTROL::a_loop()
 
         if(is_good_everything == DRIVING_FAILED)
         {
-            failed_reason = "FIND CHECK WRONG";
+            failed_reason = "IS_GOOD_ERROR";
             fsm_state = DOCKING_FSM_FAILED;
         }
 
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
         {
+            double check_time = get_time();
 
             int l_dock_type;
             find_vmark(l_dock_type);
@@ -138,7 +139,7 @@ void DOCKCONTROL::a_loop()
             {
                 normal_dock_cnt =0;
                 oneque_dock_cnt =0;
-                notfind_dock_cnt ++;
+                notfind_dock_cnt ++; // 0.2s count
             }
 
             if(normal_dock_cnt > 5)
@@ -151,7 +152,7 @@ void DOCKCONTROL::a_loop()
                 fsm_state = DOCKING_FSM_POINTDOCK;
                 oneque_dock = true;
             }
-            if(notfind_dock_cnt > 10)
+            if(notfind_dock_cnt * 0.2 > config->get_docking_waiting_time())
             {
                 failed_reason = "FIND CHECK WRONG";
                 fsm_state = DOCKING_FSM_FAILED;
@@ -328,14 +329,6 @@ void DOCKCONTROL::a_loop()
                     {
                         qDebug() << "no charge[charge_state,cur_m0,cur_m1]" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
                         failed_reason = "NOT CONNECTED";
-
-                        DATA_DOCK ddock;
-                        ddock.command = "dock";
-                        ddock.result = "fail";
-                        ddock.message = failed_reason;
-                        ddock.time = get_time();
-
-                        Q_EMIT signal_dock_response(ddock);
                         fsm_state = DOCKING_FSM_FAILED;
                     }
                 }
@@ -356,7 +349,13 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_FAILED)
         {
-            //TODO what?
+            DATA_DOCK ddock;
+            ddock.command = "dock";
+            ddock.result = "fail";
+            ddock.message = failed_reason;
+            ddock.time = get_time();
+
+            Q_EMIT signal_dock_response(ddock);
         }
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
@@ -395,9 +394,9 @@ void DOCKCONTROL::b_loop()
 
         if(fsm_state == DOCKING_FSM_UNDOCK)
         {
-            double t = std::abs((config->get_robot_size_x_max() +0.3) / 0.1) + 0.5;
+            double t = std::abs((config->get_robot_size_x_max()) / 0.05) + 0.5;
 
-            if(get_time() - undock_time > t )
+            if(get_time() - undock_time > t)
             {
                 printf("[DOCKING] UNDOCK SUCCESS\n");
 
@@ -415,10 +414,10 @@ void DOCKCONTROL::b_loop()
         else if (fsm_state ==DOCKING_FSM_OFF)
         {
 
-
         }
         else
         {
+            // never inter
             printf("[DOCKING] UNDOCK FAILED\n");
 
             DATA_DOCK ddock;
@@ -427,7 +426,7 @@ void DOCKCONTROL::b_loop()
             ddock.message = failed_reason;
             ddock.time = get_time();
 
-             Q_EMIT signal_dock_response(ddock);
+            Q_EMIT signal_dock_response(ddock);
         }
 
         // for real time loop
@@ -504,7 +503,6 @@ void DOCKCONTROL::set_obsmap_module(OBSMAP* _obsmap)
 {
     obsmap = _obsmap;
 }
-
 
 Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 {
