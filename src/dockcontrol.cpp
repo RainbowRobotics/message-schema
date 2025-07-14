@@ -184,6 +184,7 @@ void DOCKCONTROL::a_loop()
                     if(dtdr(0) < 0.35)
                     {
                         final_dock = true;
+                        findvmark_toggle = true;
                         first_aline = cur_pos_odom;
                     }
 
@@ -756,12 +757,36 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         }
         else
         {
+            if(find_check)
+            {
+                Eigen::Matrix4d temp = se2_to_TF(mobile->get_pose().pose) * dock_tf;
+
+                 double dist = (temp.block<2,1>(0,3) - docking_station_o.block<2,1>(0,3)).norm();
+
+
+                if(dist < 0.2)
+                {
+                    qDebug() << "dist far";
+                    docking_station = dock_tf;
+                    docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
+                    path_flag = true;
+                    find_check = true;
+                    return out_;
+                }
+
+                else
+                {
+                    return out_;
+                }
+            }
+
+            //flag toggle
             docking_station = dock_tf;
             docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
-            //flag toggle
             path_flag = true;
             find_check = true;
             qDebug() << "path_flag";
+
         }
 
         return out_;
