@@ -1854,8 +1854,7 @@ void MainWindow::watch_loop()
 
         // for 100ms loop
         // obs logging
-        // for 10000ms loop
-        if(cnt % 100 == 0)
+        if(cnt % 600 == 0)
         {
             if(AUTOCONTROL::instance()->get_is_moving())
             {
