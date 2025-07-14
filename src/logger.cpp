@@ -87,7 +87,7 @@ void LOGGER::init()
 
         try
         {
-            QString sem_log_path = "snlog/sem_log.txt";
+            QString sem_log_path = "snlog/sem_log.log";
 
             // header
             if(!QFile::exists(sem_log_path))
@@ -102,7 +102,7 @@ void LOGGER::init()
                 }
             }
 
-            spd_logger = spdlog::basic_logger_mt("sem_logger", "snlog/sem_log.txt");
+            spd_logger = spdlog::basic_logger_mt("sem_logger", "snlog/sem_log.log");
             spd_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
             spdlog::flush_on(spdlog::level::info);
         }
