@@ -1855,8 +1855,9 @@ void MainWindow::watch_loop()
         // obs logging
         if(AUTOCONTROL::instance()->get_is_moving())
         {
-            double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-            if(obs_d < 1.0)
+            // double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+            double obs_d = std::round(AUTOCONTROL::instance()->get_obs_dist() * 1000.0) / 1000.0;
+            if(obs_d <= 1.0)
             {
                 LOGGER::instance()->write_log_to_txt(QString("\tObstacle - stop\t%1").arg(obs_d, 0, 'f', 3));
             }
