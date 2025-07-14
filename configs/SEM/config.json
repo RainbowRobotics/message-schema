@@ -76,7 +76,7 @@
     ],
     "SICK": {
     	"LIDAR_2D_MAX_RANGE": "24.0",
-        "LIDAR_2D_MIN_RANGE": "0.5"
+        "LIDAR_2D_MIN_RANGE": "0.15"
     },
     "LAKI": {
         "LIDAR_2D_MAX_RANGE": "40.0",
