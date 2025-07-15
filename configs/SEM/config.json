@@ -173,21 +173,20 @@
     },
     "docking": {
     	"DOCKING_POINTDOCK_MARGIN": "0.3",
-    	"DOCKING_GOAL_D": "0.02", 
+    	"DOCKING_GOAL_D": "0.025", 
     	"DOCKING_GOAL_TH": "0.005",
     	"DOCKING_TYPE": "0",
-    	"DOCKING_ICP_ERR_THRESHOLD": "0.005",
+    	"DOCKING_ICP_ERR_THRESHOLD": "0.01",
     	"DOCKING_CHG_LENGTH": "0.472",
-    	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX": "2.5",
+    	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX": "2.8",
     	"DOCKING_CLUST_ANGLE_THRESHOLD": "0.785398",
-    	"DOCKING_CLUST_DIST_THRESHOLD_MAX": "2.5",
+    	"DOCKING_CLUST_DIST_THRESHOLD_MAX": "2.8",
     	"DOCKING_KD_th": "0.15",
-    	"DOCKING_KP_th": "0.35",
+    	"DOCKING_KP_th": "0.25",
     	"DOCKING_KD_d": "0.2",
-    	"DOCKING_KP_d": "0.35",
+    	"DOCKING_KP_d": "0.25",
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
-    	"DOCKING_CHECK_MOTOR_A": "300.0",
-    	"DOCKING_WAITING_TIME": "600"
+    	"DOCKING_CHECK_MOTOR_A": "300.0"
     },
     "map": {
         "MAP_PATH": "/home/juyeon/maps/250519_unicos"

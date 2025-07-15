@@ -127,7 +127,7 @@ private:
     double limit_vel = 0.1;
     double oneque_limit_vel = 0.5;
     double limit_th_acc = 25;
-    double limit_th = 1.57;
+    double limit_th = 0.78;
     double err_th_old = 0.0;
     double err_v_old = 0.0;
     double undock_time =0.0;
