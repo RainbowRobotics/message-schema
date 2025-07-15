@@ -173,7 +173,7 @@
     },
     "docking": {
     	"DOCKING_POINTDOCK_MARGIN": "0.3",
-    	"DOCKING_GOAL_D": "0.025", 
+    	"DOCKING_GOAL_D": "0.03", 
     	"DOCKING_GOAL_TH": "0.005",
     	"DOCKING_TYPE": "0",
     	"DOCKING_ICP_ERR_THRESHOLD": "0.01",

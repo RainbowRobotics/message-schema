@@ -764,21 +764,28 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             dock_tf = calculate_translation_matrix(oneque_frm1_center, frm0_center0);
             err = vfrm_icp(cur_frm, oneque_vfrm, dock_tf);
 
+            if(err > 0.5)
+            {
+                qDebug() << "findvmark {err}" << err;
+                dock_check =3;
+                return out_;
+            }
+
         }
         else
         {
             dock_tf = calculate_translation_matrix(frm1_center, frm0_center0);
             err = vfrm_icp(cur_frm, vfrm, dock_tf);
 
+            if(err > config->get_docking_icp_err_threshold())
+            {
+                qDebug() << "findvmark {err}" << err;
+                dock_check =3;
+                return out_;
+            }
         }
 
 
-        if(err > config->get_docking_icp_err_threshold())
-        {
-            qDebug() << "findvmark {err}" << err;
-            dock_check =3;
-            return out_;
-        }
 
         out_ = dock_tf; // use base_frame
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
