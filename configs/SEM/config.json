@@ -40,7 +40,7 @@
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
         "USE_BEEP": true
     },

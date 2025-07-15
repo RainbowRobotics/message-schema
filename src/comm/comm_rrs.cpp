@@ -1887,7 +1887,7 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
 // for interlock
 void COMM_RRS::slot_foot(DATA_FOOT msg)
 {
-    if((msg.state == FOOT_STATE_DONE && msg.is_down == true) || msg.state == FOOT_STATE_MOVING)
+    if(msg.state == FOOT_STATE_DONE && msg.is_down == true)
     {
         // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
         mobile->set_is_inter_lock_foot(true);

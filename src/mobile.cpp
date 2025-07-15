@@ -1313,7 +1313,7 @@ void MOBILE::move(double vx, double vy, double wz)
         return;
     }
 
-    // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz);
+    // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz*R2D);
 
     // packet
     float _vx = vx;
