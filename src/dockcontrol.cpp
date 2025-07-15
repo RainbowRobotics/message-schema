@@ -194,10 +194,15 @@ void DOCKCONTROL::a_loop()
 
                         Eigen::Matrix4d target_tf = cur_pos_odom.inverse()*docking_station_o;
 
+                        //calculate dist_y in base_frame
                         double dist_x = target_tf(0,3);
                         double dist_y = target_tf(1,3);
 
-                        if(fabs(dist_y) < 0.005)
+                        //calculate dist_y in docking_station_o
+                        Eigen::Matrix4d rel_tf = docking_station_o.inverse() * cur_pos_odom;
+                        double ref_dist_y = rel_tf(1,3);
+
+                        if(fabs(ref_dist_y) < 0.005)//if(fabs(dist_y) < 0.005)
                         {
                             fsm_state = DOCKING_FSM_COMPENSATE;
                         }
@@ -232,7 +237,13 @@ void DOCKCONTROL::a_loop()
                 double dist_x = target_tf(0,3);
                 double dist_y = target_tf(1,3);
 
-                if(dist_x > 0.05)
+                //caculate dist in docking_station_o
+                Eigen::Matrix4d rel_tf = docking_station_o.inverse() * cur_pos_odom;
+
+                double ref_dist_x = rel_tf(0,3);
+                double ref_dist_y = rel_tf(1,3);
+
+                if(ref_dist_x > 0.05) //if(dist_x > 0.05)
                 {
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_POINTDOCK;
@@ -244,10 +255,7 @@ void DOCKCONTROL::a_loop()
                 }
 
                 mobile->move(cmd_v,0,cmd_w);
-
             }
-
-
         }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
@@ -268,6 +276,8 @@ void DOCKCONTROL::a_loop()
 
                 if(std::abs(dtdr(1)) < config->get_docking_goal_th())
                 {
+                    qDebug() << "last dtdr(0)" << dtdr(0);
+                    qDebug() << "pointdoc_margin:" << config->get_docking_pointdock_margin();
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_DOCK;
                     continue;
@@ -279,6 +289,7 @@ void DOCKCONTROL::a_loop()
 
         else if(fsm_state == DOCKING_FSM_DOCK)
         {
+            Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
             if(dock)
             {
                 failed_flag =true;
@@ -289,7 +300,8 @@ void DOCKCONTROL::a_loop()
             else
             {
                 dock = true;
-                mobile->move_linear_x(config->get_docking_pointdock_margin(), 0.05);
+//                mobile->move_linear_x(config->get_docking_pointdock_margin() - 0.015, 0.05);
+                mobile->move_linear_x(dtdr(0) - 0.015, 0.05);
                 fsm_state = DOCKING_FSM_WAIT;
                 wait_start_time = get_time();
             }
@@ -1285,14 +1297,21 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
     else if( fsm_state == DOCKING_FSM_YCOMPENSATE)
     {
+        //caculate dist in docking_station_o
+        Eigen::Matrix4d rel_tf = docking_station_o.inverse() * cur_pose;
+
+        double ref_dist_x = rel_tf(0,3);
+        double ref_dist_y = rel_tf(1,3);
+
+
         v = - 0.05;
-        if (dist_y * dist_x > 0)
+        if (ref_dist_y * ref_dist_x > 0)
         {
-            w = -config->get_docking_kp_th() * std::abs(dist_y); // 오른쪽 회전
+            w = -config->get_docking_kp_th() * std::abs(ref_dist_y); // 오른쪽 회전
         }
         else
         {
-            w = config->get_docking_kp_th() * std::abs(dist_y);  // 왼쪽 회전
+            w = config->get_docking_kp_th() * std::abs(ref_dist_y);  // 왼쪽 회전
         }
 
     }
