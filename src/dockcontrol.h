@@ -68,6 +68,8 @@ public:
     std::vector<Eigen::Vector3d> debug_frame;
     std::vector<Eigen::Vector3d> get_debug_frame();
     bool get_dock_state();
+    bool get_dock_retry_flag();
+    void set_dock_retry_flag(bool val);
 
 private:
     explicit DOCKCONTROL(QObject *parent = nullptr);
@@ -100,6 +102,8 @@ private:
     Eigen::Matrix4d docking_station_m;
     Eigen::Matrix4d docking_station_o;
     Eigen::Matrix4d first_aline;
+    std::atomic<bool> dock_retry_flag = {false};
+
 
     // for cluster
     int check_oneque();

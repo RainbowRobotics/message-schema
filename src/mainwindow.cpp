@@ -1692,6 +1692,17 @@ void MainWindow::watch_loop()
         // for 1000ms loop
         if(cnt % 10 == 0)
         {
+            //For sem docking retry logic
+            bool retry_flag = DOCKCONTROL::instance()->get_dock_retry_flag();
+
+            if(retry_flag)
+            {
+                DOCKCONTROL::instance()->stop();
+                DOCKCONTROL::instance()->move();
+                DOCKCONTROL::instance()->set_dock_retry_flag(false);
+            }
+
+
             // led state
             int led_color = LED_GREEN;
 

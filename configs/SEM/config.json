@@ -186,7 +186,7 @@
     	"DOCKING_KD_d": "0.2",
     	"DOCKING_KP_d": "0.35",
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
-    	"DOCKING_CHECK_MOTOR_A": "120.0",
+    	"DOCKING_CHECK_MOTOR_A": "300.0",
     	"DOCKING_WAITING_TIME": "600"
     },
     "map": {

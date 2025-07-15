@@ -67,6 +67,7 @@ void DOCKCONTROL::move()
         path_flag = false; // for pointdock pathflag
         dock = false; // for pointdock pdu linear move flag
         failed_flag = false;
+        dock_retry_flag = false;
 
 
         first_aline = Eigen::Matrix4d::Identity();
@@ -334,7 +335,12 @@ void DOCKCONTROL::a_loop()
                         qDebug() << "no charge[charge_state,cur_m0,cur_m1]" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
                         failed_reason = "NOT CONNECTED";
                         failed_flag =true;
+
+                        //retry logic
+                        dock_retry_flag = true;
+
                         fsm_state = DOCKING_FSM_FAILED;
+
                     }
                 }
             }
@@ -483,6 +489,7 @@ void DOCKCONTROL::stop()
     dock = false;
     is_moving = false;
     is_pause = false;
+    dock_retry_flag = false;
 
 }
 
@@ -1508,6 +1515,15 @@ bool DOCKCONTROL::get_dock_state()
     return out_;
 }
 
+bool DOCKCONTROL::get_dock_retry_flag()
+{
+    return (bool)dock_retry_flag.load();
+}
+
+void DOCKCONTROL::set_dock_retry_flag(bool val)
+{
+    dock_retry_flag.store(val);
+}
 
 double DOCKCONTROL::wrapToPi(double angle)
 {
