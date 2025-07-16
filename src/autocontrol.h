@@ -209,6 +209,11 @@ private:
     PATH cur_global_path;
     PATH cur_local_path;
 
+    // obs
+    double cur_obs_decel_v = 0.0;
+    int cur_obs_value = OBS_NONE;
+    std::mutex mtx_obs_decel;
+
     // debug
     double cur_obs_dist = 9999.0;
     std::vector<Eigen::Matrix4d> obs_traj;

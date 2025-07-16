@@ -2385,7 +2385,7 @@ void AUTOCONTROL::control_loop()
                 }
                 else
                 {
-                    logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+                    logger->write_log(QString("[AUTO] driving loop time drift, dt:%1").arg(delta_loop_time));
                 }
                 pre_loop_time = get_time();
                 continue;
@@ -2397,29 +2397,14 @@ void AUTOCONTROL::control_loop()
             // obs decel
             QString _obs_condition = "none";
             double obs_v = config->get_obs_map_min_v();
-            for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
+            // get
             {
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
-
-                bool is_collision = false;
-                for(size_t p = 0; p < traj.size(); p++)
-                {
-                    cur_obs_val = obsmap->is_tf_collision(traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
-                    if(cur_obs_val != OBS_NONE)
-                    {
-                        is_collision = true;
-                        break;
-                    }
-                }
-
-                if(is_collision)
-                {
-                    _obs_condition = "far";
-                    break;
-                }
-
-                obs_v = vv;
+                std::lock_guard<std::mutex> lock(mtx);
+                obs_v = cur_obs_decel_v;
+                _obs_condition = cur_obs_condition;
+                cur_obs_val = cur_obs_value;
             }
+
 
             // obs stop
             {
@@ -2924,6 +2909,49 @@ void AUTOCONTROL::obs_loop()
         Eigen::Vector3d cur_vel = mobile->get_control_input();
         // Eigen::Vector3d cur_vel = mobile->get_pose().vel;
 
+        if(fsm_state == AUTO_FSM_DRIVING)
+        {
+            int obs_val = OBS_NONE;
+
+            // obs decel
+            QString obs_condition = "none";
+            double obs_v = config->get_obs_map_min_v();
+            for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
+            {
+                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
+
+                bool is_collision = false;
+                for(size_t p = 0; p < traj.size(); p++)
+                {
+                    int val = obsmap->is_tf_collision(traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
+                    if(val != OBS_NONE)
+                    {
+                        is_collision = true;
+                        obs_val = val;
+                        break;
+                    }
+                }
+
+                if(is_collision)
+                {
+                    obs_condition = "far";
+                    break;
+                }
+
+                obs_v = vv;
+            }
+
+            // update
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_obs_decel_v = obs_v;
+                cur_obs_condition = obs_condition;
+                cur_obs_value = obs_val;
+            }
+        }
+
+
+        // for logging
         double predict_time = 2.5 / cur_vel.head<2>().norm();
         predict_time = std::clamp(predict_time, 2.0, 7.0);
 
@@ -2973,7 +3001,7 @@ void AUTOCONTROL::obs_loop()
         }
         else
         {
-            logger->write_log(QString("[AUTO] obs loop time drift, dt:%1").arg(delta_loop_time));
+            // logger->write_log(QString("[AUTO] obs loop time drift, dt:%1").arg(delta_loop_time));
         }
         process_time_obs = delta_loop_time;
         pre_loop_time = get_time();

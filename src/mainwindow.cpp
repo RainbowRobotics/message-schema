@@ -1808,7 +1808,8 @@ void MainWindow::watch_loop()
             // resync for time skew
             if(get_time() - last_sync_time > 1200.0 && !AUTOCONTROL::instance()->get_is_moving())
             {
-                printf("[WATCH] resync all\n");
+                // printf("[WATCH] resync all\n");
+                LOGGER::instance()->write_log("[WATCH] resync all");
 
                 if(MOBILE::instance()->get_is_connected())
                 {

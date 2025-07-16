@@ -1,6 +1,53 @@
  
+sudo rm -rf /var/lib/apt/lists/* && sudo apt update && sudo apt upgrade -y
+ 
+sudo apt install \
+qtcreator \
+qtbase5-dev \
+qt5-qmake \
+cmake \
+libtbb-dev \
+libboost-all-dev \
+libopencv-dev \
+libopencv-contrib-dev \
+libeigen3-dev \
+cmake-gui \
+git \
+htop \
+build-essential \
+rapidjson-dev \
+libboost-system-dev \
+libboost-thread-dev \
+libssl-dev \
+nmap \
+qtmultimedia5-dev  \
+libqt5multimedia5-plugins \
+pdal \
+libpdal-dev \
+librdkafka-dev \
+libvtk9-qt-dev \
+libpcl-dev \
+openssh-server \
+-y
+
+sudo apt install \
+gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly \
+-y
+
  - Install linuxptp
         # @ https://sourceforge.net/projects/linuxptp/files/v3.1/
         $ wget https://sourceforge.net/projects/linuxptp/files/v3.1/linuxptp-3.1.1.tgz/download -O linuxptp-3.1.1.tgz
         $ tar -xvf linuxptp-3.1.1.tgz 
         $ cd linuxptp-3.1.1 && make && sudo make install
+        
+        
+        
+# bashrc
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/rainbow/rplidar_sdk/output/Linux/Release
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/rainbow/OrbbecSDK/lib/linux_x64
+
+

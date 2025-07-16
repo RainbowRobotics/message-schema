@@ -699,7 +699,7 @@ void MOBILE::recv_loop()
                                 is_sync = false;
 
                                 double _mobile_t = recv_tick*0.002;
-                                double _offset_t = return_time - _mobile_t;
+                                double _offset_t = pc_t - _mobile_t;
                                 offset_t = _offset_t;
 
                                 is_synced = true;
