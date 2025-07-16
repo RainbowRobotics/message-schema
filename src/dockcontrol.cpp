@@ -56,7 +56,7 @@ void DOCKCONTROL::move()
     if(config->get_docking_type() == 0) // 0 - lidar docking
     {
 
-        DWA_TABLE = generate_dwa_traj_table(0.05 ,0.05, 0.01, -10.0, 10.0, 1.0, 0.02, 500); // 0.02 - 500
+        DWA_TABLE = generate_dwa_traj_table(0.05 ,0.1, 0.01, -10.0, 10.0, 1.0, 0.02, 500); // 0.02 - 500
         //stop first
         stop();
         //obs clear -- delete renew
@@ -200,19 +200,7 @@ void DOCKCONTROL::a_loop()
                         double dist_x = target_tf(0,3);
                         double dist_y = target_tf(1,3);
 
-//                        //calculate dist_y in docking_station_o
-//                        Eigen::Matrix4d rel_tf = docking_station_o.inverse() * cur_pos_odom;
-//                        double ref_dist_y = rel_tf(1,3);
-
-//                        if(fabs(ref_dist_y) < 0.005)//if(fabs(dist_y) < 0.005)
-//                        {
                         fsm_state = DOCKING_FSM_COMPENSATE;
-//                        }
-
-//                        else
-//                        {
-//                            fsm_state = DOCKING_FSM_YCOMPENSATE;
-//                        }
 
                         wait_start_time = get_time();
                         continue;
@@ -224,41 +212,6 @@ void DOCKCONTROL::a_loop()
             }
 
         }
-//        else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
-//        {
-//            double cmd_v =0.0;
-//            double cmd_w =0.0;
-
-//            int t;
-//            find_vmark(t); // vamrk_tf -> base_frame
-
-//            if(path_flag)
-//            {
-//                Eigen::Matrix4d target_tf = cur_pos_odom.inverse()*docking_station_o;
-
-//                double dist_x = target_tf(0,3);
-//                double dist_y = target_tf(1,3);
-
-//                //caculate dist in docking_station_o
-//                Eigen::Matrix4d rel_tf = docking_station_o.inverse() * cur_pos_odom;
-
-//                double ref_dist_x = rel_tf(0,3);
-//                double ref_dist_y = rel_tf(1,3);
-
-//                if(ref_dist_x > 0.05) //if(dist_x > 0.05)
-//                {
-//                    mobile->move(0,0,0);
-//                    fsm_state = DOCKING_FSM_POINTDOCK;
-//                }
-
-//                else
-//                {
-//                    dockControl(0,cur_pos_odom,cmd_v,cmd_w);
-//                }
-
-//                mobile->move(cmd_v,0,cmd_w);
-//            }
-//        }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
         {
@@ -281,9 +234,9 @@ void DOCKCONTROL::a_loop()
                     qDebug() << "last dtdr(0)" << dtdr(0);
                     qDebug() << "pointdoc_margin:" << config->get_docking_pointdock_margin();
                     mobile->move(0,0,0);
-                    path_flag =false;
-                    find_check = false;
                     fsm_state = DOCKING_FSM_DOCK;
+                    path_flag = false;
+                    find_check = false;
                     continue;
                 }
                 dockControl(0,cur_pos_odom,cmd_v,cmd_w);
@@ -759,8 +712,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         {
             dock_tf = calculate_translation_matrix(oneque_frm1_center, frm0_center0);
             err = vfrm_icp(cur_frm, oneque_vfrm, dock_tf);
-
-            if(err > 0.5)
+            qDebug() << " err" << err ;
+            if(err > 0.1)
             {
                 qDebug() << "findvmark {err}" << err;
                 return out_;
@@ -783,6 +736,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
 
         out_ = dock_tf; // use base_frame
+
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
         {
             qDebug() << " find";
@@ -836,8 +790,6 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
             path_flag = true;
             find_check = true;
-            qDebug() << "path_flag";
-
         }
 
         return out_;
@@ -855,9 +807,12 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
     XYZR_CLOUD res3;
     XYZR_CLOUD res4;
 
+    double x_offset = config->get_docking_x_offset();
+    double y_offset = config->get_docking_y_offset();
+
     if(type == 0) //oneque vframe
     {
-        Eigen::Vector3d p1(config->get_robot_size_x_max(), 0.225, 0.0);
+        Eigen::Vector3d p1(config->get_robot_size_x_max() + x_offset, 0.225 + y_offset, 0.0);
         Eigen::Vector3d p2(p1.x(), p1.y() - 0.125 ,0.0);
         Eigen::Vector3d p3(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
         Eigen::Vector3d p4(p3.x() , p3.y() - 0.22 , 0.0);
@@ -884,7 +839,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
 
     else if (type == 1) //aline vfrmae
     {
-        Eigen::Vector3d p1(config->get_robot_size_x_max() + config->get_docking_pointdock_margin(), 0.225, 0.0);
+        Eigen::Vector3d p1(config->get_robot_size_x_max() + config->get_docking_pointdock_margin() + x_offset, 0.225 + y_offset, 0.0);
         Eigen::Vector3d p2(p1.x(), p1.y() - 0.125 ,0.0);
         Eigen::Vector3d p3(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
         Eigen::Vector3d p4(p3.x() , p3.y() - 0.22 , 0.0);
@@ -1277,10 +1232,8 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
             v = direction * (config->get_docking_kp_dist() * err_d + config->get_docking_kd_dist() * d_err_v);
 
-            //0715-2247
             w = direction * (config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th);
 
-            qDebug() << "{v,w}" << v << w;
             //w = config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th;
 
 

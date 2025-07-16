@@ -233,6 +233,9 @@ public:
     double get_docking_dwa_yaw_weight();
     double get_docking_check_motor_a();
     double get_docking_waiting_time();
+    double get_docking_final_icp_err_threshold();
+    double get_docking_x_offset();
+    double get_docking_y_offset();
     /***********************
      * map
      ***********************/
@@ -448,6 +451,10 @@ private:
     double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
     double DOCKING_CHECK_MOTOR_A = 120.0;
     double DOCKING_WAITING_TIME = 10.0; //second
+    double DOCKING_FINAL_ICP_ERR_THRESHOLD = 0.1;
+    double DOCKING_X_OFFSET = 0.0;
+    double DOCKING_Y_OFFSET = 0.0;
+
     // map
     QString MAP_PATH = "";
 

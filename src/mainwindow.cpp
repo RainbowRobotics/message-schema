@@ -3265,6 +3265,12 @@ void MainWindow::plot_tractile()
 
 void MainWindow::plot_loop()
 {
+    MOBILE_STATUS ms;
+    ms = MOBILE::instance()->get_status();
+
+    ui->le_Left_Motor->setText(QString::number(ms.cur_m1 /10.0, 'f', 3));
+    ui->le_Right_Motor->setText(QString::number(ms.cur_m0 /10.0, 'f', 3));
+
     plot_timer->stop();
     double st_time = get_time();
 

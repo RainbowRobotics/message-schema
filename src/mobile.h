@@ -105,7 +105,6 @@ public:
     void make_ref_offset(double var);
     void set_detect_mode(double var);
     void set_IO_output(unsigned char[]);
-
 private:
     explicit MOBILE(QObject *parent = nullptr);
     ~MOBILE();
