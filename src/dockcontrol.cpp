@@ -701,10 +701,6 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         find_angle = std::atan2(mean_y, mean_x);
         d = sqrt(pow(mean_x, 2) + pow(mean_y, 2));
 
-        //<Seokgyun.kim>
-        //clust_dist_threshold_min and max filter clusters based on the distance from the robot.
-        //clust_angle_threshold filters clusters based on the angle relative to the robot's coordinate system.
-
         if( d > config->get_robot_size_x_max() && d < config->get_docking_find_vmark_dist_threshold_max())
         {
             filtered_clusters.push_back(clust);
@@ -767,7 +763,6 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             if(err > 0.5)
             {
                 qDebug() << "findvmark {err}" << err;
-                dock_check =3;
                 return out_;
             }
 
