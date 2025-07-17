@@ -19,6 +19,9 @@
 #include <QMutex>
 #include <QMutexLocker>
 
+constexpr int max_cam_cnt = 10;
+
+
 class CONFIG : public QObject
 {
     Q_OBJECT
@@ -355,8 +358,8 @@ private:
     // cam
     double CAM_HEIGHT_MIN = 0.1; // for rgbd-cam cloud cropping
     double CAM_HEIGHT_MAX = 1.0;
-    QString CAM_SERIAL_NUMBER[2] = { "", "" };
-    QString CAM_TF[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
+    QString CAM_SERIAL_NUMBER[max_cam_cnt];
+    QString CAM_TF[max_cam_cnt];
 
     // motor
     int MOTOR_ID_L = 1;

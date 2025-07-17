@@ -40,7 +40,7 @@ public:
     TIME_IMG get_time_img(int idx);     // get current image (with time)
     TIME_PTS get_scan(int idx);         // get current depth (with time)
 
-    double get_process_time_post();
+    double get_process_time_post(int idx);
 
     // interface func (set)
     void set_cur_state(QString str);
@@ -68,8 +68,8 @@ private:
     ORBBEC* orbbec;
 
     // post process loop
-    std::atomic<bool> post_process_flag[2] = {false, false};
-    std::array<std::unique_ptr<std::thread>, 2> post_process_thread;
+    std::atomic<bool> post_process_flag[max_cam_cnt];
+    std::array<std::unique_ptr<std::thread>, max_cam_cnt> post_process_thread;
     void post_process_loop(int idx);
 
     // rtsp loop (Real Time Streaming Protocol to RRS)
@@ -78,12 +78,11 @@ private:
     void rtsp_loop();
 
     // params
-    std::atomic<bool> is_connected[2] = {false, false};
+    std::atomic<bool> is_connected[max_cam_cnt];
+    std::atomic<double> process_time_post[max_cam_cnt];
 
-    std::atomic<double> process_time_post = {0.0};
-
-    TIME_IMG cur_time_img[2];
-    TIME_PTS cur_scan[2];
+    TIME_IMG cur_time_img[max_cam_cnt];
+    TIME_PTS cur_scan[max_cam_cnt];
 
     tbb::concurrent_queue<FRAME> merged_que;
 

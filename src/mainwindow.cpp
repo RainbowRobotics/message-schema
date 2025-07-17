@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     UNIMAP::instance(this);
     OBSMAP::instance(this);
     MOBILE::instance(this);
+    CAM::instance(this);
     LIDAR_2D::instance(this);
     LIDAR_3D::instance(this);
     LOCALIZATION::instance(this);
@@ -307,7 +308,19 @@ void MainWindow::init_modules()
         MOBILE::instance()->open();
     }
 
-    // lidSEQ_COBOT_R_WAIT_2ar 2d module init
+    // cam module init
+    {
+        if(CONFIG::instance()->get_use_cam())
+        {
+            CAM::instance()->set_config_module(CONFIG::instance());
+            CAM::instance()->set_logger_module(LOGGER::instance());
+            CAM::instance()->set_mobile_module(MOBILE::instance());
+            CAM::instance()->init();
+            CAM::instance()->open();
+        }
+    }
+
+    // lidar 2d module init
     {
         if(CONFIG::instance()->get_use_lidar_2d())
         {
@@ -2581,7 +2594,7 @@ void MainWindow::plot_process_time()
     {
         if(CAM::instance())
         {
-            double cam_post_time = CAM::instance()->get_process_time_post() * 1000;
+            double cam_post_time = CAM::instance()->get_process_time_post(0) * 1000;
             cam_time_str = QString::asprintf("[CAM] post:%.3f\n", cam_post_time);
         }
     }
