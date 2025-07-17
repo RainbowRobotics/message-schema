@@ -20,7 +20,13 @@ CAM::CAM(QObject *parent) : QObject{parent},
     mobile(nullptr),
     orbbec(nullptr)
 {
-
+    // init
+    for(int p = 0; p < max_cam_cnt; p++)
+    {
+        is_connected[p] = false;
+        post_process_flag[p] = false;
+        process_time_post[p] = 0.0;
+    }
 }
 
 void CAM::close()
@@ -105,9 +111,9 @@ void CAM::open()
     }
 }
 
-double CAM::get_process_time_post()
+double CAM::get_process_time_post(int idx)
 {
-    return (double)process_time_post.load();
+    return (double)process_time_post[idx].load();
 }
 
 TIME_IMG CAM::get_time_img(int idx)
@@ -168,7 +174,7 @@ void CAM::post_process_loop(int idx)
         {
             logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
         }
-        process_time_post = delta_loop_time;
+        process_time_post[idx] = delta_loop_time;
         pre_loop_time = get_time();
     }
 }
