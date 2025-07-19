@@ -110,7 +110,7 @@ private:
     std::queue<std::vector<Eigen::Vector3d>> clusters_queue;
     int clust_size_min = 60;
     int clust_size_max = 500;
-    float clust_d_threshold = 0.05;
+    float clust_d_threshold = 0.01;
 
     // for icp
     KFRAME vfrm; // vmark frame for icp
