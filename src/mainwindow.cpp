@@ -86,9 +86,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_DockStart,        SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
     connect(ui->bt_DockStop,         SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
     connect(ui->bt_UnDockStart,      SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
-    connect(ui->bt_DockApproach,      SIGNAL(clicked()),                    this, SLOT(bt_DockApproach()));
-    connect(ui->bt_DockCompensate,      SIGNAL(clicked()),                    this, SLOT(bt_DockCompensate()));
-    connect(ui->bt_Dock,      SIGNAL(clicked()),                    this, SLOT(bt_Dock()));
 
     // start docking
     connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
@@ -104,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_AnnotSave, SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
-    // safety debug -- Todo remove
+    // safety function
     connect(ui->bt_ClearMismatch, SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
     connect(ui->bt_ClearOverSpd, SIGNAL(clicked()), this, SLOT(bt_ClearOverSpd()));
     connect(ui->bt_ClearObs, SIGNAL(clicked()), this, SLOT(bt_ClearObs()));
@@ -114,6 +111,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_Recover, SIGNAL(clicked()), this, SLOT(bt_Recover()));
     connect(ui->bt_SetDetectModeT, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
     connect(ui->bt_SetDetectModeF, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
+    connect(ui->bt_Request, SIGNAL(clicked()), this, SLOT(bt_Request()));
+    connect(ui->bt_LiftPowerOn, SIGNAL(clicked()), this, SLOT(bt_LiftPowerOn()));
+    connect(ui->bt_LiftPowerOff, SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
+    connect(ui->bt_SetLidarField, SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
 
     // test
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
@@ -1430,6 +1431,27 @@ void MainWindow::bt_SetDetectModeT()
 void MainWindow::bt_SetDetectModeF()
 {
     MOBILE::instance()->set_detect_mode(0.0);
+}
+
+void MainWindow::bt_Request()
+{
+    MOBILE::instance()->robot_request();
+}
+
+void MainWindow::bt_LiftPowerOn()
+{
+    MOBILE::instance()->lift_power_onoff(1);
+}
+
+void MainWindow::bt_LiftPowerOff()
+{
+    MOBILE::instance()->lift_power_onoff(0);
+}
+
+void MainWindow::bt_SetLidarField()
+{
+    unsigned int field = ui->le_Lidar_Field_Write->text().toUInt();
+    MOBILE::instance()->setlidarfield(field);
 }
 
 void MainWindow::bt_TestLed()
@@ -3278,11 +3300,144 @@ void MainWindow::plot_tractile()
 
 void MainWindow::plot_loop()
 {
-    MOBILE_STATUS ms;
-    ms = MOBILE::instance()->get_status();
+    //for safety parameter plot
+    MOBILE_SETTING cur_setting;
+    cur_setting = MOBILE::instance()->get_setting();
 
-    ui->le_Left_Motor->setText(QString::number(ms.cur_m1 /10.0, 'f', 3));
-    ui->le_Right_Motor->setText(QString::number(ms.cur_m0 /10.0, 'f', 3));
+    ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
+    ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
+
+    ui->le_Setting_Limit_V->setText(QString().sprintf("%.2f",cur_setting.v_limit/1000.0));
+    ui->le_Setting_Limit_V_Jog->setText(QString().sprintf("%.2f",cur_setting.v_limit_jog/1000.0));
+    ui->le_Setting_Limit_W->setText(QString().sprintf("%.2f", cur_setting.w_limit));
+    ui->le_Setting_Limit_W_Jog->setText(QString().sprintf("%.2f",cur_setting.w_limit_jog));
+    ui->le_Setting_Limit_A->setText(QString().sprintf("%.2f", cur_setting.a_limit/1000.0));
+    ui->le_Setting_Limit_A_Jog->setText(QString().sprintf("%.2f", cur_setting.a_limit_jog/1000.0));
+    ui->le_Setting_Limit_B->setText(QString().sprintf("%.2f", cur_setting.b_limit));
+    ui->le_Setting_Limit_B_Jog->setText(QString().sprintf("%.2f", cur_setting.b_limit_jog));
+
+    ui->le_Setting_W_R->setText(QString().sprintf("%.2f", cur_setting.w_r));
+    ui->le_Setting_W_S->setText(QString().sprintf("%.2f", cur_setting.w_s));
+    ui->le_Setting_Gear->setText(QString().sprintf("%.2f", cur_setting.gear));
+    ui->le_Setting_Dir->setText(QString().sprintf("%.2f", cur_setting.dir));
+
+    ui->le_Setting_Limit_V_Monitor->setText(QString().sprintf("%.2f",cur_setting.v_limit_monitor/1000.0));
+    ui->le_Setting_Limit_W_Monitor->setText(QString().sprintf("%.2f",cur_setting.w_limit_monitor));
+
+
+    MOBILE_STATUS cur_status;
+    cur_status = MOBILE::instance()->get_status();
+    QString state = "";
+    if(cur_status.om_state == 0){state = "POWER_OFF";}
+    else if (cur_status.om_state == 1){state = "MAIN_POWER_UP";}
+    else if (cur_status.om_state == 2){state = "PC_POWER_UP";}
+    else if (cur_status.om_state == 3){state = "ROBOT_POWER_OFF";}
+    else if (cur_status.om_state == 4){state = "ROBOT_INITIALIZE";}
+    else if (cur_status.om_state == 5){state = "NORMAL_OP";}
+    else if (cur_status.om_state == 6){state = "NORMAL_OP_AUTO";}
+    else if (cur_status.om_state == 7){state = "NORMAL_OP_MANUAL";}
+    else if (cur_status.om_state == 8){state = "NORMAL_LOW_BAT";}
+    else if (cur_status.om_state == 9){state = "OPERATIONL_STOP";}
+    else if (cur_status.om_state == 10){state = "CHARGING";}
+    else if (cur_status.om_state == 11){state = "CONFIGURATION";}
+    else{state = "";}
+
+    ui->le_Op_Mode->setText(state);
+
+    QString ri_state = "";
+    if(cur_status.ri_state == 0){ri_state = "RI_IDLE";}
+    else if (cur_status.ri_state == 1){ri_state = "RI_SAFETY_CHECK";}
+    else if (cur_status.ri_state == 2){ri_state = "RI_POWER_ON";}
+    else if (cur_status.ri_state == 3){ri_state = "RI_POWER_CHECK";}
+    else if (cur_status.ri_state == 4){ri_state = "RI_MOTOR_INIT";}
+    else if (cur_status.ri_state == 5){ri_state = "RI_MOTOR_CHECK";}
+    else if (cur_status.ri_state == 6){ri_state = "RI_DONE";}
+    else if (cur_status.ri_state == 7){ri_state = "RI_FAIL";}
+    else{ri_state = "";}
+
+    ui->le_Robot_Init_State->setText(ri_state);
+
+    ui->le_Lidar_Field_Read->setText(QString().sprintf("%d",cur_status.lidar_field));
+
+    //emo status
+    if(cur_status.safety_state_emo_pressed_1 || cur_status.safety_state_emo_pressed_2)
+    {
+        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("none"));
+    }
+
+    //speed mismatch
+    if(cur_status.safety_state_ref_meas_mismatch_1 || cur_status.safety_state_ref_meas_mismatch_2)
+    {
+        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("none"));
+    }
+
+    //overspeed
+    if(cur_status.safety_state_over_speed_1 || cur_status.safety_state_over_speed_2)
+    {
+        ui->le_Safety_Over_Speed->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Over_Speed->setText(QString().sprintf("none"));
+    }
+
+    //obstacle detect
+    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
+    {
+        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("none"));
+    }
+
+    //speed field mismatch
+    if(cur_status.safety_state_speed_field_mismatch_1 || cur_status.safety_state_speed_field_mismatch_1)
+    {
+        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("none"));
+    }
+
+    //interlock detect
+    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
+    {
+        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("none"));
+    }
+
+    //bumper detect
+    if(cur_status.safety_state_bumper_stop_1 || cur_status.safety_state_bumper_stop_2)
+    {
+        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("none"));
+    }
+
+    //operation stop detect
+    if(cur_status.operational_stop_state_flag_1 || cur_status.operational_stop_state_flag_2)
+    {
+        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("trig"));
+    }
+    else
+    {
+        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("none"));
+    }
 
     plot_timer->stop();
     double st_time = get_time();

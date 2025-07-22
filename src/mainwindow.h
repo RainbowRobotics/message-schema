@@ -222,6 +222,10 @@ public Q_SLOTS:
     void bt_Recover();
     void bt_SetDetectModeT();
     void bt_SetDetectModeF();
+    void bt_Request();
+    void bt_LiftPowerOn();
+    void bt_LiftPowerOff();
+    void bt_SetLidarField();
 
     // for test
     void bt_TestLed();

@@ -221,6 +221,10 @@ void CONFIG::load_motor_config(const QJsonObject &obj)
     check_and_set_double(obj_motor, "MOTOR_GAIN_KP",     MOTOR_GAIN_KP,     "motor");
     check_and_set_double(obj_motor, "MOTOR_GAIN_KI",     MOTOR_GAIN_KI,     "motor");
     check_and_set_double(obj_motor, "MOTOR_GAIN_KD",     MOTOR_GAIN_KD,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_SAFETY_LIMIT_V",     MOTOR_SAFETY_LIMIT_V,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_SAFETY_LIMIT_W",     MOTOR_SAFETY_LIMIT_W,     "motor");
+
+
 }
 
 void CONFIG::load_mapping_config(const QJsonObject &obj)
@@ -294,6 +298,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_WAITING_TIME", DOCKING_WAITING_TIME, "docking");
     check_and_set_double(obj_dock, "DOCKING_X_OFFSET", DOCKING_X_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_Y_OFFSET", DOCKING_Y_OFFSET, "docking");
+    check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -1363,8 +1368,28 @@ double CONFIG::get_docking_y_offset()
     return DOCKING_Y_OFFSET;
 }
 
+double CONFIG::get_docking_linear_x_offset()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_LINEAR_X_OFFSET;
+}
+
+
+double CONFIG::get_motor_safety_limit_v()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_SAFETY_LIMIT_V;
+}
+
+double CONFIG::get_motor_safety_limit_w()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_SAFETY_LIMIT_W;
+}
 QString CONFIG::get_map_path()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAP_PATH;
 } 
+
+

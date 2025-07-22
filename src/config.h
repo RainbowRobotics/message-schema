@@ -143,6 +143,8 @@ public:
     double get_motor_gain_kp();               // get motor internal position control pid p gain
     double get_motor_gain_ki();               // get motor internal position control pid i gain
     double get_motor_gain_kd();               // get motor internal position control pid d gain
+    double get_motor_safety_limit_v();        // get motor safety limit velocity : If the motor speed exceeds this variable, the system will stop under the SS1 category.
+    double get_motor_safety_limit_w();        // get motor safety limit w_velocity : If the motor speed exceeds this variable, the system will stop under the SS1 category.
 
     /***********************
      * mapping
@@ -239,6 +241,7 @@ public:
     double get_docking_final_icp_err_threshold();
     double get_docking_x_offset();
     double get_docking_y_offset();
+    double get_docking_linear_x_offset();
     /***********************
      * map
      ***********************/
@@ -373,6 +376,8 @@ private:
     double MOTOR_GAIN_KP = 4400.0;
     double MOTOR_GAIN_KI = 0.0;
     double MOTOR_GAIN_KD = 100.0;
+    double MOTOR_SAFETY_LIMIT_V = 2.1;
+    double MOTOR_SAFETY_LIMIT_W = 360.0;
 
     // mapping
     int MAPPING_ICP_MAX_FEATURE_NUM = 1000;
@@ -457,6 +462,7 @@ private:
     double DOCKING_FINAL_ICP_ERR_THRESHOLD = 0.1;
     double DOCKING_X_OFFSET = 0.0;
     double DOCKING_Y_OFFSET = 0.0;
+    double DOCKING_LINEAR_X_OFFSET = -0.035;
 
     // map
     QString MAP_PATH = "";

@@ -105,7 +105,9 @@
         "MOTOR_LIMIT_V": "1.2",
         "MOTOR_LIMIT_V_ACC": "1.0",
         "MOTOR_LIMIT_W": "90",
-        "MOTOR_LIMIT_W_ACC": "90"
+        "MOTOR_LIMIT_W_ACC": "90",
+        "MOTOR_SAFETY_LIMIT_V": "1.5",
+        "MOTOR_SAFETY_LIMIT_W": "110"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -188,7 +190,8 @@
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
     	"DOCKING_CHECK_MOTOR_A": "300.0",
     	"DOCKING_X_OFFSET": "0.0",
-    	"DOCKING_Y_OFFSET": "-0.075"
+    	"DOCKING_Y_OFFSET": "-0.075",
+    	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
         "MAP_PATH": "/home/juyeon/maps/250519_unicos"

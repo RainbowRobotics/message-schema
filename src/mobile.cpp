@@ -918,7 +918,7 @@ void MOBILE::recv_loop()
 
                                 strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
                                              "temp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\n"
-                                             "charge,power,emo,remote:%d,%d,%d,%d\n"
+                                             "charge,om_state,emo,ri_state:%d,%d,%d,%d\n"
                                              "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
                                              "power:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\n"
                                              "gyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\n"
@@ -928,7 +928,7 @@ void MOBILE::recv_loop()
                                              "bumper:{%d,%d} lidar_field:%d)",
                                             mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
                                             (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                            mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
+                                            mobile_status.charge_state, mobile_status.om_state, mobile_status.motor_stop_state, mobile_status.ri_state,
                                             mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
                                             mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
                                             mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
@@ -1061,8 +1061,8 @@ void MOBILE::recv_loop()
                             mobile_setting.b_limit_jog = _b_limit_jog;
                             mobile_setting.v_limit_monitor = _v_limit_monitor;
                             mobile_setting.w_limit_monitor = _w_limit_monitor;
-                            mobile_setting.safety_v_limit = _safety_v_limit;
-                            mobile_setting.safety_w_limit = _safety_w_limit;
+                            mobile_setting.safety_v_limit = _safety_v_limit; //not used
+                            mobile_setting.safety_w_limit = _safety_w_limit; //not used
                             mobile_setting.w_s = _w_s;
                             mobile_setting.w_r = _w_r;
                             mobile_setting.gear = _gear;
@@ -1107,64 +1107,14 @@ void MOBILE::recv_loop()
 // command func
 void MOBILE::motor_on()
 {
-    // set id
-    {
-        int id_l = config->get_motor_id_left();
-        int id_r = config->get_motor_id_right();
 
-        std::vector<uchar> send_byte(25, 0);
-        send_byte[0] = 0x24;
-
-        uint16_t size = 6+8+8;
-        memcpy(&send_byte[1], &size, 2); // size
-        send_byte[3] = 0x00;
-        send_byte[4] = 0x00;
-
-        send_byte[5] = 0xA0;
-        send_byte[6] = 0x00;
-        send_byte[7] = 101; // cmd motor init
-
-        memcpy(&send_byte[8], &id_r, 4);
-        memcpy(&send_byte[12], &id_l, 4);
-        send_byte[24] = 0x25;
-
-        if(is_connected && config->get_use_sim() == 0)
-        {
-            msg_que.push(send_byte);
-        }
-    }
-
-    // set wheel dir, gear ratio
-    {
-        float wheel_dir = config->get_motor_direction();
-        float gear_ratio = config->get_motor_gear_ratio();
-
-        std::vector<uchar> send_byte(25, 0);
-        send_byte[0] = 0x24;
-
-        uint16_t size = 6+8+8;
-        memcpy(&send_byte[1], &size, 2); // size
-        send_byte[3] = 0x00;
-        send_byte[4] = 0x00;
-
-        send_byte[5] = 0xA0;
-        send_byte[6] = 0x00;
-        send_byte[7] = 105; // cmd motor init
-
-        memcpy(&send_byte[8], &wheel_dir, 4);
-        memcpy(&send_byte[12], &gear_ratio, 4);
-        send_byte[24] = 0x25;
-
-        if(is_connected && !config->get_use_sim())
-        {
-            msg_que.push(send_byte);
-        }
-    }
-
-    // set wheel base, wheel radius
+    // set wheel base, wheel radius , wheel dir, gear ratio
     {
         float wheel_base = config->get_robot_wheel_base();
         float wheel_radius = config->get_robot_wheel_radius();
+
+        float wheel_dir = config->get_motor_direction();
+        float gear_ratio = config->get_motor_gear_ratio();
 
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
@@ -1180,6 +1130,10 @@ void MOBILE::motor_on()
 
         memcpy(&send_byte[8], &wheel_base, 4);
         memcpy(&send_byte[12], &wheel_radius, 4);
+
+        memcpy(&send_byte[16], &wheel_dir, 4);
+        memcpy(&send_byte[20], &gear_ratio, 4);
+
         send_byte[24] = 0x25;
 
         if(is_connected && !config->get_use_sim())
@@ -1191,35 +1145,11 @@ void MOBILE::motor_on()
     // set limit vel
     {
         float limit_v = config->get_motor_limit_v();
+        float limit_a = config->get_motor_limit_v_acc();
         float limit_w = config->get_motor_limit_w() * D2R;
-
-        std::vector<uchar> send_byte(25, 0);
-        send_byte[0] = 0x24;
-
-        uint16_t size = 6+8+8;
-        memcpy(&send_byte[1], &size, 2); // size
-        send_byte[3] = 0x00;
-        send_byte[4] = 0x00;
-
-        send_byte[5] = 0xA0;
-        send_byte[6] = 0x00;
-        send_byte[7] = 102; // cmd motor init
-
-        memcpy(&send_byte[8], &limit_v, 4);
-        memcpy(&send_byte[12], &limit_w, 4);
-        send_byte[24] = 0x25;
-
-        if(is_connected && !config->get_use_sim())
-        {
-            msg_que.push(send_byte);
-        }
-    }
-
-    // set limit acc
-    {
-        float limit_v_acc = config->get_motor_limit_v_acc();
         float limit_w_acc = config->get_motor_limit_w_acc() * D2R;
 
+
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
 
@@ -1230,10 +1160,13 @@ void MOBILE::motor_on()
 
         send_byte[5] = 0xA0;
         send_byte[6] = 0x00;
-        send_byte[7] = 103; // cmd motor init
+        send_byte[7] = 108; // cmd motor limit velocity
 
-        memcpy(&send_byte[8], &limit_v_acc, 4);
-        memcpy(&send_byte[12], &limit_w_acc, 4);
+        memcpy(&send_byte[8], &limit_v, 4);
+        memcpy(&send_byte[12], &limit_a, 4);
+        memcpy(&send_byte[16], &limit_w, 4);
+        memcpy(&send_byte[20], &limit_w_acc,4);
+
         send_byte[24] = 0x25;
 
         if(is_connected && !config->get_use_sim())
@@ -1242,12 +1175,37 @@ void MOBILE::motor_on()
         }
     }
 
-    // set init + gain
+    // set safety limit
     {
-        float kp = config->get_motor_gain_kp();
-        float ki = config->get_motor_gain_ki();
-        float kd = config->get_motor_gain_kd();
 
+        float safety_limit_v = config->get_motor_safety_limit_v();
+        float safety_limit_w = config->get_motor_safety_limit_w() * D2R;
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 211; // cmd motor init
+
+        memcpy(&send_byte[8], &safety_limit_v, 4); // m/s
+        memcpy(&send_byte[12], &safety_limit_w, 4); // rad/s
+
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    // set init
+    {
         std::vector<uchar> send_byte(25, 0);
         send_byte[0] = 0x24;
 
@@ -1260,9 +1218,6 @@ void MOBILE::motor_on()
         send_byte[6] = 0x00;
         send_byte[7] = 100; // cmd motor init
 
-        memcpy(&send_byte[8], &kp, 4);
-        memcpy(&send_byte[12], &ki, 4);
-        memcpy(&send_byte[16], &kd, 4);
 
         send_byte[24] = 0x25;
 
@@ -1338,6 +1293,7 @@ void MOBILE::move(double vx, double vy, double wz)
     {
         memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
         memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
+
     }
     else if(platform_type == "MECANUM")
     {
@@ -2067,6 +2023,32 @@ void MOBILE::set_detect_mode(double param)
         msg_que.push(send_byte);
     }
 
+}
+
+void MOBILE::lift_power_onoff(int param)
+{
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xC0;
+    send_byte[6] = 0x01; // lift -target
+    send_byte[7] = 0x00; // cmd
+
+    int para1 = param; // 1 on - 0 off
+
+    memcpy(&send_byte[8], &para1, 4);
+    send_byte[24] = 0x25;
+
+    if(is_connected)
+    {
+        msg_que.push(send_byte);
+    }
 }
 
 void MOBILE::set_IO_output(unsigned char [])
