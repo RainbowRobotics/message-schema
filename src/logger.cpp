@@ -103,7 +103,7 @@ void LOGGER::init()
             }
 
             spd_logger = spdlog::basic_logger_mt("sem_logger", "snlog/sem_log.log");
-            spd_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
+            spd_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e%v");
             spdlog::flush_on(spdlog::level::info);
 
             QString sem_temperature_log_path = "snlog/sem_temperature_log.log";
@@ -124,7 +124,7 @@ void LOGGER::init()
             }
 
             spd_temperature_logger = spdlog::basic_logger_mt("sem_temperature_log", "snlog/sem_temperature_log.log");
-            spd_temperature_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e %v");
+            spd_temperature_logger->set_pattern("%Y-%m-%d %H:%M:%S.%e%v");
             spdlog::flush_on(spdlog::level::info);
 
         }
