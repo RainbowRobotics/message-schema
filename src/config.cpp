@@ -46,11 +46,12 @@ void CONFIG::load_serial_number()
 
         QJsonObject obj_cam = obj["cam"].toObject();
         {
-            CAM_SERIAL_NUMBER[0] = obj_cam["CAM_SERIAL_NUMBER_0"].toString();
-            printf("[CONFIG] CAM_SERIAL_NUMBER_0, %s\n", obj_cam["CAM_SERIAL_NUMBER_0"].toString().toLocal8Bit().data());
-
-            CAM_SERIAL_NUMBER[1] = obj_cam["CAM_SERIAL_NUMBER_1"].toString();
-            printf("[CONFIG] CAM_SERIAL_NUMBER_1, %s\n", obj_cam["CAM_SERIAL_NUMBER_1"].toString().toLocal8Bit().data());
+            int cam_cnt = get_cam_num();
+            for(int p = 0; p < cam_cnt; p++)
+            {
+                CAM_SERIAL_NUMBER[p] = obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString();
+                printf("[CONFIG] CAM_SERIAL_NUMBER_%d, %s\n", p, obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString().toLocal8Bit().data());
+            }
         }
 
         QJsonObject obj_robot = obj["robot"].toObject();
@@ -220,6 +221,10 @@ void CONFIG::load_motor_config(const QJsonObject &obj)
     check_and_set_double(obj_motor, "MOTOR_GAIN_KP",     MOTOR_GAIN_KP,     "motor");
     check_and_set_double(obj_motor, "MOTOR_GAIN_KI",     MOTOR_GAIN_KI,     "motor");
     check_and_set_double(obj_motor, "MOTOR_GAIN_KD",     MOTOR_GAIN_KD,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_SAFETY_LIMIT_V",     MOTOR_SAFETY_LIMIT_V,     "motor");
+    check_and_set_double(obj_motor, "MOTOR_SAFETY_LIMIT_W",     MOTOR_SAFETY_LIMIT_W,     "motor");
+
+
 }
 
 void CONFIG::load_mapping_config(const QJsonObject &obj)
@@ -293,6 +298,7 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_WAITING_TIME", DOCKING_WAITING_TIME, "docking");
     check_and_set_double(obj_dock, "DOCKING_X_OFFSET", DOCKING_X_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_Y_OFFSET", DOCKING_Y_OFFSET, "docking");
+    check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -965,7 +971,7 @@ QString CONFIG::get_cam_serial_number(int idx)
 QString CONFIG::get_cam_tf(int idx)
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    if(idx >= 0 && idx < 2)
+    if(idx >= 0 && idx < get_cam_num())
     {
         return CAM_TF[idx];
     }
@@ -1362,8 +1368,28 @@ double CONFIG::get_docking_y_offset()
     return DOCKING_Y_OFFSET;
 }
 
+double CONFIG::get_docking_linear_x_offset()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_LINEAR_X_OFFSET;
+}
+
+
+double CONFIG::get_motor_safety_limit_v()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_SAFETY_LIMIT_V;
+}
+
+double CONFIG::get_motor_safety_limit_w()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MOTOR_SAFETY_LIMIT_W;
+}
 QString CONFIG::get_map_path()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAP_PATH;
 } 
+
+

@@ -101,6 +101,9 @@ void DOCKCONTROL::a_loop()
     bool final_dock =false;
     bool findvmark_toggle = false;
 
+    bool ycompensate_aline = false;
+    std::vector<double> dtdr_mean;
+
     //control parameter setting
     err_th_old = 0.0;
     err_v_old = 0.0;
@@ -137,8 +140,8 @@ void DOCKCONTROL::a_loop()
             }
             else if(l_dock_type == 1) //ONE QUE
             {
-                normal_dock_cnt =0;
                 oneque_dock_cnt ++;
+                normal_dock_cnt =0;
                 notfind_dock_cnt =0;
             }
             else if (l_dock_type == 3)
@@ -184,6 +187,17 @@ void DOCKCONTROL::a_loop()
 
                     Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
+                    Eigen::Matrix4d rel_tf = cur_pos_odom.inverse() * docking_station_o;
+
+                    double dist_x = rel_tf(0, 3);  // 로봇 기준 x 방향 거리
+                    double dist_y = rel_tf(1, 3);  // 로봇 기준 y 방향 거리
+
+                    Eigen::Matrix4d station_rel_tf = docking_station_o.inverse() * cur_pos_odom;
+
+                    double s_d_x = station_rel_tf(0, 3);  // 도킹스테이션 기준 x 위치
+                    double s_d_y = station_rel_tf(1, 3);  // 도킹스테이션 기준 y 위치
+
+
                     if(dtdr(0) < 0.35)
                     {
                         final_dock = true;
@@ -192,18 +206,31 @@ void DOCKCONTROL::a_loop()
 
                     if(dtdr(0) < config->get_docking_goal_dist())
                     {
-                        mobile->move(0,0,0);
 
-                        Eigen::Matrix4d target_tf = cur_pos_odom.inverse()*docking_station_o;
+                        if(fabs(s_d_y) < 0.02) // 0.01
+                        {
+                            mobile->move(0,0,0);
 
-                        //calculate dist_y in base_frame
-                        double dist_x = target_tf(0,3);
-                        double dist_y = target_tf(1,3);
+                            Eigen::Matrix4d target_tf = cur_pos_odom.inverse()*docking_station_o;
 
-                        fsm_state = DOCKING_FSM_COMPENSATE;
+                            //calculate dist_y in base_frame
+                            double dist_x = target_tf(0,3);
+                            double dist_y = target_tf(1,3);
 
-                        wait_start_time = get_time();
-                        continue;
+                            fsm_state = DOCKING_FSM_COMPENSATE;
+
+                            wait_start_time = get_time();
+                            continue;
+                        }
+
+                        else
+                        {
+                            //후진?
+                            fsm_state = DOCKING_FSM_YCOMPENSATE;
+
+
+                        }
+
                     }
 
                     dockControl(final_dock,cur_pos_odom,cmd_v,cmd_w);
@@ -211,6 +238,21 @@ void DOCKCONTROL::a_loop()
                 }
             }
 
+        }
+
+        else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
+        {
+            Eigen::Vector2d dtdr = dTdR(cur_pos_odom,first_aline);
+
+            if(dtdr(0) < 0.08)
+            {
+                fsm_state = DOCKING_FSM_POINTDOCK;
+            }
+
+            else
+            {
+                qDebug() << "y compensate error";
+            }
         }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
@@ -249,22 +291,40 @@ void DOCKCONTROL::a_loop()
             int t;
             find_vmark(t);
             Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
+
             if(path_flag)
             {
-                if(dock)
+                if(find_check)
                 {
-                    failed_flag =true;
-                    failed_reason = "LOGIC WRONG";
-                    fsm_state = DOCKING_FSM_FAILED;
+                    dtdr_mean.push_back(dtdr(0));
+                    find_check = false;
                 }
 
-                else
+
+                if (dtdr_mean.size() >= 10 && !dock)
                 {
-                    dock = true;
-                    qDebug() << "linear_x" << dtdr(0) - 0.045;
-                    mobile->move_linear_x(dtdr(0)-0.045, 0.05);
-                    fsm_state = DOCKING_FSM_WAIT;
-                    wait_start_time = get_time();
+                    double sum = 0.0;
+
+                    for (double v : dtdr_mean)
+                    {
+                        sum += v;
+                    }
+                    double avg = sum / dtdr_mean.size();
+
+                    if (dock)
+                    {
+                        failed_flag = true;
+                        failed_reason = "LOGIC WRONG";
+                        fsm_state = DOCKING_FSM_FAILED;
+                    }
+                    else
+                    {
+                        dock = true;
+                        double offset_x = config->get_docking_linear_x_offset();
+                        mobile->move_linear_x(avg + offset_x, 0.05);
+                        fsm_state = DOCKING_FSM_WAIT;
+                        wait_start_time = get_time();
+                    }
                 }
             }
 
@@ -553,7 +613,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
     {
         d = sqrt(pow(polar[i][0] - polar[i + 1][0], 2) + pow(polar[i][1] - polar[i + 1][1], 2));
 
-        if (d < clust_d_threshold)
+        if (d < 0.01)
         {
             clustered1[i] = true;
             clustered2[i + 1] = true;
@@ -670,6 +730,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         return out_;
     }
 
+    debug_frame = docking_clust;
+
 
 
     clusters_queue.push(docking_clust);
@@ -705,14 +767,13 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         Eigen::Matrix4d dock_tf = Eigen::Matrix4d::Identity();
         double err = 0.0;
 
-//            dock_tf = calculate_translation_matrix(oneque_frm1_center, frm0_center0);
-//            err = vfrm_icp(cur_frm, oneque_vfrm, dock_tf);
-
         if(fsm_state == DOCKING_FSM_DOCK)
         {
             dock_tf = calculate_translation_matrix(oneque_frm1_center, frm0_center0);
             err = vfrm_icp(cur_frm, oneque_vfrm, dock_tf);
+
             qDebug() << " err" << err ;
+
             if(err > 0.1)
             {
                 qDebug() << "findvmark {err}" << err;
@@ -749,7 +810,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             double orein_err_th = fabs(theta*180.0 /M_PI);
 
 
-            if(orein_err_th <=13.0 && head_err_th <=13.0)
+            if(orein_err_th <=20.0 && head_err_th <=20.0)
             {
                 qDebug() << "dock_chekc:1";
                 dock_check = 1; // ONEQUE DOCK CNT
@@ -790,6 +851,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
             path_flag = true;
             find_check = true;
+
         }
 
         return out_;
@@ -844,9 +906,9 @@ KFRAME DOCKCONTROL::generate_vkframe(int type)
         Eigen::Vector3d p3(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
         Eigen::Vector3d p4(p3.x() , p3.y() - 0.22 , 0.0);
 
-        res1 = generate_sample_points(p1,p2,40);
-        res2 = generate_sample_points(p2,p3,40);
-        res3 = generate_sample_points(p3,p4,40);
+        res1 = generate_sample_points(p1,p2,50);
+        res2 = generate_sample_points(p2,p3,50);
+        res3 = generate_sample_points(p3,p4,50);
 
         for (const auto& pt : res1.pts)
         {
@@ -1285,6 +1347,26 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
         err_th = std::atan2(target_tf(1,0),target_tf(0,0));
         w = config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th;
         v = 0.0;
+    }
+
+    else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
+    {
+        qDebug() << " ycompensat";
+        //use odom frame
+        Eigen::Matrix4d target_tf_ycompen = cur_pose.inverse()*first_aline;
+
+        double direction = 1.0;
+
+        if (std::abs(err_th) > M_PI_2)
+        {
+            direction = -1.0;
+            err_th = wrapToPi(err_th - M_PI);
+            if (err_th > M_PI) err_th -= 2 * M_PI;
+        }
+
+        v = direction * (config->get_docking_kp_dist() * err_d + config->get_docking_kd_dist() * d_err_v);
+        w = direction * (config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th);
+
     }
 
     v = saturation(v, v0- (limit_accel*dt) , v0 +(limit_accel*dt));

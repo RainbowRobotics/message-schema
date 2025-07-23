@@ -47,7 +47,7 @@
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
-            "TF": "0.43087, -0.30587, 0.21, 180.0, 0.0, 45.0"
+            "TF": "0.43087, -0.30587, 0.21, 180.0, 0.0, 43.5"
         },
         {
             "IP": "192.168.2.11",
@@ -105,7 +105,9 @@
         "MOTOR_LIMIT_V": "1.0",
         "MOTOR_LIMIT_V_ACC": "1.0",
         "MOTOR_LIMIT_W": "90",
-        "MOTOR_LIMIT_W_ACC": "90"
+        "MOTOR_LIMIT_W_ACC": "90",
+        "MOTOR_SAFETY_LIMIT_V": "1.5",
+        "MOTOR_SAFETY_LIMIT_W": "110"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -173,7 +175,7 @@
     },
     "docking": {
     	"DOCKING_POINTDOCK_MARGIN": "0.3",
-    	"DOCKING_GOAL_D": "0.025", 
+    	"DOCKING_GOAL_D": "0.03", 
     	"DOCKING_GOAL_TH": "0.005",
     	"DOCKING_TYPE": "0",
     	"DOCKING_ICP_ERR_THRESHOLD": "0.01",
@@ -188,7 +190,8 @@
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
     	"DOCKING_CHECK_MOTOR_A": "300.0",
     	"DOCKING_X_OFFSET": "0.0",
-    	"DOCKING_Y_OFFSET": "-0.075"
+    	"DOCKING_Y_OFFSET": "-0.075",
+    	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
         "MAP_PATH": "/home/juyeon/maps/250519_unicos"

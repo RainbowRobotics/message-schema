@@ -14,8 +14,10 @@
 // qt
 #include <QObject>
 
-constexpr int depth_profile_idx = 55;  // depth_profile(55),  w:640, h:480, fps:30, format:11
-constexpr int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
+//constexpr int depth_profile_idx = 55;  // depth_profile(55),  w:640, h:480, fps:30, format:11
+//constexpr int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
+constexpr int depth_profile_idx = 4;  // depth_profile(55),  w:640, h:480, fps:30, format:11
+constexpr int color_profile_idx = 34; // color_profile(124), w:320, h:180, fps:5, format:22
 
 class ORBBEC : public QObject
 {
@@ -65,34 +67,30 @@ private:
     MOBILE* mobile;
 
     // loop
-    std::atomic<bool> grab_flag;
-    std::unique_ptr<std::thread> grab_thread;
-    void grab_loop();
+    std::atomic<bool> grab_flag[max_cam_cnt];
+    std::array<std::unique_ptr<std::thread>, max_cam_cnt> grab_thread;
+    void grab_loop(int idx);
 
     // value
-    std::atomic<bool> is_connected[2] = {false, false};
-    std::atomic<bool> is_param_loaded = {false};
+    std::atomic<bool> is_connected[max_cam_cnt];
+    std::atomic<bool> is_param_loaded[max_cam_cnt];
 
-    cv::Mat cur_img[2];
-    TIME_IMG cur_time_img[2];
-    TIME_PTS cur_scan[2];
+    cv::Mat cur_img[max_cam_cnt];
+    TIME_IMG cur_time_img[max_cam_cnt];
+    TIME_PTS cur_scan[max_cam_cnt];
 
     std::atomic<int> cur_w_color = {0};
     std::atomic<int> cur_h_color = {0};
     std::atomic<int> cur_w_depth = {0};
     std::atomic<int> cur_h_depth = {0};
 
-    std::atomic<double> cur_pts_size0 = {0.};
-    std::atomic<double> cur_pts_size1 = {0.};
+    std::atomic<double> cur_pts_size[max_cam_cnt];
 
-    CAM_INTRINSIC intrinsic[2];
-    Eigen::Matrix4d extrinsic[2];
+    CAM_INTRINSIC intrinsic[max_cam_cnt];
+    Eigen::Matrix4d extrinsic[max_cam_cnt];
 
-    tbb::concurrent_queue<TIME_PTS> depth_que[2];
-    tbb::concurrent_queue<TIME_IMG> img_que[2];
-
-private:
-
+    tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
+    tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
 
 };
 
