@@ -663,10 +663,6 @@ void LOCALIZATION::odometry_loop()
         tp_storage.clear();
     }
 
-    // for aruco fusion
-    double pre_aruco_t = 0;
-    std::vector<std::pair<Eigen::Matrix4d, Eigen::Matrix4d>> tf_storage;
-
     // params
     MOBILE_POSE pre_mo = mobile->get_pose();
 
