@@ -2386,6 +2386,13 @@ void MainWindow::plot_info()
 
             // plot mobile status
             ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
+
+            // plot motor status
+            MOBILE_STATUS ms;
+            ms = MOBILE::instance()->get_status();
+
+            ui->le_Left_Motor->setText(QString::number(ms.cur_m1 /10.0, 'f', 3));
+            ui->le_Right_Motor->setText(QString::number(ms.cur_m0 /10.0, 'f', 3));
         }
     }
 
