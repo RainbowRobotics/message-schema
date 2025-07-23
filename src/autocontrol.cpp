@@ -2952,12 +2952,23 @@ void AUTOCONTROL::obs_loop()
 
 
         // for logging
-        double predict_time = 2.5 / cur_vel.head<2>().norm();
+        double predict_time = 7.0;//2.5 / cur_vel.head<2>().norm();
+        double speed = cur_vel.head<2>().norm();
+
+        if (speed < 1e-4)
+        {
+            predict_time =  7.0;
+        }
+        else
+        {
+            predict_time = 2.5 / speed;
+        }
+
         predict_time = std::clamp(predict_time, 2.0, 7.0);
 
         // check trajectory
         std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
-        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.2, 3.0, cur_tf);
+        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.05, 3.0, cur_tf);
         check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
 
         double min_obs_dist = 9999.0;

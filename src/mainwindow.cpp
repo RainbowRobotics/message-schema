@@ -1899,9 +1899,9 @@ void MainWindow::watch_loop()
             }
         }
 
-        // for 100ms loop
+        // for 500ms loop
         // obs logging
-        if(cnt % 600 == 0)
+        if(cnt % 5 == 0)
         {
             if(AUTOCONTROL::instance()->get_is_moving())
             {
@@ -1909,14 +1909,21 @@ void MainWindow::watch_loop()
 
                 if(obs_d < 2.0 + 1e-6)
                 {
-                    QString log = QString("\t%1\t%2")
-                            .arg(int(obs_d))
-                            .arg(obs_d, 0, 'f', 3);
+                    // zone, obs dist
+//                    QString log = QString("\t%1\t%2")
+//                            .arg(int(obs_d))
+//                            .arg(obs_d, 0, 'f', 6);
+                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
+//                    qDebug()<<log;
 
                     LOGGER::instance()->write_log_to_txt(log);
                 }
             }
-
+        }
+        // for 1 min loop
+        // temperature logging
+        if(cnt % 600 == 0)
+        {
             //for temperature status
             {
                 MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
@@ -2425,6 +2432,7 @@ void MainWindow::plot_info()
         QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
+        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
         QString auto_info_str;
         auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
