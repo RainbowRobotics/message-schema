@@ -128,6 +128,7 @@ public:
     void plot_node();
     void plot_pick();
     void plot_info();
+    void plot_safety();
     void plot_raw_2d();
     void plot_raw_3d();
     void plot_loc();
