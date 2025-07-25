@@ -2458,9 +2458,13 @@ void AUTOCONTROL::control_loop()
             // calc control input
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
+
             v = saturation(v, 0.0, obs_v);
             v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+
+//            qDebug() << "FMS Driving V(1): " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v;
+//            qDebug() << "FMS Driving V(2): " << obs_v << ", " << params.LIMIT_V << ", " << v0 - config->get_motor_limit_v_acc()*dt << ", " << v0 + config->get_motor_limit_v_acc()*dt << ", " << v;
 
             double th = (params.DRIVE_A * err_th)
                         + (params.DRIVE_B * (err_th-pre_err_th)/dt)
@@ -2478,6 +2482,8 @@ void AUTOCONTROL::control_loop()
             double scale_w = 1.0 - params.DRIVE_T*std::abs(v/params.LIMIT_V);
             v *= scale_v;
             w *= scale_w;
+
+//            qDebug() << "FMS Driving V(3): " << v << "\n";
 
             // deadzone v
             double d_v = config->get_drive_v_deadzone();
@@ -2745,7 +2751,8 @@ void AUTOCONTROL::control_loop()
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {
-                if(get_time() - obs_wait_st_time > 1.5)
+//                if(get_time() - obs_wait_st_time > 1.5)
+                if(get_time() - obs_wait_st_time > 2.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2761,7 +2768,8 @@ void AUTOCONTROL::control_loop()
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
-                if(get_time() - obs_wait_st_time > 1.5)
+//                if(get_time() - obs_wait_st_time > 1.5)
+                if(get_time() - obs_wait_st_time > 2.5)
                 {
                     extend_dt = 0;
                     pre_err_th = 0;
@@ -2968,8 +2976,17 @@ void AUTOCONTROL::obs_loop()
 
         // check trajectory
         std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
-        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.05, 3.0, cur_tf);
-        check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
+        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.01, 2.5, cur_tf);
+        std::vector<Eigen::Matrix4d> pivot_traj = calc_trajectory(Eigen::Vector3d(0.0, 0.0, 1.57), 0.2, 4.0, cur_tf);
+        if(fsm_state == AUTO_FSM_DRIVING)
+        {
+            // add straight forwarding path
+            check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
+        }else if(fsm_state == AUTO_FSM_FIRST_ALIGN || fsm_state == AUTO_FSM_FINAL_ALIGN)
+        {
+            // add rotating pivot path
+            check_traj.insert(check_traj.end(), pivot_traj.begin(), pivot_traj.end());
+        }
 
         double min_obs_dist = 9999.0;
         QString obs_far_state = "none";
@@ -2987,6 +3004,7 @@ void AUTOCONTROL::obs_loop()
                 break;
             }
         }
+//        qDebug() << "min_obs_dist: " << min_obs_dist;
 
         // store result
         {

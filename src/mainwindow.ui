@@ -432,7 +432,7 @@ stop</string>
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,1,0">
+         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -754,6 +754,12 @@ stop</string>
                <width>180</width>
                <height>180</height>
               </rect>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
              <property name="font">
               <font>

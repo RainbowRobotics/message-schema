@@ -313,7 +313,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
     std::vector<Eigen::Vector4d> global_obs_pts;
     std::vector<Eigen::Vector2d> local_obs_pts;
-    
+
     cv::Mat _map(h, w, CV_64F, cv::Scalar(0));
     for(octomap::OcTree::leaf_bbx_iterator it = octree->begin_leafs_bbx(bbx_min, bbx_max, 16); it != octree->end_leafs_bbx(); it++)
     {

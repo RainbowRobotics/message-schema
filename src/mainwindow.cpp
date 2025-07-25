@@ -1783,6 +1783,10 @@ void MainWindow::watch_loop()
                     MOBILE::instance()->led(0, SAFETY_LED_OFF);
                 }
             }
+            else
+            {
+                 MOBILE::instance()->led(0, SAFETY_LED_GREEN);
+            }
 
 
             // check mobile
@@ -2432,7 +2436,7 @@ void MainWindow::plot_info()
         QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
-        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
+//        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
         QString auto_info_str;
         auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
@@ -3471,7 +3475,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
-    // plot_tractile();
+    plot_tractile();
     plot_process_time();
 
     // camera reset
