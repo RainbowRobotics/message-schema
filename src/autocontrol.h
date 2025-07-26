@@ -162,6 +162,7 @@ private:
      ***********************/
     // calculate paths with higher resolution (local path)
     PATH calc_local_path(PATH& global_path);
+    PATH calc_local_path_with_cur_vel(PATH& global_path);
 
     // calculate paths with higher resolution (avoid path)
     PATH calc_avoid_path(PATH& global_path);
@@ -213,6 +214,11 @@ private:
     double cur_obs_decel_v = 0.0;
     int cur_obs_value = OBS_NONE;
     std::mutex mtx_obs_decel;
+
+    // driving local ref v oscilation prevent
+    Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
+    int prev_local_ref_v_index = 0;
+    bool ref_v_oscilation_end_flag = false;
 
     // debug
     double cur_obs_dist = 9999.0;

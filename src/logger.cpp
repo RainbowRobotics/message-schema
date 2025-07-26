@@ -119,7 +119,7 @@ void LOGGER::init()
                 {
                     QTextStream out(&temp_file);
                     out << "SEM_LOG_VERSION=2.0\n";
-                    out << "Time\tMotor 1 Temperature(C)\tMotor 2 Temperature(C)\tBattery(C)\tTemperature sensor(C)\tSoc(%)\n";
+                    out << "Time\tMotor_1_Temperature(C)\tMotor_2_Temperature(C)\tBattery(C)\tTemperature_sensor(C)\tSoc(%)\n";
 
 //                    out << "Time\tMotor 1 Temperature(°C)\tMotor 2 Temperature(°C)\tPDU Temperature(°C)\tTemperature sensor(°C)\tSoc(%)\n";
                     temp_file.close();

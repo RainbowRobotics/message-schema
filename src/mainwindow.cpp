@@ -1724,8 +1724,8 @@ void MainWindow::watch_loop()
             }
         }
 
-        // for 1000ms loop
-        if(cnt % 10 == 0)
+        // for 500ms loop
+        if(cnt % 5 == 0)
         {
             //For sem docking retry logic
             bool retry_flag = DOCKCONTROL::instance()->get_dock_retry_flag();
@@ -2428,7 +2428,7 @@ void MainWindow::plot_info()
     // 3d lidar info
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
+//        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
     }
 
     // plot auto info

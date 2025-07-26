@@ -387,6 +387,9 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
         global_path_que.push(path);
     }
 
+    // explicitly change flag (racing issue: control_loop <-> obs_loop)
+    is_moving = true;
+
     // start control loop
     if(control_flag == false)
     {
@@ -1438,6 +1441,7 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
         double t = std::max<double>(t_v, t_w);
         double v = err_d/t;
         _ref_v[p] = v;
+
     }
     _ref_v[0] = st_v;
 
@@ -1456,6 +1460,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     for(int p = 0; p < (int)src.size(); p++)
     {
         double v1 = std::sqrt(2*v_acc*path_step + v0*v0);
+//        double v1 = std::sqrt(2*v_acc*path_step) + v0;
         if(v1 > v_limit)
         {
             v1 = v_limit;
@@ -1478,6 +1483,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     for(int p = (int)src.size()-1; p >= 0; p--)
     {
         double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);
+//        double v1 = std::sqrt(2*v_dcc*path_step) + v0;
         if(v1 > v_limit)
         {
             v1 = v_limit;
@@ -1692,6 +1698,12 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, LOCAL_PATH_STEP);
 
+//        std::cout << "Original ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
         // check global path end
         double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
         if(d < config->get_drive_goal_dist())
@@ -1705,8 +1717,152 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
             }
 
         }
+
+//        std::cout << "Padding ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
+
         // smoothing ref_v
         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+//        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
+
+        // debug
+        // printf("ref v(%zu):", ref_v.size());
+        // for(size_t i = 0; i < ref_v.size(); i++)
+        // {
+        //     printf("%f,",ref_v[i]);
+        // }
+        // printf("\n");
+
+        // set result
+        PATH res;
+        res.t = get_time();
+        res.pose = path_pose;
+        res.pos = path_pos;
+        res.ref_v = ref_v;
+        res.ed_tf = path_pose.back(); // local goal
+        return res;
+    }
+}
+
+PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
+{
+    // get cur params
+    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+    Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+    Eigen::Vector3d cur_vel = mobile->get_control_input();
+    int cur_idx = get_nn_idx(global_path.pos, cur_pos);
+
+    // get global path segment
+    std::vector<Eigen::Matrix4d> _path_pose;
+    std::vector<Eigen::Vector3d> _path_pos;
+    int range = config->get_obs_local_goal_dist()/GLOBAL_PATH_STEP;
+    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
+    int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
+    for(int p = st_idx; p <= ed_idx; p++)
+    {
+        _path_pose.push_back(global_path.pose[p]);
+        _path_pos.push_back(global_path.pos[p]);
+    }
+    double st_v = global_path.ref_v[st_idx];
+
+    if(_path_pose.size() == 1)
+    {
+        std::vector<double> ref_v;
+        ref_v.push_back(st_v);
+
+        // set result
+        PATH res;
+        res.t = get_time();
+        res.pose = _path_pose;
+        res.pos = _path_pos;
+        res.ref_v = ref_v;
+        res.ed_tf = _path_pose.back(); // local goal
+        return res;
+    }
+    else
+    {
+        // resampling
+        std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
+        path_pose = path_resampling(path_pose, LOCAL_PATH_STEP);
+
+        std::vector<Eigen::Vector3d> path_pos;
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pos.push_back(path_pose[p].block(0,3,3,1));
+        }
+
+        // ccma
+        path_pos = path_ccma(path_pos);
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pose[p].block(0,3,3,1) = path_pos[p];
+        }
+
+        // calc ref_v
+        std::vector<double> ref_v;
+        calc_ref_v(path_pose, ref_v, st_v, LOCAL_PATH_STEP);
+
+        // adjust cur vel
+        int cur_local_idx = get_nn_idx(path_pos, cur_pos);
+        for(int i=0; i<ref_v.size(); i++)
+        {
+            if(i < cur_local_idx)
+            {
+                ref_v[i] = cur_vel[0];
+            }
+            else if(i == cur_local_idx)
+            {
+                ref_v[i] = cur_vel[0];
+                break;
+            }
+        }
+
+//        std::cout << "Original ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
+        // check global path end
+        double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
+        if(d < config->get_drive_goal_dist())
+        {
+            ref_v.back() = params.ED_V;
+
+            int edv_padding_num = std::min((int)(GLOBAL_PATH_STEP/LOCAL_PATH_STEP*2), (int)ref_v.size());
+            for(int i = 0; i < edv_padding_num; i++)
+            {
+                ref_v[ref_v.size() - i - 1] = params.ED_V;
+            }
+
+        }
+
+//        std::cout << "Padding ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
+
+        // smoothing ref_v
+        ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
+
+//        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
+//        for(int i=0; i<ref_v.size(); i++){
+//            std::cout << ref_v[i] << ", ";
+//        }
+//        std::cout << std::endl;
+
 
         // debug
         // printf("ref v(%zu):", ref_v.size());
@@ -2029,7 +2185,7 @@ void AUTOCONTROL::control_loop()
         loop_cnt++;
         if(loop_cnt % 20 == 0)
         {
-            qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << QString::number(get_time(), 'f', 3);
+            // qDebug() << "[AUTO] b_loop_pp alive fsm_state: " << fsm_state << ", time: " << QString::number(get_time(), 'f', 3);
         }
 
         // get current status
@@ -2153,7 +2309,8 @@ void AUTOCONTROL::control_loop()
                 if(get_time() - local_path.t > 0.2)
                 {
                     // update local path
-                    local_path = calc_local_path(global_path);
+//                    local_path = calc_local_path(global_path);
+                    local_path = calc_local_path_with_cur_vel(global_path);
 
                     // for plot
                     {
@@ -2201,6 +2358,9 @@ void AUTOCONTROL::control_loop()
                 pre_err_th = 0;
                 mobile->move(cur_vel[0], 0, 0);
 
+                cur_pos_at_start_driving = cur_pos;
+                prev_local_ref_v_index = 0;  // set 0 index
+                ref_v_oscilation_end_flag = false;
                 fsm_state = AUTO_FSM_DRIVING;
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -2452,8 +2612,24 @@ void AUTOCONTROL::control_loop()
             // calc cross track error
             double cte = calc_cte(local_path.pose, cur_pos);
 
-            // get ref_v
-            double ref_v = local_path.ref_v[cur_idx];
+            // get ref_v -- prevent oscilation caused by localization jitter
+            double ref_v = 0.0;
+            double diff_from_start_pos = calc_dist_2d(cur_pos - cur_pos_at_start_driving);
+            if(diff_from_start_pos < 0.5 && ref_v_oscilation_end_flag == false)
+            {
+                // it is critical at staring point (vel from zero)
+                if(cur_idx > prev_local_ref_v_index)
+                {
+                    prev_local_ref_v_index = cur_idx;
+                }
+                ref_v = local_path.ref_v[prev_local_ref_v_index];
+            }
+            else
+            {
+                ref_v_oscilation_end_flag = true;
+                ref_v = local_path.ref_v[cur_idx];
+            }
+//            ref_v = local_path.ref_v[cur_idx];
 
             // calc control input
             double v0 = cur_vel[0];
@@ -2463,8 +2639,19 @@ void AUTOCONTROL::control_loop()
             v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
+//            qDebug() << "prev_local_ref_v_index: " << prev_local_ref_v_index << " / " << local_path.ref_v.size() << " ----- " << ref_v_oscilation_end_flag;
+//            qDebug() << "FMS Driving cur_idx: " << cur_idx << " cur pos: " << cur_pos[0] << ", " << cur_pos[1];
+//            qDebug() << "ref v value : " << local_path.ref_v[0] << ", " << local_path.ref_v[1] << ", " << local_path.ref_v[2];
+//            qDebug() << "local pos(idx+0): " << local_path.pos[cur_idx][0] << ", " << local_path.pos[cur_idx][1];
+//            if(cur_idx-1 >= 0){
+//                qDebug() << "local pos(idx-1): " << local_path.pos[cur_idx-1][0] << ", " << local_path.pos[cur_idx-1][1];
+//            }
+//            if(cur_idx+1 <= local_path.pos.size()-1){
+//                qDebug() << "local pos(idx+1): " << local_path.pos[cur_idx+1][0] << ", " << local_path.pos[cur_idx+1][1];
+//            }
 //            qDebug() << "FMS Driving V(1): " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v;
 //            qDebug() << "FMS Driving V(2): " << obs_v << ", " << params.LIMIT_V << ", " << v0 - config->get_motor_limit_v_acc()*dt << ", " << v0 + config->get_motor_limit_v_acc()*dt << ", " << v;
+//            qDebug() << "v total : " << cur_vel[0] << ", " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v << ", " << obs_v << ", " << v;
 
             double th = (params.DRIVE_A * err_th)
                         + (params.DRIVE_B * (err_th-pre_err_th)/dt)
@@ -2905,8 +3092,17 @@ void AUTOCONTROL::obs_loop()
     double pre_loop_time = get_time();
 
     logger->write_log("[AUTO] obs loop start");
+
+    int loop_cnt = 0;
+    double obs_v_debug = 0.0;
     while(obs_flag)
-    {
+    {        
+        if(loop_cnt % 10 == 0)
+        {
+            qDebug() << "[AUTO] obs_loop alive : " << is_moving << " , " << fsm_state << ", " << obs_v_debug;
+        }
+        loop_cnt++;
+
         if(!is_moving)
         {
             return;
@@ -2949,6 +3145,7 @@ void AUTOCONTROL::obs_loop()
                 obs_v = vv;
             }
 
+            obs_v_debug = obs_v;
             // update
             {
                 std::lock_guard<std::mutex> lock(mtx);
@@ -2976,8 +3173,8 @@ void AUTOCONTROL::obs_loop()
 
         // check trajectory
         std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
-        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.01, 2.5, cur_tf);
-        std::vector<Eigen::Matrix4d> pivot_traj = calc_trajectory(Eigen::Vector3d(0.0, 0.0, 1.57), 0.2, 4.0, cur_tf);
+        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.02, 3.0, cur_tf);
+        std::vector<Eigen::Matrix4d> pivot_traj = calc_trajectory(Eigen::Vector3d(0.0, 0.0, 1.57), 0.4, 4.0, cur_tf);
         if(fsm_state == AUTO_FSM_DRIVING)
         {
             // add straight forwarding path
@@ -2986,6 +3183,11 @@ void AUTOCONTROL::obs_loop()
         {
             // add rotating pivot path
             check_traj.insert(check_traj.end(), pivot_traj.begin(), pivot_traj.end());
+        }
+        else
+        {
+            // add straight forwarding path
+            check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
         }
 
         double min_obs_dist = 9999.0;

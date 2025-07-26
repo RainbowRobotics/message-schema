@@ -384,7 +384,8 @@ void MOBILE::recv_loop()
         // Safety total 186 -> data 199
         while((int)buf.size() > min_packet_size && recv_flag)
         {
-            if(buf[0] == 0x24){
+            if(buf[0] == 0x24)
+            {
                 // Header
                 int data_size = (unsigned short)(buf[1]|(buf[2]<<8));
                 if(data_size+7 <= buf.size())
@@ -587,7 +588,8 @@ void MOBILE::recv_loop()
                             memcpy(&power, &_buf[index], dlc_f);                index=index+dlc_f;
                             memcpy(&total_used_power, &_buf[index], dlc_f);     index=index+dlc_f;
 
-                            if(robot_type == ROBOT_TYPE_MECANUM){
+                            if(robot_type == ROBOT_TYPE_MECANUM)
+                            {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
                             }

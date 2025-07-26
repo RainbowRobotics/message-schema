@@ -800,7 +800,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
         {
-            qDebug() << " find";
+//            qDebug() << " find";
             double x = dock_tf(0, 3);
             double y = dock_tf(1, 3);
             double head_th = std::atan2(y,x);
@@ -832,7 +832,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
                 if(dist < 0.2)
                 {
-                    qDebug() << "dist far";
+//                    qDebug() << "dist far";
                     docking_station = dock_tf;
                     docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
                     path_flag = true;
