@@ -122,6 +122,9 @@ void SIM::simulation_loop()
         MOBILE_POSE pose;
         pose.t = sim_t;
         pose.pose = cur_xi;
+
+        distance = vx0*dt;
+
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
         MOBILE_STATUS status;        

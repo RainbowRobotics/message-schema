@@ -3099,7 +3099,7 @@ void AUTOCONTROL::obs_loop()
     {        
         if(loop_cnt % 10 == 0)
         {
-            qDebug() << "[AUTO] obs_loop alive : " << is_moving << " , " << fsm_state << ", " << obs_v_debug;
+//            qDebug() << "[AUTO] obs_loop alive : " << is_moving << " , " << fsm_state << ", " << obs_v_debug;
         }
         loop_cnt++;
 

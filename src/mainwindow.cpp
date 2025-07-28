@@ -2450,6 +2450,30 @@ void MainWindow::plot_info()
                               _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
     }
+
+    // plot mobile distance info
+    {
+        if(MOBILE::instance()->get_is_connected())
+        {
+            double move_distance;
+            if(CONFIG::instance()->get_use_sim())
+            {
+                move_distance = SIM::instance()->distance;
+            }
+            else
+            {
+                move_distance = MOBILE::instance()-> get_move_distance();
+            }
+            mileage +=abs(move_distance);
+
+            QString mileage_sum;
+            mileage_sum = "[Mileage] : "+QString::number(mileage);
+
+            // plot mobile pose
+            ui->lb_Mileage->setText(mileage_sum);
+        }
+    }
+
 }
 
 void MainWindow::plot_safety()
@@ -3443,11 +3467,15 @@ void MainWindow::plot_tractile()
                 QString name = QString("traj_%1").arg(p);
                 std::string name_str = name.toStdString();
 
-                pcl_viewer->addCube(x_min, x_max, y_min, y_max, z_min, z_max, 0.8, 0.8, 0.8, name_str);
 
-                pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
-                pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
-                last_obs_plot_tactile.push_back(name);
+                if(p == traj.size()-1 || p % 50 == 0)
+                {
+                    pcl_viewer->addCube(x_min, x_max, y_min, y_max, z_min, z_max, 0.8, 0.8, 0.8, name_str);
+
+                    pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
+                    pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
+                    last_obs_plot_tactile.push_back(name);
+                }
             }
         }
     }

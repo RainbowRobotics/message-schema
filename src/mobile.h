@@ -44,6 +44,9 @@ public:
     QString get_cur_pdu_state();
     QString get_status_text();
     QString get_pose_text();
+
+    double get_move_distance();
+
     MOBILE_POSE get_pose();
     MOBILE_POSE get_best_mo(double ref_t);
     MOBILE_STATUS get_status();
@@ -106,6 +109,9 @@ public:
     void set_detect_mode(double var);
     void set_IO_output(unsigned char[]);
     void lift_power_onoff(int param);
+
+
+//    float mileage = 0.0;
 private:
     explicit MOBILE(QObject *parent = nullptr);
     ~MOBILE();
@@ -157,6 +163,8 @@ private:
 
     std::atomic<double> process_time_mobile = {0.0};
 
+     std::atomic<double> distance = 0.0;
+
     std::atomic<double> last_pose_t = {0};
     std::atomic<double> last_imu_t = {0};
 
@@ -167,6 +175,7 @@ private:
 
     QString pose_text;
     QString status_text;
+
 };
 
 #endif // MOBILE_H

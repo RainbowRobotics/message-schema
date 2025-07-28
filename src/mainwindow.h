@@ -123,6 +123,9 @@ public:
     // usb temp sensor
     std::atomic<float> temperature_value = {0.0};
 
+    // for mileage
+   double mileage = {0.0};
+
     // plot funcs
     void plot_map();
     void plot_node();

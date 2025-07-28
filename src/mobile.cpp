@@ -225,6 +225,15 @@ QString MOBILE::get_pose_text()
     return res;
 }
 
+
+// for mileage
+double MOBILE::get_move_distance()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    double res = (double)distance.load();
+    return res;
+}
+
 QString MOBILE::get_status_text()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -891,6 +900,7 @@ void MOBILE::recv_loop()
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
                                             cmd[0], cmd[1], cmd[2]*R2D);
+
                                 mtx.lock();
                                 pose_text = strP;
                                 mtx.unlock();
@@ -914,6 +924,7 @@ void MOBILE::recv_loop()
                                             mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
                                             mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
                                             cmd[0], cmd[1], cmd[2]*R2D);
+
                                 mtx.lock();
                                 pose_text = strP;
                                 mtx.unlock();
@@ -1095,6 +1106,12 @@ void MOBILE::recv_loop()
                 buf.erase(buf.begin(), buf.begin()+1);
             }
         }
+
+        qDebug()<<vx0*pre_loop_time;
+        mtx.lock();
+        distance = vx0*pre_loop_time;
+        mtx.unlock();
+        qDebug()<<"distance : "<<distance;
 
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;

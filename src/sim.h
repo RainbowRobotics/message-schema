@@ -40,6 +40,7 @@ public:
     void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
     void set_localization_module(LOCALIZATION* _loc);
 
+    float distance = 0.0;
 private:
     explicit SIM(QObject *parent = nullptr);
     ~SIM();
