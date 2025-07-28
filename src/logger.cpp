@@ -78,63 +78,63 @@ void LOGGER::init()
             fclose(pFile);
         }
 
-        // spdlog
-        QDir sem_dir("snlog");
-        if(!sem_dir.exists())
-        {
-            sem_dir.mkpath(".");
-        }
+//        // spdlog
+//        QDir sem_dir("snlog");
+//        if(!sem_dir.exists())
+//        {
+//            sem_dir.mkpath(".");
+//        }
 
-        try
-        {
-            QString date_time = QDateTime::currentDateTime().toString("yyyyMMdd");
+//        try
+//        {
+//            QString date_time = QDateTime::currentDateTime().toString("yyyyMMdd");
 
-//            2025071411_LidarDetectionRange.log
-            QString sem_log_path = "snlog/"+date_time+"_LidarDetectionRange.log";
+////            2025071411_LidarDetectionRange.log
+//            QString sem_log_path = "snlog/"+date_time+"_LidarDetectionRange.log";
 
-            // header
-            if(!QFile::exists(sem_log_path))
-            {
-                QFile file(sem_log_path);
-                if(file.open(QIODevice::WriteOnly | QIODevice::Text))
-                {
-                    QTextStream out(&file);
-                    out << "SEM_LOG_VERSION=2.0\n";
-                    out << "Time\tObstacleStatus\tDistance(m)\n";
-                    file.close();
-                }
-            }
+//            // header
+//            if(!QFile::exists(sem_log_path))
+//            {
+//                QFile file(sem_log_path);
+//                if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+//                {
+//                    QTextStream out(&file);
+//                    out << "SEM_LOG_VERSION=2.0\n";
+//                    out << "Time\tObstacleStatus\tDistance(m)\n";
+//                    file.close();
+//                }
+//            }
 
-            spd_logger = spdlog::basic_logger_mt("sem_logger", sem_log_path.toStdString());
-            spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
-            spdlog::flush_on(spdlog::level::info);
+//            spd_logger = spdlog::basic_logger_mt("sem_logger", sem_log_path.toStdString());
+//            spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
+//            spdlog::flush_on(spdlog::level::info);
 
-            QString sem_temperature_log_path = "snlog/sem_temperature_log.log";
+//            QString sem_temperature_log_path = "snlog/sem_temperature_log.log";
 
-            // header
-            if(!QFile::exists(sem_temperature_log_path))
-            {
-                QFile temp_file(sem_temperature_log_path);
-                if(temp_file.open(QIODevice::WriteOnly | QIODevice::Text))
-                {
-                    QTextStream out(&temp_file);
-                    out << "SEM_LOG_VERSION=2.0\n";
-                    out << "Time\tMotor_1_Temperature(C)\tMotor_2_Temperature(C)\tBattery(C)\tTemperature_sensor(C)\tSoc(%)\n";
+//            // header
+//            if(!QFile::exists(sem_temperature_log_path))
+//            {
+//                QFile temp_file(sem_temperature_log_path);
+//                if(temp_file.open(QIODevice::WriteOnly | QIODevice::Text))
+//                {
+//                    QTextStream out(&temp_file);
+//                    out << "SEM_LOG_VERSION=2.0\n";
+//                    out << "Time\tMotor_1_Temperature(C)\tMotor_2_Temperature(C)\tBattery(C)\tTemperature_sensor(C)\tSoc(%)\n";
 
-//                    out << "Time\tMotor 1 Temperature(°C)\tMotor 2 Temperature(°C)\tPDU Temperature(°C)\tTemperature sensor(°C)\tSoc(%)\n";
-                    temp_file.close();
-                }
-            }
+////                    out << "Time\tMotor 1 Temperature(°C)\tMotor 2 Temperature(°C)\tPDU Temperature(°C)\tTemperature sensor(°C)\tSoc(%)\n";
+//                    temp_file.close();
+//                }
+//            }
 
-            spd_temperature_logger = spdlog::basic_logger_mt("sem_temperature_log", "snlog/sem_temperature_log.log");
-            spd_temperature_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
-            spdlog::flush_on(spdlog::level::info);
+//            spd_temperature_logger = spdlog::basic_logger_mt("sem_temperature_log", "snlog/sem_temperature_log.log");
+//            spd_temperature_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
+//            spdlog::flush_on(spdlog::level::info);
 
-        }
-        catch(const spdlog::spdlog_ex& ex)
-        {
-            printf("[LOGGER] SPDLOG init failed: %s\n", ex.what());
-        }
+//        }
+//        catch(const spdlog::spdlog_ex& ex)
+//        {
+//            printf("[LOGGER] SPDLOG init failed: %s\n", ex.what());
+//        }
 
     }
     mtx.unlock();
