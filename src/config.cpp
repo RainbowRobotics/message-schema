@@ -122,6 +122,8 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
 
     check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
+    check_and_set_string(obj_robot, "MILEAGE",        MILEAGE,      "robot");
+
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_Y",     ROBOT_SIZE_Y[0],    "robot");
@@ -473,6 +475,7 @@ void CONFIG::set_config_path(const QString &path)
     path_config = path;
 }
 
+
 void CONFIG::set_version_path(const QString &path)
 {
     path_version = path;
@@ -492,6 +495,8 @@ bool CONFIG::load_common(QString path)
         return false;
     }
 
+    common_path = path;
+
     QByteArray data = common_file.readAll();
     common_file.close();
 
@@ -508,6 +513,12 @@ bool CONFIG::load_common(QString path)
     {
         PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
     }
+
+    if(obj.contains("MILEAGE"))
+    {
+        MILEAGE = obj["MILEAGE"].toString();
+    }
+
     printf("[CONFIG] PLATFORM_NAME, %s\n", qUtf8Printable(PLATFORM_NAME));
 
     // complete
@@ -570,6 +581,70 @@ void CONFIG::set_map_path(const QString &path)
     config_file.close();
 }
 
+
+void CONFIG::set_mileage(const QString &mileage)
+{
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        MILEAGE = mileage;
+    }
+
+    // write path
+    QMutexLocker locker(&q_mtx);
+    QFile config_file(common_path);
+
+    if(!config_file.open(QIODevice::ReadWrite))
+    {
+        printf("[config] failed to open config file for reading and writing.\n");
+        return;
+    }
+
+    QString data;
+    {
+        QTextStream in(&config_file);
+        data = in.readAll();
+        config_file.close();
+    }
+
+
+    QString pattern = R"("MILEAGE"\s*:\s*".*?")";
+    QRegularExpression re(pattern);
+    QRegularExpressionMatch match = re.match(data);
+
+    if(match.hasMatch())
+    {
+        data.replace(re, R"("MILEAGE": ")" + mileage + R"(")");
+    }
+    else
+    {
+        QRegularExpression mapRe(R"("MILEAGE"\s*:\s*\{)");
+        QRegularExpressionMatch mapMatch = mapRe.match(data);
+
+        int bracePos = data.indexOf('{');
+        if (bracePos != -1)
+        {
+            int insertPos = bracePos + 1;
+            QString insertText = QString("\n    \"MILEAGE\": \"%1\",").arg(mileage);
+            data.insert(insertPos, insertText);
+            qDebug() << "삽입 후 내용:" << data;
+        }
+        else
+        {
+            qDebug() << "[config] 중괄호 { 를 찾을 수 없습니다.";
+        }
+    }
+
+    if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+    {
+        printf("[config] failed to open config file for writing.\n");
+        return;
+    }
+
+    QTextStream out(&config_file);
+    out << data;
+    config_file.close();
+}
+
 QString CONFIG::get_robot_serial_number()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -580,6 +655,12 @@ QString CONFIG::get_platform_name()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return PLATFORM_NAME;
+}
+
+double CONFIG::get_mileage()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MILEAGE.toDouble();
 }
 
 QString CONFIG::get_platform_type()

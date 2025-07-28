@@ -248,6 +248,11 @@ public:
     QString get_map_path();
     void set_map_path(const QString& path);
 
+    //set mileage
+    double get_mileage();
+
+    void set_mileage(const QString &mileage);
+
     /***********************
      * missing variables check
      ***********************/
@@ -296,6 +301,7 @@ private:
     QString path_config;
     QString path_version;
     QString path_serial_number;
+    QString common_path;
 
     /* unit : meter, degree, second
      * params (initial value ref from AMR200)
@@ -305,6 +311,7 @@ private:
     QString ROBOT_SERIAL_NUMBER = "RB-M-";
     QString PLATFORM_NAME = "";
     QString PLATFORM_TYPE = "";
+    QString MILEAGE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};

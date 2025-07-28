@@ -137,6 +137,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
+
+    CONFIG::instance()->set_mileage(QString::number(mileage));
+
+
     plot_timer->stop();
     delete ui;
 }
@@ -240,6 +244,9 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
     {
         QString platform_name = CONFIG::instance()->get_platform_name();
+
+        mileage = CONFIG::instance()->get_mileage();
+
         if(platform_name.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
@@ -1903,6 +1910,30 @@ void MainWindow::watch_loop()
             }
         }
 
+        // plot mobile distance info
+        {
+            if(MOBILE::instance()->get_is_connected())
+            {
+                double move_distance;
+                if(CONFIG::instance()->get_use_sim())
+                {
+                    move_distance = SIM::instance()->distance;
+                }
+                else
+                {
+                    move_distance = MOBILE::instance()-> get_move_distance();
+                }
+                mileage +=abs(move_distance);
+
+                QString mileage_sum;
+                mileage_sum = "[Mileage] : "+QString::number(mileage);
+
+                // plot mobile pose
+                ui->lb_Mileage->setText(mileage_sum);
+            }
+        }
+//         CONFIG::instance()->set_mileage(QString::number(mileage));
+
         // Samsung's request
 //        // for 500ms loop
 //        // obs logging
@@ -2449,29 +2480,6 @@ void MainWindow::plot_info()
                               AUTOCONTROL::instance()->get_multi_reqest_state().toLocal8Bit().data(),
                               _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
-    }
-
-    // plot mobile distance info
-    {
-        if(MOBILE::instance()->get_is_connected())
-        {
-            double move_distance;
-            if(CONFIG::instance()->get_use_sim())
-            {
-                move_distance = SIM::instance()->distance;
-            }
-            else
-            {
-                move_distance = MOBILE::instance()-> get_move_distance();
-            }
-            mileage +=abs(move_distance);
-
-            QString mileage_sum;
-            mileage_sum = "[Mileage] : "+QString::number(mileage);
-
-            // plot mobile pose
-            ui->lb_Mileage->setText(mileage_sum);
-        }
     }
 
 }
