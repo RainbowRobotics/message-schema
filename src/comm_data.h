@@ -290,6 +290,45 @@ struct DATA_DOCK
     }
 };
 
+struct DATA_FIELD
+{
+    double time;
+    QString command; // set, get
+    unsigned int set_field;
+    unsigned int get_field;
+
+    QString result;
+    QString message;
+
+    DATA_FIELD()
+    {
+        time = 0.0;
+        command = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_FIELD(const DATA_FIELD& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_FIELD& operator=(const DATA_FIELD& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
 struct DATA_VIEW_LIDAR
 {
     double time;

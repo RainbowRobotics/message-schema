@@ -1745,57 +1745,6 @@ void MainWindow::watch_loop()
             }
 
 
-            // led state
-            int led_color = LED_GREEN;
-
-            // autodrive led control
-            if(AUTOCONTROL::instance()->get_is_moving())
-            {
-                if(AUTOCONTROL::instance()->get_obs_condition() == "far")
-                {
-                    led_color = LED_WHITE_BLINK;
-                }
-                else if(AUTOCONTROL::instance()->get_obs_condition() == "near")
-                {
-                    led_color = LED_RED;
-
-                    if(CONFIG::instance()->get_use_beep())
-                    {
-                        QApplication::beep();
-                    }
-                }
-                else if(AUTOCONTROL::instance()->get_obs_condition() == "near_robot")
-                {
-                    led_color = LED_RED;
-                }
-                else
-                {
-                    led_color = LED_WHITE;
-                }
-
-                // test
-                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-                if(obs_d < 1.0)
-                {
-                    MOBILE::instance()->led(0, SAFETY_LED_RED);
-                    // LOGGER::instance()->write_log_to_txt(QString("\tObstacle - stop\t%1").arg(obs_d, 0, 'f', 3));
-                }
-                else if(obs_d < 2.0)
-                {
-                    MOBILE::instance()->led(0, SAFETY_LED_YELLOW);
-                    // LOGGER::instance()->write_log_to_txt(QString("\tObstacle - warning\t%1").arg(obs_d, 0, 'f', 3));
-                }
-                else
-                {
-                    MOBILE::instance()->led(0, SAFETY_LED_OFF);
-                }
-            }
-            else
-            {
-                 MOBILE::instance()->led(0, SAFETY_LED_GREEN);
-            }
-
-
             // check mobile
             if(MOBILE::instance()->get_is_connected())
             {
@@ -1824,7 +1773,7 @@ void MainWindow::watch_loop()
                     else
                     {
                         MOBILE::instance()->set_cur_pdu_state("fail");
-                        led_color = LED_MAGENTA;
+//                        led_color = LED_MAGENTA;
                     }
                 }
             }
@@ -1886,7 +1835,7 @@ void MainWindow::watch_loop()
                 {
                     loc_fail_cnt = 0;
                     LOCALIZATION::instance()->set_cur_loc_state("none");
-                    led_color = LED_MAGENTA;
+//                    led_color = LED_MAGENTA;
                 }
                 else
                 {
@@ -1898,7 +1847,7 @@ void MainWindow::watch_loop()
                         if(loc_fail_cnt > 3)
                         {
                             LOCALIZATION::instance()->set_cur_loc_state("fail");
-                            led_color = LED_MAGENTA_BLINK;
+//                            led_color = LED_MAGENTA_BLINK;
                         }
                     }
                     else
@@ -3565,6 +3514,58 @@ void MainWindow::plot_loop()
     }
 
     plot_timer->start();
+}
+
+int MainWindow::led_handler()
+{
+
+    int led_out = SAFETY_LED_OFF;
+
+    //check mobile communication
+
+    MOBILE_STATUS ms;
+
+    if(ms.om_state)
+    {
+
+    }
+
+
+    // autodrive led control
+    if(AUTOCONTROL::instance()->get_is_moving())
+    {
+
+
+        double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+
+
+        if(obs_d < 1.0)
+        {
+            MOBILE::instance()->led(0, SAFETY_LED_PURPLE_BLINKING);
+        }
+        else if(obs_d < 2.0)
+        {
+            MOBILE::instance()->led(0, SAFETY_LED_PURPLE);
+        }
+
+        else if(AUTOCONTROL::instance()->get_obs_condition() == "near_robot")
+        {
+            led_out = SAFETY_LED_YELLOW_WAVERING;
+        }
+
+    }
+
+
+
+
+
+    else
+    {
+         MOBILE::instance()->led(0, SAFETY_LED_GREEN);
+    }
+
+
+    return led_out;
 }
 
 QString MainWindow::get_map_path()

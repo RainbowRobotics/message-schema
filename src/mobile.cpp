@@ -794,6 +794,7 @@ void MOBILE::recv_loop()
                             // safety
                             mobile_status.auto_manual_sw = auto_manual_sw;
                             mobile_status.brake_release_sw = brake_sw;
+                            qDebug() << "brake sw" << brake_sw ;
                             mobile_status.sw_reset = reset_sw;
                             mobile_status.sw_stop = stop_sw;
                             mobile_status.sw_start = start_sw;

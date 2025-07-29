@@ -55,7 +55,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-
+    BIND_EVENT(sock, "lidarFieldSet",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -64,6 +64,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_randomseq,       this, &COMM_RRS::slot_randomseq);
     connect(this, &COMM_RRS::signal_mapping,         this, &COMM_RRS::slot_mapping);
     connect(this, &COMM_RRS::signal_dock,            this, &COMM_RRS::slot_dock);
+    connect(this, &COMM_RRS::signal_field_set,       this, &COMM_RRS::slot_field_set);
     connect(this, &COMM_RRS::signal_view_lidar,      this, &COMM_RRS::slot_view_lidar);
     connect(this, &COMM_RRS::signal_view_path,       this, &COMM_RRS::slot_view_path);
     connect(this, &COMM_RRS::signal_led,             this, &COMM_RRS::slot_led);
@@ -315,6 +316,25 @@ void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data,
         Q_EMIT signal_dock(msg);
     }
 }
+
+void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        DATA_FIELD msg;
+        msg.command = get_json(data, "command"); // "set", "get"
+        msg.time = get_json(data, "time").toDouble() / 1000;
+
+        // action
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        }
+        Q_EMIT signal_field_set(msg);
+    }
+}
+
 
 void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -1552,6 +1572,40 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     }
 }
 
+void COMM_RRS::slot_field_set(DATA_FIELD msg)
+{
+    const QString command = msg.command;
+
+    if(command == "set")
+    {
+        msg.result = "accept";
+        unsigned int set_field_ = msg.set_field;
+        msg.message = "";
+
+        if(mobile)
+        {
+            MOBILE::instance()->setlidarfield(set_field_);
+        }
+
+        send_field_set_response(msg);
+    }
+
+    else if (command == "get")
+    {
+        msg.result = "accept";
+        msg.message = "";
+
+        if(mobile)
+        {
+            MOBILE_STATUS ms = MOBILE::instance()->get_status();
+            msg.get_field = ms.lidar_field;
+        }
+
+        send_field_get_response(msg);
+
+    }
+}
+
 void COMM_RRS::slot_dock(DATA_DOCK msg)
 {
     const QString command = msg.command;
@@ -2073,6 +2127,53 @@ void COMM_RRS::send_dock_response(const DATA_DOCK& msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("dockResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("fieldSetResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_RRS::send_field_get_response(const DATA_FIELD& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["getfield"] = QString::number(msg.get_field);
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("fieldGetResponse", res);
 
     // for plot
     mtx.lock();

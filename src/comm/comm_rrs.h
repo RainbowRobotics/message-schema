@@ -132,6 +132,7 @@ public Q_SLOTS:
     void recv_led(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_field_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
@@ -148,7 +149,7 @@ public Q_SLOTS:
     void slot_led(DATA_LED msg);
     void slot_motor(DATA_MOTOR msg);
     void slot_foot(DATA_FOOT msg);
-
+    void slot_field_set(DATA_FIELD msg);
     void slot_path(DATA_PATH msg);
     void slot_vobs(DATA_VOBS msg);
     void slot_software_update(DATA_SOFTWARE msg);
@@ -160,6 +161,8 @@ public Q_SLOTS:
     void send_randomseq_response(const DATA_RANDOMSEQ& msg);
     void send_mapping_response(const DATA_MAPPING& msg);
     void send_dock_response(const DATA_DOCK& msg);
+    void send_field_set_response(const DATA_FIELD& msg);
+    void send_field_get_response(const DATA_FIELD& msg);
     void send_path_response(const DATA_PATH& msg);
     void send_software_update_response(const DATA_SOFTWARE& msg);
 
@@ -177,7 +180,7 @@ Q_SIGNALS:
     void signal_led(DATA_LED msg);
     void signal_motor(DATA_MOTOR msg);
     void signal_foot(DATA_FOOT msg);
-
+    void signal_field_set(DATA_FIELD msg);
     void signal_path(DATA_PATH msg);
     void signal_vobs(DATA_VOBS msg);
     void signal_software_update(DATA_SOFTWARE msg);
