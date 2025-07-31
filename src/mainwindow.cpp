@@ -1744,6 +1744,10 @@ void MainWindow::watch_loop()
                 DOCKCONTROL::instance()->set_dock_retry_flag(false);
             }
 
+            // Led logic
+            int led_state = led_handler();
+            MOBILE::instance()->led(0, led_state);
+
 
             // check mobile
             if(MOBILE::instance()->get_is_connected())
@@ -3518,52 +3522,86 @@ void MainWindow::plot_loop()
 
 int MainWindow::led_handler()
 {
-
-    int led_out = SAFETY_LED_OFF;
-
-    //check mobile communication
-
     MOBILE_STATUS ms;
 
-    if(ms.om_state)
-    {
-
-    }
-
+    int led_out = SAFETY_LED_OFF;
 
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
     {
 
+        //charging
+        if(ms.charge_state == CHARGING_STATION_CHARGING)
+        {
+            //docking process sucess
+            qDebug() << "SAFETY_LED_CONTRACTING_GREEN";
+            led_out = SAFETY_LED_CONTRACTING_GREEN;
+            return led_out;
+        }
 
+        //docking
+        int dock_fsm_state_ = DOCKCONTROL::instance()->get_dock_fsm_state();
+
+        if(!(dock_fsm_state_ == DOCKING_FSM_OFF))
+        {
+            qDebug() << "SAFETY_LED_WHITE_WAVERING";
+            //docking process..
+            led_out = SAFETY_LED_WHITE_WAVERING;
+            return led_out;
+        }
+
+        //autocontrol
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
 
         if(obs_d < 1.0)
         {
-            MOBILE::instance()->led(0, SAFETY_LED_PURPLE_BLINKING);
-        }
-        else if(obs_d < 2.0)
-        {
-            MOBILE::instance()->led(0, SAFETY_LED_PURPLE);
+            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
+            led_out = SAFETY_LED_PURPLE_BLINKING;
+            return led_out;
+
         }
 
-        else if(AUTOCONTROL::instance()->get_obs_condition() == "near_robot")
+        if(obs_d < 2.0)
         {
-            led_out = SAFETY_LED_YELLOW_WAVERING;
+            qDebug() << "SAFETY_LED_PURPLE";
+            led_out = SAFETY_LED_PURPLE;
+            return led_out;
+
         }
 
+        else
+        {
+            //normal auto drive led
+            qDebug() << "SAFETY_LED_GREEN_BLINKING";
+            led_out = SAFETY_LED_GREEN_BLINKING;
+            return led_out;
+        }
     }
 
-
-
-
-
+    // not autodrive led control
     else
     {
-         MOBILE::instance()->led(0, SAFETY_LED_GREEN);
-    }
 
+        if(ms.om_state == SM_OM_POWER_OFF)
+        {
+            // Pc boot up
+            led_out = SAFETY_LED_YELLOW;
+
+            // Brkae release
+            if(ms.brake_release_sw == 1)
+            {
+                led_out = SAFETY_LED_BLUE;
+                return led_out;
+            }
+        }
+
+        else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
+        {
+            qDebug() << "SAFETY_LED_CYAN";
+            led_out = SAFETY_LED_CYAN;
+            return led_out;
+        }
+    }
 
     return led_out;
 }

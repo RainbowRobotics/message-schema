@@ -63,12 +63,14 @@ public:
     void set_qr_sensor_module(QR_SENSOR* _qr_sensor);
     void set_obsmap_module(OBSMAP* _obsmap);
 
+
     //for debug
     std::vector<Eigen::Vector3d> get_cur_clust();
     std::vector<Eigen::Vector3d> debug_frame;
     std::vector<Eigen::Vector3d> get_debug_frame();
     bool get_dock_state();
     bool get_dock_retry_flag();
+    int  get_dock_fsm_state();
     void set_dock_retry_flag(bool val);
 
 private:
