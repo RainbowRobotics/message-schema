@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AUTOCONTROL::instance(this);
     SIM::instance(this);
     DOCKCONTROL::instance(this);
+    ZONE::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -440,7 +441,18 @@ void MainWindow::init_modules()
         DOCKCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
     }
 
-
+    // zone module init
+    {
+        if(CONFIG::instance()->get_use_zone())
+        {
+            ZONE::instance()->set_config_module(CONFIG::instance());
+            ZONE::instance()->set_logger_module(LOGGER::instance());
+            ZONE::instance()->set_unimap_module(UNIMAP::instance());
+            ZONE::instance()->set_localization_module(LOCALIZATION::instance());
+            ZONE::instance()->init();
+            ZONE::instance()->open();
+        }
+    }
 
     // start jog loop
     jog_flag = true;

@@ -36,13 +36,14 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": true,
+        "USE_RRS": false,
         "USE_FMS": false
     },
     "debug": {
         "USE_SIM": true,
         "USE_QTUI": false,
-        "USE_BEEP": true
+        "USE_BEEP": false,
+        "USE_ZONE": true
     },
     "lidar_2d_config": [
         {
@@ -194,7 +195,7 @@
     	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
-        "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
+        "MAP_PATH": "/home/juyeon/maps/250429_unicos_test"
     }
 }
 
