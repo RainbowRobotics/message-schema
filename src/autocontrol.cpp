@@ -2636,7 +2636,8 @@ void AUTOCONTROL::control_loop()
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
 
             v = saturation(v, 0.0, obs_v);
-            v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
+//            v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
 //            qDebug() << "prev_local_ref_v_index: " << prev_local_ref_v_index << " / " << local_path.ref_v.size() << " ----- " << ref_v_oscilation_end_flag;

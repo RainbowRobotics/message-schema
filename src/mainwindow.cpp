@@ -2893,14 +2893,14 @@ void MainWindow::plot_mapping()
             if(MAPPING::instance()->try_pop_kfrm_update_que(kfrm_id))
             {
                 Eigen::Matrix4d opt_G = Eigen::Matrix4d::Identity();
+                KFRAME kfrm = MAPPING::instance()->get_kfrm(kfrm_id);
+                opt_G = kfrm.opt_G;
 
                 QString name;
                 name.sprintf("kfrm_%d", kfrm_id);
+
                 if(!pcl_viewer->contains(name.toStdString()))
                 {
-                    KFRAME kfrm = MAPPING::instance()->get_kfrm(kfrm_id);
-                    opt_G = kfrm.opt_G;
-
                     const size_t point_size = kfrm.pts.size();
 
                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);

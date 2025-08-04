@@ -794,7 +794,7 @@ void MOBILE::recv_loop()
                             // safety
                             mobile_status.auto_manual_sw = auto_manual_sw;
                             mobile_status.brake_release_sw = brake_sw;
-                            qDebug() << "brake sw" << brake_sw ;
+//                            qDebug() << "brake sw" << brake_sw ;
                             mobile_status.sw_reset = reset_sw;
                             mobile_status.sw_stop = stop_sw;
                             mobile_status.sw_start = start_sw;
@@ -1108,11 +1108,11 @@ void MOBILE::recv_loop()
             }
         }
 
-        qDebug()<<vx0*pre_loop_time;
+//        qDebug()<<vx0*pre_loop_time;
         mtx.lock();
         distance = vx0*pre_loop_time;
         mtx.unlock();
-        qDebug()<<"distance : "<<distance;
+//        qDebug()<<"distance : "<<distance;
 
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;
