@@ -3025,6 +3025,47 @@ void MainWindow::plot_loc()
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "plot_cur_pts");
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "plot_cur_pts");
     }
+    else if(ui->cb_ViewType->currentText() == "VIEW_2D" && plot_cur_pts.size() > 0 && LOCALIZATION::instance()->get_is_loc() && !MAPPING::instance()->get_is_mapping())
+    {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(pcl_viewer->contains(id.toStdString()))
+            {
+                pcl_viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(pcl_viewer->contains("live_tree_pts"))
+        {
+            pcl_viewer->removePointCloud("live_tree_pts");
+        }
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        const size_t point_size = plot_cur_pts.size();
+        cloud->reserve(point_size);
+        for(const auto& P: plot_cur_pts)
+        {
+            pcl::PointXYZRGB pt;
+            pt.x = P[0];
+            pt.y = P[1];
+            pt.z = P[2];
+            pt.r = 255;
+            pt.g = 0;
+            pt.b = 0;
+            cloud->push_back(pt);
+        }
+
+        if(!pcl_viewer->updatePointCloud(cloud, "plot_cur_pts"))
+        {
+            pcl_viewer->addPointCloud(cloud, "plot_cur_pts");
+        }
+
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "plot_cur_pts");
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "plot_cur_pts");
+    }
     else
     {
         if(pcl_viewer->contains("plot_cur_pts"))
