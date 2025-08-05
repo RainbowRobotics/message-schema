@@ -93,6 +93,7 @@ void CONFIG::load()
 
     load_robot_config(obj);
     load_sensors_config(obj);
+    load_localization_config(obj);
     load_localization_2d_config(obj);
     load_localization_3d_config(obj);
     load_network_config(obj);
@@ -149,13 +150,20 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
-    check_and_set_bool(obj_sensors,   "USE_ARUCO",      USE_ARUCO,     "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_3D_NUM",   LIDAR_3D_NUM,  "sensors");
     check_and_set_int(obj_sensors,    "CAM_NUM",        CAM_NUM,       "sensors");
     check_and_set_string(obj_sensors, "LIDAR_2D_TYPE",  LIDAR_2D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "LIDAR_3D_TYPE",  LIDAR_3D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
+}
+
+void CONFIG::load_localization_config(const QJsonObject &obj)
+{
+    QJsonObject obj_loc = obj["localization"].toObject();
+
+    check_and_set_string(obj_loc,   "MODE",             LOC_MODE,       "localization");
+    check_and_set_bool(obj_loc,     "USE_ARUCO",        USE_ARUCO,      "localization");
 }
 
 void CONFIG::load_localization_2d_config(const QJsonObject &obj)
