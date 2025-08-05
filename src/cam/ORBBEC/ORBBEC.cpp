@@ -294,6 +294,7 @@ void ORBBEC::grab_loop(int idx)
                 scan.t = t;
                 scan.pts = std::move(pts);
 
+
                 depth_que[idx].push(scan);
                 if(depth_que[idx].unsafe_size() > 10)
                 {
@@ -318,9 +319,13 @@ void ORBBEC::grab_loop(int idx)
                 double t = static_cast<double>(ts) / 1000.0;
 
                 std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-                cv::Mat img;
-                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+//                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
+//                cv::Mat img;
+//                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                const uchar* dataPtr = static_cast<const uchar*>(colorFrame->data());
+                std::vector<uchar> buf(dataPtr, dataPtr + colorFrame->dataSize());
+                cv::Mat encoded(1, colorFrame->dataSize(), CV_8UC1, buf.data());
+                cv::Mat img = cv::imdecode(encoded, cv::IMREAD_COLOR);
 
                 if(!img.empty())
                 {
@@ -328,6 +333,7 @@ void ORBBEC::grab_loop(int idx)
                     time_img.t = t;
                     time_img.img = img;
 
+                    img_que[idx].push(time_img);
                     if(img_que[idx].unsafe_size() > 10)
                     {
                         TIME_IMG dummy;

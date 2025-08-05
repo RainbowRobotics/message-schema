@@ -141,6 +141,7 @@ public:
     void plot_mapping();
     void plot_obs();
     void plot_ctrl();
+    void plot_cam();
     void plot_tractile();
     void plot_process_time();
 

@@ -76,6 +76,7 @@ public:
     void set_mobile_module(MOBILE* _mobile);
     void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
     void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
+    void set_cam_module(CAM *_cam);
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
 

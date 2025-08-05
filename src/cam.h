@@ -40,6 +40,7 @@ public:
     TIME_IMG get_time_img(int idx);     // get current image (with time)
     TIME_PTS get_scan(int idx);         // get current depth (with time)
 
+    bool get_connection(int idx);
     double get_process_time_post(int idx);
 
     // interface func (set)

@@ -358,7 +358,7 @@ void MainWindow::init_modules()
         LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
         LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        //LOCALIZATION::instance()->set_cam_module(CAM::instance());
+        LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
         LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
     }
@@ -3409,6 +3409,31 @@ void MainWindow::plot_ctrl()
                               arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
 
+void MainWindow::plot_cam()
+{
+    if(CAM::instance()->get_connection(0))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(0).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
+//    if(cam.is_connected[1])
+//    {
+//        cv::Mat plot = cam.get_img(1);
+//        if(!plot.empty())
+//        {
+//            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+//            ui->lb_Screen3->setScaledContents(true);
+//            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+//        }
+//    }
+}
+
 void MainWindow::plot_tractile()
 {
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
@@ -3513,6 +3538,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
+    plot_cam();
     plot_tractile();
     plot_process_time();
 

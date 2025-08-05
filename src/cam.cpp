@@ -111,6 +111,11 @@ void CAM::open()
     }
 }
 
+bool CAM::get_connection(int idx)
+{
+    return is_connected[idx];
+}
+
 double CAM::get_process_time_post(int idx)
 {
     return (double)process_time_post[idx].load();
@@ -130,7 +135,8 @@ TIME_PTS CAM::get_scan(int idx)
 
 void CAM::post_process_loop(int idx)
 {
-    const double dt = 0.025; // 40hz
+//    const double dt = 0.025; // 40hz
+    const double dt = 0.1; // 10hz
     double pre_loop_time = get_time();
 
     while(post_process_flag)

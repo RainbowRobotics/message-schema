@@ -20,6 +20,7 @@ LOCALIZATION::LOCALIZATION(QObject *parent) : QObject{parent},
     mobile(nullptr),
     lidar_2d(nullptr),
     lidar_3d(nullptr),
+    cam(nullptr),
     unimap(nullptr),
     obsmap(nullptr)
 {
@@ -1630,6 +1631,11 @@ void LOCALIZATION::set_lidar_2d_module(LIDAR_2D *_lidar_2d)
 void LOCALIZATION::set_lidar_3d_module(LIDAR_3D *_lidar_3d)
 {
     lidar_3d = _lidar_3d;
+}
+
+void LOCALIZATION::set_cam_module(CAM *_cam)
+{
+    cam = _cam;
 }
 
 void LOCALIZATION::set_unimap_module(UNIMAP *_unimap)
