@@ -2,7 +2,8 @@
     "robot": {
         "PLATFORM_NAME": "SEM",
         "PLATFORM_TYPE": "D400",
-        
+        "SPEAKER": true,
+      
         "ROBOT_SIZE_MAX_X": "0.56",
         "ROBOT_SIZE_MAX_Y": "0.375",
         "ROBOT_SIZE_MAX_Z": "1.5",
@@ -40,7 +41,7 @@
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": true,
+        "USE_SIM": false,
         "USE_QTUI": false,
         "USE_BEEP": true
     },
@@ -105,9 +106,7 @@
         "MOTOR_LIMIT_V": "1.0",
         "MOTOR_LIMIT_V_ACC": "1.0",
         "MOTOR_LIMIT_W": "90",
-        "MOTOR_LIMIT_W_ACC": "90",
-        "MOTOR_SAFETY_LIMIT_V": "1.5",
-        "MOTOR_SAFETY_LIMIT_W": "110"
+        "MOTOR_LIMIT_W_ACC": "90"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -175,7 +174,7 @@
     },
     "docking": {
     	"DOCKING_POINTDOCK_MARGIN": "0.3",
-    	"DOCKING_GOAL_D": "0.03", 
+    	"DOCKING_GOAL_D": "0.025", 
     	"DOCKING_GOAL_TH": "0.005",
     	"DOCKING_TYPE": "0",
     	"DOCKING_ICP_ERR_THRESHOLD": "0.01",
@@ -183,18 +182,18 @@
     	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX": "2.8",
     	"DOCKING_CLUST_ANGLE_THRESHOLD": "0.785398",
     	"DOCKING_CLUST_DIST_THRESHOLD_MAX": "2.8",
-    	"DOCKING_KD_th": "0.15",
+   	"DOCKING_KD_th": "0.15",
     	"DOCKING_KP_th": "0.25",
     	"DOCKING_KD_d": "0.2",
     	"DOCKING_KP_d": "0.25",
     	"DOCKING_DWA_YAW_WEIGTH": "0.25",
     	"DOCKING_CHECK_MOTOR_A": "300.0",
-    	"DOCKING_X_OFFSET": "0.0",
-    	"DOCKING_Y_OFFSET": "-0.075",
-    	"DOCKING_LINEAR_X_OFFSET": "-0.035"
+	"DOCKING_X_OFFSET": "0.0",
+    	"DOCKING_Y_OFFSET": "-0.007"
     },
     "map": {
-        "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
+        "MAP_PATH": "/home/rainbow/maps/250519_unicos"
     }
 }
+
 

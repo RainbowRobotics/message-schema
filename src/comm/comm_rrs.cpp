@@ -55,7 +55,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "lidarFieldSet",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "fieldRequest",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -324,6 +324,10 @@ void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& 
         // parsing
         DATA_FIELD msg;
         msg.command = get_json(data, "command"); // "set", "get"
+        msg.set_field = get_json(data, "set_field").toInt();
+
+
+        qDebug() << "recv_field_set_field:" << msg.set_field;
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
@@ -1574,13 +1578,17 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 
 void COMM_RRS::slot_field_set(DATA_FIELD msg)
 {
+
     const QString command = msg.command;
 
     if(command == "set")
     {
-        msg.result = "accept";
+        msg.result = "success";
+        qDebug() << "slot msg.sef_field:" << msg.set_field;
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
+
+        qDebug() << "parsing filed set:" << set_field_;
 
         if(mobile)
         {
@@ -1592,12 +1600,13 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
 
     else if (command == "get")
     {
-        msg.result = "accept";
+        msg.result = "success";
         msg.message = "";
 
         if(mobile)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
+            qDebug() << ms.lidar_field;
             msg.get_field = ms.lidar_field;
         }
 
@@ -2149,7 +2158,7 @@ void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
 
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("fieldSetResponse", res);
+    io->socket()->emit("fieldResponse", res);
 
     // for plot
     mtx.lock();
@@ -2168,12 +2177,12 @@ void COMM_RRS::send_field_get_response(const DATA_FIELD& msg)
     obj["command"] = msg.command;
     obj["result"] = msg.result;
     obj["message"] = msg.message;
-    obj["getfield"] = QString::number(msg.get_field);
+    obj["get_field"] = QString::number(msg.get_field);
     obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("fieldGetResponse", res);
+    io->socket()->emit("fieldResponse", res);
 
     // for plot
     mtx.lock();

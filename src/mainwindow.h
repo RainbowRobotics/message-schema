@@ -72,7 +72,9 @@ public:
     void set_opacity(QWidget* w, double opacity);
     void init_modules();
     void setup_vtk();
+    void speaker_handler(int cnt);
     int led_handler();
+
 
     QString get_map_path();
     void set_map_path(const QString& path);

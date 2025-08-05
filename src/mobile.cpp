@@ -794,7 +794,6 @@ void MOBILE::recv_loop()
                             // safety
                             mobile_status.auto_manual_sw = auto_manual_sw;
                             mobile_status.brake_release_sw = brake_sw;
-//                            qDebug() << "brake sw" << brake_sw ;
                             mobile_status.sw_reset = reset_sw;
                             mobile_status.sw_stop = stop_sw;
                             mobile_status.sw_start = start_sw;
@@ -1108,11 +1107,9 @@ void MOBILE::recv_loop()
             }
         }
 
-//        qDebug()<<vx0*pre_loop_time;
         mtx.lock();
         distance = vx0*pre_loop_time;
         mtx.unlock();
-//        qDebug()<<"distance : "<<distance;
 
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;
@@ -2085,7 +2082,6 @@ void MOBILE::set_IO_output(unsigned char [])
     send_byte[6] = 0x00; // 0~1
     send_byte[7] = 0x00; // cmd
 
-//    float parameter = (float)param; // 1 -detect mode || 2 - detect mode not used
     for(int i=0; i<16; i++)
     {
         send_byte[i+8] = cur_setting.d_out[i];
@@ -2098,6 +2094,58 @@ void MOBILE::set_IO_output(unsigned char [])
         msg_que.push(send_byte);
     }
 }
+
+void MOBILE::set_IO_individual_output(unsigned char target, unsigned int n)
+{
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA1;
+
+    //notice
+    //0~7 : MCU1 I/O pin
+    //8~15: MCU2 I/O pin
+    send_byte[6] = target; // target - 0 ~15
+    send_byte[7] = 0x01; // command
+
+    // n = 0 low
+    // n = 1 high
+    unsigned int para1 = n;
+    memcpy(&send_byte[8], &para1, 4);
+
+    send_byte[24] = 0x25;
+
+
+    if(is_connected && !config->get_use_sim())
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::sem_io_speaker(unsigned int speak_num)
+{
+    uint8_t io_bitmask = 0;
+    io_bitmask = speak_num & 0x0F;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        bool new_state = (io_bitmask >> i) & 0x01;
+
+        if (speaker_io_state[i] != new_state)
+        {
+            speaker_io_state[i] = new_state;
+            set_IO_individual_output(static_cast<unsigned char>(i), new_state ? 1 : 0);
+        }
+    }
+
+}
+
 
 // send loop
 void MOBILE::send_loop()

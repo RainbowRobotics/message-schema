@@ -1669,6 +1669,7 @@ void MainWindow::jog_loop()
 void MainWindow::watch_loop()
 {
     int cnt = 0;
+    int speaker_cnt = 0;
     int loc_fail_cnt = 0;
     double last_sync_time = 0;
 
@@ -1748,6 +1749,12 @@ void MainWindow::watch_loop()
             int led_state = led_handler();
             MOBILE::instance()->led(0, led_state);
 
+            // speaker logic
+            if(CONFIG::instance()->get_robot_use_speaker() == true)
+            {
+                speaker_cnt++;
+                speaker_handler(speaker_cnt);
+            }
 
             // check mobile
             if(MOBILE::instance()->get_is_connected())
@@ -3520,12 +3527,67 @@ void MainWindow::plot_loop()
     plot_timer->start();
 }
 
+void MainWindow::speaker_handler(int speaker_cnt)
+{
+    MOBILE_STATUS ms = MOBILE::instance()->get_status();
+
+    int speak_code = 0;
+
+    // autodrive
+    if (AUTOCONTROL::instance()->get_is_moving())
+    {
+
+        double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+        if (obs_d < 1.0)
+        {
+            speak_code = 10;
+        }
+        else if (obs_d < 2.0)
+        {
+            speak_code = 10;
+        }
+        else
+        {
+            speak_code = 2;
+        }
+
+        if (DOCKCONTROL::instance()->get_dock_fsm_state() != DOCKING_FSM_OFF)
+        {
+            speak_code = 3;
+        }
+    }
+    else
+    {
+        if (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL)
+        {
+            speak_code = 11;
+        }
+    }
+
+
+    if (speaker_cnt % 8 == 0)
+    {
+        MOBILE::instance()->sem_io_speaker(speak_code);
+    }
+
+    else if (speaker_cnt % 8 == 2)
+    {
+        MOBILE::instance()->sem_io_speaker(0);
+    }
+}
+
 int MainWindow::led_handler()
 {
     MOBILE_STATUS ms;
+    ms = MOBILE::instance()->get_status();
 
     int led_out = SAFETY_LED_OFF;
 
+    if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
+    {
+        led_out = SAFETY_LED_RED;
+        return led_out;
+    }
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
     {
@@ -3534,7 +3596,6 @@ int MainWindow::led_handler()
         if(ms.charge_state == CHARGING_STATION_CHARGING)
         {
             //docking process sucess
-            qDebug() << "SAFETY_LED_CONTRACTING_GREEN";
             led_out = SAFETY_LED_CONTRACTING_GREEN;
             return led_out;
         }
@@ -3544,7 +3605,6 @@ int MainWindow::led_handler()
 
         if(!(dock_fsm_state_ == DOCKING_FSM_OFF))
         {
-            qDebug() << "SAFETY_LED_WHITE_WAVERING";
             //docking process..
             led_out = SAFETY_LED_WHITE_WAVERING;
             return led_out;
@@ -3555,7 +3615,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 1.0)
         {
-            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
+//            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
 
@@ -3563,7 +3623,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 2.0)
         {
-            qDebug() << "SAFETY_LED_PURPLE";
+//            qDebug() << "SAFETY_LED_PURPLE";
             led_out = SAFETY_LED_PURPLE;
             return led_out;
 
@@ -3572,7 +3632,7 @@ int MainWindow::led_handler()
         else
         {
             //normal auto drive led
-            qDebug() << "SAFETY_LED_GREEN_BLINKING";
+//            qDebug() << "SAFETY_LED_GREEN_BLINKING";
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
@@ -3581,12 +3641,11 @@ int MainWindow::led_handler()
     // not autodrive led control
     else
     {
-
-        if(ms.om_state == SM_OM_POWER_OFF)
+        if(ms.om_state == SM_OM_ROBOT_POWER_OFF)
         {
             // Pc boot up
             led_out = SAFETY_LED_YELLOW;
-
+//            qDebug() << "led yellow";
             // Brkae release
             if(ms.brake_release_sw == 1)
             {
@@ -3594,10 +3653,9 @@ int MainWindow::led_handler()
                 return led_out;
             }
         }
-
         else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
         {
-            qDebug() << "SAFETY_LED_CYAN";
+//            qDebug() << "SAFETY_LED_CYAN";
             led_out = SAFETY_LED_CYAN;
             return led_out;
         }

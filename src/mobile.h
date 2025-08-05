@@ -39,6 +39,7 @@ public:
     bool get_is_connected();
     bool get_is_synced();
     bool get_is_inter_lock_foot();
+    bool get_is_speaker_on();
     double get_last_pose_t();
     double get_process_time_mobile();
     QString get_cur_pdu_state();
@@ -108,8 +109,9 @@ public:
     void make_ref_offset(double var);
     void set_detect_mode(double var);
     void set_IO_output(unsigned char[]);
+    void set_IO_individual_output(unsigned char target, unsigned int n);
     void lift_power_onoff(int param);
-
+    void sem_io_speaker(unsigned int speak_num);
 
 //    float mileage = 0.0;
 private:
@@ -154,7 +156,6 @@ private:
     QString cur_pdu_state = "none";
 
     std::atomic<bool> is_inter_lock_foot = {false};
-
     std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};
     std::atomic<bool> is_synced = {false};
@@ -163,7 +164,7 @@ private:
 
     std::atomic<double> process_time_mobile = {0.0};
 
-     std::atomic<double> distance = 0.0;
+    std::atomic<double> distance = 0.0;
 
     std::atomic<double> last_pose_t = {0};
     std::atomic<double> last_imu_t = {0};
@@ -175,6 +176,9 @@ private:
 
     QString pose_text;
     QString status_text;
+
+    // device varibale
+    bool speaker_io_state[4] = {false,};
 
 };
 

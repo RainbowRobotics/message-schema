@@ -123,6 +123,7 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
     check_and_set_string(obj_robot, "MILEAGE",        MILEAGE,      "robot");
+    check_and_set_bool  (obj_robot, "SPEAKER",        USE_SPEAKER,  "robot");
 
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
@@ -721,6 +722,13 @@ double CONFIG::get_robot_radius()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_RADIUS;
+}
+
+
+bool CONFIG::get_robot_use_speaker()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_SPEAKER;
 }
 
 bool CONFIG::get_use_lidar_2d()

@@ -65,6 +65,7 @@ public:
     double get_robot_wheel_base();      // the distance between the robot's two wheels
     double get_robot_wheel_radius();    // robot wheel radius (mm)
     double get_robot_radius();          // robot radius (auto calc)
+    bool get_robot_use_speaker();     // robot io-speaker use
 
     /***********************
      * sensor common
@@ -318,6 +319,7 @@ private:
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
+    bool USE_SPEAKER = false;
 
     // sensors
     bool USE_LIDAR_2D = false;
