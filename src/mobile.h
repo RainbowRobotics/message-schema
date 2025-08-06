@@ -48,6 +48,8 @@ public:
 
     double get_move_distance();
 
+    double get_battery_soc();
+
     MOBILE_POSE get_pose();
     MOBILE_POSE get_best_mo(double ref_t);
     MOBILE_STATUS get_status();
@@ -113,6 +115,7 @@ public:
     void lift_power_onoff(int param);
     void sem_io_speaker(unsigned int speak_num);
 
+
 //    float mileage = 0.0;
 private:
     explicit MOBILE(QObject *parent = nullptr);
@@ -154,6 +157,8 @@ private:
     MOBILE_SETTING cur_setting;
     Eigen::Vector3d cur_imu;
     QString cur_pdu_state = "none";
+
+    std::atomic<double> bat_soc = 0.0;
 
     std::atomic<bool> is_inter_lock_foot = {false};
     std::atomic<bool> is_connected = {false};

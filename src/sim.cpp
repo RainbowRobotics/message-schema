@@ -122,9 +122,6 @@ void SIM::simulation_loop()
         MOBILE_POSE pose;
         pose.t = sim_t;
         pose.pose = cur_xi;
-
-        distance = vx0*dt;
-
         pose.vel = Eigen::Vector3d(vx, vy, wz);
 
         MOBILE_STATUS status;        
@@ -145,6 +142,8 @@ void SIM::simulation_loop()
         // for real time loop
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
+
+
         if(delta_loop_time < dt)
         {
             int sleep_ms = (dt-delta_loop_time)*1000;
@@ -154,6 +153,7 @@ void SIM::simulation_loop()
         {
             //printf("[SIM] a_loop loop time drift, dt:%f\n", delta_loop_time);
         }
+        distance += vx0*dt;
         pre_loop_time = get_time();
     }
     printf("[SIM] simulation_loop stop\n");

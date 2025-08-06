@@ -108,6 +108,27 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
+//    // Shared memory 객체 생성
+//       QSharedMemory sharedMemory;
+//       sharedMemory.setKey("MyUniqueAppKey");
+
+//       // 이미 실행 중인 인스턴스가 있는지 확인
+//       if (sharedMemory.attach())
+//       {
+//           // 이미 실행 중이면 종료
+//   //        QMessageBox::warning(nullptr, "경고", "이미 프로그램이 실행 중입니다.");
+//           return 0;
+//       }
+//       else
+//       {
+//           // 첫 번째 인스턴스라면 공유 메모리 할당
+//           if (!sharedMemory.create(1))
+//           {
+//   //            QMessageBox::critical(nullptr, "에러", "공유 메모리를 생성할 수 없습니다.");
+//               return 0;
+//           }
+//       }
+
     // set VTK default option
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
     vtkObject::GlobalWarningDisplayOff();

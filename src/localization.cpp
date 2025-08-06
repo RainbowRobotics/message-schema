@@ -187,8 +187,7 @@ void LOCALIZATION::set_cur_loc_state(QString str)
 
 void LOCALIZATION::set_cur_ieir(Eigen::Vector2d ieir)
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    cur_ieir = ieir;
+    std::lock_guard<std::mutex> lock(mtx);    cur_ieir = ieir;
 }
 
 
@@ -196,9 +195,26 @@ QString LOCALIZATION::get_info_text()
 {
     Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());
     Eigen::Vector2d cur_ieir = get_cur_ieir();
+    Eigen::Matrix4d  cur_tf = get_cur_tf();
+
+    Eigen::Vector3d translation = cur_tf.block<3,1>(0,3);  // translation
+    double yaw_deg = atan2(cur_tf(1,0), cur_tf(0,0)) * 180.0 / M_PI;  // rotation
+
     QString loc_state = get_cur_loc_state();
-    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11").arg(cur_xi[0], 0, 'f', 2)                                                                                                   .arg(cur_xi[1], 0, 'f', 2)
-                                                                                                         .arg(loc_state);
+    //    QString str = QString("[LOC]\npos:%1,%2,%3\nerr:%4 %\nloc_t:%5,%6,%7,%8\nieir:(%9,%10)\nloc_state:%11")
+
+    QString str = QString("[LOC]\npos:%1,%2,%3\nloc_t:%4,%5,%6,%7\nieir:(%8,%9)\nloc_state:%10")
+            .arg(cur_xi[0], 0, 'f', 2)            // %1
+            .arg(cur_xi[1], 0, 'f', 2)            // %2
+            .arg(cur_xi[2], 0, 'f', 2)            // %3
+            //            .arg(cur_tf_err * 100, 0, 'f', 2)     // %4
+            .arg(translation[0], 0, 'f', 2)       // %5
+            .arg(translation[1], 0, 'f', 2)       // %6
+            .arg(translation[2], 0, 'f', 2)       // %7
+            .arg(yaw_deg, 0, 'f', 2)              // %8
+            .arg(cur_ieir[0], 0, 'f', 2)          // %9
+            .arg(cur_ieir[1], 0, 'f', 2)          // %10
+            .arg(loc_state);                      // %11
     return str;
 }
 

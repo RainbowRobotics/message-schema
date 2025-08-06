@@ -129,6 +129,8 @@ public:
     // for mileage
    double mileage = {0.0};
 
+   QString mileage_sum;
+
     // plot funcs
     void plot_map();
     void plot_node();

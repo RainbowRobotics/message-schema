@@ -224,6 +224,9 @@ private:
     double cur_obs_dist = 9999.0;
     std::vector<Eigen::Matrix4d> obs_traj;
 
+    // for obs distance
+    double max_check_range = 2.5;
+
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
     void signal_path(DATA_PATH msg);

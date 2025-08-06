@@ -104,6 +104,14 @@ void MOBILE::set_cur_pose(MOBILE_POSE mp)
     cur_pose = mp;
 }
 
+
+double MOBILE::get_battery_soc()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    double res = cur_status.tabos_soc;
+    return res;
+}
+
 void MOBILE::set_cur_status(MOBILE_STATUS ms)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -958,8 +966,12 @@ void MOBILE::recv_loop()
                                             mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
                                             mobile_status.lidar_field);
                                 mtx.lock();
+//                                set_battery_soc(mobile_status.tabos_soc);
                                 status_text = strS;
                                 mtx.unlock();
+
+
+
                             }
                             else if(robot_type == ROBOT_TYPE_MECANUM)
                             {
@@ -1113,6 +1125,15 @@ void MOBILE::recv_loop()
 
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;
+
+        float f_distance;
+
+        f_distance+=std::fabs(cur_pose.vel[0] *process_time_mobile);
+
+        mtx.lock();
+        distance = f_distance;
+        mtx.unlock();
+
         pre_loop_time = cur_loop_time;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

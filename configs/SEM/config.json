@@ -1,13 +1,12 @@
 {
     "robot": {
-        "PLATFORM_NAME": "SEM",
         "PLATFORM_TYPE": "D400",
         "SPEAKER": true,
       
         "ROBOT_SIZE_MAX_X": "0.56",
         "ROBOT_SIZE_MAX_Y": "0.375",
         "ROBOT_SIZE_MAX_Z": "1.5",
-        "ROBOT_SIZE_MIN_X": "-0.65",
+        "ROBOT_SIZE_MIN_X": "-0.56",
         "ROBOT_SIZE_MIN_Y": "-0.375",
         "ROBOT_SIZE_MIN_Z": "0",
         "ROBOT_WHEEL_BASE": "0.6585",
@@ -192,7 +191,11 @@
     	"DOCKING_Y_OFFSET": "-0.007"
     },
     "map": {
-        "MAP_PATH": "/home/rainbow/maps/250519_unicos"
+<<<<<<< Updated upstream
+        "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
+=======
+        "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
+>>>>>>> Stashed changes
     }
 }
 

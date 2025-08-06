@@ -137,9 +137,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-
-    CONFIG::instance()->set_mileage(QString::number(mileage));
-
+    CONFIG::instance()->set_mileage(mileage_sum);
 
     plot_timer->stop();
     delete ui;
@@ -457,6 +455,7 @@ void MainWindow::init_modules()
         UNIMAP::instance()->load_map(map_path);
     }
     all_update();
+    bt_Request();
 }
 
 void MainWindow::all_plot_clear()
@@ -1872,8 +1871,6 @@ void MainWindow::watch_loop()
 
         // plot mobile distance info
         {
-            if(MOBILE::instance()->get_is_connected())
-            {
                 double move_distance;
                 if(CONFIG::instance()->get_use_sim())
                 {
@@ -1883,16 +1880,13 @@ void MainWindow::watch_loop()
                 {
                     move_distance = MOBILE::instance()-> get_move_distance();
                 }
-                mileage +=abs(move_distance);
 
-                QString mileage_sum;
-                mileage_sum = "[Mileage] : "+QString::number(mileage);
+                float total_mileage = mileage + abs(move_distance);
+                mileage_sum = QString::number(total_mileage, 'f', 3);
 
                 // plot mobile pose
-                ui->lb_Mileage->setText(mileage_sum);
-            }
+                ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
         }
-//         CONFIG::instance()->set_mileage(QString::number(mileage));
 
         // Samsung's request
 //        // for 500ms loop
@@ -2380,7 +2374,11 @@ void MainWindow::plot_info()
 {
     // plot mobile info
     {
+//        MOBILE_STATUS ms = MOBILE::instance()->get_status();
+
+        double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
         ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
+
 
         if(MOBILE::instance()->get_is_connected())
         {
@@ -2389,6 +2387,8 @@ void MainWindow::plot_info()
 
             // plot mobile status
             ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
+
+            ui->lb_Battery->setText("[BAT]" + QString::number(tabos_battery_soc)+"%");
         }
     }
 
@@ -3442,7 +3442,7 @@ void MainWindow::plot_tractile()
 
     Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
 
-    /*
+
     // plot tactile
     {
         // erase first
@@ -3463,19 +3463,22 @@ void MainWindow::plot_tractile()
         std::vector<Eigen::Matrix4d> traj = AUTOCONTROL::instance()->calc_trajectory(vel, 0.2, 1.0, cur_tf);
         for(size_t p = 0; p < traj.size(); p++)
         {
-            QString name = QString("traj_%1").arg(p);
-            std::string name_str = name.toStdString();
+            if(p == traj.size()-1 || p % 50 == 0)
+            {
+                QString name = QString("traj_%1").arg(p);
+                std::string name_str = name.toStdString();
 
-            pcl_viewer->addCube(x_min, x_max,
-                                y_min, y_max,
-                                z_min, z_max, 1.0, 0.0, 0.0, name_str);
+                pcl_viewer->addCube(x_min, x_max,
+                                    y_min, y_max,
+                                    z_min, z_max, 1.0, 0.0, 0.0, name_str);
 
-            pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
-            pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
-            last_plot_tactile.push_back(name);
+                pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
+                pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
+                last_plot_tactile.push_back(name);
+            }
         }
     }
-    */
+
 
     // plot obs tactile
     {

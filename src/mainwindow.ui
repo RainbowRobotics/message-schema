@@ -47,342 +47,6 @@
     <property name="spacing">
      <number>0</number>
     </property>
-    <item row="1" column="1">
-     <widget class="QFrame" name="frame_3">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>100</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>8</pointsize>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <widget class="QDoubleSpinBox" name="spb_JogV">
-       <property name="geometry">
-        <rect>
-         <x>140</x>
-         <y>10</y>
-         <width>101</width>
-         <height>20</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string> mps</string>
-       </property>
-       <property name="maximum">
-        <double>2.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>0.300000000000000</double>
-       </property>
-      </widget>
-      <widget class="QDoubleSpinBox" name="spb_JogW">
-       <property name="geometry">
-        <rect>
-         <x>140</x>
-         <y>50</y>
-         <width>101</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string> dps</string>
-       </property>
-       <property name="maximum">
-        <double>120.000000000000000</double>
-       </property>
-       <property name="value">
-        <double>45.000000000000000</double>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_MotorInit">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>31</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Init</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_Emergency">
-       <property name="geometry">
-        <rect>
-         <x>250</x>
-         <y>10</y>
-         <width>71</width>
-         <height>81</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(246, 97, 81);</string>
-       </property>
-       <property name="text">
-        <string>Emergency
-stop</string>
-       </property>
-      </widget>
-      <widget class="QDoubleSpinBox" name="spb_AccV">
-       <property name="geometry">
-        <rect>
-         <x>140</x>
-         <y>30</y>
-         <width>51</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <double>120.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>0.300000000000000</double>
-       </property>
-      </widget>
-      <widget class="QDoubleSpinBox" name="spb_DecelV">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>30</y>
-         <width>51</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <double>120.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-       <property name="value">
-        <double>0.600000000000000</double>
-       </property>
-      </widget>
-      <widget class="QDoubleSpinBox" name="spb_AccW">
-       <property name="geometry">
-        <rect>
-         <x>140</x>
-         <y>70</y>
-         <width>51</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <double>120.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>5.000000000000000</double>
-       </property>
-       <property name="value">
-        <double>30.000000000000000</double>
-       </property>
-      </widget>
-      <widget class="QDoubleSpinBox" name="spb_DecelW">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>70</y>
-         <width>51</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="suffix">
-        <string/>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <double>120.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>5.000000000000000</double>
-       </property>
-       <property name="value">
-        <double>60.000000000000000</double>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogR">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▶</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogB">
-       <property name="geometry">
-        <rect>
-         <x>50</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▼</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogF">
-       <property name="geometry">
-        <rect>
-         <x>50</x>
-         <y>10</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>▲</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="bt_JogL">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>50</y>
-         <width>41</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>8</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>◀</string>
-       </property>
-       <property name="autoRepeat">
-        <bool>false</bool>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>100</number>
-       </property>
-      </widget>
-     </widget>
-    </item>
     <item row="0" column="0" rowspan="2">
      <widget class="QTabWidget" name="main_tab">
       <property name="font">
@@ -607,12 +271,12 @@ stop</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="lb_Version">
+             <widget class="QLabel" name="lb_Battery">
               <property name="styleSheet">
-               <string notr="true">background-color: rgb(87, 227, 137);</string>
+               <string notr="true">background-color: rgb(153, 193, 241);</string>
               </property>
               <property name="text">
-               <string>Version:250522_00</string>
+               <string>[Battery] </string>
               </property>
              </widget>
             </item>
@@ -638,7 +302,7 @@ stop</string>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>40</width>
+                <width>20</width>
                 <height>20</height>
                </size>
               </property>
@@ -1167,8 +831,26 @@ out</string>
       </widget>
      </widget>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="1" rowspan="2">
      <widget class="QTabWidget" name="menu_tab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>70</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>330</width>
+        <height>16777215</height>
+       </size>
+      </property>
       <property name="font">
        <font>
         <pointsize>8</pointsize>
@@ -1177,9 +859,9 @@ out</string>
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tab_S">
+      <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
-        <string>S</string>
+        <string>ROBOT</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <property name="spacing">
@@ -1198,7 +880,7 @@ out</string>
          <number>0</number>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -1214,7 +896,7 @@ out</string>
           <item>
            <widget class="QTabWidget" name="tabWidget">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -1222,7 +904,13 @@ out</string>
             <property name="minimumSize">
              <size>
               <width>330</width>
-              <height>130</height>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>330</width>
+              <height>500</height>
              </size>
             </property>
             <property name="font">
@@ -1241,7 +929,7 @@ out</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1259,7 +947,7 @@ out</string>
               <property name="geometry">
                <rect>
                 <x>60</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1277,7 +965,7 @@ out</string>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1295,7 +983,7 @@ out</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1310,10 +998,13 @@ out</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_LocInitAuto">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1332,7 +1023,7 @@ out</string>
               <property name="geometry">
                <rect>
                 <x>160</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1351,7 +1042,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1373,7 +1064,7 @@ stop</string>
               <property name="geometry">
                <rect>
                 <x>160</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1392,7 +1083,7 @@ init</string>
               <property name="geometry">
                <rect>
                 <x>260</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1411,7 +1102,7 @@ clear</string>
               <property name="geometry">
                <rect>
                 <x>260</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1430,7 +1121,7 @@ config</string>
               <property name="geometry">
                <rect>
                 <x>60</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1449,7 +1140,7 @@ config</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1473,7 +1164,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1487,7 +1178,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>60</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1501,7 +1192,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>110</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1515,7 +1206,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>160</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1528,7 +1219,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1541,7 +1232,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>260</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1554,7 +1245,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1566,15 +1257,15 @@ LC</string>
              <widget class="QLabel" name="lb_Mileage">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>130</y>
-                <width>161</width>
-                <height>51</height>
+                <x>70</x>
+                <y>50</y>
+                <width>241</width>
+                <height>41</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <pointsize>7</pointsize>
+                <pointsize>15</pointsize>
                </font>
               </property>
               <property name="focusPolicy">
@@ -1602,7 +1293,7 @@ LC</string>
               <property name="geometry">
                <rect>
                 <x>80</x>
-                <y>30</y>
+                <y>10</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
@@ -1625,7 +1316,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>30</y>
+                <y>10</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
@@ -1648,7 +1339,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1661,7 +1352,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>190</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1674,7 +1365,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>240</x>
-                <y>30</y>
+                <y>10</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -1685,6 +1376,9 @@ start</string>
              </widget>
             </widget>
             <widget class="QWidget" name="tab_3">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <attribute name="title">
               <string>Task</string>
              </attribute>
@@ -1692,7 +1386,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>50</y>
+                <y>30</y>
                 <width>101</width>
                 <height>21</height>
                </rect>
@@ -1705,7 +1399,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>90</y>
+                <y>70</y>
                 <width>51</width>
                 <height>21</height>
                </rect>
@@ -1718,7 +1412,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>111</y>
+                <y>91</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
@@ -1734,7 +1428,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>90</y>
+                <y>70</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1747,7 +1441,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>30</y>
+                <y>10</y>
                 <width>101</width>
                 <height>21</height>
                </rect>
@@ -1760,7 +1454,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>110</y>
+                <y>90</y>
                 <width>101</width>
                 <height>21</height>
                </rect>
@@ -1781,7 +1475,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>70</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>21</height>
                </rect>
@@ -1794,7 +1488,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>70</x>
-                <y>90</y>
+                <y>70</y>
                 <width>51</width>
                 <height>21</height>
                </rect>
@@ -1807,7 +1501,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>70</y>
+                <y>50</y>
                 <width>51</width>
                 <height>21</height>
                </rect>
@@ -1820,7 +1514,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>28</y>
+                <y>8</y>
                 <width>161</width>
                 <height>61</height>
                </rect>
@@ -1830,7 +1524,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>110</y>
+                <y>90</y>
                 <width>91</width>
                 <height>21</height>
                </rect>
@@ -1855,7 +1549,7 @@ start</string>
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>90</y>
+                <y>70</y>
                 <width>71</width>
                 <height>23</height>
                </rect>
@@ -1866,6 +1560,9 @@ start</string>
              </widget>
             </widget>
             <widget class="QWidget" name="tab_6">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <attribute name="title">
               <string>fms</string>
              </attribute>
@@ -1918,9 +1615,9 @@ start</string>
              <widget class="QPushButton" name="bt_Sync">
               <property name="geometry">
                <rect>
-                <x>240</x>
-                <y>150</y>
-                <width>81</width>
+                <x>232</x>
+                <y>130</y>
+                <width>80</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1931,9 +1628,9 @@ start</string>
              <widget class="QPushButton" name="bt_Test">
               <property name="geometry">
                <rect>
-                <x>130</x>
-                <y>150</y>
-                <width>51</width>
+                <x>117</x>
+                <y>130</y>
+                <width>50</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1944,9 +1641,9 @@ start</string>
              <widget class="QSpinBox" name="spb_Led">
               <property name="geometry">
                <rect>
-                <x>190</x>
-                <y>130</y>
-                <width>51</width>
+                <x>177</x>
+                <y>110</y>
+                <width>50</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1957,9 +1654,9 @@ start</string>
              <widget class="QPushButton" name="bt_TestLed">
               <property name="geometry">
                <rect>
-                <x>240</x>
-                <y>130</y>
-                <width>81</width>
+                <x>232</x>
+                <y>110</y>
+                <width>80</width>
                 <height>20</height>
                </rect>
               </property>
@@ -1970,9 +1667,9 @@ start</string>
              <widget class="QCheckBox" name="ckb_TestDebug">
               <property name="geometry">
                <rect>
-                <x>60</x>
-                <y>150</y>
-                <width>61</width>
+                <x>47</x>
+                <y>130</y>
+                <width>60</width>
                 <height>20</height>
                </rect>
               </property>
@@ -1983,9 +1680,9 @@ start</string>
              <widget class="QPushButton" name="bt_TestImgSave">
               <property name="geometry">
                <rect>
-                <x>130</x>
-                <y>130</y>
-                <width>51</width>
+                <x>117</x>
+                <y>110</y>
+                <width>50</width>
                 <height>21</height>
                </rect>
               </property>
@@ -1996,9 +1693,9 @@ start</string>
              <widget class="QLabel" name="label_3">
               <property name="geometry">
                <rect>
-                <x>100</x>
+                <x>92</x>
                 <y>40</y>
-                <width>21</width>
+                <width>20</width>
                 <height>16</height>
                </rect>
               </property>
@@ -2009,7 +1706,7 @@ start</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveLinearDist">
               <property name="geometry">
                <rect>
-                <x>40</x>
+                <x>36</x>
                 <y>40</y>
                 <width>51</width>
                 <height>21</height>
@@ -2028,9 +1725,9 @@ start</string>
              <widget class="QPushButton" name="bt_MoveRotate">
               <property name="geometry">
                <rect>
-                <x>170</x>
+                <x>162</x>
                 <y>80</y>
-                <width>81</width>
+                <width>80</width>
                 <height>21</height>
                </rect>
               </property>
@@ -2041,9 +1738,9 @@ start</string>
              <widget class="QPushButton" name="bt_MoveStop">
               <property name="geometry">
                <rect>
-                <x>260</x>
+                <x>252</x>
                 <y>40</y>
-                <width>61</width>
+                <width>60</width>
                 <height>61</height>
                </rect>
               </property>
@@ -2057,9 +1754,9 @@ start</string>
              <widget class="QPushButton" name="bt_MoveLinearY">
               <property name="geometry">
                <rect>
-                <x>170</x>
+                <x>162</x>
                 <y>60</y>
-                <width>81</width>
+                <width>80</width>
                 <height>20</height>
                </rect>
               </property>
@@ -2070,9 +1767,9 @@ start</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveRotateW">
               <property name="geometry">
                <rect>
-                <x>120</x>
+                <x>112</x>
                 <y>80</y>
-                <width>51</width>
+                <width>50</width>
                 <height>21</height>
                </rect>
               </property>
@@ -2089,7 +1786,7 @@ start</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveRotateDeg">
               <property name="geometry">
                <rect>
-                <x>40</x>
+                <x>36</x>
                 <y>80</y>
                 <width>51</width>
                 <height>21</height>
@@ -2108,9 +1805,9 @@ start</string>
              <widget class="QLabel" name="label_5">
               <property name="geometry">
                <rect>
-                <x>100</x>
+                <x>92</x>
                 <y>80</y>
-                <width>21</width>
+                <width>20</width>
                 <height>17</height>
                </rect>
               </property>
@@ -2121,7 +1818,7 @@ start</string>
              <widget class="QLabel" name="label_2">
               <property name="geometry">
                <rect>
-                <x>10</x>
+                <x>6</x>
                 <y>40</y>
                 <width>31</width>
                 <height>20</height>
@@ -2142,7 +1839,7 @@ start</string>
              <widget class="QLabel" name="label_4">
               <property name="geometry">
                <rect>
-                <x>10</x>
+                <x>6</x>
                 <y>80</y>
                 <width>31</width>
                 <height>21</height>
@@ -2155,9 +1852,9 @@ start</string>
              <widget class="QDoubleSpinBox" name="dsb_MoveLinearV">
               <property name="geometry">
                <rect>
-                <x>120</x>
+                <x>112</x>
                 <y>40</y>
-                <width>51</width>
+                <width>50</width>
                 <height>21</height>
                </rect>
               </property>
@@ -2174,9 +1871,9 @@ start</string>
              <widget class="QPushButton" name="bt_MoveLinearX">
               <property name="geometry">
                <rect>
-                <x>170</x>
+                <x>162</x>
                 <y>40</y>
-                <width>81</width>
+                <width>80</width>
                 <height>20</height>
                </rect>
               </property>
@@ -2207,8 +1904,8 @@ start</string>
              <widget class="QPushButton" name="bt_QuickAddNode">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>210</y>
+                <x>65</x>
+                <y>160</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -2226,8 +1923,8 @@ Node</string>
              <widget class="QPushButton" name="bt_DelNode">
               <property name="geometry">
                <rect>
-                <x>80</x>
-                <y>210</y>
+                <x>125</x>
+                <y>160</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -2245,8 +1942,8 @@ Node</string>
              <widget class="QSpinBox" name="spb_PointSize">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>180</y>
+                <x>15</x>
+                <y>160</y>
                 <width>39</width>
                 <height>23</height>
                </rect>
@@ -2264,8 +1961,8 @@ Node</string>
              <widget class="QPushButton" name="bt_AnnotSave">
               <property name="geometry">
                <rect>
-                <x>140</x>
-                <y>210</y>
+                <x>185</x>
+                <y>160</y>
                 <width>51</width>
                 <height>31</height>
                </rect>
@@ -2285,12 +1982,21 @@ Save</string>
           </item>
           <item>
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="5" column="0">
-             <widget class="QLabel" name="lb_SystemInfo">
+            <item row="0" column="0">
+             <widget class="QLabel" name="lb_ProcTimeInfo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
                </font>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(255, 255, 255);</string>
@@ -2299,73 +2005,13 @@ Save</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[SYSTEM_INFO]</string>
+               <string>[PROC_INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="lb_QueInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[QUE_STATUS]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="lb_CommInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[COMM_INFO]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="lb_AutoInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[AUTO_INFO]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              <property name="wordWrap">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -2388,6 +2034,9 @@ Save</string>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="4" column="0">
@@ -2409,26 +2058,8 @@ Save</string>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="lb_MobileStatusInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[MOBILE_STATUS]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              <property name="wordWrap">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
@@ -2451,6 +2082,63 @@ Save</string>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="lb_QueInfo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[QUE_STATUS]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="lb_SystemInfo">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[SYSTEM_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="5" column="1">
@@ -2472,10 +2160,43 @@ Save</string>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="lb_MobileStatusInfo">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[MOBILE_STATUS]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="lb_SlamInfo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
@@ -2496,17 +2217,17 @@ Save</string>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
               </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="lb_ProcTimeInfo">
+            <item row="3" column="0">
+             <widget class="QLabel" name="lb_AutoInfo">
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
                </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
               </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(255, 255, 255);</string>
@@ -2515,247 +2236,397 @@ Save</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[PROC_INFO]</string>
+               <string>[AUTO_INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="lb_CommInfo">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[COMM_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
            </layout>
           </item>
+          <item>
+           <widget class="QFrame" name="frame_4">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <widget class="QDoubleSpinBox" name="spb_JogV">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>10</y>
+               <width>101</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string> mps</string>
+             </property>
+             <property name="maximum">
+              <double>2.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.300000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_JogW">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>50</y>
+               <width>101</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string> dps</string>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>45.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_MotorInit">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>31</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Init</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_Emergency">
+             <property name="geometry">
+              <rect>
+               <x>250</x>
+               <y>10</y>
+               <width>71</width>
+               <height>81</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(246, 97, 81);</string>
+             </property>
+             <property name="text">
+              <string>Emergency
+stop</string>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_AccV">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>30</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.300000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_DecelV">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>30</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.600000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_AccW">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>70</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>5.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>30.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QDoubleSpinBox" name="spb_DecelW">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>70</y>
+               <width>51</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="suffix">
+              <string/>
+             </property>
+             <property name="decimals">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <double>120.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>5.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>60.000000000000000</double>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogR">
+             <property name="geometry">
+              <rect>
+               <x>90</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▶</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogB">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▼</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogF">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>10</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>▲</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="bt_JogL">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>50</y>
+               <width>41</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>◀</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoRepeatDelay">
+              <number>100</number>
+             </property>
+            </widget>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_B">
+      <widget class="QWidget" name="tab_PDU">
        <attribute name="title">
-        <string/>
+        <string>PDU</string>
        </attribute>
-       <widget class="QLineEdit" name="le_Safety_Emo_Pressed">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>20</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Op_Stop_State">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>230</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Speed_Field_Mismatch">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>140</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Ref_Meas_Mismatch">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>50</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Bumper_Stop">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>200</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Over_Speed">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>80</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Obstacle_Detect">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>110</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Safety_Interlock_Stop">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>170</y>
-          <width>31</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_ClearObs">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>110</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear obs</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_BumperStop">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>200</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear bumper</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_ClearInterlockStop">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>170</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear interlock</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_ClearOverSpd">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>80</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear over spd</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_ClearFieldMis">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>140</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear field mis</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_ClearMismatch">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>50</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>clear mis</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_Recover">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>230</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>recover</string>
-        </property>
-       </widget>
        <widget class="QPushButton" name="bt_SetDetectModeT">
         <property name="geometry">
          <rect>
           <x>60</x>
-          <y>270</y>
+          <y>250</y>
           <width>111</width>
           <height>25</height>
          </rect>
@@ -2768,7 +2639,7 @@ Save</string>
         <property name="geometry">
          <rect>
           <x>40</x>
-          <y>310</y>
+          <y>280</y>
           <width>131</width>
           <height>21</height>
          </rect>
@@ -2781,7 +2652,7 @@ Save</string>
         <property name="geometry">
          <rect>
           <x>180</x>
-          <y>310</y>
+          <y>280</y>
           <width>131</width>
           <height>21</height>
          </rect>
@@ -2790,89 +2661,11 @@ Save</string>
          <string>LIFT_POWER_OFF</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_30">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>340</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>OP Mode</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_32">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>380</y>
-          <width>91</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Charge State</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Charge_State">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>380</y>
-          <width>61</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Op_Mode">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>340</y>
-          <width>61</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Robot_Init_State">
-        <property name="geometry">
-         <rect>
-          <x>100</x>
-          <y>360</y>
-          <width>61</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_31">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>360</y>
-          <width>81</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>R Init State</string>
-        </property>
-       </widget>
        <widget class="QLabel" name="label_33">
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>270</y>
+          <y>250</y>
           <width>71</width>
           <height>21</height>
          </rect>
@@ -2881,82 +2674,11 @@ Save</string>
          <string>OSSD</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_34">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>360</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Lidar Filed (W))</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Lidar_Field_Read">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>340</y>
-          <width>41</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_35">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>340</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Lidar Filed (R)</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="bt_SetLidarField">
-        <property name="geometry">
-         <rect>
-          <x>170</x>
-          <y>390</y>
-          <width>151</width>
-          <height>25</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Set  Field</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Lidar_Field_Write">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>360</y>
-          <width>41</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="cursor">
-         <cursorShape>IBeamCursor</cursorShape>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
        <widget class="QPushButton" name="bt_SetDetectModeF">
         <property name="geometry">
          <rect>
           <x>180</x>
-          <y>270</y>
+          <y>250</y>
           <width>111</width>
           <height>25</height>
          </rect>
@@ -2965,538 +2687,1230 @@ Save</string>
          <string>no detect_mod</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_36">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>20</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>EMO</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_37">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>50</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Meas Mis</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_38">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>80</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Ovr Spd</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_39">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>110</y>
-          <width>81</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Obs Detect</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_40">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>140</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Field Mis</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_41">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>170</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Interlock</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_42">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>200</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>bumper</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_43">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>230</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>OP Mode</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_A">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>580</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_46">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>540</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit v</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_B_Jog">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>590</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_47">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>580</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit a</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_48">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>560</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit w</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_49">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>500</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>version</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_50">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>570</y>
-          <width>81</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit a(jog)</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_51">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>520</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>type</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_52">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>640</y>
-          <width>121</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit v(Monitor)</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_B">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>600</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_W_Monitor">
-        <property name="geometry">
-         <rect>
-          <x>130</x>
-          <y>620</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_V">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>540</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_53">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>550</y>
-          <width>81</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit w(jog)</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_W_Jog">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>550</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Version">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>500</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_54">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>590</y>
-          <width>81</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit b(jog)</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_55">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>620</y>
-          <width>111</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit w(Monitor)</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_V_Jog">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>530</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_56">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>600</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit b</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_W">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>560</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_V_Monitor">
-        <property name="geometry">
-         <rect>
-          <x>130</x>
-          <y>640</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Limit_A_Jog">
-        <property name="geometry">
-         <rect>
-          <x>240</x>
-          <y>570</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_57">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>530</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>limit v(jog)</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Type">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>520</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
        <widget class="QPushButton" name="bt_Request">
         <property name="geometry">
          <rect>
-          <x>140</x>
-          <y>460</y>
-          <width>131</width>
-          <height>21</height>
+          <x>160</x>
+          <y>400</y>
+          <width>160</width>
+          <height>20</height>
          </rect>
         </property>
         <property name="text">
          <string>request</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_58">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>450</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>wheel S</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_59">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>470</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>wheel R</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_60">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>490</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Gear</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_W_S">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>450</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_61">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>510</y>
-          <width>71</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Dir</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_W_R">
-        <property name="geometry">
-         <rect>
-          <x>70</x>
-          <y>470</y>
-          <width>51</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="le_Setting_Dir">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>180</x>
-          <y>510</y>
-          <width>51</width>
-          <height>16</height>
+          <y>440</y>
+          <width>135</width>
+          <height>152</height>
          </rect>
         </property>
-        <property name="text">
-         <string/>
-        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_60">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Gear</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_Setting_Gear">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_61">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Dir</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_Setting_Dir">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_57">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>limit v(jog)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_V_Jog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_53">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>limit w(jog)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_W_Jog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_50">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>limit a(jog)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_A_Jog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_54">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>limit b(jog)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_B_Jog">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
-       <widget class="QLineEdit" name="le_Setting_Gear">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
-          <x>180</x>
-          <y>490</y>
-          <width>51</width>
-          <height>16</height>
+          <x>10</x>
+          <y>440</y>
+          <width>171</width>
+          <height>256</height>
          </rect>
         </property>
-        <property name="text">
-         <string/>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_58">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>wheel S</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_Setting_W_S">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_59">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>wheel R</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_Setting_W_R">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_49">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>version</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="le_Setting_Version">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_51">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>type</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="le_Setting_Type">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_46">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit v</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_V">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_48">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit w</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_W">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_47">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit a</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_A">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_56">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit b</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_B">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_55">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>110</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit w(Monitor)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_W_Monitor">
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_52">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>110</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>limit v(Monitor)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="le_Setting_Limit_V_Monitor">
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>23</x>
+          <y>3</y>
+          <width>291</width>
+          <height>239</height>
+         </rect>
         </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_36">
+           <property name="maximumSize">
+            <size>
+             <width>50</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>EMO</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_Safety_Emo_Pressed">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_37">
+           <property name="text">
+            <string>Meas Mis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_Safety_Ref_Meas_Mismatch">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="bt_ClearMismatch">
+           <property name="text">
+            <string>clear mis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_38">
+           <property name="text">
+            <string>Ovr Spd</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="le_Safety_Over_Speed">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="bt_ClearOverSpd">
+           <property name="text">
+            <string>clear over spd</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_39">
+           <property name="text">
+            <string>Obs Detect</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="le_Safety_Obstacle_Detect">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QPushButton" name="bt_ClearObs">
+           <property name="text">
+            <string>clear obs</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_40">
+           <property name="text">
+            <string>Field Mis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="le_Safety_Speed_Field_Mismatch">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QPushButton" name="bt_ClearFieldMis">
+           <property name="text">
+            <string>clear field mis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_41">
+           <property name="text">
+            <string>Interlock</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="le_Safety_Interlock_Stop">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QPushButton" name="bt_ClearInterlockStop">
+           <property name="text">
+            <string>clear interlock</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_42">
+           <property name="text">
+            <string>bumper</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="le_Safety_Bumper_Stop">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="2">
+          <widget class="QPushButton" name="bt_BumperStop">
+           <property name="text">
+            <string>clear bumper</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_43">
+           <property name="text">
+            <string>OP Mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="le_Safety_Op_Stop_State">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QPushButton" name="bt_Recover">
+           <property name="text">
+            <string>recover</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>313</y>
+          <width>311</width>
+          <height>79</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_30">
+           <property name="text">
+            <string>OP Mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="le_Op_Mode">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_35">
+           <property name="text">
+            <string>Lidar Filed (R)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLineEdit" name="le_Lidar_Field_Read">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>R Init State</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_Robot_Init_State">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_34">
+           <property name="text">
+            <string>Lidar Filed (W))</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLineEdit" name="le_Lidar_Field_Write">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Charge State</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="le_Charge_State">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" colspan="2">
+          <widget class="QPushButton" name="bt_SetLidarField">
+           <property name="text">
+            <string>Set  Field</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </widget>
      </widget>
