@@ -895,6 +895,9 @@ out</string>
           </property>
           <item>
            <widget class="QTabWidget" name="tabWidget">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
               <horstretch>0</horstretch>
@@ -919,7 +922,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1609,10 +1612,16 @@ start</string>
              </widget>
             </widget>
             <widget class="QWidget" name="tab_5">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <attribute name="title">
-              <string>Test</string>
+              <string>Linear</string>
              </attribute>
              <widget class="QPushButton" name="bt_Sync">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>232</x>
@@ -1626,6 +1635,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_Test">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>117</x>
@@ -1639,6 +1651,9 @@ start</string>
               </property>
              </widget>
              <widget class="QSpinBox" name="spb_Led">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>177</x>
@@ -1652,6 +1667,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TestLed">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>232</x>
@@ -1665,6 +1683,9 @@ start</string>
               </property>
              </widget>
              <widget class="QCheckBox" name="ckb_TestDebug">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>47</x>
@@ -1678,6 +1699,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TestImgSave">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>117</x>
@@ -1736,6 +1760,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_MoveStop">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>252</x>
@@ -1902,6 +1929,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_QuickAddNode">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>65</x>
@@ -1921,6 +1951,9 @@ Node</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_DelNode">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>125</x>
@@ -1940,6 +1973,9 @@ Node</string>
               </property>
              </widget>
              <widget class="QSpinBox" name="spb_PointSize">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>15</x>
@@ -1959,6 +1995,9 @@ Node</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_AnnotSave">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>185</x>
@@ -1982,87 +2021,6 @@ Save</string>
           </item>
           <item>
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="0" column="0">
-             <widget class="QLabel" name="lb_ProcTimeInfo">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[PROC_INFO]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="lb_MobilePoseInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[MOBILE_POSE]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="lb_SensorInfo">
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[SENSOR_INFO]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item row="4" column="1">
              <widget class="QLabel" name="lb_LidarInfo_2D">
               <property name="font">
@@ -2078,36 +2036,6 @@ Save</string>
               </property>
               <property name="text">
                <string>[2D LIDAR INFO]</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="lb_QueInfo">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>7</pointsize>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(255, 255, 255);</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="text">
-               <string>[QUE_STATUS]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -2141,8 +2069,41 @@ Save</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
-             <widget class="QLabel" name="lb_LidarInfo_3D">
+            <item row="0" column="0">
+             <widget class="QLabel" name="lb_ProcTimeInfo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[PROC_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="lb_CommInfo">
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
@@ -2155,7 +2116,7 @@ Save</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[3D LIDAR INFO]</string>
+               <string>[COMM_INFO]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -2222,6 +2183,84 @@ Save</string>
               </property>
              </widget>
             </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="lb_QueInfo">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[QUE_STATUS]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="lb_LidarInfo_3D">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[3D LIDAR INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="lb_SensorInfo">
+              <property name="font">
+               <font>
+                <pointsize>7</pointsize>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 255);</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="text">
+               <string>[SENSOR_INFO]</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
             <item row="3" column="0">
              <widget class="QLabel" name="lb_AutoInfo">
               <property name="font">
@@ -2246,8 +2285,8 @@ Save</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="lb_CommInfo">
+            <item row="2" column="1">
+             <widget class="QLabel" name="lb_MobilePoseInfo">
               <property name="font">
                <font>
                 <pointsize>7</pointsize>
@@ -2260,7 +2299,7 @@ Save</string>
                <enum>QFrame::Box</enum>
               </property>
               <property name="text">
-               <string>[COMM_INFO]</string>
+               <string>[MOBILE_POSE]</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

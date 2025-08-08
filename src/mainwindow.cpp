@@ -2556,7 +2556,7 @@ void MainWindow::plot_safety()
     }
 
     //interlock detect
-    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
+    if(cur_status.safety_state_interlock_stop_1 || cur_status.safety_state_interlock_stop_2)
     {
         ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
     }
