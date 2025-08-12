@@ -166,6 +166,7 @@ void ORBBEC::grab_loop(int idx)
 
     auto dev_list = ctx.queryDeviceList();
     int dev_count = dev_list->deviceCount();
+
     if(dev_count == 0)
     {
         grab_flag[idx] = false;
@@ -174,7 +175,25 @@ void ORBBEC::grab_loop(int idx)
         return;
     }
 
-    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+//    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+    int dev_match_success = false;
+    int dev_idx = 0;
+    QString sn_connected = "";
+    for(int i=0; i<dev_count; i++)
+    {
+        QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+        if(sn == config->get_cam_serial_number(idx)){
+            dev_match_success = true;
+            dev_idx = i;
+            sn_connected = sn;
+            break;
+        }
+    }
+    if(dev_match_success == false){
+        grab_flag[idx] = false;
+        logger->write_log("[ORBBEC] no camera match", "Red");
+        return;
+    }
     //if(sn != config->get_cam_serial_number(idx))
     //{
     //    grab_flag[idx] = false;
@@ -182,7 +201,7 @@ void ORBBEC::grab_loop(int idx)
     //    logger->write_log("[ORBBEC] no camera", "Red");
     //    return;
     //}
-    logger->write_log(QString("[ORBBEC] detected serial number, sn:%1").arg(sn));
+    logger->write_log(QString("[ORBBEC] connected serial number, sn:%1").arg(sn_connected));
 
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
@@ -190,7 +209,7 @@ void ORBBEC::grab_loop(int idx)
     double voxel_size = config->get_mapping_voxel_size();
 
     // set cam
-    auto dev = dev_list->getDevice(idx);
+    auto dev = dev_list->getDevice(dev_idx);
     dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
     dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
 

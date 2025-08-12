@@ -355,7 +355,9 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
         {
             QJsonObject obj_cam = cam_arr[i].toObject();
             CAM_TF[i] = obj_cam["TF"].toString();
+            CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
             printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
+            printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
         }
     }
 }
