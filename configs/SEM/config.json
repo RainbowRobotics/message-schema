@@ -191,11 +191,7 @@
     	"DOCKING_Y_OFFSET": "-0.007"
     },
     "map": {
-<<<<<<< Updated upstream
         "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
-=======
-        "MAP_PATH": "/home/rainbow/maps/250429_unicos_update2"
->>>>>>> Stashed changes
     }
 }
 

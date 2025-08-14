@@ -1884,12 +1884,13 @@ void MainWindow::watch_loop()
 
             // plot mobile pose
             ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+
+            if(cnt % 600 == 0)
+            {
+                CONFIG::instance()->set_mileage(mileage_sum);
+            }
         }
 
-        if(cnt % 600 == 0)
-        {
-            CONFIG::instance()->set_mileage(mileage_sum);
-        }
 
         // Samsung's request
 //        // for 500ms loop
@@ -2559,7 +2560,7 @@ void MainWindow::plot_safety()
     }
 
     //interlock detect
-    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
+    if(cur_status.safety_state_interlock_stop_1 || cur_status.safety_state_interlock_stop_2)
     {
         ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
     }
