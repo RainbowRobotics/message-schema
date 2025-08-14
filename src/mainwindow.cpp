@@ -3435,6 +3435,26 @@ void MainWindow::plot_cam()
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+    if(CAM::instance()->get_connection(2))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(2).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen4->setScaledContents(true);
+            ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+    if(CAM::instance()->get_connection(3))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(3).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen5->setScaledContents(true);
+            ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
 }
 
 void MainWindow::plot_tractile()

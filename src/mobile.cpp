@@ -1119,6 +1119,10 @@ void MOBILE::recv_loop()
             }
         }
 
+//        mtx.lock();
+//        distance = vx0*pre_loop_time;
+//        mtx.unlock();
+
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;
 

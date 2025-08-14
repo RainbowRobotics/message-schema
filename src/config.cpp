@@ -1060,7 +1060,7 @@ double CONFIG::get_cam_height_max()
 QString CONFIG::get_cam_serial_number(int idx)
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    if(idx >= 0 && idx < 2)
+    if(idx >= 0 && idx < 4)
     {
         return CAM_SERIAL_NUMBER[idx];
     }
