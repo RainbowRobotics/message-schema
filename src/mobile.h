@@ -187,6 +187,8 @@ private:
     // device varibale
     bool speaker_io_state[4] = {false,};
 
+    float f_distance = 0.0;
+
 };
 
 #endif // MOBILE_H

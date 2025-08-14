@@ -137,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
+
     plot_timer->stop();
     delete ui;
 }
