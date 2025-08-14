@@ -182,6 +182,8 @@ private:
     QString pose_text;
     QString status_text;
 
+   float f_distance;
+
     // device varibale
     bool speaker_io_state[4] = {false,};
 

@@ -1119,16 +1119,10 @@ void MOBILE::recv_loop()
             }
         }
 
-        mtx.lock();
-        distance = vx0*pre_loop_time;
-        mtx.unlock();
-
         double cur_loop_time = get_time();
         process_time_mobile = cur_loop_time - pre_loop_time;
 
-        float f_distance;
-
-        f_distance+=std::fabs(cur_pose.vel[0] *process_time_mobile);
+        f_distance+=std::fabs(cur_pose.vel[0] * process_time_mobile);
 
         mtx.lock();
         distance = f_distance;

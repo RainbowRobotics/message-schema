@@ -137,8 +137,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-    CONFIG::instance()->set_mileage(mileage_sum);
-
     plot_timer->stop();
     delete ui;
 }
@@ -1871,21 +1869,26 @@ void MainWindow::watch_loop()
 
         // plot mobile distance info
         {
-                double move_distance;
-                if(CONFIG::instance()->get_use_sim())
-                {
-                    move_distance = SIM::instance()->distance;
-                }
-                else
-                {
-                    move_distance = MOBILE::instance()-> get_move_distance();
-                }
+            double move_distance;
+            if(CONFIG::instance()->get_use_sim())
+            {
+                move_distance = SIM::instance()->distance;
+            }
+            else
+            {
+                move_distance = MOBILE::instance()-> get_move_distance();
+            }
 
-                float total_mileage = mileage + abs(move_distance);
-                mileage_sum = QString::number(total_mileage, 'f', 3);
+            float total_mileage = mileage + abs(move_distance);
+            mileage_sum = QString::number(total_mileage, 'f', 3);
 
-                // plot mobile pose
-                ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+            // plot mobile pose
+            ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+        }
+
+        if(cnt % 600 == 0)
+        {
+            CONFIG::instance()->set_mileage(mileage_sum);
         }
 
         // Samsung's request
