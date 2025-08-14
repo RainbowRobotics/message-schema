@@ -1330,7 +1330,11 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     if(command == "mapload")
     {
         const QString map_name = msg.map_name;
-        const QString load_dir = QDir::homePath() + "/data/maps/" + map_name;
+        //const QString load_dir = QDir::homePath() + "/data/maps/" + map_name;
+        const QString load_dir = "/data/maps/" + map_name;
+
+        //printf(Qload_dir);
+        qDebug()<<load_dir;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
@@ -1371,7 +1375,6 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             {
                 msg.result = "success";
                 msg.message = "";
-
                 send_load_response(msg);
             }
             else
