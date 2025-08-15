@@ -139,22 +139,24 @@ void ORBBEC::get_cam_exist_check()
 QString ORBBEC::get_cam_info_str()
 {
     QString connection_str = "connection:";
-    for(int p = 0; p < config->get_cam_num(); p++)
+    int camNum = config->get_cam_num();
+
+    for(int p = 0; p < camNum; p++)
     {
         QString connection = QString("%1,").arg(is_connected[p] ? "1" : "0");
         connection_str += connection;
     }
 
     QString pts_str = "pts:";
-    for(int p = 0; p < config->get_cam_num(); p++)
+    for(int p = 0; p < camNum; p++)
     {
         QString pts = QString("%1,").arg(cur_pts_size[p]);
         pts_str += pts;
     }
 
     QString str = QString("[ORBBEC]\n%1, color(w,h):%2,%3\ndepth(w,h):%4,%5, %6").arg(connection_str)
-                                                                                 .arg((int)cur_w_color).arg((int)cur_h_color)
-                                                                                 .arg((int)cur_w_depth).arg((int)cur_h_depth)
+            .arg((int)cur_w_color).arg((int)cur_h_color)
+            .arg((int)cur_w_depth).arg((int)cur_h_depth)
                                                                                  .arg(pts_str);
     return str;
 }

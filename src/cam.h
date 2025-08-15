@@ -55,6 +55,8 @@ public:
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
 
+    std::vector<bool> get_rtsp_flag();
+
 private:
     explicit CAM(QObject *parent = nullptr);
     ~CAM();
@@ -84,6 +86,9 @@ private:
 
     TIME_IMG cur_time_img[max_cam_cnt];
     TIME_PTS cur_scan[max_cam_cnt];
+
+    // for rrs. rtsp status check
+    std::vector<bool> rtsp_cam_status;
 
     tbb::concurrent_queue<FRAME> merged_que;
 

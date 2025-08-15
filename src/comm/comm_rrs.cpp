@@ -2380,6 +2380,25 @@ void COMM_RRS::send_loop()
         path_view_cnt++;
     }
 
+    // for 1000ms loop
+    // to give information video streaming data
+    if(config->get_use_rtsp() && config->get_use_cam())
+    {
+        if(cnt % 100 == 0)
+        {
+            std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
+            if(rtsp_flag.size() != 0)
+            {
+                for(int p = 0; p < rtsp_flag.size(); p++)
+                {
+                    QString msg = QString("[COMM] cam%1 rtsp writer %2")
+                            .arg(p)
+                            .arg(rtsp_flag[p] ? "open success" : "open failed");
+                    logger->write_log(msg);
+                }
+            }
+        }
+    }
 
     send_cnt ++;
 }
