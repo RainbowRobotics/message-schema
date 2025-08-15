@@ -481,6 +481,24 @@ void CONFIG::show_missing_variables_dialog()
     printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
 }
 
+QStringList CONFIG::load_folder_list()
+{
+    QString version_path = QCoreApplication::applicationDirPath() + "/config";
+    QStringList fileList;
+
+    QDir dir(version_path);
+    QFileInfoList entries = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllDirs);
+
+    for (const QFileInfo& item : entries)
+    {
+        if (item.isDir())
+        {
+            fileList.append(item.baseName());
+        }
+    }
+    return fileList;
+}
+
 void CONFIG::set_config_path(const QString &path)
 {
     path_config = path;
@@ -592,6 +610,167 @@ void CONFIG::set_map_path(const QString &path)
     config_file.close();
 }
 
+bool CONFIG::set_value_change(QString key, QString value)
+{
+    QMutexLocker locker(&q_mtx);
+
+    QFile file(path_config);
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(fileData, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        return false;
+    }
+
+    QJsonObject rootObj = jsonDoc.object();
+
+    // define section list
+    QStringList sections = {"robot", "motor", "default", "mapping", "loc","annotation", "debug", "control", "docking", "obs", "cam", "fms", "lvx", "map"};
+    bool updated = false;
+
+    for (const QString& section : sections)
+    {
+        if (!rootObj.contains(section) || !rootObj[section].isObject())
+        {
+            continue;
+        }
+
+        QJsonObject subObj = rootObj[section].toObject();
+
+
+        if (subObj.contains(key))
+        {
+            subObj[key] = value;
+            rootObj[section] = subObj;
+            updated = true;
+
+            QJsonDocument updatedDoc(rootObj);
+
+            QFile wfile(path_config);
+            if(!wfile.open(QIODevice::WriteOnly))
+            {
+                return false;
+            }
+            wfile.write(updatedDoc.toJson(QJsonDocument::Indented));
+            wfile.close();
+
+            return true;
+        }
+    }
+
+    // If the key does not exist in config.json -> modify common.json.
+    if (!updated)
+    {
+        QFile common_file(common_path);
+        if (!common_file.open(QIODevice::ReadOnly))
+            return false;
+
+        QByteArray common_fileData = common_file.readAll();
+        common_file.close();
+
+        QJsonParseError common_parseError;
+        QJsonDocument common_jsonDoc = QJsonDocument::fromJson(common_fileData, &common_parseError);
+        if (common_parseError.error != QJsonParseError::NoError)
+            return false;
+
+        QJsonObject commonObj = common_jsonDoc.object();
+
+        QStringList fileList = load_folder_list();
+        bool foundKeyInList = false;
+
+        for (const QString& item : fileList)
+        {
+            if (item == value)
+            {
+                foundKeyInList = true;
+                break;
+            }
+        }
+
+        if (foundKeyInList)
+        {
+            if (commonObj.contains(key))
+            {
+                commonObj[key] = value;
+                QJsonDocument updatedCommonDoc(commonObj);
+                QFile wCommonFile(common_path);
+                if (!wCommonFile.open(QIODevice::WriteOnly))
+                {
+                    return false;
+                }
+                wCommonFile.write(updatedCommonDoc.toJson(QJsonDocument::Indented));
+                wCommonFile.close();
+                return true;
+            }
+            else
+            {
+                return false; // key is not in common.json
+            }
+        }
+    }
+    return false;
+}
+
+
+bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
+{
+    QMutexLocker locker(&q_mtx);
+
+    QFile file(path_config);
+    qDebug()<<"path_config : "<<path_config;
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(fileData, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        return false;
+    }
+
+    QJsonObject rootObj = jsonDoc.object();
+    if(!rootObj.contains("cam_config") || !rootObj["cam_config"].isArray())
+    {
+        return false;
+    }
+
+     QJsonArray camArray = rootObj["cam_config"].toArray();
+
+
+    for (int i = 0; i < get_cam_num(); i++)
+    {
+        QJsonObject camObj = camArray[i].toObject();
+        camObj["SERIAL_NUMBER"] = CAM_SERIAL_NUMBER[i]; // save serial number
+        camArray[i] = camObj; // add object to array
+    }
+
+    rootObj["cam_config"] = camArray;
+
+
+    QJsonDocument updatedDoc(rootObj);
+    QFile wfile(path_config);
+    if(!wfile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+    wfile.write(updatedDoc.toJson(QJsonDocument::Indented));
+    wfile.close();
+
+    return true;
+}
 
 void CONFIG::set_mileage(const QString &mileage)
 {

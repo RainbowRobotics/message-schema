@@ -116,6 +116,16 @@ private:
 
     QByteArray lastest_msg_str;
 
+
+    // for variable loop
+    std::atomic<int> lidar_view_frequency = {1};
+    std::atomic<int> path_view_frequency = {2};
+
+    int cnt = 0;
+    int lidar_view_cnt = 0;
+    int path_view_cnt = 0;
+
+
 public Q_SLOTS:
     void sio_connected();
     void sio_disconnected(sio::client::close_reason const& reason);

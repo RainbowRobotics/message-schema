@@ -38,6 +38,8 @@ public:
 
     // set config path
     void set_config_path(const QString& path);
+    bool set_cam_order(QString CAM_SERIAL_NUMBER[]);
+    bool set_value_change(QString key, QString value);
     void set_version_path(const QString& path);
     void set_serial_number_path(const QString& path);
 
@@ -472,6 +474,8 @@ private:
     double DOCKING_X_OFFSET = 0.0;
     double DOCKING_Y_OFFSET = 0.0;
     double DOCKING_LINEAR_X_OFFSET = -0.035;
+
+    QStringList load_folder_list();
 
     // map
     QString MAP_PATH = "";

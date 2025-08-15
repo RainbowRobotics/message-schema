@@ -97,6 +97,7 @@ void CAM::open()
     if(config->get_cam_type() == "ORBBEC" && orbbec)
     {
         int cam_num = config->get_cam_num();
+
         for(int p = 0; p < cam_num; p++)
         {
             post_process_flag[p] = true;

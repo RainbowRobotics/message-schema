@@ -79,6 +79,63 @@ void ORBBEC::close()
     }
 }
 
+void ORBBEC::get_cam_exist_check()
+{
+//    // check device
+//    ob::Context ctx;
+//    ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
+//    ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
+
+//    auto dev_list = ctx.queryDeviceList();
+//    int dev_count = dev_list->deviceCount();
+
+//    if(dev_count == 0)
+//    {
+//        grab_flag[idx] = false;
+
+//        logger->write_log("[ORBBEC] no camera", "Red");
+//        return;
+//    }
+
+////    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+//    int dev_match_success = false;
+//    int dev_idx = 0;
+//    QString sn_connected = "";
+//    for(int i=0; i<dev_count; i++)
+//    {
+//        QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+//        if(sn == config->get_cam_serial_number(idx))
+//        {
+//            dev_match_success = true;
+//            dev_idx = i;
+//            sn_connected = sn;
+//            break;
+//        }
+//    }
+//    if(dev_match_success == false)
+//    {
+//        static QAtomicInt already_updated = 0; // 전역 또는 static 변수
+
+//        if(dev_match_success == false)
+//        {
+//            grab_flag[idx] = false;
+
+//            if(already_updated.testAndSetRelaxed(0, 1)) // 처음 호출한 스레드만 true
+//            {
+//                QString serial_number_str[max_cam_cnt];
+//                for (int i = 0 ; i < dev_count; i++)
+//                {
+//                    serial_number_str[i] = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+//                }
+//                config->set_cam_order(serial_number_str);
+//                logger->write_log("[ORBBEC] no camera match -> saved serial numbers", "Yellow");
+//            }
+
+//            return;
+//        }
+//    }
+}
+
 QString ORBBEC::get_cam_info_str()
 {
     QString connection_str = "connection:";
@@ -182,17 +239,35 @@ void ORBBEC::grab_loop(int idx)
     for(int i=0; i<dev_count; i++)
     {
         QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
-        if(sn == config->get_cam_serial_number(idx)){
+        if(sn == config->get_cam_serial_number(idx))
+        {
             dev_match_success = true;
             dev_idx = i;
             sn_connected = sn;
             break;
         }
     }
-    if(dev_match_success == false){
-        grab_flag[idx] = false;
-        logger->write_log("[ORBBEC] no camera match", "Red");
-        return;
+    if(dev_match_success == false)
+    {
+        static QAtomicInt already_updated = 0; // 전역 또는 static 변수
+
+        if(dev_match_success == false)
+        {
+            grab_flag[idx] = false;
+
+            if(already_updated.testAndSetRelaxed(0, 1)) // 처음 호출한 스레드만 true
+            {
+                QString serial_number_str[max_cam_cnt];
+                for (int i = 0 ; i < dev_count; i++)
+                {
+                    serial_number_str[i] = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+                }
+                config->set_cam_order(serial_number_str);
+                logger->write_log("[ORBBEC] no camera match -> saved serial numbers", "Yellow");
+            }
+
+            return;
+        }
     }
     //if(sn != config->get_cam_serial_number(idx))
     //{
@@ -201,6 +276,8 @@ void ORBBEC::grab_loop(int idx)
     //    logger->write_log("[ORBBEC] no camera", "Red");
     //    return;
     //}
+//    get_cam_exist_check();
+
     logger->write_log(QString("[ORBBEC] connected serial number, sn:%1").arg(sn_connected));
 
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();

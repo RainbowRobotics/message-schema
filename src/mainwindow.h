@@ -128,6 +128,7 @@ public:
 
     // for mileage
    double mileage = {0.0};
+   double prev_move_distance = {0.0};
 
    QString mileage_sum;
 

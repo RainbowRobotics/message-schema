@@ -76,7 +76,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
 
     send_timer = new QTimer(this);
     connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
-    send_timer->start(100);
+    send_timer->start(10);
 }
 
 COMM_RRS::~COMM_RRS()
@@ -153,7 +153,7 @@ void COMM_RRS::init()
         printf("[COMM_RRS] Warning: config module not set\n");
         return;
     }
-
+    qDebug()<<"USE_COMM_RRS : "<<config->get_use_rrs();
     if(config->get_use_rrs())
     {
         std::map<std::string, std::string> query;
@@ -2318,6 +2318,9 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
+
+// Modifying part of sending LiDAR data
+// working at 10[ms]
 void COMM_RRS::send_loop()
 {
     if(!is_connected)
@@ -2325,12 +2328,13 @@ void COMM_RRS::send_loop()
         return;
     }
 
-    if(send_cnt % 2 == 0)
+    // Synchronize with the development version
+    if(send_cnt % 5 == 0)
     {
         send_move_status();
     }
 
-    if(send_cnt % 5 == 0)
+    if(send_cnt % 50 == 0)
     {
         send_status();
     }
@@ -2339,6 +2343,43 @@ void COMM_RRS::send_loop()
     {
         send_cnt = 0;
     }
+
+    // for variable loop
+    double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
+    time_lidar_view *= 10.0;
+    if(time_lidar_view > 0)
+    {
+        if(lidar_view_cnt > time_lidar_view)
+        {
+            lidar_view_cnt = 0;
+            send_lidar();
+        }
+
+        lidar_view_cnt++;
+    }
+
+    double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
+    time_path_view *= 10.0;
+    if(time_path_view > 0)
+    {
+        if(path_view_cnt > time_path_view)
+        {
+            path_view_cnt = 0;
+//                if(is_global_path_update2)
+//                {
+//                    is_global_path_update2 = false;
+//                    comm_rrs.send_global_path();
+//                }
+
+//                if(is_local_path_update2)
+//                {
+//                    is_local_path_update2 = false;
+//                    comm_rrs.send_local_path();
+//                }
+        }
+        path_view_cnt++;
+    }
+
 
     send_cnt ++;
 }

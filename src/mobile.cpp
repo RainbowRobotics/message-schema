@@ -1114,7 +1114,7 @@ void MOBILE::recv_loop()
             }
             else
             {
-                qDebug() << "Header Fail";
+//                qDebug() << "Header Fail";
                 buf.erase(buf.begin(), buf.begin()+1);
             }
         }

@@ -241,6 +241,7 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
     {
         QString platform_name = CONFIG::instance()->get_platform_name();
+        ui->lb_RobotType->setText(platform_name);
 
         mileage = CONFIG::instance()->get_mileage();
 
@@ -426,6 +427,7 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+
     }
 
     // docking module init
@@ -1870,18 +1872,16 @@ void MainWindow::watch_loop()
 
         // plot mobile distance info
         {
-            double move_distance;
-            if(CONFIG::instance()->get_use_sim())
-            {
-                move_distance = SIM::instance()->distance;
-            }
-            else
-            {
-                move_distance = MOBILE::instance()-> get_move_distance();
-            }
+            double move_distance = prev_move_distance;
+            double candidate = CONFIG::instance()->get_use_sim() ? SIM::instance()->distance : MOBILE::instance()->get_move_distance();
 
+            if (!std::isnan(candidate))
+            {
+                move_distance = candidate;
+            }
             float total_mileage = mileage + abs(move_distance);
             mileage_sum = QString::number(total_mileage, 'f', 3);
+            prev_move_distance = move_distance;
 
             // plot mobile pose
             ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
