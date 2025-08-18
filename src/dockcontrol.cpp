@@ -408,6 +408,7 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
         {
+            fsm_state = DOCKING_FSM_OFF;
 
         }
 
@@ -462,7 +463,7 @@ void DOCKCONTROL::b_loop()
             }
         }
 
-        else if (fsm_state ==DOCKING_FSM_OFF)
+        else if (fsm_state == DOCKING_FSM_OFF)
         {
 
         }
@@ -1588,6 +1589,11 @@ bool DOCKCONTROL::get_dock_retry_flag()
 void DOCKCONTROL::set_dock_retry_flag(bool val)
 {
     dock_retry_flag.store(val);
+}
+
+int DOCKCONTROL::get_dock_fsm_state()
+{
+    return (int)fsm_state.load();
 }
 
 double DOCKCONTROL::wrapToPi(double angle)

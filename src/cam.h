@@ -40,6 +40,7 @@ public:
     TIME_IMG get_time_img(int idx);     // get current image (with time)
     TIME_PTS get_scan(int idx);         // get current depth (with time)
 
+    bool get_connection(int idx);
     double get_process_time_post(int idx);
 
     // interface func (set)
@@ -53,6 +54,8 @@ public:
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
+
+    std::vector<bool> get_rtsp_flag();
 
 private:
     explicit CAM(QObject *parent = nullptr);
@@ -83,6 +86,9 @@ private:
 
     TIME_IMG cur_time_img[max_cam_cnt];
     TIME_PTS cur_scan[max_cam_cnt];
+
+    // for rrs. rtsp status check
+    std::vector<bool> rtsp_cam_status;
 
     tbb::concurrent_queue<FRAME> merged_que;
 

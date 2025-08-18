@@ -139,9 +139,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 MainWindow::~MainWindow()
 {
 
-    CONFIG::instance()->set_mileage(QString::number(mileage));
-
-
     plot_timer->stop();
     delete ui;
 }
@@ -245,6 +242,7 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
     {
         QString platform_name = CONFIG::instance()->get_platform_name();
+        ui->lb_RobotType->setText(platform_name);
 
         mileage = CONFIG::instance()->get_mileage();
 
@@ -359,7 +357,7 @@ void MainWindow::init_modules()
         LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
         LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        //LOCALIZATION::instance()->set_cam_module(CAM::instance());
+        LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
         LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
     }
@@ -430,6 +428,7 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+
     }
 
     // docking module init
@@ -469,6 +468,7 @@ void MainWindow::init_modules()
         UNIMAP::instance()->load_map(map_path);
     }
     all_update();
+    bt_Request();
 }
 
 void MainWindow::all_plot_clear()
@@ -1681,6 +1681,7 @@ void MainWindow::jog_loop()
 void MainWindow::watch_loop()
 {
     int cnt = 0;
+    int speaker_cnt = 0;
     int loc_fail_cnt = 0;
     double last_sync_time = 0;
 
@@ -1756,6 +1757,16 @@ void MainWindow::watch_loop()
                 DOCKCONTROL::instance()->set_dock_retry_flag(false);
             }
 
+            // Led logic
+            int led_state = led_handler();
+            MOBILE::instance()->led(0, led_state);
+
+            // speaker logic
+            if(CONFIG::instance()->get_robot_use_speaker() == true)
+            {
+                speaker_cnt++;
+                speaker_handler(speaker_cnt);
+            }
 
             // check mobile
             if(MOBILE::instance()->get_is_connected())
@@ -1873,27 +1884,26 @@ void MainWindow::watch_loop()
 
         // plot mobile distance info
         {
-            if(MOBILE::instance()->get_is_connected())
+            double move_distance = prev_move_distance;
+            double candidate = CONFIG::instance()->get_use_sim() ? SIM::instance()->distance : MOBILE::instance()->get_move_distance();
+
+            if (!std::isnan(candidate))
             {
-                double move_distance;
-                if(CONFIG::instance()->get_use_sim())
-                {
-                    move_distance = SIM::instance()->distance;
-                }
-                else
-                {
-                    move_distance = MOBILE::instance()-> get_move_distance();
-                }
-                mileage +=abs(move_distance);
+                move_distance = candidate;
+            }
+            float total_mileage = mileage + abs(move_distance);
+            mileage_sum = QString::number(total_mileage, 'f', 3);
+            prev_move_distance = move_distance;
 
-                QString mileage_sum;
-                mileage_sum = "[Mileage] : "+QString::number(mileage);
+            // plot mobile pose
+            ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
 
-                // plot mobile pose
-                ui->lb_Mileage->setText(mileage_sum);
+            if(cnt % 600 == 0)
+            {
+                CONFIG::instance()->set_mileage(mileage_sum);
             }
         }
-//         CONFIG::instance()->set_mileage(QString::number(mileage));
+
 
         // Samsung's request
 //        // for 500ms loop
@@ -2381,7 +2391,11 @@ void MainWindow::plot_info()
 {
     // plot mobile info
     {
+//        MOBILE_STATUS ms = MOBILE::instance()->get_status();
+
+        double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
         ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
+
 
         if(MOBILE::instance()->get_is_connected())
         {
@@ -2390,6 +2404,8 @@ void MainWindow::plot_info()
 
             // plot mobile status
             ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
+
+            ui->lb_Battery->setText("[BAT]" + QString::number(tabos_battery_soc)+"%");
         }
     }
 
@@ -2557,7 +2573,7 @@ void MainWindow::plot_safety()
     }
 
     //interlock detect
-    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
+    if(cur_status.safety_state_interlock_stop_1 || cur_status.safety_state_interlock_stop_2)
     {
         ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
     }
@@ -2905,14 +2921,14 @@ void MainWindow::plot_mapping()
             if(MAPPING::instance()->try_pop_kfrm_update_que(kfrm_id))
             {
                 Eigen::Matrix4d opt_G = Eigen::Matrix4d::Identity();
+                KFRAME kfrm = MAPPING::instance()->get_kfrm(kfrm_id);
+                opt_G = kfrm.opt_G;
 
                 QString name;
                 name.sprintf("kfrm_%d", kfrm_id);
+
                 if(!pcl_viewer->contains(name.toStdString()))
                 {
-                    KFRAME kfrm = MAPPING::instance()->get_kfrm(kfrm_id);
-                    opt_G = kfrm.opt_G;
-
                     const size_t point_size = kfrm.pts.size();
 
                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -3015,6 +3031,47 @@ void MainWindow::plot_loc()
             pt.r = 0;
             pt.g = 0;
             pt.b = 255;
+            cloud->push_back(pt);
+        }
+
+        if(!pcl_viewer->updatePointCloud(cloud, "plot_cur_pts"))
+        {
+            pcl_viewer->addPointCloud(cloud, "plot_cur_pts");
+        }
+
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "plot_cur_pts");
+        pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "plot_cur_pts");
+    }
+    else if(ui->cb_ViewType->currentText() == "VIEW_2D" && plot_cur_pts.size() > 0 && LOCALIZATION::instance()->get_is_loc() && !MAPPING::instance()->get_is_mapping())
+    {
+        // remove first
+        for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+        {
+            QString id = last_plot_kfrms[p];
+            if(pcl_viewer->contains(id.toStdString()))
+            {
+                pcl_viewer->removeShape(id.toStdString());
+            }
+        }
+        last_plot_kfrms.clear();
+
+        if(pcl_viewer->contains("live_tree_pts"))
+        {
+            pcl_viewer->removePointCloud("live_tree_pts");
+        }
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        const size_t point_size = plot_cur_pts.size();
+        cloud->reserve(point_size);
+        for(const auto& P: plot_cur_pts)
+        {
+            pcl::PointXYZRGB pt;
+            pt.x = P[0];
+            pt.y = P[1];
+            pt.z = P[2];
+            pt.r = 255;
+            pt.g = 0;
+            pt.b = 0;
             cloud->push_back(pt);
         }
 
@@ -3332,6 +3389,50 @@ void MainWindow::plot_ctrl()
                               arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
 
+void MainWindow::plot_cam()
+{
+    if(CAM::instance()->get_connection(0))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(0).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+    if(CAM::instance()->get_connection(1))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(1).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen3->setScaledContents(true);
+            ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+    if(CAM::instance()->get_connection(2))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(2).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen4->setScaledContents(true);
+            ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+    if(CAM::instance()->get_connection(3))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(3).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen5->setScaledContents(true);
+            ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+}
+
 void MainWindow::plot_tractile()
 {
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
@@ -3340,7 +3441,7 @@ void MainWindow::plot_tractile()
 
     Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
 
-    /*
+
     // plot tactile
     {
         // erase first
@@ -3361,19 +3462,22 @@ void MainWindow::plot_tractile()
         std::vector<Eigen::Matrix4d> traj = AUTOCONTROL::instance()->calc_trajectory(vel, 0.2, 1.0, cur_tf);
         for(size_t p = 0; p < traj.size(); p++)
         {
-            QString name = QString("traj_%1").arg(p);
-            std::string name_str = name.toStdString();
+            if(p == traj.size()-1 || p % 50 == 0)
+            {
+                QString name = QString("traj_%1").arg(p);
+                std::string name_str = name.toStdString();
 
-            pcl_viewer->addCube(x_min, x_max,
-                                y_min, y_max,
-                                z_min, z_max, 1.0, 0.0, 0.0, name_str);
+                pcl_viewer->addCube(x_min, x_max,
+                                    y_min, y_max,
+                                    z_min, z_max, 1.0, 0.0, 0.0, name_str);
 
-            pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
-            pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
-            last_plot_tactile.push_back(name);
+                pcl_viewer->updateShapePose(name_str, Eigen::Affine3f(traj[p].cast<float>()));
+                pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, name_str);
+                last_plot_tactile.push_back(name);
+            }
         }
     }
-    */
+
 
     // plot obs tactile
     {
@@ -3436,6 +3540,7 @@ void MainWindow::plot_loop()
     plot_loc();
     plot_obs();
     plot_ctrl();
+    plot_cam();
     plot_tractile();
     plot_process_time();
 
@@ -3491,54 +3596,139 @@ void MainWindow::plot_loop()
     plot_timer->start();
 }
 
-int MainWindow::led_handler()
+void MainWindow::speaker_handler(int speaker_cnt)
 {
+    MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
-    int led_out = SAFETY_LED_OFF;
+    int speak_code = 0;
 
-    //check mobile communication
-
-    MOBILE_STATUS ms;
-
-    if(ms.om_state)
+    // autodrive
+    if (AUTOCONTROL::instance()->get_is_moving())
     {
 
+        double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+        if (obs_d < 1.0)
+        {
+            speak_code = 10;
+        }
+        else if (obs_d < 2.0)
+        {
+            speak_code = 10;
+        }
+        else
+        {
+            speak_code = 2;
+        }
+
+        if (DOCKCONTROL::instance()->get_dock_fsm_state() != DOCKING_FSM_OFF)
+        {
+            speak_code = 3;
+        }
+    }
+    else
+    {
+        if (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL)
+        {
+            speak_code = 11;
+        }
     }
 
 
+    if (speaker_cnt % 8 == 0)
+    {
+        MOBILE::instance()->sem_io_speaker(speak_code);
+    }
+
+    else if (speaker_cnt % 8 == 2)
+    {
+        MOBILE::instance()->sem_io_speaker(0);
+    }
+}
+
+int MainWindow::led_handler()
+{
+    MOBILE_STATUS ms;
+    ms = MOBILE::instance()->get_status();
+
+    int led_out = SAFETY_LED_OFF;
+
+    if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
+    {
+        led_out = SAFETY_LED_RED;
+        return led_out;
+    }
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
     {
 
+        //charging
+        if(ms.charge_state == CHARGING_STATION_CHARGING)
+        {
+            //docking process sucess
+            led_out = SAFETY_LED_CONTRACTING_GREEN;
+            return led_out;
+        }
 
+        //docking
+        int dock_fsm_state_ = DOCKCONTROL::instance()->get_dock_fsm_state();
+
+        if(!(dock_fsm_state_ == DOCKING_FSM_OFF))
+        {
+            //docking process..
+            led_out = SAFETY_LED_WHITE_WAVERING;
+            return led_out;
+        }
+
+        //autocontrol
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
 
         if(obs_d < 1.0)
         {
-            MOBILE::instance()->led(0, SAFETY_LED_PURPLE_BLINKING);
-        }
-        else if(obs_d < 2.0)
-        {
-            MOBILE::instance()->led(0, SAFETY_LED_PURPLE);
+//            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
+            led_out = SAFETY_LED_PURPLE_BLINKING;
+            return led_out;
+
         }
 
-        else if(AUTOCONTROL::instance()->get_obs_condition() == "near_robot")
+        if(obs_d < 2.0)
         {
-            led_out = SAFETY_LED_YELLOW_WAVERING;
+//            qDebug() << "SAFETY_LED_PURPLE";
+            led_out = SAFETY_LED_PURPLE;
+            return led_out;
+
         }
 
+        else
+        {
+            //normal auto drive led
+//            qDebug() << "SAFETY_LED_GREEN_BLINKING";
+            led_out = SAFETY_LED_GREEN_BLINKING;
+            return led_out;
+        }
     }
 
-
-
-
-
+    // not autodrive led control
     else
     {
-         MOBILE::instance()->led(0, SAFETY_LED_GREEN);
+        if(ms.om_state == SM_OM_ROBOT_POWER_OFF)
+        {
+            // Pc boot up
+            led_out = SAFETY_LED_YELLOW;
+//            qDebug() << "led yellow";
+            // Brkae release
+            if(ms.brake_release_sw == 1)
+            {
+                led_out = SAFETY_LED_BLUE;
+                return led_out;
+            }
+        }
+        else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
+        {
+//            qDebug() << "SAFETY_LED_CYAN";
+            led_out = SAFETY_LED_CYAN;
+            return led_out;
+        }
     }
-
 
     return led_out;
 }

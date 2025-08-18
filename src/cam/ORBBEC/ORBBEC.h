@@ -30,6 +30,9 @@ public:
 
     void init();
 
+    // to check cam is exist?
+    void get_cam_exist_check();
+
     // start ORBBEC module
     void open();
 

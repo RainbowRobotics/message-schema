@@ -38,6 +38,8 @@ public:
 
     // set config path
     void set_config_path(const QString& path);
+    bool set_cam_order(QString CAM_SERIAL_NUMBER[]);
+    bool set_value_change(QString key, QString value);
     void set_version_path(const QString& path);
     void set_serial_number_path(const QString& path);
 
@@ -65,6 +67,7 @@ public:
     double get_robot_wheel_base();      // the distance between the robot's two wheels
     double get_robot_wheel_radius();    // robot wheel radius (mm)
     double get_robot_radius();          // robot radius (auto calc)
+    bool get_robot_use_speaker();     // robot io-speaker use
 
     /***********************
      * sensor common
@@ -319,6 +322,7 @@ private:
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
+    bool USE_SPEAKER = false;
 
     // sensors
     bool USE_LIDAR_2D = false;
@@ -472,6 +476,8 @@ private:
     double DOCKING_X_OFFSET = 0.0;
     double DOCKING_Y_OFFSET = 0.0;
     double DOCKING_LINEAR_X_OFFSET = -0.035;
+
+    QStringList load_folder_list();
 
     // map
     QString MAP_PATH = "";

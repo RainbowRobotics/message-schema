@@ -294,8 +294,9 @@ struct DATA_FIELD
 {
     double time;
     QString command; // set, get
-    unsigned int set_field;
-    unsigned int get_field;
+
+    int set_field;
+    int get_field;
 
     QString result;
     QString message;
@@ -304,6 +305,9 @@ struct DATA_FIELD
     {
         time = 0.0;
         command = "";
+
+        set_field = 0;
+        get_field = 0;
 
         result = "";
         message = "";
@@ -314,6 +318,9 @@ struct DATA_FIELD
         time = p.time;
         command = p.command;
 
+        set_field = p.set_field;
+        get_field = p.get_field;
+
         result = p.result;
         message = p.message;
     }
@@ -322,6 +329,9 @@ struct DATA_FIELD
     {
         time = p.time;
         command = p.command;
+
+        get_field = p.get_field;
+        set_field = p.set_field;
 
         result = p.result;
         message = p.message;
@@ -740,5 +750,6 @@ Q_DECLARE_METATYPE(DATA_PATH)
 Q_DECLARE_METATYPE(DATA_VOBS)
 Q_DECLARE_METATYPE(DATA_SOFTWARE)
 Q_DECLARE_METATYPE(DATA_FOOT)
+Q_DECLARE_METATYPE(DATA_FIELD)
 
 #endif // COMM_DATA_H

@@ -549,6 +549,8 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
     // obs loop shutdown but robot still moving
     if(obs_flag)
     {
+        //        cur_obs_dist = 99999.0;
+
         obs_flag = false;
         obs_thread->join();
         obs_thread.reset();
@@ -1460,7 +1462,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     for(int p = 0; p < (int)src.size(); p++)
     {
         double v1 = std::sqrt(2*v_acc*path_step + v0*v0);
-//        double v1 = std::sqrt(2*v_acc*path_step) + v0;
+        //        double v1 = std::sqrt(2*v_acc*path_step) + v0;
         if(v1 > v_limit)
         {
             v1 = v_limit;
@@ -1483,7 +1485,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     for(int p = (int)src.size()-1; p >= 0; p--)
     {
         double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);
-//        double v1 = std::sqrt(2*v_dcc*path_step) + v0;
+        //        double v1 = std::sqrt(2*v_dcc*path_step) + v0;
         if(v1 > v_limit)
         {
             v1 = v_limit;
@@ -1590,8 +1592,8 @@ std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_ve
         Eigen::Matrix3d pre_rot = Eigen::Matrix3d::Zero();
 
         pre_rot << std::cos(pre_th), -std::sin(pre_th), 0,
-                   std::sin(pre_th),  std::cos(pre_th), 0,
-                                  0,                 0, 1;
+                std::sin(pre_th),  std::cos(pre_th), 0,
+                0,                 0, 1;
 
         Eigen::Vector3d local_vel = Eigen::Vector3d(vx, vy, 0);
         Eigen::Vector3d vel = pre_rot*local_vel;
@@ -1698,11 +1700,11 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, LOCAL_PATH_STEP);
 
-//        std::cout << "Original ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Original ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
         // check global path end
         double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
@@ -1718,21 +1720,21 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
 
         }
 
-//        std::cout << "Padding ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Padding ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
 
         // smoothing ref_v
         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
 
-//        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
 
         // debug
@@ -1827,11 +1829,11 @@ PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
             }
         }
 
-//        std::cout << "Original ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Original ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
         // check global path end
         double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
@@ -1847,21 +1849,21 @@ PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
 
         }
 
-//        std::cout << "Padding ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Padding ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
 
         // smoothing ref_v
         ref_v = smoothing_v(ref_v, LOCAL_PATH_STEP);
 
-//        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
-//        for(int i=0; i<ref_v.size(); i++){
-//            std::cout << ref_v[i] << ", ";
-//        }
-//        std::cout << std::endl;
+        //        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
 
         // debug
@@ -2309,7 +2311,7 @@ void AUTOCONTROL::control_loop()
                 if(get_time() - local_path.t > 0.2)
                 {
                     // update local path
-//                    local_path = calc_local_path(global_path);
+                    //                    local_path = calc_local_path(global_path);
                     local_path = calc_local_path_with_cur_vel(global_path);
 
                     // for plot
@@ -2442,15 +2444,15 @@ void AUTOCONTROL::control_loop()
                     }
                     v = saturation(v, -temp_v, temp_v);
                 }
-//                else
-//                {
-//                    temp_v += params.LIMIT_V_DCC;
-//                    if(temp_v > -params.ED_V)
-//                    {
-//                        temp_v = -params.ED_V;
-//                    }
-//                }
-//                v = saturation(v, -params.ED_V, params.ED_V);
+                //                else
+                //                {
+                //                    temp_v += params.LIMIT_V_DCC;
+                //                    if(temp_v > -params.ED_V)
+                //                    {
+                //                        temp_v = -params.ED_V;
+                //                    }
+                //                }
+                //                v = saturation(v, -params.ED_V, params.ED_V);
                 mobile->move(v, 0, 0);
 
                 extend_dt += dt;
@@ -2629,33 +2631,34 @@ void AUTOCONTROL::control_loop()
                 ref_v_oscilation_end_flag = true;
                 ref_v = local_path.ref_v[cur_idx];
             }
-//            ref_v = local_path.ref_v[cur_idx];
+            //            ref_v = local_path.ref_v[cur_idx];
 
             // calc control input
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
 
             v = saturation(v, 0.0, obs_v);
-            v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
+//            v = saturation(v, v0 - config->get_motor_limit_v_acc()*dt, v0 + config->get_motor_limit_v_acc()*dt);
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
-//            qDebug() << "prev_local_ref_v_index: " << prev_local_ref_v_index << " / " << local_path.ref_v.size() << " ----- " << ref_v_oscilation_end_flag;
-//            qDebug() << "FMS Driving cur_idx: " << cur_idx << " cur pos: " << cur_pos[0] << ", " << cur_pos[1];
-//            qDebug() << "ref v value : " << local_path.ref_v[0] << ", " << local_path.ref_v[1] << ", " << local_path.ref_v[2];
-//            qDebug() << "local pos(idx+0): " << local_path.pos[cur_idx][0] << ", " << local_path.pos[cur_idx][1];
-//            if(cur_idx-1 >= 0){
-//                qDebug() << "local pos(idx-1): " << local_path.pos[cur_idx-1][0] << ", " << local_path.pos[cur_idx-1][1];
-//            }
-//            if(cur_idx+1 <= local_path.pos.size()-1){
-//                qDebug() << "local pos(idx+1): " << local_path.pos[cur_idx+1][0] << ", " << local_path.pos[cur_idx+1][1];
-//            }
-//            qDebug() << "FMS Driving V(1): " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v;
-//            qDebug() << "FMS Driving V(2): " << obs_v << ", " << params.LIMIT_V << ", " << v0 - config->get_motor_limit_v_acc()*dt << ", " << v0 + config->get_motor_limit_v_acc()*dt << ", " << v;
-//            qDebug() << "v total : " << cur_vel[0] << ", " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v << ", " << obs_v << ", " << v;
+            //            qDebug() << "prev_local_ref_v_index: " << prev_local_ref_v_index << " / " << local_path.ref_v.size() << " ----- " << ref_v_oscilation_end_flag;
+            //            qDebug() << "FMS Driving cur_idx: " << cur_idx << " cur pos: " << cur_pos[0] << ", " << cur_pos[1];
+            //            qDebug() << "ref v value : " << local_path.ref_v[0] << ", " << local_path.ref_v[1] << ", " << local_path.ref_v[2];
+            //            qDebug() << "local pos(idx+0): " << local_path.pos[cur_idx][0] << ", " << local_path.pos[cur_idx][1];
+            //            if(cur_idx-1 >= 0){
+            //                qDebug() << "local pos(idx-1): " << local_path.pos[cur_idx-1][0] << ", " << local_path.pos[cur_idx-1][1];
+            //            }
+            //            if(cur_idx+1 <= local_path.pos.size()-1){
+            //                qDebug() << "local pos(idx+1): " << local_path.pos[cur_idx+1][0] << ", " << local_path.pos[cur_idx+1][1];
+            //            }
+            //            qDebug() << "FMS Driving V(1): " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v;
+            //            qDebug() << "FMS Driving V(2): " << obs_v << ", " << params.LIMIT_V << ", " << v0 - config->get_motor_limit_v_acc()*dt << ", " << v0 + config->get_motor_limit_v_acc()*dt << ", " << v;
+            //            qDebug() << "v total : " << cur_vel[0] << ", " << (params.LIMIT_V/params.DRIVE_L)*err_d << ", " << ref_v << ", " << obs_v << ", " << v;
 
             double th = (params.DRIVE_A * err_th)
-                        + (params.DRIVE_B * (err_th-pre_err_th)/dt)
-                        + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+                    + (params.DRIVE_B * (err_th-pre_err_th)/dt)
+                    + std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
             th = saturation(th, -45.0*D2R, 45.0*D2R);
             pre_err_th = err_th;
 
@@ -2670,7 +2673,7 @@ void AUTOCONTROL::control_loop()
             v *= scale_v;
             w *= scale_w;
 
-//            qDebug() << "FMS Driving V(3): " << v << "\n";
+            //            qDebug() << "FMS Driving V(3): " << v << "\n";
 
             // deadzone v
             double d_v = config->get_drive_v_deadzone();
@@ -2938,7 +2941,7 @@ void AUTOCONTROL::control_loop()
             }
             else if(obs_state == AUTO_OBS_WAIT)
             {
-//                if(get_time() - obs_wait_st_time > 1.5)
+                //                if(get_time() - obs_wait_st_time > 1.5)
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
                     extend_dt = 0;
@@ -2955,7 +2958,7 @@ void AUTOCONTROL::control_loop()
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
-//                if(get_time() - obs_wait_st_time > 1.5)
+                //                if(get_time() - obs_wait_st_time > 1.5)
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
                     extend_dt = 0;
@@ -3096,10 +3099,10 @@ void AUTOCONTROL::obs_loop()
     int loop_cnt = 0;
     double obs_v_debug = 0.0;
     while(obs_flag)
-    {        
+    {
         if(loop_cnt % 10 == 0)
         {
-//            qDebug() << "[AUTO] obs_loop alive : " << is_moving << " , " << fsm_state << ", " << obs_v_debug;
+            //            qDebug() << "[AUTO] obs_loop alive : " << is_moving << " , " << fsm_state << ", " << obs_v_debug;
         }
         loop_cnt++;
 
@@ -3113,22 +3116,24 @@ void AUTOCONTROL::obs_loop()
         Eigen::Vector3d cur_vel = mobile->get_control_input();
         // Eigen::Vector3d cur_vel = mobile->get_pose().vel;
 
-        if(fsm_state == AUTO_FSM_DRIVING)
+        if (fsm_state == AUTO_FSM_DRIVING || AUTO_FSM_OBS == AUTO_FSM_OBS)
         {
             int obs_val = OBS_NONE;
-
-            // obs decel
             QString obs_condition = "none";
             double obs_v = config->get_obs_map_min_v();
+
+            // predict trajectory
+            std::vector<Eigen::Matrix4d> traj;
+            double predict_time = config->get_obs_predict_time();
             for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
-                std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, config->get_obs_predict_time(), cur_tf);
+                traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, predict_time, cur_tf);
 
                 bool is_collision = false;
-                for(size_t p = 0; p < traj.size(); p++)
+                for (const auto& tf : traj)
                 {
-                    int val = obsmap->is_tf_collision(traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
-                    if(val != OBS_NONE)
+                    int val = obsmap->is_tf_collision(tf, true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
+                    if (val != OBS_NONE)
                     {
                         is_collision = true;
                         obs_val = val;
@@ -3136,7 +3141,7 @@ void AUTOCONTROL::obs_loop()
                     }
                 }
 
-                if(is_collision)
+                if (is_collision)
                 {
                     obs_condition = "far";
                     break;
@@ -3146,81 +3151,75 @@ void AUTOCONTROL::obs_loop()
             }
 
             obs_v_debug = obs_v;
-            // update
+
+            // === From here, calculate the distance based on raw data based on the trajectory ===
+            std::vector<Eigen::Vector3d> dyn_pts = obsmap->get_dyn_pts();
+            double min_dyn_dist = std::numeric_limits<double>::max();
+            bool found_forward_obs = false;
+
+            double yaw = std::atan2(cur_tf(1, 0), cur_tf(0, 0));
+            Eigen::Vector2d heading_vec(std::cos(yaw), std::sin(yaw));
+
+            for (const auto& pt : dyn_pts)
+            {
+//                Forward filtering (within 45 degrees)
+                Eigen::Vector2d obs_vec(pt[0] - cur_pos[0], pt[1] - cur_pos[1]);
+                double forward_component = heading_vec.dot(obs_vec.normalized());
+                // 없애고 테스트해보기)
+//                if (forward_component <= std::cos(M_PI / 4))
+//                    continue;
+
+                bool near_traj = false;
+                for (const auto& tf : traj)
+                {
+                    Eigen::Vector3d traj_pos = tf.block<3,1>(0, 3);
+                    double dx = pt[0] - traj_pos[0];
+                    double dy = pt[1] - traj_pos[1];
+                    double dist = std::sqrt(dx * dx + dy * dy);
+
+                    // 2) Is the obstacle point near the trajectory? (within 2.5m)
+                    if (dist < 2.5)
+                    {
+                        near_traj = true;
+                        break;
+                    }
+                }
+
+                if (!near_traj)
+                    continue;
+
+                // 3) Calculate the actual distance from the current location to the obstacle
+                double dx = pt[0] - cur_pos[0];
+                double dy = pt[1] - cur_pos[1];
+                double d = std::sqrt(dx * dx + dy * dy);
+
+                if (d < min_dyn_dist)
+                {
+                    min_dyn_dist = d;
+                    found_forward_obs = true;
+                }
+            }
+            double obs_dist;
+            if (found_forward_obs)
+            {
+                obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
+                qDebug()<<"obs loop : "<<obs_dist;
+            }
+            else
+            {
+                obs_dist = std::numeric_limits<double>::max();
+            }
+
+            // final update(conclusion)
             {
                 std::lock_guard<std::mutex> lock(mtx);
                 cur_obs_decel_v = obs_v;
                 cur_obs_condition = obs_condition;
                 cur_obs_value = obs_val;
+                cur_obs_dist = obs_dist;
             }
         }
 
-
-        // for logging
-        double predict_time = 7.0;//2.5 / cur_vel.head<2>().norm();
-        double speed = cur_vel.head<2>().norm();
-
-        if (speed < 1e-4)
-        {
-            predict_time =  7.0;
-        }
-        else
-        {
-            predict_time = 2.5 / speed;
-        }
-
-        predict_time = std::clamp(predict_time, 2.0, 7.0);
-
-        // check trajectory
-        std::vector<Eigen::Matrix4d> check_traj = calc_trajectory(cur_vel, 0.2, predict_time, cur_tf);
-        std::vector<Eigen::Matrix4d> straight_traj = calc_trajectory(Eigen::Vector3d(1.0, 0.0, 0.0), 0.02, 3.0, cur_tf);
-        std::vector<Eigen::Matrix4d> pivot_traj = calc_trajectory(Eigen::Vector3d(0.0, 0.0, 1.57), 0.4, 4.0, cur_tf);
-        if(fsm_state == AUTO_FSM_DRIVING)
-        {
-            // add straight forwarding path
-            check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
-        }else if(fsm_state == AUTO_FSM_FIRST_ALIGN || fsm_state == AUTO_FSM_FINAL_ALIGN)
-        {
-            // add rotating pivot path
-            check_traj.insert(check_traj.end(), pivot_traj.begin(), pivot_traj.end());
-        }
-        else
-        {
-            // add straight forwarding path
-            check_traj.insert(check_traj.end(), straight_traj.begin(), straight_traj.end());
-        }
-
-        double min_obs_dist = 9999.0;
-        QString obs_far_state = "none";
-
-        for(size_t p = 0; p < check_traj.size(); p++)
-        {
-            int val = obsmap->is_tf_collision(check_traj[p], true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
-            if(val != OBS_NONE)
-            {
-                double d = calc_dist_2d(check_traj[p].block(0,3,3,1) - cur_pos);
-                if(d < min_obs_dist)
-                {
-                    min_obs_dist = d;
-                }
-                break;
-            }
-        }
-//        qDebug() << "min_obs_dist: " << min_obs_dist;
-
-        // store result
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            cur_obs_dist = min_obs_dist;
-            obs_traj = check_traj;
-
-        }
-
-        // debug
-        // if(min_obs_dist < 2.0)
-        // {
-        //     printf("[OBS_LOOP] Obstacle detected: dist = %.2f, state = %s, vx = %.2f\n", min_obs_dist, obs_far_state.toStdString().c_str(), cur_vel[0]);
-        // }
 
         // for real time loop
         double cur_loop_time = get_time();

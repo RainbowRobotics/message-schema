@@ -79,25 +79,84 @@ void ORBBEC::close()
     }
 }
 
+void ORBBEC::get_cam_exist_check()
+{
+//    // check device
+//    ob::Context ctx;
+//    ctx.setLoggerSeverity(OB_LOG_SEVERITY_OFF);
+//    ctx.setLoggerToConsole(OB_LOG_SEVERITY_OFF);
+
+//    auto dev_list = ctx.queryDeviceList();
+//    int dev_count = dev_list->deviceCount();
+
+//    if(dev_count == 0)
+//    {
+//        grab_flag[idx] = false;
+
+//        logger->write_log("[ORBBEC] no camera", "Red");
+//        return;
+//    }
+
+////    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+//    int dev_match_success = false;
+//    int dev_idx = 0;
+//    QString sn_connected = "";
+//    for(int i=0; i<dev_count; i++)
+//    {
+//        QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+//        if(sn == config->get_cam_serial_number(idx))
+//        {
+//            dev_match_success = true;
+//            dev_idx = i;
+//            sn_connected = sn;
+//            break;
+//        }
+//    }
+//    if(dev_match_success == false)
+//    {
+//        static QAtomicInt already_updated = 0; // 전역 또는 static 변수
+
+//        if(dev_match_success == false)
+//        {
+//            grab_flag[idx] = false;
+
+//            if(already_updated.testAndSetRelaxed(0, 1)) // 처음 호출한 스레드만 true
+//            {
+//                QString serial_number_str[max_cam_cnt];
+//                for (int i = 0 ; i < dev_count; i++)
+//                {
+//                    serial_number_str[i] = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+//                }
+//                config->set_cam_order(serial_number_str);
+//                logger->write_log("[ORBBEC] no camera match -> saved serial numbers", "Yellow");
+//            }
+
+//            return;
+//        }
+//    }
+}
+
 QString ORBBEC::get_cam_info_str()
 {
     QString connection_str = "connection:";
-    for(int p = 0; p < config->get_cam_num(); p++)
+    int camNum = config->get_cam_num();
+
+    for(int p = 0; p < camNum; p++)
     {
         QString connection = QString("%1,").arg(is_connected[p] ? "1" : "0");
         connection_str += connection;
     }
 
     QString pts_str = "pts:";
-    for(int p = 0; p < config->get_cam_num(); p++)
+    for(int p = 0; p < camNum; p++)
     {
         QString pts = QString("%1,").arg(cur_pts_size[p]);
         pts_str += pts;
     }
 
     QString str = QString("[ORBBEC]\n%1, color(w,h):%2,%3\ndepth(w,h):%4,%5, %6").arg(connection_str)
-                                                                                 .arg((int)cur_w_color).arg((int)cur_h_color)
-                                                                                 .arg((int)cur_w_depth).arg((int)cur_h_depth)
+            .arg((int)cur_w_color).arg((int)cur_h_color)
+            .arg((int)cur_w_depth).arg((int)cur_h_depth)
                                                                                  .arg(pts_str);
     return str;
 }
@@ -166,6 +225,7 @@ void ORBBEC::grab_loop(int idx)
 
     auto dev_list = ctx.queryDeviceList();
     int dev_count = dev_list->deviceCount();
+
     if(dev_count == 0)
     {
         grab_flag[idx] = false;
@@ -174,7 +234,43 @@ void ORBBEC::grab_loop(int idx)
         return;
     }
 
-    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+//    QString sn = dev_list->getDevice(idx)->getDeviceInfo()->serialNumber();
+    int dev_match_success = false;
+    int dev_idx = 0;
+    QString sn_connected = "";
+    for(int i=0; i<dev_count; i++)
+    {
+        QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+        if(sn == config->get_cam_serial_number(idx))
+        {
+            dev_match_success = true;
+            dev_idx = i;
+            sn_connected = sn;
+            break;
+        }
+    }
+    if(dev_match_success == false)
+    {
+        static QAtomicInt already_updated = 0; // 전역 또는 static 변수
+
+        if(dev_match_success == false)
+        {
+            grab_flag[idx] = false;
+
+            if(already_updated.testAndSetRelaxed(0, 1)) // 처음 호출한 스레드만 true
+            {
+                QString serial_number_str[max_cam_cnt];
+                for (int i = 0 ; i < dev_count; i++)
+                {
+                    serial_number_str[i] = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+                }
+                config->set_cam_order(serial_number_str);
+                logger->write_log("[ORBBEC] no camera match -> saved serial numbers", "Yellow");
+            }
+
+            return;
+        }
+    }
     //if(sn != config->get_cam_serial_number(idx))
     //{
     //    grab_flag[idx] = false;
@@ -182,7 +278,9 @@ void ORBBEC::grab_loop(int idx)
     //    logger->write_log("[ORBBEC] no camera", "Red");
     //    return;
     //}
-    logger->write_log(QString("[ORBBEC] detected serial number, sn:%1").arg(sn));
+//    get_cam_exist_check();
+
+    logger->write_log(QString("[ORBBEC] connected serial number, sn:%1").arg(sn_connected));
 
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
@@ -190,7 +288,7 @@ void ORBBEC::grab_loop(int idx)
     double voxel_size = config->get_mapping_voxel_size();
 
     // set cam
-    auto dev = dev_list->getDevice(idx);
+    auto dev = dev_list->getDevice(dev_idx);
     dev->setBoolProperty(OB_PROP_COLOR_MIRROR_BOOL, false);
     dev->setBoolProperty(OB_PROP_DEPTH_MIRROR_BOOL, false);
 
@@ -294,6 +392,7 @@ void ORBBEC::grab_loop(int idx)
                 scan.t = t;
                 scan.pts = std::move(pts);
 
+
                 depth_que[idx].push(scan);
                 if(depth_que[idx].unsafe_size() > 10)
                 {
@@ -318,9 +417,13 @@ void ORBBEC::grab_loop(int idx)
                 double t = static_cast<double>(ts) / 1000.0;
 
                 std::shared_ptr<ob::ColorFrame> colorFrame = fs->colorFrame();
-                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
-                cv::Mat img;
-                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+//                cv::Mat raw(colorFrame->height(), colorFrame->width(), CV_8UC3, colorFrame->data());
+//                cv::Mat img;
+//                cv::cvtColor(raw, img, cv::COLOR_RGB2BGR);
+                const uchar* dataPtr = static_cast<const uchar*>(colorFrame->data());
+                std::vector<uchar> buf(dataPtr, dataPtr + colorFrame->dataSize());
+                cv::Mat encoded(1, colorFrame->dataSize(), CV_8UC1, buf.data());
+                cv::Mat img = cv::imdecode(encoded, cv::IMREAD_COLOR);
 
                 if(!img.empty())
                 {
@@ -328,6 +431,7 @@ void ORBBEC::grab_loop(int idx)
                     time_img.t = t;
                     time_img.img = img;
 
+                    img_que[idx].push(time_img);
                     if(img_que[idx].unsafe_size() > 10)
                     {
                         TIME_IMG dummy;

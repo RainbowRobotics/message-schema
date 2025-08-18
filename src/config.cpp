@@ -93,6 +93,7 @@ void CONFIG::load()
 
     load_robot_config(obj);
     load_sensors_config(obj);
+    load_localization_config(obj);
     load_localization_2d_config(obj);
     load_localization_3d_config(obj);
     load_network_config(obj);
@@ -123,6 +124,7 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
     check_and_set_string(obj_robot, "MILEAGE",        MILEAGE,      "robot");
+    check_and_set_bool  (obj_robot, "SPEAKER",        USE_SPEAKER,  "robot");
 
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
@@ -148,13 +150,20 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
-    check_and_set_bool(obj_sensors,   "USE_ARUCO",      USE_ARUCO,     "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_3D_NUM",   LIDAR_3D_NUM,  "sensors");
     check_and_set_int(obj_sensors,    "CAM_NUM",        CAM_NUM,       "sensors");
     check_and_set_string(obj_sensors, "LIDAR_2D_TYPE",  LIDAR_2D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "LIDAR_3D_TYPE",  LIDAR_3D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
+}
+
+void CONFIG::load_localization_config(const QJsonObject &obj)
+{
+    QJsonObject obj_loc = obj["localization"].toObject();
+
+    check_and_set_string(obj_loc,   "MODE",             LOC_MODE,       "localization");
+    check_and_set_bool(obj_loc,     "USE_ARUCO",        USE_ARUCO,      "localization");
 }
 
 void CONFIG::load_localization_2d_config(const QJsonObject &obj)
@@ -347,7 +356,9 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
         {
             QJsonObject obj_cam = cam_arr[i].toObject();
             CAM_TF[i] = obj_cam["TF"].toString();
+            CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
             printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
+            printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
         }
     }
 }
@@ -471,6 +482,24 @@ void CONFIG::show_missing_variables_dialog()
     printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
 }
 
+QStringList CONFIG::load_folder_list()
+{
+    QString version_path = QCoreApplication::applicationDirPath() + "/config";
+    QStringList fileList;
+
+    QDir dir(version_path);
+    QFileInfoList entries = dir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllDirs);
+
+    for (const QFileInfo& item : entries)
+    {
+        if (item.isDir())
+        {
+            fileList.append(item.baseName());
+        }
+    }
+    return fileList;
+}
+
 void CONFIG::set_config_path(const QString &path)
 {
     path_config = path;
@@ -582,6 +611,167 @@ void CONFIG::set_map_path(const QString &path)
     config_file.close();
 }
 
+bool CONFIG::set_value_change(QString key, QString value)
+{
+    QMutexLocker locker(&q_mtx);
+
+    QFile file(path_config);
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(fileData, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        return false;
+    }
+
+    QJsonObject rootObj = jsonDoc.object();
+
+    // define section list
+    QStringList sections = {"robot", "motor", "default", "mapping", "loc","annotation", "debug", "control", "docking", "obs", "cam", "fms", "lvx", "map"};
+    bool updated = false;
+
+    for (const QString& section : sections)
+    {
+        if (!rootObj.contains(section) || !rootObj[section].isObject())
+        {
+            continue;
+        }
+
+        QJsonObject subObj = rootObj[section].toObject();
+
+
+        if (subObj.contains(key))
+        {
+            subObj[key] = value;
+            rootObj[section] = subObj;
+            updated = true;
+
+            QJsonDocument updatedDoc(rootObj);
+
+            QFile wfile(path_config);
+            if(!wfile.open(QIODevice::WriteOnly))
+            {
+                return false;
+            }
+            wfile.write(updatedDoc.toJson(QJsonDocument::Indented));
+            wfile.close();
+
+            return true;
+        }
+    }
+
+    // If the key does not exist in config.json -> modify common.json.
+    if (!updated)
+    {
+        QFile common_file(common_path);
+        if (!common_file.open(QIODevice::ReadOnly))
+            return false;
+
+        QByteArray common_fileData = common_file.readAll();
+        common_file.close();
+
+        QJsonParseError common_parseError;
+        QJsonDocument common_jsonDoc = QJsonDocument::fromJson(common_fileData, &common_parseError);
+        if (common_parseError.error != QJsonParseError::NoError)
+            return false;
+
+        QJsonObject commonObj = common_jsonDoc.object();
+
+        QStringList fileList = load_folder_list();
+        bool foundKeyInList = false;
+
+        for (const QString& item : fileList)
+        {
+            if (item == value)
+            {
+                foundKeyInList = true;
+                break;
+            }
+        }
+
+        if (foundKeyInList)
+        {
+            if (commonObj.contains(key))
+            {
+                commonObj[key] = value;
+                QJsonDocument updatedCommonDoc(commonObj);
+                QFile wCommonFile(common_path);
+                if (!wCommonFile.open(QIODevice::WriteOnly))
+                {
+                    return false;
+                }
+                wCommonFile.write(updatedCommonDoc.toJson(QJsonDocument::Indented));
+                wCommonFile.close();
+                return true;
+            }
+            else
+            {
+                return false; // key is not in common.json
+            }
+        }
+    }
+    return false;
+}
+
+
+bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
+{
+    QMutexLocker locker(&q_mtx);
+
+    QFile file(path_config);
+    qDebug()<<"path_config : "<<path_config;
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(fileData, &parseError);
+    if(parseError.error != QJsonParseError::NoError)
+    {
+        return false;
+    }
+
+    QJsonObject rootObj = jsonDoc.object();
+    if(!rootObj.contains("cam_config") || !rootObj["cam_config"].isArray())
+    {
+        return false;
+    }
+
+     QJsonArray camArray = rootObj["cam_config"].toArray();
+
+
+    for (int i = 0; i < get_cam_num(); i++)
+    {
+        QJsonObject camObj = camArray[i].toObject();
+        camObj["SERIAL_NUMBER"] = CAM_SERIAL_NUMBER[i]; // save serial number
+        camArray[i] = camObj; // add object to array
+    }
+
+    rootObj["cam_config"] = camArray;
+
+
+    QJsonDocument updatedDoc(rootObj);
+    QFile wfile(path_config);
+    if(!wfile.open(QIODevice::WriteOnly))
+    {
+        return false;
+    }
+    wfile.write(updatedDoc.toJson(QJsonDocument::Indented));
+    wfile.close();
+
+    return true;
+}
 
 void CONFIG::set_mileage(const QString &mileage)
 {
@@ -722,6 +912,13 @@ double CONFIG::get_robot_radius()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_RADIUS;
+}
+
+
+bool CONFIG::get_robot_use_speaker()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_SPEAKER;
 }
 
 bool CONFIG::get_use_lidar_2d()
@@ -1049,7 +1246,7 @@ double CONFIG::get_cam_height_max()
 QString CONFIG::get_cam_serial_number(int idx)
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    if(idx >= 0 && idx < 2)
+    if(idx >= 0 && idx < 4)
     {
         return CAM_SERIAL_NUMBER[idx];
     }

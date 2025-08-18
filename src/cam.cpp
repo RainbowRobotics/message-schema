@@ -97,6 +97,7 @@ void CAM::open()
     if(config->get_cam_type() == "ORBBEC" && orbbec)
     {
         int cam_num = config->get_cam_num();
+
         for(int p = 0; p < cam_num; p++)
         {
             post_process_flag[p] = true;
@@ -109,6 +110,11 @@ void CAM::open()
         rtsp_flag = true;
         rtsp_thread = std::make_unique<std::thread>(&CAM::rtsp_loop, this);
     }
+}
+
+bool CAM::get_connection(int idx)
+{
+    return is_connected[idx];
 }
 
 double CAM::get_process_time_post(int idx)
@@ -128,52 +134,107 @@ TIME_PTS CAM::get_scan(int idx)
     return cur_scan[idx];
 }
 
+//void CAM::post_process_loop(int idx)
+//{
+////    const double dt = 0.025; // 40hz
+//    const double dt = 0.1; // 10hz
+//    double pre_loop_time = get_time();
+
+//    while(post_process_flag)
+//    {
+//        if(config->get_cam_type() == "ORBBEC" && orbbec)
+//        {
+//            TIME_PTS tp;
+//            if(orbbec->try_pop_depth_que(idx, tp))
+//            {
+//                if(is_connected[idx] == false)
+//                {
+//                    is_connected[idx] = true;
+//                }
+
+//                std::lock_guard<std::mutex> lock(mtx);
+//                cur_scan[idx] = tp;
+//            }
+
+//            TIME_IMG ti;
+//            if(orbbec->try_pop_img_que(idx, ti))
+//            {
+//                if(is_connected[idx] == false)
+//                {
+//                    is_connected[idx] = true;
+//                }
+
+//                std::lock_guard<std::mutex> lock(mtx);
+//                cur_time_img[idx] = ti;
+//            }
+//        }
+
+//        // for real time loop
+//        double cur_loop_time = get_time();
+//        double delta_loop_time = cur_loop_time - pre_loop_time;
+//        if(delta_loop_time < dt)
+//        {
+//            int sleep_ms = (dt-delta_loop_time)*1000;
+//            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+//        }
+//        else
+//        {
+//            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+//        }
+//        process_time_post[idx] = delta_loop_time;
+//        pre_loop_time = get_time();
+//    }
+//}
+
 void CAM::post_process_loop(int idx)
 {
-    const double dt = 0.025; // 40hz
+    const double dt = 0.1; // 10hz
     double pre_loop_time = get_time();
 
     while(post_process_flag)
     {
         if(config->get_cam_type() == "ORBBEC" && orbbec)
         {
-            TIME_PTS tp;
-            if(orbbec->try_pop_depth_que(idx, tp))
+            try
             {
-                if(is_connected[idx] == false)
+                TIME_PTS tp;
+                if(orbbec->try_pop_depth_que(idx, tp))
                 {
-                    is_connected[idx] = true;
+                    if(is_connected[idx] == false) is_connected[idx] = true;
+
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_scan[idx] = tp;
                 }
 
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_scan[idx] = tp;
+                TIME_IMG ti;
+                if(orbbec->try_pop_img_que(idx, ti))
+                {
+                    if(is_connected[idx] == false) is_connected[idx] = true;
+
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_time_img[idx] = ti;
+                }
             }
-
-            TIME_IMG ti;
-            if(orbbec->try_pop_img_que(idx, ti))
+            catch(const ob::Error &e)
             {
-                if(is_connected[idx] == false)
-                {
-                    is_connected[idx] = true;
-                }
-
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_time_img[idx] = ti;
+                // If an SDK exception occurs, log it and set the connection status to false
+                logger->write_log(QString("[ORBBEC] Camera %1 error: %2").arg(idx).arg(e.getMessage()));
+                is_connected[idx] = false;
             }
         }
 
-        // for real time loop
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
         if(delta_loop_time < dt)
         {
-            int sleep_ms = (dt-delta_loop_time)*1000;
+            int sleep_ms = (dt - delta_loop_time) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
         }
         else
         {
             logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
         }
+
         process_time_post[idx] = delta_loop_time;
         pre_loop_time = get_time();
     }
@@ -184,26 +245,54 @@ void CAM::rtsp_loop()
     const int send_w = 320;
     const int send_h = 160;
 
-    cv::VideoWriter writer[2];
-    std::string pipeline[2];
-    pipeline[0] = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam0 protocols=udp latency=0";
-    pipeline[1] = "appsrc ! queue max-size-buffers=1 leaky=downstream ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 key-int-max=30 bframes=0 ! video/x-h264,profile=baseline ! rtspclientsink location=rtsp://localhost:8554/cam1 protocols=udp latency=0";
+    int cam_num = config->get_cam_num();
 
-    for(int p=0; p<config->get_cam_num(); p++)
+    std::vector<cv::VideoWriter> writer(cam_num);
+    std::vector<std::string> pipeline(cam_num);
+
+    for (int p = 0; p < cam_num; p++)
+    {
+        std::stringstream ss;
+        ss << "appsrc ! queue max-size-buffers=1 leaky=downstream ! "
+           << "videoconvert ! video/x-raw,format=I420 ! "
+           << "x264enc tune=zerolatency speed-preset=ultrafast bitrate=600 "
+           << "key-int-max=30 bframes=0 ! "
+           << "video/x-h264,profile=baseline ! "
+           << "rtspclientsink location=rtsp://localhost:8554/cam" << p
+           << " protocols=udp latency=0";
+        pipeline[p] = ss.str();
+    }
+
+    rtsp_cam_status.resize(cam_num, false);
+
+    for(int p = 0; p < cam_num; p++)
     {
         bool is_try_open = false;
         if(!writer[p].isOpened())
         {
-            is_try_open = writer[p].open(pipeline[p], 0, (double)10, cv::Size(send_w, send_h), true);
+//            is_try_open = writer[p].open(pipeline[p], 0, (double)10, cv::Size(send_w, send_h), true);
+            is_try_open = writer[p].open(pipeline[p], cv::CAP_GSTREAMER, 10.0, cv::Size(send_w, send_h), true);
+
         }
 
         if(!is_try_open)
         {
             logger->write_log(QString("[RTSP] cam%1 rtsp writer open failed").arg(p));
-            rtsp_flag = false;
-            return;
+//            rtsp_flag = false;
+            rtsp_cam_status[p] = false;
+//            return;
         }
+        else
+        {
+//            rtsp_flag = true;
+            rtsp_cam_status[p] = true;
+        }
+
     }
+
+//    All camera statuses must be true for rtsp_flag to be true
+    rtsp_flag = std::all_of(rtsp_cam_status.begin(), rtsp_cam_status.end(),
+                            [](bool status) { return status; });
 
     while(rtsp_flag)
     {
@@ -238,6 +327,12 @@ void CAM::rtsp_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
+}
+
+std::vector<bool> CAM::get_rtsp_flag()
+{
+   std::lock_guard<std::mutex> lock(mtx);
+   return rtsp_cam_status;
 }
 
 void CAM::set_config_module(CONFIG* _config)

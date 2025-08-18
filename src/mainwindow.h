@@ -73,7 +73,9 @@ public:
     void set_opacity(QWidget* w, double opacity);
     void init_modules();
     void setup_vtk();
+    void speaker_handler(int cnt);
     int led_handler();
+
 
     QString get_map_path();
     void set_map_path(const QString& path);
@@ -127,6 +129,9 @@ public:
 
     // for mileage
    double mileage = {0.0};
+   double prev_move_distance = {0.0};
+
+   QString mileage_sum;
 
     // plot funcs
     void plot_map();
@@ -140,6 +145,7 @@ public:
     void plot_mapping();
     void plot_obs();
     void plot_ctrl();
+    void plot_cam();
     void plot_tractile();
     void plot_process_time();
 

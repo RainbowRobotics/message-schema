@@ -55,7 +55,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "lidarFieldSet",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "fieldRequest",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -76,7 +76,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
 
     send_timer = new QTimer(this);
     connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
-    send_timer->start(100);
+    send_timer->start(10);
 }
 
 COMM_RRS::~COMM_RRS()
@@ -153,7 +153,7 @@ void COMM_RRS::init()
         printf("[COMM_RRS] Warning: config module not set\n");
         return;
     }
-
+    qDebug()<<"USE_COMM_RRS : "<<config->get_use_rrs();
     if(config->get_use_rrs())
     {
         std::map<std::string, std::string> query;
@@ -324,6 +324,10 @@ void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& 
         // parsing
         DATA_FIELD msg;
         msg.command = get_json(data, "command"); // "set", "get"
+        msg.set_field = get_json(data, "set_field").toInt();
+
+
+        qDebug() << "recv_field_set_field:" << msg.set_field;
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
@@ -1326,7 +1330,11 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     if(command == "mapload")
     {
         const QString map_name = msg.map_name;
-        const QString load_dir = QDir::homePath() + "/data/maps/" + map_name;
+        //const QString load_dir = QDir::homePath() + "/data/maps/" + map_name;
+        const QString load_dir = "/data/maps/" + map_name;
+
+        //printf(Qload_dir);
+        qDebug()<<load_dir;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
@@ -1367,7 +1375,6 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             {
                 msg.result = "success";
                 msg.message = "";
-
                 send_load_response(msg);
             }
             else
@@ -1574,13 +1581,17 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 
 void COMM_RRS::slot_field_set(DATA_FIELD msg)
 {
+
     const QString command = msg.command;
 
     if(command == "set")
     {
-        msg.result = "accept";
+        msg.result = "success";
+        qDebug() << "slot msg.sef_field:" << msg.set_field;
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
+
+        qDebug() << "parsing filed set:" << set_field_;
 
         if(mobile)
         {
@@ -1592,12 +1603,13 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
 
     else if (command == "get")
     {
-        msg.result = "accept";
+        msg.result = "success";
         msg.message = "";
 
         if(mobile)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
+            qDebug() << ms.lidar_field;
             msg.get_field = ms.lidar_field;
         }
 
@@ -2149,7 +2161,7 @@ void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
 
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("fieldSetResponse", res);
+    io->socket()->emit("fieldResponse", res);
 
     // for plot
     mtx.lock();
@@ -2168,12 +2180,12 @@ void COMM_RRS::send_field_get_response(const DATA_FIELD& msg)
     obj["command"] = msg.command;
     obj["result"] = msg.result;
     obj["message"] = msg.message;
-    obj["getfield"] = QString::number(msg.get_field);
+    obj["get_field"] = QString::number(msg.get_field);
     obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-    io->socket()->emit("fieldGetResponse", res);
+    io->socket()->emit("fieldResponse", res);
 
     // for plot
     mtx.lock();
@@ -2306,6 +2318,9 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
+
+// Modifying part of sending LiDAR data
+// working at 10[ms]
 void COMM_RRS::send_loop()
 {
     if(!is_connected)
@@ -2313,12 +2328,13 @@ void COMM_RRS::send_loop()
         return;
     }
 
-    if(send_cnt % 2 == 0)
+    // Synchronize with the development version
+    if(send_cnt % 5 == 0)
     {
         send_move_status();
     }
 
-    if(send_cnt % 5 == 0)
+    if(send_cnt % 50 == 0)
     {
         send_status();
     }
@@ -2326,6 +2342,62 @@ void COMM_RRS::send_loop()
     if(send_cnt > 10000)
     {
         send_cnt = 0;
+    }
+
+    // for variable loop
+    double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
+    time_lidar_view *= 10.0;
+    if(time_lidar_view > 0)
+    {
+        if(lidar_view_cnt > time_lidar_view)
+        {
+            lidar_view_cnt = 0;
+            send_lidar();
+        }
+
+        lidar_view_cnt++;
+    }
+
+    double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
+    time_path_view *= 10.0;
+    if(time_path_view > 0)
+    {
+        if(path_view_cnt > time_path_view)
+        {
+            path_view_cnt = 0;
+//                if(is_global_path_update2)
+//                {
+//                    is_global_path_update2 = false;
+//                    comm_rrs.send_global_path();
+//                }
+
+//                if(is_local_path_update2)
+//                {
+//                    is_local_path_update2 = false;
+//                    comm_rrs.send_local_path();
+//                }
+        }
+        path_view_cnt++;
+    }
+
+    // for 1000ms loop
+    // to give information video streaming data
+    if(config->get_use_rtsp() && config->get_use_cam())
+    {
+        if(cnt % 100 == 0)
+        {
+            std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
+            if(rtsp_flag.size() != 0)
+            {
+                for(int p = 0; p < rtsp_flag.size(); p++)
+                {
+                    QString msg = QString("[COMM] cam%1 rtsp writer %2")
+                            .arg(p)
+                            .arg(rtsp_flag[p] ? "open success" : "open failed");
+                    logger->write_log(msg);
+                }
+            }
+        }
     }
 
     send_cnt ++;
