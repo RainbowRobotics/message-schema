@@ -18,7 +18,8 @@ LIDAR_2D::LIDAR_2D(QObject *parent) : QObject{parent},
     config(nullptr),
     logger(nullptr),
     mobile(nullptr),
-    sick(nullptr)
+    sick(nullptr),
+    rp(nullptr)
 {
 
 }
@@ -31,6 +32,11 @@ LIDAR_2D::~LIDAR_2D()
     if(sick != nullptr)
     {
         sick->close();
+    }
+
+    if(rp != nullptr)
+    {
+        rp->close();
     }
 
     close();
@@ -57,6 +63,20 @@ void LIDAR_2D::init()
             sick->set_mobile_module(this->mobile);
             sick->open();
         }
+    }
+    else if(config->get_lidar_2d_type() == "RP")
+    {
+        if(!rp)
+        {
+            RP_LIDAR::instance(this);
+
+            rp = RP_LIDAR::instance();
+            rp->set_config_module(this->config);
+            rp->set_logger_module(this->logger);
+            rp->set_mobile_module(this->mobile);
+            rp->open();
+        }
+
     }
 }
 
@@ -123,6 +143,10 @@ RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
     {
         res = sick->get_cur_raw(idx);
     }
+    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    {
+        res = rp->get_cur_raw(idx);
+    }
     return res;
 }
 
@@ -140,6 +164,14 @@ QString LIDAR_2D::get_info_text()
         for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
         {
             res += sick->get_info_text(idx);
+            res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
+        }
+    }
+    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    {
+        for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
+        {
+            res += rp->get_info_text(idx);
             res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
         }
     }
@@ -177,6 +209,14 @@ void LIDAR_2D::set_sync_flag(bool flag)
         {
             sick->set_is_sync(p, flag);
             printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
+        }
+    }
+    else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
+    {
+        for(int p=0; p<lidar_num; p++)
+        {
+            rp->set_is_sync(p, flag);
+            printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
         }
     }
 }
@@ -221,7 +261,17 @@ void LIDAR_2D::deskewing_loop(int idx)
         }
 
         RAW_FRAME frm;
-        if(sick->try_pop_raw_que(idx, frm))
+        bool is_try_pop = false;
+        if(config->get_lidar_2d_type() == "SICK")
+        {
+            is_try_pop = sick->try_pop_raw_que(idx, frm);
+        }
+        else if(config->get_lidar_2d_type() == "RP")
+        {
+            is_try_pop = rp->try_pop_raw_que(idx, frm);
+        }
+
+        if(is_try_pop)
         {
             double t0 = frm.t0;
             double t1 = frm.t1;
@@ -341,7 +391,27 @@ void LIDAR_2D::merge_loop()
         }
 
         // if pair lidar
-        if(sick->get_is_connected(0) && sick->get_is_connected(1))
+        int lidar_num = config->get_lidar_2d_num();
+        if(lidar_num == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+
+        bool is_ok = false;
+        if(lidar_num == 2)
+        {
+            if(config->get_lidar_2d_type() == "SICK")
+            {
+                is_ok = (sick->get_is_connected(0) && sick->get_is_connected(1));
+            }
+            else if(config->get_lidar_2d_type() == "RP")
+            {
+                is_ok = (rp->get_is_connected(0) && rp->get_is_connected(1));
+            }
+        }
+
+        if(is_ok)
         {
             for(int idx = 0; idx < lidar_num; idx++)
             {
