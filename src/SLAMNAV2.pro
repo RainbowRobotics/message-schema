@@ -30,6 +30,7 @@ message($$HOME)
 
 SOURCES += \
     comm/comm_coop.cpp \
+    comm/comm_fms.cpp \
     comm/comm_rrs.cpp \
     autocontrol.cpp \
     cam.cpp \
@@ -59,6 +60,7 @@ SOURCES += \
 
 HEADERS += \
     comm/comm_coop.h \
+    comm/comm_fms.h \
     comm/comm_rrs.h \
     autocontrol.h \
     cam.h \

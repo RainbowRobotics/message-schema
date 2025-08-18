@@ -48,7 +48,6 @@ public:
     bool get_is_busy();                                 // check if semiauto init busy
     QString get_cur_loc_state();                        // get localization state (none, fail, good)
     QString get_info_text();                            // get all localization info
-    QString get_cur_node_id();                          // get current node id
     Eigen::Matrix4d get_cur_tf();                       // get current tf (4x4 matrix)
     Eigen::Matrix4d get_best_tf(double t);              // get nearest time tf (4x4 matrix)
     Eigen::Vector2d get_cur_ieir();                     // get cur inlier error, inlier ratio
@@ -115,10 +114,6 @@ private:
     std::unique_ptr<std::thread> obs_thread;            // obstacle thread
     void obs_loop();                                    // obstacle loop
 
-    std::atomic<bool> node_flag = {false};              // node thread flag (calc nearest node)
-    std::unique_ptr<std::thread> node_thread;           // node thread
-    void node_loop();                                   // node loop
-
     // for plot
     std::vector<Eigen::Vector3d> cur_global_scan;       // cur global scan
 
@@ -131,7 +126,6 @@ private:
     Eigen::Vector2d cur_ieir;
     std::atomic<double> cur_tf_err = {0.0};
     QString cur_loc_state = "none";
-    QString cur_node_id = "";
 
     // for loc
     std::vector<TIME_POSE> tp_storage;
@@ -142,7 +136,6 @@ private:
     std::atomic<double> process_time_localization = {0.0};
     std::atomic<double> process_time_odometry = {0.0};
     std::atomic<double> process_time_obs = {0.0};
-    std::atomic<double> process_time_node = {0.0};
 
 };
 

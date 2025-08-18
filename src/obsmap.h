@@ -60,6 +60,13 @@ public:
     std::vector<Eigen::Vector3d> get_vir_closure_pts();
     std::vector<Eigen::Vector4d> get_plot_pts(); // x, y, z, prob
 
+    std::vector<Eigen::Vector3d> get_vobs_list_robots();
+    std::vector<Eigen::Vector3d> get_vobs_list_closures();
+
+    void set_vobs_list_robots(const std::vector<Eigen::Vector3d>& _vobs_r_list);
+    void set_vobs_list_closures(const std::vector<Eigen::Vector3d>& _vobs_c_list);
+
+
     std::vector<Eigen::Matrix4d> calc_path(Eigen::Matrix4d st_tf, Eigen::Matrix4d ed_tf);
 
     // for plot

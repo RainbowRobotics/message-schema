@@ -137,7 +137,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-
     plot_timer->stop();
     delete ui;
 }
@@ -2757,10 +2756,11 @@ void MainWindow::plot_process_time()
     {
         if(AUTOCONTROL::instance())
         {
-            double ctrl_control_time = AUTOCONTROL::instance()->get_process_time_control() * 1000;
             double ctrl_obs_time = AUTOCONTROL::instance()->get_process_time_obs() * 1000;
+            double ctrl_node_time = AUTOCONTROL::instance()->get_process_time_node() * 1000;
+            double ctrl_control_time = AUTOCONTROL::instance()->get_process_time_control() * 1000;
 
-            ctrl_time_str = QString::asprintf("[AUTO] control:%.3f, obs:%.3f\n", ctrl_control_time, ctrl_obs_time);
+            ctrl_time_str = QString::asprintf("[AUTO] control:%.3f, obs:%.3f, node:%.3f\n", ctrl_control_time, ctrl_obs_time, ctrl_node_time);
         }
     }
 
@@ -2812,10 +2812,9 @@ void MainWindow::plot_process_time()
             double loc_localizaion_time = LOCALIZATION::instance()->get_process_time_localization() * 1000;
             double loc_odometry_time = LOCALIZATION::instance()->get_process_time_odometry() * 1000;
             double loc_obs_time = LOCALIZATION::instance()->get_process_time_obs() * 1000;
-            double loc_node_time = LOCALIZATION::instance()->get_process_time_node() * 1000;
 
-            loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f, node:%.3f\n",
-                                             loc_localizaion_time, loc_odometry_time, loc_obs_time, loc_node_time);
+            loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f\n",
+                                             loc_localizaion_time, loc_odometry_time, loc_obs_time);
         }
     }
 

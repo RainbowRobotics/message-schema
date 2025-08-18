@@ -55,7 +55,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "fieldRequest",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "fieldRequest",    std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -423,7 +423,6 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         DATA_PATH msg;
         msg.command = get_json(data, "command"); // "path"
         msg.path = get_json(data, "path");
-        msg.vobs_robots = get_json(data, "vobs_r");
         msg.vobs_closures = get_json(data, "vobs_c");
         msg.preset = get_json(data, "preset").toInt();
         msg.time = get_json(data, "time").toDouble() / 1000;
@@ -737,7 +736,7 @@ void COMM_RRS::send_move_status()
     // Creating the JSON object
     QJsonObject rootObj;
 
-    QString cur_node_id = loc->get_cur_node_id();
+    QString cur_node_id = ctrl->get_cur_node_id();
 
     // Adding the move state object
     QString auto_state = "stop";
@@ -1177,7 +1176,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "accept";
                 msg.message = "success";
-                msg.eta = 0.0;
+                msg.remaining_time = 0.0;
             }
             else
             {
@@ -1980,7 +1979,7 @@ void COMM_RRS::send_move_response(const DATA_MOVE& msg)
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
     obj["remaining_dist"] = QString::number(msg.remaining_dist, 'f', 3);
-    obj["eta"] = QString::number(msg.eta, 'f', 3);
+    obj["eta"] = QString::number(msg.remaining_time, 'f', 3);
     obj["bat_percent"] = QString::number(msg.bat_percent, 'f', 3);
 
     // temporal patch
@@ -2318,9 +2317,6 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
-
-// Modifying part of sending LiDAR data
-// working at 10[ms]
 void COMM_RRS::send_loop()
 {
     if(!is_connected)
@@ -2365,40 +2361,38 @@ void COMM_RRS::send_loop()
         if(path_view_cnt > time_path_view)
         {
             path_view_cnt = 0;
-//                if(is_global_path_update2)
-//                {
-//                    is_global_path_update2 = false;
-//                    comm_rrs.send_global_path();
-//                }
+            /*if(is_global_path_update2)
+            {
+                is_global_path_update2 = false;
+                comm_rrs.send_global_path();
+            }
 
-//                if(is_local_path_update2)
-//                {
-//                    is_local_path_update2 = false;
-//                    comm_rrs.send_local_path();
-//                }
+            if(is_local_path_update2)
+            {
+                is_local_path_update2 = false;
+                comm_rrs.send_local_path();
+            }*/
         }
         path_view_cnt++;
     }
 
-    // for 1000ms loop
     // to give information video streaming data
     if(config->get_use_rtsp() && config->get_use_cam())
     {
-        if(cnt % 100 == 0)
+        if(send_cnt % 100 == 0)
         {
             std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
             if(rtsp_flag.size() != 0)
             {
                 for(int p = 0; p < rtsp_flag.size(); p++)
                 {
-                    QString msg = QString("[COMM] cam%1 rtsp writer %2")
-                            .arg(p)
-                            .arg(rtsp_flag[p] ? "open success" : "open failed");
+                    QString msg = QString("[COMM] cam%1 rtsp writer %2").arg(p)
+                                                                        .arg(rtsp_flag[p] ? "open success" : "open failed");
                     logger->write_log(msg);
                 }
             }
         }
     }
 
-    send_cnt ++;
+    send_cnt++;
 }
