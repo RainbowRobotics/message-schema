@@ -21,10 +21,6 @@ public:
     // make singleton
     static ZONE* instance(QObject* parent = nullptr);
 
-    /***********************
-     * interface funcs
-     ***********************/
-
     // initialization zone module
     void init();
 
@@ -34,6 +30,13 @@ public:
     // close zone module
     void close();
 
+
+    /***********************
+     * interface funcs
+     ***********************/
+    QString get_cur_zone();
+    void set_cur_zone(QString str);
+
     /***********************
      * set other modules
      ***********************/
@@ -41,7 +44,6 @@ public:
     void set_logger_module(LOGGER* _logger);
     void set_unimap_module(UNIMAP* _unimap);
     void set_localization_module(LOCALIZATION* _localization);
-
 
 private:
     explicit ZONE(QObject *parent = nullptr);
@@ -61,7 +63,7 @@ private:
     std::unique_ptr<std::thread> zone_thread;
     void zone_loop();
 
-
+    QString cur_zone = "";
 
 };
 

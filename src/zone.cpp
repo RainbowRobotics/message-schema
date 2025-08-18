@@ -48,6 +48,19 @@ void ZONE::close()
     printf("[ZONE] close\n");
 }
 
+QString ZONE::get_cur_zone()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = cur_zone;
+    return res;
+}
+
+void ZONE::set_cur_zone(QString str)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    cur_zone = str;
+}
+
 void ZONE::set_config_module(CONFIG* _config)
 {
     config = _config;
@@ -83,7 +96,6 @@ void ZONE::zone_loop()
         // check zone
         QString zone = "";
         std::vector<QString> zones = unimap->get_nodes("ZONE");
-        NODE* zone_node = nullptr;
         for(size_t p = 0; p < zones.size(); p++)
         {
             NODE* node = unimap->get_node_by_id(zones[p]);
@@ -107,12 +119,14 @@ void ZONE::zone_loop()
                     {
                         // current zone
                         zone = name;
-                        zone_node = node;
                         break;
                     }
                 }
             }
         }
+
+        // update
+        set_cur_zone(zone);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
