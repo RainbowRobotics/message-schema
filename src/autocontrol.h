@@ -40,25 +40,32 @@ public:
     /***********************
      * interface funcs
      ***********************/
-    int get_fsm_state();                    // get current Finit State Machine state
-    bool get_is_debug();                    // check if debug
-    bool get_is_pause();                    // check if paused
-    bool get_is_moving();                   // check if moving
-    bool get_multi_inter_lock();            // (if emo push->released:[true] new move cmd come:[false]) to keep it in "not ready" state until a new move command comes.
-    PATH get_cur_global_path();             // get current global path
-    PATH get_cur_local_path();              // get current local path
-    double get_process_time_control();      // get control loop processing time
-    double get_process_time_obs();          // get obs loop processing time
-    QString get_multi_reqest_state();       // get current multi request state (none, req_path, recv_path)
-    QString get_obs_condition();            // get current obstacle condition (none, near, far, vir)
-    double get_obs_dist();                 // get current obstacle far dist (1m, 2m)
+    int get_fsm_state();                            // get current Finit State Machine state
+    int get_last_step();
+    bool get_is_debug();                            // check if debug
+    bool get_is_pause();                            // check if paused
+    bool get_is_moving();                           // check if moving
+    bool get_multi_inter_lock();                    // (if emo push->released:[true] new move cmd come:[false]) to keep it in "not ready" state until a new move command comes.
+    PATH get_cur_global_path();                     // get current global path
+    PATH get_cur_local_path();                      // get current local path
+    double get_obs_dist();                          // get current obstacle far dist (1m, 2m)
+    double get_process_time_control();              // get control loop processing time
+    double get_process_time_node();                  // get node loop processing time
+    double get_process_time_obs();                  // get obs loop processing time
+    QString get_auto_state();                       // get current auto request state (stop, move, pause, good, vir, not ready, error)
+    QString get_cur_node_id();                      // get current node id
+    QString get_obs_condition();                    // get current obstacle condition (none, near, far, vir)
+    QString get_cur_move_state();                   // get current move state (none, move, complete, fail, obstacle, cancel)
+    QString get_multi_reqest_state();               // get current multi request state (none, req_path, recv_path)
+    DATA_MOVE get_cur_move_info();                  // get last received move msg
+    long long get_global_path_time();
+    CTRL_PARAM get_cur_ctrl_params();
+    Eigen::Vector3d get_last_cur_pos();             // get last current pos
+    Eigen::Vector3d get_last_tgt_pos();             // get last target pos
+    Eigen::Vector3d get_last_local_goal();          // get last local goal
     std::vector<Eigen::Matrix4d> get_obs_traj();
-    QString get_cur_move_state();           // get current move state (none, move, complete, fail, obstacle, cancel)
-    DATA_MOVE get_cur_move_info();          // get last received move msg
-    Eigen::Vector3d get_last_cur_pos();     // get last current pos
-    Eigen::Vector3d get_last_tgt_pos();     // get last target pos
-    Eigen::Vector3d get_last_local_goal();  // get last local goal
 
+    void set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time);
     void set_is_rrs(bool flag);
     void set_is_pause(bool val);
     void set_is_debug(bool val);
@@ -90,6 +97,7 @@ public Q_SLOTS:
 
     // slot func move(receive path) (start control loop)
     void slot_path(DATA_PATH msg);
+    void slot_path();
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -117,6 +125,7 @@ private:
 
     // [multi robot] move (input param: node path)
     void move(std::vector<QString> node_path, int preset);
+    void move();
 
     // global path, local path
     void clear_path();
@@ -183,6 +192,10 @@ private:
     std::unique_ptr<std::thread> obs_thread;
     void obs_loop();
 
+    std::atomic<bool> node_flag = {false};              // node thread flag (calc nearest node)
+    std::unique_ptr<std::thread> node_thread;           // node thread
+    void node_loop();                                   // node loop
+
     // for plot
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
@@ -190,35 +203,45 @@ private:
 
     tbb::concurrent_queue<PATH> global_path_que;
 
-    // flags
-    std::atomic<bool> is_path_overlap  = {false};
-    std::atomic<bool> is_moving        = {false};
-    std::atomic<bool> is_debug         = {false};
-    std::atomic<bool> is_pause         = {false};
-    std::atomic<bool> is_rrs           = {false};
-    std::atomic<int>  fsm_state        = {AUTO_FSM_COMPLETE};
-    std::atomic<bool> multi_inter_lock = {false};
+    // for multi-robot control
+    int global_preset = 0;
+    std::mutex path_mtx;
+    std::vector<int> global_step;
+    std::atomic<int> last_step = {0};
+    std::vector<QString> global_node_path;
+    std::atomic<long long> global_path_time = {(long long)0};
 
+    // flags
+    std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
+    std::atomic<bool> is_rrs                 = {false};
+    std::atomic<bool> is_debug               = {false};
+    std::atomic<bool> is_pause               = {false};
+    std::atomic<bool> is_moving              = {false};
+    std::atomic<bool> is_path_overlap        = {false};
+    std::atomic<bool> multi_inter_lock       = {false};
+    std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
-    std::atomic<double> process_time_obs = {0.0};
 
     // params for rrs & plot
-    DATA_MOVE cur_move_info;
-    QString cur_multi_req     = "none"; // none, req_path, recv_path
-    QString cur_obs_condition = "none"; // none, near, far, vir
-    QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
-    PATH cur_global_path;
     PATH cur_local_path;
+    PATH cur_global_path;
+    QString cur_node_id       = "";
+    QString cur_multi_req     = "none"; // none, req_path, recv_path
+    QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
+    QString cur_obs_condition = "none"; // none, near, far, vir
+    DATA_MOVE cur_move_info;
 
     // obs
-    double cur_obs_decel_v = 0.0;
     int cur_obs_value = OBS_NONE;
+    double cur_obs_decel_v = 0.0;
     std::mutex mtx_obs_decel;
 
     // driving local ref v oscilation prevent
     Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
     int prev_local_ref_v_index = 0;
     bool ref_v_oscilation_end_flag = false;
+
+    std::atomic<double> process_time_node = {0.0};
 
     // debug
     double cur_obs_dist = 9999.0;
@@ -229,6 +252,7 @@ private:
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
+    void signal_path();
     void signal_path(DATA_PATH msg);
     void signal_move_response(DATA_MOVE msg);
     void signal_global_path_updated();
