@@ -329,6 +329,7 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             QJsonObject obj_lidar_2d = lidar_arr[i].toObject();
             LIDAR_2D_IP[i] = obj_lidar_2d["IP"].toString();
             LIDAR_2D_TF[i] = obj_lidar_2d["TF"].toString();
+            LIDAR_2D_DEV[i] = obj_lidar_2d["DEV"].toString();
             printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
         }
     }
@@ -930,6 +931,12 @@ QString CONFIG::get_lidar_2d_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return LIDAR_2D_TYPE;
+}
+
+QString CONFIG::get_lidar_2d_dev(int idx)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_DEV[idx];
 }
 
 int CONFIG::get_lidar_2d_num()

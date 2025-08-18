@@ -11,6 +11,7 @@
 #include "mobile.h"
 
 #include "lidar/SICK/sick.h"
+#include "lidar/RP/rp_lidar.h"
 
 #include <QObject>
 
@@ -71,10 +72,11 @@ private:
     std::shared_mutex mtx;
 
     // other modules
+    SICK* sick;
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
-    SICK* sick;
+    RP_LIDAR *rp;
 
     // deskewing loop
     std::atomic<bool> deskewing_flag[2] = {false, false};

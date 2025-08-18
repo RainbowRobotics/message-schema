@@ -89,7 +89,7 @@ private:
 
     // vars    
     std::unique_ptr<sio::client> io;    
-    std::atomic<int> last_send_kfrm_idx{0};
+    std::atomic<int> last_send_kfrm_idx = {0};
 
     // flags
     QString multi_state;
