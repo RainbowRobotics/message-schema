@@ -83,9 +83,26 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
 
 void POLICY::zone_loop()
 {
+    bool is_ready = false;
+
     printf("[POLICY] zone_loop start\n");
     while(zone_flag)
     {
+        if(!is_ready)
+        {
+            if(unimap->get_is_loaded() == MAP_LOADED)
+            {
+                is_ready = true;
+                if(unimap->get_nodes("ZONE").empty())
+                {
+                    break;
+                }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
         // plot text
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         pcl::PointXYZ position;

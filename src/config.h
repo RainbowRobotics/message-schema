@@ -104,7 +104,6 @@ public:
      ***********************/
     bool get_use_sim();                 // check if the robot uses simulation mode
     bool get_use_beep();                // check if the robot uses beep sound (internal beep sound when obstacle is detected)
-    bool get_use_zone();                // check if the robot uses zone funtion
     QString get_server_ip();
     QString get_server_id();
     QString get_server_pw();
@@ -354,7 +353,6 @@ private:
     // debug
     bool USE_SIM = false;
     bool USE_BEEP = false;
-    bool USE_ZONE = false;
     QString SERVER_IP = "127.0.0.1";
     QString SERVER_ID = "rainbow";
     QString SERVER_PW = "rainbow";

@@ -428,7 +428,6 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
-
     }
 
     // docking module init
@@ -442,15 +441,12 @@ void MainWindow::init_modules()
 
     // zone module init
     {
-        if(CONFIG::instance()->get_use_zone())
-        {
-            POLICY::instance()->set_config_module(CONFIG::instance());
-            POLICY::instance()->set_logger_module(LOGGER::instance());
-            POLICY::instance()->set_unimap_module(UNIMAP::instance());
-            POLICY::instance()->set_localization_module(LOCALIZATION::instance());
-            POLICY::instance()->init();
-            POLICY::instance()->open();
-        }
+        POLICY::instance()->set_config_module(CONFIG::instance());
+        POLICY::instance()->set_logger_module(LOGGER::instance());
+        POLICY::instance()->set_unimap_module(UNIMAP::instance());
+        POLICY::instance()->set_localization_module(LOCALIZATION::instance());
+        POLICY::instance()->init();
+        POLICY::instance()->open();
     }
 
     // start jog loop

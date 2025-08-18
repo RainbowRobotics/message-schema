@@ -42,8 +42,7 @@
     "debug": {
         "USE_SIM": false,
         "USE_QTUI": false,
-        "USE_BEEP": false,
-        "USE_ZONE": true
+        "USE_BEEP": false
     },
     "lidar_2d_config": [
         {
