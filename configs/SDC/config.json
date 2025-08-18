@@ -1,6 +1,6 @@
 {
     "robot": {
-        "PLATFORM_NAME": "SEM",
+        "PLATFORM_NAME": "SDC",
         "PLATFORM_TYPE": "D400",
         
         "ROBOT_SIZE_MAX_X": "0.51",

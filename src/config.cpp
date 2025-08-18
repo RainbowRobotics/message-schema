@@ -212,6 +212,7 @@ void CONFIG::load_debug_config(const QJsonObject &obj)
 
     check_and_set_bool(obj_debug,   "USE_SIM",   USE_SIM,   "debug");
     check_and_set_bool(obj_debug,   "USE_BEEP",  USE_BEEP,  "debug");
+    check_and_set_bool(obj_debug,   "USE_ZONE",  USE_ZONE,  "debug");
     check_and_set_string(obj_debug, "SERVER_IP", SERVER_IP, "debug");
     check_and_set_string(obj_debug, "SERVER_ID", SERVER_ID, "debug");
     check_and_set_string(obj_debug, "SERVER_PW", SERVER_PW, "debug");
@@ -1140,6 +1141,12 @@ bool CONFIG::get_use_beep()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_BEEP;
+}
+
+bool CONFIG::get_use_zone()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_ZONE;
 }
 
 QString CONFIG::get_server_ip()

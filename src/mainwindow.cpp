@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AUTOCONTROL::instance(this);
     SIM::instance(this);
     DOCKCONTROL::instance(this);
+    ZONE::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -439,7 +440,18 @@ void MainWindow::init_modules()
         DOCKCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
     }
 
-
+    // zone module init
+    {
+        if(CONFIG::instance()->get_use_zone())
+        {
+            ZONE::instance()->set_config_module(CONFIG::instance());
+            ZONE::instance()->set_logger_module(LOGGER::instance());
+            ZONE::instance()->set_unimap_module(UNIMAP::instance());
+            ZONE::instance()->set_localization_module(LOCALIZATION::instance());
+            ZONE::instance()->init();
+            ZONE::instance()->open();
+        }
+    }
 
     // start jog loop
     jog_flag = true;
@@ -3346,46 +3358,9 @@ void MainWindow::plot_ctrl()
             pcl_viewer->removeShape("vel_text");
         }
 
-        pcl::PointXYZ position;
-        position.x = cur_tf(0,3);
-        position.y = cur_tf(1,3);
-        position.z = cur_tf(2,3) + 1.5;
-
-        // check zone
-        QString zone = "";
-        std::vector<QString> zones = UNIMAP::instance()->get_nodes("ZONE");
-        for(size_t p = 0; p < zones.size(); p++)
-        {
-            NODE* node = UNIMAP::instance()->get_node_by_id(zones[p]);
-            if(node != nullptr)
-            {
-                QString name = node->name;
-                QString info = node->info;
-
-                NODE_INFO res;
-                if(parse_info(info, "SIZE", res))
-                {
-                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
-
-                    double x = tf(0,3);
-                    double y = tf(1,3);
-                    double z = tf(2,3);
-
-                    if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
-                            y > -res.sz[1]/2 && y < res.sz[1]/2 &&
-                            z > -res.sz[2]/2 && z < res.sz[2]/2)
-                    {
-                        // current zone
-                        zone = name;
-                        break;
-                    }
-                }
-            }
-        }
-
         Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
         QString text;
-        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", control_input[0], control_input[1], control_input[2]*R2D, zone.toLocal8Bit().data());
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", control_input[0], control_input[1], control_input[2]*R2D, ZONE::instance()->get_cur_zone().toLocal8Bit().data());
         ui->lb_RobotVel->setText(text);
 
         // draw cur node
