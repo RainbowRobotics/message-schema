@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     AUTOCONTROL::instance(this);
     SIM::instance(this);
     DOCKCONTROL::instance(this);
-    ZONE::instance(this);
+    POLICY::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -444,12 +444,12 @@ void MainWindow::init_modules()
     {
         if(CONFIG::instance()->get_use_zone())
         {
-            ZONE::instance()->set_config_module(CONFIG::instance());
-            ZONE::instance()->set_logger_module(LOGGER::instance());
-            ZONE::instance()->set_unimap_module(UNIMAP::instance());
-            ZONE::instance()->set_localization_module(LOCALIZATION::instance());
-            ZONE::instance()->init();
-            ZONE::instance()->open();
+            POLICY::instance()->set_config_module(CONFIG::instance());
+            POLICY::instance()->set_logger_module(LOGGER::instance());
+            POLICY::instance()->set_unimap_module(UNIMAP::instance());
+            POLICY::instance()->set_localization_module(LOCALIZATION::instance());
+            POLICY::instance()->init();
+            POLICY::instance()->open();
         }
     }
 
@@ -3360,7 +3360,7 @@ void MainWindow::plot_ctrl()
 
         Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
         QString text;
-        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", control_input[0], control_input[1], control_input[2]*R2D, ZONE::instance()->get_cur_zone().toLocal8Bit().data());
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", control_input[0], control_input[1], control_input[2]*R2D, POLICY::instance()->get_cur_zone().toLocal8Bit().data());
         ui->lb_RobotVel->setText(text);
 
         // draw cur node

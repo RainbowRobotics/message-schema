@@ -55,7 +55,7 @@ SOURCES += \
     lidar/LIVOX/livox.cpp \
     obsmap.cpp \
     sim.cpp \
-    zone.cpp
+    policy.cpp
 
 
 HEADERS += \
@@ -88,7 +88,7 @@ HEADERS += \
     lidar/LIVOX/livox.h \
     obsmap.h \
     sim.h \
-    zone.h
+    policy.h
 
 
 FORMS += \

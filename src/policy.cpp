@@ -1,11 +1,11 @@
-#include "zone.h"
+#include "policy.h"
 
-ZONE* ZONE::instance(QObject* parent)
+POLICY* POLICY::instance(QObject* parent)
 {
-    static ZONE* inst = nullptr;
+    static POLICY* inst = nullptr;
     if(!inst && parent)
     {
-        inst = new ZONE(parent);
+        inst = new POLICY(parent);
     }
     else if(inst && parent && inst->parent() == nullptr)
     {
@@ -14,30 +14,30 @@ ZONE* ZONE::instance(QObject* parent)
     return inst;
 }
 
-ZONE::ZONE(QObject *parent) : QObject{parent}
+POLICY::POLICY(QObject *parent) : QObject{parent}
 {
 
 }
 
-ZONE::~ZONE()
+POLICY::~POLICY()
 {
     close();
 }
 
-void ZONE::init()
+void POLICY::init()
 {
-    printf("[ZONE] init\n");
+    printf("[POLICY] init\n");
 }
 
-void ZONE::open()
+void POLICY::open()
 {
     zone_flag = true;
-    zone_thread = std::make_unique<std::thread>(&ZONE::zone_loop, this);
+    zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
 
-    printf("[ZONE] open\n");
+    printf("[POLICY] open\n");
 }
 
-void ZONE::close()
+void POLICY::close()
 {
     zone_flag = false;
     if(zone_thread && zone_thread->joinable())
@@ -45,45 +45,45 @@ void ZONE::close()
         zone_thread->join();
     }
     zone_thread.reset();
-    printf("[ZONE] close\n");
+    printf("[POLICY] close\n");
 }
 
-QString ZONE::get_cur_zone()
+QString POLICY::get_cur_zone()
 {
     std::lock_guard<std::mutex> lock(mtx);
     QString res = cur_zone;
     return res;
 }
 
-void ZONE::set_cur_zone(QString str)
+void POLICY::set_cur_zone(QString str)
 {
     std::lock_guard<std::mutex> lock(mtx);
     cur_zone = str;
 }
 
-void ZONE::set_config_module(CONFIG* _config)
+void POLICY::set_config_module(CONFIG* _config)
 {
     config = _config;
 }
 
-void ZONE::set_logger_module(LOGGER* _logger)
+void POLICY::set_logger_module(LOGGER* _logger)
 {
     logger = _logger;
 }
 
-void ZONE::set_unimap_module(UNIMAP *_unimap)
+void POLICY::set_unimap_module(UNIMAP *_unimap)
 {
     unimap = _unimap;
 }
 
-void ZONE::set_localization_module(LOCALIZATION *_loc)
+void POLICY::set_localization_module(LOCALIZATION *_loc)
 {
     loc = _loc;
 }
 
-void ZONE::zone_loop()
+void POLICY::zone_loop()
 {
-    printf("[ZONE] zone_loop start\n");
+    printf("[POLICY] zone_loop start\n");
     while(zone_flag)
     {
         // plot text
@@ -130,4 +130,5 @@ void ZONE::zone_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    printf("[POLICY] zone_loop stop\n");
 }

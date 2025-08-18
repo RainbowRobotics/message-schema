@@ -1,5 +1,5 @@
-#ifndef ZONE_H
-#define ZONE_H
+#ifndef POLICY_H
+#define POLICY_H
 
 // defines
 #include "global_defines.h"
@@ -13,21 +13,21 @@
 
 #include <QObject>
 
-class ZONE : public QObject
+class POLICY : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY(ZONE)
+    Q_DISABLE_COPY(POLICY)
 public:
     // make singleton
-    static ZONE* instance(QObject* parent = nullptr);
+    static POLICY* instance(QObject* parent = nullptr);
 
-    // initialization zone module
+    // initialization policy module
     void init();
 
-    // open zone module
+    // open policy module
     void open();
 
-    // close zone module
+    // close policy module
     void close();
 
 
@@ -46,8 +46,8 @@ public:
     void set_localization_module(LOCALIZATION* _localization);
 
 private:
-    explicit ZONE(QObject *parent = nullptr);
-    ~ZONE();
+    explicit POLICY(QObject *parent = nullptr);
+    ~POLICY();
 
     // mutex
     std::mutex mtx;
@@ -67,4 +67,4 @@ private:
 
 };
 
-#endif // ZONE_H
+#endif // POLICY_H

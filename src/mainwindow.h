@@ -18,7 +18,7 @@
 #include "autocontrol.h"
 #include "sim.h"
 #include "dockcontrol.h"
-#include "zone.h"
+#include "policy.h"
 
 
 #include "comm/comm_coop.h"
