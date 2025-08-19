@@ -24,6 +24,8 @@ public:
 
     // load map from path
     void load_map(QString path);
+    bool load_node(); // load topo.json
+
     void save_node();
 
     // clear all map params
@@ -88,9 +90,6 @@ private:
 
     // load 3d map
     bool load_3d();
-
-    // load topo.json
-    bool load_node();
 
     // all nodes clear
     void clear_nodes();

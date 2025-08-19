@@ -1333,7 +1333,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
         const QString load_dir = "/data/maps/" + map_name;
 
         //printf(Qload_dir);
-        qDebug()<<load_dir;
+        //qDebug()<<load_dir;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
@@ -1387,10 +1387,56 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     }
     else if(command == "topoload")
     {
-        msg.result = "reject";
-        msg.message = "[R0Sx0301]not support yet";
+        MOBILE_STATUS ms = mobile->get_status();
+        if(config->get_use_sim() || ms.motor_stop_state ==1)
+        {
+            const QString map_name = msg.map_name;
+            const QString load_dir = "/data/maps/" + map_name;
+            //qDebug()<<load_dir;
 
-        send_load_response(msg);
+            if(!load_dir.isNull())
+            {
+                if(!QDir(load_dir).exists())
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid map dir_topo_command";
+                    send_load_response(msg);
+                    return;
+                }
+
+                MainWindow* _main = qobject_cast<MainWindow*>(main);
+                if(_main)
+                {
+                    _main->set_map_path(load_dir);
+                    if(unimap)
+                    {
+                        unimap->load_node();
+                    }
+                    _main->all_update();
+                }
+
+                else
+                {
+                    msg.result = "fail";
+                    msg.message = "topo not load_topo_command";
+                    send_load_response(msg);
+                }
+            }
+
+        }
+
+        //if(unimap && unimap->get_is_loaded() == MAP_LOADED)
+        //{
+        //    msg.result = "success";
+        //    msg.message = "";
+        //    send_load_response(msg);
+        //}
+
+
+        //msg.result = "reject";
+        //msg.message = "[R0Sx0301]not support yet";
+
+        //send_load_response(msg);
     }
     else if(command == "configload")
     {

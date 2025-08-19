@@ -1118,7 +1118,8 @@ void MainWindow::bt_MapBuild()
     UNIMAP::instance()->clear();
 
     // auto generation dir path
-    QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
+    //QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
+    QString _map_dir = "/data/maps/" + get_time_str();
     QDir().mkpath(_map_dir);
     UNIMAP::instance()->set_map_path(_map_dir);
 
@@ -1217,7 +1218,8 @@ void MainWindow::bt_MapSave()
 
 void MainWindow::bt_MapLoad()
 {
-    QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+    //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+    QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
     {
         // clear first

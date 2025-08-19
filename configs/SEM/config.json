@@ -36,11 +36,11 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": false,
+        "USE_RRS": true,
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
         "USE_BEEP": false
     },
@@ -191,7 +191,7 @@
     	"DOCKING_Y_OFFSET": "-0.007"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250429_unicos_test"
+        "MAP_PATH": "/data/maps/250804_unicos_update6_test"
     }
 }
 
