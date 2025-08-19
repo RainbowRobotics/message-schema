@@ -908,18 +908,13 @@ void COMM_RRS::send_global_path()
 void COMM_RRS::send_lidar_2d()
 {
 
-//    if (!is_connected || !loc || !lidar_2d || (CONFIG::instance()->get_use_lidar_3d() && !lidar_3d))
-//    {
-//        return;
-//    }
-
-
     if (!is_connected || !loc || !lidar_2d)
     {
         return;
     }
 
     std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
+
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
     if(pts.size() > 0)
@@ -929,25 +924,57 @@ void COMM_RRS::send_lidar_2d()
         poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
         poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
         poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
+
         rootObject->get_map()["pose"] = poseObject;
 
         sio::array_message::ptr jsonArray = sio::array_message::create();
-        for(size_t p = 0; p < pts.size(); p++)
+
+        // initalize vector, get pts -> 1 deg
+        std::vector<Eigen::Vector3d> sample_pts(360, Eigen::Vector3d(NAN,NAN,NAN));
+
+        for(size_t p=0; p<pts.size(); p++)
         {
-            sio::array_message::ptr jsonObj = sio::array_message::create();
+            double yaw_rad = std::atan2(pts[p][1], pts[p][0]);
+            double yaw_deg = yaw_rad * R2D;
+            if(yaw_deg < 0)
+            {
+                yaw_deg += 360.0;
+            }
 
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
-            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+            int idx = static_cast<int>(yaw_deg) % 360;
+            double dist = std::sqrt(pts[p][0]*pts[p][0] + pts[p][1]*pts[p][1]);
 
-            jsonArray->get_vector().push_back(jsonObj);
+            // if multiple values with similar angles appear, update the one with the shorter distance.
+            if(std::isnan(sample_pts[idx][0]) || dist < std::sqrt(sample_pts[idx][0]*sample_pts[idx][0] + sample_pts[idx][1]*sample_pts[idx][1]))
+            {
+                sample_pts[idx] = Eigen::Vector3d(pts[p][0], pts[p][1], pts[p][2]);
+            }
         }
 
-        rootObject->get_map()["data"] = jsonArray;
+        for(int i=0; i<360; i++)
+        {
+            // fill missing sample point with previous point
+            if(std::isnan(sample_pts[i][0]))
+            {
+                int prev = (i-1+360)%360;
+                sample_pts[i] = sample_pts[prev];  // add pre pts
+            }
 
-        // send
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+            if(!std::isnan(sample_pts[i][0]))
+            {
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][0],'f',3).toStdString()));
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][1],'f',3).toStdString()));
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][2],'f',3).toStdString()));
+            }
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100,'f',3).toStdString()));
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+//        std::cout << jsonArray->get_vector().size() << std::endl;
+
+        rootObject->get_map()["data"] = jsonArray;
         io->socket()->emit("lidarCloud", rootObject);
+
     }
 
 }
@@ -967,6 +994,7 @@ void COMM_RRS::send_lidar_3d()
     {
         return;
     }
+    qDebug()<<"3333333333333";
 
     std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
@@ -995,8 +1023,6 @@ void COMM_RRS::send_lidar_3d()
 
         rootObject->get_map()["data"] = jsonArray;
 
-        // send
-        io->socket()->emit("lidarCloud", rootObject);
     }
 
 }
