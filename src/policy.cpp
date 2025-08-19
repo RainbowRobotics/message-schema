@@ -31,6 +31,10 @@ void POLICY::init()
 
 void POLICY::open()
 {
+    // todo
+    // node_flag = true;
+    // node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
+
     zone_flag = true;
     zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
 
@@ -39,6 +43,13 @@ void POLICY::open()
 
 void POLICY::close()
 {
+    node_flag = false;
+    if(node_thread && node_thread->joinable())
+    {
+        node_thread->join();
+    }
+    node_thread.reset();
+
     zone_flag = false;
     if(zone_thread && zone_thread->joinable())
     {
@@ -46,6 +57,19 @@ void POLICY::close()
     }
     zone_thread.reset();
     printf("[POLICY] close\n");
+}
+
+QString POLICY::get_cur_info()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = cur_info;
+    return res;
+}
+
+void POLICY::set_cur_info(QString str)
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    cur_info = str;
 }
 
 QString POLICY::get_cur_zone()
@@ -79,6 +103,25 @@ void POLICY::set_unimap_module(UNIMAP *_unimap)
 void POLICY::set_localization_module(LOCALIZATION *_loc)
 {
     loc = _loc;
+}
+
+void POLICY::node_loop()
+{
+    printf("[POLICY] node_loop start\n");
+    while(node_flag)
+    {
+        if(unimap->get_is_loaded() != MAP_LOADED)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[POLICY] node_loop stop\n");
 }
 
 void POLICY::zone_loop()

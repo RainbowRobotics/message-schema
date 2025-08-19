@@ -3356,7 +3356,9 @@ void MainWindow::plot_ctrl()
 
         Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
         QString text;
-        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, zone:%s", control_input[0], control_input[1], control_input[2]*R2D, POLICY::instance()->get_cur_zone().toLocal8Bit().data());
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, info:%s, zone:%s", control_input[0], control_input[1], control_input[2]*R2D
+                , POLICY::instance()->get_cur_info().toLocal8Bit().data()
+                , POLICY::instance()->get_cur_zone().toLocal8Bit().data());
         ui->lb_RobotVel->setText(text);
 
         // draw cur node
