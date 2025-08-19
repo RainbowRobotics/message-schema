@@ -3428,8 +3428,15 @@ void AUTOCONTROL::obs_loop()
             double min_dyn_dist = std::numeric_limits<double>::max();
             bool found_forward_obs = false;
 
+            double yaw = std::atan2(cur_tf(1, 0), cur_tf(0, 0));
+            Eigen::Vector2d heading_vec(std::cos(yaw), std::sin(yaw));
+
             for(const auto& pt : dyn_pts)
             {
+//                Forward filtering (within 45 degrees)
+                Eigen::Vector2d obs_vec(pt[0] - cur_pos[0], pt[1] - cur_pos[1]);
+                double forward_component = heading_vec.dot(obs_vec.normalized());
+
                 bool near_traj = false;
                 for(const auto& tf : traj)
                 {
@@ -3445,7 +3452,7 @@ void AUTOCONTROL::obs_loop()
                     }
                 }
 
-                if(!near_traj)
+                if (!near_traj)
                 {
                     continue;
                 }
@@ -3470,6 +3477,8 @@ void AUTOCONTROL::obs_loop()
             {
                 obs_dist = std::numeric_limits<double>::max();
             }
+
+//            std::cout<<obs_dist<<std::endl;
 
             // final update(conclusion)
             {

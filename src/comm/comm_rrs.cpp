@@ -506,12 +506,12 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         temperature_msg.temperature_value   = get_json(temperature_sensor, "temperature_value").toFloat();
         temperature_msg.time       = time_sec;
 
-//        qDebug()<<QString::number(temperature_msg.temperature_value);
+        //        qDebug()<<QString::number(temperature_msg.temperature_value);
 
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         _main->temperature_value = temperature_msg.temperature_value;
 
-//        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
+        //        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
 
         // debug
         // printf("[COMM_RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
@@ -905,9 +905,16 @@ void COMM_RRS::send_global_path()
     io->socket()->emit("globalPath", jsonArray);
 }
 
-void COMM_RRS::send_lidar()
+void COMM_RRS::send_lidar_2d()
 {
-    if(!is_connected || !loc || !lidar_2d || !lidar_3d)
+
+//    if (!is_connected || !loc || !lidar_2d || (CONFIG::instance()->get_use_lidar_3d() && !lidar_3d))
+//    {
+//        return;
+//    }
+
+
+    if (!is_connected || !loc || !lidar_2d)
     {
         return;
     }
@@ -944,6 +951,56 @@ void COMM_RRS::send_lidar()
     }
 
 }
+
+
+void COMM_RRS::send_lidar_3d()
+{
+
+//    if (!is_connected || !loc || !lidar_2d || (CONFIG::instance()->get_use_lidar_3d() && !lidar_3d))
+//    {
+//        return;
+//    }
+
+//    must resample data
+
+    if (!is_connected || !loc || !lidar_2d || !lidar_3d)
+    {
+        return;
+    }
+
+    std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
+    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    if(pts.size() > 0)
+    {
+        sio::object_message::ptr rootObject = sio::object_message::create();
+        sio::object_message::ptr poseObject = sio::object_message::create();
+        poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
+        poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
+        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
+        rootObject->get_map()["pose"] = poseObject;
+
+        sio::array_message::ptr jsonArray = sio::array_message::create();
+        for(size_t p = 0; p < pts.size(); p++)
+        {
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][0], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][1], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(pts[p][2], 'f', 3).toStdString()));
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100, 'f', 3).toStdString()));
+
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+
+        rootObject->get_map()["data"] = jsonArray;
+
+        // send
+        io->socket()->emit("lidarCloud", rootObject);
+    }
+
+}
+
 
 void COMM_RRS::send_mapping_cloud()
 {
@@ -2317,6 +2374,18 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
+void COMM_RRS::set_global_path_update()
+{
+    is_global_path_update2 = true;
+}
+
+void COMM_RRS::set_local_path_update()
+{
+    is_local_path_update2 = true;
+}
+
+// Modifying part of sending LiDAR data
+// working at 10[ms]
 void COMM_RRS::send_loop()
 {
     if(!is_connected)
@@ -2325,11 +2394,12 @@ void COMM_RRS::send_loop()
     }
 
     // Synchronize with the development version
-    if(send_cnt % 5 == 0)
+    // 100[ms]
+    if(send_cnt % 10 == 0)
     {
         send_move_status();
     }
-
+    // 500[ms]
     if(send_cnt % 50 == 0)
     {
         send_status();
@@ -2343,12 +2413,22 @@ void COMM_RRS::send_loop()
     // for variable loop
     double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
     time_lidar_view *= 10.0;
+
     if(time_lidar_view > 0)
     {
         if(lidar_view_cnt > time_lidar_view)
         {
             lidar_view_cnt = 0;
-            send_lidar();
+
+            if(!CONFIG::instance()->get_use_lidar_3d())
+            {
+                send_lidar_2d();
+            }
+            else
+            {
+                send_lidar_2d();
+                send_lidar_3d();
+            }
         }
 
         lidar_view_cnt++;
@@ -2361,20 +2441,11 @@ void COMM_RRS::send_loop()
         if(path_view_cnt > time_path_view)
         {
             path_view_cnt = 0;
-            /*if(is_global_path_update2)
-            {
-                is_global_path_update2 = false;
-                comm_rrs.send_global_path();
-            }
-
-            if(is_local_path_update2)
-            {
-                is_local_path_update2 = false;
-                comm_rrs.send_local_path();
-            }*/
+            send_local_path();
         }
-        path_view_cnt++;
     }
+    path_view_cnt++;
+
 
     // to give information video streaming data
     if(config->get_use_rtsp() && config->get_use_cam())

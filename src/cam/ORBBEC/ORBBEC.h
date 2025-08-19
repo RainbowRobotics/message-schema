@@ -87,6 +87,8 @@ private:
     std::atomic<int> cur_w_depth = {0};
     std::atomic<int> cur_h_depth = {0};
 
+    std::atomic<int> already_updated = {0};
+
     std::atomic<double> cur_pts_size[max_cam_cnt];
 
     CAM_INTRINSIC intrinsic[max_cam_cnt];

@@ -66,6 +66,10 @@ public:
     void set_localization_module(LOCALIZATION* _loc);
     void set_mapping_module(MAPPING* _mapping);
 
+    // for send path
+    void set_global_path_update();
+    void set_local_path_update();
+
 private:
     explicit COMM_RRS(QObject *parent = nullptr);
     ~COMM_RRS();
@@ -95,6 +99,9 @@ private:
     QString multi_state;
     std::atomic<bool> is_connected = {false};
 
+    std::atomic<bool> is_local_path_update2 = {false};
+    std::atomic<bool> is_global_path_update2 = {false};
+
     // semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
     std::unique_ptr<std::thread> semi_auto_init_thread;
@@ -105,7 +112,8 @@ private:
     QTimer* send_timer;
     std::atomic<int> lidar_view_frequency = {1};
     std::atomic<int> path_view_frequency  = {2};
-    void send_lidar();
+    void send_lidar_2d();
+    void send_lidar_3d();
     void send_status();
     void send_local_path();
     void send_global_path();

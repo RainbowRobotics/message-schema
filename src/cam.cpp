@@ -189,10 +189,14 @@ TIME_PTS CAM::get_scan(int idx)
 void CAM::post_process_loop(int idx)
 {
     const double dt = 0.1; // 10hz
-    double pre_loop_time = get_time();
 
     while(post_process_flag)
     {
+        // =======================
+        // ORBBEC queue processing
+        // =======================
+        double pre_loop_time  = get_time();
+
         if(config->get_cam_type() == "ORBBEC" && orbbec)
         {
             try
@@ -200,7 +204,10 @@ void CAM::post_process_loop(int idx)
                 TIME_PTS tp;
                 if(orbbec->try_pop_depth_que(idx, tp))
                 {
-                    if(is_connected[idx] == false) is_connected[idx] = true;
+                    if(is_connected[idx] == false)
+                    {
+                        is_connected[idx] = true;
+                    }
 
                     std::lock_guard<std::mutex> lock(mtx);
                     cur_scan[idx] = tp;
@@ -209,7 +216,10 @@ void CAM::post_process_loop(int idx)
                 TIME_IMG ti;
                 if(orbbec->try_pop_img_que(idx, ti))
                 {
-                    if(is_connected[idx] == false) is_connected[idx] = true;
+                    if(is_connected[idx] == false)
+                    {
+                        is_connected[idx] = true;
+                    }
 
                     std::lock_guard<std::mutex> lock(mtx);
                     cur_time_img[idx] = ti;
@@ -222,6 +232,10 @@ void CAM::post_process_loop(int idx)
                 is_connected[idx] = false;
             }
         }
+
+        // =======================
+        // loop time check, sleep
+        // =======================
 
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
@@ -236,7 +250,7 @@ void CAM::post_process_loop(int idx)
         }
 
         process_time_post[idx] = delta_loop_time;
-        pre_loop_time = get_time();
+//        pre_loop_time = get_time();
     }
 }
 
