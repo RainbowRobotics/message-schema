@@ -3768,3 +3768,18 @@ void MainWindow::set_map_path(const QString& path)
     map_path = path;
 }
 
+void MainWindow::getIPv4()
+{
+    QString chosen = "N/A";
+
+    for (const QHostAddress &addr : QNetworkInterface::allAddresses())
+    {
+        if (addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
+        {
+            ui->lb_RobotIP->setText(addr.toString());
+            return;
+        }
+    }
+
+    ui->lb_RobotIP->setText(chosen);
+}
