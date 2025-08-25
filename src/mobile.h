@@ -28,12 +28,16 @@ enum class RobotType
 
 struct MOBILE_INFO
 {
+    static constexpr int drop_cnt = 10;
+    static constexpr int min_packet_size     = 4;
     static constexpr int packet_size_s100    = 85;
     static constexpr int packet_size_d400    = 126;
     static constexpr int packet_size_mecanum = 129;
     static constexpr int packet_size_safety  = 199;
 
     static constexpr double pdu_tick_resolution = 0.002;
+
+    static constexpr size_t recv_buf_size = 2000;
 };
 
 class MOBILE : public QObject

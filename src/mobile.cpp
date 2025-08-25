@@ -349,11 +349,8 @@ void MOBILE::recv_loop()
     is_connected = true;
     logger->write_log("[MOBILE] connected", "Green", true, false);
 
-    // var init
-    const int min_packet_size = 4;
-
     std::vector<uchar> buf;
-    int drop_cnt = 10;
+    int drop_cnt = MOBILE_INFO::drop_cnt;
 
     double pre_loop_time = get_time();
 
@@ -361,7 +358,7 @@ void MOBILE::recv_loop()
     while(recv_flag)
     {
         // storing buffer
-        std::vector<uchar> recv_buf(2000, 0);
+        std::vector<uchar> recv_buf(MOBILE_INFO::recv_buf_size, 0);
         int num = read(fd, (char*)recv_buf.data(), recv_buf.size());
         if(num == 0)
         {
@@ -370,13 +367,16 @@ void MOBILE::recv_loop()
         }
         else if(num < 0)
         {
-            std::cout << "!!!!!!!!!!!!!!! num < 0" << std::endl;
+            logger->write_log("[MOBILE] read buffer size lower than 0", "Red");
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
         }
 
         // initial drop
         if(drop_cnt > 0)
         {
             drop_cnt--;
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 
@@ -398,7 +398,7 @@ void MOBILE::recv_loop()
          * Mecanum total 136  -> data 129
          */
 
-        while((int)buf.size() > min_packet_size && recv_flag)
+        while((int)buf.size() > MOBILE_INFO::min_packet_size && recv_flag)
         {
             if(buf[0] == 0x24)
             {
@@ -410,9 +410,9 @@ void MOBILE::recv_loop()
                     {
                         // Footer
                         int index = 6;
-                        int dlc   = 1;
-                        int dlc_s = 2;
-                        int dlc_f = 4;
+                        const int dlc   = 1;
+                        const int dlc_s = 2;
+                        const int dlc_f = 4;
 
                         uchar *_buf = (uchar*)buf.data();
 
@@ -706,7 +706,7 @@ void MOBILE::recv_loop()
                             {
                                 is_sync = false;
 
-                                double _mobile_t = recv_tick*0.002;
+                                double _mobile_t = recv_tick * MOBILE_INFO::pdu_tick_resolution;
                                 double _offset_t = pc_t - _mobile_t;
                                 offset_t = _offset_t;
 
@@ -819,7 +819,6 @@ void MOBILE::recv_loop()
                             mobile_status.safety_state_bumper_stop_2 = safety_bumper_stop_2;
                             mobile_status.operational_stop_state_flag_2 = safety_stop_state_flag_2;
 
-
                             mobile_status.lidar_field = lidar_field;
 
                             mobile_status.ref_dps[0] = ref_dps_0;
@@ -889,38 +888,34 @@ void MOBILE::recv_loop()
                             Eigen::Vector3d cmd = get_control_input();
 
                             // pose & status text
+                            QString mobile_pose_str   = "[MOBILE_POSE]";
+                            QString mobile_status_str = "[MOBILE_STATUS]";
                             if(robot_type == RobotType::ROBOT_TYPE_S100)
                             {
-                                QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                            mobile_pose.t,
-                                            mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                            mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                            cmd[0], cmd[1], cmd[2]*R2D);
 
-                                strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
-                                            mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
-                                            (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                            mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
-                                            mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
-                                            mobile_status.power, mobile_status.total_power,
-                                            mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
+                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
+                                                          mobile_pose.t,
+                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
+                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                                                          cmd[0], cmd[1], cmd[2]*R2D);
 
-                                mtx.lock();
-                                pose_text = strP;
-                                status_text = strS;
-                                mtx.unlock();
+                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\ntemp(m0,m1): %d,%d, cur(m0,m1):%.2f,%.2f\ncharge,power,emo,remote:%d,%d,%d,%d\nBAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\npower:%.3f, total power:%.3f\ncore_temp(m0,m1,state): %f, %f, %d",
+                                                          mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1,
+                                                          (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
+                                                          mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
+                                                          mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
+                                                          mobile_status.power, mobile_status.total_power,
+                                                          mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
                             }
                             else if(robot_type == RobotType::ROBOT_TYPE_D400 || robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
-                                QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                            mobile_pose.t,
-                                            mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                            mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                            cmd[0], cmd[1], cmd[2]*R2D);
+                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
+                                                          mobile_pose.t,
+                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
+                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                                                          cmd[0], cmd[1], cmd[2]*R2D);
 
-                                strS.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
+                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
                                              "temp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\n"
                                              "charge,om_state,emo,ri_state:%d,%d,%d,%d\n"
                                              "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
@@ -930,60 +925,53 @@ void MOBILE::recv_loop()
                                              "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
                                              "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
                                              "bumper:{%d,%d} lidar_field:%d)",
-                                            mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
-                                            (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
-                                            mobile_status.charge_state, mobile_status.om_state, mobile_status.motor_stop_state, mobile_status.ri_state,
-                                            mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
-                                            mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
-                                            mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                            mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                            mobile_status.tabos_voltage, mobile_status.tabos_current, mobile_status.tabos_ttf, mobile_status.tabos_tte, mobile_status.tabos_soc, mobile_status.tabos_soh,
-                                            mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status,
-                                            mobile_status.safety_state_emo_pressed_1,         mobile_status.safety_state_emo_pressed_2,
-                                            mobile_status.safety_state_ref_meas_mismatch_1,   mobile_status.safety_state_ref_meas_mismatch_2,
-                                            mobile_status.safety_state_over_speed_1,          mobile_status.safety_state_over_speed_2,
-                                            mobile_status.safety_state_obstacle_detected_1,   mobile_status.safety_state_obstacle_detected_2,
-                                            mobile_status.safety_state_speed_field_mismatch_1,mobile_status.safety_state_speed_field_mismatch_2,
-                                            mobile_status.safety_state_interlock_stop_1,      mobile_status.safety_state_interlock_stop_2,
-                                            mobile_status.operational_stop_state_flag_1,      mobile_status.operational_stop_state_flag_2,
-                                            mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
-                                            mobile_status.lidar_field);
-
-                                mtx.lock();
-                                pose_text = strP;
-                                status_text = strS;
-                                mtx.unlock();
+                                                          mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.status_m0, mobile_status.status_m1, mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.esti_temp_m0, mobile_status.esti_temp_m1,
+                                                          (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0,
+                                                          mobile_status.charge_state, mobile_status.om_state, mobile_status.motor_stop_state, mobile_status.ri_state,
+                                                          mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,mobile_status.bat_percent,
+                                                          mobile_status.power, mobile_status.total_power, mobile_status.charge_current, mobile_status.contact_voltage,
+                                                          mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
+                                                          mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
+                                                          mobile_status.tabos_voltage, mobile_status.tabos_current, mobile_status.tabos_ttf, mobile_status.tabos_tte, mobile_status.tabos_soc, mobile_status.tabos_soh,
+                                                          mobile_status.tabos_temperature, mobile_status.tabos_rc, mobile_status.tabos_ae, mobile_status.tabos_status,
+                                                          mobile_status.safety_state_emo_pressed_1,         mobile_status.safety_state_emo_pressed_2,
+                                                          mobile_status.safety_state_ref_meas_mismatch_1,   mobile_status.safety_state_ref_meas_mismatch_2,
+                                                          mobile_status.safety_state_over_speed_1,          mobile_status.safety_state_over_speed_2,
+                                                          mobile_status.safety_state_obstacle_detected_1,   mobile_status.safety_state_obstacle_detected_2,
+                                                          mobile_status.safety_state_speed_field_mismatch_1,mobile_status.safety_state_speed_field_mismatch_2,
+                                                          mobile_status.safety_state_interlock_stop_1,      mobile_status.safety_state_interlock_stop_2,
+                                                          mobile_status.operational_stop_state_flag_1,      mobile_status.operational_stop_state_flag_2,
+                                                          mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
+                                                          mobile_status.lidar_field);
                             }
                             else if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
-                                QString strP, strS;
-                                strP.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
-                                            mobile_pose.t,
-                                            mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
-                                            mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
-                                            cmd[0], cmd[1], cmd[2]*R2D);
+                                mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
+                                                          mobile_pose.t,
+                                                          mobile_pose.pose[0], mobile_pose.pose[1], mobile_pose.pose[2]*R2D,
+                                                          mobile_pose.vel[0], mobile_pose.vel[1], mobile_pose.vel[2]*R2D,
+                                                          cmd[0], cmd[1], cmd[2]*R2D);
 
-                                strS.sprintf("[MOBILE_STATUS]\nconnection:%d,%d,%d,%d\nstatus:%d,%d,%d,%d\ntemp:%d,%d,%d,%d, cur:%.2f,%.2f,%2f,%2f\ncharge,power,emo,remote:%d,%d,%d,%d\ncharge cur,vol:%.2f,%.2f\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\nTFB:%d",
-                                            mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.connection_m2, mobile_status.connection_m3,
-                                            mobile_status.status_m0, mobile_status.status_m1, mobile_status.status_m2, mobile_status.status_m3,
-                                            mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.temp_m2, mobile_status.temp_m3,
-                                            (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0, (double)mobile_status.cur_m2/10.0, (double)mobile_status.cur_m3/10.0,
-                                            mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
-                                            mobile_status.charge_current, mobile_status.contact_voltage,
-                                            mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
-                                            mobile_status.power, mobile_status.total_power,
-                                            mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
-                                            mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
-                                            mobile_status.inter_lock_state);
-
-                                mtx.lock();
-                                pose_text = strP;
-                                status_text = strS;
-                                mtx.unlock();
+                                mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection:%d,%d,%d,%d\nstatus:%d,%d,%d,%d\ntemp:%d,%d,%d,%d, cur:%.2f,%.2f,%2f,%2f\ncharge,power,emo,remote:%d,%d,%d,%d\ncharge cur,vol:%.2f,%.2f\nBAT(in,out,cur):%.3f,%.3f,%.3f\npower:%.3f, total power:%.3f\ngyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\nTFB:%d",
+                                                          mobile_status.connection_m0, mobile_status.connection_m1, mobile_status.connection_m2, mobile_status.connection_m3,
+                                                          mobile_status.status_m0, mobile_status.status_m1, mobile_status.status_m2, mobile_status.status_m3,
+                                                          mobile_status.temp_m0, mobile_status.temp_m1, mobile_status.temp_m2, mobile_status.temp_m3,
+                                                          (double)mobile_status.cur_m0/10.0, (double)mobile_status.cur_m1/10.0, (double)mobile_status.cur_m2/10.0, (double)mobile_status.cur_m3/10.0,
+                                                          mobile_status.charge_state, mobile_status.power_state, mobile_status.motor_stop_state, mobile_status.remote_state,
+                                                          mobile_status.charge_current, mobile_status.contact_voltage,
+                                                          mobile_status.bat_in, mobile_status.bat_out, mobile_status.bat_current,
+                                                          mobile_status.power, mobile_status.total_power,
+                                                          mobile_status.imu_gyr_x, mobile_status.imu_gyr_y, mobile_status.imu_gyr_z,
+                                                          mobile_status.imu_acc_x, mobile_status.imu_acc_y, mobile_status.imu_acc_z,
+                                                          mobile_status.inter_lock_state);
                             }
 
                             // storing
                             mtx.lock();
+
+                            pose_text = mobile_pose_str;
+                            status_text = mobile_status_str;
+
                             cur_pose = mobile_pose;
                             cur_status = mobile_status;
                             cur_imu = r;
@@ -2163,8 +2151,8 @@ void MOBILE::send_loop()
 
 int MOBILE::calc_battery_percentage(float voltage)
 {
-    QString platform_type = config->get_platform_type();
-    if(platform_type == "D400" || platform_type == "MECANUM" || platform_type == "S100")
+    QString platform_type = config->get_platform_name();
+    if(platform_type == "D400" || platform_type == "MECANUM")
     {
         if(voltage <= voltage_lookup_table.front().voltage)
         {

@@ -111,23 +111,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
     // safety function
-    connect(ui->bt_ClearMismatch, SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
-    connect(ui->bt_ClearOverSpd, SIGNAL(clicked()), this, SLOT(bt_ClearOverSpd()));
-    connect(ui->bt_ClearObs, SIGNAL(clicked()), this, SLOT(bt_ClearObs()));
-    connect(ui->bt_ClearFieldMis, SIGNAL(clicked()), this, SLOT(bt_ClearFieldMis()));
+    connect(ui->bt_ClearMismatch,      SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
+    connect(ui->bt_ClearOverSpd,       SIGNAL(clicked()), this, SLOT(bt_ClearOverSpd()));
+    connect(ui->bt_ClearObs,           SIGNAL(clicked()), this, SLOT(bt_ClearObs()));
+    connect(ui->bt_ClearFieldMis,      SIGNAL(clicked()), this, SLOT(bt_ClearFieldMis()));
     connect(ui->bt_ClearInterlockStop, SIGNAL(clicked()), this, SLOT(bt_ClearInterlockStop()));
-    connect(ui->bt_BumperStop, SIGNAL(clicked()), this, SLOT(bt_BumperStop()));
-    connect(ui->bt_Recover, SIGNAL(clicked()), this, SLOT(bt_Recover()));
-    connect(ui->bt_SetDetectModeT, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
-    connect(ui->bt_SetDetectModeF, SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
-    connect(ui->bt_Request, SIGNAL(clicked()), this, SLOT(bt_Request()));
-    connect(ui->bt_LiftPowerOn, SIGNAL(clicked()), this, SLOT(bt_LiftPowerOn()));
-    connect(ui->bt_LiftPowerOff, SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
-    connect(ui->bt_SetLidarField, SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
+    connect(ui->bt_BumperStop,         SIGNAL(clicked()), this, SLOT(bt_BumperStop()));
+    connect(ui->bt_Recover,            SIGNAL(clicked()), this, SLOT(bt_Recover()));
+    connect(ui->bt_SetDetectModeT,     SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
+    connect(ui->bt_SetDetectModeF,     SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
+    connect(ui->bt_Request,            SIGNAL(clicked()), this, SLOT(bt_Request()));
+    connect(ui->bt_LiftPowerOn,        SIGNAL(clicked()), this, SLOT(bt_LiftPowerOn()));
+    connect(ui->bt_LiftPowerOff,       SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
+    connect(ui->bt_SetLidarField,      SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
 
     // test
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
-
 
     // set effect
     init_ui_effect();
@@ -201,22 +200,21 @@ void MainWindow::set_opacity(QWidget* w, double opacity)
 
 void MainWindow::init_ui_effect()
 {
-    const double opacity_val = 0.75;
-    set_opacity(ui->lb_Screen1,     opacity_val);
-    set_opacity(ui->lb_Screen2,     opacity_val);
-    set_opacity(ui->lb_Screen3,     opacity_val);
-    set_opacity(ui->lb_Screen4,     opacity_val);
-    set_opacity(ui->lb_Screen5,     opacity_val);
-    set_opacity(ui->bt_ViewLeft,    opacity_val);
-    set_opacity(ui->bt_ViewRight,   opacity_val);
-    set_opacity(ui->bt_ViewUp,      opacity_val);
-    set_opacity(ui->bt_ViewDown,    opacity_val);
-    set_opacity(ui->bt_ViewZoomIn,  opacity_val);
-    set_opacity(ui->bt_ViewZoomOut, opacity_val);
-    set_opacity(ui->lb_PickPose,    opacity_val);
-    set_opacity(ui->lb_NodeId,      opacity_val);
-    set_opacity(ui->lb_RobotVel,    opacity_val);
-    set_opacity(ui->lb_RobotGoal,   opacity_val);
+    set_opacity(ui->lb_Screen1,     MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_Screen2,     MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_Screen3,     MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_Screen4,     MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_Screen5,     MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewLeft,    MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewRight,   MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewUp,      MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewDown,    MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewZoomIn,  MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->bt_ViewZoomOut, MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_PickPose,    MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_NodeId,      MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_RobotVel,    MAINWINDOW_INFO::opacity_val);
+    set_opacity(ui->lb_RobotGoal,   MAINWINDOW_INFO::opacity_val);
 }
 
 void MainWindow::setup_vtk()

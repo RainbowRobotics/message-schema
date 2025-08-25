@@ -41,6 +41,7 @@ QT_END_NAMESPACE
 struct MAINWINDOW_INFO
 {
     static constexpr int plot_point_size = 3;
+    static constexpr double opacity_val = 0.75;
 };
 
 class MainWindow : public QMainWindow

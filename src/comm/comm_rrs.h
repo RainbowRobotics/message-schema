@@ -38,6 +38,12 @@
 #include <atomic>
 #include <memory>
 
+struct COMM_RRS_INFO
+{
+    static constexpr unsigned int send_move_status_cnt = 10;
+    static constexpr unsigned int send_status_cnt = 50;
+};
+
 class COMM_RRS : public QObject
 {
     Q_OBJECT

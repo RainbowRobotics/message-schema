@@ -150,12 +150,14 @@ void COMM_RRS::init()
 {
     if(!config)
     {
-        printf("[COMM_RRS] Warning: config module not set\n");
+        logger->write_log("[COMM_RRS] config module not set", "Orange");
         return;
     }
-    qDebug()<<"USE_COMM_RRS : "<<config->get_use_rrs();
+
     if(config->get_use_rrs())
     {
+        logger->write_log("[COMM_RRS] try to connect RRS", "Green");
+
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
 
@@ -166,10 +168,12 @@ void COMM_RRS::init()
 void COMM_RRS::sio_connected()
 {
     is_connected = true;
+
     if(ctrl)
     {
         ctrl->set_is_rrs(true);
     }
+
     if(logger)
     {
         logger->write_log("[COMM_RRS] connected", "Green");
@@ -590,8 +594,9 @@ void COMM_RRS::send_status()
     QString cur_loc_state = loc->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    QString platform_type = config->get_platform_type();
-    if(platform_type == "D400" || platform_type == "MECANUM")
+    //QString platform_type = config->get_platform_type();
+    QString platform_name = config->get_platform_name();
+    if(platform_name == "D400" || platform_name == "MECANUM")
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
         {
@@ -618,7 +623,7 @@ void COMM_RRS::send_status()
             charge_st_string = "fail";
         }
     }
-    else if(platform_type == "S100")
+    else if(platform_name == "S100")
     {
         if(ms.charge_state == 0)
         {
@@ -641,29 +646,29 @@ void COMM_RRS::send_status()
 
     // Adding the power object
     QJsonObject powerObj;
-    powerObj["bat_in"]      = QString::number(ms.bat_in, 'f', 3);
-    powerObj["bat_out"]     = QString::number(ms.bat_out, 'f', 3);
-    powerObj["bat_current"] = QString::number(ms.bat_current, 'f', 3);
-    powerObj["total_power"] = QString::number(ms.total_power, 'f', 3);
-    powerObj["power"] = QString::number(ms.power, 'f', 3);
-    powerObj["bat_percent"] = QString::number(ms.bat_percent);
-    powerObj["tabos_voltage"]   = QString::number(ms.tabos_voltage, 'f', 3);
-    powerObj["tabos_current"]   = QString::number(ms.tabos_current, 'f', 3);
-    powerObj["tabos_status"]    = QString::number(ms.tabos_status);
-    powerObj["tabos_ttf"]       = QString::number(ms.tabos_ttf);
-    powerObj["tabos_tte"]       = QString::number(ms.tabos_tte);
-    powerObj["tabos_soc"]       = QString::number(ms.tabos_soc);
-    powerObj["tabos_soh"]       = QString::number(ms.tabos_soh);
-    powerObj["tabos_temp"]      = QString::number(ms.tabos_temperature, 'f', 3);
-    powerObj["tabos_rc"]        = QString::number(ms.tabos_rc, 'f', 3);
-    powerObj["tabos_ae"]        = QString::number(ms.tabos_ae, 'f' ,3);
+    powerObj["bat_in"]         = QString::number(ms.bat_in, 'f', 3);
+    powerObj["bat_out"]        = QString::number(ms.bat_out, 'f', 3);
+    powerObj["bat_current"]    = QString::number(ms.bat_current, 'f', 3);
+    powerObj["total_power"]    = QString::number(ms.total_power, 'f', 3);
+    powerObj["power"]          = QString::number(ms.power, 'f', 3);
+    powerObj["bat_percent"]    = QString::number(ms.bat_percent);
+    powerObj["tabos_voltage"]  = QString::number(ms.tabos_voltage, 'f', 3);
+    powerObj["tabos_current"]  = QString::number(ms.tabos_current, 'f', 3);
+    powerObj["tabos_status"]   = QString::number(ms.tabos_status);
+    powerObj["tabos_ttf"]      = QString::number(ms.tabos_ttf);
+    powerObj["tabos_tte"]      = QString::number(ms.tabos_tte);
+    powerObj["tabos_soc"]      = QString::number(ms.tabos_soc);
+    powerObj["tabos_soh"]      = QString::number(ms.tabos_soh);
+    powerObj["tabos_temp"]     = QString::number(ms.tabos_temperature, 'f', 3);
+    powerObj["tabos_rc"]       = QString::number(ms.tabos_rc, 'f', 3);
+    powerObj["tabos_ae"]       = QString::number(ms.tabos_ae, 'f' ,3);
 
-    if(platform_type == "D400" || platform_type == "MECANUM")
+    if(platform_name == "D400" || platform_name == "MECANUM")
     {
         powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
         powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     }
-    else if(platform_type == "S100")
+    else if(platform_name == "S100")
     {
         powerObj["charge_current"] = QString::number(0.0, 'f', 3);
         powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
@@ -671,8 +676,8 @@ void COMM_RRS::send_status()
     rootObj["power"] = powerObj;
 
     QJsonObject settingObj;
-    settingObj["platform_type"] = platform_type;
-    settingObj["platform_name"] = config->get_platform_name();
+    settingObj["platform_type"] = config->get_platform_type();
+    settingObj["platform_name"] = platform_name;
     rootObj["setting"] = settingObj;
 
     QJsonObject mapObj;
@@ -2467,47 +2472,39 @@ void COMM_RRS::send_loop()
 
     // Synchronize with the development version
     // 100[ms]
-    if(send_cnt % 10 == 0)
+    if(send_cnt % COMM_RRS_INFO::send_move_status_cnt == 0)
     {
         send_move_status();
     }
+
     // 500[ms]
-    if(send_cnt % 50 == 0)
+    if(send_cnt % COMM_RRS_INFO::send_status_cnt == 0)
     {
         send_status();
     }
 
-    if(send_cnt > 10000)
-    {
-        send_cnt = 0;
-    }
-
     // for variable loop
-    double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
-    time_lidar_view *= 10.0;
-
+    double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06) * 10.0;
     if(time_lidar_view > 0)
     {
         if(lidar_view_cnt > time_lidar_view)
         {
             lidar_view_cnt = 0;
 
-            if(!CONFIG::instance()->get_use_lidar_3d())
+            if(CONFIG::instance()->get_use_lidar_2d())
             {
                 send_lidar_2d();
             }
-            else
+
+            if(CONFIG::instance()->get_use_lidar_3d())
             {
-                send_lidar_2d();
                 send_lidar_3d();
             }
         }
-
         lidar_view_cnt++;
     }
 
-    double time_path_view = 1.0/((double)path_view_frequency + 1e-06);
-    time_path_view *= 10.0;
+    double time_path_view = 1.0/((double)path_view_frequency + 1e-06) * 10.0;
     if(time_path_view > 0)
     {
         if(path_view_cnt > time_path_view)
@@ -2515,27 +2512,30 @@ void COMM_RRS::send_loop()
             path_view_cnt = 0;
             send_local_path();
         }
+        path_view_cnt++;
     }
-    path_view_cnt++;
-
 
     // to give information video streaming data
-    if(config->get_use_rtsp() && config->get_use_cam())
-    {
-        if(send_cnt % 100 == 0)
-        {
-            std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
-            if(rtsp_flag.size() != 0)
-            {
-                for(int p = 0; p < rtsp_flag.size(); p++)
-                {
-                    QString msg = QString("[COMM] cam%1 rtsp writer %2").arg(p)
-                                                                        .arg(rtsp_flag[p] ? "open success" : "open failed");
-                    logger->write_log(msg);
-                }
-            }
-        }
-    }
+    //if(config->get_use_rtsp() && config->get_use_cam())
+    //{
+    //    if(send_cnt % 100 == 0)
+    //    {
+    //        std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
+    //        if(rtsp_flag.size() != 0)
+    //        {
+    //            for(int p = 0; p < rtsp_flag.size(); p++)
+    //            {
+    //                QString msg = QString("[COMM] cam%1 rtsp writer %2").arg(p)
+    //                                                                    .arg(rtsp_flag[p] ? "open success" : "open failed");
+    //                logger->write_log(msg);
+    //            }
+    //        }
+    //    }
+    //}
 
     send_cnt++;
+    if(send_cnt > 10000)
+    {
+        send_cnt = 0;
+    }
 }

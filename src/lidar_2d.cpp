@@ -319,9 +319,13 @@ void LIDAR_2D::deskewing_loop(int idx)
             deskewing_frm.t0 = frm.t0;
             deskewing_frm.t1 = frm.t1;
             deskewing_frm.mo = frm.mo;
-            deskewing_frm.reflects = filtered_reflects;
-            deskewing_frm.times = filtered_time;
-            deskewing_frm.pts = filetered_deskewing;
+            //deskewing_frm.reflects = filtered_reflects;
+            //deskewing_frm.times = filtered_time;
+            //deskewing_frm.pts = filetered_deskewing;
+
+            deskewing_frm.reflects = std::move(frm.reflects);
+            deskewing_frm.times = std::move(frm.times);
+            deskewing_frm.pts = std::move(frm.pts);
 
             // printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
 

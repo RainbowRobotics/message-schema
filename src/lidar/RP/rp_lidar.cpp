@@ -194,6 +194,9 @@ void RP_LIDAR::grab_loop(int idx)
 
     int drop_cnt = 10;
     logger->write_log(QString("[RP_LIDAR] start grab loop"), "Green", true, false);
+
+    Eigen::Matrix4d tf_lidar = ZYX_to_TF(config->get_lidar_2d_tf(idx));
+
     while(grab_flag[idx])
     {
         sl_lidar_response_measurement_node_hq_t nodes[8192];
@@ -269,7 +272,7 @@ void RP_LIDAR::grab_loop(int idx)
 
                 double t    = t0 + p*per_sample;
                 double deg  = (nodes[p].angle_z_q14 * 90.0)/RP_LIDAR_INFO::deg_resolution;
-                double dist = (nodes[p].dist_mm_q2/4.0)/RP_LIDAR_INFO::dist_resolution;
+                double dist = (nodes[p].dist_mm_q2 / 4.0)/RP_LIDAR_INFO::dist_resolution;
                 double rssi = (double)nodes[p].quality;
 
                 // dist filter
@@ -298,6 +301,20 @@ void RP_LIDAR::grab_loop(int idx)
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
+
+            std::vector<Eigen::Vector3d> pts_transformed;
+            for(size_t p=0; p<pts.size(); p++)
+            {
+                Eigen::Vector3d P = tf_lidar.block(0,0,3,3)*pts[p] + tf_lidar.block(0,3,3,1);
+                if(P[0] > config->get_robot_size_x_min() && P[0] < config->get_robot_size_x_max() &&
+                   P[1] > config->get_robot_size_y_min() && P[1] < config->get_robot_size_y_max())
+                {
+                    continue;
+                }
+
+                pts_transformed.push_back(P);
+            }
+            pts.swap(pts_transformed);
 
             Eigen::Vector3d min_pose = pose_storage.back().pose;
             double min_dt = std::numeric_limits<double>::max();
