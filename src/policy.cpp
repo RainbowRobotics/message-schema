@@ -155,6 +155,8 @@ void POLICY::zone_loop()
 
         // check zone
         QString zone = "";
+        QString info = "";
+
         std::vector<QString> zones = unimap->get_nodes("ZONE");
         for(size_t p = 0; p < zones.size(); p++)
         {
@@ -162,10 +164,10 @@ void POLICY::zone_loop()
             if(node != NULL)
             {
                 QString name = node->name;
-                QString info = node->info;
+                // QString info = node->info;
 
                 NODE_INFO res;
-                if(parse_info(info, "SIZE", res))
+                if(parse_info(node->info, "", res))
                 {
                     Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
 
@@ -174,11 +176,33 @@ void POLICY::zone_loop()
                     double z = tf(2,3);
 
                     if(x > -res.sz[0]/2 && x < res.sz[0]/2 &&
-                            y > -res.sz[1]/2 && y < res.sz[1]/2 &&
-                            z > -res.sz[2]/2 && z < res.sz[2]/2)
+                       y > -res.sz[1]/2 && y < res.sz[1]/2 &&
+                       z > -res.sz[2]/2 && z < res.sz[2]/2)
                     {
                         // current zone
                         zone = name;
+
+                        QStringList parts;
+
+                        // speed
+                        if(res.speed == "SLOW")      parts << "SPEED_SLOW";
+                        else if(res.speed == "FAST") parts << "SPEED_FAST";
+
+                        // flags
+                        if(res.warning_beep)   parts << "WARNING_BEEP";
+                        if(res.ignore_2d)      parts << "IGNORE_2D";
+                        if(res.ignore_3d)      parts << "IGNORE_3D";
+                        if(res.ignore_cam)     parts << "IGNORE_CAM";
+                        if(res.ignore_obs_2d)  parts << "IGNORE_OBS_2D";
+                        if(res.ignore_obs_3d)  parts << "IGNORE_OBS_3D";
+                        if(res.ignore_obs_cam) parts << "IGNORE_OBS_CAM";
+
+                        info = parts.join(", ");
+
+                        // printf("[ZONE] active zone=%s, info=%s\n",
+                        //        zone.toStdString().c_str(),
+                        //        info.toStdString().c_str());
+
                         break;
                     }
                 }
@@ -187,6 +211,7 @@ void POLICY::zone_loop()
 
         // update
         set_cur_zone(zone);
+        set_cur_info(info);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }

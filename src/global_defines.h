@@ -1540,46 +1540,63 @@ struct COPY_INFO
 
 struct NODE_INFO
 {
-    // pose
-    Eigen::Vector3d rpy;
-
-    // pan tilt zoom
-    Eigen::Vector3d ptz;
-
     // size
     Eigen::Vector3d sz;
 
-    // bqr(bottom qr) code number
-    int bqr_code_num;
+    QString speed;
 
-    // bqr(bottom qr) offset
-    Eigen::Vector3d bqr_code_offset;
+    bool warning_beep;
+    bool ignore_2d;
+    bool ignore_3d;
+    bool ignore_cam;
+    bool ignore_obs_2d;
+    bool ignore_obs_3d;
+    bool ignore_obs_cam;
 
     NODE_INFO()
     {
-        rpy.setZero();
-        ptz.setZero();
         sz.setZero();
-        bqr_code_num = -1;
-        bqr_code_offset.setZero();
+
+        speed = "";
+
+        warning_beep   = false;
+        ignore_2d      = false;
+        ignore_3d      = false;
+        ignore_cam     = false;
+        ignore_obs_2d  = false;
+        ignore_obs_3d  = false;
+        ignore_obs_cam = false;
     }
 
     NODE_INFO(const NODE_INFO& p)
     {
-        rpy = p.rpy;
-        ptz = p.ptz;
         sz = p.sz;
-        bqr_code_num = p.bqr_code_num;
-        bqr_code_offset = p.bqr_code_offset;
+
+        speed = p.speed;
+
+        warning_beep   = p.warning_beep;
+        ignore_2d      = p.ignore_2d;
+        ignore_3d      = p.ignore_3d;
+        ignore_cam     = p.ignore_cam;
+        ignore_obs_2d  = p.ignore_obs_2d;
+        ignore_obs_3d  = p.ignore_obs_3d;
+        ignore_obs_cam = p.ignore_obs_cam;
     }
 
     NODE_INFO& operator=(const NODE_INFO& p)
     {
-        rpy = p.rpy;
-        ptz = p.ptz;
         sz = p.sz;
-        bqr_code_num = p.bqr_code_num;
-        bqr_code_offset = p.bqr_code_offset;
+
+        speed = p.speed;
+
+        warning_beep   = p.warning_beep;
+        ignore_2d      = p.ignore_2d;
+        ignore_3d      = p.ignore_3d;
+        ignore_cam     = p.ignore_cam;
+        ignore_obs_2d  = p.ignore_obs_2d;
+        ignore_obs_3d  = p.ignore_obs_3d;
+        ignore_obs_cam = p.ignore_obs_cam;
+
         return *this;
     }
 };
