@@ -17,7 +17,7 @@
         "LIDAR_2D_TYPE": "SICK",
         "LIDAR_2D_NUM": "2",
         
-        "USE_LIDAR_3D": true,
+        "USE_LIDAR_3D": false,
         "LIDAR_3D_TYPE": "LIVOX",
         "LIDAR_3D_NUM": "2",
         
@@ -29,7 +29,7 @@
         "USE_IMU": false
     },
     "localization": {
-        "MODE": "3D",
+        "MODE": "2D",
         "USE_ARUCO": false
     },
     "network": {
@@ -40,7 +40,7 @@
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
         "USE_BEEP": false
     },

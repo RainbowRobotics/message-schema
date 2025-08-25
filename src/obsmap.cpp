@@ -926,7 +926,6 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
         if(is_collision)
         {
             // collision
-//            printf("collision\n");
             return OBS_DYN;
         }
     }

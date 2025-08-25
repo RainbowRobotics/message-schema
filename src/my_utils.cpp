@@ -156,15 +156,6 @@ double get_time0()
     return (timestamp*1.0e-9);
 }
 
-#if defined(USE_S100)
-double get_time()
-{
-    std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
-    return (timestamp*1.0e-9);
-}
-#endif
-
 double st_time_for_get_time = get_time();
 double get_time()
 {
@@ -172,7 +163,6 @@ double get_time()
     auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
     return (timestamp*1.0e-9) - st_time_for_get_time;
 }
-
 
 QString get_time_str()
 {
@@ -1266,26 +1256,6 @@ int get_major_axis(Eigen::Vector3d& N)
         }
     }
     return max_idx;
-}
-
-QColor build_time_to_color(const QString& buildTime)
-{
-    uint32_t hash = 2166136261u;
-    for(auto c : buildTime.toUtf8())
-    {
-        hash ^= uint8_t(c);
-        hash *= 16777619u;
-    }
-
-    int r = (hash & 0xFF);
-    int g = (hash >> 8) & 0xFF;
-    int b = (hash >> 16) & 0xFF;
-
-    r = 128 + (r / 2);
-    g = 128 + (g / 2);
-    b = 128 + (b / 2);
-
-    return QColor(r, g, b);
 }
 
 #endif // UTILS_CPP

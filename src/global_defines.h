@@ -112,8 +112,6 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 #include <QHeaderView>
 #include <QtConcurrent/QtConcurrent>
 
-// #include "node_lidar.h"
-
 // defines
 constexpr double ACC_G  = 9.80665;
 constexpr double N2S  = 1.0e-9; // nanosec to sec
@@ -129,21 +127,9 @@ constexpr double R2D  = 180.0/M_PI;
 #define deltaRad(ed,st) (std::atan2(std::sin(ed - st), std::cos(ed - st)))
 
 #define MO_STORAGE_NUM 300
-#define POINT_PLOT_SIZE 3
-#define VIRTUAL_OBS_SIZE 0.3
-
-#define GLOBAL_PATH_STEP 0.1
-#define LOCAL_PATH_STEP 0.01
-#define STEP_SCALE (GLOBAL_PATH_STEP/LOCAL_PATH_STEP)
 
 #define S100_BAT_MAX_VOLTAGE 53.5
 #define S100_BAT_MIN_VOLTAGE 42.0
-
-#define ROBOT_TYPE_UNKNOWN  0
-#define ROBOT_TYPE_D400     1
-#define ROBOT_TYPE_S100     2
-#define ROBOT_TYPE_MECANUM  3
-#define ROBOT_TYPE_SAFETY   4
 
 // enumulator
 enum FOOT_STATE
@@ -244,8 +230,8 @@ enum AUTO_OBS_STATE
 enum OBS_STATE
 {
     OBS_NONE = 0,
-    OBS_DYN = 1,
-    OBS_VIR = 2,
+    OBS_DYN  = 1,
+    OBS_VIR  = 2,
 };
 
 enum LOCAL_PATH_STATE
@@ -269,9 +255,9 @@ enum TASK_FSM_STATE
 
 enum CHECK_DRIVING_STATE
 {
-    DRIVING_FAILED = 0,
+    DRIVING_FAILED    = 0,
     DRIVING_NOT_READY = 1,
-    DRIVING_FINE = 2,
+    DRIVING_FINE      = 2,
 };
 
 enum MOTOR_ERROR_STATE
@@ -280,32 +266,32 @@ enum MOTOR_ERROR_STATE
     MOTOR_ERR_JAM = 4,
     MOTOR_ERR_CUR = 8,
     MOTOR_ERR_BIG = 16,
-    MOTOR_ERR_IN = 32,
+    MOTOR_ERR_IN  = 32,
     MOTOR_ERR_PSI = 64,
     MOTOR_ERR_NON = 128,
 };
 
 enum ROBOT_OPERATING_MODE
 {
-    ROBOT_AUTO_MODE=0,
-    ROBOT_JOYSTICK_MODE=1,
+    ROBOT_AUTO_MODE     =0,
+    ROBOT_JOYSTICK_MODE =1,
 };
 
 enum ROBOT_OPERATION_STATE
 {
     //for safety
-    SM_OM_POWER_OFF =0,
-    SM_OM_MAIN_POWER_UP,
-    SM_OM_PC_POWER_UP,
-    SM_OM_ROBOT_POWER_OFF,
-    SM_OM_ROBOT_INITIALIZE,
-    SM_OM_NORMAL_OP,
-    SM_OM_NORMAL_OP_AUTO,
-    SM_OM_NORMAL_OP_MANUAL,
-    SM_OM_NORMAL_LOW_BAT,
-    SM_OM_OPERATIONAL_STOP,
-    SM_OM_CHARGING,
-    SM_OM_CONFIGURATION
+    SM_OM_POWER_OFF         = 0,
+    SM_OM_MAIN_POWER_UP     = 1,
+    SM_OM_PC_POWER_UP       = 2,
+    SM_OM_ROBOT_POWER_OFF   = 3,
+    SM_OM_ROBOT_INITIALIZE  = 4,
+    SM_OM_NORMAL_OP         = 5,
+    SM_OM_NORMAL_OP_AUTO    = 6,
+    SM_OM_NORMAL_OP_MANUAL  = 7,
+    SM_OM_NORMAL_LOW_BAT    = 8,
+    SM_OM_OPERATIONAL_STOP  = 9,
+    SM_OM_CHARGING          = 10,
+    SM_OM_CONFIGURATION     = 11,
 };
 
 enum CHARGING_STATION_STATE
@@ -320,9 +306,9 @@ enum CHARGING_STATION_STATE
 
 enum SEMIAUTOINIT_STATE
 {
-    NONE=0,
-    INITIALIZING=1,
-    COMPLETE=2
+    NONE         = 0,
+    INITIALIZING = 1,
+    COMPLETE     = 2
 };
 
 enum MAP_LOAD_STATE
@@ -343,6 +329,7 @@ enum PDU_MOVE_STATE
 // enum class
 enum class StateMultiReq
 {
+    NO_CHANGE,
     NONE,
     RECV_PATH,
     REQ_PATH
@@ -350,6 +337,7 @@ enum class StateMultiReq
 
 enum class StateObsCondition
 {
+    NO_CHANGE,
     NONE,
     FAR,
     NEAR,
@@ -358,6 +346,8 @@ enum class StateObsCondition
 
 enum class StateCurGoal
 {
+    NO_CHANGE,
+    NONE,
     CANCEL,
     MOVE,
     FAIL,
@@ -645,62 +635,71 @@ struct MOBILE_SETTING
 
 struct MOBILE_STATUS
 {
+    // for timesync
     double t = 0;
+    float  return_time = 0;
+    uint32_t recv_tick = 0;
 
-    // motor status
+    /* motor status */
+
+    // motor connetion
     uint8_t connection_m0 = 0;
     uint8_t connection_m1 = 0;
     uint8_t connection_m2 = 0;
     uint8_t connection_m3 = 0;
 
+    // motor status
     uint8_t status_m0 = 0;
     uint8_t status_m1 = 0;
     uint8_t status_m2 = 0;
     uint8_t status_m3 = 0;
 
+    // motor temperature (using inlier sensor)
     uint8_t temp_m0 = 0;
     uint8_t temp_m1 = 0;
     uint8_t temp_m2 = 0;
     uint8_t temp_m3 = 0;
 
+    // motor temperature (estimation)
     uint8_t esti_temp_m0 = 0;
     uint8_t esti_temp_m1 = 0;
     uint8_t esti_temp_m2 = 0;
     uint8_t esti_temp_m3 = 0;
 
+    // motor core temperature (estimation)
+    float core_temp0 = 0;
+    float core_temp1 = 0;
+    uint8_t state = 0;      // S100 state
+
+    // motor current Amphere
     uint8_t cur_m0 = 0;
     uint8_t cur_m1 = 0;
     uint8_t cur_m2 = 0;
     uint8_t cur_m3 = 0;
 
-    uint8_t charge_state = 0;
-    uint8_t power_state = 0;
+    // PDU default state
+    uint8_t charge_state     = 0;
+    uint8_t power_state      = 0;
     uint8_t motor_stop_state = 0;
-    uint8_t remote_state = 0;
+    uint8_t remote_state     = 0;
 
+    // battery
+    float power = 0;
     float bat_in = 0;
     float bat_out = 0;
     float bat_current = 0;
     float bat_voltage = 0;
-    uint8_t bat_percent = 0;
-    float power = 0;
     float total_power = 0;
+    uint8_t bat_percent = 0;
 
+    // lift (extra module)
     float lift_voltage_in = 0.;
     float lift_voltage_out = 0.;
     float lift_current = 0.;
 
-
-    float charge_current = 0;
-    float contact_voltage = 0;
-
-    float core_temp0 = 0;   // from S100
-    float core_temp1 = 0;   // from S100
-    uint8_t state = 0;      // from S100
-
-    // for timesync
-    uint32_t recv_tick = 0;
-    float return_time = 0;
+    // docking charging
+    float charge_current  = 0;  // current charging Amphere
+    float contact_voltage = 0; // current charging voltage (docking)
 
     // imu status
     float imu_gyr_x =0;
@@ -710,41 +709,40 @@ struct MOBILE_STATUS
     float imu_acc_y =0;
     float imu_acc_z =0;
 
+    // inter lock
     uint8_t inter_lock_state = 0;
 
     // for safety
-    uint8_t auto_manual_sw = 0;
-    uint8_t brake_release_sw = 0;
+    uint8_t sw_stop  = 0;
     uint8_t sw_reset = 0;
-    uint8_t sw_stop= 0;
     uint8_t sw_start = 0;
-
-
-    uint8_t ri_state = 0;
     uint8_t om_state = 0;
-    uint8_t bumper_state =0;
-
-    uint8_t safety_state_emo_pressed_1 = 0;
-    uint8_t safety_state_ref_meas_mismatch_1 = 0;
-    uint8_t safety_state_over_speed_1 =0;
-    uint8_t safety_state_obstacle_detected_1 =0;
-    uint8_t safety_state_speed_field_mismatch_1 =0;
-    uint8_t safety_state_interlock_stop_1 =0;
-    uint8_t safety_state_bumper_stop_1 =0;
-    uint8_t operational_stop_state_flag_1 =0;
-
-    uint8_t safety_state_emo_pressed_2 = 0;
-    uint8_t safety_state_ref_meas_mismatch_2 = 0;
-    uint8_t safety_state_over_speed_2 =0;
-    uint8_t safety_state_obstacle_detected_2 =0;
-    uint8_t safety_state_speed_field_mismatch_2 =0;
-    uint8_t safety_state_interlock_stop_2 =0;
-    uint8_t safety_state_bumper_stop_2 =0;
-    uint8_t operational_stop_state_flag_2 =0;
-
+    uint8_t ri_state = 0;
     uint8_t lidar_field;
+    uint8_t bumper_state     = 0;
+    uint8_t auto_manual_sw   = 0;
+    uint8_t brake_release_sw = 0;
 
-    short ref_dps[2] = {0,0};
+
+    uint8_t safety_state_emo_pressed_1          = 0;
+    uint8_t safety_state_ref_meas_mismatch_1    = 0;
+    uint8_t safety_state_over_speed_1           = 0;
+    uint8_t safety_state_obstacle_detected_1    = 0;
+    uint8_t safety_state_speed_field_mismatch_1 = 0;
+    uint8_t safety_state_interlock_stop_1       = 0;
+    uint8_t safety_state_bumper_stop_1          = 0;
+    uint8_t operational_stop_state_flag_1       = 0;
+
+    uint8_t safety_state_emo_pressed_2          = 0;
+    uint8_t safety_state_ref_meas_mismatch_2    = 0;
+    uint8_t safety_state_over_speed_2           = 0;
+    uint8_t safety_state_obstacle_detected_2    = 0;
+    uint8_t safety_state_speed_field_mismatch_2 = 0;
+    uint8_t safety_state_interlock_stop_2       = 0;
+    uint8_t safety_state_bumper_stop_2          = 0;
+    uint8_t operational_stop_state_flag_2       = 0;
+
+    short ref_dps[2]  = {0,0};
     short meas_dps[2] = {0,0};
 
     unsigned char mcu0_dio[8] ={0,};
@@ -756,16 +754,16 @@ struct MOBILE_STATUS
     unsigned char adc_value[4] ={0,};
     unsigned char dac_value[4] ={0,};
 
-    float tabos_voltage =0.; //v
-    float tabos_current =0.; //a
-    uint16_t tabos_status = 0;
-    unsigned short tabos_ttf = 0; // time to full-min
-    unsigned short tabos_tte = 0; // time to empty-min
-    unsigned char tabos_soc = 0; // state of charge-%
-    unsigned char tabos_soh = 0; // state of health-%
-    float tabos_temperature = 0.; // battery temperature-c
-    float tabos_rc = 0.; // remain capacity -ah
-    float tabos_ae = 0; // availiable energy -wh
+    float tabos_rc           = 0.f; // remain capacity -ah
+    float tabos_ae           = 0.f; // availiable energy -wh
+    float tabos_voltage      = 0.f; // v
+    float tabos_current      = 0.f; // a
+    float tabos_temperature  = 0.;  // battery temperature-c
+    uint16_t tabos_status    = 0;
+    unsigned short tabos_ttf = 0;   // time to full-min
+    unsigned short tabos_tte = 0;   // time to empty-min
+    unsigned char tabos_soc  = 0;   // state of charge-%
+    unsigned char tabos_soh  = 0;   // state of health-%
 };
 
 struct MOBILE_POSE
@@ -814,28 +812,28 @@ struct MOBILE_IMU
 
 struct PT_XYZR
 {
-    double x = 0;    // x coordinates
-    double y = 0;    // y coordinates
-    double z = 0;    // z coordinates
-    double vx = 0;   // view vector x
-    double vy = 0;   // view vector y
-    double vz = 0;   // view vector z
-    double r = 0;    // reflect 0~1
-    int k0 = 0;      // original add cnt
-    int k = 0;       // add cnt of tree
-    int do_cnt = 0;  // dynamic object count
+    int k       = 0;       // add cnt of tree
+    int k0      = 0;      // original add cnt
+    int do_cnt  = 0;  // dynamic object count
+    double x    = 0;    // x coordinates
+    double y    = 0;    // y coordinates
+    double z    = 0;    // z coordinates
+    double vx   = 0;   // view vector x
+    double vy   = 0;   // view vector y
+    double vz   = 0;   // view vector z
+    double r    = 0;    // reflect 0~1
 };
 
 struct PT_SURFEL
 {
-    double x = 0;
-    double y = 0;
-    double z = 0;
-    double nx = 0;
-    double ny = 0;
-    double nz = 0;
-    double r = 0;
-    int lb = 0; // 0:none, 1:travel
+    int lb    = 0;   // 0:none, 1:travel
+    double x  = 0.0;
+    double y  = 0.0;
+    double z  = 0.0;
+    double r  = 0.0;
+    double nx = 0.0;
+    double ny = 0.0;
+    double nz = 0.0;
 };
 
 struct RAW_FRAME
@@ -843,13 +841,12 @@ struct RAW_FRAME
     double t0 = 0;
     double t1 = 0;
 
+    MOBILE_POSE mo;                   // mobile pose at t0
     Eigen::Vector3d pose0;
     Eigen::Vector3d pose1;
-
     std::vector<double> times;
     std::vector<double> reflects;
     std::vector<Eigen::Vector3d> pts; // deskewed local pts
-    MOBILE_POSE mo; // mobile pose at t0
 
     RAW_FRAME()
     {
@@ -882,9 +879,9 @@ struct RAW_FRAME
 struct FRAME
 {
     double t = 0;    
+    MOBILE_POSE mo;                     // mobile pose at t
     std::vector<double> reflects;
     std::vector<Eigen::Vector3d> pts;
-    MOBILE_POSE mo; // mobile pose at t
 
     FRAME()
     {
@@ -909,9 +906,9 @@ struct FRAME
 struct KFRAME
 {
     int id = 0;
-    std::vector<PT_XYZR> pts;
     Eigen::Matrix4d G;
     Eigen::Matrix4d opt_G;
+    std::vector<PT_XYZR> pts;
 
     KFRAME()
     {
@@ -958,12 +955,6 @@ struct XYZR_CLOUD
     bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 };
 
-struct ID_XYZ
-{
-    Eigen::Vector3d pos;
-    QString id;
-};
-
 struct XYZ_NODE
 {
     std::vector<Eigen::Vector3d> pos;
@@ -986,7 +977,6 @@ struct XYZ_NODE
 };
 
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZ_NODE>, XYZ_NODE, 3> KD_TREE_NODE;
-
 
 struct COST_JACOBIAN
 {
@@ -1091,8 +1081,8 @@ struct TIME_POSE_PTS
 
 struct TIME_POSE_ID
 {
-    double t = 0;
     int id = 0;
+    double t = 0;
     Eigen::Matrix4d tf;
 
     TIME_POSE_ID()
@@ -1123,9 +1113,9 @@ struct NODE
 {
     QString id;
     QString name;
-    QString type; // ROUTE, GOAL, OBS, ZONE
-    QString info; // additional info
-    Eigen::Matrix4d tf; // node tf
+    QString type;                   // ROUTE, GOAL, OBS, ZONE
+    QString info;                   // additional info
+    Eigen::Matrix4d tf;             // node tf
     std::vector<QString> linked;
 
     NODE()
@@ -1172,38 +1162,40 @@ struct NODE
 // autocontrol parameters
 struct CTRL_PARAM
 {
-    double LIMIT_V = 1.0;
-    double LIMIT_W = 30.0;
-    double LIMIT_V_ACC = 0.3;
-    double LIMIT_V_DCC = 0.3;
-    double LIMIT_W_ACC = 180.0;
-    double LIMIT_PIVOT_W = 30.0;
-    double ST_V = 0.05;
-    double ED_V = 0.05;
-    double DRIVE_T = 0.0;
-    double DRIVE_H = 4.0;
-    double DRIVE_A = 0.9;
-    double DRIVE_B = 0.03;
-    double DRIVE_L = 0.4;
-    double DRIVE_K = 1.0;
-    double DRIVE_EPS = 0.3;
+    double ST_V          =  0.05;
+    double ED_V          =  0.05;
+
+    double LIMIT_V       =  1.0;
+    double LIMIT_W       =  30.0;
+    double LIMIT_V_ACC   =  0.3;
+    double LIMIT_V_DCC   =  0.3;
+    double LIMIT_W_ACC   =  180.0;
+    double LIMIT_PIVOT_W =  30.0;
+
+    double DRIVE_T       =  0.0;
+    double DRIVE_H       =  4.0;
+    double DRIVE_A       =  0.9;
+    double DRIVE_B       =  0.03;
+    double DRIVE_L       =  0.4;
+    double DRIVE_K       =  1.0;
+    double DRIVE_EPS     =  0.3;
 };
 
 // dockcontrol parameters
 struct DCTRL_PARAM
 {
-    double GAIN_P = 1.0;
-    double GAIN_D = 0.0;
-    double LIMIT_V = 0.5;
-    double LIMIT_W = 30.0;
+    double GAIN_P      = 1.0;
+    double GAIN_D      = 0.0;
+    double LIMIT_V     = 0.5;
+    double LIMIT_W     = 30.0;
     double LIMIT_V_ACC = 0.5;
     double LIMIT_W_ACC = 180.0;
 };
 
 struct ASTAR_NODE
 {
-    ASTAR_NODE* parent = NULL;
-    NODE* node = NULL;
+    ASTAR_NODE* parent = nullptr;
+    NODE* node = nullptr;
     Eigen::Matrix4d tf;
     double g = 0;
     double h = 0;
@@ -1211,8 +1203,8 @@ struct ASTAR_NODE
 
     ASTAR_NODE()
     {
-        parent = NULL;
-        node = NULL;
+        parent = nullptr;
+        node = nullptr;
         tf.setIdentity();
         g = 0;
         h = 0;
@@ -1243,8 +1235,8 @@ struct ASTAR_NODE
 
 struct HASTAR_NODE
 {
-    HASTAR_NODE* parent = NULL;
-    NODE* node = NULL;
+    HASTAR_NODE* parent = nullptr;
+    NODE* node = nullptr;
     Eigen::Matrix4d tf;
     double g = 0;
     double h = 0;
@@ -1253,8 +1245,8 @@ struct HASTAR_NODE
 
     HASTAR_NODE()
     {
-        parent = NULL;
-        node = NULL;
+        parent = nullptr;
+        node = nullptr;
         tf.setIdentity();
         g = 0;
         h = 0;
@@ -1289,12 +1281,12 @@ struct HASTAR_NODE
 struct PATH
 {
     double t;
+    bool is_final;
+    Eigen::Matrix4d ed_tf;
     std::vector<QString> node;
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
-    Eigen::Matrix4d ed_tf;
-    bool is_final;
 
     PATH()
     {
@@ -1450,14 +1442,14 @@ struct CPU_USAGE
 
 struct MOVE_INFO
 {
-    QString command = "";
+    int preset = 0;
     double x = 0;
     double y = 0;
     double z = 0;
     double rz = 0;
-    QString node_id = "";
-    int preset = 0;
     QString method = "";
+    QString command = "";
+    QString node_id = "";
 
     double docking_offset_x = 0;
     double docking_offset_y = 0;
@@ -1609,6 +1601,10 @@ struct IMU
 {
     double t = 0; // sec
 
+    double rx = 0; // so3 vector
+    double ry = 0;
+    double rz = 0;
+
     double acc_x = 0; // m/s^2
     double acc_y = 0;
     double acc_z = 0;
@@ -1617,11 +1613,10 @@ struct IMU
     double gyr_y = 0;
     double gyr_z = 0;
 
-    double rx = 0; // so3 vector
-    double ry = 0;
-    double rz = 0;
+    IMU()
+    {
 
-    IMU(){}
+    }
 
     IMU(const IMU& p)
     {
@@ -1655,16 +1650,19 @@ struct IMU
 
 struct LVX_PT
 {
-    double t = 0;           // sec
-    double alpha = 0;       // rate in frm
-    double reflect = 0;     // reflect
-    uint8_t tag = 0;        // tag for noise filtering
+    double t       = 0;   // sec
+    double alpha   = 0;   // rate in frm
+    double reflect = 0;   // reflect
+    uint8_t tag    = 0;   // tag for noise filtering
 
-    float x = 0;            // float for octree
+    float x = 0;          // float for octree
     float y = 0;
     float z = 0;
 
-    LVX_PT(){}
+    LVX_PT()
+    {
+
+    }
 
     LVX_PT(const LVX_PT& p)
     {

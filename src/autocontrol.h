@@ -22,6 +22,21 @@
  * @brief robot path finding, path following control
  */
 
+struct AUTOCONTROL_INFO
+{
+    static constexpr int control_loop_cnt = 20;
+    static constexpr int path_overlap_check_dist = 20;
+    static constexpr double local_path_calc_dt = 0.1;
+    static constexpr double avoid_path_check_idx = 0.9;
+    static constexpr double path_overlap_check_deg = 30.0;
+    static constexpr double dynamic_deadzone_safety_margin = 0.5;
+    static constexpr double obstacle_near_check_dist = 2.5;
+
+    static constexpr double local_path_step = 0.01;
+    static constexpr double global_path_step = 0.1;
+};
+
+
 class AUTOCONTROL : public QObject
 {
     Q_OBJECT
@@ -50,8 +65,9 @@ public:
     PATH get_cur_local_path();                      // get current local path
     double get_obs_dist();                          // get current obstacle far dist (1m, 2m)
     double get_process_time_control();              // get control loop processing time
-    double get_process_time_node();                  // get node loop processing time
+    double get_process_time_node();                 // get node loop processing time
     double get_process_time_obs();                  // get obs loop processing time
+    double get_cur_deadzone();                      // get current deadzone value
     QString get_auto_state();                       // get current auto request state (stop, move, pause, good, vir, not ready, error)
     QString get_cur_node_id();                      // get current node id
     QString get_obs_condition();                    // get current obstacle condition (none, near, far, vir)
@@ -70,9 +86,10 @@ public:
     void set_is_pause(bool val);
     void set_is_debug(bool val);
     void set_is_moving(bool val);
-    void set_multi_req(QString str);
+    void set_multi_request(QString str);
     void set_obs_condition(QString str);
     void set_cur_goal_state(QString str);
+    void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
     void set_multi_inter_lock(bool val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
@@ -104,7 +121,7 @@ private:
     ~AUTOCONTROL();
 
     // mutex
-    std::mutex mtx;
+    std::recursive_mutex mtx;
 
     // other modules
     CONFIG* config;
@@ -126,6 +143,9 @@ private:
     // [multi robot] move (input param: node path)
     void move(std::vector<QString> node_path, int preset);
     void move();
+
+    // flag, path, state
+    void clear_control_params();
 
     // global path, local path
     void clear_path();
@@ -163,7 +183,10 @@ private:
     // [multi robot] calc global path (node path -> global path)
     PATH calc_global_path(std::vector<QString> node_path, bool add_cur_tf);
 
+    // calc reference velocity map
     void calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vector<double>& ref_v, double st_v, double step);
+
+    // smoothing velocity input -> ref_v
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
     /***********************
@@ -230,25 +253,22 @@ private:
     QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
     QString cur_obs_condition = "none"; // none, near, far, vir
     DATA_MOVE cur_move_info;
+    std::atomic<double> cur_deadzone = {0.0};
 
     // obs
     int cur_obs_value = OBS_NONE;
     double cur_obs_decel_v = 0.0;
-    std::mutex mtx_obs_decel;
 
     // driving local ref v oscilation prevent
-    Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
     int prev_local_ref_v_index = 0;
     bool ref_v_oscilation_end_flag = false;
+    Eigen::Vector3d cur_pos_at_start_driving = Eigen::Vector3d(0,0,0);
 
     std::atomic<double> process_time_node = {0.0};
 
     // debug
-    double cur_obs_dist = 9999.0;
+    double cur_obs_dist = std::numeric_limits<double>::max();
     std::vector<Eigen::Matrix4d> obs_traj;
-
-    // for obs distance
-    double max_check_range = 2.5;
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);

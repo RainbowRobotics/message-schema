@@ -50,6 +50,7 @@ void RP_LIDAR::open()
         {
             grab_flag[idx] = true;
             grab_thread[idx] = make_unique<std::thread>(&RP_LIDAR::grab_loop, this, idx);
+            printf("[RP_LIDAR] start grab loop idx:%d\n", idx);
         }
     }
 }
@@ -187,12 +188,12 @@ void RP_LIDAR::grab_loop(int idx)
         return;
     }
 
-    logger->write_log(QString("[LIDAR] lidar scan start, MODE :%1").arg(mode.scan_mode), "Green", true, false);
+    logger->write_log(QString("[RP_LIDAR] lidar scan start, MODE :%1").arg(mode.scan_mode), "Green", true, false);
 
     is_connected[idx] = true;
 
     int drop_cnt = 10;
-    logger->write_log(QString("[LIDAR] start grab loop"), "Green", true, false);
+    logger->write_log(QString("[RP_LIDAR] start grab loop"), "Green", true, false);
     while(grab_flag[idx])
     {
         sl_lidar_response_measurement_node_hq_t nodes[8192];
@@ -266,8 +267,8 @@ void RP_LIDAR::grab_loop(int idx)
                     continue;
                 }
 
-                double t = t0 + p*per_sample;
-                double deg = (nodes[p].angle_z_q14 * 90.0)/RP_LIDAR_INFO::deg_resolution;
+                double t    = t0 + p*per_sample;
+                double deg  = (nodes[p].angle_z_q14 * 90.0)/RP_LIDAR_INFO::deg_resolution;
                 double dist = (nodes[p].dist_mm_q2/4.0)/RP_LIDAR_INFO::dist_resolution;
                 double rssi = (double)nodes[p].quality;
 

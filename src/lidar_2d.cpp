@@ -51,6 +51,8 @@ void LIDAR_2D::init()
         return;
     }
 
+    std::cout << "config->get_lidar_2d_type(): " << config->get_lidar_2d_type().toStdString() << std::endl;
+
     if(config->get_lidar_2d_type() == "SICK")
     {
         if(!sick)
@@ -62,6 +64,7 @@ void LIDAR_2D::init()
             sick->set_logger_module(this->logger);
             sick->set_mobile_module(this->mobile);
             sick->open();
+            printf("[LIDAR_2D] try to open SICK 2D lidar\n");
         }
     }
     else if(config->get_lidar_2d_type() == "RP")
@@ -75,6 +78,7 @@ void LIDAR_2D::init()
             rp->set_logger_module(this->logger);
             rp->set_mobile_module(this->mobile);
             rp->open();
+            printf("[LIDAR_2D] try to open RP 2D lidar\n");
         }
 
     }
@@ -98,7 +102,7 @@ void LIDAR_2D::open()
     int lidar_num = config->get_lidar_2d_num();
     for(int idx = 0; idx < lidar_num; idx++)
     {
-        deskewing_flag[idx] = true;
+        deskewing_flag[idx]   = true;
         deskewing_thread[idx] = std::make_unique<std::thread>(&LIDAR_2D::deskewing_loop, this, idx);
     }
 
@@ -205,7 +209,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
     int lidar_num = config->get_lidar_2d_num();
     if(config->get_lidar_2d_type() == "SICK" && sick != nullptr)
     {
-        for(int p=0; p<lidar_num; p++)
+        for(int p = 0; p < lidar_num; p++)
         {
             sick->set_is_sync(p, flag);
             printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
@@ -213,7 +217,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
     {
-        for(int p=0; p<lidar_num; p++)
+        for(int p = 0; p < lidar_num; p++)
         {
             rp->set_is_sync(p, flag);
             printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
@@ -325,7 +329,7 @@ void LIDAR_2D::deskewing_loop(int idx)
             deskewing_que[idx].push(deskewing_frm);
 
             // for queue overflow
-            if(deskewing_que[idx].unsafe_size() > deskewing_que_max_size)
+            if(deskewing_que[idx].unsafe_size() > LIDAR_2D_INFO::deskewing_que_max_size)
             {
                 RAW_FRAME tmp;
                 deskewing_que[idx].try_pop(tmp);
@@ -345,8 +349,8 @@ void LIDAR_2D::merge_loop()
     const int lidar_num = config->get_lidar_2d_num();
 
     // 10ms
-    double timeout = 0.05;
-    double wait_timeout = 0.15;
+    const double timeout = 0.05;
+    const double wait_timeout = 0.15;
     double last_recv_t[lidar_num];
 
     std::vector<RAW_FRAME> storage[lidar_num];
@@ -373,7 +377,7 @@ void LIDAR_2D::merge_loop()
 
                 // update
                 merged_que.push(frm);
-                if(merged_que.unsafe_size() > merge_que_max_size)
+                if(merged_que.unsafe_size() > LIDAR_2D_INFO::merge_que_max_size)
                 {
                     FRAME tmp;
                     merged_que.try_pop(tmp);
@@ -421,7 +425,7 @@ void LIDAR_2D::merge_loop()
                     last_recv_t[idx] = frm.mo.t;
 
                     storage[idx].push_back(frm);
-                    if(storage[idx].size() > deskewing_storage_max_size)
+                    if(storage[idx].size() > LIDAR_2D_INFO::deskewing_storage_max_size)
                     {
                         storage[idx].erase(storage[idx].begin());
                     }
@@ -436,18 +440,18 @@ void LIDAR_2D::merge_loop()
                 last_recv_t[0] = frm.mo.t;
 
                 storage[0].push_back(frm);
-                if(storage[0].size() > deskewing_storage_max_size)
+                if(storage[0].size() > LIDAR_2D_INFO::deskewing_storage_max_size)
                 {
                     storage[0].erase(storage[0].begin());
                 }
             }
         }
 
-        bool matched = false;
-        RAW_FRAME best0, best1;
+        bool matched  = false;
         double min_dt = std::numeric_limits<double>::max();
-        size_t ref_i = 0;
+        size_t ref_i  = 0;
         size_t best_j = 0;
+        RAW_FRAME best0, best1;
         if(!storage[0].empty() && !storage[1].empty())
         {
             ref_i = 0;
@@ -545,7 +549,7 @@ void LIDAR_2D::merge_loop()
             cur_merged_frm_t = merge_frm.t;
             cur_merged_num = merge_frm.pts.size();
 
-            if(merged_que.unsafe_size() > merge_que_max_size)
+            if(merged_que.unsafe_size() > LIDAR_2D_INFO::merge_que_max_size)
             {
                 FRAME tmp;
                 merged_que.try_pop(tmp);
@@ -588,8 +592,8 @@ bool LIDAR_2D::is_shadow(const double r1, const double r2, const double included
 
 std::vector<std::pair<Eigen::Vector3d, bool>> LIDAR_2D::scan_shadow_filter(const std::vector<Eigen::Vector3d>& dsk, int shadow_window)
 {
-    const double min_angle_tan = std::tan(5.0*D2R);
-    const double max_angle_tan = std::tan(175.0*D2R);
+    const double min_angle_tan = std::tan(LIDAR_2D_INFO::scan_shadow_min_angle*D2R);
+    const double max_angle_tan = std::tan(LIDAR_2D_INFO::scan_shadow_max_angle*D2R);
 
     std::vector<std::pair<Eigen::Vector3d, bool>> filtered_pts;
     filtered_pts.resize(dsk.size());

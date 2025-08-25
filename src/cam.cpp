@@ -221,6 +221,16 @@ void CAM::post_process_loop(int idx)
                         is_connected[idx] = true;
                     }
 
+                    QString robot_type = config->get_platform_name();
+                    if(robot_type == "S100")
+                    {
+                        // right camera
+                        if(idx == 1)
+                        {
+                            cv::flip(ti.img, ti.img, -1);
+                        }
+                    }
+
                     std::lock_guard<std::mutex> lock(mtx);
                     cur_time_img[idx] = ti;
                 }
@@ -284,7 +294,6 @@ void CAM::rtsp_loop()
         bool is_try_open = false;
         if(!writer[p].isOpened())
         {
-//            is_try_open = writer[p].open(pipeline[p], 0, (double)10, cv::Size(send_w, send_h), true);
             is_try_open = writer[p].open(pipeline[p], cv::CAP_GSTREAMER, 10.0, cv::Size(send_w, send_h), true);
 
         }
@@ -292,21 +301,20 @@ void CAM::rtsp_loop()
         if(!is_try_open)
         {
             logger->write_log(QString("[RTSP] cam%1 rtsp writer open failed").arg(p));
-//            rtsp_flag = false;
             rtsp_cam_status[p] = false;
-//            return;
         }
         else
         {
-//            rtsp_flag = true;
             rtsp_cam_status[p] = true;
         }
 
     }
 
-//    All camera statuses must be true for rtsp_flag to be true
-    rtsp_flag = std::all_of(rtsp_cam_status.begin(), rtsp_cam_status.end(),
-                            [](bool status) { return status; });
+    // All camera statuses must be true for rtsp_flag to be true
+    rtsp_flag = std::all_of(rtsp_cam_status.begin(), rtsp_cam_status.end(), [](bool status)
+    {
+        return status;
+    });
 
     while(rtsp_flag)
     {

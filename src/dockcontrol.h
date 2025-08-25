@@ -11,9 +11,10 @@
 #include "logger.h"
 #include "mobile.h"
 #include "lidar_2d.h"
-#include "qr_sensor.h"
 #include "obsmap.h"
+#include "qr_sensor.h"
 #include "comm_data.h"
+
 struct DWA_Trajectory
 {
     std::vector<Eigen::Matrix4d> poses;

@@ -15,9 +15,15 @@
 
 #include <QObject>
 
-constexpr unsigned int deskewing_que_max_size = 10;
-constexpr unsigned int deskewing_storage_max_size = 10;
-constexpr unsigned int merge_que_max_size = 10;
+struct LIDAR_2D_INFO
+{
+    static constexpr double scan_shadow_min_angle = 5.0;
+    static constexpr double scan_shadow_max_angle = 175.0;
+    static constexpr unsigned int merge_que_max_size         = 10;
+    static constexpr unsigned int deskewing_que_max_size     = 10;
+    static constexpr unsigned int deskewing_storage_max_size = 10;
+};
+
 
 class LIDAR_2D : public QObject
 {
@@ -92,11 +98,11 @@ private:
     QString cur_state = "none";
 
     // params
-    std::atomic<bool> is_connected = {false};
     std::atomic<bool> is_sync = {false};
+    std::atomic<bool> is_connected = {false};
 
-    std::atomic<double> cur_merged_frm_t = 0;
     std::atomic<int> cur_merged_num = 0;
+    std::atomic<double> cur_merged_frm_t = 0;
 
     // storage
     tbb::concurrent_queue<RAW_FRAME> deskewing_que[2];

@@ -28,68 +28,76 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     COMM_RRS::instance(this);
 
     // for 3d viewer
-    connect(ui->cb_ViewType,         SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
-    connect(ui->spb_PointSize,       SIGNAL(valueChanged(int)), this, SLOT(map_update()));              // change point size -> update map rendering elements
+    connect(ui->cb_ViewType,          SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
+    connect(ui->spb_PointSize,        SIGNAL(valueChanged(int)),            this, SLOT(map_update()));   // change point size -> update map rendering elements
+
+    // for viewer control
+    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
+    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
 
     // for simulation
-    connect(ui->bt_SimInit,          SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
+    connect(ui->bt_SimInit,           SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
 
     // config reload
-    connect(ui->bt_ConfigLoad,       SIGNAL(clicked()),  this, SLOT(bt_ConfigLoad()));                  // reload config.json file
+    connect(ui->bt_ConfigLoad,        SIGNAL(clicked()),  this, SLOT(bt_ConfigLoad()));                  // reload config.json file
 
     // emergency stop
-    connect(ui->bt_Emergency,        SIGNAL(clicked()),  this, SLOT(bt_Emergency()));                   // software emo button
+    connect(ui->bt_Emergency,         SIGNAL(clicked()),  this, SLOT(bt_Emergency()));                   // software emo button
 
     // mobile
-    connect(ui->bt_Sync,             SIGNAL(clicked()),  this, SLOT(bt_Sync()));                        // manual sync (mobile, 2d lidar, 3d lidar)
-    connect(ui->bt_MoveLinearX,      SIGNAL(clicked()),  this, SLOT(bt_MoveLinearX()));                 // move linear x only use odomety
-    connect(ui->bt_MoveLinearY,      SIGNAL(clicked()),  this, SLOT(bt_MoveLinearY()));                 // move linear y only use odomety
-    connect(ui->bt_MoveRotate,       SIGNAL(clicked()),  this, SLOT(bt_MoveRotate()));                  // move rotate only use odomety
-    connect(ui->bt_MotorInit,        SIGNAL(clicked()),  this, SLOT(bt_MotorInit()));                   // manual motor power on
+    connect(ui->bt_Sync,              SIGNAL(clicked()),  this, SLOT(bt_Sync()));                        // manual sync (mobile, 2d lidar, 3d lidar)
+    connect(ui->bt_MoveLinearX,       SIGNAL(clicked()),  this, SLOT(bt_MoveLinearX()));                 // move linear x only use odomety
+    connect(ui->bt_MoveLinearY,       SIGNAL(clicked()),  this, SLOT(bt_MoveLinearY()));                 // move linear y only use odomety
+    connect(ui->bt_MoveRotate,        SIGNAL(clicked()),  this, SLOT(bt_MoveRotate()));                  // move rotate only use odomety
+    connect(ui->bt_MotorInit,         SIGNAL(clicked()),  this, SLOT(bt_MotorInit()));                   // manual motor power on
 
     // jog
-    connect(ui->bt_JogF,             SIGNAL(pressed()),  this, SLOT(bt_JogF()));                        // if button pressed, move robot to front direction
-    connect(ui->bt_JogB,             SIGNAL(pressed()),  this, SLOT(bt_JogB()));                        // if button pressed, move robot to back direction
-    connect(ui->bt_JogL,             SIGNAL(pressed()),  this, SLOT(bt_JogL()));                        // if button pressed, move robot to left
-    connect(ui->bt_JogR,             SIGNAL(pressed()),  this, SLOT(bt_JogR()));                        // if button pressed, move robot to right
-    connect(ui->bt_JogF,             SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogB,             SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogL,             SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogR,             SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogF,              SIGNAL(pressed()),  this, SLOT(bt_JogF()));                        // if button pressed, move robot to front direction
+    connect(ui->bt_JogB,              SIGNAL(pressed()),  this, SLOT(bt_JogB()));                        // if button pressed, move robot to back direction
+    connect(ui->bt_JogL,              SIGNAL(pressed()),  this, SLOT(bt_JogL()));                        // if button pressed, move robot to left
+    connect(ui->bt_JogR,              SIGNAL(pressed()),  this, SLOT(bt_JogR()));                        // if button pressed, move robot to right
+    connect(ui->bt_JogF,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogB,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogL,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogR,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
 
     // mapping
-    connect(ui->bt_MapBuild,         SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));                    // mapping start
-    connect(ui->bt_MapSave,          SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
-    connect(ui->bt_MapLoad,          SIGNAL(clicked()),  this, SLOT(bt_MapLoad()));                     // map load
-    connect(ui->bt_MapLastLc,        SIGNAL(clicked()),  this, SLOT(bt_MapLastLc()));                   // manual loop closing
+    connect(ui->bt_MapBuild,          SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));                    // mapping start
+    connect(ui->bt_MapSave,           SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
+    connect(ui->bt_MapLoad,           SIGNAL(clicked()),  this, SLOT(bt_MapLoad()));                     // map load
+    connect(ui->bt_MapLastLc,         SIGNAL(clicked()),  this, SLOT(bt_MapLastLc()));                   // manual loop closing
 
     // localization
-    connect(ui->bt_LocInit,          SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
-    connect(ui->bt_LocStart,         SIGNAL(clicked()),  this, SLOT(bt_LocStart()));                    // localization start
-    connect(ui->bt_LocStop,          SIGNAL(clicked()),  this, SLOT(bt_LocStop()));                     // localization stop
+    connect(ui->bt_LocInit,           SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
+    connect(ui->bt_LocStart,          SIGNAL(clicked()),  this, SLOT(bt_LocStart()));                    // localization start
+    connect(ui->bt_LocStop,           SIGNAL(clicked()),  this, SLOT(bt_LocStop()));                     // localization stop
 
     // obsmap
-    connect(ui->bt_ObsClear,         SIGNAL(clicked()),     this, SLOT(bt_ObsClear()));                         // manual obstacle map clear
-    connect(OBSMAP::instance(),      SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);    // if obsmap changed, plot update
+    connect(ui->bt_ObsClear,          SIGNAL(clicked()),     this, SLOT(bt_ObsClear()));                         // manual obstacle map clear
+    connect(OBSMAP::instance(),       SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);    // if obsmap changed, plot update
 
     // autocontrol
-    connect(ui->bt_AutoMove,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove()));                                      // move A to B (use stanley, differential type)
-    connect(ui->bt_AutoMove2,        SIGNAL(clicked()),                    this, SLOT(bt_AutoMove2()));                                     // move A to B (use holonomic pure pursuit, mecanum type)
-    connect(ui->bt_AutoMove3,        SIGNAL(clicked()),                    this, SLOT(bt_AutoMove3()));                                     // move A to B (use PID, turn & go mode)
-    connect(ui->bt_AutoStop,         SIGNAL(clicked()),                    this, SLOT(bt_AutoStop()));                                      // stop auto-control
-    connect(ui->bt_AutoPause,        SIGNAL(clicked()),                    this, SLOT(bt_AutoPause()));                                     // pause auto-control
-    connect(ui->bt_AutoResume,       SIGNAL(clicked()),                    this, SLOT(bt_AutoResume()));                                    // resume auto-control
-    connect(ui->bt_ReturnToCharging, SIGNAL(clicked()),                    this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
-    connect(AUTOCONTROL::instance(), SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
-    connect(AUTOCONTROL::instance(), SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
+    connect(ui->bt_AutoMove,          SIGNAL(clicked()),                    this, SLOT(bt_AutoMove()));                                      // move A to B (use stanley, differential type)
+    connect(ui->bt_AutoMove2,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove2()));                                     // move A to B (use holonomic pure pursuit, mecanum type)
+    connect(ui->bt_AutoMove3,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove3()));                                     // move A to B (use PID, turn & go mode)
+    connect(ui->bt_AutoStop,          SIGNAL(clicked()),                    this, SLOT(bt_AutoStop()));                                      // stop auto-control
+    connect(ui->bt_AutoPause,         SIGNAL(clicked()),                    this, SLOT(bt_AutoPause()));                                     // pause auto-control
+    connect(ui->bt_AutoResume,        SIGNAL(clicked()),                    this, SLOT(bt_AutoResume()));                                    // resume auto-control
+    connect(ui->bt_ReturnToCharging,  SIGNAL(clicked()),                    this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
 
     // dockcontrol
-    connect(ui->bt_DockStart,        SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
-    connect(ui->bt_DockStop,         SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
-    connect(ui->bt_UnDockStart,      SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
+    connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
+    connect(ui->bt_DockStop,          SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
+    connect(ui->bt_UnDockStart,       SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
 
     // start docking
-    connect(ui->ckb_PlotEnable,      SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
+    connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
     // for response
     connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
@@ -98,9 +106,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // annotation
-    connect(ui->bt_DelNode, SIGNAL(clicked()), this, SLOT(bt_DelNode()));
-    connect(ui->bt_AnnotSave, SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
-    connect(ui->bt_QuickAddNode, SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
+    connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
+    connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
 
     // safety function
     connect(ui->bt_ClearMismatch, SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
@@ -984,7 +992,7 @@ void MainWindow::bt_Emergency()
 {
     // task.cancel();
     AUTOCONTROL::instance()->stop();
-    AUTOCONTROL::instance()->set_multi_req("none");
+    AUTOCONTROL::instance()->set_multi_request("none");
     AUTOCONTROL::instance()->set_obs_condition("none");
     // dctrl.stop();
     MOBILE::instance()->move(0,0,0);
@@ -1999,7 +2007,7 @@ void MainWindow::plot_map()
                 }
 
                 // point size
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "map_pts");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, "map_pts");
             }
         }
 
@@ -2242,7 +2250,7 @@ void MainWindow::plot_node()
                 {
                     pcl_viewer->addPointCloud(cloud, "front_dots");
                 }
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "front_dots");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size*2, "front_dots");
             }
 
             if(ui->ckb_PlotEdges->isChecked())
@@ -2310,14 +2318,14 @@ void MainWindow::plot_node()
                 {
                     pcl_viewer->addPointCloud(cloud, "edge_dots");
                 }
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2, "edge_dots");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size*2, "edge_dots");
                 pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.5, "edge_dots");
 
                 if(!pcl_viewer->updatePointCloud(cloud2, "edge_chk_dots"))
                 {
                     pcl_viewer->addPointCloud(cloud2, "edge_chk_dots");
                 }
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*2.5, "edge_chk_dots");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size*2.5, "edge_chk_dots");
             }
         }
     }
@@ -2390,11 +2398,8 @@ void MainWindow::plot_info()
 {
     // plot mobile info
     {
-        //        MOBILE_STATUS ms = MOBILE::instance()->get_status();
-
         double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
         ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
-
 
         if(MOBILE::instance()->get_is_connected())
         {
@@ -2436,7 +2441,7 @@ void MainWindow::plot_info()
     // 3d lidar info
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-        //        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
+//        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
     }
 
     // plot auto info
@@ -2444,7 +2449,7 @@ void MainWindow::plot_info()
         QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
-        //        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
+//        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
         QString auto_info_str;
         auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
@@ -2902,7 +2907,7 @@ void MainWindow::plot_mapping()
                 }
 
                 // point size
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, "live_tree_pts");
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, "live_tree_pts");
             }
         }
         else
@@ -2965,14 +2970,14 @@ void MainWindow::plot_mapping()
                     }
 
                     // point size
-                    pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                    pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, name.toStdString());
                 }
                 else
                 {
                     pcl_viewer->updatePointCloudPose(name.toStdString(), Eigen::Affine3f(opt_G.cast<float>()));
 
                     // point size
-                    pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE, name.toStdString());
+                    pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, name.toStdString());
                 }
             }
         }
@@ -3231,7 +3236,7 @@ void MainWindow::plot_ctrl()
             {
                 pcl_viewer->addPointCloud(cloud, "global_path");
             }
-            pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, POINT_PLOT_SIZE*3, "global_path");
+            pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size*3, "global_path");
         }
     }
 
@@ -3709,7 +3714,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 1.0)
         {
-            //            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
+//            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
 
@@ -3717,7 +3722,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 2.0)
         {
-            //            qDebug() << "SAFETY_LED_PURPLE";
+//            qDebug() << "SAFETY_LED_PURPLE";
             led_out = SAFETY_LED_PURPLE;
             return led_out;
 
@@ -3726,7 +3731,7 @@ int MainWindow::led_handler()
         else
         {
             //normal auto drive led
-            //            qDebug() << "SAFETY_LED_GREEN_BLINKING";
+//            qDebug() << "SAFETY_LED_GREEN_BLINKING";
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }

@@ -37,7 +37,8 @@
 #include <cmath>
 #include <iostream>
 
-namespace imu_tools {
+namespace imu_tools
+{
 
 const double ComplementaryFilter::kGravity = 9.8;
 const double ComplementaryFilter::gamma_ = 0.01;
@@ -261,13 +262,13 @@ bool ComplementaryFilter::checkState(double ax, double ay, double az, double wx,
     if (fabs(acc_magnitude - kGravity) > kAccelerationThreshold) return false;
 
     if (fabs(wx - wx_prev_) > kDeltaAngularVelocityThreshold ||
-        fabs(wy - wy_prev_) > kDeltaAngularVelocityThreshold ||
-        fabs(wz - wz_prev_) > kDeltaAngularVelocityThreshold)
+            fabs(wy - wy_prev_) > kDeltaAngularVelocityThreshold ||
+            fabs(wz - wz_prev_) > kDeltaAngularVelocityThreshold)
         return false;
 
     if (fabs(wx - wx_bias_) > kAngularVelocityThreshold ||
-        fabs(wy - wy_bias_) > kAngularVelocityThreshold ||
-        fabs(wz - wz_bias_) > kAngularVelocityThreshold)
+            fabs(wy - wy_bias_) > kAngularVelocityThreshold ||
+            fabs(wz - wz_bias_) > kAngularVelocityThreshold)
         return false;
 
     return true;
@@ -338,10 +339,10 @@ void ComplementaryFilter::getMeasurement(double ax, double ay, double az,
     // frame by the inverse of q_acc.
     // l = R(q_acc)^-1 m
     double lx = (q0_acc * q0_acc + q1_acc * q1_acc - q2_acc * q2_acc) * mx +
-                2.0 * (q1_acc * q2_acc) * my - 2.0 * (q0_acc * q2_acc) * mz;
+            2.0 * (q1_acc * q2_acc) * my - 2.0 * (q0_acc * q2_acc) * mz;
     double ly = 2.0 * (q1_acc * q2_acc) * mx +
-                (q0_acc * q0_acc - q1_acc * q1_acc + q2_acc * q2_acc) * my +
-                2.0 * (q0_acc * q1_acc) * mz;
+            (q0_acc * q0_acc - q1_acc * q1_acc + q2_acc * q2_acc) * my +
+            2.0 * (q0_acc * q1_acc) * mz;
 
     // q_mag is the quaternion that rotates the Global frame (North West Up)
     // into the intermediary frame. q1_mag and q2_mag are defined as 0.
@@ -526,12 +527,12 @@ void rotateVectorByQuaternion(double x, double y, double z, double q0,
                               double& vy, double& vz)
 {
     vx = (q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * x +
-         2 * (q1 * q2 - q0 * q3) * y + 2 * (q1 * q3 + q0 * q2) * z;
+            2 * (q1 * q2 - q0 * q3) * y + 2 * (q1 * q3 + q0 * q2) * z;
     vy = 2 * (q1 * q2 + q0 * q3) * x +
-         (q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3) * y +
-         2 * (q2 * q3 - q0 * q1) * z;
+            (q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3) * y +
+            2 * (q2 * q3 - q0 * q1) * z;
     vz = 2 * (q1 * q3 - q0 * q2) * x + 2 * (q2 * q3 + q0 * q1) * y +
-         (q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * z;
+            (q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * z;
 }
 
 }  // namespace imu_tools

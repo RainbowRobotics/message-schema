@@ -17,6 +17,25 @@
 // qt
 #include <QObject>
 
+enum class RobotType
+{
+    ROBOT_TYPE_UNKNOWN = 0,
+    ROBOT_TYPE_D400    = 1,
+    ROBOT_TYPE_S100    = 2,
+    ROBOT_TYPE_MECANUM = 3,
+    ROBOT_TYPE_SAFETY  = 4
+};
+
+struct MOBILE_INFO
+{
+    static constexpr int packet_size_s100    = 85;
+    static constexpr int packet_size_d400    = 126;
+    static constexpr int packet_size_mecanum = 129;
+    static constexpr int packet_size_safety  = 199;
+
+    static constexpr double pdu_tick_resolution = 0.002;
+};
+
 class MOBILE : public QObject
 {
     Q_OBJECT
@@ -115,8 +134,6 @@ public:
     void lift_power_onoff(int param);
     void sem_io_speaker(unsigned int speak_num);
 
-
-//    float mileage = 0.0;
 private:
     explicit MOBILE(QObject *parent = nullptr);
     ~MOBILE();
@@ -182,7 +199,7 @@ private:
     QString pose_text;
     QString status_text;
 
-   float f_distance = 0.0;
+    float f_distance = 0.0;
 
     // device varibale
     bool speaker_io_state[4] = {false,};

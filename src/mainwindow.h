@@ -38,6 +38,11 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+struct MAINWINDOW_INFO
+{
+    static constexpr int plot_point_size = 3;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

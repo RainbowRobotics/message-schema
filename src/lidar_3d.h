@@ -41,11 +41,11 @@ public:
     IMU get_best_imu(double ref_t, int idx);    // get nearest time(ref_t) imu info (Compare values ​​in specific storage)
     bool get_is_sync();                         // check if synced lidar to mobile
     bool get_is_connected();                    // check if connected lidar
-    double get_process_time_deskewing(int idx);
-    double get_process_time_merge();
+    double get_process_time_merge();            // merge loop processing time
+    double get_process_time_deskewing(int idx); // deskewing loop processing time
+    LVX_FRM get_cur_raw(int idx);               // get cur raw frame (LVX_FRM, global pts, not deskewing)
     QString get_info_text();                    // get all lidar info
     QString get_cur_state();                    // get lidar state
-    LVX_FRM get_cur_raw(int idx);               // get cur raw frame (LVX_FRM, global pts, not deskewing)
     TIME_PTS get_cur_frm();
 
     // setter func
@@ -82,28 +82,27 @@ private:
     void deskewing_loop(int idx);                                   // deskewing loop (raw_frame to deskewing frame)
 
     // merge loop
-    std::atomic<bool> merge_flag = {false};         // merge thread flag
-    std::unique_ptr<std::thread> merge_thread;      // merge thread
-    void merge_loop();                              // merge loop (raw_frame array cnt is 2, merge)
+    std::atomic<bool> merge_flag = {false};                         // merge thread flag
+    std::unique_ptr<std::thread> merge_thread;                      // merge thread
+    void merge_loop();                                              // merge loop (raw_frame array cnt is 2, merge)
 
-    // watchdog
-    QString cur_state = "none";
+    // flags
+    std::atomic<bool> is_connected = {false};                       // is connected lidar
+    std::atomic<bool> is_sync = {false};                            // is synced lidar
 
-    // params
-    std::atomic<bool> is_connected = {false};       // is connected lidar
-    std::atomic<bool> is_sync = {false};            // is synced lidar
-
+    // process time
     std::atomic<double> process_time_deskewing[2] = {0.0, 0.0};
     std::atomic<double> process_time_merge        = {0.0};
 
-    std::atomic<double> cur_merged_frm_t = 0;       // last merge_que pop time
-    std::atomic<int> cur_merged_num = 0;            // last merge_que point size
-
+    // current state
+    QString cur_state = "none";
     TIME_PTS cur_frm;
+    std::atomic<double> cur_merged_frm_t = 0;                       // last merge_que pop time
+    std::atomic<int> cur_merged_num = 0;                            // last merge_que point size
 
     // storage
-    tbb::concurrent_queue<TIME_PTS> deskewing_que[2];   // deskewing queue (used in merge loop)
-    tbb::concurrent_queue<TIME_PTS> merged_que;         // merged queue (used in other modules)
+    tbb::concurrent_queue<TIME_PTS> deskewing_que[2];               // deskewing queue (used in merge loop)
+    tbb::concurrent_queue<TIME_PTS> merged_que;                     // merged queue (used in other modules)
 };
 
 #endif // LIDAR_3D_H
