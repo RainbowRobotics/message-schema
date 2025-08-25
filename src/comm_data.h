@@ -17,7 +17,7 @@ struct DATA_MOVE
     Eigen::Vector3d jog_val; // vx, vy, wz
 
     double remaining_dist;
-    double eta; // estimated time of arrival
+    double remaining_time; // estimated time of arrival
     int bat_percent; // battery percentage
 
     QString result;
@@ -38,7 +38,7 @@ struct DATA_MOVE
         jog_val.setZero();
 
         remaining_dist = 0.0;
-        eta = 9999.0;
+        remaining_time = 9999.0;
         bat_percent = -1;
 
         result = "";
@@ -59,7 +59,7 @@ struct DATA_MOVE
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 
-        eta = p.eta;
+        remaining_time = p.remaining_time;
         bat_percent = p.bat_percent;
 
         result = p.result;
@@ -80,7 +80,7 @@ struct DATA_MOVE
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 
-        eta = p.eta;
+        remaining_time = p.remaining_time;
         bat_percent = p.bat_percent;
 
         result = p.result;
@@ -501,10 +501,9 @@ struct DATA_VIEW_PATH
 
 struct DATA_PATH
 {
-    double time;
+    long long time;
     QString command; // path
     QString path;
-    QString vobs_robots;
     QString vobs_closures;
     int preset;
 
@@ -514,10 +513,9 @@ struct DATA_PATH
 
     DATA_PATH()
     {
-        time = 0.0;
+        time = 0;
         command = "";
         path = "";
-        vobs_robots = "";
         vobs_closures = "";
         preset = 0;
 
@@ -531,7 +529,6 @@ struct DATA_PATH
         time = p.time;
         command = p.command;
         path = p.path;
-        vobs_robots = p.vobs_robots;
         vobs_closures = p.vobs_closures;
         preset = p.preset;
 
@@ -545,7 +542,6 @@ struct DATA_PATH
         time = p.time;
         command = p.command;
         path = p.path;
-        vobs_robots = p.vobs_robots;
         vobs_closures = p.vobs_closures;
         preset = p.preset;
 
@@ -734,6 +730,116 @@ struct DATA_TEMPERATURE
     }
 };
 
+struct DATA_CAM_INFO
+{
+    double time;
+    QString serial_cam0;
+    QString serial_cam1;
+
+    QString result;
+    QString message;
+
+    DATA_CAM_INFO()
+    {
+        time = 0.0;
+        serial_cam0 = "";
+        serial_cam1 = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_CAM_INFO(const DATA_CAM_INFO& p)
+    {
+        time = p.time;
+        serial_cam0 = p.serial_cam0;
+        serial_cam1 = p.serial_cam1;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_CAM_INFO& operator=(const DATA_CAM_INFO& p)
+    {
+        time = p.time;
+        serial_cam0 = p.serial_cam0;
+        serial_cam1 = p.serial_cam1;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+struct DATA_UPDATE_VARIABLE
+{
+    QString key;
+    QString value;
+
+    QString result;
+    QString message;
+
+    DATA_UPDATE_VARIABLE()
+    {
+        key = "";
+        value = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_UPDATE_VARIABLE(const DATA_UPDATE_VARIABLE& p)
+    {
+        key = p.key;
+        value = p.value;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_UPDATE_VARIABLE& operator=(const DATA_UPDATE_VARIABLE& p)
+    {
+        key = p.key;
+        value = p.value;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+struct DATA_COMMON
+{
+    enum class TYPE
+    {
+        LOAD,
+        LOCALIZATION,
+        RANDOMSEQ,
+        MAPPING,
+        DOCKING,
+        VIEW_LIDAR,
+        VIEW_PATH,
+        LED,
+        MOTOR,
+        SW_UPDATE,
+        UPDATE_VARIABLE,
+        CAM_INFO
+    };
+    TYPE type;
+
+    DATA_LOAD dload;
+    DATA_LOCALIZATION dlocalization;
+    DATA_RANDOMSEQ drandomseq;
+    DATA_MAPPING dmapping;
+    DATA_DOCK ddock;
+    DATA_VIEW_LIDAR dlidar;
+    DATA_VIEW_PATH dpath;
+    DATA_LED dled;
+    DATA_MOTOR dmotor;
+    DATA_SOFTWARE dsw;
+    DATA_UPDATE_VARIABLE duv;
+    DATA_CAM_INFO dci;
+};
 
 
 Q_DECLARE_METATYPE(DATA_MOVE)
@@ -751,5 +857,8 @@ Q_DECLARE_METATYPE(DATA_VOBS)
 Q_DECLARE_METATYPE(DATA_SOFTWARE)
 Q_DECLARE_METATYPE(DATA_FOOT)
 Q_DECLARE_METATYPE(DATA_FIELD)
+Q_DECLARE_METATYPE(DATA_CAM_INFO)
+Q_DECLARE_METATYPE(DATA_UPDATE_VARIABLE)
+Q_DECLARE_METATYPE(DATA_COMMON)
 
 #endif // COMM_DATA_H

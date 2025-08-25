@@ -74,6 +74,7 @@ public:
      ***********************/
     bool get_use_lidar_2d();            // check if the robot uses 2d lidar
     QString get_lidar_2d_type();        // check 2d lidar type
+    QString get_lidar_2d_dev(int idx);  // check 2d lidar dev
     int get_lidar_2d_num();             // check 2d lidar number
     bool get_use_lidar_3d();            // check if the robot uses 3d lidar
     QString get_lidar_3d_type();        // check 3d lidar type
@@ -362,6 +363,7 @@ private:
     double LIDAR_2D_MAX_RANGE = 40.0;
     QString LIDAR_2D_IP[2] = { "", "" };
     QString LIDAR_2D_TF[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
+    QString LIDAR_2D_DEV[2] = { "0,0,0,0,0,0", "0,0,0,0,0,0" };
 
     // lidar 3d
     double LIDAR_3D_MIN_RANGE = 1.0;

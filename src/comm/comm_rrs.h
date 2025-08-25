@@ -48,18 +48,6 @@ public:
     // interface func
     void init();
 
-    // send status
-    void send_status();
-    void send_move_status();
-
-    // send path
-    void send_local_path();
-    void send_global_path();
-
-    // send cloud
-    void send_lidar();
-    void send_mapping_cloud();
-
     // util func
     QString get_json(sio::message::ptr const& data, const QString& key);
     QString get_multi_state();
@@ -78,6 +66,10 @@ public:
     void set_localization_module(LOCALIZATION* _loc);
     void set_mapping_module(MAPPING* _mapping);
 
+    // for send path
+    void set_global_path_update();
+    void set_local_path_update();
+
 private:
     explicit COMM_RRS(QObject *parent = nullptr);
     ~COMM_RRS();
@@ -85,46 +77,52 @@ private:
     std::shared_mutex mtx;
 
     // other modules
-    QObject* main;
+    CAM* cam;
+    UNIMAP* unimap;
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
+    OBSMAP* obsmap;
+    QObject* main;
+    MAPPING* mapping;
     LIDAR_2D* lidar_2d;
     LIDAR_2D* lidar_3d;
-    CAM* cam;
-    UNIMAP* unimap;
-    OBSMAP* obsmap;
     AUTOCONTROL* ctrl;
     DOCKCONTROL* dctrl;
     LOCALIZATION* loc;
-    MAPPING* mapping;
-
-    QTimer* send_timer;
-    int send_cnt = 0;
 
     // vars    
     std::unique_ptr<sio::client> io;    
-    std::atomic<int> last_send_kfrm_idx{0};
+    std::atomic<int> last_send_kfrm_idx = {0};
 
     // flags
     QString multi_state;
-    std::atomic<bool> is_connected{false};
+    std::atomic<bool> is_connected = {false};
+
+    std::atomic<bool> is_local_path_update2 = {false};
+    std::atomic<bool> is_global_path_update2 = {false};
 
     // semi auto init
-    std::atomic<bool> semi_auto_init_flag{false};
+    std::atomic<bool> semi_auto_init_flag = {false};
     std::unique_ptr<std::thread> semi_auto_init_thread;
 
     QByteArray lastest_msg_str;
 
-
-    // for variable loop
+    // send timer
+    QTimer* send_timer;
     std::atomic<int> lidar_view_frequency = {1};
-    std::atomic<int> path_view_frequency = {2};
+    std::atomic<int> path_view_frequency  = {2};
+    void send_lidar_2d();
+    void send_lidar_3d();
+    void send_status();
+    void send_local_path();
+    void send_global_path();
+    void send_move_status();
+    void send_mapping_cloud();
 
-    int cnt = 0;
+    int send_cnt = 0;
     int lidar_view_cnt = 0;
-    int path_view_cnt = 0;
-
+    int path_view_cnt  = 0;
 
 public Q_SLOTS:
     void sio_connected();
@@ -148,20 +146,20 @@ public Q_SLOTS:
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_software_update(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
-    void slot_move(DATA_MOVE msg);
-    void slot_localization(DATA_LOCALIZATION msg);
-    void slot_load(DATA_LOAD msg);
-    void slot_randomseq(DATA_RANDOMSEQ msg);
-    void slot_mapping(DATA_MAPPING msg);
-    void slot_dock(DATA_DOCK msg);
-    void slot_view_lidar(DATA_VIEW_LIDAR msg);
-    void slot_view_path(DATA_VIEW_PATH msg);
     void slot_led(DATA_LED msg);
-    void slot_motor(DATA_MOTOR msg);
-    void slot_foot(DATA_FOOT msg);
-    void slot_field_set(DATA_FIELD msg);
+    void slot_move(DATA_MOVE msg);
     void slot_path(DATA_PATH msg);
     void slot_vobs(DATA_VOBS msg);
+    void slot_load(DATA_LOAD msg);
+    void slot_dock(DATA_DOCK msg);
+    void slot_foot(DATA_FOOT msg);
+    void slot_motor(DATA_MOTOR msg);
+    void slot_mapping(DATA_MAPPING msg);
+    void slot_randomseq(DATA_RANDOMSEQ msg);
+    void slot_view_path(DATA_VIEW_PATH msg);
+    void slot_field_set(DATA_FIELD msg);
+    void slot_view_lidar(DATA_VIEW_LIDAR msg);
+    void slot_localization(DATA_LOCALIZATION msg);
     void slot_software_update(DATA_SOFTWARE msg);
 
     /* send command response */

@@ -80,6 +80,8 @@ public:
     QString get_map_path();
     void set_map_path(const QString& path);
 
+    void getIPv4();
+
     // vars
     std::atomic<double> plot_dt = {0.};
 

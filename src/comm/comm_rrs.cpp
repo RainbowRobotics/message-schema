@@ -55,7 +55,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "fieldRequest",   std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "fieldRequest",    std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -423,7 +423,6 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         DATA_PATH msg;
         msg.command = get_json(data, "command"); // "path"
         msg.path = get_json(data, "path");
-        msg.vobs_robots = get_json(data, "vobs_r");
         msg.vobs_closures = get_json(data, "vobs_c");
         msg.preset = get_json(data, "preset").toInt();
         msg.time = get_json(data, "time").toDouble() / 1000;
@@ -507,12 +506,12 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         temperature_msg.temperature_value   = get_json(temperature_sensor, "temperature_value").toFloat();
         temperature_msg.time       = time_sec;
 
-//        qDebug()<<QString::number(temperature_msg.temperature_value);
+        //        qDebug()<<QString::number(temperature_msg.temperature_value);
 
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         _main->temperature_value = temperature_msg.temperature_value;
 
-//        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
+        //        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
 
         // debug
         // printf("[COMM_RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
@@ -737,7 +736,7 @@ void COMM_RRS::send_move_status()
     // Creating the JSON object
     QJsonObject rootObj;
 
-    QString cur_node_id = loc->get_cur_node_id();
+    QString cur_node_id = ctrl->get_cur_node_id();
 
     // Adding the move state object
     QString auto_state = "stop";
@@ -906,12 +905,96 @@ void COMM_RRS::send_global_path()
     io->socket()->emit("globalPath", jsonArray);
 }
 
-void COMM_RRS::send_lidar()
+void COMM_RRS::send_lidar_2d()
 {
-    if(!is_connected || !loc || !lidar_2d || !lidar_3d)
+
+    if (!is_connected || !loc || !lidar_2d)
     {
         return;
     }
+
+    std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
+
+    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    if(pts.size() > 0)
+    {
+        sio::object_message::ptr rootObject = sio::object_message::create();
+        sio::object_message::ptr poseObject = sio::object_message::create();
+        poseObject->get_map()["x"] = sio::string_message::create(QString::number(cur_xi[0], 'f', 3).toStdString());
+        poseObject->get_map()["y"] = sio::string_message::create(QString::number(cur_xi[1], 'f', 3).toStdString());
+        poseObject->get_map()["rz"] = sio::string_message::create(QString::number(cur_xi[2]*R2D, 'f', 3).toStdString());
+
+        rootObject->get_map()["pose"] = poseObject;
+
+        sio::array_message::ptr jsonArray = sio::array_message::create();
+
+        // initalize vector, get pts -> 1 deg
+        std::vector<Eigen::Vector3d> sample_pts(360, Eigen::Vector3d(NAN,NAN,NAN));
+
+        for(size_t p=0; p<pts.size(); p++)
+        {
+            double yaw_rad = std::atan2(pts[p][1], pts[p][0]);
+            double yaw_deg = yaw_rad * R2D;
+            if(yaw_deg < 0)
+            {
+                yaw_deg += 360.0;
+            }
+
+            int idx = static_cast<int>(yaw_deg) % 360;
+            double dist = std::sqrt(pts[p][0]*pts[p][0] + pts[p][1]*pts[p][1]);
+
+            // if multiple values with similar angles appear, update the one with the shorter distance.
+            if(std::isnan(sample_pts[idx][0]) || dist < std::sqrt(sample_pts[idx][0]*sample_pts[idx][0] + sample_pts[idx][1]*sample_pts[idx][1]))
+            {
+                sample_pts[idx] = Eigen::Vector3d(pts[p][0], pts[p][1], pts[p][2]);
+            }
+        }
+
+        for(int i=0; i<360; i++)
+        {
+            // fill missing sample point with previous point
+            if(std::isnan(sample_pts[i][0]))
+            {
+                int prev = (i-1+360)%360;
+                sample_pts[i] = sample_pts[prev];  // add pre pts
+            }
+
+            sio::array_message::ptr jsonObj = sio::array_message::create();
+            if(!std::isnan(sample_pts[i][0]))
+            {
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][0],'f',3).toStdString()));
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][1],'f',3).toStdString()));
+                jsonObj->get_vector().push_back(sio::string_message::create(QString::number(sample_pts[i][2],'f',3).toStdString()));
+            }
+            jsonObj->get_vector().push_back(sio::string_message::create(QString::number(100,'f',3).toStdString()));
+            jsonArray->get_vector().push_back(jsonObj);
+        }
+//        std::cout << jsonArray->get_vector().size() << std::endl;
+
+        rootObject->get_map()["data"] = jsonArray;
+        io->socket()->emit("lidarCloud", rootObject);
+
+    }
+
+}
+
+
+void COMM_RRS::send_lidar_3d()
+{
+
+//    if (!is_connected || !loc || !lidar_2d || (CONFIG::instance()->get_use_lidar_3d() && !lidar_3d))
+//    {
+//        return;
+//    }
+
+//    must resample data
+
+    if (!is_connected || !loc || !lidar_2d || !lidar_3d)
+    {
+        return;
+    }
+    qDebug()<<"3333333333333";
 
     std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
@@ -940,11 +1023,10 @@ void COMM_RRS::send_lidar()
 
         rootObject->get_map()["data"] = jsonArray;
 
-        // send
-        io->socket()->emit("lidarCloud", rootObject);
     }
 
 }
+
 
 void COMM_RRS::send_mapping_cloud()
 {
@@ -1177,7 +1259,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             {
                 msg.result = "accept";
                 msg.message = "success";
-                msg.eta = 0.0;
+                msg.remaining_time = 0.0;
             }
             else
             {
@@ -1334,7 +1416,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
         const QString load_dir = "/data/maps/" + map_name;
 
         //printf(Qload_dir);
-        qDebug()<<load_dir;
+        //qDebug()<<load_dir;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
@@ -1388,10 +1470,56 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     }
     else if(command == "topoload")
     {
-        msg.result = "reject";
-        msg.message = "[R0Sx0301]not support yet";
+        MOBILE_STATUS ms = mobile->get_status();
+        if(config->get_use_sim() || ms.motor_stop_state ==1)
+        {
+            const QString map_name = msg.map_name;
+            const QString load_dir = "/data/maps/" + map_name;
+            //qDebug()<<load_dir;
 
-        send_load_response(msg);
+            if(!load_dir.isNull())
+            {
+                if(!QDir(load_dir).exists())
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid map dir_topo_command";
+                    send_load_response(msg);
+                    return;
+                }
+
+                MainWindow* _main = qobject_cast<MainWindow*>(main);
+                if(_main)
+                {
+                    _main->set_map_path(load_dir);
+                    if(unimap)
+                    {
+                        unimap->load_node();
+                    }
+                    _main->all_update();
+                }
+
+                else
+                {
+                    msg.result = "fail";
+                    msg.message = "topo not load_topo_command";
+                    send_load_response(msg);
+                }
+            }
+
+        }
+
+        //if(unimap && unimap->get_is_loaded() == MAP_LOADED)
+        //{
+        //    msg.result = "success";
+        //    msg.message = "";
+        //    send_load_response(msg);
+        //}
+
+
+        //msg.result = "reject";
+        //msg.message = "[R0Sx0301]not support yet";
+
+        //send_load_response(msg);
     }
     else if(command == "configload")
     {
@@ -1980,7 +2108,7 @@ void COMM_RRS::send_move_response(const DATA_MOVE& msg)
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;
     obj["remaining_dist"] = QString::number(msg.remaining_dist, 'f', 3);
-    obj["eta"] = QString::number(msg.eta, 'f', 3);
+    obj["eta"] = QString::number(msg.remaining_time, 'f', 3);
     obj["bat_percent"] = QString::number(msg.bat_percent, 'f', 3);
 
     // temporal patch
@@ -2318,6 +2446,15 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
     }
 }
 
+void COMM_RRS::set_global_path_update()
+{
+    is_global_path_update2 = true;
+}
+
+void COMM_RRS::set_local_path_update()
+{
+    is_local_path_update2 = true;
+}
 
 // Modifying part of sending LiDAR data
 // working at 10[ms]
@@ -2329,11 +2466,12 @@ void COMM_RRS::send_loop()
     }
 
     // Synchronize with the development version
-    if(send_cnt % 5 == 0)
+    // 100[ms]
+    if(send_cnt % 10 == 0)
     {
         send_move_status();
     }
-
+    // 500[ms]
     if(send_cnt % 50 == 0)
     {
         send_status();
@@ -2347,12 +2485,22 @@ void COMM_RRS::send_loop()
     // for variable loop
     double time_lidar_view = 1.0/((double)lidar_view_frequency + 1e-06);
     time_lidar_view *= 10.0;
+
     if(time_lidar_view > 0)
     {
         if(lidar_view_cnt > time_lidar_view)
         {
             lidar_view_cnt = 0;
-            send_lidar();
+
+            if(!CONFIG::instance()->get_use_lidar_3d())
+            {
+                send_lidar_2d();
+            }
+            else
+            {
+                send_lidar_2d();
+                send_lidar_3d();
+            }
         }
 
         lidar_view_cnt++;
@@ -2365,40 +2513,29 @@ void COMM_RRS::send_loop()
         if(path_view_cnt > time_path_view)
         {
             path_view_cnt = 0;
-//                if(is_global_path_update2)
-//                {
-//                    is_global_path_update2 = false;
-//                    comm_rrs.send_global_path();
-//                }
-
-//                if(is_local_path_update2)
-//                {
-//                    is_local_path_update2 = false;
-//                    comm_rrs.send_local_path();
-//                }
+            send_local_path();
         }
-        path_view_cnt++;
     }
+    path_view_cnt++;
 
-    // for 1000ms loop
+
     // to give information video streaming data
     if(config->get_use_rtsp() && config->get_use_cam())
     {
-        if(cnt % 100 == 0)
+        if(send_cnt % 100 == 0)
         {
             std::vector<bool> rtsp_flag = cam->get_rtsp_flag();
             if(rtsp_flag.size() != 0)
             {
                 for(int p = 0; p < rtsp_flag.size(); p++)
                 {
-                    QString msg = QString("[COMM] cam%1 rtsp writer %2")
-                            .arg(p)
-                            .arg(rtsp_flag[p] ? "open success" : "open failed");
+                    QString msg = QString("[COMM] cam%1 rtsp writer %2").arg(p)
+                                                                        .arg(rtsp_flag[p] ? "open success" : "open failed");
                     logger->write_log(msg);
                 }
             }
         }
     }
 
-    send_cnt ++;
+    send_cnt++;
 }

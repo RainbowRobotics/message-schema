@@ -127,6 +127,30 @@ void OBSMAP::set_unimap_module(UNIMAP* _unimap)
     unimap = _unimap;
 }
 
+void OBSMAP::set_vobs_list_robots(const std::vector<Eigen::Vector3d>& _vobs_r_list)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    vobs_list_robots = _vobs_r_list;
+}
+
+void OBSMAP::set_vobs_list_closures(const std::vector<Eigen::Vector3d>& _vobs_c_list)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    vobs_list_closures = _vobs_c_list;
+}
+
+std::vector<Eigen::Vector3d> OBSMAP::get_vobs_list_robots()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return vobs_list_robots;
+}
+
+std::vector<Eigen::Vector3d> OBSMAP::get_vobs_list_closures()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return vobs_list_closures;
+}
+
 void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 {
     std::unique_lock<std::shared_mutex> lock(mtx);

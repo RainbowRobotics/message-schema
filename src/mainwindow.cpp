@@ -138,7 +138,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-
     plot_timer->stop();
     delete ui;
 }
@@ -702,7 +701,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                         pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
 
-                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
+                        //                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
 
                         // update last mouse button
                         pick.last_btn = 0;
@@ -1119,7 +1118,8 @@ void MainWindow::bt_MapBuild()
     UNIMAP::instance()->clear();
 
     // auto generation dir path
-    QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
+    //QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
+    QString _map_dir = "/data/maps/" + get_time_str();
     QDir().mkpath(_map_dir);
     UNIMAP::instance()->set_map_path(_map_dir);
 
@@ -1218,7 +1218,8 @@ void MainWindow::bt_MapSave()
 
 void MainWindow::bt_MapLoad()
 {
-    QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+    //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+    QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
     {
         // clear first
@@ -1601,11 +1602,13 @@ void MainWindow::bt_QuickAddNode()
 
 void MainWindow::slot_local_path_updated()
 {
+    COMM_RRS::instance()->set_local_path_update();
     is_local_path_update = true;
 }
 
 void MainWindow::slot_global_path_updated()
 {
+    COMM_RRS::instance()->set_global_path_update();
     is_global_path_update = true;
 }
 
@@ -1792,7 +1795,7 @@ void MainWindow::watch_loop()
                     else
                     {
                         MOBILE::instance()->set_cur_pdu_state("fail");
-//                        led_color = LED_MAGENTA;
+                        //                        led_color = LED_MAGENTA;
                     }
                 }
             }
@@ -1854,7 +1857,7 @@ void MainWindow::watch_loop()
                 {
                     loc_fail_cnt = 0;
                     LOCALIZATION::instance()->set_cur_loc_state("none");
-//                    led_color = LED_MAGENTA;
+                    //                    led_color = LED_MAGENTA;
                 }
                 else
                 {
@@ -1866,7 +1869,7 @@ void MainWindow::watch_loop()
                         if(loc_fail_cnt > 3)
                         {
                             LOCALIZATION::instance()->set_cur_loc_state("fail");
-//                            led_color = LED_MAGENTA_BLINK;
+                            //                            led_color = LED_MAGENTA_BLINK;
                         }
                     }
                     else
@@ -1902,49 +1905,49 @@ void MainWindow::watch_loop()
 
 
         // Samsung's request
-//        // for 500ms loop
-//        // obs logging
-//        if(cnt % 5 == 0)
-//        {
-//            if(AUTOCONTROL::instance()->get_is_moving())
-//            {
-//                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
+        //        // for 500ms loop
+        //        // obs logging
+        //        if(cnt % 5 == 0)
+        //        {
+        //            if(AUTOCONTROL::instance()->get_is_moving())
+        //            {
+        //                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
 
-//                if(obs_d < 2.0 + 1e-6)
-//                {
-//                    // zone, obs dist
-////                    QString log = QString("\t%1\t%2")
-////                            .arg(int(obs_d))
-////                            .arg(obs_d, 0, 'f', 6);
-//                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
-////                    qDebug()<<log;
+        //                if(obs_d < 2.0 + 1e-6)
+        //                {
+        //                    // zone, obs dist
+        ////                    QString log = QString("\t%1\t%2")
+        ////                            .arg(int(obs_d))
+        ////                            .arg(obs_d, 0, 'f', 6);
+        //                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
+        ////                    qDebug()<<log;
 
-//                    LOGGER::instance()->write_log_to_txt(log);
-//                }
-//            }
-//        }
-//        // for 1 min loop
-//        // temperature logging
-//        if(cnt % 600 == 0)
-//        {
-//            //for temperature status
-//            {
-//                MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
+        //                    LOGGER::instance()->write_log_to_txt(log);
+        //                }
+        //            }
+        //        }
+        //        // for 1 min loop
+        //        // temperature logging
+        //        if(cnt % 600 == 0)
+        //        {
+        //            //for temperature status
+        //            {
+        //                MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
 
-//                //            //m1 m2 battery usb sensor
-//                QString log = QString("\t%1\t%2\t%3\t%4\t%5")
-//                        .arg(mobile_log.temp_m0)
-//                        .arg(mobile_log.temp_m1)
-//                        .arg(mobile_log.tabos_temperature)
-//                        .arg(QString::number(temperature_value))
-//                        .arg(mobile_log.tabos_soc, 0, 'f', 3);
+        //                //            //m1 m2 battery usb sensor
+        //                QString log = QString("\t%1\t%2\t%3\t%4\t%5")
+        //                        .arg(mobile_log.temp_m0)
+        //                        .arg(mobile_log.temp_m1)
+        //                        .arg(mobile_log.tabos_temperature)
+        //                        .arg(QString::number(temperature_value))
+        //                        .arg(mobile_log.tabos_soc, 0, 'f', 3);
 
-//                //            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
-//                //            qDebug()<<temperature_value.load();
+        //                //            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
+        //                //            qDebug()<<temperature_value.load();
 
-//                LOGGER::instance()->write_temperature_log_to_txt(log);
-//            }
-//        }
+        //                LOGGER::instance()->write_temperature_log_to_txt(log);
+        //            }
+        //        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -2387,7 +2390,7 @@ void MainWindow::plot_info()
 {
     // plot mobile info
     {
-//        MOBILE_STATUS ms = MOBILE::instance()->get_status();
+        //        MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
         double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
         ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
@@ -2433,7 +2436,7 @@ void MainWindow::plot_info()
     // 3d lidar info
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-//        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
+        //        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
     }
 
     // plot auto info
@@ -2441,7 +2444,7 @@ void MainWindow::plot_info()
         QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
-//        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
+        //        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
         QString auto_info_str;
         auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
@@ -2765,10 +2768,11 @@ void MainWindow::plot_process_time()
     {
         if(AUTOCONTROL::instance())
         {
-            double ctrl_control_time = AUTOCONTROL::instance()->get_process_time_control() * 1000;
             double ctrl_obs_time = AUTOCONTROL::instance()->get_process_time_obs() * 1000;
+            double ctrl_node_time = AUTOCONTROL::instance()->get_process_time_node() * 1000;
+            double ctrl_control_time = AUTOCONTROL::instance()->get_process_time_control() * 1000;
 
-            ctrl_time_str = QString::asprintf("[AUTO] control:%.3f, obs:%.3f\n", ctrl_control_time, ctrl_obs_time);
+            ctrl_time_str = QString::asprintf("[AUTO] control:%.3f, obs:%.3f, node:%.3f\n", ctrl_control_time, ctrl_obs_time, ctrl_node_time);
         }
     }
 
@@ -2820,10 +2824,9 @@ void MainWindow::plot_process_time()
             double loc_localizaion_time = LOCALIZATION::instance()->get_process_time_localization() * 1000;
             double loc_odometry_time = LOCALIZATION::instance()->get_process_time_odometry() * 1000;
             double loc_obs_time = LOCALIZATION::instance()->get_process_time_obs() * 1000;
-            double loc_node_time = LOCALIZATION::instance()->get_process_time_node() * 1000;
 
-            loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f, node:%.3f\n",
-                                             loc_localizaion_time, loc_odometry_time, loc_obs_time, loc_node_time);
+            loc_time_str = QString::asprintf("[LOC] loc:%.3f, odo:%.3f\n\tobs:%.3f\n",
+                                             loc_localizaion_time, loc_odometry_time, loc_obs_time);
         }
     }
 
@@ -3389,21 +3392,41 @@ void MainWindow::plot_ctrl()
 
 void MainWindow::plot_cam()
 {
-    if(CAM::instance()->get_connection(0))
+    int cam_num = CONFIG::instance()->get_cam_num();
+    for(int i = 0 ; i<cam_num;i++)
     {
-        cv::Mat plot = CAM::instance()->get_time_img(0).img;
-        if(!plot.empty())
+        if(CAM::instance()->get_connection(i))
         {
-            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-            ui->lb_Screen2->setScaledContents(true);
-            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            cv::Mat plot = CAM::instance()->get_time_img(i).img;
+            if(!plot.empty())
+            {
+//                cv::flip(plot,plot,0);
+
+                // QLabel name create dynamically
+                QString labelName = QString("lb_Screen%1").arg(i+2); // lb_Screen2, lb_Screen3 ...
+                QLabel* label = this->findChild<QLabel*>(labelName);
+
+                if(label)
+                {
+                    label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+                    label->setScaledContents(true);
+                    label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+                }
+                else
+                {
+                    qDebug() << labelName << " not found!";
+                }
+            }
         }
     }
+    /*
     if(CAM::instance()->get_connection(1))
     {
         cv::Mat plot = CAM::instance()->get_time_img(1).img;
         if(!plot.empty())
         {
+            cv::flip(plot, plot, 0);
+
             ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen3->setScaledContents(true);
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -3414,6 +3437,8 @@ void MainWindow::plot_cam()
         cv::Mat plot = CAM::instance()->get_time_img(2).img;
         if(!plot.empty())
         {
+            cv::flip(plot, plot, 0);
+
             ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen4->setScaledContents(true);
             ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -3424,11 +3449,13 @@ void MainWindow::plot_cam()
         cv::Mat plot = CAM::instance()->get_time_img(3).img;
         if(!plot.empty())
         {
+            cv::flip(plot, plot, 0);
+
             ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen5->setScaledContents(true);
             ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
-    }
+    }*/
 }
 
 void MainWindow::plot_tractile()
@@ -3682,7 +3709,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 1.0)
         {
-//            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
+            //            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
 
@@ -3690,7 +3717,7 @@ int MainWindow::led_handler()
 
         if(obs_d < 2.0)
         {
-//            qDebug() << "SAFETY_LED_PURPLE";
+            //            qDebug() << "SAFETY_LED_PURPLE";
             led_out = SAFETY_LED_PURPLE;
             return led_out;
 
@@ -3699,7 +3726,7 @@ int MainWindow::led_handler()
         else
         {
             //normal auto drive led
-//            qDebug() << "SAFETY_LED_GREEN_BLINKING";
+            //            qDebug() << "SAFETY_LED_GREEN_BLINKING";
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
@@ -3712,7 +3739,7 @@ int MainWindow::led_handler()
         {
             // Pc boot up
             led_out = SAFETY_LED_YELLOW;
-//            qDebug() << "led yellow";
+            //            qDebug() << "led yellow";
             // Brkae release
             if(ms.brake_release_sw == 1)
             {
@@ -3722,7 +3749,7 @@ int MainWindow::led_handler()
         }
         else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
         {
-//            qDebug() << "SAFETY_LED_CYAN";
+            //            qDebug() << "SAFETY_LED_CYAN";
             led_out = SAFETY_LED_CYAN;
             return led_out;
         }
@@ -3743,3 +3770,18 @@ void MainWindow::set_map_path(const QString& path)
     map_path = path;
 }
 
+void MainWindow::getIPv4()
+{
+    QString chosen = "N/A";
+
+    for (const QHostAddress &addr : QNetworkInterface::allAddresses())
+    {
+        if (addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
+        {
+            ui->lb_RobotIP->setText(addr.toString());
+            return;
+        }
+    }
+
+    ui->lb_RobotIP->setText(chosen);
+}

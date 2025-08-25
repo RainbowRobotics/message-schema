@@ -30,11 +30,13 @@ message($$HOME)
 
 SOURCES += \
     comm/comm_coop.cpp \
+    comm/comm_fms.cpp \
     comm/comm_rrs.cpp \
     autocontrol.cpp \
     cam.cpp \
     cam/ORBBEC/ORBBEC.cpp \
     dockcontrol.cpp \
+    lidar/RP/rp_lidar.cpp \
     lidar/SICK/sick.cpp \
     lidar_2d.cpp \
     localization.cpp \
@@ -60,12 +62,14 @@ SOURCES += \
 
 HEADERS += \
     comm/comm_coop.h \
+    comm/comm_fms.h \
     comm/comm_rrs.h \
     autocontrol.h \
     cam.h \
     cam/ORBBEC/ORBBEC.h \
     comm_data.h \
     dockcontrol.h \
+    lidar/RP/rp_lidar.h \
     lidar/SICK/sick.h \
     lidar_2d.h \
     localization.h \

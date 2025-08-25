@@ -259,13 +259,38 @@
              </spacer>
             </item>
             <item>
+             <widget class="QLabel" name="lb_RobotIP">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(250, 160, 100);
+color: rgb(0, 0, 0);</string>
+              </property>
+              <property name="text">
+               <string>RobotIP</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="lb_RobotType">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
               <property name="styleSheet">
                <string notr="true">background-color: rgb(98, 160, 100);
 color: rgb(0, 0, 0);</string>
               </property>
               <property name="text">
-               <string>TextLabel</string>
+               <string>Type</string>
               </property>
              </widget>
             </item>
@@ -3797,7 +3822,7 @@ stop</string>
          <item row="0" column="1">
           <widget class="QLineEdit" name="le_Op_Mode">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
              <horstretch>20</horstretch>
              <verstretch>20</verstretch>
             </sizepolicy>
