@@ -1,0 +1,6 @@
+bazel-*
+external
+
+*.lock
+
+compile_commands.json

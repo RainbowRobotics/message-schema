@@ -1,0 +1,40 @@
+"""Module definition for rby2"""
+
+module(
+    name = "rby2",
+    version = "0.1.0",
+    bazel_compatibility = [">=7.0.0"],
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.0")
+bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "flatbuffers", version = "25.2.10")
+bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
+
+# hedron_compile_commands
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "0e990032f3c5a866e72615cf67e5ce22186dcb97",
+    # Replace the commit hash (above) with the latest (https://github.com/hedronvision/bazel-compile-commands-extractor/commits/main).
+    # Even better, set up Renovate and let it do the work for you (see "Suggestion: Updates" in the README).
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http_archive(
+    name = "zenoh_c_src",
+    urls = ["https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/1.5.0.tar.gz"],
+    sha256 = "158a49b8e8468effbf932fe4eaee449f9055eb234cb73211a3ad59c308273d0d",
+    strip_prefix = "zenoh-c-1.5.0",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**"],
+    ),
+)
+    """,
+)

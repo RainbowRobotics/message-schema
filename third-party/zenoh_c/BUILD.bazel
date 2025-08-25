@@ -1,0 +1,26 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+# **IMPORTANT**
+# Cargo 미리 설치 되어 있어야 함
+
+cmake(
+    name = "zenoh_c",
+    cache_entries = {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ZENOHC_BUILD_WITH_SHARED_MEMORY": "ON",
+        "ZENOHC_BUILD_WITH_UNSTABLE_API": "OFF",
+    },
+    env = {
+        "CARGO_HOME": "$$BUILD_TMPDIR$$/.cargo",
+        "RUSTUP_HOME": "$$BUILD_TMPDIR$$/.rustup",
+    },
+    install = True,
+    lib_source = "@zenoh_c_src//:all_srcs",
+    out_shared_libs = [
+        "libzenohc.dylib",
+    ],
+    out_static_libs = [
+        "libzenohc.a",
+    ],
+    tags = ["requires-network"],
+)

@@ -1,0 +1,35 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("//build_defs:flatbuffers_bundle.bzl", "flatbuffers_bundle")
+
+flatbuffers_bundle(
+    name = "rb_example",
+    srcs = ["state.fbs"],
+    out_dir = "rb/example",
+)
+
+cc_binary(
+    name = "hello-world",
+    srcs = ["hello-world.cc"],
+    # deps = [
+    #     "//schemas/rb/v1:rb_v1_cc",
+    #     "@flatbuffers//:flatbuffers",
+    # ]
+)
+
+cc_binary(
+    name = "state_writer",
+    srcs = ["state_writer.cc"],
+    deps = [
+        "rb_example_cc",
+        "@flatbuffers",
+    ],
+)
+
+cc_binary(
+    name = "state_reader",
+    srcs = ["state_reader.cc"],
+    deps = [
+        "rb_example_cc",
+        "@flatbuffers",
+    ],
+)
