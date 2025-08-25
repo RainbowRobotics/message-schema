@@ -30,10 +30,12 @@ public:
     // close policy module
     void close();
 
-
     /***********************
      * interface funcs
      ***********************/
+    QString get_cur_info();
+    void set_cur_info(QString str);
+
     QString get_cur_zone();
     void set_cur_zone(QString str);
 
@@ -58,12 +60,18 @@ private:
     UNIMAP* unimap;
     LOCALIZATION *loc;
 
+    // node loop
+    std::atomic<bool> node_flag = {false};
+    std::unique_ptr<std::thread> node_thread;
+    void node_loop();
+
     // zone loop
     std::atomic<bool> zone_flag = {false};
     std::unique_ptr<std::thread> zone_thread;
     void zone_loop();
 
     QString cur_zone = "";
+    QString cur_info = "";
 
 };
 

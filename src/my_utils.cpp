@@ -1061,48 +1061,66 @@ bool check_self_collision(double x, double y, double z,
 
 bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
 {
-    QStringList lines = info.split("\n");
-    for(int i = 0; i < lines.size(); i++)
+    bool matched = false;
+
+    QStringList lines = info.split("\n", Qt::KeepEmptyParts);
+
+    for (int i = 0; i < lines.size(); i++)
     {
-        QStringList info_parts = lines[i].split(",");
-        if(info_parts.size() > 0 && info_parts[0] == info_key)
+        QString line = lines[i].trimmed();
+        if(line.isEmpty())
         {
-            if(info_key == "PTZ" && info_parts.size() == 4)
-            {
-                result.ptz[0] = info_parts[1].toDouble(); // pan
-                result.ptz[1] = info_parts[2].toDouble(); // tilt
-                result.ptz[2] = info_parts[3].toDouble(); // zoom
-                return true;
-            }
-            else if(info_key == "POSE" && info_parts.size() == 4)
-            {
-                result.rpy[0] = info_parts[1].toDouble(); // roll
-                result.rpy[1] = info_parts[2].toDouble(); // pitch
-                result.rpy[2] = info_parts[3].toDouble(); // yaw
-                return true;
-            }
-            else if(info_key == "SIZE" && info_parts.size() == 4)
-            {
-                result.sz[0] = info_parts[1].toDouble(); // size x
-                result.sz[1] = info_parts[2].toDouble(); // size y
-                result.sz[2] = info_parts[3].toDouble(); // size z
-                return true;
-            }
-            else if(info_key == "BQR_CODE_NUM" && info_parts.size() == 2)
-            {
-                result.bqr_code_num = info_parts[1].toInt(); // bottom qr code num
-                return true;
-            }
-            else if(info_key == "BQR_CODE_OFFSET" && info_parts.size() == 4)
-            {
-                result.bqr_code_offset[0] = info_parts[1].toDouble(); // bottom qr code offset x
-                result.bqr_code_offset[1] = info_parts[2].toDouble(); // bottom qr code offset y
-                result.bqr_code_offset[2] = info_parts[3].toDouble(); // bottom qr code offset z
-                return true;
-            }
+            continue;
         }
+
+        QStringList parts = line.split(",", Qt::KeepEmptyParts);
+
+        if(!parts.isEmpty() && parts.back().isEmpty())
+        {
+            parts.removeLast();
+        }
+        if(parts.isEmpty())
+        {
+            continue;
+        }
+
+        const QString key = parts[0];
+
+        // ---- SIZE ----
+        if(key == "SIZE" && parts.size() == 4)
+        {
+            result.sz[0] = parts[1].toDouble();
+            result.sz[1] = parts[2].toDouble();
+            result.sz[2] = parts[3].toDouble();
+            matched = true;
+            continue;
+        }
+
+        // ---- SPEED ----
+        if(key == "SPEED_SLOW")
+        {
+            result.speed = "SLOW";
+            matched = true;
+            continue;
+        }
+        if(key == "SPEED_FAST")
+        {
+            result.speed = "FAST";
+            matched = true;
+            continue;
+        }
+
+        // ---- flags ----
+        if (key == "WARNING_BEEP")   { result.warning_beep   = true; matched = true; continue; }
+        if (key == "IGNORE_2D")      { result.ignore_2d      = true; matched = true; continue; }
+        if (key == "IGNORE_3D")      { result.ignore_3d      = true; matched = true; continue; }
+        if (key == "IGNORE_CAM")     { result.ignore_cam     = true; matched = true; continue; }
+        if (key == "IGNORE_OBS_2D")  { result.ignore_obs_2d  = true; matched = true; continue; }
+        if (key == "IGNORE_OBS_3D")  { result.ignore_obs_3d  = true; matched = true; continue; }
+        if (key == "IGNORE_OBS_CAM") { result.ignore_obs_cam = true; matched = true; continue; }
     }
-    return false;
+
+    return matched;
 }
 
 QJsonArray pose_to_array(Eigen::Vector3d pose)
