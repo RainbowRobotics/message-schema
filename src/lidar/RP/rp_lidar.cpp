@@ -305,7 +305,7 @@ void RP_LIDAR::grab_loop(int idx)
             std::vector<Eigen::Vector3d> pts_transformed;
             for(size_t p=0; p<pts.size(); p++)
             {
-                Eigen::Vector3d P = tf_lidar.block(0,0,3,3)*pts[p] + tf_lidar.block(0,3,3,1);
+                Eigen::Vector3d P = tf_lidar.block(0,0,3,3) * pts[p] + tf_lidar.block(0,3,3,1);
                 if(P[0] > config->get_robot_size_x_min() && P[0] < config->get_robot_size_x_max() &&
                    P[1] > config->get_robot_size_y_min() && P[1] < config->get_robot_size_y_max())
                 {

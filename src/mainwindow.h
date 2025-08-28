@@ -82,10 +82,6 @@ public:
     void speaker_handler(int cnt);
     int led_handler();
 
-
-    QString get_map_path();
-    void set_map_path(const QString& path);
-
     void getIPv4();
 
     // vars
@@ -259,7 +255,5 @@ public Q_SLOTS:
 private:
     Ui::MainWindow *ui;
     std::shared_mutex mtx;
-
-    QString map_path = "";
 };
 #endif // MAINWINDOW_H

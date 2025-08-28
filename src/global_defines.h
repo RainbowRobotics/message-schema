@@ -135,10 +135,38 @@ constexpr double R2D  = 180.0/M_PI;
 enum FOOT_STATE
 {
     FOOT_STATE_IDLE = 0,         // 정지 상태
-    FOOT_STATE_INIT,         // 시작 준비 or 초기화
+    FOOT_STATE_INIT,            // 시작 준비 or 초기화
     FOOT_STATE_MOVING ,       // 위로 이동 동작 수행 중
     FOOT_STATE_EMO_STOP ,       // 비상정지
     FOOT_STATE_DONE      // 이동 동작 완료
+};
+
+enum OPEARATION_MODE_STATE
+{
+    MOBILE_POWER_OFF        = 0,
+    MOBILE_MAIN_POWER_UP    = 1,
+    MOBILE_PC_POWER_UP      = 2,
+    MOBILE_ROBOT_POWER_OFF  = 3,
+    MOBILE_ROBOT_INITIALIZE = 4,
+    MOBILE_NORMAL_OP        = 5,
+    MOBILE_NORMAL_OP_AUTO   = 6,
+    MOBILE_NORMAL_OP_MANUAL = 7,
+    MOBILE_NORMAL_LOW_BAT   = 8,
+    MOBILE_OPERATIONL_STOP  = 9,
+    MOBILE_CHARGING         = 10,
+    MOBILE_CONFIGURATION    = 11,
+};
+
+enum ROBOT_INITIALZATION_STATE
+{
+    MOBILE_RI_IDLE          = 0,
+    MOBILE_RI_SAFETY_CHECK  = 1,
+    MOBILE_RI_POWER_ON      = 2,
+    MOBILE_RI_POWER_CHECK   = 3,
+    MOBILE_RI_MOTOR_INIT    = 4,
+    MOBILE_RI_MOTOR_CHECK   = 5,
+    MOBILE_RI_DONE          = 6,
+    MOBILE_RI_FAIL          = 7,
 };
 
 enum DOCKING_CHARGE_STATE

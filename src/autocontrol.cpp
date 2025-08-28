@@ -67,7 +67,7 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     CTRL_PARAM res;
 
     // read
-    QString preset_path = QCoreApplication::applicationDirPath() + "/configs/" + config->get_platform_name() + "/preset_" + QString::number(preset) + ".json";
+    QString preset_path = QCoreApplication::applicationDirPath() + "/config/" + config->get_robot_type() + "/preset_" + QString::number(preset) + ".json";
 
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
@@ -2917,7 +2917,6 @@ void AUTOCONTROL::control_loop()
             {
                 mobile->move(v, 0, w);
             }
-            //printf("v:%f, w:%f, err_th:%f, cte:%f, ref_v:%f, obs_v:%f\n", v, w*R2D, err_th*R2D, cte, ref_v, obs_v);
         }
         else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
         {
@@ -3080,7 +3079,7 @@ void AUTOCONTROL::control_loop()
                         continue;
                     }
 
-                    double min_d = std::numeric_limits<double>::max();
+                    double min_d = 9999; //std::numeric_limits<double>::max();
                     for(size_t p = 0; p < obs_pts.size(); p++)
                     {
                         double d = calc_dist_2d(obs_pts[p] - traj.back().block(0,3,3,1));
@@ -3398,14 +3397,11 @@ void AUTOCONTROL::obs_loop()
             if(found_forward_obs)
             {
                 obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
-                qDebug() << "obs loop : " << obs_dist;
             }
             else
             {
                 obs_dist = std::numeric_limits<double>::max();
             }
-
-//            std::cout<<obs_dist<<std::endl;
 
             // final update(conclusion)
             {
