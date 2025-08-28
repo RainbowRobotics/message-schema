@@ -1286,17 +1286,16 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-    QString platform_type = config->get_platform_type();
+    QString robot_model = config->get_robot_model();
 
-    if(platform_type == "S100" || platform_type == "D400")
+    if(robot_model == "S100" || robot_model == "D400" || robot_model == "SDC" || robot_model == "SEM")
     {
-        memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
+        memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
         memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
-
     }
-    else if(platform_type == "MECANUM")
+    else if(robot_model == "MECANUM")
     {
-        memcpy(&send_byte[8], &_vx, 4); // param1 linear vel
+        memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
         memcpy(&send_byte[12], &_vy, 4); // param2 linear vel
         memcpy(&send_byte[16], &_wz, 4); // param3 angular vel
     }
@@ -1344,8 +1343,8 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    QString platform_type = config->get_platform_type();
-    if(platform_type != "MECANUM")
+    QString robot_model = config->get_robot_model();
+    if(robot_model != "MECANUM")
     {
         return;
     }
@@ -1383,8 +1382,8 @@ void MOBILE::move_linear_y(double d, double v)
 
 void MOBILE::stop_charge()
 {
-    QString platform_type = config->get_platform_type();
-    if(platform_type != "MECANUM")
+    QString robot_model = config->get_robot_model();
+    if(robot_model != "MECANUM")
     {
         return;
     }
@@ -1430,8 +1429,8 @@ void MOBILE::move_rotate(double th, double w)
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
 
-    QString platform_type = config->get_platform_type();
-    if(platform_type == "MECANUM")
+    QString robot_model = config->get_robot_model();
+    if(robot_model == "MECANUM")
     {
         send_byte[7] = 119; // cmd move rotate
     }
@@ -2151,8 +2150,8 @@ void MOBILE::send_loop()
 
 int MOBILE::calc_battery_percentage(float voltage)
 {
-    QString platform_type = config->get_platform_name();
-    if(platform_type == "D400" || platform_type == "MECANUM")
+    QString robot_model = config->get_robot_model();
+    if(robot_model == "D400" || robot_model == "MECANUM")
     {
         if(voltage <= voltage_lookup_table.front().voltage)
         {
@@ -2178,13 +2177,13 @@ int MOBILE::calc_battery_percentage(float voltage)
         }
         return 0;
     }
-    else if(platform_type == "S100")
+    else if(robot_model == "S100")
     {
-        if (voltage >= S100_BAT_MAX_VOLTAGE)
+        if(voltage >= S100_BAT_MAX_VOLTAGE)
         {
             return 100;
         }
-        if (voltage <= S100_BAT_MIN_VOLTAGE)
+        if(voltage <= S100_BAT_MIN_VOLTAGE)
         {
             return 0;
         }

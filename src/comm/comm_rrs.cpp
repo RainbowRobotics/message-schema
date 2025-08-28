@@ -594,9 +594,8 @@ void COMM_RRS::send_status()
     QString cur_loc_state = loc->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    //QString platform_type = config->get_platform_type();
-    QString platform_name = config->get_platform_name();
-    if(platform_name == "D400" || platform_name == "MECANUM")
+    QString robot_model = config->get_robot_model();
+    if(robot_model == "D400" || robot_model == "MECANUM")
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
         {
@@ -623,7 +622,7 @@ void COMM_RRS::send_status()
             charge_st_string = "fail";
         }
     }
-    else if(platform_name == "S100")
+    else if(robot_model == "S100")
     {
         if(ms.charge_state == 0)
         {
@@ -663,21 +662,21 @@ void COMM_RRS::send_status()
     powerObj["tabos_rc"]       = QString::number(ms.tabos_rc, 'f', 3);
     powerObj["tabos_ae"]       = QString::number(ms.tabos_ae, 'f' ,3);
 
-    if(platform_name == "D400" || platform_name == "MECANUM")
+    if(robot_model == "D400" || robot_model == "MECANUM")
     {
-        powerObj["charge_current"] = QString::number(ms.charge_current, 'f', 3);
+        powerObj["charge_current"]  = QString::number(ms.charge_current, 'f', 3);
         powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     }
-    else if(platform_name == "S100")
+    else if(robot_model == "S100")
     {
-        powerObj["charge_current"] = QString::number(0.0, 'f', 3);
+        powerObj["charge_current"]  = QString::number(0.0, 'f', 3);
         powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
     }
     rootObj["power"] = powerObj;
 
     QJsonObject settingObj;
-    settingObj["platform_type"] = config->get_platform_type();
-    settingObj["platform_name"] = platform_name;
+    settingObj["platform_type"] = config->get_robot_type();
+    settingObj["platform_name"] = "";
     rootObj["setting"] = settingObj;
 
     QJsonObject mapObj;
@@ -724,7 +723,6 @@ void COMM_RRS::send_status()
     if(!doc.isNull())
     {
         sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
-        // std::cout << doc.toJson().toStdString() << std::endl;
         io->socket()->emit("status", res);
     }
 }
@@ -1382,7 +1380,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
             const QString map_name = msg.map_name;
             const QString save_dir = "/data/maps/" + map_name;
 
-            const std::string command = "cp -r " + _main->get_map_path().toStdString() + " '" + save_dir.toStdString() + "'";
+            const std::string command = "cp -r " + unimap->get_map_path().toStdString() + " '" + save_dir.toStdString() + "'";
             const int result = std::system(command.c_str());
             if(result == 0)
             {
@@ -1417,11 +1415,8 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     if(command == "mapload")
     {
         const QString map_name = msg.map_name;
-        //const QString load_dir = QDir::homePath() + "/data/maps/" + map_name;
         const QString load_dir = "/data/maps/" + map_name;
 
-        //printf(Qload_dir);
-        //qDebug()<<load_dir;
         if(!load_dir.isNull())
         {
             if(!QDir(load_dir).exists())
@@ -1450,7 +1445,6 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             MainWindow* _main = qobject_cast<MainWindow*>(main);
             if(_main)
             {
-                _main->set_map_path(load_dir);
                 if(unimap)
                 {
                     unimap->load_map(load_dir);
@@ -1495,7 +1489,6 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 MainWindow* _main = qobject_cast<MainWindow*>(main);
                 if(_main)
                 {
-                    _main->set_map_path(load_dir);
                     if(unimap)
                     {
                         unimap->load_node();

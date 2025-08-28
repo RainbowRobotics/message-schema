@@ -244,20 +244,20 @@ void MainWindow::setup_vtk()
 void MainWindow::init_modules()
 {
     // load config
-    if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/configs/common.json"))
+    if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
-        QString platform_name = CONFIG::instance()->get_platform_name();
-        ui->lb_RobotType->setText(platform_name);
+        QString robot_type = CONFIG::instance()->get_robot_type();
+        ui->lb_RobotType->setText(robot_type);
 
         mileage = CONFIG::instance()->get_mileage();
 
-        if(platform_name.isEmpty())
+        if(robot_type.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
-            QString path = QCoreApplication::applicationDirPath() + "/configs/" + platform_name + "/config.json";
+            QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
 
@@ -265,9 +265,9 @@ void MainWindow::init_modules()
             CONFIG::instance()->set_version_path(path_version);
             CONFIG::instance()->load_version();
 
-            QString path_serial_number = QCoreApplication::applicationDirPath() + "/configs/" + platform_name + "/config_sn.json";
-            CONFIG::instance()->set_serial_number_path(path_serial_number);
-            CONFIG::instance()->load_serial_number();
+            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config_sn.json";
+            CONFIG::instance()->set_serial_number_path(path_cam_serial_number);
+            CONFIG::instance()->load_cam_serial_number();
         }
     }
     else
@@ -1972,7 +1972,7 @@ void MainWindow::plot_map()
     {
         is_map_update = false;
 
-        // 2D map plot
+        if(ui->cb_ViewType->currentText() == "VIEW_2D")
         {
             auto kdtree_cloud = UNIMAP::instance()->get_kdtree_cloud();
             if(kdtree_cloud)
@@ -2006,6 +2006,13 @@ void MainWindow::plot_map()
 
                 // point size
                 pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, "map_pts");
+            }
+        }
+        else
+        {
+            if(pcl_viewer->contains("map_pts"))
+            {
+                pcl_viewer->removePointCloud("map_pts");
             }
         }
 
@@ -2406,7 +2413,6 @@ void MainWindow::plot_info()
 
             // plot mobile status
             ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
-
             ui->lb_Battery->setText("[BAT]" + QString::number(tabos_battery_soc)+"%");
         }
     }
@@ -2439,7 +2445,7 @@ void MainWindow::plot_info()
     // 3d lidar info
     if(CONFIG::instance()->get_use_lidar_3d())
     {
-//        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
+        ui->lb_LidarInfo_3D->setText(LIDAR_3D::instance()->get_info_text());
     }
 
     // plot auto info
@@ -2466,8 +2472,7 @@ void MainWindow::plot_info()
 void MainWindow::plot_safety()
 {
     //for safety parameter plot
-    MOBILE_SETTING cur_setting;
-    cur_setting = MOBILE::instance()->get_setting();
+    MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
     ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
     ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
@@ -2489,40 +2494,104 @@ void MainWindow::plot_safety()
     ui->le_Setting_Limit_V_Monitor->setText(QString().sprintf("%.2f",cur_setting.v_limit_monitor/1000.0));
     ui->le_Setting_Limit_W_Monitor->setText(QString().sprintf("%.2f",cur_setting.w_limit_monitor));
 
+    MOBILE_STATUS cur_status = MOBILE::instance()->get_status();
 
-    MOBILE_STATUS cur_status;
-    cur_status = MOBILE::instance()->get_status();
     QString state = "";
-    if(cur_status.om_state == 0){state = "POWER_OFF";}
-    else if (cur_status.om_state == 1){state = "MAIN_POWER_UP";}
-    else if (cur_status.om_state == 2){state = "PC_POWER_UP";}
-    else if (cur_status.om_state == 3){state = "ROBOT_POWER_OFF";}
-    else if (cur_status.om_state == 4){state = "ROBOT_INITIALIZE";}
-    else if (cur_status.om_state == 5){state = "NORMAL_OP";}
-    else if (cur_status.om_state == 6){state = "NORMAL_OP_AUTO";}
-    else if (cur_status.om_state == 7){state = "NORMAL_OP_MANUAL";}
-    else if (cur_status.om_state == 8){state = "NORMAL_LOW_BAT";}
-    else if (cur_status.om_state == 9){state = "OPERATIONL_STOP";}
-    else if (cur_status.om_state == 10){state = "CHARGING";}
-    else if (cur_status.om_state == 11){state = "CONFIGURATION";}
-    else{state = "";}
+    if(cur_status.om_state == MOBILE_POWER_OFF)
+    {
+        state = "POWER_OFF";
+    }
+    else if(cur_status.om_state == MOBILE_MAIN_POWER_UP)
+    {
+        state = "MAIN_POWER_UP";
+    }
+    else if(cur_status.om_state == MOBILE_PC_POWER_UP)
+    {
+        state = "PC_POWER_UP";
+    }
+    else if(cur_status.om_state == MOBILE_ROBOT_POWER_OFF)
+    {
+        state = "ROBOT_POWER_OFF";
+    }
+    else if(cur_status.om_state == MOBILE_ROBOT_INITIALIZE)
+    {
+        state = "ROBOT_INITIALIZE";
+    }
+    else if(cur_status.om_state == MOBILE_NORMAL_OP)
+    {
+        state = "NORMAL_OP";
+    }
+    else if(cur_status.om_state == MOBILE_NORMAL_OP_AUTO)
+    {
+        state = "NORMAL_OP_AUTO";
+    }
+    else if(cur_status.om_state == MOBILE_NORMAL_OP_MANUAL)
+    {
+        state = "NORMAL_OP_MANUAL";
+    }
+    else if(cur_status.om_state == MOBILE_NORMAL_LOW_BAT)
+    {
+        state = "NORMAL_LOW_BAT";
+    }
+    else if(cur_status.om_state == MOBILE_OPERATIONL_STOP)
+    {
+        state = "OPERATIONL_STOP";
+    }
+    else if(cur_status.om_state == MOBILE_CHARGING)
+    {
+        state = "CHARGING";
+    }
+    else if(cur_status.om_state == MOBILE_CONFIGURATION)
+    {
+        state = "CONFIGURATION";
+    }
+    else
+    {
+        state = "";
+    }
 
     ui->le_Op_Mode->setText(state);
 
     QString ri_state = "";
-    if(cur_status.ri_state == 0){ri_state = "RI_IDLE";}
-    else if (cur_status.ri_state == 1){ri_state = "RI_SAFETY_CHECK";}
-    else if (cur_status.ri_state == 2){ri_state = "RI_POWER_ON";}
-    else if (cur_status.ri_state == 3){ri_state = "RI_POWER_CHECK";}
-    else if (cur_status.ri_state == 4){ri_state = "RI_MOTOR_INIT";}
-    else if (cur_status.ri_state == 5){ri_state = "RI_MOTOR_CHECK";}
-    else if (cur_status.ri_state == 6){ri_state = "RI_DONE";}
-    else if (cur_status.ri_state == 7){ri_state = "RI_FAIL";}
-    else{ri_state = "";}
+    if(cur_status.ri_state == MOBILE_RI_IDLE)
+    {
+        ri_state = "RI_IDLE";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_SAFETY_CHECK)
+    {
+        ri_state = "RI_SAFETY_CHECK";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_POWER_ON)
+    {
+        ri_state = "RI_POWER_ON";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_POWER_CHECK)
+    {
+        ri_state = "RI_POWER_CHECK";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_MOTOR_INIT)
+    {
+        ri_state = "RI_MOTOR_INIT";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_MOTOR_CHECK)
+    {
+        ri_state = "RI_MOTOR_CHECK";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_DONE)
+    {
+        ri_state = "RI_DONE";
+    }
+    else if(cur_status.ri_state == MOBILE_RI_FAIL)
+    {
+        ri_state = "RI_FAIL";
+    }
+    else
+    {
+        ri_state = "";
+    }
 
     ui->le_Robot_Init_State->setText(ri_state);
-
-    ui->le_Lidar_Field_Read->setText(QString().sprintf("%d",cur_status.lidar_field));
+    ui->le_Lidar_Field_Read->setText(QString().sprintf("%d", cur_status.lidar_field));
 
     //emo status
     if(cur_status.safety_state_emo_pressed_1 || cur_status.safety_state_emo_pressed_2)
@@ -2661,17 +2730,7 @@ void MainWindow::plot_raw_2d()
                 pcl_pt.b = 0;
 
                 cloud->push_back(pcl_pt);
-                //                pcl::PointXYZRGB pcl_pt;
-                //                pcl_pt.x = pt.x();
-                //                pcl_pt.y = pt.y();
-                //                pcl_pt.z = pt.z();
-                //                pcl_pt.r = 0;
-                //                pcl_pt.g = 255;
-                //                pcl_pt.b = 0;
-
-                //                cloud->push_back(pcl_pt);
             }
-
 
             QString cloud_id = QString("lidar_2d_cur_pts_%1").arg(idx);
             if(!pcl_viewer->updatePointCloud(cloud, cloud_id.toStdString()))
@@ -2729,11 +2788,11 @@ void MainWindow::plot_raw_3d()
                 pt.z = _P[2];
                 if(idx == 0)
                 {
-                    pt.r = 255; pt.g = 127; pt.b = 0;   // Orange for lidar 0
+                    pt.r = 255; pt.g = 127; pt.b = 0;    // Orange for lidar 0
                 }
                 else
                 {
-                    pt.r = 0; pt.g = 200; pt.b = 255;   // Cyan for lidar 1
+                    pt.r =   0; pt.g = 200; pt.b = 255;  // Cyan for lidar 1
                 }
 
                 cloud->push_back(pt);
@@ -3422,6 +3481,7 @@ void MainWindow::plot_cam()
             }
         }
     }
+
     /*
     if(CAM::instance()->get_connection(1))
     {
@@ -3631,15 +3691,15 @@ void MainWindow::speaker_handler(int speaker_cnt)
     int speak_code = 0;
 
     // autodrive
-    if (AUTOCONTROL::instance()->get_is_moving())
+    if(AUTOCONTROL::instance()->get_is_moving())
     {
 
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-        if (obs_d < 1.0)
+        if(obs_d < 1.0)
         {
             speak_code = 10;
         }
-        else if (obs_d < 2.0)
+        else if(obs_d < 2.0)
         {
             speak_code = 10;
         }
@@ -3648,26 +3708,26 @@ void MainWindow::speaker_handler(int speaker_cnt)
             speak_code = 2;
         }
 
-        if (DOCKCONTROL::instance()->get_dock_fsm_state() != DOCKING_FSM_OFF)
+        if(DOCKCONTROL::instance()->get_dock_fsm_state() != DOCKING_FSM_OFF)
         {
             speak_code = 3;
         }
     }
     else
     {
-        if (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL)
+        if(ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL)
         {
             speak_code = 11;
         }
     }
 
 
-    if (speaker_cnt % 8 == 0)
+    if(speaker_cnt % 8 == 0)
     {
         MOBILE::instance()->sem_io_speaker(speak_code);
     }
 
-    else if (speaker_cnt % 8 == 2)
+    else if(speaker_cnt % 8 == 2)
     {
         MOBILE::instance()->sem_io_speaker(0);
     }
@@ -3675,16 +3735,15 @@ void MainWindow::speaker_handler(int speaker_cnt)
 
 int MainWindow::led_handler()
 {
-    MOBILE_STATUS ms;
-    ms = MOBILE::instance()->get_status();
+    MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
     int led_out = SAFETY_LED_OFF;
-
     if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
     {
         led_out = SAFETY_LED_RED;
         return led_out;
     }
+
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
     {
@@ -3699,7 +3758,6 @@ int MainWindow::led_handler()
 
         //docking
         int dock_fsm_state_ = DOCKCONTROL::instance()->get_dock_fsm_state();
-
         if(!(dock_fsm_state_ == DOCKING_FSM_OFF))
         {
             //docking process..
@@ -3709,10 +3767,8 @@ int MainWindow::led_handler()
 
         //autocontrol
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
         if(obs_d < 1.0)
         {
-//            qDebug() << "SAFETY_LED_PURPLE_BLINKING";
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
 
@@ -3720,7 +3776,6 @@ int MainWindow::led_handler()
 
         if(obs_d < 2.0)
         {
-//            qDebug() << "SAFETY_LED_PURPLE";
             led_out = SAFETY_LED_PURPLE;
             return led_out;
 
@@ -3729,7 +3784,6 @@ int MainWindow::led_handler()
         else
         {
             //normal auto drive led
-//            qDebug() << "SAFETY_LED_GREEN_BLINKING";
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
@@ -3742,7 +3796,7 @@ int MainWindow::led_handler()
         {
             // Pc boot up
             led_out = SAFETY_LED_YELLOW;
-            //            qDebug() << "led yellow";
+
             // Brkae release
             if(ms.brake_release_sw == 1)
             {
@@ -3752,7 +3806,6 @@ int MainWindow::led_handler()
         }
         else if((ms.om_state == SM_OM_NORMAL_OP_AUTO) || (ms.om_state == SM_OM_NORMAL_OP_MANUAL))
         {
-            //            qDebug() << "SAFETY_LED_CYAN";
             led_out = SAFETY_LED_CYAN;
             return led_out;
         }
@@ -3761,25 +3814,13 @@ int MainWindow::led_handler()
     return led_out;
 }
 
-QString MainWindow::get_map_path()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return map_path;
-}
-
-void MainWindow::set_map_path(const QString& path)
-{
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    map_path = path;
-}
-
 void MainWindow::getIPv4()
 {
     QString chosen = "N/A";
 
-    for (const QHostAddress &addr : QNetworkInterface::allAddresses())
+    for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
-        if (addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
+        if(addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
         {
             ui->lb_RobotIP->setText(addr.toString());
             return;

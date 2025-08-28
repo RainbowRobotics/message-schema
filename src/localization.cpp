@@ -967,6 +967,7 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
                 double near_query_pt[3] = {_P1[0], _P1[1], _P1[2]};
                 tree.knnSearch(&near_query_pt[0], pt_surfel_num, &ret_near_idxs[0], &ret_near_sq_dists[0]);
 
+                int sq_threshold_cnt = 0;
                 int cnt = 0;
                 int idx0 = ret_near_idxs[0];
                 double sq_d_max = sq_d_max0 * sq_d_max0;

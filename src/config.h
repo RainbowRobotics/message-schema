@@ -46,14 +46,14 @@ public:
     // load config.json
     void load();
     void load_version();
-    void load_serial_number();
+    void load_cam_serial_number();
 
     /***********************
      * robot unique
      ***********************/
     QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
-    QString get_platform_name();        // robot platform name : S100, D400, Mecanum, SEM ...
-    QString get_platform_type();        // robot platform type : b(S100)
+    QString get_robot_type();           // robot type  : S100-A-3D
+    QString get_robot_model();          // robot model : S100, D400, Mecanum, SEM ...
 
     /***********************
      * robot hardware
@@ -304,7 +304,7 @@ private:
     std::shared_mutex mtx;
     QString path_config;
     QString path_version;
-    QString path_serial_number;
+    QString path_cam_serial_number;
     QString common_path;
 
     /* unit : meter, degree, second
@@ -313,7 +313,8 @@ private:
 
     // robot
     QString ROBOT_SERIAL_NUMBER = "RB-M-";
-    QString PLATFORM_NAME = "";
+    QString ROBOT_MODEL = "";
+    QString ROBOT_TYPE  = "";
     QString PLATFORM_TYPE = "";
     QString MILEAGE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max

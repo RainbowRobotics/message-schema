@@ -34,10 +34,10 @@ void CONFIG::load_version()
     }
 }
 
-void CONFIG::load_serial_number()
+void CONFIG::load_cam_serial_number()
 {
     // read config
-    QFile config_sn_file(path_serial_number);
+    QFile config_sn_file(path_cam_serial_number);
     if(config_sn_file.open(QIODevice::ReadOnly))
     {
         QByteArray data = config_sn_file.readAll();
@@ -63,7 +63,7 @@ void CONFIG::load_serial_number()
         // complete
         is_load = true;
         config_sn_file.close();
-        printf("[CONFIG] %s, load successed\n", path_serial_number.toLocal8Bit().data());
+        printf("[CONFIG] %s, load successed\n", path_cam_serial_number.toLocal8Bit().data());
     }
 }
 
@@ -120,8 +120,6 @@ void CONFIG::load()
 void CONFIG::load_robot_config(const QJsonObject &obj)
 {
     QJsonObject obj_robot = obj["robot"].toObject();
-
-    check_and_set_string(obj_robot, "PLATFORM_TYPE",        PLATFORM_TYPE,      "robot");
 
     check_and_set_string(obj_robot, "MILEAGE",        MILEAGE,      "robot");
     check_and_set_bool  (obj_robot, "SPEAKER",        USE_SPEAKER,  "robot");
@@ -513,7 +511,7 @@ void CONFIG::set_version_path(const QString &path)
 
 void CONFIG::set_serial_number_path(const QString &path)
 {
-    path_serial_number = path;
+    path_cam_serial_number = path;
 }
 
 bool CONFIG::load_common(QString path)
@@ -539,9 +537,9 @@ bool CONFIG::load_common(QString path)
     }
 
     QJsonObject obj = doc.object();
-    if(obj.contains("PLATFORM_NAME"))
+    if(obj.contains("ROBOT_TYPE"))
     {
-        PLATFORM_NAME = obj["PLATFORM_NAME"].toString();
+        ROBOT_TYPE = obj["ROBOT_TYPE"].toString();
     }
 
     if(obj.contains("MILEAGE"))
@@ -549,7 +547,7 @@ bool CONFIG::load_common(QString path)
         MILEAGE = obj["MILEAGE"].toString();
     }
 
-    printf("[CONFIG] PLATFORM_NAME, %s\n", qUtf8Printable(PLATFORM_NAME));
+    printf("[CONFIG] ROBOT_TYPE, %s\n", qUtf8Printable(ROBOT_TYPE));
 
     // complete
     common_file.close();
@@ -842,22 +840,22 @@ QString CONFIG::get_robot_serial_number()
     return ROBOT_SERIAL_NUMBER;
 }
 
-QString CONFIG::get_platform_name()
+QString CONFIG::get_robot_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
-    return PLATFORM_NAME;
+    return ROBOT_TYPE;
+}
+
+QString CONFIG::get_robot_model()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_MODEL;
 }
 
 double CONFIG::get_mileage()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MILEAGE.toDouble();
-}
-
-QString CONFIG::get_platform_type()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return PLATFORM_TYPE;
 }
 
 double CONFIG::get_robot_size_x_min()
@@ -913,7 +911,6 @@ double CONFIG::get_robot_radius()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_RADIUS;
 }
-
 
 bool CONFIG::get_robot_use_speaker()
 {
