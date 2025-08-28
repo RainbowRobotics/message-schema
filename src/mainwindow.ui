@@ -958,7 +958,7 @@ out</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1038,7 +1038,7 @@ out</string>
              </widget>
              <widget class="QPushButton" name="bt_LocInitAuto">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1098,7 +1098,7 @@ stop</string>
              </widget>
              <widget class="QPushButton" name="bt_SimInit">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1422,6 +1422,9 @@ start</string>
               <string>Task</string>
              </attribute>
              <widget class="QPushButton" name="bt_TaskDel">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>20</x>
@@ -1435,6 +1438,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskPause">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>20</x>
@@ -1448,6 +1454,9 @@ start</string>
               </property>
              </widget>
              <widget class="QCheckBox" name="ckb_Looping">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>130</x>
@@ -1464,6 +1473,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskPlay">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>200</x>
@@ -1477,6 +1489,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskAdd">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>20</x>
@@ -1490,6 +1505,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskCancel">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>20</x>
@@ -1511,6 +1529,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskLoad">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>70</x>
@@ -1524,6 +1545,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskResume">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>70</x>
@@ -1537,6 +1561,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_TaskSave">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>20</x>
@@ -1550,6 +1577,9 @@ start</string>
               </property>
              </widget>
              <widget class="QListWidget" name="lw_TaskList">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>130</x>
@@ -1560,6 +1590,9 @@ start</string>
               </property>
              </widget>
              <widget class="QComboBox" name="cb_TaskDrivingMode">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>200</x>
@@ -1585,6 +1618,9 @@ start</string>
               </item>
              </widget>
              <widget class="QCheckBox" name="ckb_AccuracySave">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>130</x>
@@ -1606,6 +1642,9 @@ start</string>
               <string>fms</string>
              </attribute>
              <widget class="QLabel" name="lb_FmsInfo">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>10</x>
@@ -1633,6 +1672,9 @@ start</string>
               </property>
              </widget>
              <widget class="QPushButton" name="bt_SendMap">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>10</x>
@@ -1656,7 +1698,7 @@ start</string>
              </attribute>
              <widget class="QPushButton" name="bt_Sync">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1672,7 +1714,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_Test">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1688,7 +1730,7 @@ start</string>
              </widget>
              <widget class="QSpinBox" name="spb_Led">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1704,7 +1746,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TestLed">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1720,7 +1762,7 @@ start</string>
              </widget>
              <widget class="QCheckBox" name="ckb_TestDebug">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1736,7 +1778,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TestImgSave">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1966,7 +2008,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_QuickAddNode">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1988,7 +2030,7 @@ Node</string>
              </widget>
              <widget class="QPushButton" name="bt_DelNode">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -2010,7 +2052,7 @@ Node</string>
              </widget>
              <widget class="QSpinBox" name="spb_PointSize">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -2032,7 +2074,7 @@ Node</string>
              </widget>
              <widget class="QPushButton" name="bt_AnnotSave">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="geometry">
                <rect>

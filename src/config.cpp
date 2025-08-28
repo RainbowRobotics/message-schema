@@ -540,6 +540,12 @@ bool CONFIG::load_common(QString path)
     if(obj.contains("ROBOT_TYPE"))
     {
         ROBOT_TYPE = obj["ROBOT_TYPE"].toString();
+
+        QStringList robot_model_list = ROBOT_TYPE.split("-");
+        if(robot_model_list.size() != 0)
+        {
+            ROBOT_MODEL = robot_model_list[0];
+        }
     }
 
     if(obj.contains("MILEAGE"))
@@ -547,7 +553,7 @@ bool CONFIG::load_common(QString path)
         MILEAGE = obj["MILEAGE"].toString();
     }
 
-    printf("[CONFIG] ROBOT_TYPE, %s\n", qUtf8Printable(ROBOT_TYPE));
+    printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(ROBOT_TYPE), qUtf8Printable(ROBOT_MODEL));
 
     // complete
     common_file.close();

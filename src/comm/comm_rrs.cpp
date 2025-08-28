@@ -985,19 +985,10 @@ void COMM_RRS::send_lidar_2d()
 
 void COMM_RRS::send_lidar_3d()
 {
-
-//    if (!is_connected || !loc || !lidar_2d || (CONFIG::instance()->get_use_lidar_3d() && !lidar_3d))
-//    {
-//        return;
-//    }
-
-//    must resample data
-
     if (!is_connected || !loc || !lidar_2d || !lidar_3d)
     {
         return;
     }
-    qDebug()<<"3333333333333";
 
     std::vector<Eigen::Vector3d> pts = lidar_2d->get_cur_frm().pts;
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
@@ -1025,11 +1016,8 @@ void COMM_RRS::send_lidar_3d()
         }
 
         rootObject->get_map()["data"] = jsonArray;
-
     }
-
 }
-
 
 void COMM_RRS::send_mapping_cloud()
 {
