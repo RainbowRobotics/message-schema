@@ -4,6 +4,7 @@
 // defines
 #include "global_defines.h"
 #include "my_utils.h"
+#include "ekf.h"
 
 // module
 #include "config.h"
@@ -108,7 +109,7 @@ private:
 
     std::atomic<bool> odometry_flag = {false};          // odometry thread flag (wheel odometry)
     std::unique_ptr<std::thread> odometry_thread;       // odometry thread
-    void odometry_loop();                               // odometry loop
+    void odometry_loop();                               // odometry loop        
 
     std::atomic<bool> obs_flag = {false};               // obstacle thread flag (obstacle map update)
     std::unique_ptr<std::thread> obs_thread;            // obstacle thread

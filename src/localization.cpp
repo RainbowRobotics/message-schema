@@ -791,6 +791,8 @@ void LOCALIZATION::odometry_loop()
     printf("[LOCALIZATION] odometry loop stop\n");
 }
 
+
+
 void LOCALIZATION::obs_loop()
 {
     printf("[LOCALIZATION] obs_loop start\n");
