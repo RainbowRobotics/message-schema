@@ -277,8 +277,8 @@ void LOCALIZATION::start_semiauto_init()
         }
 
         std::vector<QString> prefix_list = {"CHARGING"};
-        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
-        if(idxs.empty())
+        std::vector<NODE> nodes = unimap->get_init_candidates_id("INIT", prefix_list);
+        if(nodes.empty())
         {
             is_busy = false;
             return;
@@ -288,10 +288,9 @@ void LOCALIZATION::start_semiauto_init()
         double min_cost = std::numeric_limits<double>::max();
         Eigen::Vector2d min_ieir(1.0, 0.0);
 
-        auto nodes = unimap->get_nodes_origin();
-        for(int i : idxs)
+        for(const auto& node : nodes)
         {
-            Eigen::Matrix4d tf = (*nodes)[i].tf;
+            Eigen::Matrix4d tf = node.tf;
             for(double th = -180.0; th < 180.0; th += 20.0)
             {
                 Eigen::Matrix4d _tf = tf * se2_to_TF({0, 0, th*D2R});
@@ -335,19 +334,19 @@ void LOCALIZATION::start_semiauto_init()
         }
 
         std::vector<QString> prefix_list = {config->get_robot_serial_number(), "CHARGING"};
-        std::vector<int> idxs = unimap->get_init_candidates(prefix_list);
-        if(idxs.empty())
+        std::vector<NODE> nodes = unimap->get_init_candidates_id("", prefix_list);
+        if(nodes.empty())
         {
             is_busy = false;
             return;
         }
 
-        auto nodes = unimap->get_nodes_origin();
         Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
         double min_err = std::numeric_limits<double>::max();
-        for(int i : idxs)
+
+        for(const auto& node : nodes)
         {
-            Eigen::Matrix4d tf = (*nodes)[i].tf;
+            Eigen::Matrix4d tf = node.tf;
             for(double th = -180.0; th < 180.0; th += 90.0)
             {
                 Eigen::Matrix4d _tf = tf * se2_to_TF({0, 0, th*D2R});

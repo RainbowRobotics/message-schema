@@ -215,10 +215,10 @@ void COMM_FMS::send_move_status()
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
     if(unimap->get_is_loaded() == MAP_LOADED && goal_node_id != "")
     {
-        NODE* node = unimap->get_node_by_id(goal_node_id);
-        if(node != nullptr)
+        NODE node = unimap->get_node_by_id(goal_node_id);
+        if(!node.id.isEmpty())
         {
-            goal_tf =  node->tf;
+            goal_tf =  node.tf;
         }
     }
 
@@ -1314,11 +1314,11 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
             return;
         }
 
-        NODE* node = unimap->get_node_by_id(goal_id);
-        if(!node)
+        NODE node = unimap->get_node_by_id(goal_id);
+        if(node.id.isEmpty())
         {
             node = unimap->get_node_by_name(goal_id);
-            if(!node)
+            if(node.id.isEmpty())
             {
                 msg.result = "reject";
                 msg.message = "[R0Nx2001]can not find node";
@@ -1327,12 +1327,12 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
             }
 
             // convert name to id
-            msg.goal_node_id   = node->id;
-            msg.goal_node_name = node->name;
+            msg.goal_node_id   = node.id;
+            msg.goal_node_name = node.name;
         }
         else
         {
-            msg.goal_node_name = node->name;
+            msg.goal_node_name = node.name;
         }
 
         mobile->move(0,0,0);
@@ -1341,14 +1341,14 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
         msg.cur_pos = cur_pos;
 
-        Eigen::Vector3d xi = TF_to_se2(node->tf);
+        Eigen::Vector3d xi = TF_to_se2(node.tf);
         msg.tgt_pose_vec[0] = xi[0];
         msg.tgt_pose_vec[1] = xi[1];
-        msg.tgt_pose_vec[2] = node->tf(2,3);
+        msg.tgt_pose_vec[2] = node.tf(2,3);
         msg.tgt_pose_vec[3] = xi[2];
 
         // calc eta (estimation time arrival)
-        Eigen::Matrix4d goal_tf = node->tf;
+        Eigen::Matrix4d goal_tf = node.tf;
         PATH global_path = ctrl->calc_global_path(goal_tf);
         if(global_path.pos.size() < 2)
         {
@@ -1481,10 +1481,10 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
+                NODE node = unimap->get_node_by_id(node_id);
+                if(!node.id.isEmpty())
                 {
-                    vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    vobs_c_list.push_back(node.tf.block(0,3,3,1));
                 }
             }
         }
@@ -1557,10 +1557,10 @@ void COMM_FMS::handle_vobs(DATA_VOBS& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
+                NODE node = unimap->get_node_by_id(node_id);
+                if(!node.id.isEmpty())
                 {
-                    vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    vobs_c_list.push_back(node.tf.block(0,3,3,1));
                 }
             }
         }

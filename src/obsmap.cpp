@@ -214,13 +214,16 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
     std::vector<QString> obs_nodes = unimap->get_nodes("OBS");
     for(size_t i = 0; i < obs_nodes.size(); i++)
     {
-        NODE* node = unimap->get_node_by_id(obs_nodes[i]);
-        if(node == nullptr) continue;
+        NODE node = unimap->get_node_by_id(obs_nodes[i]);
+        if(node.id.isEmpty())
+        {
+            continue;
+        }
 
         NODE_INFO info;
-        if(parse_info(node->info, "SIZE", info))
+        if(parse_info(node.info, "SIZE", info))
         {
-            Eigen::Matrix4d tf = node->tf;
+            Eigen::Matrix4d tf = node.tf;
             double sx = info.sz[0];
             double sy = info.sz[1];
             double sz = info.sz[2];
@@ -433,11 +436,11 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         for(size_t p = 0; p < obs_nodes.size(); p++)
         {
             QString id = obs_nodes[p];
-            NODE* node = unimap->get_node_by_id(id);
-            if(node != nullptr)
+            NODE node = unimap->get_node_by_id(id);
+            if(!node.id.isEmpty())
             {
-                QString info = node->info;
-                Eigen::Matrix4d tf = node->tf;
+                QString info = node.info;
+                Eigen::Matrix4d tf = node.tf;
 
                 NODE_INFO res;
                 if(parse_info(info, "SIZE", res))

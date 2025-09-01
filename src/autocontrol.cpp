@@ -471,10 +471,10 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     // fill goal node name
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
     {
-        NODE* node = unimap->get_node_by_id(msg.goal_node_id);
-        if(node)
+        NODE node = unimap->get_node_by_id(msg.goal_node_id);
+        if(!node.id.isEmpty())
         {
-            msg.goal_node_name = node->name;
+            msg.goal_node_name = node.name;
         }
     }
 
@@ -617,36 +617,35 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         // check final path
         if(p == path_list2.size()-1)
         {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == NULL)
+            NODE node = unimap->get_node_by_id(path_list2[p].back());
+            if(node.id.isEmpty())
             {
-                logger->write_log("[AUTO] move_pp, path invalid");
-                qDebug() << "[AUTO] node null";
                 stop();
+                logger->write_log("[AUTO] move_pp, path invalid");
                 return;
             }
 
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
+            if(final_goal_node_name.contains("AMR-WAITING-01") && node.name.contains("AMR-WAITING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
+            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node.name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
+            else if(final_goal_node_name.contains("AMR-PACKING-01") && node.name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
+            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node.name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
             }
-            else if(final_goal_node_id == node->id)
+            else if(final_goal_node_id == node.id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
@@ -798,35 +797,35 @@ void AUTOCONTROL::move()
         // check final path
         if(p == path_list2.size()-1)
         {
-            NODE* node = unimap->get_node_by_id(path_list2[p].back());
-            if(node == nullptr)
+            NODE node = unimap->get_node_by_id(path_list2[p].back());
+            if(node.id.isEmpty())
             {
                 logger->write_log("[AUTO] move_pp, path invalid");
                 stop();
                 return;
             }
 
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
+            if(final_goal_node_name.contains("AMR-WAITING-01") && node.name.contains("AMR-WAITING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
+            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node.name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
+            else if(final_goal_node_name.contains("AMR-PACKING-01") && node.name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
             }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
+            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node.name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
             }
-            else if(final_goal_node_id == node->id)
+            else if(final_goal_node_id == node.id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
@@ -1098,13 +1097,13 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     for(size_t p = 0; p < node_path.size(); p++)
     {
         QString node_id = node_path[p];
-        NODE* node = unimap->get_node_by_id(node_id);
-        if(!node)
+        NODE node = unimap->get_node_by_id(node_id);
+        if(node.id.isEmpty())
         {
             logger->write_log(QString("[AUTO] %s: node null").arg(node_id));
             return PATH();
         }
-        node_pose.push_back(node->tf);
+        node_pose.push_back(node.tf);
     }
 
     // add cur pos
@@ -1159,26 +1158,26 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
 PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_tf)
 {
-    NODE* ed_node = unimap->get_node_by_id(node_path.back());
-    if(ed_node == NULL)
+    NODE ed_node = unimap->get_node_by_id(node_path.back());
+    if(ed_node.id.isEmpty())
     {
         return PATH();
     }
 
-    Eigen::Matrix4d ed_tf = ed_node->tf;
+    Eigen::Matrix4d ed_tf = ed_node.tf;
 
     // convert metric path
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
         QString node_id = node_path[p];
-        NODE* node = unimap->get_node_by_id(node_id);
-        if(node == NULL)
+        NODE node = unimap->get_node_by_id(node_id);
+        if(node.id.isEmpty())
         {
             logger->write_log(QString("[AUTO] %1: node null").arg(node_id));
             return PATH();
         }
-        node_pose.push_back(node->tf);
+        node_pose.push_back(node.tf);
     }
 
     // add cur pos
@@ -1244,18 +1243,18 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_node_id)
 {
     // set st node, ed node
-    NODE* st_node = unimap->get_node_by_id(st_node_id);
-    NODE* ed_node = unimap->get_node_by_id(ed_node_id);
-    if(st_node == nullptr || ed_node == nullptr)
+    NODE st_node = unimap->get_node_by_id(st_node_id);
+    NODE ed_node = unimap->get_node_by_id(ed_node_id);
+    if(st_node.id.isEmpty() || ed_node.id.isEmpty())
     {
         printf("[AUTO] st_node or ed_node null\n");
         return std::vector<QString>();
     }
 
-    printf("[AUTO] topo_path_finding, st: %s -> ed: %s\n", st_node->id.toLocal8Bit().data(), ed_node->id.toLocal8Bit().data());
+    printf("[AUTO] topo_path_finding, st: %s -> ed: %s\n", st_node.id.toLocal8Bit().data(), ed_node.id.toLocal8Bit().data());
 
     // no need path finding
-    if(st_node->id == ed_node->id)
+    if(st_node.id == ed_node.id)
     {
         printf("[AUTO] st_node same as ed_node, just set ed_node\n");
 
@@ -1269,10 +1268,10 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
     std::vector<ASTAR_NODE*> close_set;
 
     ASTAR_NODE *ed = new ASTAR_NODE();
-    ed->node = ed_node;
+    ed->node = &ed_node;
 
     ASTAR_NODE *st = new ASTAR_NODE();
-    st->node = st_node;
+    st->node = &st_node;
     st->g = 0;
     st->h = (ed->node->tf.block(0,3,3,1) - st->node->tf.block(0,3,3,1)).norm();
     st->f = st->g + st->h;
@@ -1338,14 +1337,14 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         for(size_t p = 0; p < around.size(); p++)
         {
             // calc heuristics
-            NODE* node = unimap->get_node_by_id(around[p]);
-            if(node == nullptr)
+            NODE node = unimap->get_node_by_id(around[p]);
+            if(node.id.isEmpty())
             {
                 continue;
             }
 
-            double g = cur->g + (node->tf.block(0,3,3,1) - cur->node->tf.block(0,3,3,1)).norm();
-            double h = (node->tf.block(0,3,3,1) - ed->node->tf.block(0,3,3,1)).norm();
+            double g = cur->g + (node.tf.block(0,3,3,1) - cur->node->tf.block(0,3,3,1)).norm();
+            double h = (node.tf.block(0,3,3,1) - ed->node->tf.block(0,3,3,1)).norm();
             double f = g + h;
 
             // check open set
@@ -1353,7 +1352,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
             ASTAR_NODE* open_node = NULL;
             for(size_t q = 0; q < open_set.size(); q++)
             {
-                if(open_set[q]->node->id == node->id)
+                if(open_set[q]->node->id == node.id)
                 {
                     is_open_set = true;
                     open_node = open_set[q];
@@ -1380,7 +1379,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
             // add new child to open set
             ASTAR_NODE *child = new ASTAR_NODE();
             child->parent = cur;
-            child->node = node;
+            child->node = &node;
             child->g = g;
             child->h = h;
             child->f = f;
@@ -3454,10 +3453,10 @@ void AUTOCONTROL::node_loop()
             else
             {
                 // calc pre node id
-                NODE *node = unimap->get_node_by_id(_cur_node_id);
-                if(node != nullptr)
+                NODE node = unimap->get_node_by_id(_cur_node_id);
+                if(node.id.isEmpty())
                 {
-                    double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                    double d = calc_dist_2d(node.tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
                         if(pre_node_id != _cur_node_id)

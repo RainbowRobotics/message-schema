@@ -569,9 +569,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                    pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                    std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
+                    pick.cur_node = UNIMAP::instance()->get_goal_node(pt).id;
 
                     // update last mouse button
                     pick.last_btn = 0;
@@ -705,9 +703,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                        pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                        //                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
+                        pick.cur_node = UNIMAP::instance()->get_goal_node(pt).id;
 
                         // update last mouse button
                         pick.last_btn = 0;
@@ -1270,19 +1266,19 @@ void MainWindow::bt_AutoMove()
 
     if(pick.cur_node != "")
     {
-        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-        if(node)
+        NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(!node.id.isEmpty())
         {
-            Eigen::Vector3d xi = TF_to_se2(node->tf);
+            Eigen::Vector3d xi = TF_to_se2(node.tf);
 
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "pp";
             msg.preset = 0;
-            msg.goal_node_id = node->id;
+            msg.goal_node_id = node.id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
             Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
@@ -1316,19 +1312,19 @@ void MainWindow::bt_AutoMove2()
 
     if(pick.cur_node != "")
     {
-        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-        if(node != NULL)
+        NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(!node.id.isEmpty())
         {
-            Eigen::Vector3d xi = TF_to_se2(node->tf);
+            Eigen::Vector3d xi = TF_to_se2(node.tf);
 
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "hpp";
             msg.preset = 0;
-            msg.goal_node_id = node->id;
+            msg.goal_node_id = node.id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
             Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
@@ -1491,10 +1487,9 @@ void MainWindow::bt_ReturnToCharging()
         return;
     }
 
-    auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
-
     std::vector<QString> found_ids;
-    for(const auto& node : (*unimap_nodes))
+    auto nodes = UNIMAP::instance()->get_nodes();
+    for(const auto& node : nodes)
     {
         QString name = node.name;
         if(name.contains(robot_serial_number))
@@ -1519,24 +1514,24 @@ void MainWindow::bt_ReturnToCharging()
 
 
     QString found_id = found_ids[0];
-    NODE* node = UNIMAP::instance()->get_node_by_id(found_id);
-    if(node == nullptr)
+    NODE node = UNIMAP::instance()->get_node_by_id(found_id);
+    if(node.id.isEmpty())
     {
         LOGGER::instance()->write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
         return;
     }
 
-    LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+    LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node.name), "Green");
 
-    Eigen::Vector3d xi = TF_to_se2(node->tf);
+    Eigen::Vector3d xi = TF_to_se2(node.tf);
     DATA_MOVE msg;
     msg.command = "goal";
     msg.method = "pp";
     msg.preset = 0;
-    msg.goal_node_id = node->id;
+    msg.goal_node_id = node.id;
     msg.tgt_pose_vec[0] = xi[0];
     msg.tgt_pose_vec[1] = xi[1];
-    msg.tgt_pose_vec[2] = node->tf(2,3);
+    msg.tgt_pose_vec[2] = node.tf(2,3);
     msg.tgt_pose_vec[3] = xi[2];
 
     Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
@@ -2102,8 +2097,8 @@ void MainWindow::plot_node()
         }
 
         // draw
-        auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
-        if(unimap_nodes && unimap_nodes->size() > 0)
+        auto unimap_nodes = UNIMAP::instance()->get_nodes();
+        if(unimap_nodes.size() > 0)
         {
             // std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
@@ -2115,9 +2110,9 @@ void MainWindow::plot_node()
                 // draw nodes
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-                const size_t nodes_size = unimap_nodes->size();
+                const size_t nodes_size = unimap_nodes.size();
                 cloud->reserve(nodes_size);
-                for(const auto& node : (*unimap_nodes))
+                for(const auto& node : unimap_nodes)
                 {
                     QString id = node.id;
                     if(pcl_viewer->contains(id.toStdString()))
@@ -2260,23 +2255,23 @@ void MainWindow::plot_node()
 
             if(ui->ckb_PlotEdges->isChecked())
             {
-                auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
+                auto unimap_nodes = UNIMAP::instance()->get_nodes();
 
                 // draw edges
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
-                for(const auto node0 : (*unimap_nodes))
+                for(const auto node0 : unimap_nodes)
                 {
                     for(const auto node1_id : node0.linked)
                     {
-                        NODE* node1 = UNIMAP::instance()->get_node_by_id(node1_id);
-                        if(node1 == nullptr)
+                        NODE node1 = UNIMAP::instance()->get_node_by_id(node1_id);
+                        if(node1.id.isEmpty())
                         {
                             continue;
                         }
 
                         Eigen::Vector3d P0 = node0.tf.block(0,3,3,1);
-                        Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
+                        Eigen::Vector3d P1 = node1.tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 
                         std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
@@ -2361,14 +2356,14 @@ void MainWindow::plot_pick()
 
         if(pick.cur_node != "")
         {
-            NODE *node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-            if(node != nullptr)
+            NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+            if(!node.id.isEmpty())
             {
-                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node->tf, 1.0, 1.0, 1.0);
+                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node.tf, 1.0, 1.0, 1.0);
                 pcl_viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString text = "id: " + node->id + ", name: " + node->name;
+                QString text = "id: " + node.id + ", name: " + node.name;
                 ui->lb_NodeId->setText(text);
             }
         }
@@ -2474,8 +2469,8 @@ void MainWindow::plot_safety()
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
-    ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
-    ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
+    ui->le_Setting_Version->setText(QString("%1").arg(cur_setting.version));
+    ui->le_Setting_Type->setText(QString("%1").arg(cur_setting.robot_type));
 
     ui->le_Setting_Limit_V->setText(QString().sprintf("%.2f",cur_setting.v_limit/1000.0));
     ui->le_Setting_Limit_V_Jog->setText(QString().sprintf("%.2f",cur_setting.v_limit_jog/1000.0));
@@ -3435,10 +3430,10 @@ void MainWindow::plot_ctrl()
         QString cur_node_id; // = ctrl.get_cur_node_id();
         if(cur_node_id != "")
         {
-            NODE *node = UNIMAP::instance()->get_node_by_id(cur_node_id);
-            if(node != nullptr)
+            NODE node = UNIMAP::instance()->get_node_by_id(cur_node_id);
+            if(!node.id.isEmpty())
             {
-                Eigen::Matrix4d tf = node->tf;
+                Eigen::Matrix4d tf = node.tf;
                 tf(2,3) += CONFIG::instance()->get_robot_size_z_max();
                 pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius()*0.5, 0.05, tf, 0.0, 1.0, 1.0);
                 pcl_viewer->addPolygonMesh(donut, "cur_node");
@@ -3462,7 +3457,6 @@ void MainWindow::plot_cam()
             cv::Mat plot = CAM::instance()->get_time_img(i).img;
             if(!plot.empty())
             {
-//                cv::flip(plot,plot,0);
 
                 // QLabel name create dynamically
                 QString labelName = QString("lb_Screen%1").arg(i+2); // lb_Screen2, lb_Screen3 ...
