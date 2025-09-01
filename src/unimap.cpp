@@ -23,9 +23,9 @@ UNIMAP::UNIMAP(QObject *parent) : QObject(parent),
     kdtree_cloud_2d_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud_2d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
 
     // init related 3d map params
-    map_3d_pts            = std::make_shared<std::vector<Eigen::Vector3d>>();
-    map_3d_normal         = std::make_shared<std::vector<Eigen::Vector3d>>();
-    map_3d_reflects       = std::make_shared<std::vector<double>>();
+    map_3d_pts      = std::make_shared<std::vector<Eigen::Vector3d>>();
+    map_3d_normal   = std::make_shared<std::vector<Eigen::Vector3d>>();
+    map_3d_reflects = std::make_shared<std::vector<double>>();
 }
 
 UNIMAP::~UNIMAP()
@@ -35,9 +35,9 @@ UNIMAP::~UNIMAP()
 
 void UNIMAP::clear()
 {
-    is_loaded.store(MAP_NOT_LOADED);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
 
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    is_loaded.store(MAP_NOT_LOADED);
     
     // clear 2d cloud
     {
@@ -119,11 +119,8 @@ void UNIMAP::load_map(QString path)
 
 bool UNIMAP::load_2d()
 {
-    QString path;
-    {
-        std::shared_lock<std::shared_mutex> lock(mtx);
-        path = map_path;
-    }
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    QString path = map_path;
 
     // load cloud map
     {
@@ -132,12 +129,9 @@ bool UNIMAP::load_2d()
         if(cloud_csv_info.exists() && cloud_csv_info.isFile())
         {
             // clear 2d cloud info
+            if(kdtree_cloud_2d)
             {
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                if(kdtree_cloud_2d)
-                {
-                    kdtree_cloud_2d->pts.clear();
-                }
+                kdtree_cloud_2d->pts.clear();
             }
 
             // clear additional cloud
@@ -179,13 +173,9 @@ bool UNIMAP::load_2d()
                 }
                 cloud_csv_file.close();
 
-                // set 2d cloud info
+                if(kdtree_cloud_2d)
                 {
-                    std::unique_lock<std::shared_mutex> lock(mtx);
-                    if(kdtree_cloud_2d)
-                    {
-                        kdtree_cloud_2d->pts = voxel_filtering(pts, 0.05);
-                    }
+                    kdtree_cloud_2d->pts = voxel_filtering(pts, 0.05);
                 }
 
                 printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud_2d->pts.size());
@@ -200,7 +190,6 @@ bool UNIMAP::load_2d()
 
     // set KDTree
     {
-        std::unique_lock<std::shared_mutex> lock(mtx);
         if(kdtree_cloud_2d)
         {
             kdtree_cloud_2d_index = std::make_shared<KD_TREE_XYZR>(3, *kdtree_cloud_2d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
@@ -250,12 +239,8 @@ bool UNIMAP::load_2d()
 
 bool UNIMAP::load_3d()
 {
-    QString path;
-    {
-        std::shared_lock<std::shared_mutex> lock(mtx);
-        path = map_path;
-    }
-
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    QString path = map_path;;
     if(path.isEmpty())
     {
         printf("[UNIMAP(3D)] map_dir is empty!\n");
@@ -323,7 +308,6 @@ bool UNIMAP::load_3d()
 
     // update
     {
-        std::unique_lock<std::shared_mutex> lock(mtx);
         kdtree_cloud_3d.pts = pts;
 
         kdtree_cloud_3d_index = std::make_unique<KD_TREE>(3, kdtree_cloud_3d, nanoflann::KDTreeSingleIndexAdaptorParams(10));
@@ -341,7 +325,7 @@ bool UNIMAP::load_3d()
 
 bool UNIMAP::load_node()
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
 
     // first clear node
     if(multi_index_nodes.size() != 0)
@@ -411,12 +395,9 @@ bool UNIMAP::load_node()
 
 void UNIMAP::save_node()
 {
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     // get save folder
-    QString path;
-    {
-        std::unique_lock<std::shared_mutex> lock(mtx);
-        path = map_path;
-    }
+    QString path = map_path;
 
     // save topo.json
     QString node_path = path + "/topo.json";
@@ -448,7 +429,7 @@ void UNIMAP::save_node()
 
 void UNIMAP::clear_nodes()
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
 
     multi_index_nodes.clear();
     
@@ -465,7 +446,7 @@ void UNIMAP::clear_nodes()
 
 std::vector<QString> UNIMAP::get_nodes(QString type)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
 
     std::vector<QString> res;
     auto& id_idx = multi_index_nodes.get<by_id>();
@@ -482,7 +463,7 @@ std::vector<QString> UNIMAP::get_nodes(QString type)
 
 std::vector<NODE> UNIMAP::get_nodes()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
 
     std::vector<NODE> res;
     auto& id_idx = multi_index_nodes.get<by_id>();
@@ -501,25 +482,25 @@ QString UNIMAP::gen_node_id()
 
 double UNIMAP::get_map_min_x()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_min_x;
 }
 
 double UNIMAP::get_map_max_x()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_max_x;
 }
 
 double UNIMAP::get_map_min_y()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_min_y;
 }
 
 double UNIMAP::get_map_max_y()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_max_y;
 }
 
@@ -531,7 +512,7 @@ std::vector<NODE> UNIMAP::get_init_candidates_id(QString type, std::vector<QStri
         return res;
     }
 
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     
     auto& id_idx = multi_index_nodes.get<by_id>();
     for(const NODE& node : id_idx)
@@ -556,7 +537,7 @@ std::vector<NODE> UNIMAP::get_init_candidates_id(QString type, std::vector<QStri
 
 QString UNIMAP::get_map_path()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_path;
 }
 
@@ -567,31 +548,31 @@ int UNIMAP::get_is_loaded()
 
 void UNIMAP::set_map_path(QString path)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     map_path = path;
 }
 
 std::shared_ptr<XYZR_CLOUD> UNIMAP::get_kdtree_cloud()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return kdtree_cloud_2d;
 }
 
 std::shared_ptr<std::vector<Eigen::Vector3d>> UNIMAP::get_map_3d_pts()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_3d_pts;
 }
 
 std::shared_ptr<std::vector<Eigen::Vector3d>> UNIMAP::get_map_3d_normal()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     return map_3d_normal;
 }
 
 Eigen::Vector3d UNIMAP::get_normal_3d(int idx)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED || !map_3d_normal || (idx < 0 || idx >= (int)map_3d_normal->size()))
     {
         return Eigen::Vector3d(0,0,0);
@@ -602,7 +583,7 @@ Eigen::Vector3d UNIMAP::get_normal_3d(int idx)
 
 Eigen::Vector3d UNIMAP::get_pts_3d(int idx)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED || !map_3d_pts || (idx < 0 || idx >= (int)map_3d_normal->size()))
     {
         return Eigen::Vector3d(0,0,0);
@@ -613,7 +594,7 @@ Eigen::Vector3d UNIMAP::get_pts_3d(int idx)
 
 std::shared_ptr<std::vector<double>> UNIMAP::get_map_3d_reflects()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED)
     {
         return {};
@@ -624,7 +605,7 @@ std::shared_ptr<std::vector<double>> UNIMAP::get_map_3d_reflects()
 
 std::shared_ptr<KD_TREE_XYZR> UNIMAP::get_kdtree_cloud_index()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED)
     {
         return {};
@@ -635,7 +616,7 @@ std::shared_ptr<KD_TREE_XYZR> UNIMAP::get_kdtree_cloud_index()
 
 void UNIMAP::radius_search_kdtree_idx(double query[], double sq_radius, std::vector<nanoflann::ResultItem<unsigned int, double>>& res_idxs, nanoflann::SearchParameters params)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED || !kdtree_cloud_2d_index)
     {
         return;
@@ -646,10 +627,15 @@ void UNIMAP::radius_search_kdtree_idx(double query[], double sq_radius, std::vec
 
 QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(!is_loaded != MAP_LOADED || multi_index_nodes.size() != 0 || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
     {
+        return "";
+    }
+
+    if(!std::isfinite(pos[0]) || !std::isfinite(pos[1]) || !std::isfinite(pos[2]))
+    {
+        logger->write_log("[UNIMAP] get node id edge input is NAN", "Red");
         return "";
     }
 
@@ -721,14 +707,44 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
         }
         else
         {
-            return "";
+            return get_node_id_nn(pos);
         }
     }
 }
 
+QString UNIMAP::get_node_id_nn(Eigen::Vector3d pos)
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx);
+    if(!is_loaded != MAP_LOADED || multi_index_nodes.size() != 0 || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
+    {
+        return "";
+    }
+
+    // find node
+    NODE min_node;
+    double min_d = std::numeric_limits<double>::max();
+
+    auto& id_idx = multi_index_nodes.get<by_id>();
+    for(const NODE& node : id_idx)
+    {
+        // check non drivable
+        if(is_node_drivable(node.type))
+        {
+            double d = (node.tf.block(0,3,3,1) - pos).norm();
+            if(d < min_d)
+            {
+                min_d = d;
+                min_node = node;
+            }
+        }
+    }
+
+    return min_node.id;
+}
+
 NODE UNIMAP::get_goal_node(Eigen::Vector3d pos)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(multi_index_nodes.size() == 0 || !kdtree_node_index || kdtree_node.pos.empty())
     {
         return {};
@@ -773,7 +789,7 @@ NODE UNIMAP::get_goal_node(Eigen::Vector3d pos)
             continue;
         }
 
-        if(!is_goal_node_type(node.type))
+        if(!is_node_drivable(node.type))
         {
             continue;
         }
@@ -793,15 +809,9 @@ NODE UNIMAP::get_goal_node(Eigen::Vector3d pos)
     return nearest_node;
 }
 
-double UNIMAP::calculate_distance_squared(const Eigen::Vector3d& pos1, const Eigen::Vector3d& pos2)
-{
-    const Eigen::Vector3d diff = pos1 - pos2;
-    return diff.squaredNorm();
-}
-
 NODE UNIMAP::get_node_by_id(QString id)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(id.isEmpty())
     {
         return {};
@@ -821,7 +831,7 @@ NODE UNIMAP::get_node_by_id(QString id)
 
 NODE UNIMAP::get_node_by_name(QString name)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(name.isEmpty())
     {
         return {};
@@ -841,8 +851,7 @@ NODE UNIMAP::get_node_by_name(QString name)
 
 std::vector<int> UNIMAP::knn_search_idx(Eigen::Vector3d center, int k, double radius)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(!kdtree_cloud_3d_index)
     {
         return std::vector<int>();
@@ -888,7 +897,7 @@ void UNIMAP::set_logger_module(LOGGER* _logger)
 // Public node management interface
 bool UNIMAP::add_node(const NODE& node)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED)
     {
         logger->write_log("[UNIMAP] Map not loaded", "Red");
@@ -948,7 +957,7 @@ bool UNIMAP::add_node(const Eigen::Matrix4d tf, const QString type)
 
 bool UNIMAP::remove_node(const QString& id)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     if(is_loaded != MAP_LOADED)
     {
         logger->write_log("[UNIMAP] Map not loaded", "Red");
@@ -973,9 +982,19 @@ bool UNIMAP::remove_node(const QString& id)
     id_idx.erase(it);
     
     // Rebuild KD-tree
+    rebuild_kdtree();
+
+    logger->write_log(QString("[UNIMAP] Removed node: %1").arg(id), "Green");
+    return true;
+}
+
+void UNIMAP::rebuild_kdtree()
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx);
     kdtree_node.pos.clear();
     kdtree_node.id.clear();
 
+    auto& id_idx = multi_index_nodes.get<by_id>();
     for(const NODE& node : id_idx)
     {
         if(is_node_drivable(node.type))
@@ -984,7 +1003,7 @@ bool UNIMAP::remove_node(const QString& id)
             kdtree_node.id.push_back(node.id);
         }
     }
-    
+
     if(kdtree_node_index)
     {
         kdtree_node_index.reset();
@@ -995,14 +1014,6 @@ bool UNIMAP::remove_node(const QString& id)
         kdtree_node_index = std::make_unique<KD_TREE_NODE>(3, kdtree_node, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         kdtree_node_index->buildIndex();
     }
-
-    logger->write_log(QString("[UNIMAP] Removed node: %1").arg(id), "Green");
-    return true;
-}
-
-bool UNIMAP::is_goal_node_type(const QString& type)
-{
-    return (type == "GOAL" || type == "INIT" || type == "STATION");
 }
 
 bool UNIMAP::is_node_drivable(QString type)

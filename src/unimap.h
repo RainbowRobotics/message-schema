@@ -101,7 +101,7 @@ private:
     ~UNIMAP();
 
     // mutex
-    std::shared_mutex mtx;
+    std::recursive_mutex mtx;
 
     // map dir
     QString map_path;
@@ -152,25 +152,12 @@ private:
     // other modules
     CONFIG* config;
     LOGGER* logger;
-
-    bool is_goal_node_type(const QString& type);
-    double calculate_distance_squared(const Eigen::Vector3d& pos1, const Eigen::Vector3d& pos2);
     
     // node management functions
-    void add_node_to_maps(const NODE& node, size_t index);
-    void rebuild_node_maps();
-    void update_node_in_maps(const NODE& node, size_t index);
-    void remove_node_from_maps(const QString& id, const QString& name);
-    bool update_node(const QString& id, const NODE& new_node);
-    bool node_exists(const QString& id);
+    void rebuild_kdtree();
     bool is_node_drivable(QString type);
-    bool node_exists_by_name(const QString& name);
-    bool is_valid_node_index(size_t index);
     QString gen_node_id();
-
-    NODE get_by_id();
-    NODE get_by_name();
-
+    QString get_node_id_nn(Eigen::Vector3d pos);
 };
 
 #endif // UNIMAP_H

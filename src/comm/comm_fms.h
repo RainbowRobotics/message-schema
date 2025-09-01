@@ -167,9 +167,6 @@ private:
 
     void handle_common_motor(DATA_MOTOR& msg);
 
-    std::atomic<double> end_time   = {0.0};
-    std::atomic<double> start_time = {0.0};
-
     std::atomic<double> process_time_path = {0.0};
     std::atomic<double> process_time_vobs = {0.0};
 

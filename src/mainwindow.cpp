@@ -1896,59 +1896,13 @@ void MainWindow::watch_loop()
             prev_move_distance = move_distance;
 
             // plot mobile pose
-            ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+            ui->lb_Mileage->setText("[Mileage] : " + mileage_sum);
 
             if(cnt % 600 == 0)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }
         }
-
-
-        // Samsung's request
-        //        // for 500ms loop
-        //        // obs logging
-        //        if(cnt % 5 == 0)
-        //        {
-        //            if(AUTOCONTROL::instance()->get_is_moving())
-        //            {
-        //                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
-        //                if(obs_d < 2.0 + 1e-6)
-        //                {
-        //                    // zone, obs dist
-        ////                    QString log = QString("\t%1\t%2")
-        ////                            .arg(int(obs_d))
-        ////                            .arg(obs_d, 0, 'f', 6);
-        //                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
-        ////                    qDebug()<<log;
-
-        //                    LOGGER::instance()->write_log_to_txt(log);
-        //                }
-        //            }
-        //        }
-        //        // for 1 min loop
-        //        // temperature logging
-        //        if(cnt % 600 == 0)
-        //        {
-        //            //for temperature status
-        //            {
-        //                MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
-
-        //                //            //m1 m2 battery usb sensor
-        //                QString log = QString("\t%1\t%2\t%3\t%4\t%5")
-        //                        .arg(mobile_log.temp_m0)
-        //                        .arg(mobile_log.temp_m1)
-        //                        .arg(mobile_log.tabos_temperature)
-        //                        .arg(QString::number(temperature_value))
-        //                        .arg(mobile_log.tabos_soc, 0, 'f', 3);
-
-        //                //            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
-        //                //            qDebug()<<temperature_value.load();
-
-        //                LOGGER::instance()->write_temperature_log_to_txt(log);
-        //            }
-        //        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
