@@ -58,6 +58,13 @@
         "span": "cpp",
         "*.inc": "cpp"
     },
-
+    "python.defaultInterpreterPath": "${workspaceFolder}/fast-api/.venv/bin/python",
+    "[python]": { "editor.defaultFormatter": "ms-python.black-formatter" },
+    "editor.formatOnSave": true,
+    "ruff.lint.enable": true,
+    "editor.codeActionsOnSave": [
+        "source.fixAll.ruff",
+        "source.organizeImports.ruff"
+    ],
     "editor.tabSize": 2
 }
