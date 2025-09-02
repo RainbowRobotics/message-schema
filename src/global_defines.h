@@ -132,6 +132,31 @@ constexpr double R2D  = 180.0/M_PI;
 #define S100_BAT_MIN_VOLTAGE 42.0
 
 // enumulator
+enum class RobotType
+{
+    S100_A,
+    S100_B,
+    S100_A_3D,
+    S100_B_3D,
+    D400,
+    QD,
+    MECANUM,
+    SEM,
+    SDC,
+    NONE
+};
+
+enum class RobotModel
+{
+    S100,
+    D400,
+    QD,
+    MECANUM,
+    SEM,
+    SDC,
+    NONE
+};
+
 enum FOOT_STATE
 {
     FOOT_STATE_IDLE = 0,         // 정지 상태
@@ -179,15 +204,22 @@ enum DOCKING_CHARGE_STATE
     CHARGE_STATE_FAIL,
 };
 
-enum AUTO_FSM_STATE
+enum class AUTO_FSM_STATE
 {
-    AUTO_FSM_FIRST_ALIGN = 0,
-    AUTO_FSM_DRIVING,
-    AUTO_FSM_FINAL_ALIGN,
-    AUTO_FSM_OBS,
-    AUTO_FSM_COMPLETE,    
-    AUTO_FSM_DOCKING,
-    AUTO_FSM_PAUSE,    
+    FIRST_ALIGN = 0,
+    DRIVING,
+    FINAL_ALIGN,
+    OBS,
+    COMPLETE,
+    DOCKING,
+    PAUSE,
+};
+
+enum class ALREADY_GOAL_STATE
+{
+    NONE = 0,
+    TEMP_GOAL,
+    GOAL
 };
 
 enum LED_STATE

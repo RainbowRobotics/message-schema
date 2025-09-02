@@ -34,6 +34,8 @@ struct AUTOCONTROL_INFO
 
     static constexpr double local_path_step = 0.01;
     static constexpr double global_path_step = 0.1;
+
+    static constexpr double first_align_safe_velocity = 0.1;
 };
 
 
@@ -150,6 +152,12 @@ private:
     // global path, local path
     void clear_path();
 
+    void update_local_path(const PATH& _local_path);
+
+    void update_global_path(const PATH& _global_path);
+
+    void send_move_response(QString result, QString message);
+
     /***********************
      * global path planning
      ***********************/
@@ -189,18 +197,24 @@ private:
     // smoothing velocity input -> ref_v
     std::vector<double> smoothing_v(const std::vector<double>& src, double path_step);
 
+    // check robot alreay there
+    ALREADY_GOAL_STATE check_already_goal(const Eigen::Matrix4d& _goal_tf, const PATH& _global_path);
+
     /***********************
      * local path planning
      ***********************/
     // calculate paths with higher resolution (local path)
-    PATH calc_local_path(PATH& global_path);
-    PATH calc_local_path_with_cur_vel(PATH& global_path);
+    PATH calc_holonomic_local_path(PATH& global_path, bool use_cur_vel);
+    PATH calc_local_path(PATH& global_path, bool use_cur_vel);
 
     // calculate paths with higher resolution (avoid path)
     PATH calc_avoid_path(PATH& global_path);
 
     // check which index of the path the current location is at
     int get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d cur_pos);
+
+    // check which index of the path the target position idx is at
+    int get_tgt_idx(std::vector<Eigen::Vector3d>& path, int cur_idx);
 
     // check if controllability
     int is_everything_fine();
@@ -235,15 +249,15 @@ private:
     std::atomic<long long> global_path_time = {(long long)0};
 
     // flags
-    std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
     std::atomic<bool> is_rrs                 = {false};
     std::atomic<bool> is_debug               = {false};
     std::atomic<bool> is_pause               = {false};
     std::atomic<bool> is_moving              = {false};
     std::atomic<bool> is_path_overlap        = {false};
-    std::atomic<bool> multi_inter_lock       = {false};
+    std::atomic<bool> is_multi_inter_lock    = {false};
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
+    std::atomic<AUTO_FSM_STATE> fsm_state    = {AUTO_FSM_STATE::COMPLETE};
 
     // params for rrs & plot
     PATH cur_local_path;

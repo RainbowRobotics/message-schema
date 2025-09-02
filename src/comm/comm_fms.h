@@ -167,6 +167,8 @@ private:
 
     void handle_common_motor(DATA_MOTOR& msg);
 
+    void atomic_update_max(std::atomic<double>& tgt, double v);
+
     std::atomic<double> process_time_path = {0.0};
     std::atomic<double> process_time_vobs = {0.0};
 

@@ -28,35 +28,35 @@ COMM_FMS::~COMM_FMS()
     }
 
     is_recv_running = false;
-    if(recv_thread->joinable())
+    if(recv_thread && recv_thread->joinable())
     {
         recv_thread->join();
     }
 
     is_move_running = false;
     move_cv.notify_all();
-    if(move_thread->joinable())
+    if(move_thread && move_thread->joinable())
     {
         move_thread->join();
     }
 
     is_path_running = false;
     path_cv.notify_all();
-    if(path_thread->joinable())
+    if(path_thread && path_thread->joinable())
     {
         path_thread->join();
     }
 
     is_vobs_running = false;
     vobs_cv.notify_all();
-    if(vobs_thread->joinable())
+    if(vobs_thread && vobs_thread->joinable())
     {
         vobs_thread->join();
     }
 
     is_common_running = false;
     common_cv.notify_all();
-    if(common_thread->joinable())
+    if(common_thread && common_thread->joinable())
     {
         common_thread->join();
     }
@@ -118,26 +118,31 @@ void COMM_FMS::init()
 
     if(move_thread == nullptr)
     {
+        is_move_running = true;
         move_thread = std::make_unique<std::thread>(&COMM_FMS::move_loop, this);
     }
 
     if(path_thread == nullptr)
     {
+        is_path_running = true;
         path_thread = std::make_unique<std::thread>(&COMM_FMS::path_loop, this);
     }
 
     if(vobs_thread == nullptr)
     {
+        is_vobs_running = true;
         vobs_thread = std::make_unique<std::thread>(&COMM_FMS::vobs_loop, this);
     }
 
     if(common_thread == nullptr)
     {
+        is_common_running = true;
         common_thread = std::make_unique<std::thread>(&COMM_FMS::common_loop, this);
     }
 
     if(response_thread == nullptr)
     {
+        is_response_running = true;
         response_thread = std::make_unique<std::thread>(&COMM_FMS::response_loop, this);
     }
 
@@ -619,13 +624,8 @@ void COMM_FMS::path_loop()
         }
 
         double ed_time = get_time();
-        process_time_path = ed_time - st_time;
-        if(max_process_time_path < process_time_path)
-        {
-            max_process_time_path = (double)process_time_path;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        process_time_path.store(ed_time - st_time, std::memory_order_relaxed);
+        atomic_update_max(max_process_time_path, process_time_path.load(std::memory_order_relaxed));
     }
 }
 
@@ -662,13 +662,8 @@ void COMM_FMS::vobs_loop()
         }
 
         double ed_time = get_time();
-        process_time_vobs = ed_time - st_time;
-        if(max_process_time_vobs < process_time_vobs)
-        {
-            max_process_time_vobs = (double)process_time_vobs;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        process_time_vobs.store(ed_time - st_time, std::memory_order_relaxed);
+        atomic_update_max(max_process_time_vobs, process_time_vobs.load(std::memory_order_relaxed));
     }
 }
 
@@ -1070,8 +1065,6 @@ void COMM_FMS::common_loop()
                 msg.message = "";
             }
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
@@ -1623,4 +1616,13 @@ QMainWindow* COMM_FMS::get_main_window()
 bool COMM_FMS::is_main_window_valid()
 {
     return (qobject_cast<QMainWindow*>(main) != nullptr);
+}
+
+void COMM_FMS::atomic_update_max(std::atomic<double>& tgt, double v)
+{
+    double cur = tgt.load(std::memory_order_relaxed);
+    while (cur < v && !tgt.compare_exchange_weak(cur, v, std::memory_order_relaxed, std::memory_order_relaxed))
+    {
+
+    }
 }
