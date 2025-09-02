@@ -4,3 +4,15 @@ external
 *.lock
 
 compile_commands.json
+
+.venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.DS_Store
+.env
+.env.*
+__pycache__
+*.egg-info
+build
+*.bin
