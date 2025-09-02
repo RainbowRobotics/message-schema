@@ -138,6 +138,8 @@ private:
     std::atomic<double> process_time_odometry = {0.0};
     std::atomic<double> process_time_obs = {0.0};
 
+    // ekf
+    EKF ekf;
 };
 
 #endif // LOCALIZATION_H

@@ -85,6 +85,8 @@ public:
     bool get_use_bqr();                 // check if the robot uses bottom QR sensor
     bool get_use_imu();                 // check if the robot uses external IMU
     bool get_use_aruco();               // check if the robot uses aruco marker (must used cam)
+    bool get_use_ekf();               // check if the robot uses aruco marker (must used cam)
+
 
     /***********************
      * localization
@@ -344,6 +346,7 @@ private:
     // localization config
     QString LOC_MODE = "3D";   // "2D" or "3D"
     bool USE_ARUCO = false;
+    bool USE_EKF = false;
 
     // Networking
     bool USE_MULTI     = false;

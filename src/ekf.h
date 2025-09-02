@@ -16,26 +16,40 @@ public:
     void init(const Eigen::Matrix4d& tf, double alpha);
     void reset();
 
-    void predict(const Eigen::Matrix4d& odom_tf);
-    Eigen::Matrix4d update_measurement();
+    Eigen::Matrix4d get_cur_tf();
 
+    void set_pre_mo_tf(Eigen::Matrix4d tf);
+
+    void predict(const Eigen::Matrix4d& odom_tf);
+    void estimate(const Eigen::Matrix4d& icp_tf);
+
+    // flags
+    std::atomic<bool> initialized = {false};
 
 private:
-
     // mutex
     std::mutex mtx;
 
-    Eigen::Vector3d x_hat;          // state estimation (x, y, theta)
+    // state estimation (x, y, theta)
+    Eigen::Vector3d x_hat;
 
+    // covariance estimation
+    Eigen::Matrix3d P_hat = Eigen::Matrix3d::Identity();
 
-    Eigen::Matrix3d P_hat;          // covariance
-    Eigen::Matrix4d prev_odom_tf;
+    Eigen::Matrix4d pre_mo_tf = Eigen::Matrix4d::Identity();
 
     // process noise
-    Eigen::Matrix3d M_k;
+    Eigen::Matrix3d M_k = Eigen::Matrix3d::Identity();
 
     // measurement nois
-    Eigen::Matrix3d R_k;
+    Eigen::Matrix3d R_k = Eigen::Matrix3d::Identity();
+
+    // result
+    Eigen::Matrix4d cur_tf = Eigen::Matrix4d::Identity();
+
+    // flags
+    std::atomic<bool> has_pre_mo_tf = {false};
+
 
 };
 

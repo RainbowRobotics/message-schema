@@ -43,6 +43,9 @@ void LOCALIZATION::start()
     // set flag
     is_loc = true;
 
+    // clear
+    ekf.reset();
+
     QString loc_mode = config->get_loc_mode();
     if(loc_mode == "2D")
     {
@@ -502,6 +505,20 @@ void LOCALIZATION::localization_loop_2d()
             // check error
             if(err < config->get_loc_2d_icp_error_threshold())
             {
+                if(config->get_use_ekf())
+                {
+                    if(!ekf.initialized.load())
+                    {
+                        ekf.init(G, config->get_loc_2d_icp_odometry_fusion_ratio());
+                    }
+                    else
+                    {
+                        ekf.estimate(G);
+                    }
+
+                    G = ekf.get_cur_tf();
+                }
+
                 // for loc b loop
                 TIME_POSE tp;
                 tp.t = frm.t;
@@ -674,84 +691,93 @@ void LOCALIZATION::odometry_loop()
             // get current tf
             Eigen::Matrix4d _cur_tf = get_cur_tf();
 
-            // update odo_tf
-            Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
-            Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
-            pre_mo_tf = cur_mo_tf;
-
-            // icp-odometry fusion
-            TIME_POSE tp;
-            if(tp_que.try_pop(tp) && !config->get_use_sim())
+            if(config->get_use_ekf())
             {
-                // time delay compensation
-                Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
-                Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-                Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
-                Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
-
-                double alpha = config->get_loc_2d_icp_odometry_fusion_ratio(); // 1.0 means odo_tf 100%
-
-                // for odometry slip
-                Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
-                if(std::abs(dtdr[1]) > 10.0*D2R)
-                {
-                    alpha = 0;
-                    printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
-                }
-
-                // interpolation
-                Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
-                Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                // update
-                _cur_tf = fused_tf;
+                ekf.predict(cur_mo_tf);
+                _cur_tf = ekf.get_cur_tf();
             }
             else
             {
-                // update
-                _cur_tf = odo_tf;
-            }
+                printf("asdf\n");
+                // update odo_tf
+                Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
+                Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;
+                pre_mo_tf = cur_mo_tf;
 
-            /*
-            // aruco fusion
-            TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
-            if(aruco_tpi.t > pre_aruco_t && config->USE_SIM == 0)
-            {
-                double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
-                if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
+                // icp-odometry fusion
+                TIME_POSE tp;
+                if(tp_que.try_pop(tp) && !config->get_use_sim())
                 {
-                    NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
-                    if(node != NULL)
+                    // time delay compensation
+                    Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(tp.t).pose);
+                    Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+                    Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+                    Eigen::Matrix4d icp_tf = tp.tf * mo_dtf;
+
+                    double alpha = config->get_loc_2d_icp_odometry_fusion_ratio(); // 1.0 means odo_tf 100%
+
+                    // for odometry slip
+                    Eigen::Vector2d dtdr = dTdR(odo_tf, icp_tf);
+                    if(std::abs(dtdr[1]) > 10.0*D2R)
                     {
-                        // parse tf
-                        Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
-                        Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+                        alpha = 0;
+                        printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
+                    }
 
-                        // time delay compensation
-                        Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
-                        Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
-                        Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+                    // interpolation
+                    Eigen::Matrix4d dtf = icp_tf.inverse()*odo_tf;
+                    Eigen::Matrix4d fused_tf = icp_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
 
-                        Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
-                        Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
+                    // update
+                    _cur_tf = fused_tf;
+                }
+                else
+                {
+                    // update
+                    _cur_tf = odo_tf;
+                }
 
-                        // interpolation
-                        double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 1.0 mean odometry only
-                        if(std::abs(cur_mo.vel[2]) > 10.0*D2R)
+                /*
+                // aruco fusion
+                TIME_POSE_ID aruco_tpi = aruco->get_cur_tpi();
+                if(aruco_tpi.t > pre_aruco_t && config->USE_SIM == 0)
+                {
+                    double d = calc_dist_2d(aruco_tpi.tf.block(0,3,3,1));
+                    if(d < config->LOC_ARUCO_ODO_FUSION_DIST)
+                    {
+                        NODE* node = unimap->get_node_by_name(QString::number(aruco_tpi.id, 10));
+                        if(node != NULL)
                         {
-                            alpha = 1.0; // odometry only
+                            // parse tf
+                            Eigen::Matrix4d T_g_m0 = node->tf; // stored global marker tf
+                            Eigen::Matrix4d T_m_r = aruco_tpi.tf.inverse();
+
+                            // time delay compensation
+                            Eigen::Matrix4d tf0 = se2_to_TF(mobile->get_best_mo(aruco_tpi.t).pose);
+                            Eigen::Matrix4d tf1 = se2_to_TF(cur_mo.pose);
+                            Eigen::Matrix4d mo_dtf = tf0.inverse()*tf1;
+
+                            Eigen::Matrix4d T_g_r = T_g_m0*T_m_r*mo_dtf;
+                            Eigen::Matrix4d aruco_tf = se2_to_TF(TF_to_se2(T_g_r));
+
+                            // interpolation
+                            double alpha = config->LOC_ARUCO_ODO_FUSION_RATIO; // 1.0 mean odometry only
+                            if(std::abs(cur_mo.vel[2]) > 10.0*D2R)
+                            {
+                                alpha = 1.0; // odometry only
+                            }
+
+                            Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
+                            Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
+
+                            // update
+                            _cur_tf = fused_tf;
+                            pre_aruco_t = aruco_tpi.t;
                         }
-
-                        Eigen::Matrix4d dtf = aruco_tf.inverse()*_cur_tf;
-                        Eigen::Matrix4d fused_tf = aruco_tf*intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
-
-                        // update
-                        _cur_tf = fused_tf;
-                        pre_aruco_t = aruco_tpi.t;
                     }
                 }
+                */
             }
-            */
 
             // update
             set_cur_tf(_cur_tf);
