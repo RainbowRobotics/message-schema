@@ -1,0 +1,23 @@
+[project]
+name = "manipulate"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Manipulate"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+  "fastapi>=0.116.1,<0.117.0",
+  "uvicorn[standard]>=0.35.0,<0.36.0",
+  "python-dotenv>=1.1.1,<2.0.0",
+  "utils",
+  "rb_zenoh",
+  "flat-buffers",
+]
+
+[tool.uv.sources]
+utils = { workspace = true }
+rb_zenoh = { workspace = true }
+flat-buffers = { workspace = true }

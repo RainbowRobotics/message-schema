@@ -1,0 +1,53 @@
+[project]
+name = "rb-backend-server"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "RB Backend Server"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+[dependency-groups]
+dev = [
+    "black==25.1.0",
+    "ruff==0.12.7",
+    "isort==6.0.1",
+    "mypy==1.17.1",
+    "pytest==8.4.1",
+]
+
+[tool.uv.workspace]
+members = ["services/*", "packages/*"]
+
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["fast-api/services", "fast-api/packages"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+strict_optional = true
+pretty = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["fast-api/services", "fast-api/packages"]
