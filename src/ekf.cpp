@@ -13,8 +13,11 @@ EKF::~EKF()
 
 }
 
-void EKF::init(const Eigen::Matrix4d& tf, double alpha)
+void EKF::init(const Eigen::Matrix4d& tf)
 {
+    // clear first
+    reset();
+
     std::lock_guard<std::mutex> lock(mtx);
 
     // set state, covariance
@@ -33,13 +36,15 @@ void EKF::init(const Eigen::Matrix4d& tf, double alpha)
 
     // set measurement noise, R_k (icp)
     R_k = Eigen::Matrix3d::Zero();
-    R_k(0,0) = 0.03 * 0.03;
-    R_k(1,1) = 0.03 * 0.03;
-    R_k(2,2) = (1.0 * D2R) * (1.0 * D2R);
+    R_k(0,0) = icp_err_xy * icp_err_xy;
+    R_k(1,1) = icp_err_xy * icp_err_xy;
+    R_k(2,2) = (icp_err_th * D2R) * (icp_err_th * D2R);
 
     has_pre_mo_tf = false;
 
     initialized = true;
+
+    printf("[EKF] init: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
 }
 
 void EKF::reset()
@@ -59,10 +64,15 @@ Eigen::Matrix4d EKF::get_cur_tf()
     return res;
 }
 
-void EKF::set_pre_mo_tf(Eigen::Matrix4d tf)
+void EKF::set_cur_tf(Eigen::Matrix4d tf)
 {
+    Eigen::Vector3d z_k;
+    z_k(0) = tf(0,3);
+    z_k(1) = tf(1,3);
+    z_k(2) = std::atan2(tf(1,0), tf(0,0));
+
     std::lock_guard<std::mutex> lock(mtx);
-    pre_mo_tf = tf;
+    x_hat = z_k;
 }
 
 void EKF::predict(const Eigen::Matrix4d& odom_tf)
@@ -121,10 +131,10 @@ void EKF::predict(const Eigen::Matrix4d& odom_tf)
 
     pre_mo_tf = odom_tf;
 
-    printf("[EKF] prediction: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]);
+    // printf("[EKF] prediction: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
 }
 
-void EKF::estimate(const Eigen::Matrix4d& icp_tf)
+void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
 {
     // update measurement
     Eigen::Vector3d z_k;
@@ -140,8 +150,27 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf)
     y_k(1) = z_k(1) - x_hat(1);
     y_k(2) = std::atan2(std::sin(z_k(2) - x_hat(2)), std::cos(z_k(2) - x_hat(2))); // wrap
 
+    // todo adaptive R (ieir)
+
+
     // innovation covariance
     Eigen::Matrix3d S_k = P_hat + R_k;
+
+    // outlier detection - norm check
+    double y_norm = y_k.norm();
+    if(y_norm > 0.5)
+    {
+        printf("[EKF] ICP rejected, norm=%.3f\n", y_norm);
+        return;
+    }
+
+    // outlier detection - mahalanobis distance check
+    double d2 = y_k.transpose() * S_k.ldlt().solve(y_k);
+    if(d2 > 11.34)
+    {
+        printf("[EKF] ICP rejected, mahalanobis=%.2f\n", d2);
+        return;
+    }
 
     // calc kalman gain
     // Eigen::Matrix3d K_k = P_hat * S_k.inverse();
@@ -150,7 +179,6 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf)
     // state estimation
     Eigen::Vector3d x_new = x_hat + K_k * y_k;
     x_new(2) = std::atan2(std::sin(x_new(2)), std::cos(x_new(2))); // wrap
-
 
     // error covariance update (joseph form)
     Eigen::Matrix3d I3 = Eigen::Matrix3d::Identity();
@@ -161,5 +189,7 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf)
     x_hat = x_new;
     P_hat = P_new;
 
-    printf("[EKF] estimation: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]);
+    // debug
+    // printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
+    //        x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
 }

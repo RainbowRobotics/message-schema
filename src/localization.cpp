@@ -43,9 +43,6 @@ void LOCALIZATION::start()
     // set flag
     is_loc = true;
 
-    // clear
-    ekf.reset();
-
     QString loc_mode = config->get_loc_mode();
     if(loc_mode == "2D")
     {
@@ -75,6 +72,8 @@ void LOCALIZATION::start()
 void LOCALIZATION::stop()
 {
     is_loc = false;
+
+    ekf.reset();
 
     localization_flag = false;
     if(localization_thread && localization_thread->joinable())
@@ -509,11 +508,11 @@ void LOCALIZATION::localization_loop_2d()
                 {
                     if(!ekf.initialized.load())
                     {
-                        ekf.init(G, config->get_loc_2d_icp_odometry_fusion_ratio());
+                        ekf.init(G);
                     }
                     else
                     {
-                        ekf.estimate(G);
+                        ekf.estimate(G, cur_ieir);
                     }
 
                     G = ekf.get_cur_tf();

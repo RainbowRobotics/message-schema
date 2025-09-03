@@ -13,15 +13,14 @@ public:
     explicit EKF(QObject *parent = nullptr);
     ~EKF();
 
-    void init(const Eigen::Matrix4d& tf, double alpha);
+    void init(const Eigen::Matrix4d& tf);
     void reset();
 
+    void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
 
-    void set_pre_mo_tf(Eigen::Matrix4d tf);
-
     void predict(const Eigen::Matrix4d& odom_tf);
-    void estimate(const Eigen::Matrix4d& icp_tf);
+    void estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir);
 
     // flags
     std::atomic<bool> initialized = {false};
@@ -42,6 +41,8 @@ private:
     Eigen::Matrix3d M_k = Eigen::Matrix3d::Identity();
 
     // measurement nois
+    double icp_err_xy = 0.01;
+    double icp_err_th = 1.0;
     Eigen::Matrix3d R_k = Eigen::Matrix3d::Identity();
 
     // result
