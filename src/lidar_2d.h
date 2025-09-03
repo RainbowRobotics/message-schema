@@ -62,6 +62,7 @@ public:
 
     void clear_merged_queue();
     bool try_pop_merged_queue(FRAME& frm);
+    bool get_deskewing_frm(FRAME& frm, int idx); // for mapping
 
     /***********************
      * set other modules
@@ -112,6 +113,11 @@ private:
 
     std::atomic<double> process_time_deskewing[2] = {0.0, 0.0};
     std::atomic<double> process_time_merge        = {0.0};
+
+    // for mapping
+    RAW_FRAME last_dsk_frm[2];
+    std::atomic<double> last_served_dsk_t[2] = {-1.0, -1.0};
+
 
     // https://www.researchgate.net/figure/Schematic-of-shadows-created-by-a-moving-LIDAR-Vehicle-graphic-credit-ShapeNet-23_fig1_364897453
     std::vector<std::pair<Eigen::Vector3d, bool>> scan_shadow_filter(const std::vector<Eigen::Vector3d>& dsk, int shadow_window);

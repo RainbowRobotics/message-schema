@@ -698,7 +698,6 @@ void LOCALIZATION::odometry_loop()
             }
             else
             {
-                printf("asdf\n");
                 // update odo_tf
                 Eigen::Matrix4d delta_tf = pre_mo_tf.inverse()*cur_mo_tf;
                 Eigen::Matrix4d odo_tf = _cur_tf*delta_tf;

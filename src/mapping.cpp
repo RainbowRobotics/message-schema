@@ -194,7 +194,8 @@ void MAPPING::kfrm_loop()
     while(kfrm_flag)
     {
         FRAME frm;
-        if(lidar_2d->try_pop_merged_queue(frm))
+        // if(lidar_2d->try_pop_merged_queue(frm))
+        if(lidar_2d->get_deskewing_frm(frm, 0))
         {
             // for processing time
             double st_time = get_time();
@@ -909,6 +910,9 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
         return std::numeric_limits<double>::max();
     }
+
+    // debug
+    // printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

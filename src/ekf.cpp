@@ -161,5 +161,5 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf)
     x_hat = x_new;
     P_hat = P_new;
 
-    printf("[EKF] estimation: (%f, %f, %f), gain: %f\n", x_hat[0], x_hat[1], x_hat[2], K_k);
+    printf("[EKF] estimation: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]);
 }
