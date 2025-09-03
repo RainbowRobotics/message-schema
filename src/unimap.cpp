@@ -628,8 +628,9 @@ void UNIMAP::radius_search_kdtree_idx(double query[], double sq_radius, std::vec
 QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
-    if(!is_loaded != MAP_LOADED || multi_index_nodes.size() != 0 || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
+    if(is_loaded != MAP_LOADED || multi_index_nodes.size() == 0 || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
     {
+        std::cout << "is_loaded != MAP_LOADED || multi_index_nodes.size() != 0 || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty()" << std::endl;
         return "";
     }
 
@@ -784,7 +785,7 @@ NODE UNIMAP::get_goal_node(Eigen::Vector3d pos)
 
         QString node_id = kdtree_node.id[node_idx];
         NODE node = get_node_by_id(node_id);
-        if(node.id.isEmpty())
+        if(node.id.isEmpty() || node.id.isNull())
         {
             continue;
         }
@@ -812,7 +813,7 @@ NODE UNIMAP::get_goal_node(Eigen::Vector3d pos)
 NODE UNIMAP::get_node_by_id(QString id)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
-    if(id.isEmpty())
+    if(id.isEmpty() || id.isNull())
     {
         return {};
     }
@@ -832,7 +833,7 @@ NODE UNIMAP::get_node_by_id(QString id)
 NODE UNIMAP::get_node_by_name(QString name)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
-    if(name.isEmpty())
+    if(name.isEmpty() || name.isNull())
     {
         return {};
     }

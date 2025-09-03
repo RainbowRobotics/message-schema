@@ -219,7 +219,8 @@ enum class ALREADY_GOAL_STATE
 {
     NONE = 0,
     TEMP_GOAL,
-    GOAL
+    GOAL,
+    JUMP_FINAL_ALIGN,
 };
 
 enum LED_STATE
@@ -1255,6 +1256,47 @@ struct DCTRL_PARAM
 struct ASTAR_NODE
 {
     ASTAR_NODE* parent = nullptr;
+    NODE node;
+    Eigen::Matrix4d tf;
+    double g = 0;
+    double h = 0;
+    double f = 0;
+
+    ASTAR_NODE()
+    {
+        parent = nullptr;
+        tf.setIdentity();
+        g = 0;
+        h = 0;
+        f = 0;
+    }
+
+    ASTAR_NODE(const ASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+    }
+
+    ASTAR_NODE& operator=(const ASTAR_NODE& p)
+    {
+        parent = p.parent;
+        node = p.node;
+        tf = p.tf;
+        g = p.g;
+        h = p.h;
+        f = p.f;
+        return *this;
+    }
+};
+
+/*
+struct ASTAR_NODE
+{
+    ASTAR_NODE* parent = nullptr;
     NODE* node = nullptr;
     Eigen::Matrix4d tf;
     double g = 0;
@@ -1291,7 +1333,7 @@ struct ASTAR_NODE
         f = p.f;
         return *this;
     }
-};
+};*/
 
 struct HASTAR_NODE
 {

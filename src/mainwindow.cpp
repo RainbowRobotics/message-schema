@@ -32,12 +32,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->spb_PointSize,        SIGNAL(valueChanged(int)),            this, SLOT(map_update()));   // change point size -> update map rendering elements
 
     // for viewer control
-    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
-    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
+    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0, -2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  0,  2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  0, -2, 0, 0, 0);});
 
     // for simulation
     connect(ui->bt_SimInit,           SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
@@ -2054,7 +2054,6 @@ void MainWindow::plot_node()
         auto unimap_nodes = UNIMAP::instance()->get_nodes();
         if(unimap_nodes.size() > 0)
         {
-            // std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {
                 double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
@@ -3230,7 +3229,7 @@ void MainWindow::plot_ctrl()
                 pcl::PointXYZRGB pt;
                 pt.x = P[0];
                 pt.y = P[1];
-                pt.z = P[2]+0.1;
+                pt.z = P[2] + 0.1;
                 pt.r = 255;
                 pt.g = 0;
                 pt.b = 0;

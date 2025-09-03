@@ -407,7 +407,7 @@ std::vector<Eigen::Matrix4d> intp_tf(Eigen::Matrix4d tf0, Eigen::Matrix4d tf1, d
 
     std::vector<Eigen::Matrix4d> res;
     res.push_back(tf0);
-    for (int i = 1; i < steps; i++)
+    for(int i = 1; i < steps; i++)
     {
         double alpha = (double)i/steps;
 

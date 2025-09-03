@@ -27,7 +27,7 @@ struct AUTOCONTROL_INFO
     static constexpr int control_loop_cnt = 20;
     static constexpr int path_overlap_check_dist = 20;
     static constexpr double local_path_calc_dt = 0.1;
-    static constexpr double avoid_path_check_idx = 0.9;
+    static constexpr double avoid_path_check_ratio = 0.9;
     static constexpr double path_overlap_check_deg = 30.0;
     static constexpr double dynamic_deadzone_safety_margin = 0.5;
     static constexpr double obstacle_near_check_dist = 2.5;
@@ -36,8 +36,12 @@ struct AUTOCONTROL_INFO
     static constexpr double global_path_step = 0.1;
 
     static constexpr double first_align_safe_velocity = 0.1;
-};
 
+    static constexpr double diff_from_start_pos_threshold = 0.5;
+
+    static constexpr double obs_recovery_collision_check_deg = 30.0;
+    static constexpr double obs_wait_time = 1.5;
+};
 
 class AUTOCONTROL : public QObject
 {
@@ -115,7 +119,6 @@ public Q_SLOTS:
     void slot_move(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
-    void slot_path(DATA_PATH msg);
     void slot_path();
 
 private:
@@ -143,7 +146,7 @@ private:
     void move(Eigen::Matrix4d goal_tf, int preset);
 
     // [multi robot] move (input param: node path)
-    void move(std::vector<QString> node_path, int preset);
+    void move(std::vector<QString> node_path, int preset, bool use_globlal_node_path = false);
     void move();
 
     // flag, path, state
@@ -152,9 +155,9 @@ private:
     // global path, local path
     void clear_path();
 
-    void update_local_path(const PATH& _local_path);
+    void set_cur_local_path(const PATH& _local_path);
 
-    void update_global_path(const PATH& _global_path);
+    void set_cur_global_path(const PATH& _global_path);
 
     void send_move_response(QString result, QString message);
 
@@ -204,7 +207,6 @@ private:
      * local path planning
      ***********************/
     // calculate paths with higher resolution (local path)
-    PATH calc_holonomic_local_path(PATH& global_path, bool use_cur_vel);
     PATH calc_local_path(PATH& global_path, bool use_cur_vel);
 
     // calculate paths with higher resolution (avoid path)

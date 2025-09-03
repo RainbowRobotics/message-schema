@@ -111,7 +111,6 @@ void SIM::simulation_loop()
         // update pose
         _cur_tf = _cur_tf*dG;
         Eigen::Vector3d cur_xi = TF_to_se2(_cur_tf);
-        Eigen::Matrix4d cur_tf_inv = _cur_tf.inverse();
 
         // update vel
         vx0 = vx;
@@ -128,8 +127,12 @@ void SIM::simulation_loop()
         status.t = sim_t;
         status.connection_m0 = 1;
         status.connection_m1 = 1;
+        status.connection_m2 = 1;
+        status.connection_m3 = 1;
         status.status_m0 = 1;
         status.status_m1 = 1;
+        status.status_m2 = 1;
+        status.status_m3 = 1;
         status.charge_state = 0;
         status.motor_stop_state = 1;
         status.power_state = 1;
@@ -142,7 +145,6 @@ void SIM::simulation_loop()
         // for real time loop
         double cur_loop_time = get_time();
         double delta_loop_time = cur_loop_time - pre_loop_time;
-
 
         if(delta_loop_time < dt)
         {
