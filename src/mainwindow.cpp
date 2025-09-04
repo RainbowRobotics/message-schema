@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     POLICY::instance(this);
 
     COMM_COOP::instance(this);
+    COMM_FMS::instance(this);
     COMM_RRS::instance(this);
 
     // for 3d viewer
@@ -384,8 +385,6 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
         AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
         AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
-        // ctrl->lidar = lidar;
-        // ctrl->cam = cam;
         AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
@@ -420,7 +419,7 @@ void MainWindow::init_modules()
         COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
-    // comm cooperative module init
+    // comm rrs module init
     {
         COMM_RRS::instance()->set_config_module(CONFIG::instance());
         COMM_RRS::instance()->set_logger_module(LOGGER::instance());
@@ -433,6 +432,21 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+    }
+
+    // comm fms module init
+    {
+        COMM_FMS::instance()->set_config_module(CONFIG::instance());
+        COMM_FMS::instance()->set_logger_module(LOGGER::instance());
+        COMM_FMS::instance()->set_mobile_module(MOBILE::instance());
+        COMM_FMS::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_FMS::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_FMS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_FMS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
+        COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+        COMM_FMS::instance()->init();
     }
 
     // docking module init
@@ -1281,9 +1295,8 @@ void MainWindow::bt_AutoMove()
             msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         }
-        return;
     }
 
     if(pick.last_btn == 1)
@@ -1297,8 +1310,7 @@ void MainWindow::bt_AutoMove()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
-        return;
+        AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
     }
 }
 
@@ -1327,7 +1339,7 @@ void MainWindow::bt_AutoMove2()
             msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         }
         return;
     }
@@ -1343,7 +1355,7 @@ void MainWindow::bt_AutoMove2()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         return;
     }
 }
@@ -1534,7 +1546,7 @@ void MainWindow::bt_ReturnToCharging()
     msg.tgt_pose_vec[2] = node.tf(2,3);
     msg.tgt_pose_vec[3] = xi[2];
 
-    Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+    AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
 }
 
 // annotation

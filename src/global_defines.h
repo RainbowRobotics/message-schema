@@ -159,11 +159,11 @@ enum class RobotModel
 
 enum FOOT_STATE
 {
-    FOOT_STATE_IDLE = 0,         // 정지 상태
-    FOOT_STATE_INIT,            // 시작 준비 or 초기화
-    FOOT_STATE_MOVING ,       // 위로 이동 동작 수행 중
-    FOOT_STATE_EMO_STOP ,       // 비상정지
-    FOOT_STATE_DONE      // 이동 동작 완료
+    FOOT_STATE_IDLE = 0,   // 정지 상태
+    FOOT_STATE_INIT,       // 시작 준비 or 초기화
+    FOOT_STATE_MOVING ,    // 위로 이동 동작 수행 중
+    FOOT_STATE_EMO_STOP ,  // 비상정지
+    FOOT_STATE_DONE        // 이동 동작 완료
 };
 
 enum OPEARATION_MODE_STATE
@@ -206,12 +206,11 @@ enum DOCKING_CHARGE_STATE
 
 enum class AUTO_FSM_STATE
 {
-    FIRST_ALIGN = 0,
+    FIRST_ALIGN,
     DRIVING,
     FINAL_ALIGN,
     OBS,
     COMPLETE,
-    DOCKING,
     PAUSE,
 };
 

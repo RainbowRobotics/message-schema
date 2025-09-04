@@ -3,14 +3,14 @@
         "PLATFORM_NAME": "SDC",
         "PLATFORM_TYPE": "D400",
         
-        "ROBOT_SIZE_MAX_X": "0.51",
+        "ROBOT_SIZE_MAX_X": "0.4",
         "ROBOT_SIZE_MAX_Y": "0.35",
-        "ROBOT_SIZE_MAX_Z": "0.22",
-        "ROBOT_SIZE_MIN_X": "-0.51",
+        "ROBOT_SIZE_MAX_Z": "0.2",
+        "ROBOT_SIZE_MIN_X": "-0.35",
         "ROBOT_SIZE_MIN_Y": "-0.35",
         "ROBOT_SIZE_MIN_Z": "0",
-        "ROBOT_WHEEL_BASE": "0.510",
-        "ROBOT_WHEEL_RADIUS": "0.075"
+        "ROBOT_WHEEL_BASE": "0.386",
+        "ROBOT_WHEEL_RADIUS": "0.0635"
     },
     "sensors": {
         "USE_LIDAR_2D": true,
@@ -37,7 +37,7 @@
         "USE_COOP": false,
         "USE_RTSP": false,
         "USE_RRS": false,
-        "USE_FMS": false
+        "USE_FMS": true
     },
     "debug": {
         "USE_SIM": true,
@@ -99,7 +99,7 @@
         "MOTOR_GAIN_KD": "100",
         "MOTOR_GAIN_KI": "0",
         "MOTOR_GAIN_KP": "4400",
-        "MOTOR_GEAR_RATIO": "12",
+        "MOTOR_GEAR_RATIO": "3.0",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
         "MOTOR_LIMIT_V": "2.0",

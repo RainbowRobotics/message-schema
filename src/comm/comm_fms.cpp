@@ -1,9 +1,32 @@
 #include "comm_fms.h"
 #include "mainwindow.h"
 
+COMM_FMS* COMM_FMS::instance(QObject* parent)
+{
+    static COMM_FMS* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new COMM_FMS(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
     , main(parent)
+    , config(nullptr)
+    , logger(nullptr)
+    , mobile(nullptr)
+    , unimap(nullptr)
+    , obsmap(nullptr)
+    , lidar_2d(nullptr)
+    , loc(nullptr)
+    , mapping(nullptr)
+    , dctrl(nullptr)
 {
     client = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     send_timer = new QTimer(this);
@@ -166,7 +189,8 @@ void COMM_FMS::reconnect_loop()
             return;
         }
 
-        QString server_addr = QString("ws://%1:12334").arg(server_ip);
+        //QString server_addr = QString("ws://%1:12334").arg(server_ip);
+        QString server_addr = QString("ws://%1:12334").arg("127.0.0.1");
         client->open(QUrl(server_addr));
     }
 }
@@ -212,6 +236,8 @@ void COMM_FMS::send_move_status()
     {
         return;
     }
+
+    std::cout << "send move response" << std::endl;
 
     // get time
     double time = get_time();
@@ -1266,7 +1292,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        ctrl->request_move(CommandType::MOVE, msg);
     }
     else
     {
@@ -1359,7 +1385,17 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
 
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        CommandType command_type = CommandType::NONE;
+        if(msg.command == "goal")
+        {
+            command_type = CommandType::MOVE;
+        }
+        else if(msg.command == "change_goal")
+        {
+            command_type = CommandType::REQ_CHANGE_GOAL;
+        }
+
+        ctrl->request_move(command_type, msg);
     }
     else if(method == "hpp")
     {
@@ -1459,9 +1495,6 @@ void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg)
 
 void COMM_FMS::handle_path(DATA_PATH& msg)
 {
-    // stop first
-    mobile->move(0,0,0);
-
     // update vobs first
     std::vector<Eigen::Vector3d> vobs_c_list;
     {
@@ -1498,7 +1531,7 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
             step.push_back((int)p);
         }
 
-        ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
+        set_path(path, step, msg.preset, (long long)(msg.time));
     }
 
     send_path_response(msg);
@@ -1513,7 +1546,19 @@ void COMM_FMS::handle_path_move(DATA_PATH& msg)
         return;
     }
 
-    ctrl->signal_path();
+    std::vector<QString> node_path;
+    std::vector<int> step;
+    int preset;
+    long long path_time;
+    {
+        std::lock_guard<std::mutex> lock(path_set_mtx);
+        node_path = cur_node_path;
+        step = cur_step;
+        preset = cur_preset;
+        path_time = cur_path_time;
+    }
+
+    ctrl->request_update_path(CommandType::UPDATE_PATH, node_path, step, preset);
 }
 
 void COMM_FMS::handle_vobs(DATA_VOBS& msg)
@@ -1622,7 +1667,102 @@ void COMM_FMS::atomic_update_max(std::atomic<double>& tgt, double v)
 {
     double cur = tgt.load(std::memory_order_relaxed);
     while (cur < v && !tgt.compare_exchange_weak(cur, v, std::memory_order_relaxed, std::memory_order_relaxed))
-    {
+    {}
+}
 
+void COMM_FMS::set_path(std::vector<QString> node_path, std::vector<int> step, int preset, long long path_time)
+{
+    std::lock_guard<std::mutex> lock(path_set_mtx);
+    cur_node_path = node_path;
+    cur_step = step;
+    cur_preset = preset;
+    cur_path_time = path_time;
+}
+
+void COMM_FMS::set_config_module(CONFIG* _config)
+{
+    if(_config)
+    {
+        config = _config;
+    }
+}
+
+void COMM_FMS::set_logger_module(LOGGER* _logger)
+{
+    if(_logger)
+    {
+        logger = _logger;
+    }
+}
+
+void COMM_FMS::set_mobile_module(MOBILE* _mobile)
+{
+    if(_mobile)
+    {
+        mobile = _mobile;
+    }
+}
+
+void COMM_FMS::set_lidar_2d_module(LIDAR_2D* _lidar)
+{
+    if(_lidar)
+    {
+        lidar_2d = _lidar;
+    }
+}
+
+void COMM_FMS::set_cam_module(CAM* _cam)
+{
+    if(_cam)
+    {
+        cam = _cam;
+    }
+}
+
+void COMM_FMS::set_localization_module(LOCALIZATION* _loc)
+{
+    if(_loc)
+    {
+        loc = _loc;
+    }
+}
+
+void COMM_FMS::set_mapping_module(MAPPING* _mapping)
+{
+    if(_mapping)
+    {
+        mapping = _mapping;
+    }
+}
+
+void COMM_FMS::set_unimap_module(UNIMAP* _unimap)
+{
+    if(_unimap)
+    {
+        unimap = _unimap;
+    }
+}
+
+void COMM_FMS::set_obsmap_module(OBSMAP* _obsmap)
+{
+    if(_obsmap)
+    {
+        obsmap = _obsmap;
+    }
+}
+
+void COMM_FMS::set_autocontrol_module(AUTOCONTROL* _ctrl)
+{
+    if(_ctrl)
+    {
+        ctrl = _ctrl;
+    }
+}
+
+void COMM_FMS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
+{
+    if(_dctrl)
+    {
+        dctrl = _dctrl;
     }
 }

@@ -59,7 +59,6 @@ public:
     QString get_multi_state();
     QByteArray get_last_msg();
 
-    // setter functions
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);

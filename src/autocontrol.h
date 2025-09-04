@@ -22,6 +22,28 @@
  * @brief robot path finding, path following control
  */
 
+enum class CommandType
+{
+    NONE,
+    REQ_CHANGE_GOAL,
+    MOVE,
+    UPDATE_PATH,
+};
+
+struct CONTROL_COMMAND
+{
+    int preset;
+    CommandType type;
+
+    // for move
+    Eigen::Matrix4d goal_tf;
+
+    // for path
+    std::vector<QString> node_path;
+
+    CTRL_PARAM params;
+};
+
 struct AUTOCONTROL_INFO
 {
     static constexpr int control_loop_cnt = 20;
@@ -85,9 +107,9 @@ public:
     Eigen::Vector3d get_last_cur_pos();             // get last current pos
     Eigen::Vector3d get_last_tgt_pos();             // get last target pos
     Eigen::Vector3d get_last_local_goal();          // get last local goal
+    std::vector<int> get_cur_global_step();
     std::vector<Eigen::Matrix4d> get_obs_traj();
 
-    void set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time);
     void set_is_rrs(bool flag);
     void set_is_pause(bool val);
     void set_is_debug(bool val);
@@ -104,6 +126,10 @@ public:
     // [single robot] calc global path
     PATH calc_global_path(Eigen::Matrix4d goal);
 
+    void request_move(CommandType type, DATA_MOVE& msg);
+    void request_update_path(CommandType type, const std::vector<QString>& node_path, const std::vector<int>& step, int preset);
+    void request_stop();
+
     /***********************
      * set other modules
      ***********************/
@@ -114,19 +140,16 @@ public:
     void set_obsmap_module(OBSMAP* _obsmap);
     void set_localization_module(LOCALIZATION* _localization);
 
-public Q_SLOTS:
-    // slot func move(receive goal) (start control loop)
-    void slot_move(DATA_MOVE msg);
-
-    // slot func move(receive path) (start control loop)
-    void slot_path();
-
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
     ~AUTOCONTROL();
 
     // mutex
     std::recursive_mutex mtx;
+    std::mutex control_mtx;
+
+    std::condition_variable control_cv;
+    CONTROL_COMMAND latest_cmd;
 
     // other modules
     CONFIG* config;
@@ -160,6 +183,10 @@ private:
     void set_cur_global_path(const PATH& _global_path);
 
     void send_move_response(QString result, QString message);
+
+    bool check_update_path(CONTROL_COMMAND& cmd);
+
+    void update_path(std::vector<QString> node_path, int preset);
 
     /***********************
      * global path planning
@@ -245,7 +272,6 @@ private:
     // for multi-robot control
     int global_preset = 0;
     std::mutex path_mtx;
-    std::vector<int> global_step;
     std::atomic<int> last_step = {0};
     std::vector<QString> global_node_path;
     std::atomic<long long> global_path_time = {(long long)0};
@@ -269,11 +295,12 @@ private:
     QString cur_move_state    = "none"; // none, move, complete, fail, obstacle, cancel
     QString cur_obs_condition = "none"; // none, near, far, vir
     DATA_MOVE cur_move_info;
+    std::vector<int> cur_global_step;
     std::atomic<double> cur_deadzone = {0.0};
 
     // obs
     int cur_obs_value = OBS_NONE;
-    double cur_obs_decel_v = 0.0;
+    double cur_obs_decel_v = {1.0};
 
     // driving local ref v oscilation prevent
     int prev_local_ref_v_index = 0;

@@ -486,6 +486,11 @@ int saturation(int val, int min, int max)
 
 double saturation(double val, double min, double max)
 {
+    if(min > 0 && val == 0)
+    {
+        return 0;
+    }
+
     if(val < min)
     {
         val = min;
