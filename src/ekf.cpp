@@ -44,7 +44,7 @@ void EKF::init(const Eigen::Matrix4d& tf)
 
     initialized = true;
 
-    printf("[EKF] init: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
+    printf("[EKF] init (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
 }
 
 void EKF::reset()
@@ -62,17 +62,6 @@ Eigen::Matrix4d EKF::get_cur_tf()
     std::lock_guard<std::mutex> lock(mtx);
     Eigen::Matrix4d res = se2_to_TF(x_hat);
     return res;
-}
-
-void EKF::set_cur_tf(Eigen::Matrix4d tf)
-{
-    Eigen::Vector3d z_k;
-    z_k(0) = tf(0,3);
-    z_k(1) = tf(1,3);
-    z_k(2) = std::atan2(tf(1,0), tf(0,0));
-
-    std::lock_guard<std::mutex> lock(mtx);
-    x_hat = z_k;
 }
 
 void EKF::predict(const Eigen::Matrix4d& odom_tf)
@@ -136,6 +125,11 @@ void EKF::predict(const Eigen::Matrix4d& odom_tf)
 
 void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
 {
+    if(!initialized.load())
+    {
+        return;
+    }
+
     // update measurement
     Eigen::Vector3d z_k;
     z_k(0) = icp_tf(0,3);
@@ -190,6 +184,6 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     P_hat = P_new;
 
     // debug
-    // printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
-    //        x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
+    printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
+           x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
 }

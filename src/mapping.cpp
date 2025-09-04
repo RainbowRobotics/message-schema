@@ -194,8 +194,8 @@ void MAPPING::kfrm_loop()
     while(kfrm_flag)
     {
         FRAME frm;
-        // if(lidar_2d->try_pop_merged_queue(frm))
-        if(lidar_2d->get_deskewing_frm(frm, 0))
+        if(lidar_2d->try_pop_merged_queue(frm))
+        // if(lidar_2d->get_deskewing_frm(frm, 0))
         {
             // for processing time
             double st_time = get_time();

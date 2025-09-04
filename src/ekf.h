@@ -16,7 +16,6 @@ public:
     void init(const Eigen::Matrix4d& tf);
     void reset();
 
-    void set_cur_tf(Eigen::Matrix4d tf);
     Eigen::Matrix4d get_cur_tf();
 
     void predict(const Eigen::Matrix4d& odom_tf);
@@ -42,7 +41,7 @@ private:
 
     // measurement nois
     double icp_err_xy = 0.01;
-    double icp_err_th = 1.0;
+    double icp_err_th = 2.0;
     Eigen::Matrix3d R_k = Eigen::Matrix3d::Identity();
 
     // result

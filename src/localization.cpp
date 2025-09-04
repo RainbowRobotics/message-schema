@@ -692,8 +692,11 @@ void LOCALIZATION::odometry_loop()
 
             if(config->get_use_ekf())
             {
-                ekf.predict(cur_mo_tf);
-                _cur_tf = ekf.get_cur_tf();
+                if(ekf.initialized.load())
+                {
+                    ekf.predict(cur_mo_tf);
+                    _cur_tf = ekf.get_cur_tf();
+                }
             }
             else
             {
