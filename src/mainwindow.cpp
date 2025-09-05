@@ -137,6 +137,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // init modules
     init_modules();
 
+    // ipv4
+    getIPv4();
+
     // plot timer (pcl-vtk viewr & Qlabel)
     plot_timer = new QTimer(this);
     connect(plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));

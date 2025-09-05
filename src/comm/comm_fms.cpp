@@ -172,7 +172,7 @@ void COMM_FMS::connected()
     {
         is_connected = true;
         logger->write_log("[COMM_FMS] connected");
-        qDebug()<<"ssssssssssssssssssssssssss!!!!!!!!!!!!!!!!!!!!1";
+        //qDebug()<<"ssssssssssssssssssssssssss!!!!!!!!!!!!!!!!!!!!1";
 
         if(!ctrl)
         {
