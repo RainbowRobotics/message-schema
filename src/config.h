@@ -110,6 +110,13 @@ public:
     QString get_server_pw();
 
     /***********************
+     * logging
+     ***********************/
+    QString get_log_level();            // get spdlog level (trace, debug, info, warn, error, critical, off)
+    bool set_lidar_2d_debug();          // enable/disable LIDAR debug logs
+    void setup_spdlog_level();          // setup spdlog level from config
+
+    /***********************
      * 2d lidar sensor
      ***********************/
     double get_lidar_2d_min_range();    // 2d lidar min range (defalut: 0.05~0.1m)
@@ -274,6 +281,7 @@ private:
     void load_localization_config(const QJsonObject& obj);
     void load_network_config(const QJsonObject& obj);
     void load_debug_config(const QJsonObject& obj);
+    void load_logging_config(const QJsonObject& obj);
     void load_motor_config(const QJsonObject& obj);
     void load_localization_2d_config(const QJsonObject& obj);
     void load_localization_3d_config(const QJsonObject& obj);
@@ -358,6 +366,10 @@ private:
     QString SERVER_IP = "127.0.0.1";
     QString SERVER_ID = "rainbow";
     QString SERVER_PW = "rainbow";
+
+    // logging
+    QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
+    bool LIDAR_2D_DEBUG = false; // enable/disable LIDAR debug logs
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;

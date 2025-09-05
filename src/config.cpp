@@ -98,6 +98,7 @@ void CONFIG::load()
     load_localization_3d_config(obj);
     load_network_config(obj);
     load_debug_config(obj);
+    load_logging_config(obj);
     load_motor_config(obj);
     load_mapping_config(obj);
     load_obstacle_config(obj);
@@ -110,6 +111,9 @@ void CONFIG::load()
 
     is_load = true;
     printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
+
+    // spdlog 레벨 설정
+    setup_spdlog_level();
 
     if(has_missing_variables())
     {
@@ -213,6 +217,14 @@ void CONFIG::load_debug_config(const QJsonObject &obj)
     check_and_set_string(obj_debug, "SERVER_IP", SERVER_IP, "debug");
     check_and_set_string(obj_debug, "SERVER_ID", SERVER_ID, "debug");
     check_and_set_string(obj_debug, "SERVER_PW", SERVER_PW, "debug");
+}
+
+void CONFIG::load_logging_config(const QJsonObject &obj)
+{
+    QJsonObject obj_logging = obj["logging"].toObject();
+
+    check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
+    check_and_set_bool(obj_logging, "LIDAR_2D_DEBUG", LIDAR_2D_DEBUG, "logging");
 }
 
 void CONFIG::load_motor_config(const QJsonObject &obj)
@@ -1169,6 +1181,64 @@ QString CONFIG::get_server_pw()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return SERVER_PW;
 }
+
+QString CONFIG::get_log_level()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_LEVEL;
+}
+
+bool CONFIG::set_lidar_2d_debug()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LIDAR_2D_DEBUG;
+}
+
+
+void CONFIG::setup_spdlog_level()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    // spdlog 레벨 문자열을 spdlog::level::level_enum으로 변환
+    spdlog::level::level_enum level = spdlog::level::info; // 기본값
+    
+    if (LOG_LEVEL == "trace")
+    {
+        level = spdlog::level::trace;
+    }
+    else if (LOG_LEVEL == "debug")
+    {
+        level = spdlog::level::debug;
+    }
+    else if (LOG_LEVEL == "info")
+    {
+        level = spdlog::level::info;
+    }
+    else if (LOG_LEVEL == "warn")
+    {
+        level = spdlog::level::warn;
+    }
+    else if (LOG_LEVEL == "error")
+    {
+        level = spdlog::level::err;
+    }
+    else if (LOG_LEVEL == "critical")
+    {
+        level = spdlog::level::critical;
+    }
+    else if (LOG_LEVEL == "off")
+    {
+        level = spdlog::level::off;
+    }
+    
+    // spdlog 기본 레벨 설정
+    spdlog::set_level(level);
+    
+    //printf("[CONFIG] spdlog level set to: %s\n", qUtf8Printable(LOG_LEVEL));
+    spdlog::info("[CONFIG] spdlog level set to: {}", LOG_LEVEL.toStdString());
+
+}
+
 
 double CONFIG::get_lidar_2d_min_range()
 {
