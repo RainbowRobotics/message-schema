@@ -148,7 +148,7 @@ private:
     void handle_move_pause(DATA_MOVE& msg);
     void handle_move_resume(DATA_MOVE& msg);
     void handle_move_target(DATA_MOVE& msg);
-    void calc_remaining_time_distance(DATA_MOVE& msg);
+    void calc_remaining_time_distance(DATA_MOVE& msg, PATH& global_path);
 
     void handle_path_cmd(const QJsonObject& data);
     void handle_path(DATA_PATH& msg);
@@ -194,6 +194,8 @@ private:
     std::vector<int> cur_step;
     int cur_preset;
     long long cur_path_time;
+
+    int cnt_ = 0;
 
 private Q_SLOTS:
     void send_loop();
