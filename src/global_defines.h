@@ -140,7 +140,7 @@ enum class RobotType
     S100_B_3D,
     D400,
     QD,
-    MECANUM,
+    MECANUM_Q150,
     SEM,
     SDC,
     NONE

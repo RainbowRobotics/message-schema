@@ -60,6 +60,9 @@ void AUTOCONTROL::init()
 
     control_flag = true;
     control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+
+    obs_flag = true;
+    obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
 }
 
 CTRL_PARAM AUTOCONTROL::load_preset(int preset)
@@ -2347,7 +2350,7 @@ void AUTOCONTROL::control_loop()
                                                      StateCurGoal::MOVE);
 
                                 logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
-                                return;
+                                continue;
                             }
                         }
                     }
@@ -2371,12 +2374,12 @@ void AUTOCONTROL::control_loop()
                 // obstacle deceleation
                 QString obs_condition = "none";
                 double obs_decel_v = params.LIMIT_V;
-                {
-                    std::lock_guard<std::recursive_mutex> lock(mtx);
-                    obs_value     = cur_obs_value;
-                    obs_decel_v   = cur_obs_decel_v;
-                    obs_condition = cur_obs_condition;
-                }
+                //{
+                //    std::lock_guard<std::recursive_mutex> lock(mtx);
+                //    obs_value     = cur_obs_value;
+                //    obs_decel_v   = cur_obs_decel_v;
+                //    obs_condition = cur_obs_condition;
+                //}
 
                 // obstacle stop
                 {
@@ -2578,7 +2581,7 @@ void AUTOCONTROL::control_loop()
                         }
 
                         logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
-                        return;
+                        continue;
                     }
                 }
 
@@ -2680,7 +2683,8 @@ void AUTOCONTROL::control_loop()
                         extend_dt = 0;
                         pre_err_th = 0;
 
-                        fsm_state = AUTO_FSM_STATE::FIRST_ALIGN;
+                        fsm_state = (robot_model == RobotModel::MECANUM ? AUTO_FSM_STATE::DRIVING : AUTO_FSM_STATE::FIRST_ALIGN);
+
                         set_multi_infomation(StateMultiReq::NO_CHANGE,
                                              StateObsCondition::NO_CHANGE,
                                              StateCurGoal::MOVE);
@@ -2794,7 +2798,8 @@ void AUTOCONTROL::control_loop()
                         extend_dt  = 0;
                         pre_err_th = 0;
 
-                        fsm_state = AUTO_FSM_STATE::FIRST_ALIGN;
+                        fsm_state = (robot_model == RobotModel::MECANUM ? AUTO_FSM_STATE::DRIVING : AUTO_FSM_STATE::FIRST_ALIGN);
+
                         set_multi_infomation(StateMultiReq::NO_CHANGE,
                                              StateObsCondition::NO_CHANGE,
                                              StateCurGoal::MOVE);
@@ -2913,7 +2918,6 @@ void AUTOCONTROL::control_loop()
                              StateCurGoal::NO_CHANGE);
 
         logger->write_log("[AUTO] path overlap, b_loop_pp stop");
-        return;
     }
 
     // manual stopped
@@ -2941,7 +2945,8 @@ void AUTOCONTROL::obs_loop()
     {
         if(!is_moving)
         {
-            return;
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();

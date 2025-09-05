@@ -1213,6 +1213,13 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
 
 void COMM_FMS::send_loop()
 {
+    cnt_++;
+    if(cnt_ % 10 == 0)
+    {
+        send_move_status();
+    }
+
+
     QString buf;
     if(send_queue.try_pop(buf))
     {
@@ -1380,7 +1387,7 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         {
             msg.result = "accept";
             msg.message = "";
-            calc_remaining_time_distance(msg);
+            calc_remaining_time_distance(msg, global_path);
         }
 
         send_move_response(msg);
@@ -1456,13 +1463,11 @@ void COMM_FMS::handle_move_stop(DATA_MOVE &msg)
     }
 }
 
-void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg)
+void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg, PATH& global_path)
 {
     // time align (first align + final align)
     CTRL_PARAM params = ctrl->get_cur_ctrl_params();
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-
-    PATH global_path = ctrl->get_cur_global_path();
 
     Eigen::Vector2d dtdr = dTdR(cur_tf, global_path.pose.front());
     double time_align = (dtdr[1] / (params.LIMIT_W*D2R + 1e-06)) * 2;

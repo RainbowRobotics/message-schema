@@ -51,8 +51,6 @@ void LIDAR_2D::init()
         return;
     }
 
-    std::cout << "config->get_lidar_2d_type(): " << config->get_lidar_2d_type().toStdString() << std::endl;
-
     if(config->get_lidar_2d_type() == "SICK")
     {
         if(!sick)

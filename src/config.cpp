@@ -564,9 +564,9 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::QD;
         }
-        else if(robot_type_str == "MECANUM")
+        else if(robot_type_str == "MECANUM-Q150")
         {
-            ROBOT_TYPE = RobotType::MECANUM;
+            ROBOT_TYPE = RobotType::MECANUM_Q150;
         }
         else if(robot_type_str == "SEM")
         {
@@ -958,9 +958,9 @@ QString CONFIG::get_robot_type_str()
     {
         return "QD";
     }
-    else if(_robot_type == RobotType::MECANUM)
+    else if(_robot_type == RobotType::MECANUM_Q150)
     {
-        return "MECANUM";
+        return "MECANUM-Q150";
     }
     else
     {
