@@ -182,7 +182,6 @@ void LOCALIZATION::set_cur_ieir(Eigen::Vector2d ieir)
     std::lock_guard<std::mutex> lock(mtx);    cur_ieir = ieir;
 }
 
-
 QString LOCALIZATION::get_info_text()
 {
     Eigen::Vector3d cur_xi = TF_to_se2(get_cur_tf());

@@ -122,10 +122,13 @@ size_t MAPPING::get_kfrm_storage_size()
 
 QString MAPPING::get_info_text()
 {
+    Eigen::Vector3d cur_xi = TF_to_se2(loc->get_cur_tf());
+
     QString res;
-    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d",
+    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d\npos: %.3f, %.3f, %.3f",
                 (double)proc_time_map_a.load(), (double)proc_time_map_b.load(),
-                (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size());
+                (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size(),
+                cur_xi[0], cur_xi[1], cur_xi[2]*R2D);
 
     return res;
 }
@@ -190,7 +193,7 @@ void MAPPING::kfrm_loop()
     // using new lidar frame
     lidar_2d->clear_merged_queue();
 
-    printf("[MAPPING] a_loop start\n");
+    printf("[MAPPING] kfrm_loop start\n");
     while(kfrm_flag)
     {
         FRAME frm;
@@ -250,6 +253,14 @@ void MAPPING::kfrm_loop()
                     live_tree->buildIndex();
                 }
 
+                // if(config->get_use_ekf())
+                // {
+                //     if(!ekf.initialized.load())
+                //     {
+                //         ekf.init(G);
+                //     }
+                // }
+
                 // update global tf
                 loc->set_cur_tf(G);
 
@@ -266,6 +277,20 @@ void MAPPING::kfrm_loop()
 
                 // initial guess
                 Eigen::Matrix4d delta_tf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
+
+                // if(config->get_use_ekf())
+                // {
+                //     if(ekf.initialized.load())
+                //     {
+                //         ekf.predict(se2_to_TF(frm.mo.pose));
+                //         G = ekf.get_cur_tf();
+                //     }
+                // }
+                // else
+                // {
+                //     G = G * delta_tf;
+                // }
+
                 G = G * delta_tf;
 
                 Eigen::Matrix3d R0 = G.block(0,0,3,3);
@@ -281,6 +306,12 @@ void MAPPING::kfrm_loop()
                     Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                     if(err < icp_error_threshold)
                     {
+                        // if(config->get_use_ekf())
+                        // {
+                        //     ekf.estimate(G, ieir);
+                        //     G = ekf.get_cur_tf();
+                        // }
+
                         // local to global
                         std::vector<PT_XYZR> dsk;
                         // #pragma omp parallel for
@@ -465,7 +496,7 @@ void MAPPING::kfrm_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    printf("[MAPPING] a_loop stop\n");
+    printf("[MAPPING] kfrm_loop stop\n");
 }
 
 void MAPPING::loop_closing_loop()

@@ -184,6 +184,6 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     P_hat = P_new;
 
     // debug
-    printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
-           x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
+    // printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
+    //        x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
 }

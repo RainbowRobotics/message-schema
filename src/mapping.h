@@ -12,6 +12,8 @@
 #include "lidar_2d.h"
 #include "localization.h"
 
+#include "ekf.h"
+
 // third party
 #include "pgo.h"
 
@@ -105,6 +107,9 @@ private:
     // for graph optimization
     void clear_pose_graph();
     PGO pgo;
+
+    // extended kalman filter
+    EKF ekf;
 };
 
 #endif // MAPPING_H

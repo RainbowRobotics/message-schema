@@ -4,7 +4,6 @@
 // defines
 #include "global_defines.h"
 #include "my_utils.h"
-#include "ekf.h"
 
 // module
 #include "config.h"
@@ -15,6 +14,8 @@
 #include "cam.h"
 #include "unimap.h"
 #include "obsmap.h"
+
+#include "ekf.h"
 
 #include <QObject>
 
@@ -138,7 +139,7 @@ private:
     std::atomic<double> process_time_odometry = {0.0};
     std::atomic<double> process_time_obs = {0.0};
 
-    // ekf
+    // extended kalman filter
     EKF ekf;
 };
 
