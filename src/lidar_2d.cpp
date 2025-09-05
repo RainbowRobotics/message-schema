@@ -47,15 +47,7 @@ void LIDAR_2D::init()
     // check simulation mode
     if(config->get_use_sim())
     {
-        //printf("[LIDAR_2D] simulation mode\n");
-        //if(config && config->get_log_level() != "off")
-
         spdlog::info("[LIDAR_2D] simulation mode init\n");
-
-        if(config->set_lidar_2d_debug())
-        {
-            spdlog::debug("[LIDAR_2D] lidar debug \n");
-        }
 
         return;
     }
@@ -237,10 +229,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
         {
             sick->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
-            if(config && config->get_log_level() != "off")
-            {
-                spdlog::info("[LIDAR_2D] set sick->is_sync = %d\n", flag);
-            }
+            spdlog::info("[LIDAR_2D] set sick->is_sync = %d\n", flag);
         }
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
@@ -249,10 +238,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
         {
             rp->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
-            if(config && config->get_log_level() != "off")
-            {
-                spdlog::info("[LIDAR_2D] set rp->is_sync = %d\n", flag);
-            }
+            spdlog::info("[LIDAR_2D] set rp->is_sync = %d\n", flag);
         }
     }
 }
@@ -282,10 +268,8 @@ void LIDAR_2D::deskewing_loop(int idx)
     double pre_loop_time = get_time();
 
     //printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
-    if(config && config->get_log_level() != "off")
-    {
-        spdlog::info("[LIDAR_2D] dsk_loop[%d] start\n", idx);
-    }
+    spdlog::info("[LIDAR_2D] dsk_loop[%d] start\n", idx);
+
     while(deskewing_flag[idx])
     {
         if(!is_connected)
@@ -381,11 +365,7 @@ void LIDAR_2D::deskewing_loop(int idx)
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    //printf("[LIDAR_2D] deskewing_loop[%d] stop\n", idx);
-    if(config && config->get_log_level() != "off")
-    {
-        spdlog::info("[LIDAR_2D] deskewing_loop[%d] stop\n", idx);
-    }
+    spdlog::info("[LIDAR_2D] deskewing_loop[%d] stop\n", idx);
 }
 
 void LIDAR_2D::merge_loop()
@@ -402,10 +382,8 @@ void LIDAR_2D::merge_loop()
     double pre_loop_time = get_time();
 
     //printf("[LIDAR_2D] merge_loop start\n");
-    if(config && config->get_log_level() != "off")
-    {
-        spdlog::info("[LIDAR_2D] merge_loop start\n");
-    }
+    spdlog::info("[LIDAR_2D] merge_loop start\n");
+
     while(merge_flag)
     {
         // if single lidar
@@ -563,7 +541,8 @@ void LIDAR_2D::merge_loop()
                 if(storage[0].back().mo.t - last_recv_t[1] > wait_timeout)
                 {
                     use_idx = 0;
-                    // printf("[LIDAR] 0-time: %f - %f = %f\n", storage[0].back().t, last_recv_t[1], storage[0].back().t - last_recv_t[1]);
+
+                    //printf("[LIDAR] 0-time: %f - %f = %f\n", storage[0].back().t, last_recv_t[1], storage[0].back().t - last_recv_t[1]);
                 }
             }
             else if(storage[0].empty() && !storage[1].empty())
@@ -616,7 +595,7 @@ void LIDAR_2D::merge_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_2D] merge_loop stop\n");
+    spdlog::info("[LIDAR_2D] merge_loop stop\n");
 }
 
 bool LIDAR_2D::is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan)

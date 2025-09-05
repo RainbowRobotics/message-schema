@@ -114,7 +114,10 @@ public:
      ***********************/
     QString get_log_level();            // get spdlog level (trace, debug, info, warn, error, critical, off)
     bool set_lidar_2d_debug();          // enable/disable LIDAR debug logs
+    bool get_log_enable_file_output();  // enable/disable file output
+    QString get_log_file_path();        // get log file path
     void setup_spdlog_level();          // setup spdlog level from config
+    void setup_spdlog_file_output();    // setup spdlog file output from config
 
     /***********************
      * 2d lidar sensor
@@ -369,7 +372,9 @@ private:
 
     // logging
     QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
-    bool LIDAR_2D_DEBUG = false; // enable/disable LIDAR debug logs
+    bool LIDAR_2D_DEBUG = false;        // enable/disable LIDAR debug logs
+    bool LOG_ENABLE_FILE_OUTPUT = false; // enable/disable file output
+    QString LOG_FILE_PATH = "logs/app.log"; // log file path
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;

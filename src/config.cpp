@@ -225,6 +225,8 @@ void CONFIG::load_logging_config(const QJsonObject &obj)
 
     check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
     check_and_set_bool(obj_logging, "LIDAR_2D_DEBUG", LIDAR_2D_DEBUG, "logging");
+    check_and_set_bool(obj_logging, "LOG_ENABLE_FILE_OUTPUT", LOG_ENABLE_FILE_OUTPUT, "logging");
+    check_and_set_string(obj_logging, "LOG_FILE_PATH", LOG_FILE_PATH, "logging");
 }
 
 void CONFIG::load_motor_config(const QJsonObject &obj)
@@ -1192,6 +1194,18 @@ bool CONFIG::set_lidar_2d_debug()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return LIDAR_2D_DEBUG;
+}
+
+bool CONFIG::get_log_enable_file_output()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_ENABLE_FILE_OUTPUT;
+}
+
+QString CONFIG::get_log_file_path()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_FILE_PATH;
 }
 
 
