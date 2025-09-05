@@ -1,6 +1,6 @@
 {
     "robot": {
-        "PLATFORM_TYPE": "D400",
+        "PLATFORM_TYPE": "S100-B-3D",
         "SPEAKER": true,
       
         "ROBOT_SIZE_MAX_X": "0.56",
