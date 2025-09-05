@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 
 class OverflowPolicy(Enum):
@@ -13,7 +13,7 @@ DispatchMode = Literal["immediate", "queue"]
 
 @dataclass
 class _BatchOptions:
-    ms: Optional[int] = None
+    ms: int | None = None
     max: int = 256
 
 @dataclass
@@ -22,16 +22,16 @@ class SubscribeOptions:
 
     sample_every: int = 1
      # 초당 콜백 호출 상한
-    rate_limit_per_sec: Optional[int] = None
+    rate_limit_per_sec: int | None = None
 
-    maxsize: Optional[int] = None # 0/None → 자동용량(EMA+메모리 예산)
+    maxsize: int | None = None # 0/None → 자동용량(EMA+메모리 예산)
     mem_budget_mb: float = 32.0
     ema_alpha: float = 0.25
     safety: float = 0.85
     overflow: OverflowPolicy = OverflowPolicy.DROP_OLDEST
     batch_opts: _BatchOptions = field(default_factory=_BatchOptions)
     # 예상 평균 바이트(EMA 초기 힌트). 없으면 첫 메시지 크기에서 시작
-    expected_avg_bytes: Optional[int] = None
+    expected_avg_bytes: int | None = None
 
 
 class CallbackEntry:
@@ -40,7 +40,7 @@ class CallbackEntry:
         self.callback = callback
         self.opts = opts
         self.q: asyncio.Queue = asyncio.Queue(maxsize=0)  # queue 모드에서만 사용
-        self.metrics: Dict[str, Any] = {
+        self.metrics: dict[str, Any] = {
             "ema_bytes": None,
             "capacity": opts.maxsize,
             "delivered": 0,

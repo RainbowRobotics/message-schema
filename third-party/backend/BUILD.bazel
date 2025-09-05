@@ -1,0 +1,34 @@
+# load("@bazel_skylib//rules:native_binary.bzl", "native_test")
+load("@rules_python//python/uv:lock.bzl", "lock")
+
+_SERVICES = ["manipulate"]
+_PACKAGES = ["utils", "rb_zenoh", "flat_buffers"]
+
+ALL_PYPROJECTS = (
+    ["//backend:pyproject.toml"] +
+    ["//backend/services/%s:pyproject.toml" % s for s in _SERVICES] +
+    ["//backend/packages/%s:pyproject.toml" % p for p in _PACKAGES]
+)
+
+
+lock(
+    name = "requirements",
+    srcs = ALL_PYPROJECTS,
+    out = "requirements_lock.txt",
+)
+
+exports_files(["requirements_lock.txt"])
+
+# genrule(
+#     name = "requirements_filtered",
+#     srcs = [":requirements_lock"],
+#     outs = ["requirements.txt"],
+#     # -e file://… 형태와 "name @ file://…" 형태를 제거
+#     cmd = r"grep -Ev '^(-e[[:space:]]+file:|[^[:space:]]+[[:space:]]+@[[:space:]]+file:)' \
+#         $(location :requirements_lock) > $@",
+# )
+
+# native_test(
+#     name = "requirements_test",
+#     src = "requirements.update",
+# )

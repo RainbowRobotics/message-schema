@@ -4,10 +4,12 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
+
 np = import_numpy()
 
-class DemoExampleHello(object):
-    __slots__ = ['_tab']
+
+class DemoExampleHello:
+    __slots__ = ["_tab"]
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -20,6 +22,7 @@ class DemoExampleHello(object):
     def GetRootAsDemoExampleHello(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
+
     # DemoExampleHello
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -30,6 +33,7 @@ class DemoExampleHello(object):
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from flat_buffers.message.MessageSenderInfo import MessageSenderInfo
+
             obj = MessageSenderInfo()
             obj.Init(self._tab.Bytes, x)
             return obj
@@ -56,49 +60,66 @@ class DemoExampleHello(object):
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
+
 def DemoExampleHelloStart(builder):
     builder.StartObject(4)
+
 
 def Start(builder):
     DemoExampleHelloStart(builder)
 
+
 def DemoExampleHelloAddSenderInfo(builder, senderInfo):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(senderInfo), 0)
+    builder.PrependUOffsetTRelativeSlot(
+        0, flatbuffers.number_types.UOffsetTFlags.py_type(senderInfo), 0
+    )
+
 
 def AddSenderInfo(builder, senderInfo):
     DemoExampleHelloAddSenderInfo(builder, senderInfo)
 
+
 def DemoExampleHelloAddX(builder, x):
     builder.PrependFloat32Slot(1, x, 0.0)
+
 
 def AddX(builder, x):
     DemoExampleHelloAddX(builder, x)
 
+
 def DemoExampleHelloAddY(builder, y):
     builder.PrependFloat32Slot(2, y, 0.0)
+
 
 def AddY(builder, y):
     DemoExampleHelloAddY(builder, y)
 
+
 def DemoExampleHelloAddZ(builder, z):
     builder.PrependFloat32Slot(3, z, 0.0)
+
 
 def AddZ(builder, z):
     DemoExampleHelloAddZ(builder, z)
 
+
 def DemoExampleHelloEnd(builder):
     return builder.EndObject()
+
 
 def End(builder):
     return DemoExampleHelloEnd(builder)
 
+
 import flat_buffers.message.MessageSenderInfo
+
 try:
-    from typing import Optional
+    pass
 except:
     pass
 
-class DemoExampleHelloT(object):
+
+class DemoExampleHelloT:
 
     # DemoExampleHelloT
     def __init__(self):
@@ -116,7 +137,7 @@ class DemoExampleHelloT(object):
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, pos)
-        return cls.InitFromBuf(buf, pos+n)
+        return cls.InitFromBuf(buf, pos + n)
 
     @classmethod
     def InitFromObj(cls, demoExampleHello):
@@ -129,7 +150,9 @@ class DemoExampleHelloT(object):
         if demoExampleHello is None:
             return
         if demoExampleHello.SenderInfo() is not None:
-            self.senderInfo = flat_buffers.message.MessageSenderInfo.MessageSenderInfoT.InitFromObj(demoExampleHello.SenderInfo())
+            self.senderInfo = flat_buffers.message.MessageSenderInfo.MessageSenderInfoT.InitFromObj(
+                demoExampleHello.SenderInfo()
+            )
         self.x = demoExampleHello.X()
         self.y = demoExampleHello.Y()
         self.z = demoExampleHello.Z()

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"   # rby2/ 까지
+ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "🔍 Root: $ROOT"
 BE="$ROOT/backend"
 
@@ -37,10 +37,22 @@ for svc in "${SERVICES[@]}"; do
   if [ -f "$BE/services/$svc/pyproject.toml" ]; then
     echo "💉 Hydrating $svc"
     (cd "$BE/services/$svc" && uv lock && uv pip compile pyproject.toml -o requirements.txt)
-    uv pip install -r "$BE/services/$svc/requirements.txt"
+    (cd "$BE/services/$svc" && uv pip install -r requirements.txt)
   else
     echo "⏭️ $svc (no pyproject)"
   fi
 done
+
+# SITE_PACKAGES="$(python - <<'PY'
+# import site; print([p for p in (site.getsitepackages()+[site.getusersitepackages()]) if 'site-packages' in p][0])
+# PY
+# )"
+# PTH_FILE="$SITE_PACKAGES/backend_paths.pth"
+# {
+#   echo "$BE/packages"      # 내부 패키지 루트
+#   for d in "${SERVICES[@]}"; do echo "$d"; done  # 서비스 루트
+# } > "$PTH_FILE"
+
+# echo "✅ Hydrated (no editable). PTH: $PTH_FILE"
 
 echo "✅ Root .venv hydrated."

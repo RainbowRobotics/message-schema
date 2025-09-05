@@ -4,9 +4,10 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
+
 np = import_numpy()
 
-class MessageSenderInfo(object):
+class MessageSenderInfo:
     __slots__ = ['_tab']
 
     @classmethod
@@ -63,7 +64,7 @@ def End(builder):
     return MessageSenderInfoEnd(builder)
 
 
-class MessageSenderInfoT(object):
+class MessageSenderInfoT:
 
     # MessageSenderInfoT
     def __init__(self):

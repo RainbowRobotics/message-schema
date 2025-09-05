@@ -28,11 +28,22 @@ target-version = ["py312"]
 [tool.isort]
 profile = "black"
 line_length = 100
-src_paths = ["fast-api/services", "fast-api/packages"]
+src_paths = ["backend/services", "backend/packages"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+include = [
+    "services/**/*.py",
+    "packages/**/*.py"
+]
+exclude = [
+    "**/__pycache__/",
+    "**/build/",
+    "**/dist/",
+    "**/*.egg-info/",
+    "packages/flat_buffers/"
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
@@ -50,4 +61,4 @@ pretty = true
 
 [tool.pytest.ini_options]
 addopts = "-q"
-testpaths = ["fast-api/services", "fast-api/packages"]
+testpaths = ["backend/services", "backend/packages"]

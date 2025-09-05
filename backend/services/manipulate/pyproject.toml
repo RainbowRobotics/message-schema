@@ -15,6 +15,7 @@ dependencies = [
   "utils",
   "rb_zenoh",
   "flat-buffers",
+  "pyinstaller>=6.15.0",
 ]
 
 [tool.uv.sources]

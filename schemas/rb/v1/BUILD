@@ -7,5 +7,5 @@ exports_files(["*.fbs"])
 flatbuffers_bundle(
     name = "rb_v1",
     srcs = glob(["*.fbs"]),
-    out_dir = "rb/v1"
+    out_dir = ""
 )

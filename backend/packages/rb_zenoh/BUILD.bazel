@@ -1,0 +1,16 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("@backend_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "rb_zenoh",
+    srcs = glob(["src/rb_zenoh/**/*.py"]),
+    imports = ["src"],
+    deps = [
+        requirement("eclipse-zenoh"),
+        requirement("psutil"),
+        requirement("flatbuffers"),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["pyproject.toml"])

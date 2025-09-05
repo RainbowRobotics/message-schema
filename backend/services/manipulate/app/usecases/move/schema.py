@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class MoveCommand(BaseModel):
     x: float
     y: float

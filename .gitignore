@@ -1,8 +1,6 @@
 bazel-*
 external
 
-*.lock
-
 compile_commands.json
 
 .venv
@@ -15,4 +13,4 @@ compile_commands.json
 __pycache__
 *.egg-info
 build
-*.bin
+backend/**/*.bin

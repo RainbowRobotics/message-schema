@@ -58,7 +58,11 @@
         "span": "cpp",
         "*.inc": "cpp"
     },
-    "python.defaultInterpreterPath": "${workspaceFolder}/fast-api/.venv/bin/python",
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend/services/manipulate",
+        "${workspaceFolder}/bazel-bin/schemas"
+    ],
     "[python]": { "editor.defaultFormatter": "ms-python.black-formatter" },
     "editor.formatOnSave": true,
     "ruff.lint.enable": true,

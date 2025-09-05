@@ -1,10 +1,12 @@
 from __future__ import annotations
+
+import io
 import re
 import sys
-from pathlib import Path
 import tokenize
-import io
 from bisect import bisect_right
+from pathlib import Path
+
 
 def protect_ranges(src: str):
     b = io.BytesIO(src.encode("utf-8"))
@@ -12,7 +14,7 @@ def protect_ranges(src: str):
     for tok in tokenize.tokenize(b.readline):
         if tok.type in (tokenize.STRING, tokenize.COMMENT):
             start_off = _offset_of(src, tok.start)
-            end_off   = _offset_of(src, tok.end)
+            end_off = _offset_of(src, tok.end)
             protected.append((start_off, end_off))
 
     protected.sort()
@@ -24,6 +26,7 @@ def protect_ranges(src: str):
             merged[-1][1] = max(merged[-1][1], e)
     return [(s, e) for s, e in merged]
 
+
 def _offset_of(src: str, lc):
     line, col = lc
     offs = 0
@@ -34,14 +37,14 @@ def _offset_of(src: str, lc):
         offs += len(ln)
     return offs
 
+
 def overlaps(protected, s, e):
     i = bisect_right(protected, (s, float("inf"))) - 1
 
     if i >= 0 and protected[i][1] > s:
         return True
-    if i + 1 < len(protected) and protected[i + 1][0] < e:
-        return True
-    return False
+    return bool(i + 1 < len(protected) and protected[i + 1][0] < e)
+
 
 def main():
     if len(sys.argv) != 2:
@@ -54,14 +57,16 @@ def main():
         print(f"not a directory: {root}", file=sys.stderr)
         sys.exit(1)
 
-    tops = sorted([
-        p.name for p in root.iterdir()
-        if p.is_dir() and p.name not in {"__pycache__", "flat_buffers"}
-    ])
+    tops = sorted(
+        [
+            p.name
+            for p in root.iterdir()
+            if p.is_dir() and p.name not in {"__pycache__", "flat_buffers"}
+        ]
+    )
 
     if not tops:
         return
-
 
     tops_alt = "|".join(re.escape(t) for t in tops)
     pattern = re.compile(rf"(?<!flat_buffers\.)\b({tops_alt})\.", flags=re.M)
@@ -87,6 +92,7 @@ def main():
         new = "".join(out)
         if new != src:
             py.write_text(new, encoding="utf-8")
+
 
 if __name__ == "__main__":
     main()

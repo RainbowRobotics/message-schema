@@ -38,3 +38,36 @@ filegroup(
 )
     """,
 )
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.12",
+)
+use_repo(python, "python_3_12", "python_versions")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
+pip.parse(
+    hub_name = "backend_deps",
+    requirements_lock = "//third-party/backend:requirements_lock.txt",
+    python_version = "3.12",
+)
+
+use_repo(pip, "backend_deps")
+
+uv = use_extension(
+    "@rules_python//python/uv:uv.bzl",
+    "uv",
+    dev_dependency = True,
+)
+uv.configure(version = "0.8.4")
+
+# pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
+# pip.parse(
+#     hub_name = "manipulate_deps",
+#     python_version = "3.12",
+#     requirements_lock = "//backend/services/manipulate:requirements.txt",
+# )
+
+# use_repo(pip, "manipulate_deps")

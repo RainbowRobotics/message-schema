@@ -6,6 +6,10 @@
     # via manipulate (pyproject.toml)
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/utils
     # via manipulate (pyproject.toml)
+altgraph==0.17.4
+    # via
+    #   macholib
+    #   pyinstaller
 annotated-types==0.7.0
     # via pydantic
 anyio==4.10.0
@@ -14,8 +18,6 @@ anyio==4.10.0
     #   watchfiles
 click==8.2.1
     # via uvicorn
-eclipse-zenoh==1.5.0
-    # via rb-zenoh
 fastapi==0.116.1
     # via manipulate (pyproject.toml)
 flatbuffers==25.2.10
@@ -28,6 +30,12 @@ httptools==0.6.4
     # via uvicorn
 idna==3.10
     # via anyio
+macholib==1.16.3
+    # via pyinstaller
+packaging==25.0
+    # via
+    #   pyinstaller
+    #   pyinstaller-hooks-contrib
 psutil==7.0.0
     # via
     #   rb-zenoh
@@ -36,12 +44,20 @@ pydantic==2.11.7
     # via fastapi
 pydantic-core==2.33.2
     # via pydantic
+pyinstaller==6.15.0
+    # via manipulate (pyproject.toml)
+pyinstaller-hooks-contrib==2025.8
+    # via pyinstaller
 python-dotenv==1.1.1
     # via
     #   manipulate (pyproject.toml)
     #   uvicorn
 pyyaml==6.0.2
     # via uvicorn
+setuptools==80.9.0
+    # via
+    #   pyinstaller
+    #   pyinstaller-hooks-contrib
 sniffio==1.3.1
     # via anyio
 starlette==0.47.3
