@@ -1,23 +1,28 @@
 FROM docker.io/dfd1123/zenoh-python-builder:py312-zenoh1.5.0-shm AS builder
 
 ARG SERVICE
-ENV WORKDIR=/app
+ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
-COPY backend/pyproject.toml backend/uv.lock ./backend/
+COPY backend/pyproject.toml backend/uv.lock ./
+COPY backend/services ./services
+COPY backend/packages ./packages
 
-RUN uv sync --project ./backend --frozen --no-dev
+RUN uv sync --project ./services/${SERVICE} --frozen --no-dev
 
 COPY --from=docker.io/dfd1123/zenoh-python-builder:py312-zenoh1.5.0-shm /wheels /wheels
-RUN uv run python -m pip install --no-deps --force-reinstall /wheels/*.whl
+RUN uv pip install --project ./services/${SERVICE} --no-deps --force-reinstall /wheels/*.whl
 
-COPY backend ./backend
+RUN uv run --project ./services/${SERVICE} python - <<'PY'
+import zenoh
+print("zenoh import OK")
+PY
 
-RUN pyinstaller --onefile --clean \
+RUN uv run pyinstaller --onefile --clean \
     --distpath=/app/dist \
     --name=run.bin \
     --collect-all zenoh \
-    ./backend/services/${SERVICE}/run.py
+    ./services/${SERVICE}/run.py
 
 FROM scratch AS artifacts
 COPY --from=builder /app/dist/run.bin /run.bin

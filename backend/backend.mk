@@ -1,9 +1,6 @@
-ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-WORKDIR := $(ROOT_DIR)
+ROOT_DIR := $(cd "$SCRIPT_DIR/../.." && pwd)
+WORKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PORT ?= $(shell grep ^PORT= ${WORKDIR}/services/${SERVICE}/config.env | cut -d '=' -f2)
-
-default:
-	@echo "WORKDIR is $(WORKDIR)"
 
 .PHONY: backend.sync
 backend.sync: ## uv sync
@@ -16,11 +13,15 @@ backend.lint: ## python ruff로 lint check 후 fix
 	| xargs -0 uv run ruff check --fix --force-exclude
 
 .PHONY: backend.dev
-backend.dev: backend.lint ## Backend 개발 환경 실행
-	@cd $(WORKDIR)/services/manipulate && uv run uvicorn app.main:app --reload
+backend.dev: backend.lint ## Backend 개발 환경 실행 
+	@bash api-gateway/generate-nginx-conf.sh
+	@bash scripts/backend/generate-compose.sh
+	@docker compose -f ${WORKDIR}/docker-compose.yml up --build
+
+
 
 .PHONY: backend.build
-backend.build: backend.lint
+backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash -c '\
 	if [ -z "$${SERVICE}" ]; then \
 		echo "🔄 모든 서비스에 대해 빌드 중..."; \
@@ -46,6 +47,13 @@ backend.build: backend.lint
 			rm -rf "$$outdir"; \
 		done; \
 	done'
+
+.PHONY: backend.preview
+backend.preview:
+	# @docker build -t rrs-nginx:latest api-gateway/
+	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
+	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
+	@docker compose -f ${WORKDIR}/docker-compose.preview.yml up
 
 .PHONY: backend.ls
 backend.ls:
