@@ -46,7 +46,9 @@ void MOBILE::open()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[MOBILE] simulation mode\n");
+        //printf("[MOBILE] simulation mode\n");
+        spdlog::info("[MOBILE] simulation mode");
+        //spd_logger->
         return;
     }
 
@@ -354,7 +356,8 @@ void MOBILE::recv_loop()
 
     double pre_loop_time = get_time();
 
-    printf("[MOBILE] recv loop start\n");
+    //printf("[MOBILE] recv loop start\n");
+    spdlog::info("[MOBILE] recv loop start");
     while(recv_flag)
     {
         // storing buffer
@@ -711,7 +714,8 @@ void MOBILE::recv_loop()
                                 offset_t = _offset_t;
 
                                 is_synced = true;
-                                printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
+                                //printf("[MOBILE] sync, offset_t: %f\n", (double)offset_t);
+                                spdlog::info("[MOBILE] sync, offset_t: {: .6f}", (double)offset_t);
                             }
 
                             // battery percentage value stabilization
@@ -1070,13 +1074,15 @@ void MOBILE::recv_loop()
                     }
                     else
                     {
-                        qDebug() << "Footer Fail";
+                        //qDebug() << "Footer Fail";
+                        spdlog::error("[MOBILE]Footer Fail");
                         buf.erase(buf.begin(), buf.begin()+1);
                     }
                 }
                 else
                 {
-                    qDebug() << "Size Fail";
+                    //qDebug() << "Size Fail";
+                    spdlog::error("[MOBILE] Size Fail");
                     break;
                 }
             }
@@ -1099,7 +1105,8 @@ void MOBILE::recv_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    printf("[MOBILE] recv loop stop\n");
+    //printf("[MOBILE] recv loop stop\n");
+    spdlog::info("[MOBILE] recv loop stop");
 }
 
 
@@ -1267,7 +1274,13 @@ void MOBILE::move(double vx, double vy, double wz)
         return;
     }
 
-    // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz*R2D);
+
+    if(config->set_debug_mobile())
+    {
+        // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz*R2D);
+        spdlog::debug("[MOBILE] cmd: {:.6f},{:.6f},{:.6f}",vx, vy, wz*R2D);
+    }
+
 
     // packet
     float _vx = vx;
@@ -2131,7 +2144,8 @@ void MOBILE::sem_io_speaker(unsigned int speak_num)
 // send loop
 void MOBILE::send_loop()
 {
-    printf("[MOBILE] send loop start\n");
+    //printf("[MOBILE] send loop start\n");
+    spdlog::info("[MOBILE] send loop start");
     while(send_flag)
     {
         if(is_connected)
@@ -2145,7 +2159,9 @@ void MOBILE::send_loop()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[MOBILE] send loop stop\n");
+    //printf("[MOBILE] send loop stop\n");
+    spdlog::info("[MOBILE] send loop stop");
+
 }
 
 int MOBILE::calc_battery_percentage(float voltage)
