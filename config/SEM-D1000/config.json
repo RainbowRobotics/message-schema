@@ -43,6 +43,11 @@
         "USE_QTUI": false,
         "USE_BEEP": true
     },
+    "logging": {
+        "LOG_LEVEL": "info",
+        "DEBUG_LIDAR_2D": true,
+        "DEBUG_MOBILE": false
+    },
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",

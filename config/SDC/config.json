@@ -45,8 +45,9 @@
         "USE_BEEP": true
     },
     "logging": {
-        "LOG_LEVEL": "debug",
-        "LOG_ENABLE_LIDAR_DEBUG": "true"
+        "LOG_LEVEL": "info",
+        "DEBUG_LIDAR_2D": true,
+        "DEBUG_MOBILE": false
     },
     "lidar_2d_config": [
         {

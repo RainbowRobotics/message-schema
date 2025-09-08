@@ -35,7 +35,8 @@
     },
     "logging": {
         "LOG_LEVEL": "info",
-        "LOG_ENABLE_LIDAR_DEBUG": "false"
+        "DEBUG_LIDAR_2D": true,
+        "DEBUG_MOBILE": false
     },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
