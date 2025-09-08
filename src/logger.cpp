@@ -85,16 +85,42 @@ void LOGGER::init()
             log_dir.mkpath(".");
         }
 
-        const QString date_time = QDate::currentDate().toString("yyyyMMdd");
-        const QString log_path = "snlog/" + date_time + "_SpdSystemlog.log";
+        const QString date_time = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz");
+        const QString log_name = "snlog/" + date_time + "_SpdSystemlog.log";
+
+
+        QFileInfoList sysLogs = log_dir.entryInfoList(QStringList() << "*_SpdSystemlog.log",QDir::Files,QDir::Time);
+        const int KeepFiles = 10;
+
+        for (int i = KeepFiles; i < sysLogs.size(); ++i)
+        {
+            QFile::remove(sysLogs[i].absoluteFilePath());
+        }
+
+        //static constexpr std::size_t kMaxBytesPerFile   = 10 * 1024 * 1024; // 10MB
+        //static constexpr std::size_t kKeepTotalFiles    = 10;
+        //#if defined(SPDLOG_WCHAR_FILENAMES)
+        //    std::wstring filename = log_name.toStdWString();
+        //#else
+        //    std::string  filename = log_name.toStdString();
+        //#endif
+        //const std::size_t max_files = (kKeepTotalFiles > 0) ? (kKeepTotalFiles - 1) : 0;
+
+        //spd_logger = spdlog::rotating_logger_mt(
+        //    "logger", filename, kMaxBytesPerFile, max_files
+        //);
 
         try
         {
+            if (spdlog::get("logger"))
+            {
+                spdlog::drop("logger");
+            }
 
             // header
-            if(!QFile::exists(log_path))
+            if(!QFile::exists(log_name))
             {
-                QFile file(log_path);
+                QFile file(log_name);
                 if(file.open(QIODevice::WriteOnly | QIODevice::Text))
                 {
                     QTextStream out(&file);
@@ -102,15 +128,15 @@ void LOGGER::init()
                     file.close();
                 }
             }
-            spd_logger = spdlog::basic_logger_mt("logger", log_path.toStdString());
+            spd_logger = spdlog::basic_logger_mt("logger", log_name.toStdString());
             spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
-            spd_logger->set_level(spdlog::level::debug);
 
             spdlog::set_default_logger(spd_logger);
 
-            // 로그 플러시 설정
+            // log flush set
             spdlog::flush_on(spdlog::level::err);
             spdlog::flush_every(std::chrono::seconds(2));
+
         }
         catch(const spdlog::spdlog_ex& ex)
         {
