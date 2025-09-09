@@ -173,12 +173,14 @@ void COMM_RRS::init()
     if(!config)
     {
         logger->write_log("[COMM_RRS] config module not set", "Orange");
+        spdlog::warn("[COMM_RRS] config module not set");
         return;
     }
 
     if(config->get_use_rrs())
     {
         logger->write_log("[COMM_RRS] try to connect RRS", "Green");
+        spdlog::info("[COMM_RRS] try to connect RRS");
 
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
@@ -202,6 +204,7 @@ void COMM_RRS::sio_connected()
     {
         logger->write_log("[COMM_RRS] connected", "Green");
     }
+    spdlog::info("[COMM_RRS] connected");
 }
 
 void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
@@ -215,6 +218,8 @@ void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
     {
         logger->write_log("[COMM_RRS] disconnected", "Green");
     }
+    spdlog::warn("[COMM_RRS] disconnected");
+
 }
 
 void COMM_RRS::sio_error()
@@ -223,6 +228,7 @@ void COMM_RRS::sio_error()
     {
         logger->write_log("[COMM_RRS] some error", "Red");
     }
+    spdlog::error("[COMM_RRS] some error");
 }
 
 // recv parser -> emit recv signals
@@ -249,6 +255,7 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, move, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_move(msg);
     }
 }
@@ -271,6 +278,7 @@ void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr cons
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, loc, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_localization(msg);
     }
 }
@@ -289,6 +297,8 @@ void COMM_RRS::recv_load(std::string const& name, sio::message::ptr const& data,
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, load, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_load(msg);
     }
 }
@@ -306,6 +316,8 @@ void COMM_RRS::recv_randomseq(std::string const& name, sio::message::ptr const& 
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, randomseq, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_randomseq(msg);
     }
 }
@@ -323,6 +335,7 @@ void COMM_RRS::recv_mapping(std::string const& name, sio::message::ptr const& da
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, mapping, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_mapping(msg);
     }
 }
@@ -341,6 +354,7 @@ void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data,
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, dock, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_dock(msg);
     }
 }
@@ -363,6 +377,7 @@ void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& 
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, field_set, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_field_set(msg);
     }
 }
@@ -383,6 +398,8 @@ void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr
         {
             logger->write_log(QString("[COMM_RRS] recv, lidar_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, lidar_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_view_lidar(msg);
     }
 }
@@ -402,6 +419,8 @@ void COMM_RRS::recv_view_path_on_off(std::string const& name, sio::message::ptr 
         {
             logger->write_log(QString("[COMM_RRS] recv, path_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, path_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_view_path(msg);
     }
 }
@@ -421,6 +440,8 @@ void COMM_RRS::recv_led(std::string const& name, sio::message::ptr const& data, 
         {
             logger->write_log(QString("[COMM_RRS] recv, led_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, led_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_led(msg);
     }
 }
@@ -439,6 +460,8 @@ void COMM_RRS::recv_motor(std::string const& name, sio::message::ptr const& data
         {
             logger->write_log(QString("[COMM_RRS] recv, motor_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS] recv, motor_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+
         Q_EMIT signal_motor(msg);
     }
 }
@@ -457,6 +480,8 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
 
         // action
         //logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
+        spdlog::info("[COMM_RRS] recv, path, command: {}, path: {}, time: {}",msg.command.toStdString(), msg.path.toStdString(), msg.time);
+
         Q_EMIT signal_path(msg);
     }
 }
@@ -478,6 +503,8 @@ void COMM_RRS::recv_vobs(std::string const& name, sio::message::ptr const& data,
         printf("%s\n", res.toLocal8Bit().constData());
 
         //logger->write_log(QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time), "Green");
+
+        spdlog::info("[COMM_RRS] recv, vobs, command: {}, vobs_r: {}, vobs_c: {}, time: {}",msg.command.toStdString(), msg.vobs_robots.toStdString(), msg.vobs_clousers.toStdString(), msg.time);
         Q_EMIT signal_vobs(msg);
     }
 }
@@ -564,20 +591,33 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
 
 void COMM_RRS::recv_safety_io_set(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
 {
-     printf("[COMM_RRS][DEBUG] recv_safety io called\n");
+     //printf("[COMM_RRS][DEBUG] recv_safety io called\n");
+    if(config->set_debug_comm_rrs())
+    {
+        spdlog::debug("[COMM_RRS] recv_safety io called");
+    }
 
     if(data && data->get_flag() == sio::message::flag_object)
     {
         QString time_str = get_json(data, "time");
         double time_sec = get_json(data, "time").toDouble() / 1000;
 
+
         // printf("[COMM_RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
+        if(config->set_debug_comm_rrs())
+        {
+            spdlog::debug("[COMM_RRS] time: {}",time_str.toStdString());
+        }
 
         // get safety io msg
         sio::message::ptr safetyio_msg = data->get_map()["safetyio"];
         if(!safetyio_msg || safetyio_msg->get_flag() != sio::message::flag_object)
         {
             // printf("[COMM_RRS][DEBUG] 'foot' field missing or not object\n");
+            if(config->set_debug_comm_rrs())
+            {
+                spdlog::debug("[COMM_RRS] 'foot' field missing or not object");
+            }
             return;
         }
 
@@ -838,7 +878,8 @@ void COMM_RRS::send_move_status()
 {
     if(!is_connected || !ctrl || !mobile || !unimap || !dctrl)
     {
-        printf("is_connected : %d\n", (int)is_connected.load());
+        //printf("is_connected : %d\n", (int)is_connected.load());
+        spdlog::info("is_connected : {}", (int)is_connected.load());
         return;
     }
 
@@ -1686,6 +1727,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         {
             logger->write_log("[AUTO_INIT] recv_loc, try semi-auto init", "Green", true, false);
         }
+        spdlog::info("[COMM_RRS][AUTO_INIT] recv_loc, try semi-auto init");
 
         if(loc)
         {
@@ -1699,6 +1741,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             {
                 logger->write_log("[AUTO_INIT] recv_loc, thread already running.", "Orange", true, false);
             }
+            spdlog::info("[COMM_RRS][AUTO_INIT] recv_loc, thread already running");
             if(semi_auto_init_thread->joinable())
             {
                 semi_auto_init_thread->join();
@@ -1744,6 +1787,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, (x,y,test,th,th_test):%2,%3,%4,%5,%6 time: %7").arg(msg.command).arg(x).arg(y).arg(test).arg(rz).arg(rz * D2R).arg(msg.time), "Green");
         }
+        spdlog::info("[COMM_RRS][INIT] recv_loc, command: {}, (x,y,test,th,th_test):{:.3f},{:.3f},{:.3f},{:.3f},{:.6f} time: {:.6f})",msg.command.toStdString(),x,y,test,rz,rz*D2R, msg.command.toStdString());
 
         const Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz * D2R));
         if(loc)
@@ -1812,11 +1856,14 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
     if(command == "set")
     {
         msg.result = "success";
-        qDebug() << "slot msg.sef_field:" << msg.set_field;
+        //qDebug() << "slot msg.sef_field:" << msg.set_field;
+        spdlog::info("[COMM_RRS] set, slot msg.sef_filed: {}", msg.set_field);
+
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
 
-        qDebug() << "parsing filed set:" << set_field_;
+        //qDebug() << "parsing filed set:" << set_field_;
+        spdlog::info("[COMM_RRS] set, parsing filed set: {}", msg.set_field);
 
         if(mobile)
         {
@@ -1834,7 +1881,8 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
         if(mobile)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
-            qDebug() << ms.lidar_field;
+            //qDebug() << ms.lidar_field;
+            spdlog::info("[COMM_RRS] get, slot ms.lidar_field: {}", ms.lidar_field);
             msg.get_field = ms.lidar_field;
         }
 
@@ -2181,11 +2229,13 @@ void COMM_RRS::slot_foot(DATA_FOOT msg)
     if(msg.state == FOOT_STATE_DONE && msg.is_down == true)
     {
         // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
+        spdlog::info("[COMM_RRS][MOBILE] slot_foot state:{}, set inter lock true",static_cast<int>(msg.state));
         mobile->set_is_inter_lock_foot(true);
     }
     else
     {
         // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(msg.state), "Green");
+        spdlog::info("[COMM_RRS][MOBILE] slot_foot state:{}, set inter lock false",static_cast<int>(msg.state));
         mobile->set_is_inter_lock_foot(false);
     }
 }

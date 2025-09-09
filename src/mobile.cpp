@@ -48,7 +48,6 @@ void MOBILE::open()
     {
         //printf("[MOBILE] simulation mode\n");
         spdlog::info("[MOBILE] simulation mode");
-        //spd_logger->
         return;
     }
 
@@ -66,9 +65,10 @@ void MOBILE::sync()
     sync_st_time = get_time();
     is_sync = true;
 
-    QString str;
-    str.sprintf("[MOBILE] time sync, sync_st_time:%f", (double)sync_st_time);
-    logger->write_log(str, "Green", true, false);
+    //QString str;
+    //str.sprintf("[MOBILE] time sync, sync_st_time:%f", (double)sync_st_time);
+    //logger->write_log(str, "Green", true, false);
+    spdlog::info("[MOBILE] time sync, sync_st_time: {:.6f}", (double)sync_st_time);
 }
 
 QString MOBILE::get_cur_pdu_state()
@@ -279,15 +279,18 @@ void MOBILE::recv_loop()
     server_addr.sin_addr.s_addr = inet_addr(pdu_ip.toLocal8Bit().data());
     server_addr.sin_port        = htons(pdu_port);
 
-    QString str;
-    str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
-    logger->write_log(str, "Green");
+    //QString str;
+    //str.sprintf("[MOBILE] try connect, ip:%s, port:%d\n", pdu_ip.toLocal8Bit().data(), pdu_port);
+    //logger->write_log(str, "Green");
+    spdlog::info("[MOBILE] try connect, ip:{}, port:{}",pdu_ip.toStdString(),pdu_port);
+
 
     // connection
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0)
     {
-        logger->write_log("[MOBILE] socket create failed", "Red", true, false);
+        //logger->write_log("[MOBILE] socket create failed", "Red", true, false);
+        spdlog::error("[MOBILE] socket create failed");
         return;
     }
 
@@ -304,7 +307,8 @@ void MOBILE::recv_loop()
     int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
     if(status < 0 && errno != EINPROGRESS)
     {
-        logger->write_log("[MOBILE] connect failed", "Red", true, false);
+        //logger->write_log("[MOBILE] connect failed", "Red", true, false);
+        spdlog::error("[MOBILE] connect failed");
         return;
     }
 
@@ -320,7 +324,8 @@ void MOBILE::recv_loop()
     status = select(fd + 1, NULL, &writefds, NULL, &tv);
     if(status <= 0) // timeout or error
     {
-        logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
+        //logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
+        spdlog::error("[MOBILE] connect timeout or error");
         close(fd);
         return;
     }
@@ -330,17 +335,21 @@ void MOBILE::recv_loop()
     socklen_t len = sizeof(so_error);
     if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) < 0)
     {
-        QString errStr;
-        errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
-        logger->write_log(errStr, "Red", true, false);
+        //QString errStr;
+        //errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
+        //logger->write_log(errStr, "Red", true, false);
+        int er = errno;
+        spdlog::error("[MOBILE] getsockopt failed: {})",std::error_code(er, std::system_category()).message(), er);
         close(fd);
         return;
     }
     if(so_error!=0)
     {
-        QString errStr;
-        errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
-        logger->write_log(errStr, "Red", true, false);
+        //QString errStr;
+        //errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
+        //logger->write_log(errStr, "Red", true, false);
+        int er = errno;
+        spdlog::error("[MOBILE] connect error after select: {} (so_error={})",std::error_code(er, std::system_category()).message(), er);
         close(fd);
         return;
     }
@@ -349,7 +358,8 @@ void MOBILE::recv_loop()
     fcntl(fd, F_SETFL, flags);
 
     is_connected = true;
-    logger->write_log("[MOBILE] connected", "Green", true, false);
+    //logger->write_log("[MOBILE] connected", "Green", true, false);
+    spdlog::info("[MOBILE] connected");
 
     std::vector<uchar> buf;
     int drop_cnt = MOBILE_INFO::drop_cnt;
@@ -370,7 +380,8 @@ void MOBILE::recv_loop()
         }
         else if(num < 0)
         {
-            logger->write_log("[MOBILE] read buffer size lower than 0", "Red");
+            //logger->write_log("[MOBILE] read buffer size lower than 0", "Red");
+            spdlog::warn("[MOBILE] read buffer size lower than 0");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
@@ -438,7 +449,8 @@ void MOBILE::recv_loop()
                         }
                         else
                         {
-                            std::cout << "wrong robot_type: " << static_cast<int>(robot_type) << ", data_size: " << data_size << std::endl;
+                            //std::cout << "wrong robot_type: " << static_cast<int>(robot_type) << ", data_size: " << data_size << std::endl;
+                            spdlog::warn("wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
                         }
 
                         if(_buf[5] == 0xA2)
@@ -1233,7 +1245,8 @@ void MOBILE::motor_on()
         }
     }
 
-    logger->write_log("[MOBILE] motor lock on", "Green", true, false);
+    //logger->write_log("[MOBILE] motor lock on", "Green", true, false);
+    spdlog::info("[MOBILE] motor lock on");
 }
 
 void MOBILE::motor_off()
@@ -1257,7 +1270,8 @@ void MOBILE::motor_off()
         msg_que.push(send_byte);
     }
 
-    logger->write_log("[MOBILE] motor lock off", "Green", true, false);
+    //logger->write_log("[MOBILE] motor lock off", "Green", true, false);
+    spdlog::info("[MOBILE] motor lock off");
 }
 
 void MOBILE::move(double vx, double vy, double wz)
@@ -1270,7 +1284,8 @@ void MOBILE::move(double vx, double vy, double wz)
     bool is_inter_lock_foot = get_is_inter_lock_foot();
     if(is_inter_lock_foot)
     {
-        logger->write_log("[MOBILE] motor inter lock foot", "Orange");
+        //logger->write_log("[MOBILE] motor inter lock foot", "Orange");
+        spdlog::info("[MOBILE] motor inter lock foot");
         return;
     }
 

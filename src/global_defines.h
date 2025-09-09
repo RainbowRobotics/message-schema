@@ -97,6 +97,9 @@ Q_DECLARE_METATYPE(Eigen::Matrix4d)
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
+// std::error code
+#include <system_error>
+
 // qt
 #include <QApplication>
 #include <QStandardPaths>

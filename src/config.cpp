@@ -1203,6 +1203,12 @@ bool CONFIG::set_debug_mobile()
     return DEBUG_MOBILE;
 }
 
+bool CONFIG::set_debug_comm_rrs()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_COMM_RRS;
+}
+
 bool CONFIG::get_log_enable_file_output()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
