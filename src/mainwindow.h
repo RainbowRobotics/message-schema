@@ -17,6 +17,7 @@
 #include "mapping.h"
 #include "autocontrol.h"
 #include "sim.h"
+#include "simple_task.h"
 #include "dockcontrol.h"
 #include "policy.h"
 
@@ -82,7 +83,7 @@ public:
     void speaker_handler(int cnt);
     int led_handler();
 
-    void getIPv4();
+    void get_IP();
 
     // vars
     std::atomic<double> plot_dt = {0.};
@@ -173,6 +174,8 @@ public Q_SLOTS:
 
     void vtk_viewer_update(int val);
 
+    void ui_tasks_update();
+
     // config
     void bt_ConfigLoad();
 
@@ -248,6 +251,9 @@ public Q_SLOTS:
 
     void slot_local_path_updated();
     void slot_global_path_updated();
+
+    void slot_sim_random_init(QString seed);
+    void slot_sim_random_seq();
 
     // timer loops
     void plot_loop();

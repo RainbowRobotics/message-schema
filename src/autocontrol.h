@@ -30,6 +30,13 @@ enum class CommandType
     UPDATE_PATH,
 };
 
+struct GOAL_INFO
+{
+    Eigen::Matrix4d goal_tf;
+    Eigen::Vector3d goal_xi;  // x,y,th
+    Eigen::Vector3d goal_pos; // x,y,z
+};
+
 struct CONTROL_COMMAND
 {
     int preset;
@@ -113,12 +120,14 @@ public:
     void set_is_rrs(bool flag);
     void set_is_pause(bool val);
     void set_is_debug(bool val);
+    void set_last_step(int val);
     void set_is_moving(bool val);
     void set_multi_request(QString str);
     void set_obs_condition(QString str);
     void set_cur_goal_state(QString str);
     void set_multi_infomation(StateMultiReq val0, StateObsCondition val1, StateCurGoal str2);
     void set_multi_inter_lock(bool val);
+    void set_global_path_time(long long val);
 
     // extract the path from the cur_tf to predict_t seconds with the cur_vel at the resolution of dt.
     std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
@@ -184,9 +193,18 @@ private:
 
     void send_move_response(QString result, QString message);
 
+    void update_move(const Eigen::Matrix4d& goal_tf);
+
+    void update_path(const std::vector<QString>& node_path);
+
+    void try_enque_global_path_queue(const CONTROL_COMMAND& _cmd);
+
     bool check_update_path(CONTROL_COMMAND& cmd);
 
-    void update_path(std::vector<QString> node_path, int preset);
+    bool initialize_drive_state(PATH& global_path, GOAL_INFO& goal_info);
+
+    bool try_pop_global_path_queue(PATH& global_path);
+
 
     /***********************
      * global path planning
@@ -234,7 +252,7 @@ private:
      * local path planning
      ***********************/
     // calculate paths with higher resolution (local path)
-    PATH calc_local_path(PATH& global_path, bool use_cur_vel);
+    PATH calc_local_path(PATH& global_path);
 
     // calculate paths with higher resolution (avoid path)
     PATH calc_avoid_path(PATH& global_path);
@@ -285,7 +303,7 @@ private:
     std::atomic<bool> is_multi_inter_lock    = {false};
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
-    std::atomic<AUTO_FSM_STATE> fsm_state    = {AUTO_FSM_STATE::COMPLETE};
+    std::atomic<AutoFsmState> fsm_state    = {AutoFsmState::COMPLETE};
 
     // params for rrs & plot
     PATH cur_local_path;
@@ -299,7 +317,7 @@ private:
     std::atomic<double> cur_deadzone = {0.0};
 
     // obs
-    int cur_obs_value = OBS_NONE;
+    ObsDetectState cur_obs_value = ObsDetectState::NONE;
     double cur_obs_decel_v = {1.0};
 
     // driving local ref v oscilation prevent

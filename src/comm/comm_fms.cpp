@@ -126,7 +126,7 @@ double COMM_FMS::get_max_process_time_vobs()
 void COMM_FMS::init()
 {
     // update robot id
-    robot_id = QString("R_%1").arg(static_cast<long long>(get_time()*1000));
+    robot_id = QString("R_%1").arg(static_cast<long long>(get_time0()*1000));
     logger->write_log(QString("[COMM_FMS] ID: %1").arg(robot_id));
 
     // start reconnect loop
@@ -190,7 +190,8 @@ void COMM_FMS::reconnect_loop()
         }
 
         //QString server_addr = QString("ws://%1:12334").arg(server_ip);
-        QString server_addr = QString("ws://%1:12334").arg("127.0.0.1");
+        //QString server_addr = QString("ws://%1:12334").arg("127.0.0.1");
+        QString server_addr = QString("ws://%1:12334").arg("3.34.158.22");
         client->open(QUrl(server_addr));
     }
 }
@@ -236,8 +237,6 @@ void COMM_FMS::send_move_status()
     {
         return;
     }
-
-    std::cout << "send move response" << std::endl;
 
     // get time
     double time = get_time();
@@ -323,6 +322,8 @@ void COMM_FMS::recv_loop()
             QString cmd = get_json(root_obj, "topic");
             QJsonObject data = root_obj.value("data").toObject();
 
+            logger->write_log(QString("[COMM_FMS] recv, command: %1, time: %2").arg(cmd).arg(get_time()), "Green");
+
             // parsing
             if(cmd == "move")
             {
@@ -341,8 +342,6 @@ void COMM_FMS::recv_loop()
             {
                 handle_common_cmd(cmd, data);
             }
-
-            logger->write_log(QString("[COMM_FMS] recv, command: %1, time: %2").arg(cmd).arg(get_time()), "Green");
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1287,7 +1286,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
         Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3]*D2R));
         goal_tf(2,3) = pose_vec[2];
-        if(obsmap->is_tf_collision(goal_tf))
+        if(obsmap->is_tf_collision(goal_tf) != ObsDetectState::NONE)
         {
             msg.result = "reject";
             msg.message = "[R0Tx1801] target location occupied(static obs)";
@@ -1332,7 +1331,7 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         }
 
         QString goal_id = msg.goal_node_id;
-        if(goal_id.isEmpty() )
+        if(goal_id.isEmpty())
         {
             msg.result = "reject";
             msg.message = "[R0Nx2000]empty node id";
@@ -1537,6 +1536,8 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
         }
 
         set_path(path, step, msg.preset, (long long)(msg.time));
+        ctrl->set_last_step(0);
+        ctrl->set_global_path_time(msg.time);
     }
 
     send_path_response(msg);

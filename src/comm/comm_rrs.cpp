@@ -1126,7 +1126,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
             const Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
             const Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3] * D2R));
-            if(obsmap->is_tf_collision(goal_tf))
+            if(obsmap->is_tf_collision(goal_tf) != ObsDetectState::NONE)
             {
                 msg.result = "reject";
                 msg.message = "[R0Tx1801] target location occupied(static obs)";

@@ -93,6 +93,16 @@ void UNIMAP::load_map(QString path)
     // set load map dir
     map_path = path;
 
+    if(config->get_use_sim())
+    {
+        if(load_2d())
+        {
+            is_loaded.store(MAP_LOADED);
+            load_node();
+        }
+        return;
+    }
+
     bool loaded_2d = load_2d();
     auto future = std::async(std::launch::async, [this]()
     {

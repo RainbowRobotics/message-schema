@@ -204,7 +204,7 @@ enum DOCKING_CHARGE_STATE
     CHARGE_STATE_FAIL,
 };
 
-enum class AUTO_FSM_STATE
+enum class AutoFsmState
 {
     FIRST_ALIGN,
     DRIVING,
@@ -277,21 +277,21 @@ enum DOCK_FSM_STATE
     DOCKING_FSM_CHKCHARGE,
 };
 
-enum AUTO_OBS_STATE
+enum class AUTO_OBS_STATE
 {
-    AUTO_OBS_CHECK = 0,
-    AUTO_OBS_RECOVERY,
-    AUTO_OBS_AVOID,
-    AUTO_OBS_WAIT,
-    AUTO_OBS_WAIT2,
-    AUTO_OBS_VIR
+    CHECK = 0,
+    RECOVERY,
+    AVOID,
+    WAIT,
+    WAIT2,
+    VIR
 };
 
-enum OBS_STATE
+enum class ObsDetectState
 {
-    OBS_NONE = 0,
-    OBS_DYN  = 1,
-    OBS_VIR  = 2,
+    NONE = 0,
+    DYN  = 1,
+    VIR  = 2,
 };
 
 enum LOCAL_PATH_STATE

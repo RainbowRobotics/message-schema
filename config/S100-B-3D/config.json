@@ -33,7 +33,7 @@
         "USE_ARUCO": false
     },
     "network": {
-        "USE_MULTI": false,
+        "USE_MULTI": true,
         "USE_COOP": false,
         "USE_RTSP": false,
         "USE_RRS": false,
@@ -185,7 +185,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/home/jy/maps/250327_unicos_test"
+        "MAP_PATH": "/data/maps/ttk_250715"
     }
 }
 
