@@ -360,6 +360,21 @@ color: rgb(0, 0, 0);</string>
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="ckb_PlotKfrm">
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>kfrm</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="ckb_PlotNodes">
               <property name="font">
                <font>
@@ -1501,6 +1516,42 @@ config</string>
               <property name="text">
                <string>Last
 LC</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MapPause">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>90</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Pause</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MapResume">
+              <property name="geometry">
+               <rect>
+                <x>60</x>
+                <y>90</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Resume</string>
               </property>
              </widget>
             </widget>

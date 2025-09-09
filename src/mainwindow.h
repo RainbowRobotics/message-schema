@@ -200,6 +200,8 @@ public Q_SLOTS:
     void bt_MapSave();
     void bt_MapLoad();
     void bt_MapLastLc();
+    void bt_MapPause();
+    void bt_MapResume();
 
     // localization
     void bt_LocInit();
@@ -243,8 +245,9 @@ public Q_SLOTS:
     void bt_LiftPowerOff();
     void bt_SetLidarField();
 
-    // for test
+    // others
     void bt_TestLed();
+    void ckb_PlotKfrm();
 
     void slot_local_path_updated();
     void slot_global_path_updated();

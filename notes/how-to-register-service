@@ -1,0 +1,7 @@
+#e.g. vkms service
+sudo nano /etc/systemd/system/vkms.service
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable vkms.service
+sudo systemctl start vkms.service
+systemctl status vkms.service

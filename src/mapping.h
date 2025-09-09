@@ -59,6 +59,13 @@ public:
     void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
     void set_localization_module(LOCALIZATION* _loc);
 
+    // flags
+    std::atomic<bool> is_pause = {false};
+
+    // storage
+    std::shared_ptr<std::vector<KFRAME>> kfrm_storage;
+    tbb::concurrent_queue<int> kfrm_update_que;
+
 private:
     explicit MAPPING(QObject *parent = nullptr);
     ~MAPPING();
@@ -92,8 +99,8 @@ private:
 
     // storage
     tbb::concurrent_queue<KFRAME> kfrm_que;
-    tbb::concurrent_queue<int> kfrm_update_que;
-    std::shared_ptr<std::vector<KFRAME>> kfrm_storage;
+    // tbb::concurrent_queue<int> kfrm_update_que;
+    // std::shared_ptr<std::vector<KFRAME>> kfrm_storage;
 
     // live kd_tree
     XYZR_CLOUD live_cloud;

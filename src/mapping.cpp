@@ -186,6 +186,7 @@ void MAPPING::kfrm_loop()
     int frm_cnt = 0;
     int add_cnt = 0;
     int kfrm_id = 0;
+    ekf.initialized.store(false);
 
     // last frame
     FRAME frm0;
@@ -253,13 +254,13 @@ void MAPPING::kfrm_loop()
                     live_tree->buildIndex();
                 }
 
-                // if(config->get_use_ekf())
-                // {
-                //     if(!ekf.initialized.load())
-                //     {
-                //         ekf.init(G);
-                //     }
-                // }
+                if(config->get_use_ekf())
+                {
+                    if(!ekf.initialized.load())
+                    {
+                        ekf.init(G);
+                    }
+                }
 
                 // update global tf
                 loc->set_cur_tf(G);
@@ -278,32 +279,47 @@ void MAPPING::kfrm_loop()
                 // initial guess
                 Eigen::Matrix4d delta_tf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
 
-                // if(config->get_use_ekf())
-                // {
-                //     if(ekf.initialized.load())
-                //     {
-                //         ekf.predict(se2_to_TF(frm.mo.pose));
-                //         G = ekf.get_cur_tf();
-                //     }
-                // }
-                // else
-                // {
-                //     G = G * delta_tf;
-                // }
+                if(config->get_use_ekf())
+                {
+                    if(ekf.initialized.load())
+                    {
+                        ekf.predict(se2_to_TF(frm.mo.pose));
+                        G = ekf.get_cur_tf();
+                    }
+                }
+                else
+                {
+                    G = G * delta_tf;
+                }
 
-                G = G * delta_tf;
+                // G = G * delta_tf;
 
                 Eigen::Matrix3d R0 = G.block(0,0,3,3);
                 Eigen::Vector3d t0 = G.block(0,3,3,1);
 
+                double err = frm_icp(*live_tree, live_cloud, frm, G);
+                Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
+                if(err < icp_error_threshold)
+                {
+                    if(config->get_use_ekf())
+                    {
+                        ekf.estimate(G, ieir);
+                        G = ekf.get_cur_tf();
+                    }
+                }
+
+                // update global tf
+                loc->set_cur_tf(G);
+
                 // check moving
                 double moving_d = calc_dist_2d(delta_tf.block(0,3,3,1));
                 double moving_th = std::abs(TF_to_se2(delta_tf)[2]);
-                if(moving_d > 0.05 || moving_th > 2.5*D2R)
+                // if((moving_d > 0.05 || moving_th > 2.5*D2R) && !is_pause.load())
+                if(moving_d > 0.05 && !is_pause.load())
                 {
                     // pose estimation
-                    double err = frm_icp(*live_tree, live_cloud, frm, G);
-                    Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
+                    // double err = frm_icp(*live_tree, live_cloud, frm, G);
+                    // Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                     if(err < icp_error_threshold)
                     {
                         // if(config->get_use_ekf())
@@ -450,7 +466,7 @@ void MAPPING::kfrm_loop()
                         }
 
                         // update global tf
-                        loc->set_cur_tf(G);
+                        // loc->set_cur_tf(G);
 
                         // update previous frame
                         frm0 = frm;
@@ -470,7 +486,7 @@ void MAPPING::kfrm_loop()
                             kfrm.G = G;
                             kfrm.opt_G = G;
                             kfrm_que.push(kfrm);
-                            printf("[MAPPING] keyframe created, id:%d\n", kfrm.id);
+                            printf("[MAPPING] keyframe created, id:%d, pts: %zu\n", kfrm.id, kfrm.pts.size());
 
                             // inc keyframe id
                             kfrm_id++;
