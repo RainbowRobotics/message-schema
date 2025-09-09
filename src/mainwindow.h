@@ -132,11 +132,17 @@ public:
     // usb temp sensor
     std::atomic<float> temperature_value = {0.0};
 
+    //for change map name
+    std::atomic<bool> change_map_name = {false};
+
     // for mileage
    double mileage = {0.0};
    double prev_move_distance = {0.0};
 
    QString mileage_sum;
+
+   // vars
+   QString map_dir = "";
 
     // plot funcs
     void plot_map();

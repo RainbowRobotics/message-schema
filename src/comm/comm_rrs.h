@@ -56,6 +56,8 @@ public:
 
     // util func
     QString get_json(sio::message::ptr const& data, const QString& key);
+    void fillArray_memcpy(unsigned char* arr, int arr_size, const QJsonArray& jsonArr);
+
     QString get_multi_state();
     QByteArray get_last_msg();
 
@@ -146,6 +148,7 @@ public Q_SLOTS:
     void recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_field_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_safety_io_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
@@ -166,6 +169,7 @@ public Q_SLOTS:
     void slot_view_lidar(DATA_VIEW_LIDAR msg);
     void slot_localization(DATA_LOCALIZATION msg);
     void slot_software_update(DATA_SOFTWARE msg);
+    void slot_safety_io(DATA_SAFTYIO msg);
 
     /* send command response */
     void send_move_response(const DATA_MOVE& msg);
@@ -178,6 +182,7 @@ public Q_SLOTS:
     void send_field_get_response(const DATA_FIELD& msg);
     void send_path_response(const DATA_PATH& msg);
     void send_software_update_response(const DATA_SOFTWARE& msg);
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
 
     void send_loop();
 
@@ -197,6 +202,7 @@ Q_SIGNALS:
     void signal_path(DATA_PATH msg);
     void signal_vobs(DATA_VOBS msg);
     void signal_software_update(DATA_SOFTWARE msg);
+    void signal_safety_io(DATA_SAFTYIO msg);
 
 };
 
