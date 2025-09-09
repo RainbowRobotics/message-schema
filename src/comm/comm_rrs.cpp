@@ -683,10 +683,10 @@ void COMM_RRS::send_status()
 
     // Adding the state object
     QString cur_loc_state = loc->get_cur_loc_state();
-    QString charge_st_string = "none";
 
-    QString robot_model = config->get_robot_model();
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    QString charge_st_string = "none";
+    RobotModel robot_model = config->get_robot_model();
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
         {
@@ -713,7 +713,7 @@ void COMM_RRS::send_status()
             charge_st_string = "fail";
         }
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         if(ms.charge_state == 0)
         {
@@ -768,12 +768,12 @@ void COMM_RRS::send_status()
     powerObj["tabos_rc"]       = QString::number(ms.tabos_rc, 'f', 3);
     powerObj["tabos_ae"]       = QString::number(ms.tabos_ae, 'f' ,3);
 
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         powerObj["charge_current"]  = QString::number(ms.charge_current, 'f', 3);
         powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         powerObj["charge_current"]  = QString::number(0.0, 'f', 3);
         powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
@@ -781,7 +781,7 @@ void COMM_RRS::send_status()
     rootObj["power"] = powerObj;
 
     QJsonObject settingObj;
-    settingObj["platform_type"] = config->get_robot_type();
+    settingObj["platform_type"] = config->get_robot_type_str();
     settingObj["platform_name"] = "";
     rootObj["setting"] = settingObj;
 
@@ -911,10 +911,10 @@ void COMM_RRS::send_move_status()
     QString cur_node_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
     {
-        NODE* node = unimap->get_node_by_id(cur_node_id);
-        if(node != nullptr)
+        NODE node = unimap->get_node_by_id(cur_node_id);
+        if(!node.id.isEmpty())
         {
-            cur_node_name = node->name;
+            cur_node_name = node.name;
         }
     }
 
@@ -934,11 +934,11 @@ void COMM_RRS::send_move_status()
     Eigen::Vector3d goal_xi(0, 0, 0);
     if(unimap->get_is_loaded() == MAP_LOADED && !goal_node_id.isEmpty())
     {
-        NODE* node = unimap->get_node_by_id(goal_node_id);
-        if(node != nullptr)
+        NODE node = unimap->get_node_by_id(goal_node_id);
+        if(!node.id.isEmpty())
         {
-            goal_node_name = node->name;
-            goal_xi = TF_to_se2(node->tf);
+            goal_node_name = node.name;
+            goal_xi = TF_to_se2(node.tf);
         }
     }
 
@@ -1232,7 +1232,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
 
             const Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
             const Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3] * D2R));
-            if(obsmap->is_tf_collision(goal_tf))
+            if(obsmap->is_tf_collision(goal_tf) != ObsDetectState::NONE)
             {
                 msg.result = "reject";
                 msg.message = "[R0Tx1801] target location occupied(static obs)";
@@ -1314,11 +1314,11 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 return;
             }
 
-            NODE* node = unimap->get_node_by_id(goal_id);
-            if(!node)
+            NODE node = unimap->get_node_by_id(goal_id);
+            if(node.id.isEmpty())
             {
                 node = unimap->get_node_by_name(goal_id);
-                if(!node)
+                if(node.id.isEmpty())
                 {
                     msg.result = "reject";
                     msg.message = "[R0Nx2001]can not find node";
@@ -1329,28 +1329,28 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 }
 
                 // convert name to id
-                msg.goal_node_id = node->id;
-                msg.goal_node_name = node->name;
+                msg.goal_node_id = node.id;
+                msg.goal_node_name = node.name;
             }
             else
             {
-                msg.goal_node_name = node->name;
+                msg.goal_node_name = node.name;
             }
 
             const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
             const Eigen::Vector3d cur_pos = cur_tf.block(0, 3, 3, 1);
             msg.cur_pos = cur_pos;
 
-            const Eigen::Vector3d xi = TF_to_se2(node->tf);
+            const Eigen::Vector3d xi = TF_to_se2(node.tf);
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node->tf(2, 3);
+            msg.tgt_pose_vec[2] = node.tf(2, 3);
             msg.tgt_pose_vec[3] = xi[2];
 
             msg.bat_percent = bat_percent;
 
             // calc eta (estimation time arrival)
-            const Eigen::Matrix4d goal_tf = node->tf;
+            const Eigen::Matrix4d goal_tf = node.tf;
             PATH global_path = ctrl->calc_global_path(goal_tf);
             if(global_path.pos.size() < 2)
             {
@@ -2075,10 +2075,10 @@ void COMM_RRS::slot_vobs(DATA_VOBS msg)
             {
                 if(!node_id.isEmpty())
                 {
-                    NODE* node = unimap->get_node_by_id(node_id);
-                    if(node)
+                    NODE node = unimap->get_node_by_id(node_id);
+                    if(!node.id.isEmpty())
                     {
-                        vobs_c_list.push_back(node->tf.block(0, 3, 3, 1));
+                        vobs_c_list.push_back(node.tf.block(0, 3, 3, 1));
                     }
                 }
             }

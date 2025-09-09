@@ -221,8 +221,8 @@ void CAM::post_process_loop(int idx)
                         is_connected[idx] = true;
                     }
 
-                    QString robot_type = config->get_robot_type();
-                    if(robot_type == "S100")
+                    RobotModel robot_model = config->get_robot_model();
+                    if(robot_model == RobotModel::S100)
                     {
                         // right camera
                         if(idx == 1)

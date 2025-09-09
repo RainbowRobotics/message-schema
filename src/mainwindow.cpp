@@ -21,10 +21,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     MAPPING::instance(this);
     AUTOCONTROL::instance(this);
     SIM::instance(this);
+    TASK::instance(this);
     DOCKCONTROL::instance(this);
     POLICY::instance(this);
 
     COMM_COOP::instance(this);
+    COMM_FMS::instance(this);
     COMM_RRS::instance(this);
 
     // for 3d viewer
@@ -32,12 +34,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->spb_PointSize,        SIGNAL(valueChanged(int)),            this, SLOT(map_update()));   // change point size -> update map rendering elements
 
     // for viewer control
-    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
-    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
+    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0, -2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  0,  2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control( 0,  0, -2, 0, 0, 0);});
 
     // for simulation
     connect(ui->bt_SimInit,           SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
@@ -136,6 +138,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // init modules
     init_modules();
+
+    get_IP();
 
     // plot timer (pcl-vtk viewr & Qlabel)
     plot_timer = new QTimer(this);
@@ -246,18 +250,16 @@ void MainWindow::init_modules()
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
-        QString robot_type = CONFIG::instance()->get_robot_type();
-        ui->lb_RobotType->setText(robot_type);
-
-        mileage = CONFIG::instance()->get_mileage();
-
-        if(robot_type.isEmpty())
+        QString robot_type_str = CONFIG::instance()->get_robot_type_str();
+        if(robot_type_str.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
-            QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config.json";
+            ui->lb_RobotType->setText(QString("[ROBOT TYPE]: %1").arg(robot_type_str));
+
+            QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
 
@@ -265,10 +267,12 @@ void MainWindow::init_modules()
             CONFIG::instance()->set_version_path(path_version);
             CONFIG::instance()->load_version();
 
-            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config_sn.json";
+            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config_sn.json";
             CONFIG::instance()->set_serial_number_path(path_cam_serial_number);
             CONFIG::instance()->load_cam_serial_number();
         }
+
+        mileage = CONFIG::instance()->get_mileage();
     }
     else
     {
@@ -384,8 +388,6 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
         AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
         AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
-        // ctrl->lidar = lidar;
-        // ctrl->cam = cam;
         AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
@@ -398,15 +400,18 @@ void MainWindow::init_modules()
         SIM::instance()->set_logger_module(LOGGER::instance());
         SIM::instance()->set_unimap_module(UNIMAP::instance());
         SIM::instance()->set_mobile_module(MOBILE::instance());
-        if(CONFIG::instance()->get_loc_mode() == "3D")
-        {
-            SIM::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        }
-        else
-        {
-            SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        }
+        SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         SIM::instance()->set_localization_module(LOCALIZATION::instance());
+    }
+
+    // simple task module init
+    {
+        TASK::instance()->set_config_module(CONFIG::instance());
+        TASK::instance()->set_logger_module(LOGGER::instance());
+        TASK::instance()->set_unimap_module(UNIMAP::instance());
+        TASK::instance()->set_mobile_module(MOBILE::instance());
+        TASK::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        TASK::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
     // comm cooperative module init
@@ -420,7 +425,7 @@ void MainWindow::init_modules()
         COMM_COOP::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
-    // comm cooperative module init
+    // comm rrs module init
     {
         COMM_RRS::instance()->set_config_module(CONFIG::instance());
         COMM_RRS::instance()->set_logger_module(LOGGER::instance());
@@ -433,6 +438,21 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+    }
+
+    // comm fms module init
+    {
+        COMM_FMS::instance()->set_config_module(CONFIG::instance());
+        COMM_FMS::instance()->set_logger_module(LOGGER::instance());
+        COMM_FMS::instance()->set_mobile_module(MOBILE::instance());
+        COMM_FMS::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_FMS::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_FMS::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_FMS::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_FMS::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_FMS::instance()->set_mapping_module(MAPPING::instance());
+        COMM_FMS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+        COMM_FMS::instance()->init();
     }
 
     // docking module init
@@ -468,8 +488,22 @@ void MainWindow::init_modules()
     {
         UNIMAP::instance()->load_map(map_path);
     }
+
     all_update();
     bt_Request();
+}
+
+void MainWindow::ui_tasks_update()
+{
+    ui->lw_TaskList->clear();
+
+    std::vector<QString> task_nodes = TASK::instance()->get_task_node_list();
+    for(size_t i = 0; i < TASK::instance()->check_node_list_size(); i++)
+    {
+        ui->lw_TaskList->addItem(task_nodes[i]);
+    }
+
+    is_topo_update = true;
 }
 
 void MainWindow::all_plot_clear()
@@ -569,9 +603,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                    pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                    std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
+                    pick.cur_node = UNIMAP::instance()->get_goal_node(pt).id;
 
                     // update last mouse button
                     pick.last_btn = 0;
@@ -705,9 +737,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
-                        pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                        //                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
+                        pick.cur_node = UNIMAP::instance()->get_goal_node(pt).id;
 
                         // update last mouse button
                         pick.last_btn = 0;
@@ -973,7 +1003,7 @@ void MainWindow::bt_SimInit()
     MOBILE::instance()->set_is_synced(true);
 
     LIDAR_2D::instance()->set_is_connected(true);
-    LIDAR_2D::instance()->set_sync_flag(true);
+    LIDAR_2D::instance()->set_is_sync(true);
 
     // loc start
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1008,7 +1038,7 @@ void MainWindow::bt_Sync()
 
     if(CONFIG::instance()->get_use_lidar_2d())
     {
-        LIDAR_2D::instance()->set_sync_flag(true);
+        LIDAR_2D::instance()->set_is_sync(true);
     }
 
     if(CONFIG::instance()->get_use_lidar_3d())
@@ -1285,24 +1315,23 @@ void MainWindow::bt_AutoMove()
 
     if(pick.cur_node != "")
     {
-        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-        if(node)
+        NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(!node.id.isEmpty())
         {
-            Eigen::Vector3d xi = TF_to_se2(node->tf);
+            Eigen::Vector3d xi = TF_to_se2(node.tf);
 
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "pp";
             msg.preset = 0;
-            msg.goal_node_id = node->id;
+            msg.goal_node_id = node.id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         }
-        return;
     }
 
     if(pick.last_btn == 1)
@@ -1316,8 +1345,7 @@ void MainWindow::bt_AutoMove()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
-        return;
+        AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
     }
 }
 
@@ -1331,22 +1359,22 @@ void MainWindow::bt_AutoMove2()
 
     if(pick.cur_node != "")
     {
-        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-        if(node != NULL)
+        NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(!node.id.isEmpty())
         {
-            Eigen::Vector3d xi = TF_to_se2(node->tf);
+            Eigen::Vector3d xi = TF_to_se2(node.tf);
 
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "hpp";
             msg.preset = 0;
-            msg.goal_node_id = node->id;
+            msg.goal_node_id = node.id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[2] = node.tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
 
-            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+            AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         }
         return;
     }
@@ -1362,7 +1390,7 @@ void MainWindow::bt_AutoMove2()
         msg.tgt_pose_vec[2] = 0;
         msg.tgt_pose_vec[3] = xi[2];
 
-        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
         return;
     }
 }
@@ -1506,10 +1534,9 @@ void MainWindow::bt_ReturnToCharging()
         return;
     }
 
-    auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
-
     std::vector<QString> found_ids;
-    for(const auto& node : (*unimap_nodes))
+    auto nodes = UNIMAP::instance()->get_nodes();
+    for(const auto& node : nodes)
     {
         QString name = node.name;
         if(name.contains(robot_serial_number))
@@ -1534,27 +1561,27 @@ void MainWindow::bt_ReturnToCharging()
 
 
     QString found_id = found_ids[0];
-    NODE* node = UNIMAP::instance()->get_node_by_id(found_id);
-    if(node == nullptr)
+    NODE node = UNIMAP::instance()->get_node_by_id(found_id);
+    if(node.id.isEmpty())
     {
         LOGGER::instance()->write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
         return;
     }
 
-    LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+    LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node.name), "Green");
 
-    Eigen::Vector3d xi = TF_to_se2(node->tf);
+    Eigen::Vector3d xi = TF_to_se2(node.tf);
     DATA_MOVE msg;
     msg.command = "goal";
     msg.method = "pp";
     msg.preset = 0;
-    msg.goal_node_id = node->id;
+    msg.goal_node_id = node.id;
     msg.tgt_pose_vec[0] = xi[0];
     msg.tgt_pose_vec[1] = xi[1];
-    msg.tgt_pose_vec[2] = node->tf(2,3);
+    msg.tgt_pose_vec[2] = node.tf(2,3);
     msg.tgt_pose_vec[3] = xi[2];
 
-    Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+    AUTOCONTROL::instance()->request_move(CommandType::MOVE, msg);
 }
 
 // annotation
@@ -1620,7 +1647,6 @@ void MainWindow::bt_QuickAddNode()
     printf("[QA_Node] quick add node\n");
 }
 
-
 void MainWindow::slot_local_path_updated()
 {
     COMM_RRS::instance()->set_local_path_update();
@@ -1631,6 +1657,110 @@ void MainWindow::slot_global_path_updated()
 {
     COMM_RRS::instance()->set_global_path_update();
     is_global_path_update = true;
+}
+
+void MainWindow::slot_sim_random_init(QString seed)
+{
+    if(CONFIG::instance()->get_use_sim() == false)
+    {
+        LOGGER::instance()->write_log("[SIM] only simulation mode", "Red", true, false);
+        return;
+    }
+
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        LOGGER::instance()->write_log("[SIM] map load first", "Red", true, false);
+        return;
+    }
+
+    NODE node = UNIMAP::instance()->get_node_by_id(seed);
+    if(node.id.isEmpty() || node.id.isNull())
+    {
+        return;
+    }
+
+    // loc stop
+    LOCALIZATION::instance()->stop();
+
+    // stop first
+    SIM::instance()->stop();
+
+    // set
+    Eigen::Matrix4d tf = node.tf;
+    SIM::instance()->set_cur_tf(tf);
+    LOCALIZATION::instance()->set_cur_tf(tf);
+
+    // start
+    SIM::instance()->start();
+
+    // make dummy
+    MOBILE::instance()->set_is_connected(true);
+    MOBILE::instance()->set_is_synced(true);
+
+    LIDAR_2D::instance()->set_is_connected(true);
+    LIDAR_3D::instance()->set_is_connected(true);
+
+    LIDAR_2D::instance()->set_is_sync(true);
+    LIDAR_3D::instance()->set_is_sync(true);
+
+    // loc start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    LOCALIZATION::instance()->start();
+}
+
+void MainWindow::slot_sim_random_seq()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED || LOCALIZATION::instance()->get_is_loc() == false || TASK::instance()->get_is_task())
+    {
+        printf("check again\n");
+        return;
+    }
+
+    std::vector<QString> goal_nodes = UNIMAP::instance()->get_nodes("GOAL");
+    std::vector<QString> init_nodes = UNIMAP::instance()->get_nodes("INIT");
+
+    std::vector<QString> nodes;
+    nodes.insert(nodes.end(), goal_nodes.begin(), goal_nodes.end());
+    nodes.insert(nodes.end(), init_nodes.begin(), init_nodes.end());
+
+    if(nodes.size() == 0)
+    {
+        printf("check again 2\n");
+        return;
+    }
+
+    TASK::instance()->clear();
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(nodes.begin(), nodes.end(), g);
+
+    const int seq_size = 10;
+    for(int p = 0; p < seq_size; p++)
+    {
+        QString id = nodes[p];
+        NODE node = UNIMAP::instance()->get_node_by_id(id);
+        if(node.id.isEmpty() || node.id.isNull())
+        {
+            continue;
+        }
+
+        TASK::instance()->add_task(node);
+    }
+
+    if(TASK::instance()->check_node_list_size() == 0)
+    {
+        printf("check again 3\n");
+        return;
+    }
+
+    ui_tasks_update();
+
+    TASK::instance()->set_is_start(true);
+    TASK::instance()->set_use_looping(true);
+
+    QString mode = CONFIG::instance()->get_robot_model() == RobotModel::MECANUM ? "holonomic" : "basic";
+    TASK::instance()->play(mode);
 }
 
 // for obsmap
@@ -1651,7 +1781,7 @@ void MainWindow::jog_loop()
     while(jog_flag)
     {
         // check autodrive
-        if(!AUTOCONTROL::instance()->get_is_moving() /*|| AUTOCONTROL::instance()->get_is_debug()*/)
+        if(!AUTOCONTROL::instance()->get_is_moving())
         {
             // action
             double v_acc   = ui->spb_AccV->value();
@@ -1837,7 +1967,7 @@ void MainWindow::watch_loop()
             {
                 if(LIDAR_2D::instance()->get_is_connected() && !LIDAR_2D::instance()->get_is_sync())
                 {
-                    LIDAR_2D::instance()->set_sync_flag(true);
+                    LIDAR_2D::instance()->set_is_sync(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_2d_type());
                     printf("%s\n", str.toLocal8Bit().data());
                 }
@@ -1856,7 +1986,7 @@ void MainWindow::watch_loop()
 
                 if(LIDAR_2D::instance()->get_is_connected())
                 {
-                    LIDAR_2D::instance()->set_sync_flag(true);
+                    LIDAR_2D::instance()->set_is_sync(true);
                 }
 
                 if(LIDAR_3D::instance()->get_is_connected())
@@ -1916,59 +2046,13 @@ void MainWindow::watch_loop()
             prev_move_distance = move_distance;
 
             // plot mobile pose
-            ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+            ui->lb_Mileage->setText("[Mileage] : " + mileage_sum);
 
             if(cnt % 100 == 0)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }
         }
-
-
-        // Samsung's request
-        //        // for 500ms loop
-        //        // obs logging
-        //        if(cnt % 5 == 0)
-        //        {
-        //            if(AUTOCONTROL::instance()->get_is_moving())
-        //            {
-        //                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
-        //                if(obs_d < 2.0 + 1e-6)
-        //                {
-        //                    // zone, obs dist
-        ////                    QString log = QString("\t%1\t%2")
-        ////                            .arg(int(obs_d))
-        ////                            .arg(obs_d, 0, 'f', 6);
-        //                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
-        ////                    qDebug()<<log;
-
-        //                    LOGGER::instance()->write_log_to_txt(log);
-        //                }
-        //            }
-        //        }
-        //        // for 1 min loop
-        //        // temperature logging
-        //        if(cnt % 600 == 0)
-        //        {
-        //            //for temperature status
-        //            {
-        //                MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
-
-        //                //            //m1 m2 battery usb sensor
-        //                QString log = QString("\t%1\t%2\t%3\t%4\t%5")
-        //                        .arg(mobile_log.temp_m0)
-        //                        .arg(mobile_log.temp_m1)
-        //                        .arg(mobile_log.tabos_temperature)
-        //                        .arg(QString::number(temperature_value))
-        //                        .arg(mobile_log.tabos_soc, 0, 'f', 3);
-
-        //                //            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
-        //                //            qDebug()<<temperature_value.load();
-
-        //                LOGGER::instance()->write_temperature_log_to_txt(log);
-        //            }
-        //        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -2117,10 +2201,9 @@ void MainWindow::plot_node()
         }
 
         // draw
-        auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
-        if(unimap_nodes && unimap_nodes->size() > 0)
+        auto unimap_nodes = UNIMAP::instance()->get_nodes();
+        if(unimap_nodes.size() > 0)
         {
-            // std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {
                 double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
@@ -2130,9 +2213,9 @@ void MainWindow::plot_node()
                 // draw nodes
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-                const size_t nodes_size = unimap_nodes->size();
+                const size_t nodes_size = unimap_nodes.size();
                 cloud->reserve(nodes_size);
-                for(const auto& node : (*unimap_nodes))
+                for(const auto& node : unimap_nodes)
                 {
                     QString id = node.id;
                     if(pcl_viewer->contains(id.toStdString()))
@@ -2275,23 +2358,23 @@ void MainWindow::plot_node()
 
             if(ui->ckb_PlotEdges->isChecked())
             {
-                auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
+                auto unimap_nodes = UNIMAP::instance()->get_nodes();
 
                 // draw edges
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
-                for(const auto node0 : (*unimap_nodes))
+                for(const auto node0 : unimap_nodes)
                 {
                     for(const auto node1_id : node0.linked)
                     {
-                        NODE* node1 = UNIMAP::instance()->get_node_by_id(node1_id);
-                        if(node1 == nullptr)
+                        NODE node1 = UNIMAP::instance()->get_node_by_id(node1_id);
+                        if(node1.id.isEmpty())
                         {
                             continue;
                         }
 
                         Eigen::Vector3d P0 = node0.tf.block(0,3,3,1);
-                        Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
+                        Eigen::Vector3d P1 = node1.tf.block(0,3,3,1);
                         Eigen::Vector3d P_mid = (P0+P1)/2;
 
                         std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
@@ -2376,14 +2459,14 @@ void MainWindow::plot_pick()
 
         if(pick.cur_node != "")
         {
-            NODE *node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
-            if(node != nullptr)
+            NODE node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+            if(!node.id.isEmpty())
             {
-                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node->tf, 1.0, 1.0, 1.0);
+                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node.tf, 1.0, 1.0, 1.0);
                 pcl_viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text
-                QString text = "id: " + node->id + ", name: " + node->name;
+                QString text = "id: " + node.id + ", name: " + node.name;
                 ui->lb_NodeId->setText(text);
             }
         }
@@ -2428,7 +2511,7 @@ void MainWindow::plot_info()
 
             // plot mobile status
             ui->lb_MobileStatusInfo->setText(MOBILE::instance()->get_status_text());
-            ui->lb_Battery->setText("[BAT]" + QString::number(tabos_battery_soc)+"%");
+            ui->lb_BatteryPercent->setText("[BAT]" + QString::number(tabos_battery_soc) + "%");
         }
     }
 
@@ -2489,8 +2572,8 @@ void MainWindow::plot_safety()
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
-    ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
-    ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
+    ui->le_Setting_Version->setText(QString("%1").arg(cur_setting.version));
+    ui->le_Setting_Type->setText(QString("%1").arg(cur_setting.robot_type));
 
     ui->le_Setting_Limit_V->setText(QString().sprintf("%.2f",cur_setting.v_limit/1000.0));
     ui->le_Setting_Limit_V_Jog->setText(QString().sprintf("%.2f",cur_setting.v_limit_jog/1000.0));
@@ -3296,7 +3379,7 @@ void MainWindow::plot_ctrl()
                 pcl::PointXYZRGB pt;
                 pt.x = P[0];
                 pt.y = P[1];
-                pt.z = P[2]+0.1;
+                pt.z = P[2] + 0.1;
                 pt.r = 255;
                 pt.g = 0;
                 pt.b = 0;
@@ -3450,10 +3533,10 @@ void MainWindow::plot_ctrl()
         QString cur_node_id; // = ctrl.get_cur_node_id();
         if(cur_node_id != "")
         {
-            NODE *node = UNIMAP::instance()->get_node_by_id(cur_node_id);
-            if(node != nullptr)
+            NODE node = UNIMAP::instance()->get_node_by_id(cur_node_id);
+            if(!node.id.isEmpty())
             {
-                Eigen::Matrix4d tf = node->tf;
+                Eigen::Matrix4d tf = node.tf;
                 tf(2,3) += CONFIG::instance()->get_robot_size_z_max();
                 pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius()*0.5, 0.05, tf, 0.0, 1.0, 1.0);
                 pcl_viewer->addPolygonMesh(donut, "cur_node");
@@ -3477,7 +3560,6 @@ void MainWindow::plot_cam()
             cv::Mat plot = CAM::instance()->get_time_img(i).img;
             if(!plot.empty())
             {
-//                cv::flip(plot,plot,0);
 
                 // QLabel name create dynamically
                 QString labelName = QString("lb_Screen%1").arg(i+2); // lb_Screen2, lb_Screen3 ...
@@ -3786,7 +3868,6 @@ int MainWindow::led_handler()
         {
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
-
         }
 
         if(obs_d < 2.0)
@@ -3829,15 +3910,15 @@ int MainWindow::led_handler()
     return led_out;
 }
 
-void MainWindow::getIPv4()
+void MainWindow::get_IP()
 {
-    QString chosen = "N/A";
+    QString chosen = "[IP]: N/A";
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
         if(addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
         {
-            ui->lb_RobotIP->setText(addr.toString());
+            ui->lb_RobotIP->setText(QString("[IP]: %1").arg(addr.toString()));
             return;
         }
     }

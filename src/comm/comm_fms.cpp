@@ -1,9 +1,32 @@
 #include "comm_fms.h"
 #include "mainwindow.h"
 
+COMM_FMS* COMM_FMS::instance(QObject* parent)
+{
+    static COMM_FMS* inst = nullptr;
+    if(!inst && parent)
+    {
+        inst = new COMM_FMS(parent);
+    }
+    else if(inst && parent && inst->parent() == nullptr)
+    {
+        inst->setParent(parent);
+    }
+    return inst;
+}
+
 COMM_FMS::COMM_FMS(QObject *parent)
     : QObject{parent}
     , main(parent)
+    , config(nullptr)
+    , logger(nullptr)
+    , mobile(nullptr)
+    , unimap(nullptr)
+    , obsmap(nullptr)
+    , lidar_2d(nullptr)
+    , loc(nullptr)
+    , mapping(nullptr)
+    , dctrl(nullptr)
 {
     client = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     send_timer = new QTimer(this);
@@ -28,35 +51,35 @@ COMM_FMS::~COMM_FMS()
     }
 
     is_recv_running = false;
-    if(recv_thread->joinable())
+    if(recv_thread && recv_thread->joinable())
     {
         recv_thread->join();
     }
 
     is_move_running = false;
     move_cv.notify_all();
-    if(move_thread->joinable())
+    if(move_thread && move_thread->joinable())
     {
         move_thread->join();
     }
 
     is_path_running = false;
     path_cv.notify_all();
-    if(path_thread->joinable())
+    if(path_thread && path_thread->joinable())
     {
         path_thread->join();
     }
 
     is_vobs_running = false;
     vobs_cv.notify_all();
-    if(vobs_thread->joinable())
+    if(vobs_thread && vobs_thread->joinable())
     {
         vobs_thread->join();
     }
 
     is_common_running = false;
     common_cv.notify_all();
-    if(common_thread->joinable())
+    if(common_thread && common_thread->joinable())
     {
         common_thread->join();
     }
@@ -103,7 +126,7 @@ double COMM_FMS::get_max_process_time_vobs()
 void COMM_FMS::init()
 {
     // update robot id
-    robot_id = QString("R_%1").arg(static_cast<long long>(get_time()*1000));
+    robot_id = QString("R_%1").arg(static_cast<long long>(get_time0()*1000));
     logger->write_log(QString("[COMM_FMS] ID: %1").arg(robot_id));
 
     // start reconnect loop
@@ -118,26 +141,31 @@ void COMM_FMS::init()
 
     if(move_thread == nullptr)
     {
+        is_move_running = true;
         move_thread = std::make_unique<std::thread>(&COMM_FMS::move_loop, this);
     }
 
     if(path_thread == nullptr)
     {
+        is_path_running = true;
         path_thread = std::make_unique<std::thread>(&COMM_FMS::path_loop, this);
     }
 
     if(vobs_thread == nullptr)
     {
+        is_vobs_running = true;
         vobs_thread = std::make_unique<std::thread>(&COMM_FMS::vobs_loop, this);
     }
 
     if(common_thread == nullptr)
     {
+        is_common_running = true;
         common_thread = std::make_unique<std::thread>(&COMM_FMS::common_loop, this);
     }
 
     if(response_thread == nullptr)
     {
+        is_response_running = true;
         response_thread = std::make_unique<std::thread>(&COMM_FMS::response_loop, this);
     }
 
@@ -161,7 +189,9 @@ void COMM_FMS::reconnect_loop()
             return;
         }
 
-        QString server_addr = QString("ws://%1:12334").arg(server_ip);
+        //QString server_addr = QString("ws://%1:12334").arg(server_ip);
+        //QString server_addr = QString("ws://%1:12334").arg("127.0.0.1");
+        QString server_addr = QString("ws://%1:12334").arg("3.34.158.22");
         client->open(QUrl(server_addr));
     }
 }
@@ -216,10 +246,10 @@ void COMM_FMS::send_move_status()
     Eigen::Matrix4d goal_tf = Eigen::Matrix4d::Identity();
     if(unimap->get_is_loaded() == MAP_LOADED && goal_node_id != "")
     {
-        NODE* node = unimap->get_node_by_id(goal_node_id);
-        if(node != nullptr)
+        NODE node = unimap->get_node_by_id(goal_node_id);
+        if(!node.id.isEmpty())
         {
-            goal_tf =  node->tf;
+            goal_tf =  node.tf;
         }
     }
 
@@ -293,6 +323,8 @@ void COMM_FMS::recv_loop()
             QString cmd = get_json(root_obj, "topic");
             QJsonObject data = root_obj.value("data").toObject();
 
+            logger->write_log(QString("[COMM_FMS] recv, command: %1, time: %2").arg(cmd).arg(get_time()), "Green");
+
             // parsing
             if(cmd == "move")
             {
@@ -311,8 +343,6 @@ void COMM_FMS::recv_loop()
             {
                 handle_common_cmd(cmd, data);
             }
-
-            logger->write_log(QString("[COMM_FMS] recv, command: %1, time: %2").arg(cmd).arg(get_time()), "Green");
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -621,13 +651,8 @@ void COMM_FMS::path_loop()
         }
 
         double ed_time = get_time();
-        process_time_path = ed_time - st_time;
-        if(max_process_time_path < process_time_path)
-        {
-            max_process_time_path = (double)process_time_path;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        process_time_path.store(ed_time - st_time, std::memory_order_relaxed);
+        atomic_update_max(max_process_time_path, process_time_path.load(std::memory_order_relaxed));
     }
 }
 
@@ -664,13 +689,8 @@ void COMM_FMS::vobs_loop()
         }
 
         double ed_time = get_time();
-        process_time_vobs = ed_time - st_time;
-        if(max_process_time_vobs < process_time_vobs)
-        {
-            max_process_time_vobs = (double)process_time_vobs;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        process_time_vobs.store(ed_time - st_time, std::memory_order_relaxed);
+        atomic_update_max(max_process_time_vobs, process_time_vobs.load(std::memory_order_relaxed));
     }
 }
 
@@ -1072,8 +1092,6 @@ void COMM_FMS::common_loop()
                 msg.message = "";
             }
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
@@ -1196,6 +1214,13 @@ void COMM_FMS::send_move_response(DATA_MOVE msg)
 
 void COMM_FMS::send_loop()
 {
+    cnt_++;
+    if(cnt_ % 10 == 0)
+    {
+        send_move_status();
+    }
+
+
     QString buf;
     if(send_queue.try_pop(buf))
     {
@@ -1263,7 +1288,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
         Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3]*D2R));
         goal_tf(2,3) = pose_vec[2];
-        if(obsmap->is_tf_collision(goal_tf))
+        if(obsmap->is_tf_collision(goal_tf) != ObsDetectState::NONE)
         {
             msg.result = "reject";
             msg.message = "[R0Tx1801] target location occupied(static obs)";
@@ -1275,7 +1300,7 @@ void COMM_FMS::handle_move_target(DATA_MOVE &msg)
         msg.message = "";
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        ctrl->request_move(CommandType::MOVE, msg);
     }
     else
     {
@@ -1308,7 +1333,7 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         }
 
         QString goal_id = msg.goal_node_id;
-        if(goal_id.isEmpty() )
+        if(goal_id.isEmpty())
         {
             msg.result = "reject";
             msg.message = "[R0Nx2000]empty node id";
@@ -1316,11 +1341,11 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
             return;
         }
 
-        NODE* node = unimap->get_node_by_id(goal_id);
-        if(!node)
+        NODE node = unimap->get_node_by_id(goal_id);
+        if(node.id.isEmpty())
         {
             node = unimap->get_node_by_name(goal_id);
-            if(!node)
+            if(node.id.isEmpty())
             {
                 msg.result = "reject";
                 msg.message = "[R0Nx2001]can not find node";
@@ -1329,12 +1354,12 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
             }
 
             // convert name to id
-            msg.goal_node_id   = node->id;
-            msg.goal_node_name = node->name;
+            msg.goal_node_id   = node.id;
+            msg.goal_node_name = node.name;
         }
         else
         {
-            msg.goal_node_name = node->name;
+            msg.goal_node_name = node.name;
         }
 
         mobile->move(0,0,0);
@@ -1343,14 +1368,14 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
         msg.cur_pos = cur_pos;
 
-        Eigen::Vector3d xi = TF_to_se2(node->tf);
+        Eigen::Vector3d xi = TF_to_se2(node.tf);
         msg.tgt_pose_vec[0] = xi[0];
         msg.tgt_pose_vec[1] = xi[1];
-        msg.tgt_pose_vec[2] = node->tf(2,3);
+        msg.tgt_pose_vec[2] = node.tf(2,3);
         msg.tgt_pose_vec[3] = xi[2];
 
         // calc eta (estimation time arrival)
-        Eigen::Matrix4d goal_tf = node->tf;
+        Eigen::Matrix4d goal_tf = node.tf;
         PATH global_path = ctrl->calc_global_path(goal_tf);
         if(global_path.pos.size() < 2)
         {
@@ -1363,12 +1388,22 @@ void COMM_FMS::handle_move_goal(DATA_MOVE &msg)
         {
             msg.result = "accept";
             msg.message = "";
-            calc_remaining_time_distance(msg);
+            calc_remaining_time_distance(msg, global_path);
         }
 
         send_move_response(msg);
 
-        Q_EMIT (ctrl->signal_move(msg));
+        CommandType command_type = CommandType::NONE;
+        if(msg.command == "goal")
+        {
+            command_type = CommandType::MOVE;
+        }
+        else if(msg.command == "change_goal")
+        {
+            command_type = CommandType::REQ_CHANGE_GOAL;
+        }
+
+        ctrl->request_move(command_type, msg);
     }
     else if(method == "hpp")
     {
@@ -1429,13 +1464,11 @@ void COMM_FMS::handle_move_stop(DATA_MOVE &msg)
     }
 }
 
-void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg)
+void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg, PATH& global_path)
 {
     // time align (first align + final align)
     CTRL_PARAM params = ctrl->get_cur_ctrl_params();
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-
-    PATH global_path = ctrl->get_cur_global_path();
 
     Eigen::Vector2d dtdr = dTdR(cur_tf, global_path.pose.front());
     double time_align = (dtdr[1] / (params.LIMIT_W*D2R + 1e-06)) * 2;
@@ -1468,9 +1501,6 @@ void COMM_FMS::calc_remaining_time_distance(DATA_MOVE &msg)
 
 void COMM_FMS::handle_path(DATA_PATH& msg)
 {
-    // stop first
-    mobile->move(0,0,0);
-
     // update vobs first
     std::vector<Eigen::Vector3d> vobs_c_list;
     {
@@ -1483,10 +1513,10 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
+                NODE node = unimap->get_node_by_id(node_id);
+                if(!node.id.isEmpty())
                 {
-                    vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    vobs_c_list.push_back(node.tf.block(0,3,3,1));
                 }
             }
         }
@@ -1507,7 +1537,9 @@ void COMM_FMS::handle_path(DATA_PATH& msg)
             step.push_back((int)p);
         }
 
-        ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
+        set_path(path, step, msg.preset, (long long)(msg.time));
+        ctrl->set_last_step(0);
+        ctrl->set_global_path_time(msg.time);
     }
 
     send_path_response(msg);
@@ -1522,7 +1554,19 @@ void COMM_FMS::handle_path_move(DATA_PATH& msg)
         return;
     }
 
-    ctrl->signal_path();
+    std::vector<QString> node_path;
+    std::vector<int> step;
+    int preset;
+    long long path_time;
+    {
+        std::lock_guard<std::mutex> lock(path_set_mtx);
+        node_path = cur_node_path;
+        step = cur_step;
+        preset = cur_preset;
+        path_time = cur_path_time;
+    }
+
+    ctrl->request_update_path(CommandType::UPDATE_PATH, node_path, step, preset);
 }
 
 void COMM_FMS::handle_vobs(DATA_VOBS& msg)
@@ -1559,10 +1603,10 @@ void COMM_FMS::handle_vobs(DATA_VOBS& msg)
             QString node_id = vobs_str_list[p];
             if(node_id != "")
             {
-                NODE *node = unimap->get_node_by_id(node_id);
-                if(node != nullptr)
+                NODE node = unimap->get_node_by_id(node_id);
+                if(!node.id.isEmpty())
                 {
-                    vobs_c_list.push_back(node->tf.block(0,3,3,1));
+                    vobs_c_list.push_back(node.tf.block(0,3,3,1));
                 }
             }
         }
@@ -1625,4 +1669,108 @@ QMainWindow* COMM_FMS::get_main_window()
 bool COMM_FMS::is_main_window_valid()
 {
     return (qobject_cast<QMainWindow*>(main) != nullptr);
+}
+
+void COMM_FMS::atomic_update_max(std::atomic<double>& tgt, double v)
+{
+    double cur = tgt.load(std::memory_order_relaxed);
+    while (cur < v && !tgt.compare_exchange_weak(cur, v, std::memory_order_relaxed, std::memory_order_relaxed))
+    {}
+}
+
+void COMM_FMS::set_path(std::vector<QString> node_path, std::vector<int> step, int preset, long long path_time)
+{
+    std::lock_guard<std::mutex> lock(path_set_mtx);
+    cur_node_path = node_path;
+    cur_step = step;
+    cur_preset = preset;
+    cur_path_time = path_time;
+}
+
+void COMM_FMS::set_config_module(CONFIG* _config)
+{
+    if(_config)
+    {
+        config = _config;
+    }
+}
+
+void COMM_FMS::set_logger_module(LOGGER* _logger)
+{
+    if(_logger)
+    {
+        logger = _logger;
+    }
+}
+
+void COMM_FMS::set_mobile_module(MOBILE* _mobile)
+{
+    if(_mobile)
+    {
+        mobile = _mobile;
+    }
+}
+
+void COMM_FMS::set_lidar_2d_module(LIDAR_2D* _lidar)
+{
+    if(_lidar)
+    {
+        lidar_2d = _lidar;
+    }
+}
+
+void COMM_FMS::set_cam_module(CAM* _cam)
+{
+    if(_cam)
+    {
+        cam = _cam;
+    }
+}
+
+void COMM_FMS::set_localization_module(LOCALIZATION* _loc)
+{
+    if(_loc)
+    {
+        loc = _loc;
+    }
+}
+
+void COMM_FMS::set_mapping_module(MAPPING* _mapping)
+{
+    if(_mapping)
+    {
+        mapping = _mapping;
+    }
+}
+
+void COMM_FMS::set_unimap_module(UNIMAP* _unimap)
+{
+    if(_unimap)
+    {
+        unimap = _unimap;
+    }
+}
+
+void COMM_FMS::set_obsmap_module(OBSMAP* _obsmap)
+{
+    if(_obsmap)
+    {
+        obsmap = _obsmap;
+    }
+}
+
+void COMM_FMS::set_autocontrol_module(AUTOCONTROL* _ctrl)
+{
+    if(_ctrl)
+    {
+        ctrl = _ctrl;
+    }
+}
+
+void COMM_FMS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
+{
+    if(_dctrl)
+    {
+        dctrl = _dctrl;
+    }
 }

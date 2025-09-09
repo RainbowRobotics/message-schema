@@ -51,6 +51,7 @@ SOURCES += \
     logger.cpp \
     qr_sensor.cpp \
     qr_sensor/GLS611/GLS611.cpp \
+    simple_task.cpp \
     unimap.cpp \
     mobile.cpp \
     lidar_3d.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     nanoflann.hpp \
     qr_sensor.h \
     qr_sensor/GLS611/GLS611.h \
+    simple_task.h \
     tinycolormap.hpp \
     logger.h \
     unimap.h \

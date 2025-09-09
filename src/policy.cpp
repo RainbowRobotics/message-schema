@@ -160,16 +160,16 @@ void POLICY::zone_loop()
         std::vector<QString> zones = unimap->get_nodes("ZONE");
         for(size_t p = 0; p < zones.size(); p++)
         {
-            NODE* node = unimap->get_node_by_id(zones[p]);
-            if(node != NULL)
+            NODE node = unimap->get_node_by_id(zones[p]);
+            if(!node.id.isEmpty())
             {
-                QString name = node->name;
+                QString name = node.name;
                 // QString info = node->info;
 
                 NODE_INFO res;
-                if(parse_info(node->info, "", res))
+                if(parse_info(node.info, "", res))
                 {
-                    Eigen::Matrix4d tf = node->tf.inverse()*cur_tf;
+                    Eigen::Matrix4d tf = node.tf.inverse()*cur_tf;
 
                     double x = tf(0,3);
                     double y = tf(1,3);

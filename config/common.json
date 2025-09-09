@@ -1,5 +1,4 @@
 {
-    "MILEAGE": "6.566",
-    "ROBOT_MODEL": "S100",
-    "ROBOT_TYPE": "S100-B-3D"
+    "MILEAGE": "0.0",
+    "ROBOT_TYPE": "MECANUM-Q150"
 }

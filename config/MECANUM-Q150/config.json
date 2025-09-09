@@ -1,52 +1,16 @@
 {
-    "annotation": {
-        "ANNOT_QA_STEP": "0.3"
-    },
-    "cam": {
-        "CAM_HEIGHT_MAX": "1.0",
-        "CAM_HEIGHT_MIN": "0.1",        
-        "CAM_TF_0":"0.2292,0.0875,0.2,62.0,0.0,115.0",
-        "CAM_TF_1":"0.2292,-0.0875,0.2,-62.0,0.0,-115.0"
-    },
-    "control": {
-        "DRIVE_EXTENDED_CONTROL_TIME": "1.0",
-        "DRIVE_GOAL_APPROACH_GAIN": "0.5",
-        "DRIVE_GOAL_D": "0.1",
-        "DRIVE_GOAL_TH": "5.0",
-        "DRIVE_V_DEADZONE": "0.0",
-        "DRIVE_W_DEADZONE": "0.0"
-    },
-    "debug": {
-        "USE_SIM": "0",
-        "USE_IMU": "0",
-        "USE_BLIDAR": "0",
-        "USE_BQR": "0",
-        "USE_BEEP": "1",
-        "USE_CAM": "1",
-        "USE_RTSP": "0",
-        "USE_RRS": "1",
-        "USE_FMS": "1",
-        "USE_QTUI": "0",
-        "USE_ARUCO": "0",
-        "USE_EARLYSTOP": "0",
-        "USE_LVX": "0",
-        "USE_COOP": "0",
-        "USE_MULTI": "1"
-    },
-    "default": {
-        "LIDAR_MAX_RANGE": "40.0",
-        "LIDAR_MIN_RANGE": "0.5",
-        "LIDAR_TF_B": "0.0, 0.0, 0.0, 0.0, 0.0, 0.0",
-        "LIDAR_TF_F": "0.17, 0.0, 0.0, 0.0, 0.0, -178.0",
-        "ROBOT_SIZE_MIN_X": "-0.35",
-        "ROBOT_SIZE_MAX_X": "0.4",
+    "robot": {
+        "PLATFORM_NAME": "SDC",
+        "PLATFORM_TYPE": "D400",
+        
+        "ROBOT_SIZE_MAX_X": "0.51",
         "ROBOT_SIZE_MAX_Y": "0.35",
-        "ROBOT_SIZE_MAX_Z": "0.2",
-        "ROBOT_SIZE_MIN_X": "-0.35",
+        "ROBOT_SIZE_MAX_Z": "0.22",
+        "ROBOT_SIZE_MIN_X": "-0.51",
         "ROBOT_SIZE_MIN_Y": "-0.35",
         "ROBOT_SIZE_MIN_Z": "0",
-        "ROBOT_WHEEL_BASE": "0.386",
-        "ROBOT_WHEEL_RADIUS": "0.0635"
+        "ROBOT_WHEEL_BASE": "0.510",
+        "ROBOT_WHEEL_RADIUS": "0.075"
     },
     "sensors": {
         "USE_LIDAR_2D": true,
@@ -69,11 +33,11 @@
         "USE_ARUCO": false
     },
     "network": {
-        "USE_MULTI": true,
+        "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
         "USE_RRS": false,
-        "USE_FMS": true
+        "USE_FMS": false
     },
     "debug": {
         "USE_SIM": true,
@@ -135,7 +99,7 @@
         "MOTOR_GAIN_KD": "100",
         "MOTOR_GAIN_KI": "0",
         "MOTOR_GAIN_KP": "4400",
-        "MOTOR_GEAR_RATIO": "3.0",
+        "MOTOR_GEAR_RATIO": "12",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
         "MOTOR_LIMIT_V": "2.0",
@@ -221,7 +185,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/data/maps/ttk_250715"
+        "MAP_PATH": "/home/jy/maps/250327_unicos_test"
     }
 }
 

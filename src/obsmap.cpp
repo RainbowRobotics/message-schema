@@ -21,8 +21,8 @@ OBSMAP::OBSMAP(QObject *parent) : QObject{parent},
 {
     map_tf.setIdentity();
 
-    wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
-    static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    wall_map    = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    static_map  = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
 }
@@ -50,14 +50,14 @@ void OBSMAP::init()
 
     double obsmap_range = config->get_obs_map_range();
 
-    w = (2*obsmap_range)/obsmap_grid_size;
-    h = (2*obsmap_range)/obsmap_grid_size;
+    w  = (2*obsmap_range)/obsmap_grid_size;
+    h  = (2*obsmap_range)/obsmap_grid_size;
     cx = w/2;
     cy = h/2;
     gs = obsmap_grid_size;
 
-    wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
-    static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    wall_map    = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    static_map  = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
 
@@ -89,11 +89,11 @@ void OBSMAP::clear()
     vobs_list_robots.clear();
     vobs_list_closures.clear();
 
-    wall_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
-    static_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    map_tf      = Eigen::Matrix4d::Identity();
+    wall_map    = cv::Mat(h, w, CV_8U, cv::Scalar(0));
+    static_map  = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
-    map_tf = Eigen::Matrix4d::Identity();
 }
 
 // util
@@ -214,13 +214,16 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
     std::vector<QString> obs_nodes = unimap->get_nodes("OBS");
     for(size_t i = 0; i < obs_nodes.size(); i++)
     {
-        NODE* node = unimap->get_node_by_id(obs_nodes[i]);
-        if(node == nullptr) continue;
+        NODE node = unimap->get_node_by_id(obs_nodes[i]);
+        if(node.id.isEmpty())
+        {
+            continue;
+        }
 
         NODE_INFO info;
-        if(parse_info(node->info, "SIZE", info))
+        if(parse_info(node.info, "SIZE", info))
         {
-            Eigen::Matrix4d tf = node->tf;
+            Eigen::Matrix4d tf = node.tf;
             double sx = info.sz[0];
             double sy = info.sz[1];
             double sz = info.sz[2];
@@ -433,11 +436,11 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         for(size_t p = 0; p < obs_nodes.size(); p++)
         {
             QString id = obs_nodes[p];
-            NODE* node = unimap->get_node_by_id(id);
-            if(node != nullptr)
+            NODE node = unimap->get_node_by_id(id);
+            if(!node.id.isEmpty())
             {
-                QString info = node->info;
-                Eigen::Matrix4d tf = node->tf;
+                QString info = node.info;
+                Eigen::Matrix4d tf = node.tf;
 
                 NODE_INFO res;
                 if(parse_info(info, "SIZE", res))
@@ -869,7 +872,7 @@ void OBSMAP::draw_robot(cv::Mat& img)
     cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_x[0], uv_x[1]), cv::Scalar(0,0,255), 1, cv::LINE_AA);
 }
 
-int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double margin_x, double margin_y)
+ObsDetectState OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double margin_x, double margin_y)
 {
     // get
     std::vector<Eigen::Vector3d> pts;
@@ -926,7 +929,7 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
         if(is_collision)
         {
             // collision
-            return OBS_DYN;
+            return ObsDetectState::DYN;
         }
     }
 
@@ -954,16 +957,16 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
             if(is_collision)
             {
                 // collision
-                return OBS_VIR;
+                return ObsDetectState::VIR;
             }
         }
     }
 
     // no collision
-    return OBS_NONE;
+    return ObsDetectState::NONE;
 }
 
-int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
+ObsDetectState OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn, double margin_x, double margin_y, int st_idx, int idx_step)
 {
     // get
     std::vector<Eigen::Vector3d> pts;
@@ -1024,7 +1027,7 @@ int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, boo
                 // collision
                 if(is_collision)
                 {
-                    return OBS_DYN;
+                    return ObsDetectState::DYN;
                 }
             }
         }
@@ -1064,7 +1067,7 @@ int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, boo
                     // collision
                     if(is_collision)
                     {
-                        return OBS_VIR;
+                        return ObsDetectState::VIR;
                     }
                 }
             }
@@ -1072,7 +1075,7 @@ int OBSMAP::is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, boo
     }
 
     // no collision
-    return OBS_NONE;
+    return ObsDetectState::NONE;
 }
 
 // for avoid path
