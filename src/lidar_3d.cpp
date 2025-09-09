@@ -257,11 +257,6 @@ QString LIDAR_3D::get_info_text()
     return res;
 }
 
-void LIDAR_3D::set_is_connected(bool flag)
-{
-    is_connected.store(flag);
-}
-
 void LIDAR_3D::set_is_sync(bool flag)
 {
     is_sync = flag;

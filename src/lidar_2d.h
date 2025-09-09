@@ -19,10 +19,11 @@ struct LIDAR_2D_INFO
 {
     static constexpr double scan_shadow_min_angle = 5.0;
     static constexpr double scan_shadow_max_angle = 175.0;
-    static constexpr unsigned int merge_que_max_size = 10;
-    static constexpr unsigned int deskewing_que_max_size = 10;
+    static constexpr unsigned int merge_que_max_size         = 10;
+    static constexpr unsigned int deskewing_que_max_size     = 10;
     static constexpr unsigned int deskewing_storage_max_size = 10;
 };
+
 
 class LIDAR_2D : public QObject
 {
@@ -56,7 +57,7 @@ public:
 
     // interface funcs (set)
     void set_cur_state(QString str);
-    void set_is_sync(bool flag);
+    void set_sync_flag(bool flag);
     void set_is_connected(bool val);
 
     void clear_merged_queue();

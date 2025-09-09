@@ -17,7 +17,7 @@
 // qt
 #include <QObject>
 
-enum class RobotType_PDU
+enum class RobotType
 {
     ROBOT_TYPE_UNKNOWN = 0,
     ROBOT_TYPE_D400    = 1,

@@ -51,11 +51,9 @@ public:
     /***********************
      * robot unique
      ***********************/
-    QString get_robot_type_str();        // robot type_str
-    QString get_robot_model_str();       // robot model_str
-    QString get_robot_serial_number();   // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
-    RobotType get_robot_type();          // robot type  : S100-A-3D
-    RobotModel get_robot_model();        // robot model : S100, D400, Mecanum, SEM ...
+    QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
+    QString get_robot_type();           // robot type  : S100-A-3D
+    QString get_robot_model();          // robot model : S100, D400, Mecanum, SEM ...
 
     /***********************
      * robot hardware
@@ -314,17 +312,18 @@ private:
      */
 
     // robot
-    bool USE_SPEAKER = false;
+    QString ROBOT_SERIAL_NUMBER = "RB-M-";
+    QString ROBOT_MODEL = "";
+    QString ROBOT_TYPE  = "";
+    QString PLATFORM_TYPE = "";
+    QString MILEAGE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
-    QString MILEAGE = "";
-    QString ROBOT_SERIAL_NUMBER = "RB-M-";
-    RobotType ROBOT_TYPE  = RobotType::NONE;
-    RobotModel ROBOT_MODEL = RobotModel::NONE;
+    bool USE_SPEAKER = false;
 
     // sensors
     bool USE_LIDAR_2D = false;

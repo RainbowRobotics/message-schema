@@ -46,18 +46,6 @@ public:
     double get_max_process_time_path();
     double get_max_process_time_vobs();
 
-    void set_config_module(CONFIG* _config);
-    void set_logger_module(LOGGER* _logger);
-    void set_mobile_module(MOBILE* _mobile);
-    void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
-    void set_cam_module(CAM* _cam);
-    void set_unimap_module(UNIMAP* _unimap);
-    void set_obsmap_module(OBSMAP* _obsmap);
-    void set_autocontrol_module(AUTOCONTROL* _ctrl);
-    void set_dockcontrol_module(DOCKCONTROL* _dctrl);
-    void set_localization_module(LOCALIZATION* _loc);
-    void set_mapping_module(MAPPING* _mapping);
-
 private:
     explicit COMM_FMS(QObject *parent = nullptr);
     ~COMM_FMS();
@@ -109,7 +97,6 @@ private:
     std::mutex vobs_mtx;
     std::mutex common_mtx;
     std::mutex response_mtx;
-    std::mutex path_set_mtx;
 
     std::queue<DATA_MOVE> move_queue;
     std::queue<DATA_PATH> path_queue;
@@ -148,7 +135,7 @@ private:
     void handle_move_pause(DATA_MOVE& msg);
     void handle_move_resume(DATA_MOVE& msg);
     void handle_move_target(DATA_MOVE& msg);
-    void calc_remaining_time_distance(DATA_MOVE& msg, PATH& global_path);
+    void calc_remaining_time_distance(DATA_MOVE& msg);
 
     void handle_path_cmd(const QJsonObject& data);
     void handle_path(DATA_PATH& msg);
@@ -180,22 +167,14 @@ private:
 
     void handle_common_motor(DATA_MOTOR& msg);
 
-    void atomic_update_max(std::atomic<double>& tgt, double v);
+    std::atomic<double> end_time   = {0.0};
+    std::atomic<double> start_time = {0.0};
 
     std::atomic<double> process_time_path = {0.0};
     std::atomic<double> process_time_vobs = {0.0};
 
     std::atomic<double> max_process_time_path = {-std::numeric_limits<double>::max()};
     std::atomic<double> max_process_time_vobs = {-std::numeric_limits<double>::max()};
-
-    void set_path(std::vector<QString> node_path, std::vector<int> step, int preset, long long path_time);
-
-    std::vector<QString> cur_node_path;
-    std::vector<int> cur_step;
-    int cur_preset;
-    long long cur_path_time;
-
-    int cnt_ = 0;
 
 private Q_SLOTS:
     void send_loop();

@@ -51,6 +51,8 @@ void LIDAR_2D::init()
         return;
     }
 
+    std::cout << "config->get_lidar_2d_type(): " << config->get_lidar_2d_type().toStdString() << std::endl;
+
     if(config->get_lidar_2d_type() == "SICK")
     {
         if(!sick)
@@ -201,7 +203,7 @@ double LIDAR_2D::get_process_time_merge()
     return (double)process_time_merge.load();
 }
 
-void LIDAR_2D::set_is_sync(bool flag)
+void LIDAR_2D::set_sync_flag(bool flag)
 {
     is_sync = flag;
     int lidar_num = config->get_lidar_2d_num();

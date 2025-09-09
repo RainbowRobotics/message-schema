@@ -17,13 +17,12 @@
 #include "mapping.h"
 #include "autocontrol.h"
 #include "sim.h"
-#include "simple_task.h"
 #include "dockcontrol.h"
 #include "policy.h"
 
+
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"
-#include "comm/comm_fms.h"
 
 // qt
 #include <QMainWindow>
@@ -83,7 +82,7 @@ public:
     void speaker_handler(int cnt);
     int led_handler();
 
-    void get_IP();
+    void getIPv4();
 
     // vars
     std::atomic<double> plot_dt = {0.};
@@ -180,8 +179,6 @@ public Q_SLOTS:
 
     void vtk_viewer_update(int val);
 
-    void ui_tasks_update();
-
     // config
     void bt_ConfigLoad();
 
@@ -257,9 +254,6 @@ public Q_SLOTS:
 
     void slot_local_path_updated();
     void slot_global_path_updated();
-
-    void slot_sim_random_init(QString seed);
-    void slot_sim_random_seq();
 
     // timer loops
     void plot_loop();

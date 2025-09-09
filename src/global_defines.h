@@ -132,38 +132,13 @@ constexpr double R2D  = 180.0/M_PI;
 #define S100_BAT_MIN_VOLTAGE 42.0
 
 // enumulator
-enum class RobotType
-{
-    S100_A,
-    S100_B,
-    S100_A_3D,
-    S100_B_3D,
-    D400,
-    QD,
-    MECANUM_Q150,
-    SEM,
-    SDC,
-    NONE
-};
-
-enum class RobotModel
-{
-    S100,
-    D400,
-    QD,
-    MECANUM,
-    SEM,
-    SDC,
-    NONE
-};
-
 enum FOOT_STATE
 {
-    FOOT_STATE_IDLE = 0,   // 정지 상태
-    FOOT_STATE_INIT,       // 시작 준비 or 초기화
-    FOOT_STATE_MOVING ,    // 위로 이동 동작 수행 중
-    FOOT_STATE_EMO_STOP ,  // 비상정지
-    FOOT_STATE_DONE        // 이동 동작 완료
+    FOOT_STATE_IDLE = 0,         // 정지 상태
+    FOOT_STATE_INIT,            // 시작 준비 or 초기화
+    FOOT_STATE_MOVING ,       // 위로 이동 동작 수행 중
+    FOOT_STATE_EMO_STOP ,       // 비상정지
+    FOOT_STATE_DONE      // 이동 동작 완료
 };
 
 enum OPEARATION_MODE_STATE
@@ -204,22 +179,15 @@ enum DOCKING_CHARGE_STATE
     CHARGE_STATE_FAIL,
 };
 
-enum class AutoFsmState
+enum AUTO_FSM_STATE
 {
-    FIRST_ALIGN,
-    DRIVING,
-    FINAL_ALIGN,
-    OBS,
-    COMPLETE,
-    PAUSE,
-};
-
-enum class ALREADY_GOAL_STATE
-{
-    NONE = 0,
-    TEMP_GOAL,
-    GOAL,
-    JUMP_FINAL_ALIGN,
+    AUTO_FSM_FIRST_ALIGN = 0,
+    AUTO_FSM_DRIVING,
+    AUTO_FSM_FINAL_ALIGN,
+    AUTO_FSM_OBS,
+    AUTO_FSM_COMPLETE,    
+    AUTO_FSM_DOCKING,
+    AUTO_FSM_PAUSE,    
 };
 
 enum LED_STATE
@@ -277,21 +245,21 @@ enum DOCK_FSM_STATE
     DOCKING_FSM_CHKCHARGE,
 };
 
-enum class AUTO_OBS_STATE
+enum AUTO_OBS_STATE
 {
-    CHECK = 0,
-    RECOVERY,
-    AVOID,
-    WAIT,
-    WAIT2,
-    VIR
+    AUTO_OBS_CHECK = 0,
+    AUTO_OBS_RECOVERY,
+    AUTO_OBS_AVOID,
+    AUTO_OBS_WAIT,
+    AUTO_OBS_WAIT2,
+    AUTO_OBS_VIR
 };
 
-enum class ObsDetectState
+enum OBS_STATE
 {
-    NONE = 0,
-    DYN  = 1,
-    VIR  = 2,
+    OBS_NONE = 0,
+    OBS_DYN  = 1,
+    OBS_VIR  = 2,
 };
 
 enum LOCAL_PATH_STATE
@@ -1255,47 +1223,6 @@ struct DCTRL_PARAM
 struct ASTAR_NODE
 {
     ASTAR_NODE* parent = nullptr;
-    NODE node;
-    Eigen::Matrix4d tf;
-    double g = 0;
-    double h = 0;
-    double f = 0;
-
-    ASTAR_NODE()
-    {
-        parent = nullptr;
-        tf.setIdentity();
-        g = 0;
-        h = 0;
-        f = 0;
-    }
-
-    ASTAR_NODE(const ASTAR_NODE& p)
-    {
-        parent = p.parent;
-        node = p.node;
-        tf = p.tf;
-        g = p.g;
-        h = p.h;
-        f = p.f;
-    }
-
-    ASTAR_NODE& operator=(const ASTAR_NODE& p)
-    {
-        parent = p.parent;
-        node = p.node;
-        tf = p.tf;
-        g = p.g;
-        h = p.h;
-        f = p.f;
-        return *this;
-    }
-};
-
-/*
-struct ASTAR_NODE
-{
-    ASTAR_NODE* parent = nullptr;
     NODE* node = nullptr;
     Eigen::Matrix4d tf;
     double g = 0;
@@ -1332,7 +1259,7 @@ struct ASTAR_NODE
         f = p.f;
         return *this;
     }
-};*/
+};
 
 struct HASTAR_NODE
 {

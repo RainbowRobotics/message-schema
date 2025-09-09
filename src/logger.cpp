@@ -14,6 +14,7 @@ LOGGER* LOGGER::instance(QObject* parent)
     return inst;
 }
 
+
 LOGGER::LOGGER(QObject *parent)
     : QObject{parent}
 {
@@ -21,19 +22,18 @@ LOGGER::LOGGER(QObject *parent)
 
 LOGGER::~LOGGER()
 {
-    log_flag = false;
-    if(log_thread && log_thread->joinable())
+    if(log_thread != NULL)
     {
+        log_flag = false;
         log_thread->join();
+        log_thread = NULL;
     }
-    log_thread.reset();
 }
 
 void LOGGER::init()
 {
+    mtx.lock();
     {
-        std::lock_guard<std::mutex> lock(mtx);
-
         // make log folder
         QDir log_folder_path(log_path);
         if(!log_folder_path.exists())
@@ -77,7 +77,67 @@ void LOGGER::init()
 
             fclose(pFile);
         }
+
+//        // spdlog
+//        QDir sem_dir("snlog");
+//        if(!sem_dir.exists())
+//        {
+//            sem_dir.mkpath(".");
+//        }
+
+//        try
+//        {
+//            QString date_time = QDateTime::currentDateTime().toString("yyyyMMdd");
+
+////            2025071411_LidarDetectionRange.log
+//            QString sem_log_path = "snlog/"+date_time+"_LidarDetectionRange.log";
+
+//            // header
+//            if(!QFile::exists(sem_log_path))
+//            {
+//                QFile file(sem_log_path);
+//                if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+//                {
+//                    QTextStream out(&file);
+//                    out << "SEM_LOG_VERSION=2.0\n";
+//                    out << "Time\tObstacleStatus\tDistance(m)\n";
+//                    file.close();
+//                }
+//            }
+
+//            spd_logger = spdlog::basic_logger_mt("sem_logger", sem_log_path.toStdString());
+//            spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
+//            spdlog::flush_on(spdlog::level::info);
+
+//            QString sem_temperature_log_path = "snlog/sem_temperature_log.log";
+
+//            // header
+//            if(!QFile::exists(sem_temperature_log_path))
+//            {
+//                QFile temp_file(sem_temperature_log_path);
+//                if(temp_file.open(QIODevice::WriteOnly | QIODevice::Text))
+//                {
+//                    QTextStream out(&temp_file);
+//                    out << "SEM_LOG_VERSION=2.0\n";
+//                    out << "Time\tMotor_1_Temperature(C)\tMotor_2_Temperature(C)\tBattery(C)\tTemperature_sensor(C)\tSoc(%)\n";
+
+////                    out << "Time\tMotor 1 Temperature(°C)\tMotor 2 Temperature(°C)\tPDU Temperature(°C)\tTemperature sensor(°C)\tSoc(%)\n";
+//                    temp_file.close();
+//                }
+//            }
+
+//            spd_temperature_logger = spdlog::basic_logger_mt("sem_temperature_log", "snlog/sem_temperature_log.log");
+//            spd_temperature_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e%v");
+//            spdlog::flush_on(spdlog::level::info);
+
+//        }
+//        catch(const spdlog::spdlog_ex& ex)
+//        {
+//            printf("[LOGGER] SPDLOG init failed: %s\n", ex.what());
+//        }
+
     }
+    mtx.unlock();
 
     log_flag = true;
     log_thread = std::make_unique<std::thread>(&LOGGER::log_loop, this);
@@ -122,7 +182,7 @@ void LOGGER::write_log(QString user_log, QString color_code, bool time, bool hid
 
 void LOGGER::write_log_list(std::vector<QString> user_log_list, QString color_code, bool time, bool hide)
 {
-    for(auto ele : user_log_list)
+    for (auto ele : user_log_list)
     {
         LOG_INFO log_info;
         log_info.user_log = ele;
@@ -158,13 +218,16 @@ void LOGGER::log_with_html(QString msg, QString color_code, bool time, bool hide
 
 void LOGGER::write_log_file(QString log)
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    check_system_time(log_file_name);
+    mtx.lock();
+    {
+        check_system_time(log_file_name);
 
-    FILE* pFile;
-    pFile = fopen(log_file_name.toStdString().c_str(), "a");
-    fprintf(pFile, log.toStdString().c_str());
-    fclose(pFile);
+        FILE* pFile;
+        pFile = fopen(log_file_name.toStdString().c_str(), "a");
+        fprintf(pFile, log.toStdString().c_str());
+        fclose(pFile);
+    }
+    mtx.unlock();
 }
 
 QString LOGGER::log_with_time(QString msg)
@@ -202,6 +265,7 @@ void LOGGER::write_log_to_txt(const QString& msg)
         spd_logger->info(msg.toStdString());
     }
 }
+
 
 // spdlog
 void LOGGER::write_temperature_log_to_txt(const QString& msg)

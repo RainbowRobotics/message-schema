@@ -82,8 +82,8 @@ public:
     /***********************
      * check collision
      ***********************/
-    ObsDetectState is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn = false, double margin_x = 0, double margin_y = 0);
-    ObsDetectState is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn = false, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
+    int is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn = false, double margin_x = 0, double margin_y = 0);
+    int is_path_collision(const std::vector<Eigen::Matrix4d>& robot_tfs, bool is_dyn = false, double margin_x = 0, double margin_y = 0, int st_idx = 0, int idx_step = 1);
 
 private:
     explicit OBSMAP(QObject *parent = nullptr);

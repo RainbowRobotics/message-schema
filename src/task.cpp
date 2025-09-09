@@ -1,57 +1,39 @@
-#include "simple_task.h"
-
-TASK* TASK::instance(QObject* parent)
-{
-    static TASK* inst = nullptr;
-    if(!inst && parent)
-    {
-        inst = new TASK(parent);
-    }
-    else if(inst && parent && inst->parent() == nullptr)
-    {
-        inst->setParent(parent);
-    }
-    return inst;
-}
+#include "task.h"
 
 TASK::TASK(QObject *parent) : QObject{parent}
-  , config(nullptr)
-  , logger(nullptr)
-  , unimap(nullptr)
-  , mobile(nullptr)
-  , ctrl(nullptr)
-  , loc(nullptr)
 {
 
 }
 
 TASK::~TASK()
 {
-    task_flag = false;
-    if(task_thread && task_thread->joinable())
+    if(a_thread != NULL)
     {
-        task_thread->join();
+        a_flag = false;
+        a_thread->join();
+        a_thread = NULL;
     }
-    task_thread.reset();
 }
 
 void TASK::play(QString _driving_mode)
 {
     // stop first
-    task_flag = false;
-    if(task_thread && task_thread->joinable())
+    if(a_thread != NULL)
     {
-        task_thread->join();
+        a_flag = false;
+        a_thread->join();
+        a_thread = NULL;
     }
-    task_thread.reset();
-
     ctrl->stop();
 
     driving_mode = _driving_mode;
 
     // task loop running
-    task_flag = true;
-    task_thread = std::make_unique<std::thread>(&TASK::task_loop, this);
+    if(a_thread == NULL)
+    {
+        a_flag = true;
+        a_thread = new std::thread(&TASK::a_loop, this);
+    }
 }
 
 void TASK::pause()
@@ -62,66 +44,28 @@ void TASK::pause()
 void TASK::cancel()
 {
     // cancel
-    task_flag = false;
-    if(task_thread && task_thread->joinable())
+    if(a_thread != NULL)
     {
-        task_thread->join();
+        a_flag = false;
+        a_thread->join();
+        a_thread = NULL;
     }
-    task_thread.reset();
 
     ctrl->stop();
 }
 
-void TASK::clear()
+void TASK::add_task(NODE* node)
 {
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    task_node_list.clear();
+    task_node_list.push_back(node->id);
 }
 
-bool TASK::get_is_task()
+void TASK::del_task(NODE* node)
 {
-    return static_cast<bool>(is_task.load());
-}
-
-void TASK::set_is_start(bool flag)
-{
-    is_start.store(flag);
-}
-
-void TASK::set_use_looping(bool flag)
-{
-    use_looping.store(flag);
-}
-
-std::vector<QString> TASK::get_task_node_list()
-{
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    return task_node_list;
-}
-
-int TASK::check_node_list_size()
-{
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    return task_node_list.size();
-}
-
-void TASK::add_task(NODE node)
-{
-    if(node.id.isEmpty() || node.id.isNull())
-    {
-        return;
-    }
-
-    task_node_list.push_back(node.id);
-}
-
-void TASK::del_task(NODE node)
-{
-    auto it = std::find(task_node_list.begin(), task_node_list.end(), node.id);
+    auto it = std::find(task_node_list.begin(), task_node_list.end(), node->id);
     if(it != task_node_list.end())
     {
         task_node_list.erase(it);
-        node.name = "";
+        node->name = "";
     }
     else
     {
@@ -134,7 +78,7 @@ void TASK::save_task(QString path)
     // save task.json
     QString task_path = path + "/task_"+ get_time_str()+".json";
     QFile task_file(task_path);
-    if(task_file.open(QIODevice::WriteOnly | QFile::Truncate))
+    if(task_file.open(QIODevice::WriteOnly|QFile::Truncate))
     {
         QJsonArray arr;
         for(size_t p = 0; p < task_node_list.size(); p++)
@@ -192,16 +136,39 @@ void TASK::load_task(QString path)
     is_loaded = true;
 }
 
+
 // loop
-void TASK::task_loop()
+void TASK::a_loop()
 {
-    is_task = true;
+    is_tasking = true;
 
     //get task list
     std::vector<QString> node_list = task_node_list;
     for(size_t p = 0; p < node_list.size(); p++)
     {
         printf("[TASK] seq: %d, node_id: %s\n", (int)p, node_list[p].toLocal8Bit().data());
+    }
+
+    if (accuracy_save_enabled)
+    {
+        printf("[TASK] accuracy_save_enabled\n");
+        QString logFolder = QCoreApplication::applicationDirPath() + "/home/rainbow/slamnav2/snlog";
+        QDir dir(logFolder);
+        if (!dir.exists())
+        {
+            dir.mkpath(logFolder);
+        }
+        // Make new CSV file - file name : Today + time
+        accuracyLogFileName = logFolder + "/accuracy_log_" + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".csv";
+        QFile file(accuracyLogFileName);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream out(&file);
+            out << "timestamp,actual_x,actual_y,actual_theta,target_id,target_name,target_type,target_info,"
+                               "planned_x,planned_y,planned_theta,error_distance,error_angle,cur_ie,cur_ir\n";
+                        file.close();
+            printf("[TASK] Make ccuracy log file: %s\n", accuracyLogFileName.toLocal8Bit().data());
+        }
     }
 
     // init state
@@ -211,16 +178,10 @@ void TASK::task_loop()
     // seq num
     int idx = 0;
 
-    bool is_first = true;
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dist(1, 10);
-
-
     printf("[TASK] task_loop start\n");
-    while(task_flag)
+    while(a_flag)
     {
+
         if(state == TASK_IDLE)
         {
             if(is_start)
@@ -235,17 +196,8 @@ void TASK::task_loop()
         }
         else if(state == TASK_MOVE)
         {
-            if(is_first)
-            {
-                is_first = false;
-            }
-            else
-            {
-                std::this_thread::sleep_for(std::chrono::minutes(dist(gen)));
-            }
-
-            NODE node = unimap->get_node_by_id(task_node_list[idx]);
-            if(node.id.isEmpty() || node.id.isNull())
+            NODE* node = unimap->get_node_by_id(task_node_list[idx]);
+            if(node == NULL)
             {
                 state = TASK_WAIT;
                 last_task_state = state;
@@ -254,19 +206,18 @@ void TASK::task_loop()
                 continue;
             }
 
-            Eigen::Vector3d xi = TF_to_se2(node.tf);
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
 
             DATA_MOVE msg;
             msg.command = "goal";
             msg.method = "pp";
             msg.preset = 0;
-            msg.goal_node_id = node.id;
+            msg.goal_node_id = node->id;
             msg.tgt_pose_vec[0] = xi[0];
             msg.tgt_pose_vec[1] = xi[1];
-            msg.tgt_pose_vec[2] = node.tf(2,3);
+            msg.tgt_pose_vec[2] = node->tf(2,3);
             msg.tgt_pose_vec[3] = xi[2];
-
-            ctrl->request_move(CommandType::MOVE, msg);
+            Q_EMIT ctrl->signal_move(msg);
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;
@@ -276,7 +227,7 @@ void TASK::task_loop()
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            QString multi_state = ctrl->get_multi_reqest_state();
+            QString multi_state = ctrl->get_multi_req();
             if(multi_state == "recv_path")
             {
                 printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
@@ -289,7 +240,7 @@ void TASK::task_loop()
         }
         else if(state == TASK_PROGRESS)
         {
-            QString multi_state = ctrl->get_multi_reqest_state();
+            QString multi_state = ctrl->get_multi_req();
             if(multi_state == "none")
             {
                 printf("[TASK] TASK_PROGRESS -> TASK_WAIT\n");
@@ -302,6 +253,67 @@ void TASK::task_loop()
         }
         else if(state == TASK_WAIT)
         {
+            // obs clear
+            //obsmap->clear();
+
+            if(accuracy_save_enabled)
+            {
+                Eigen::Matrix4d current_pose = slam->get_cur_tf();
+                double actual_x = current_pose(0,3);
+                double actual_y = current_pose(1,3);
+                double actual_theta = TF_to_se2(current_pose)[2];
+                double actual_theta_deg = actual_theta * R2D;
+
+                //get arrived current node info
+                NODE* target_node = unimap->get_node_by_id(node_list[idx]);
+                QString target_id = (target_node != NULL) ? target_node->id : "unknown";
+                QString target_name = (target_node != NULL) ? target_node->name : "unknown";
+                QString target_type = (target_node != NULL) ? target_node->type : "unknown";
+                QString target_info = (target_node != NULL) ? target_node->info : "unknown";
+
+                double planned_x = 0.0, planned_y = 0.0, planned_theta = 0.0;
+                if(target_node)
+                {
+                    planned_x = target_node->tf(0,3);
+                    planned_y = target_node->tf(1,3);
+                    planned_theta = TF_to_se2(target_node->tf)[2];
+                }
+
+                // err calc
+                double error_distance = std::sqrt(std::pow(actual_x - planned_x, 2) + std::pow(actual_y - planned_y, 2));
+                double error_angle_deg = std::abs((actual_theta - planned_theta) * R2D);
+
+                // ieir - slam
+                Eigen::Vector2d cur_ieir = slam->get_cur_ieir();
+                double cur_ie = cur_ieir[0];
+                double cur_ir = cur_ieir[1];
+
+                // logging time
+                QString timeStr = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+                QFile file(accuracyLogFileName);
+                if (file.open(QIODevice::Append | QIODevice::Text))
+                {
+                    QTextStream out(&file);
+                    // CSV format
+                    out << timeStr << ","
+                        << actual_x << "," << actual_y << "," << actual_theta_deg << ","
+                        << target_id << "," << target_name << "," << target_type << "," << target_info << ","
+                        << planned_x << "," << planned_y << "," << planned_theta * R2D << ","
+                        << error_distance << "," << error_angle_deg << ","<< cur_ie << "," << cur_ir << "\n";
+
+                    file.close();
+                    printf("[TASK] LOG: %s, actual: (%.2f, %.2f, %.2f), target: (%s, %s, %s), planned: (%.2f, %.2f, %.2f), error: (%.2f, %.2f), cur_ie: %.3f, cur_ir: %.3f\n",
+                                       timeStr.toLocal8Bit().data(),
+                                       actual_x, actual_y, actual_theta_deg,target_id.toLocal8Bit().data(), target_name.toLocal8Bit().data(), target_type.toLocal8Bit().data(),
+                                       planned_x, planned_y, planned_theta * R2D,error_distance, error_angle_deg,cur_ie, cur_ir);
+                }
+                else
+                {
+                    printf("[TASK] failed wrtie CSV file \n");
+                }
+            }
+
+
             // increase idx
             state = TASK_MOVE;
             last_task_state = state;
@@ -343,36 +355,5 @@ void TASK::task_loop()
 
     //clear
     is_start = false;
-    is_task = false;
+    is_tasking = false;
 }
-
-void TASK::set_config_module(CONFIG* _config)
-{
-    config = _config;
-}
-
-void TASK::set_logger_module(LOGGER* _logger)
-{
-    logger = _logger;
-}
-
-void TASK::set_unimap_module(UNIMAP* _unimap)
-{
-    unimap = _unimap;
-}
-
-void TASK::set_mobile_module(MOBILE* _mobile)
-{
-    mobile = _mobile;
-}
-
-void TASK::set_autocontrol_module(AUTOCONTROL* _ctrl)
-{
-    ctrl = _ctrl;
-}
-
-void TASK::set_localization_module(LOCALIZATION *_loc)
-{
-    loc = _loc;
-}
-

@@ -539,81 +539,21 @@ bool CONFIG::load_common(QString path)
     QJsonObject obj = doc.object();
     if(obj.contains("ROBOT_TYPE"))
     {
-        QString robot_type_str = obj["ROBOT_TYPE"].toString();
-        if(robot_type_str == "S100-A")
-        {
-            ROBOT_TYPE = RobotType::S100_A;
-        }
-        else if(robot_type_str == "S100-B")
-        {
-            ROBOT_TYPE = RobotType::S100_B;
-        }
-        else if(robot_type_str == "S100-A-3D")
-        {
-            ROBOT_TYPE = RobotType::S100_A_3D;
-        }
-        else if(robot_type_str == "S100-B-3D")
-        {
-            ROBOT_TYPE = RobotType::S100_B_3D;
-        }
-        else if(robot_type_str == "D400")
-        {
-            ROBOT_TYPE = RobotType::D400;
-        }
-        else if(robot_type_str == "QD")
-        {
-            ROBOT_TYPE = RobotType::QD;
-        }
-        else if(robot_type_str == "MECANUM-Q150")
-        {
-            ROBOT_TYPE = RobotType::MECANUM_Q150;
-        }
-        else if(robot_type_str == "SEM")
-        {
-            ROBOT_TYPE = RobotType::SEM;
-        }
-        else if(robot_type_str == "SDC")
-        {
-            ROBOT_TYPE = RobotType::SDC;
-        }
-        else
-        {
-            ROBOT_TYPE = RobotType::NONE;
-        }
+        ROBOT_TYPE = obj["ROBOT_TYPE"].toString();
 
-        QString robot_model_str;
-        QStringList robot_model_list = robot_type_str.split("-");
+        QStringList robot_model_list = ROBOT_TYPE.split("-");
         if(robot_model_list.size() != 0)
         {
-            robot_model_str = robot_model_list[0];
-            if(robot_model_str == "S100")
-            {
-                ROBOT_MODEL = RobotModel::S100;
-            }
-            else if(robot_model_str == "D400")
-            {
-                ROBOT_MODEL = RobotModel::D400;
-            }
-            else if(robot_model_str == "QD")
-            {
-                ROBOT_MODEL = RobotModel::QD;
-            }
-            else if(robot_model_str == "MECANUM")
-            {
-                ROBOT_MODEL = RobotModel::MECANUM;
-            }
-            else
-            {
-                ROBOT_MODEL = RobotModel::NONE;
-            }
+            ROBOT_MODEL = robot_model_list[0];
         }
-        printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
     }
 
     if(obj.contains("MILEAGE"))
     {
         MILEAGE = obj["MILEAGE"].toString();
     }
+
+    printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(ROBOT_TYPE), qUtf8Printable(ROBOT_MODEL));
 
     // complete
     common_file.close();
@@ -906,104 +846,16 @@ QString CONFIG::get_robot_serial_number()
     return ROBOT_SERIAL_NUMBER;
 }
 
-RobotType CONFIG::get_robot_type()
+QString CONFIG::get_robot_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_TYPE;
 }
 
-RobotModel CONFIG::get_robot_model()
+QString CONFIG::get_robot_model()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_MODEL;
-}
-
-QString CONFIG::get_robot_type_str()
-{
-    RobotType _robot_type = RobotType::NONE;
-    {
-        std::shared_lock<std::shared_mutex> lock(mtx);
-        _robot_type = ROBOT_TYPE;
-    }
-
-    if(_robot_type == RobotType::S100_A)
-    {
-        return "S100-A";
-    }
-    else if(_robot_type == RobotType::S100_B)
-    {
-        return "S100-B";
-    }
-    else if(_robot_type == RobotType::S100_A_3D)
-    {
-        return "S100-A-3D";
-    }
-    else if(_robot_type == RobotType::S100_B_3D)
-    {
-        return "S100-B-3D";
-    }
-    else if(_robot_type == RobotType::D400)
-    {
-        return "D400";
-    }
-    else if(_robot_type == RobotType::SDC)
-    {
-        return "SDC";
-    }
-    else if(_robot_type == RobotType::SEM)
-    {
-        return "SEM";
-    }
-    else if(_robot_type == RobotType::QD)
-    {
-        return "QD";
-    }
-    else if(_robot_type == RobotType::MECANUM_Q150)
-    {
-        return "MECANUM-Q150";
-    }
-    else
-    {
-        return "NONE";
-    }
-}
-
-QString CONFIG::get_robot_model_str()
-{
-    RobotModel _robot_model = RobotModel::NONE;
-    {
-        std::shared_lock<std::shared_mutex> lock(mtx);
-        _robot_model = ROBOT_MODEL;
-    }
-
-    if(_robot_model == RobotModel::S100)
-    {
-        return "S100";
-    }
-    else if(_robot_model == RobotModel::D400)
-    {
-        return "D400";
-    }
-    else if(_robot_model == RobotModel::SDC)
-    {
-        return "SDC";
-    }
-    else if(_robot_model == RobotModel::SEM)
-    {
-        return "SEM";
-    }
-    else if(_robot_model == RobotModel::QD)
-    {
-        return "QD";
-    }
-    else if(_robot_model == RobotModel::MECANUM)
-    {
-        return "MECANUM";
-    }
-    else
-    {
-        return "NONE";
-    }
 }
 
 double CONFIG::get_mileage()

@@ -416,22 +416,22 @@ void MOBILE::recv_loop()
 
                         uchar *_buf = (uchar*)buf.data();
 
-                        RobotType_PDU robot_type = RobotType_PDU::ROBOT_TYPE_UNKNOWN;
+                        RobotType robot_type = RobotType::ROBOT_TYPE_UNKNOWN;
                         if(data_size == MOBILE_INFO::packet_size_d400)
                         {
-                            robot_type = RobotType_PDU::ROBOT_TYPE_D400;
+                            robot_type = RobotType::ROBOT_TYPE_D400;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_s100)
                         {
-                            robot_type = RobotType_PDU::ROBOT_TYPE_S100;
+                            robot_type = RobotType::ROBOT_TYPE_S100;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_mecanum)
                         {
-                            robot_type = RobotType_PDU::ROBOT_TYPE_MECANUM;
+                            robot_type = RobotType::ROBOT_TYPE_MECANUM;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety)
                         {
-                            robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY;
+                            robot_type = RobotType::ROBOT_TYPE_SAFETY;
                         }
                         else
                         {
@@ -449,7 +449,7 @@ void MOBILE::recv_loop()
                             double mobile_t = tick * MOBILE_INFO::pdu_tick_resolution;
 
                             uint32_t recv_tick; float return_time;
-                            if(robot_type != RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type != RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);   index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f); index=index+dlc_f;
@@ -458,7 +458,7 @@ void MOBILE::recv_loop()
                             uint8_t connection_status_m0, connection_status_m1, connection_status_m2, connection_status_m3;
                             connection_status_m0 = _buf[index]; index=index+dlc;
                             connection_status_m1 = _buf[index]; index=index+dlc;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 connection_status_m2 = _buf[index]; index=index+dlc;
                                 connection_status_m3 = _buf[index]; index=index+dlc;
@@ -476,7 +476,7 @@ void MOBILE::recv_loop()
 
                             float local_v, local_w;
                             float local_vx, local_vy, local_wz;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&local_vx, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&local_vy, &_buf[index], dlc_f);     index=index+dlc_f;
@@ -492,7 +492,7 @@ void MOBILE::recv_loop()
                             uint8_t stat_m2, stat_m3;
                             stat_m0 = _buf[index];     index=index+dlc;
                             stat_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 stat_m2 = _buf[index];     index=index+dlc;
                                 stat_m3 = _buf[index];     index=index+dlc;
@@ -502,14 +502,14 @@ void MOBILE::recv_loop()
                             uint8_t temp_m2, temp_m3;
                             temp_m0 = _buf[index];     index=index+dlc;
                             temp_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 temp_m2 = _buf[index];     index=index+dlc;
                                 temp_m3 = _buf[index];     index=index+dlc;
                             }
 
                             uint8_t esti_temp_m0, esti_temp_m1;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_D400)
+                            if(robot_type == RobotType::ROBOT_TYPE_D400)
                             {
                                 memcpy(&esti_temp_m0, &_buf[index], dlc);     index=index+dlc;
                                 memcpy(&esti_temp_m1, &_buf[index], dlc);     index=index+dlc;
@@ -519,7 +519,7 @@ void MOBILE::recv_loop()
                             uint8_t cur_m2, cur_m3;
                             cur_m0 = _buf[index];     index=index+dlc;
                             cur_m1 = _buf[index];     index=index+dlc;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 cur_m2 = _buf[index];     index=index+dlc;
                                 cur_m3 = _buf[index];     index=index+dlc;
@@ -533,7 +533,7 @@ void MOBILE::recv_loop()
                             uint8_t safety_emo_pressed_2, safety_ref_meas_mismatch_2, safety_over_speed_2,safety_obs_detect_2,
                                     safety_speed_field_mismatch_2, safety_stop_state_flag_2, safety_interlock_stop_2, safety_bumper_stop_2;
 
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            if(robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&auto_manual_sw, &_buf[index], dlc);       index=index+dlc;
                                 memcpy(&brake_sw, &_buf[index], dlc);             index=index+dlc;
@@ -582,7 +582,7 @@ void MOBILE::recv_loop()
                             memcpy(&bat_out, &_buf[index], dlc_f);              index=index+dlc_f;
                             memcpy(&bat_cur, &_buf[index], dlc_f);              index=index+dlc_f;
 
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            if(robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&lift_voltage_in, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&lift_voltage_out, &_buf[index], dlc_f);              index=index+dlc_f;
@@ -596,18 +596,18 @@ void MOBILE::recv_loop()
                             memcpy(&power, &_buf[index], dlc_f);                index=index+dlc_f;
                             memcpy(&total_used_power, &_buf[index], dlc_f);     index=index+dlc_f;
 
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
                             }
 
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_D400)
+                            if(robot_type == RobotType::ROBOT_TYPE_D400)
                             {
                                 memcpy(&charge_current, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&contact_voltage, &_buf[index], dlc_f);               index=index+dlc_f;
                             }
-                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_S100 || robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            else if(robot_type == RobotType::ROBOT_TYPE_S100 || robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&motor_core_temp0, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&motor_core_temp1, &_buf[index], dlc_f);     index=index+dlc_f;
@@ -617,11 +617,11 @@ void MOBILE::recv_loop()
                             float q0, q1, q2, q3;
                             float imu_gyr_x=0.0, imu_gyr_y=0.0, imu_gyr_z=0.0;
                             float imu_acc_x=0.0, imu_acc_y=0.0, imu_acc_z=0.0;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
+                            if(robot_type == RobotType::ROBOT_TYPE_S100)
                             {
                                 state = _buf[index];     index=index+dlc;
                             }
-                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_D400 || robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            else if(robot_type == RobotType::ROBOT_TYPE_D400 || robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
                                 memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -638,7 +638,7 @@ void MOBILE::recv_loop()
                             }
 
                             uint8_t inter_lock_state;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 inter_lock_state = _buf[index];     index=index+dlc;
                             }
@@ -664,7 +664,7 @@ void MOBILE::recv_loop()
                             unsigned short _tabos_ae;
 
 
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            if(robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&lidar_field, &_buf[index], dlc);                index=index+dlc;
                                 memcpy(&ref_dps_0, &_buf[index], dlc_s);                index=index+dlc_s;
@@ -761,7 +761,7 @@ void MOBILE::recv_loop()
                             mobile_status.cur_m3 = cur_m3;
                             mobile_status.charge_state = charge_state;
                             mobile_status.power_state = power_state;
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            if(robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 mobile_status.motor_stop_state = !(safety_emo_pressed_1||safety_emo_pressed_2);
                             }
@@ -890,7 +890,7 @@ void MOBILE::recv_loop()
                             // pose & status text
                             QString mobile_pose_str   = "[MOBILE_POSE]";
                             QString mobile_status_str = "[MOBILE_STATUS]";
-                            if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
+                            if(robot_type == RobotType::ROBOT_TYPE_S100)
                             {
 
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
@@ -907,7 +907,7 @@ void MOBILE::recv_loop()
                                                           mobile_status.power, mobile_status.total_power,
                                                           mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
                             }
-                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_D400 || robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
+                            else if(robot_type == RobotType::ROBOT_TYPE_D400 || robot_type == RobotType::ROBOT_TYPE_SAFETY)
                             {
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                                           mobile_pose.t,
@@ -944,7 +944,7 @@ void MOBILE::recv_loop()
                                                           mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
                                                           mobile_status.lidar_field);
                             }
-                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
+                            else if(robot_type == RobotType::ROBOT_TYPE_MECANUM)
                             {
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                                           mobile_pose.t,
@@ -1267,6 +1267,8 @@ void MOBILE::move(double vx, double vy, double wz)
         return;
     }
 
+    // printf("mobile cmd: %f, %f, %f\n", vx, vy, wz*R2D);
+
     // packet
     float _vx = vx;
     float _vy = vy;
@@ -1284,17 +1286,18 @@ void MOBILE::move(double vx, double vy, double wz)
     send_byte[6] = 0x00;
     send_byte[7] = 10; // cmd move
 
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::MECANUM)
+    QString robot_model = config->get_robot_model();
+
+    if(robot_model == "S100" || robot_model == "D400" || robot_model == "SDC" || robot_model == "SEM")
     {
-        memcpy(&send_byte[8],  &_vx, 4);  // param1 linear vel
+        memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
+        memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
+    }
+    else if(robot_model == "MECANUM")
+    {
+        memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
         memcpy(&send_byte[12], &_vy, 4); // param2 linear vel
         memcpy(&send_byte[16], &_wz, 4); // param3 angular vel
-    }
-    else
-    {
-        memcpy(&send_byte[8],  &_vx, 4);  // param1 linear vel
-        memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
     }
 
     send_byte[24] = 0x25;
@@ -1340,8 +1343,8 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model != RobotModel::MECANUM)
+    QString robot_model = config->get_robot_model();
+    if(robot_model != "MECANUM")
     {
         return;
     }
@@ -1379,8 +1382,8 @@ void MOBILE::move_linear_y(double d, double v)
 
 void MOBILE::stop_charge()
 {
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model != RobotModel::MECANUM)
+    QString robot_model = config->get_robot_model();
+    if(robot_model != "MECANUM")
     {
         return;
     }
@@ -1426,8 +1429,8 @@ void MOBILE::move_rotate(double th, double w)
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
 
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::MECANUM)
+    QString robot_model = config->get_robot_model();
+    if(robot_model == "MECANUM")
     {
         send_byte[7] = 119; // cmd move rotate
     }
@@ -2147,8 +2150,8 @@ void MOBILE::send_loop()
 
 int MOBILE::calc_battery_percentage(float voltage)
 {
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
+    QString robot_model = config->get_robot_model();
+    if(robot_model == "D400" || robot_model == "MECANUM")
     {
         if(voltage <= voltage_lookup_table.front().voltage)
         {
@@ -2174,7 +2177,7 @@ int MOBILE::calc_battery_percentage(float voltage)
         }
         return 0;
     }
-    else if(robot_model == RobotModel::S100)
+    else if(robot_model == "S100")
     {
         if(voltage >= S100_BAT_MAX_VOLTAGE)
         {

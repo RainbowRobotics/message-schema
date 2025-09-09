@@ -22,7 +22,9 @@ AUTOCONTROL::AUTOCONTROL(QObject *parent) : QObject{parent},
     obsmap(nullptr),
     loc(nullptr)
 {
-
+    connect(this, SIGNAL(signal_move(DATA_MOVE)), this, SLOT(slot_move(DATA_MOVE)));
+    connect(this, SIGNAL(signal_path(DATA_PATH)), this, SLOT(slot_path(DATA_PATH)));
+    connect(this, SIGNAL(signal_path()), this, SLOT(slot_path()));
 }
 
 AUTOCONTROL::~AUTOCONTROL()
@@ -58,12 +60,6 @@ void AUTOCONTROL::init()
 
     node_flag = true;
     node_thread = std::make_unique<std::thread>(&AUTOCONTROL::node_loop, this);
-
-    control_flag = true;
-    control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
-
-    obs_flag = true;
-    obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
 }
 
 CTRL_PARAM AUTOCONTROL::load_preset(int preset)
@@ -71,7 +67,8 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
     CTRL_PARAM res;
 
     // read
-    QString preset_path = QCoreApplication::applicationDirPath() + "/config/" + config->get_robot_type_str() + "/preset_" + QString::number(preset) + ".json";
+    QString preset_path = QCoreApplication::applicationDirPath() + "/config/" + config->get_robot_type() + "/preset_" + QString::number(preset) + ".json";
+
     QFileInfo info(preset_path);
     if(info.exists() && info.isFile())
     {
@@ -155,12 +152,19 @@ PATH AUTOCONTROL::get_cur_local_path()
     return res;
 }
 
-std::vector<int> AUTOCONTROL::get_cur_global_step()
+void AUTOCONTROL::set_path(const std::vector<QString>& _global_node_path, const std::vector<int>& _global_step, int _global_preset, long long _global_path_time)
 {
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    return cur_global_step;
-}
+    std::lock_guard<std::mutex> lock(path_mtx);
+    global_node_path = std::move(_global_node_path);
+    global_step      = std::move(_global_step);
+    global_preset    = _global_preset;
 
+    if(_global_path_time != global_path_time)
+    {
+        last_step = 0;
+    }
+    global_path_time = _global_path_time;
+}
 
 void AUTOCONTROL::set_cur_goal_state(QString str)
 {
@@ -225,7 +229,9 @@ void AUTOCONTROL::set_multi_infomation(StateMultiReq val0, StateObsCondition val
     {
         cur_move_state = "obstacle";
     }
+
 }
+
 
 void AUTOCONTROL::set_is_rrs(bool val)
 {
@@ -245,11 +251,6 @@ void AUTOCONTROL::set_is_pause(bool val)
 void AUTOCONTROL::set_is_debug(bool val)
 {
     is_debug.store(val);
-}
-
-void AUTOCONTROL::set_last_step(int val)
-{
-    last_step.store(val);
 }
 
 QString AUTOCONTROL::get_cur_move_state()
@@ -326,11 +327,6 @@ Eigen::Vector3d AUTOCONTROL::get_last_local_goal()
     return res;
 }
 
-void AUTOCONTROL::set_global_path_time(long long val)
-{
-    global_path_time.store(val);
-}
-
 void AUTOCONTROL::set_obs_condition(QString str)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -397,7 +393,7 @@ double AUTOCONTROL::get_cur_deadzone()
 
 bool AUTOCONTROL::get_multi_inter_lock()
 {
-    return static_cast<bool>(is_multi_inter_lock.load());
+    return static_cast<bool>(multi_inter_lock.load());
 }
 
 QString AUTOCONTROL::get_cur_node_id()
@@ -414,7 +410,7 @@ int AUTOCONTROL::get_last_step()
 
 void AUTOCONTROL::set_multi_inter_lock(bool val)
 {
-    is_multi_inter_lock.store(val);
+    multi_inter_lock.store(val);
 }
 
 void AUTOCONTROL::set_multi_request(QString str)
@@ -425,20 +421,32 @@ void AUTOCONTROL::set_multi_request(QString str)
 
 void AUTOCONTROL::stop()
 {
-    // stop first
-    mobile->move(0, 0, 0);
+    // control loop stop
+    if(control_thread != NULL)
+    {
+        control_flag = false;
+        control_thread->join();
+        control_thread = NULL;
+    }
+
+    // obs loop stop
+    if(obs_thread != NULL)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread = NULL;
+    }
 
     clear_control_params();
 
     set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::CANCEL);
 
     // obsmap clear
-    //obsmap->clear();
+    obsmap->clear();
 }
 
 void AUTOCONTROL::clear_control_params()
 {
-    // stop first
     mobile->move(0, 0, 0);
 
     // control params clear
@@ -458,54 +466,18 @@ void AUTOCONTROL::clear_path()
     Q_EMIT signal_local_path_updated();
 }
 
-void AUTOCONTROL::set_cur_local_path(const PATH& _local_path)
+void AUTOCONTROL::slot_move(DATA_MOVE msg)
 {
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    cur_local_path  = _local_path;
-    last_local_goal = _local_path.ed_tf.block(0,3,3,1);
-
-    Q_EMIT signal_local_path_updated();
-}
-
-void AUTOCONTROL::set_cur_global_path(const PATH& _global_path)
-{
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    cur_global_path = _global_path;
-
-    Q_EMIT signal_global_path_updated();
-}
-
-void AUTOCONTROL::send_move_response(QString result, QString message)
-{
-    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    cur_move_info.time = get_time();
-    cur_move_info.result = result;
-    cur_move_info.message = message;
-    cur_move_info.cur_pos = cur_tf.block(0,3,3,1);
-
-    Q_EMIT signal_move_response(cur_move_info);
-}
-
-void AUTOCONTROL::request_move(CommandType type, DATA_MOVE& msg)
-{
-    if(type == CommandType::NONE || type == CommandType::UPDATE_PATH)
-    {
-        logger->write_log("[AUTO] invalid command type");
-        return;
-    }
-
+    // fill goal node name
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
     {
-        NODE node = unimap->get_node_by_id(msg.goal_node_id);
-        if(!node.id.isEmpty())
+        NODE* node = unimap->get_node_by_id(msg.goal_node_id);
+        if(node)
         {
-            msg.goal_node_name = node.name;
+            msg.goal_node_name = node->name;
         }
     }
 
-    // update move_info
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         cur_move_info = msg;
@@ -519,19 +491,8 @@ void AUTOCONTROL::request_move(CommandType type, DATA_MOVE& msg)
         }
         else
         {
-            // stop first
-            stop();
-
-            Eigen::Matrix4d goal_tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            {
-                std::lock_guard<std::recursive_mutex> lock(mtx);
-                latest_cmd.type    = CommandType::MOVE;
-                latest_cmd.preset  = msg.preset;
-                latest_cmd.params  = load_preset(msg.preset);
-                latest_cmd.goal_tf = goal_tf;
-            }
-
-            control_cv.notify_one();
+            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
+            move(tf, msg.preset);
         }
     }
     else if(msg.command == "change_goal")
@@ -540,33 +501,415 @@ void AUTOCONTROL::request_move(CommandType type, DATA_MOVE& msg)
     }
 }
 
-void AUTOCONTROL::request_update_path(CommandType type, const std::vector<QString>& node_path, const std::vector<int>& step, int preset)
+void AUTOCONTROL::slot_path(DATA_PATH msg)
 {
-    if(type == CommandType::NONE || type == CommandType::REQ_CHANGE_GOAL || type == CommandType::MOVE)
+    const QString path_str = msg.path;
+    const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
+
+    std::vector<QString> path;
+    path.reserve(path_str_list.size());
+    for(const QString& path_item : path_str_list)
     {
-        logger->write_log("[AUTO] invalid command type");
+        path.push_back(path_item);
+    }
+
+    const int preset = msg.preset;
+
+    move(path, preset);
+}
+
+void AUTOCONTROL::slot_path()
+{
+    move();
+}
+
+void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
+{
+    // stop first
+    stop();
+
+    // load preset
+    params = load_preset(preset);
+
+    // calc global path
+    PATH path = calc_global_path(goal_tf);
+    if(path.pos.size() > 0)
+    {
+        // enque global path
+        global_path_que.clear();
+        global_path_que.push(path);
+    }
+
+    // explicitly change flag (racing issue: control_loop <-> obs_loop)
+    is_moving = true;
+
+    // start control loop
+    if(control_flag == false)
+    {
+        control_flag = true;
+        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+    }
+
+    if(obs_flag == false)
+    {
+        obs_flag = true;
+        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
+    }
+}
+
+void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
+{
+    if(node_path.size() == 0 || preset == -1)
+    {
         return;
     }
 
-    if(node_path.size() == 0 || preset < 0)
+    // symmetric cut
+    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
+
+    // loop cut
+    std::vector<std::vector<QString>> path_list2;
+    for(size_t p = 0; p < path_list.size(); p++)
     {
+        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
+        for(size_t q = 0; q < res.size(); q++)
+        {
+            path_list2.push_back(res[q]);
+        }
+    }
+
+    if(path_list2.size() == 0)
+    {
+        logger->write_log("[AUTO] move_pp, path_list2 empty");
+        stop();
         return;
     }
 
+    // set flag
+    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
+
+    logger->write_log("[AUTO] move_pp, recv path check");
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
+        logger->write_log(QString("[AUTO] path_%1").arg(p));
+        for(size_t q = 0; q < path_list2[p].size(); q++)
+        {
+            logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+        }
+    }
+
+    QString final_goal_node_id = "";
+    QString final_goal_node_name = "";
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
-        cur_global_step = step;
-        latest_cmd.type      = CommandType::UPDATE_PATH;
-        latest_cmd.preset    = preset;
-        latest_cmd.params    = load_preset(preset);
-        latest_cmd.node_path = node_path;
+        final_goal_node_id   = cur_move_info.goal_node_id;
+        final_goal_node_name = cur_move_info.goal_node_name;
+        logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
     }
 
-    set_multi_infomation(StateMultiReq::RECV_PATH,
-                         StateObsCondition::NO_CHANGE,
-                         StateCurGoal::NO_CHANGE);
+    // set path
+    std::vector<PATH> tmp_storage;
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
+        // enque path
+        PATH path = calc_global_path(path_list2[p], p == 0);
 
-    control_cv.notify_one();
+        // check final path
+        if(p == path_list2.size()-1)
+        {
+            NODE* node = unimap->get_node_by_id(path_list2[p].back());
+            if(node == NULL)
+            {
+                logger->write_log("[AUTO] move_pp, path invalid");
+                qDebug() << "[AUTO] node null";
+                stop();
+                return;
+            }
+
+            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, waiting, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, charging, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, packing, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, container, path set final");
+            }
+            else if(final_goal_node_id == node->id)
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, path set final");
+            }
+        }
+
+        tmp_storage.push_back(path);
+    }
+
+    // control loop shutdown but robot still moving
+    if(control_flag)
+    {
+        // check path overlap or reset
+        bool is_curve = false;
+        std::vector<Eigen::Matrix4d> merged_tf_list;
+        for(size_t p = 0; p < tmp_storage.size(); p++)
+        {
+            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
+            {
+                merged_tf_list.push_back(tmp_storage[p].pose[q]);
+            }
+        }
+
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+        for(int p = 0; p < std::min<int>((int)merged_tf_list.size(), 20); p++) // 2m
+        {
+            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
+            double th = deltaRad(xi[2], cur_xi[2]);
+            if(std::abs(th) > 30.0*D2R)
+            {
+                is_curve = true;
+                break;
+            }
+        }
+
+        is_path_overlap = true;
+        control_flag = false;
+        control_thread->join();
+        control_thread.reset();
+
+        if(is_curve)
+        {
+            mobile->move(0,0,0);
+            logger->write_log("[AUTO] move_pp, curve detected, stop");
+        }
+        else
+        {
+            logger->write_log("[AUTO] move_pp, no curve, just change path");
+        }
+    }
+
+    // obs loop shutdown but robot still moving
+    if(obs_flag)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread.reset();
+    }
+
+    // set global path
+    global_path_que.clear();
+    for(size_t p = 0; p < tmp_storage.size(); p++)
+    {
+        global_path_que.push(tmp_storage[p]);
+    }
+
+    // load preset
+    params = load_preset(preset);
+
+    // start control loop
+    if(control_flag == false)
+    {
+        control_flag = true;
+        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+    }
+
+    // start obs loop
+    if(obs_flag == false)
+    {
+        obs_flag = true;
+        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
+    }
+}
+
+void AUTOCONTROL::move()
+{
+    std::lock_guard<std::mutex> lock(path_mtx);
+    if(global_node_path.size() == 0 || global_preset < 0)
+    {
+        logger->write_log("[AUTO] node_path.size() == 0 || preset < 0");
+        return;
+    }
+
+    // control params clear
+    is_pause = false;
+    is_moving = false;
+
+    // symmetric cut
+    std::vector<std::vector<QString>> path_list = symmetric_cut(global_node_path);
+
+    // loop cut
+    std::vector<std::vector<QString>> path_list2;
+    for(size_t p = 0; p < path_list.size(); p++)
+    {
+        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
+        for(size_t q = 0; q < res.size(); q++)
+        {
+            path_list2.push_back(res[q]);
+        }
+    }
+
+    if(path_list2.size() == 0)
+    {
+        logger->write_log("[AUTO] move_pp, path_list2 empty");
+        stop();
+        return;
+    }
+
+    // set flag
+    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
+
+    logger->write_log("[AUTO] move_pp, recv path check");
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
+        logger->write_log(QString("[AUTO] path_%1").arg(p));
+        for(size_t q = 0; q < path_list2[p].size(); q++)
+        {
+            logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+        }
+    }
+
+    QString final_goal_node_id = "";
+    QString final_goal_node_name = "";
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        final_goal_node_id   = cur_move_info.goal_node_id;
+        final_goal_node_name = cur_move_info.goal_node_name;
+        logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
+    }
+
+    // set path
+    std::vector<PATH> tmp_storage;
+    for(size_t p = 0; p < path_list2.size(); p++)
+    {
+        // enque path
+        PATH path = calc_global_path(path_list2[p], p == 0);
+
+        // check final path
+        if(p == path_list2.size()-1)
+        {
+            NODE* node = unimap->get_node_by_id(path_list2[p].back());
+            if(node == nullptr)
+            {
+                logger->write_log("[AUTO] move_pp, path invalid");
+                stop();
+                return;
+            }
+
+            if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, waiting, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, charging, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, packing, path set final");
+            }
+            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, container, path set final");
+            }
+            else if(final_goal_node_id == node->id)
+            {
+                path.is_final = true;
+                logger->write_log("[AUTO] move_pp, path set final");
+            }
+        }
+
+        tmp_storage.push_back(path);
+    }
+
+    // control loop shutdown but robot still moving
+    if(control_flag)
+    {
+        // check path overlap or reset
+        bool is_curve = false;
+        std::vector<Eigen::Matrix4d> merged_tf_list;
+        for(size_t p = 0; p < tmp_storage.size(); p++)
+        {
+            for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
+            {
+                merged_tf_list.push_back(tmp_storage[p].pose[q]);
+            }
+        }
+
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+        for(int p = 0; p < std::min<int>((int)merged_tf_list.size(), AUTOCONTROL_INFO::path_overlap_check_dist); p++)
+        {
+            Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
+            double th = deltaRad(xi[2], cur_xi[2]);
+            if(std::abs(th) > AUTOCONTROL_INFO::path_overlap_check_deg * D2R)
+            {
+                is_curve = true;
+                break;
+            }
+        }
+
+        is_path_overlap = true;
+        control_flag = false;
+        control_thread->join();
+        control_thread.reset();
+
+        if(is_curve)
+        {
+            mobile->move(0,0,0);
+            logger->write_log("[AUTO] move_pp, curve detected, stop");
+        }
+        else
+        {
+            logger->write_log("[AUTO] move_pp, no curve, just change path");
+        }
+    }
+
+    // obs loop shutdown but robot still moving
+    if(obs_flag)
+    {
+        obs_flag = false;
+        obs_thread->join();
+        obs_thread.reset();
+    }
+
+    // set global path
+    global_path_que.clear();
+    for(size_t p = 0; p < tmp_storage.size(); p++)
+    {
+        global_path_que.push(tmp_storage[p]);
+    }
+
+    // load preset
+    params = load_preset(global_preset);
+
+    // start obs loop
+    if(obs_flag == false)
+    {
+        obs_flag = true;
+        obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
+    }
+
+    // start control loop
+    if(control_flag == false)
+    {
+        control_flag = true;
+        control_thread = std::make_unique<std::thread>(&AUTOCONTROL::control_loop, this);
+    }
 }
 
 std::vector<QString> AUTOCONTROL::remove_duplicates(std::vector<QString> node_path)
@@ -755,13 +1098,13 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     for(size_t p = 0; p < node_path.size(); p++)
     {
         QString node_id = node_path[p];
-        NODE node = unimap->get_node_by_id(node_id);
-        if(node.id.isEmpty() || node.id.isNull())
+        NODE* node = unimap->get_node_by_id(node_id);
+        if(!node)
         {
             logger->write_log(QString("[AUTO] %s: node null").arg(node_id));
             return PATH();
         }
-        node_pose.push_back(node.tf);
+        node_pose.push_back(node->tf);
     }
 
     // add cur pos
@@ -785,23 +1128,10 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // divide and smooth metric path
-    std::vector<Eigen::Matrix4d> path_pose;
-    std::vector<Eigen::Vector3d> path_pos;
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::MECANUM)
-    {
-        for(size_t p = 0; p < node_pose.size(); p++)
-        {
-            Eigen::Matrix4d tf0 = node_pose[p];
-            path_pose.push_back(tf0);
-        }
-    }
-    else
-    {
-        path_pose = reorientation_path(node_pose);
-    }
+    std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
     path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::global_path_step);
 
+    std::vector<Eigen::Vector3d> path_pos;
     for(size_t p = 0; p < path_pose.size(); p++)
     {
         path_pos.push_back(path_pose[p].block(0,3,3,1));
@@ -829,26 +1159,26 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
 
 PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_tf)
 {
-    NODE ed_node = unimap->get_node_by_id(node_path.back());
-    if(ed_node.id.isEmpty())
+    NODE* ed_node = unimap->get_node_by_id(node_path.back());
+    if(ed_node == NULL)
     {
         return PATH();
     }
 
-    Eigen::Matrix4d ed_tf = ed_node.tf;
+    Eigen::Matrix4d ed_tf = ed_node->tf;
 
     // convert metric path
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
     {
         QString node_id = node_path[p];
-        NODE node = unimap->get_node_by_id(node_id);
-        if(node.id.isEmpty())
+        NODE* node = unimap->get_node_by_id(node_id);
+        if(node == NULL)
         {
             logger->write_log(QString("[AUTO] %1: node null").arg(node_id));
             return PATH();
         }
-        node_pose.push_back(node.tf);
+        node_pose.push_back(node->tf);
     }
 
     // add cur pos
@@ -902,10 +1232,10 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 
     // set result
     PATH res;
-    res.t     = get_time();
-    res.pos   = path_pos;
-    res.pose  = path_pose;
-    res.node  = node_path;
+    res.t = get_time();
+    res.node = node_path;
+    res.pose = path_pose;
+    res.pos = path_pos;
     res.ref_v = ref_v;
     res.ed_tf = ed_tf;
     return res;
@@ -914,18 +1244,18 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_node_id)
 {
     // set st node, ed node
-    NODE st_node = unimap->get_node_by_id(st_node_id);
-    NODE ed_node = unimap->get_node_by_id(ed_node_id);
-    if(st_node.id.isEmpty() || ed_node.id.isEmpty())
+    NODE* st_node = unimap->get_node_by_id(st_node_id);
+    NODE* ed_node = unimap->get_node_by_id(ed_node_id);
+    if(st_node == nullptr || ed_node == nullptr)
     {
         printf("[AUTO] st_node or ed_node null\n");
         return std::vector<QString>();
     }
 
-    printf("[AUTO] topo_path_finding, st: %s -> ed: %s\n", st_node.id.toLocal8Bit().data(), ed_node.id.toLocal8Bit().data());
+    printf("[AUTO] topo_path_finding, st: %s -> ed: %s\n", st_node->id.toLocal8Bit().data(), ed_node->id.toLocal8Bit().data());
 
     // no need path finding
-    if(st_node.id == ed_node.id)
+    if(st_node->id == ed_node->id)
     {
         printf("[AUTO] st_node same as ed_node, just set ed_node\n");
 
@@ -944,7 +1274,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
     ASTAR_NODE *st = new ASTAR_NODE();
     st->node = st_node;
     st->g = 0;
-    st->h = (ed->node.tf.block(0,3,3,1) - st->node.tf.block(0,3,3,1)).norm();
+    st->h = (ed->node->tf.block(0,3,3,1) - st->node->tf.block(0,3,3,1)).norm();
     st->f = st->g + st->h;
     open_set.push_back(st);
 
@@ -967,35 +1297,31 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         close_set.push_back(cur);
 
         // found goal
-        if(cur->node.id == ed->node.id)
+        if(cur->node->id == ed->node->id)
         {
             std::vector<QString> res;
 
             ASTAR_NODE* _cur = cur;
             while(_cur != NULL)
             {
-                res.push_back(_cur->node.id);
+                res.push_back(_cur->node->id);
                 _cur = _cur->parent;
             }
 
             std::reverse(res.begin(), res.end());
 
             printf("[AUTO] topo_path_finding complete, num:%d\n", (int)res.size());
-
-            delete ed;
-            delete st;
-
             return res;
         }
 
         // append child node
         std::vector<QString> around;
-        for(size_t p = 0; p < cur->node.linked.size(); p++)
+        for(size_t p = 0; p < cur->node->linked.size(); p++)
         {
             bool is_close = false;
             for(size_t q = 0; q < close_set.size(); q++)
             {
-                if(close_set[q]->node.id == cur->node.linked[p])
+                if(close_set[q]->node->id == cur->node->linked[p])
                 {
                     is_close = true;
                     break;
@@ -1004,7 +1330,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
 
             if(is_close == false)
             {
-                around.push_back(cur->node.linked[p]);
+                around.push_back(cur->node->linked[p]);
             }
         }
 
@@ -1012,14 +1338,14 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
         for(size_t p = 0; p < around.size(); p++)
         {
             // calc heuristics
-            NODE node = unimap->get_node_by_id(around[p]);
-            if(node.id.isEmpty())
+            NODE* node = unimap->get_node_by_id(around[p]);
+            if(node == nullptr)
             {
                 continue;
             }
 
-            double g = cur->g + (node.tf.block(0,3,3,1) - cur->node.tf.block(0,3,3,1)).norm();
-            double h = (node.tf.block(0,3,3,1) - ed->node.tf.block(0,3,3,1)).norm();
+            double g = cur->g + (node->tf.block(0,3,3,1) - cur->node->tf.block(0,3,3,1)).norm();
+            double h = (node->tf.block(0,3,3,1) - ed->node->tf.block(0,3,3,1)).norm();
             double f = g + h;
 
             // check open set
@@ -1027,7 +1353,7 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
             ASTAR_NODE* open_node = NULL;
             for(size_t q = 0; q < open_set.size(); q++)
             {
-                if(open_set[q]->node.id == node.id)
+                if(open_set[q]->node->id == node->id)
                 {
                     is_open_set = true;
                     open_node = open_set[q];
@@ -1063,15 +1389,12 @@ std::vector<QString> AUTOCONTROL::calc_node_path(QString st_node_id, QString ed_
     }
 
     printf("[AUTO] topo_path_finding, failed\n");
-
-    delete ed;
-    delete st;
     return std::vector<QString>();
 }
 
 std::vector<Eigen::Vector3d> AUTOCONTROL::path_resampling(const std::vector<Eigen::Vector3d>& src, double step)
 {
-    if(src.size() < 2)
+    if (src.size() < 2)
     {
         return src;
     }
@@ -1398,103 +1721,68 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
 
     const int ld = params.DRIVE_L/step;
 
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::MECANUM)
+    std::vector<double> _ref_th(src.size(), 0);
+    for(size_t p = 0; p < src.size(); p++)
     {
-        std::vector<double> _ref_v(src.size(), params.LIMIT_V);
-        for(size_t p = 0; p < src.size()-1; p++)
+        int cur_idx = p-ld;
+        if(cur_idx < 0)
         {
-            int cur_idx = p;
-            int tgt_idx = p+ld;
-            if(tgt_idx > (int)src.size()-1)
-            {
-                tgt_idx = src.size()-1;
-            }
-
-            Eigen::Vector3d xi0 = TF_to_se2(src[cur_idx]);
-            Eigen::Vector3d xi1 = TF_to_se2(src[tgt_idx]);
-
-            double err_d = calc_dist_2d(xi1 - xi0);
-            double err_th = deltaRad(xi1[2], xi0[2]) * params.DRIVE_H;
-
-            double t_v = err_d/params.LIMIT_V;
-            double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
-            double t = std::max<double>(t_v, t_w);
-            double v = err_d/t;
-            _ref_v[p] = v;
+            cur_idx = 0;
         }
 
-        _ref_v[_ref_v.size()-1] = _ref_v[_ref_v.size()-2];
-        _ref_v[0] = st_v;
+        int tgt_idx = p+ld;
+        if(tgt_idx > (int)src.size()-1)
+        {
+            tgt_idx = src.size()-1;
+        }
 
-        // update result
-        ref_v = _ref_v;
+        if(cur_idx == tgt_idx)
+        {
+            continue;
+        }
+
+        double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
+        double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
+        double th = std::atan2(dy, dx);
+        _ref_th[p] = th;
     }
-    else
+
+    std::vector<double> _ref_v(src.size(), params.LIMIT_V);
+    for(size_t p = 0; p < src.size(); p++)
     {
-        std::vector<double> _ref_th(src.size(), 0);
-        for(size_t p = 0; p < src.size(); p++)
+        int cur_idx = p-ld;
+        if(cur_idx < 0)
         {
-            int cur_idx = p-ld;
-            if(cur_idx < 0)
-            {
-                cur_idx = 0;
-            }
-
-            int tgt_idx = p+ld;
-            if(tgt_idx > (int)src.size()-1)
-            {
-                tgt_idx = src.size()-1;
-            }
-
-            if(cur_idx == tgt_idx)
-            {
-                continue;
-            }
-
-            double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
-            double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
-            double th = std::atan2(dy, dx);
-            _ref_th[p] = th;
+            cur_idx = 0;
         }
 
-        std::vector<double> _ref_v(src.size(), params.LIMIT_V);
-        for(size_t p = 0; p < src.size(); p++)
+        int tgt_idx = p+ld;
+        if(tgt_idx > (int)src.size()-1)
         {
-            int cur_idx = p-ld;
-            if(cur_idx < 0)
-            {
-                cur_idx = 0;
-            }
-
-            int tgt_idx = p+ld;
-            if(tgt_idx > (int)src.size()-1)
-            {
-                tgt_idx = src.size()-1;
-            }
-
-            if(cur_idx == tgt_idx)
-            {
-                continue;
-            }
-
-            double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
-            double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
-            double err_d = std::sqrt(dx*dx + dy*dy);
-            double err_th = deltaRad(std::atan2(dy, dx), _ref_th[cur_idx]) * params.DRIVE_H;
-
-            double t_v = err_d/params.LIMIT_V;
-            double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
-            double t = std::max<double>(t_v, t_w);
-            double v = err_d/t;
-            _ref_v[p] = v;
-
+            tgt_idx = src.size()-1;
         }
-        _ref_v[0] = st_v;
 
-        // update result
-        ref_v = _ref_v;
+        if(cur_idx == tgt_idx)
+        {
+            continue;
+        }
+
+        double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
+        double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
+        double err_d = std::sqrt(dx*dx + dy*dy);
+        double err_th = deltaRad(std::atan2(dy, dx), _ref_th[cur_idx]) * params.DRIVE_H;
+
+        double t_v = err_d/params.LIMIT_V;
+        double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
+        double t = std::max<double>(t_v, t_w);
+        double v = err_d/t;
+        _ref_v[p] = v;
+
     }
+    _ref_v[0] = st_v;
+
+    // update result
+    ref_v = _ref_v;
 }
 
 std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, double path_step)
@@ -1502,6 +1790,68 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     const double v_limit = params.LIMIT_V;
     const double v_acc = params.LIMIT_V_ACC;
     const double v_dcc = params.LIMIT_V_DCC;
+
+    std::vector<double> list0(src.size());
+    double v0 = src.front();
+    for(int p = 0; p < (int)src.size(); p++)
+    {
+        double v1 = std::sqrt(2*v_acc*path_step + v0*v0);
+        //        double v1 = std::sqrt(2*v_acc*path_step) + v0;
+        if(v1 > v_limit)
+        {
+            v1 = v_limit;
+        }
+
+        if(src[p] > v0)
+        {
+            v0 = v1;
+        }
+        else
+        {
+            v0 = src[p];
+        }
+
+        list0[p] = v0;
+    }
+
+    std::vector<double> list1(src.size());
+    v0 = src.back();
+    for(int p = (int)src.size()-1; p >= 0; p--)
+    {
+        double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);
+        //        double v1 = std::sqrt(2*v_dcc*path_step) + v0;
+        if(v1 > v_limit)
+        {
+            v1 = v_limit;
+        }
+
+        if(src[p] > v0)
+        {
+            v0 = v1;
+        }
+        else
+        {
+            v0 = src[p];
+        }
+
+        list1[p] = v0;
+    }
+
+    std::vector<double> res(src.size());
+    for(size_t p = 0; p < src.size(); p++)
+    {
+        res[p] = std::min<double>(list0[p], list1[p]);
+    }
+    return res;
+}
+
+/*
+std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, double path_step)
+{
+    const double v_limit = params.LIMIT_V;
+    const double v_acc = params.LIMIT_V_ACC;
+    const double v_dcc = params.LIMIT_V_DCC;
+    const double v_end = params.ED_V;
 
     std::vector<double> list0(src.size());
     double v0 = src.front();
@@ -1526,7 +1876,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     }
 
     std::vector<double> list1(src.size());
-    v0 = src.back();
+    v0 = v_end;
     for(int p = (int)src.size()-1; p >= 0; p--)
     {
         double v1 = std::sqrt(2*v_dcc*path_step + v0*v0);
@@ -1554,6 +1904,7 @@ std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, dou
     }
     return res;
 }
+*/
 
 // for local path planning
 std::vector<Eigen::Matrix4d> AUTOCONTROL::calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf)
@@ -1601,7 +1952,7 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
     else
     {
         int min_idx = 0;
-        double min_d = std::numeric_limits<double>::max();
+        double min_d = 99999999;
         for(size_t p = 0; p < path.size()-1; p++)
         {
             double d = calc_seg_dist(path[p], path[p+1], cur_pos);
@@ -1626,17 +1977,6 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
     }
 }
 
-int AUTOCONTROL::get_tgt_idx(std::vector<Eigen::Vector3d>& path, int cur_idx)
-{
-    int tgt_idx = cur_idx + (params.DRIVE_L / (AUTOCONTROL_INFO::local_path_step + 1e-06));
-    if(tgt_idx > (int)path.size() - 1)
-    {
-        tgt_idx = path.size() - 1;
-    }
-
-    return tgt_idx;
-}
-
 PATH AUTOCONTROL::calc_local_path(PATH& global_path)
 {
     // get cur params
@@ -1648,7 +1988,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     std::vector<Eigen::Matrix4d> _path_pose;
     std::vector<Eigen::Vector3d> _path_pos;
     int range = config->get_obs_local_goal_dist()/AUTOCONTROL_INFO::global_path_step;
-    int st_idx = saturation(cur_idx - 10,    0, global_path.pos.size()-2);
+    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
     int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
     for(int p = st_idx; p <= ed_idx; p++)
     {
@@ -1673,39 +2013,32 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     }
     else
     {
-        std::vector<Eigen::Matrix4d> path_pose;
-        std::vector<Eigen::Vector3d> path_pos;
-        RobotModel robot_model = config->get_robot_model();
-        if(robot_model == RobotModel::MECANUM)
-        {
-            // resampling
-            path_pose = path_resampling(_path_pose, AUTOCONTROL_INFO::local_path_step);
-            for(size_t p = 0; p < path_pose.size(); p++)
-            {
-                path_pos.push_back(path_pose[p].block(0,3,3,1));
-            }
-        }
-        else
-        {
-            // resampling
-            path_pose = reorientation_path(_path_pose);
-            path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
-            for(size_t p = 0; p < path_pose.size(); p++)
-            {
-                path_pos.push_back(path_pose[p].block(0,3,3,1));
-            }
+        // resampling
+        std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
+        path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
 
-            // ccma
-            path_pos = path_ccma(path_pos);
-            for(size_t p = 0; p < path_pose.size(); p++)
-            {
-                path_pose[p].block(0,3,3,1) = path_pos[p];
-            }
+        std::vector<Eigen::Vector3d> path_pos;
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pos.push_back(path_pose[p].block(0,3,3,1));
+        }
+
+        // ccma
+        path_pos = path_ccma(path_pos);
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pose[p].block(0,3,3,1) = path_pos[p];
         }
 
         // calc ref_v
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
+
+        //        std::cout << "Original ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
 
         // check global path end
         double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
@@ -1718,6 +2051,130 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
             {
                 ref_v[ref_v.size() - i - 1] = params.ED_V;
             }
+
+        }
+
+        //        std::cout << "Padding ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
+
+
+        // smoothing ref_v
+        ref_v = smoothing_v(ref_v, AUTOCONTROL_INFO::local_path_step);
+
+        //        std::cout << "Smoothing ref_v ------------------------------------" << std::endl;
+        //        for(int i=0; i<ref_v.size(); i++){
+        //            std::cout << ref_v[i] << ", ";
+        //        }
+        //        std::cout << std::endl;
+
+
+        // debug
+        // printf("ref v(%zu):", ref_v.size());
+        // for(size_t i = 0; i < ref_v.size(); i++)
+        // {
+        //     printf("%f,",ref_v[i]);
+        // }
+        // printf("\n");
+
+        // set result
+        PATH res;
+        res.t = get_time();
+        res.pose = path_pose;
+        res.pos = path_pos;
+        res.ref_v = ref_v;
+        res.ed_tf = path_pose.back(); // local goal
+        return res;
+    }
+}
+
+PATH AUTOCONTROL::calc_local_path_with_cur_vel(PATH& global_path)
+{
+    // get cur params
+    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+    Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+    Eigen::Vector3d cur_vel = mobile->get_control_input();
+    int cur_idx = get_nn_idx(global_path.pos, cur_pos);
+
+    // get global path segment
+    std::vector<Eigen::Matrix4d> _path_pose;
+    std::vector<Eigen::Vector3d> _path_pos;
+    int range = config->get_obs_local_goal_dist()/AUTOCONTROL_INFO::global_path_step;
+    int st_idx = saturation(cur_idx - 10, 0, global_path.pos.size()-2);
+    int ed_idx = saturation(cur_idx + range, 0, global_path.pos.size()-1);
+    for(int p = st_idx; p <= ed_idx; p++)
+    {
+        _path_pose.push_back(global_path.pose[p]);
+        _path_pos.push_back(global_path.pos[p]);
+    }
+    double st_v = global_path.ref_v[st_idx];
+
+    if(_path_pose.size() == 1)
+    {
+        std::vector<double> ref_v;
+        ref_v.push_back(st_v);
+
+        // set result
+        PATH res;
+        res.t = get_time();
+        res.pose = _path_pose;
+        res.pos = _path_pos;
+        res.ref_v = ref_v;
+        res.ed_tf = _path_pose.back(); // local goal
+        return res;
+    }
+    else
+    {
+        // resampling
+        std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
+        path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
+
+        std::vector<Eigen::Vector3d> path_pos;
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pos.push_back(path_pose[p].block(0,3,3,1));
+        }
+
+        // ccma
+        path_pos = path_ccma(path_pos);
+        for(size_t p = 0; p < path_pose.size(); p++)
+        {
+            path_pose[p].block(0,3,3,1) = path_pos[p];
+        }
+
+        // calc ref_v
+        std::vector<double> ref_v;
+        calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
+
+        // adjust cur vel
+        int cur_local_idx = get_nn_idx(path_pos, cur_pos);
+        for(int i=0; i<ref_v.size(); i++)
+        {
+            if(i < cur_local_idx)
+            {
+                ref_v[i] = cur_vel[0];
+            }
+            else if(i == cur_local_idx)
+            {
+                ref_v[i] = cur_vel[0];
+                break;
+            }
+        }
+
+        // check global path end
+        double d = calc_dist_2d(global_path.ed_tf.block(0,3,3,1) - path_pos.back());
+        if(d < config->get_drive_goal_dist())
+        {
+            ref_v.back() = params.ED_V;
+
+            int edv_padding_num = std::min((int)(AUTOCONTROL_INFO::global_path_step/AUTOCONTROL_INFO::local_path_step*2), (int)ref_v.size());
+            for(int i = 0; i < edv_padding_num; i++)
+            {
+                ref_v[ref_v.size() - i - 1] = params.ED_V;
+            }
+
         }
 
         // smoothing ref_v
@@ -1739,6 +2196,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
     double st_time = get_time();
 
     // get cur params
+    Eigen::Vector3d cur_vel = mobile->get_pose().vel;
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
     int cur_idx = get_nn_idx(global_path.pos, cur_pos);
@@ -1761,10 +2219,7 @@ PATH AUTOCONTROL::calc_avoid_path(PATH& global_path)
             for(int q = 0; q <= range; q++)
             {
                 int i = p + q;
-                if(obsmap->is_tf_collision(global_path.pose[i],
-                                           false,
-                                           config->get_obs_path_margin_x(),
-                                           config->get_obs_path_margin_y()) != ObsDetectState::NONE)
+                if(obsmap->is_tf_collision(global_path.pose[i], false, config->get_obs_path_margin_x(), config->get_obs_path_margin_y()))
                 {
                     is_collision = true;
                     break;
@@ -1840,7 +2295,13 @@ int AUTOCONTROL::is_everything_fine()
     if(loc_state == "none" || loc_state == "fail")
     {
         logger->write_log("[AUTO] localization fail, auto-drive stop", "Red", true, false);
-        send_move_response("fail", "loc failed");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.time    = get_time();
+            cur_move_info.result  = "fail";
+            cur_move_info.message = "loc failed";
+            Q_EMIT signal_move_response(cur_move_info);
+        }
         return DRIVING_FAILED;
     }
 
@@ -1848,7 +2309,13 @@ int AUTOCONTROL::is_everything_fine()
     if(ms.connection_m0 != 1 || ms.connection_m1 != 1)
     {
         logger->write_log("[AUTO] failed (motor not connected)", "Red", true, false);
-        send_move_response("fail", "motor not connected");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.time    = get_time();
+            cur_move_info.result  = "fail";
+            cur_move_info.message = "not connected";
+            Q_EMIT signal_move_response(cur_move_info);
+        }
         return DRIVING_FAILED;
     }
 
@@ -1892,21 +2359,38 @@ int AUTOCONTROL::is_everything_fine()
             logger->write_log("[AUTO] failed (motor error NON, 128)", "Red", true, false);
         }
 
-        send_move_response("fail", err_str);
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        cur_move_info.time    = get_time();
+        cur_move_info.result  = "fail";
+        cur_move_info.message = err_str;
+        Q_EMIT signal_move_response(cur_move_info);
+
         return DRIVING_FAILED;
     }
 
     if(ms.charge_state == 1)
     {
         logger->write_log("[AUTO] failed (robot charging)", "Red", true, false);
-        send_move_response("fail", "charging");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.time    = get_time();
+            cur_move_info.result  = "fail";
+            cur_move_info.message = "charging";
+            Q_EMIT signal_move_response(cur_move_info);
+        }
         return DRIVING_FAILED;
     }
 
     if(ms.status_m0 == 0 && ms.status_m1 == 0)
     {
         logger->write_log("[AUTO] not ready (motor lock off)", "Orange", true, false);
-        send_move_response("fail", "lock off");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.time    = get_time();
+            cur_move_info.result  = "fail";
+            cur_move_info.message = "lock off";
+            Q_EMIT signal_move_response(cur_move_info);
+        }
         return DRIVING_NOT_READY;
     }
 
@@ -1915,901 +2399,375 @@ int AUTOCONTROL::is_everything_fine()
 
 void AUTOCONTROL::control_loop()
 {
+    // set flag
+    is_moving = true;
+    multi_inter_lock = false;
+
     // set state
-    set_multi_infomation(StateMultiReq::NONE,
-                         StateObsCondition::NONE,
-                         StateCurGoal::NONE);
+    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
 
-    RobotModel robot_model = config->get_robot_model();
+    // check global path
+    logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
+    PATH global_path;
+    if(global_path_que.try_pop(global_path))
+    {
+        // update global path and goal_tf
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_global_path = global_path;
+            logger->write_log(QString("[AUTO] deque global path, size: %1").arg(cur_global_path.pose.size()));
+        }
 
+        Q_EMIT signal_global_path_updated();
+    }
+
+    if(global_path.pose.size() == 0)
+    {
+        clear_control_params();
+        set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
+        logger->write_log(QString("[AUTO] global path invalid"));
+        return;
+    }
+
+    // update goal
+    Eigen::Matrix4d goal_tf = global_path.ed_tf;
+    Eigen::Vector3d goal_xi = TF_to_se2(goal_tf);
+    Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
+
+    // set initial state
+    fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+    // check already goal
+    if(global_path_que.unsafe_size() == 0)
+    {
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*goal_tf);
+        double err_d = calc_dist_2d(dxi);
+        double err_th = std::abs(dxi[2]);
+        if(err_d < config->get_drive_goal_dist())
+        {
+            if(!global_path.is_final)
+            {
+                clear_control_params();
+                set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::MOVE);
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                logger->write_log(QString("[AUTO] COMPLETE (already temp goal), err_d:%1").arg(err_d));
+                return;
+            }
+
+            // final goal reached
+            if(err_th < config->get_drive_goal_th()*D2R)
+            {
+                // move response
+                Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
+                {
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(mtx);
+                        cur_move_info.cur_pos = cur_pos;
+                        cur_move_info.result = "success";
+                        cur_move_info.message = "already goal";
+                        cur_move_info.time = get_time();
+                    }
+                    Q_EMIT signal_move_response(cur_move_info);
+                }
+
+                clear_control_params();
+                set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                logger->write_log(QString("[AUTO] COMPLETE (already goal), err_d: %1, err_th: %2").arg(err_d).arg(err_th*R2D));
+                return;
+            }
+            else
+            {
+                // jump to final align
+                fsm_state = AUTO_FSM_FINAL_ALIGN;
+            }
+        }
+    }
+    logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
+
+    // path storage
+    PATH local_path;
+    PATH avoid_path;
+
+    // loop params
     const double dt = 0.05; // 20hz
+    double pre_loop_time = get_time();
+
+    // control params
+    double extend_dt  = 0;
+    double pre_err_th = 0;
+
+    // for obs
+    int obs_state   = AUTO_OBS_CHECK;
+    int obs_value = OBS_NONE;
+    double obs_wait_st_time = 0;
 
     logger->write_log("[AUTO] start control loop");
     while(control_flag)
     {
-        CONTROL_COMMAND cmd;
-        {
-            std::unique_lock<std::mutex> lock(control_mtx);
-            control_cv.wait(lock, [this]
-            {
-                return latest_cmd.type != CommandType::NONE || !control_flag;
-            });
+        // get current status
+        Eigen::Matrix4d cur_tf     = loc->get_cur_tf();
+        Eigen::Vector3d cur_xi     = TF_to_se2(cur_tf);
+        Eigen::Vector3d cur_pos    = cur_tf.block(0,3,3,1);
+        Eigen::Vector3d cur_vel    = mobile->get_control_input();
+        Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
-            std::lock_guard<std::recursive_mutex> lock2(mtx);
-            cmd = latest_cmd;
-            latest_cmd.type = CommandType::NONE;
+        // for plot
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            last_cur_pos = cur_pos;
         }
 
-        if(!control_flag)
+        // check everything
+        int is_good_everything = is_everything_fine();
+        if(is_good_everything == DRIVING_FAILED || is_good_everything == DRIVING_NOT_READY)
         {
+            fsm_state = AUTO_FSM_COMPLETE;
+
+            // clear
             clear_control_params();
-            break;
+            set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::FAIL);
+            logger->write_log("[AUTO] Driving failed");
+            return;
         }
 
-        try_enque_global_path_queue(cmd);
-
-        GOAL_INFO goal_info;
-        PATH global_path;
-        if(!initialize_drive_state(global_path, goal_info))
+        // pause
+        if(is_pause)
         {
+            mobile->move(0, 0, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
 
-        Eigen::Matrix4d goal_tf = goal_info.goal_tf;
-        Eigen::Vector3d goal_xi = goal_info.goal_xi;
-        Eigen::Vector3d goal_pos = goal_info.goal_pos;
-
-        is_moving = true;
-        logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[static_cast<int>(fsm_state.load())]));
-
-        // set path storage
-        PATH local_path, avoid_path;
-
-        // set params
-        double pre_loop_time = get_time();
-        double extend_dt  = 0;
-        double pre_err_th = 0;
-
-        // for obs
-        AUTO_OBS_STATE obs_state   = AUTO_OBS_STATE::CHECK;
-        ObsDetectState obs_value = ObsDetectState::NONE;
-        double obs_wait_st_time = 0;
-
-        while(control_flag && is_moving)
+        // calc local path
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN)
         {
-            try
+            if(avoid_path.pos.size() > 0)
             {
-                // check is_moving flag
-                if(!is_moving.load())
+                // clear avoid path
+                double goal_err_d = calc_dist_2d(avoid_path.pos.back() - goal_pos);
+                if(goal_err_d >= config->get_drive_goal_dist())
                 {
-                    clear_control_params();
-                    continue;
-                }
-
-                // check everything fine
-                int is_good_everything = is_everything_fine();
-                if(is_good_everything == DRIVING_FAILED || is_good_everything == DRIVING_NOT_READY)
-                {
-                    // driving complete
-                    fsm_state.store(AutoFsmState::COMPLETE);
-
-                    // stop and clear flags
-                    clear_control_params();
-
-                    // set multi state (driving failed -> none, none, fail)
-                    set_multi_infomation(StateMultiReq::NONE,
-                                         StateObsCondition::NONE,
-                                         StateCurGoal::FAIL);
-
-                    logger->write_log("[AUTO] Driving failed", "Red");
-                    continue;
-                }
-
-                // check pause
-                if(is_pause.load() == true)
-                {
-                    mobile->move(0, 0, 0);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(dt*1000)));
-                    continue;
-                }
-
-                CONTROL_COMMAND cmd;
-                bool is_update_path = check_update_path(cmd);
-                if(is_update_path)
-                {
-                    // set to
-                    if(fsm_state.load() != AutoFsmState::OBS)
-                    {
-                        fsm_state.store(AutoFsmState::FIRST_ALIGN);
-                    }
-
-                    // this function do calc global_path and enque global_path_queue
-                    update_path(cmd.node_path);
-
-                    // check try_pop global_path_queue and validate global_path
-                    try_pop_global_path_queue(global_path);
-
-                    // update goal pose
-                    goal_tf  = global_path.ed_tf;
-                    goal_xi  = TF_to_se2(goal_info.goal_tf);
-                    goal_pos = goal_tf.block(0,3,3,1);
-                }
-
-                // get current status
-                Eigen::Matrix4d cur_tf     = loc->get_cur_tf();
-                Eigen::Vector3d cur_xi     = TF_to_se2(cur_tf);
-                Eigen::Vector3d cur_pos    = cur_tf.block(0,3,3,1);
-                Eigen::Vector3d cur_vel    = mobile->get_control_input();
-                Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
-                {
-                    std::lock_guard<std::recursive_mutex> lock(mtx);
-                    last_cur_pos = cur_pos;
-                }
-
-                // calc local path
-                if(fsm_state.load() != AutoFsmState::FINAL_ALIGN)
-                {
-                    if(avoid_path.pos.size() > 0)
+                    int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
+                    if(avoid_idx > avoid_path.pos.size() * AUTOCONTROL_INFO::avoid_path_check_idx)
                     {
                         // clear avoid path
-                        double goal_err_d = calc_dist_2d(avoid_path.pos.back() - goal_info.goal_pos);
-                        if(goal_err_d >= config->get_drive_goal_dist())
-                        {
-                            int avoid_idx = get_nn_idx(avoid_path.pos, cur_pos);
-                            if(avoid_idx > avoid_path.pos.size() * AUTOCONTROL_INFO::avoid_path_check_ratio)
-                            {
-                                // clear avoid path
-                                avoid_path = PATH();
-                                logger->write_log("[AUTO] clear avoid_path");
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                continue;
-                            }
-                        }
-
-                        // set avoid path to local path
-                        local_path = avoid_path;
-                    }
-                    else
-                    {
-                        // update local path if time duration voer local path calc dt
-                        if(get_time() - local_path.t > AUTOCONTROL_INFO::local_path_calc_dt || is_update_path)
-                        {
-                            local_path = calc_local_path(global_path);
-                        }
-                    }
-
-                    set_cur_local_path(local_path);
-                }
-
-                // finite state machine
-                if(fsm_state.load() == AutoFsmState::FIRST_ALIGN)
-                {
-                    // find tgt
-                    int cur_idx = get_nn_idx(local_path.pos,  cur_pos);
-                    int tgt_idx = get_tgt_idx(local_path.pos, cur_idx);
-
-                    Eigen::Vector3d tgt_pos = local_path.pos[tgt_idx];
-                    {
-                        std::lock_guard<std::recursive_mutex> lock(mtx);
-                        last_tgt_pos = tgt_pos;
-                    }
-
-                    // calc error
-                    double dx = tgt_pos[0] - local_path.pos[cur_idx][0];
-                    double dy = tgt_pos[1] - local_path.pos[cur_idx][1];
-                    double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
-                    if(pre_err_th == 0)
-                    {
-                        pre_err_th = err_th;
-                    }
-
-                    // goal check
-                    if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
-                    {
-                        mobile->move(0, 0, 0);
-
-                        fsm_state.store(AutoFsmState::DRIVING);
-
-                        extend_dt  = 0;
-                        pre_err_th = 0;
-                        prev_local_ref_v_index    = 0;
-                        cur_pos_at_start_driving  = cur_pos;
-                        ref_v_oscilation_end_flag = false;
-
-                        logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
-                        continue;
-                    }
-
-                    // pivot control
-                    double w0 = cur_vel[2];
-                    double w  = params.DRIVE_A * err_th + params.DRIVE_B * (err_th - pre_err_th)/dt;
-                    pre_err_th = err_th;
-
-                    w = saturation(w, w0 - params.LIMIT_W_ACC * D2R * dt, w0 + params.LIMIT_W_ACC * D2R * dt);
-                    w = saturation(w,     -params.LIMIT_PIVOT_W * D2R,         params.LIMIT_PIVOT_W * D2R);
-
-                    // for safe
-                    double v0 = mobile->get_pose().vel[0];
-                    if(std::abs(v0) > AUTOCONTROL_INFO::first_align_safe_velocity)
-                    {
-                        w = 0;
-                    }
-
-                    // obs check
-                    std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
-                    obs_value = obsmap->is_path_collision(traj, true);
-                    if(obs_value != ObsDetectState::NONE)
-                    {
-                        mobile->move(0, 0, 0);
-
-                        fsm_state = AutoFsmState::OBS;
-                        obs_state = AUTO_OBS_STATE::CHECK;
-
-                        set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                             StateObsCondition::NO_CHANGE,
-                                             StateCurGoal::OBSTACLE);
-
-                        logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS, err_th:%1").arg(err_th*R2D));
+                        avoid_path = PATH();
+                        logger->write_log("[AUTO] clear avoid_path");
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         continue;
                     }
-
-                    // send control
-                    mobile->move(0, 0, w);
                 }
-                else if(fsm_state.load() == AutoFsmState::DRIVING)
+
+                // set avoid path to local path
+                local_path = avoid_path;
+            }
+            else
+            {
+                // update local path
+                if(get_time() - local_path.t > AUTOCONTROL_INFO::local_path_calc_dt)
                 {
-                    // find tgt
-                    int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-                    int tgt_idx = get_tgt_idx(local_path.pos, cur_idx);
+                    local_path = calc_local_path_with_cur_vel(global_path);
+                }
+            }
 
-                    Eigen::Matrix4d tgt_tf  = local_path.pose[tgt_idx];
-                    Eigen::Vector3d tgt_pos = local_path.pos[tgt_idx];
+            // for plot
+            {
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+                cur_local_path = local_path;
+                last_local_goal = local_path.ed_tf.block(0,3,3,1);
+            }
+
+            Q_EMIT signal_local_path_updated();
+        }
+
+        // finite state machine
+        if(fsm_state == AUTO_FSM_FIRST_ALIGN)
+        {
+            // find tgt
+            int cur_idx = get_nn_idx(local_path.pos, cur_pos);
+            int tgt_idx = cur_idx + params.DRIVE_L/AUTOCONTROL_INFO::local_path_step;
+            if(tgt_idx > (int)local_path.pos.size()-1)
+            {
+                tgt_idx = local_path.pos.size()-1;
+            }
+
+            Eigen::Vector3d tgt_pos = local_path.pos[tgt_idx];
+            {
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+                last_tgt_pos = tgt_pos;
+            }
+
+            // calc error
+            double dx = local_path.pos[tgt_idx][0] - local_path.pos[cur_idx][0];
+            double dy = local_path.pos[tgt_idx][1] - local_path.pos[cur_idx][1];
+            double err_th = deltaRad(std::atan2(dy,dx), cur_xi[2]);
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
+            // goal check
+            if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
+            {
+                mobile->move(0, 0, 0);
+
+                fsm_state = AUTO_FSM_DRIVING;
+
+                extend_dt  = 0;
+                pre_err_th = 0;
+                prev_local_ref_v_index    = 0;  // set 0 index
+                cur_pos_at_start_driving  = cur_pos;
+                ref_v_oscilation_end_flag = false;
+
+                logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+
+            // pivot control
+            double kp = params.DRIVE_A;
+            double kd = params.DRIVE_B;
+            double w0 = cur_vel[2];
+            double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
+            pre_err_th = err_th;
+
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            // for safe
+            double v0 = mobile->get_pose().vel[0];
+            if(std::abs(v0) > 0.1)
+            {
+                w = 0;
+            }
+
+            // obs check
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
+            obs_value = obsmap->is_path_collision(traj, true);
+            if(obs_value != OBS_NONE)
+            {
+                mobile->move(0, 0, 0);
+
+                fsm_state = AUTO_FSM_OBS;
+                obs_state = AUTO_OBS_CHECK;
+                set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
+
+                logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS, err_th:%1").arg(err_th*R2D));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+
+            // send control
+            if(!is_debug)
+            {
+                mobile->move(0, 0, w);
+            }
+        }
+        else if(fsm_state == AUTO_FSM_DRIVING)
+        {
+            // find tgt
+            int cur_idx = get_nn_idx(local_path.pos, cur_pos);
+            int tgt_idx = cur_idx + params.DRIVE_L/AUTOCONTROL_INFO::local_path_step;
+            if(tgt_idx > (int)local_path.pos.size()-1)
+            {
+                tgt_idx = local_path.pos.size()-1;
+            }
+
+            Eigen::Matrix4d tgt_tf  = local_path.pose[tgt_idx];
+            Eigen::Vector3d tgt_pos = local_path.pos[tgt_idx];
+            {
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+                last_tgt_pos = tgt_pos;
+            }
+
+            // goal check
+            int max_idx = global_path.pos.size()-1;
+            int goal_idx = get_nn_idx(global_path.pos, cur_pos);
+            if(max_idx - goal_idx < 2)
+            {
+                Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
+                double v0 = cur_vel[0];
+                double v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
+
+                double temp_v = v0;
+                if(v0 > 0)
+                {
+                    temp_v -= params.LIMIT_V_DCC/dt;
+                    if(temp_v < params.ED_V)
                     {
-                        std::lock_guard<std::recursive_mutex> lock(mtx);
-                        last_tgt_pos = tgt_pos;
+                        temp_v = params.ED_V;
                     }
+                    v = saturation(v, -temp_v, temp_v);
+                }
 
-                    // goal check
-                    int max_idx = global_path.pos.size()-1;
-                    int goal_idx = get_nn_idx(global_path.pos, cur_pos);
-                    if(max_idx - goal_idx < 2)
+                mobile->move(v, 0, 0);
+
+                extend_dt += dt;
+                if(extend_dt > config->get_drive_extended_control_time())
+                {
+                    mobile->move(0, 0, 0);
+
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    double goal_err_d = calc_dist_2d(_goal_pos);
+                    if(global_path.is_final)
                     {
-                        Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
-                        double v0 = cur_vel[0];
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;
 
-                        double val_ = std::sqrt(_goal_pos[0] *_goal_pos[0] + _goal_pos[1] * _goal_pos[1]);
-                        double v = saturation(config->get_drive_goal_approach_gain()*val_, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
-
-                        if(robot_model == RobotModel::MECANUM)
-                        {
-                            double local_dx = _goal_pos[0];
-                            double local_dy = _goal_pos[1];
-
-                            double local_goal_d = std::sqrt(local_dx * local_dx + local_dy * local_dy);
-                            double local_dir_x = local_dx / (local_goal_d + 1.0e-6);
-                            double local_dir_y = local_dy / (local_goal_d + 1.0e-6);
-
-                            double local_vx = local_dir_x * v;
-                            double local_vy = local_dir_y * v;
-
-                            double _err_th = deltaRad(goal_xi[2], cur_xi[2]);
-                            double k_wz = 1.0 - std::exp(-std::abs(_err_th) * 3.0);
-                            double wz = k_wz * saturation(config->get_drive_goal_approach_gain() * _err_th, -3.0 * D2R, 3.0 * D2R);
-
-                            mobile->move(local_vx, local_vy, wz);
-                        }
-                        else
-                        {
-                            double temp_v = v0;
-                            if(v0 > 0)
-                            {
-                                temp_v -= params.LIMIT_V_DCC/dt;
-                                if(temp_v < params.ED_V)
-                                {
-                                    temp_v = params.ED_V;
-                                }
-                                v = saturation(v, -temp_v, temp_v);
-                            }
-
-                            mobile->move(v, 0, 0);
-                        }
-
-                        extend_dt += dt;
-                        if(extend_dt > config->get_drive_extended_control_time())
-                        {
-                            mobile->move(0, 0, 0);
-
-                            extend_dt = 0;
-                            pre_err_th = 0;
-
-                            double goal_err_d = calc_dist_2d(_goal_pos);
-                            if(global_path.is_final)
-                            {
-                                fsm_state = AutoFsmState::FINAL_ALIGN;
-
-                                logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                continue;
-                            }
-                            else
-                            {
-                                // deque
-                                PATH _global_path;
-                                if(global_path_que.try_pop(_global_path))
-                                {
-                                    fsm_state = AutoFsmState::FIRST_ALIGN;
-
-                                    // update global path
-                                    global_path = _global_path;
-                                    logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(_global_path.pos.size()));
-
-                                    // update global goal
-                                    goal_tf  = global_path.ed_tf;
-                                    goal_xi  = TF_to_se2(goal_tf);
-                                    goal_pos = goal_tf.block(0,3,3,1);
-
-                                    // update local path
-                                    local_path = calc_local_path(global_path);
-                                    avoid_path = PATH();
-
-                                    // update global & local path
-                                    set_cur_global_path(global_path);
-                                    set_cur_local_path(local_path);
-
-                                    logger->write_log(QString("[AUTO] next global path, DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                    continue;
-                                }
-                                else
-                                {
-                                    fsm_state = AutoFsmState::COMPLETE;
-
-                                    clear_control_params();
-                                    set_multi_infomation(StateMultiReq::NONE,
-                                                         StateObsCondition::NONE,
-                                                         StateCurGoal::MOVE);
-
-                                    logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // for real time loop
-                        double cur_loop_time = get_time();
-                        double delta_loop_time = cur_loop_time - pre_loop_time;
-                        if(delta_loop_time < dt)
-                        {
-                            int sleep_ms = (dt-delta_loop_time)*1000;
-                            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-                        }
-                        else
-                        {
-                            logger->write_log(QString("[AUTO] driving loop time drift, dt:%1").arg(delta_loop_time));
-                        }
-                        pre_loop_time = get_time();
+                        logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         continue;
                     }
-
-                    // obstacle deceleation
-                    QString obs_condition = "none";
-                    double obs_decel_v = params.LIMIT_V;
-                    {
-                        std::lock_guard<std::recursive_mutex> lock(mtx);
-                        obs_value     = cur_obs_value;
-                        obs_decel_v   = cur_obs_decel_v;
-                        obs_condition = cur_obs_condition;
-                    }
-
-                    // obstacle stop
-                    {
-                        double cur_velocity      = mobile->get_control_input()[0];
-                        double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
-                        double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
-
-                        dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
-                        cur_deadzone = dynamic_deadzone;
-
-                        int chk_idx = cur_idx + dynamic_deadzone/AUTOCONTROL_INFO::local_path_step;
-                        if(chk_idx > (int)local_path.pos.size()-1)
-                        {
-                            chk_idx = local_path.pos.size()-1;
-                        }
-
-                        std::vector<Eigen::Matrix4d> traj;
-                        for(int p = cur_idx; p <= chk_idx; p++)
-                        {
-                            traj.push_back(local_path.pose[p]);
-                        }
-
-                        obs_value = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
-                        if(obs_value != ObsDetectState::NONE)
-                        {
-                            mobile->move(0, 0, 0);
-
-                            fsm_state = AutoFsmState::OBS;
-                            obs_state = AUTO_OBS_STATE::CHECK;
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::NO_CHANGE,
-                                                 StateCurGoal::OBSTACLE);
-
-                            logger->write_log(QString("[AUTO] DRIVING -> OBS, cur_obs_val:%1, fsm_state:%2").arg(static_cast<int>(obs_value)).arg(static_cast<int>(fsm_state.load())));
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-                    }
-
-                    // for mobile server
-                    set_obs_condition(obs_condition);
-
-                    // calc heading error
-                    Eigen::Matrix4d _tgt_tf = cur_tf_inv*tgt_tf;
-                    Eigen::Vector3d _tgt_xi = TF_to_se2(_tgt_tf);
-
-                    // only use mecanum model
-                    double dir_x = 0.0;
-                    double dir_y = 0.0;
-
-                    double err_d  = std::numeric_limits<double>::max();
-                    double err_th = std::numeric_limits<double>::max();
-                    if(robot_model == RobotModel::MECANUM)
-                    {
-                        Eigen::Vector3d local_tgt_pos = _tgt_tf.block(0,3,3,1);
-
-                        double local_dx = local_tgt_pos[0];
-                        double local_dy = local_tgt_pos[1];
-
-                        double local_d = std::sqrt(local_dx*local_dx+local_dy*local_dy);
-                        dir_x = local_dx / (local_d + 1.0e-6);
-                        dir_y = local_dy / (local_d + 1.0e-6);
-
-                        err_d = calc_dist_2d(goal_pos - cur_pos);
-                    }
                     else
                     {
-                        err_d  = calc_dist_2d(_tgt_xi);
-                    }
-                    err_th = _tgt_xi[2];
-
-                    // calc cross track error
-                    double cte = calc_cte(local_path.pose, cur_pos);
-
-                    // get ref_v -- prevent oscilation caused by localization jitter
-                    double ref_v = 0.0;
-                    double diff_from_start_pos = calc_dist_2d(cur_pos - cur_pos_at_start_driving);
-                    if(diff_from_start_pos < AUTOCONTROL_INFO::diff_from_start_pos_threshold && ref_v_oscilation_end_flag == false)
-                    {
-                        // it is critical at staring point (vel from zero)
-                        if(cur_idx > prev_local_ref_v_index)
+                        // deque
+                        PATH _global_path;
+                        if(global_path_que.try_pop(_global_path))
                         {
-                            prev_local_ref_v_index = cur_idx;
-                        }
-                        ref_v = local_path.ref_v[prev_local_ref_v_index];
-                    }
-                    else
-                    {
-                        ref_v_oscilation_end_flag = true;
-                        ref_v = local_path.ref_v[cur_idx];
-                    }
+                            fsm_state = AUTO_FSM_FIRST_ALIGN;
 
-                    /* calc control input */
-                    // calc linear velocity
-                    double v0 = cur_vel[0];
-                    double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
-                    if(robot_model == RobotModel::MECANUM)
-                    {
-                        v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
-                    }
+                            // update global path
+                            global_path = _global_path;
+                            logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
 
-                    v = saturation(v, 0.0, obs_decel_v);
-                    v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
-                    v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+                            // update global goal
+                            goal_tf = global_path.ed_tf;
+                            goal_pos = goal_tf.block(0,3,3,1);
+                            goal_xi = TF_to_se2(goal_tf);
 
-                    if(pre_err_th == 0)
-                    {
-                        pre_err_th = err_th;
-                    }
+                            // update local path
+                            local_path = calc_local_path(global_path);
+                            avoid_path = PATH();
 
-                    double w;
-                    if(robot_model == RobotModel::MECANUM)
-                    {
-                        // PD control
-                        w = params.DRIVE_A * err_th + params.DRIVE_B * (err_th - pre_err_th)/dt;
-                    }
-                    else
-                    {
-                        // stanley control
-                        double th = (params.DRIVE_A * err_th)
-                                + (params.DRIVE_B * (err_th-pre_err_th)/dt)
-                                +  std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
-                        th = saturation(th, -45.0 * D2R, 45.0 * D2R);
-                        w = std::tan(th) / params.DRIVE_L;
-                    }
-                    pre_err_th = err_th;
-
-                    double w0 = cur_vel[2];
-                    w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
-                    w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
-
-                    // scaling
-                    double scale_v = 1.0 - params.DRIVE_T*std::abs(w/(params.LIMIT_W*D2R));
-                    double scale_w = 1.0 - params.DRIVE_T*std::abs(v/params.LIMIT_V);
-                    v *= scale_v;
-                    w *= scale_w;
-
-                    // deadzone v
-                    double d_v = config->get_drive_v_deadzone();
-                    if(std::abs(v) < d_v)
-                    {
-                        v = sgn(v)*d_v;
-                    }
-
-                    // deadzone w
-                    double d_w = config->get_drive_w_deadzone()*D2R;
-                    if(std::abs(w) < d_w)
-                    {
-                        w = 0;
-                    }
-                    else
-                    {
-                        w = sgn(w)*(std::abs(w)-d_w);
-                    }
-
-                    if(robot_model == RobotModel::MECANUM)
-                    {
-                        double vx = dir_x * v;
-                        double vy = dir_y * v;
-
-                        // send control
-                        mobile->move(vx, vy, w);
-                    }
-                    else
-                    {
-                        // send control
-                        mobile->move(v, 0, w);
-                    }
-
-                }
-                else if(fsm_state.load() == AutoFsmState::FINAL_ALIGN)
-                {
-                    // calc heading error
-                    double err_th = deltaRad(goal_xi[2], cur_xi[2]);
-                    if(pre_err_th == 0)
-                    {
-                        pre_err_th = err_th;
-                    }
-
-                    // goal check
-                    if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
-                    {
-                        extend_dt += dt;
-                        if(extend_dt > config->get_drive_extended_control_time())
-                        {
-                            clear_control_params();
-
-                            fsm_state = AutoFsmState::COMPLETE;
-                            set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
-
-                            // update move info
+                            // update global & local path
                             {
                                 std::lock_guard<std::recursive_mutex> lock(mtx);
-                                cur_move_info.time    = get_time();
-                                cur_move_info.result  = "success";
-                                cur_move_info.message = "very good";
-                                cur_move_info.cur_pos = cur_pos;
-                                Q_EMIT signal_move_response(cur_move_info);
+                                cur_global_path = global_path;
+                                cur_local_path  = local_path;
+                                last_local_goal = local_path.ed_tf.block(0,3,3,1);
+
+                                Q_EMIT signal_global_path_updated();
+                                Q_EMIT signal_local_path_updated();
                             }
 
-                            logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
-                            continue;
-                        }
-                    }
-
-                    // obs check
-                    std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
-                    obs_value = obsmap->is_path_collision(traj, true);
-                    if(obs_value == ObsDetectState::DYN)
-                    {
-                        mobile->move(0, 0, 0);
-
-                        fsm_state = AutoFsmState::OBS;
-                        obs_state = AUTO_OBS_STATE::WAIT2;
-                        set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
-                        obs_wait_st_time = get_time();
-
-                        logger->write_log("[AUTO] FINAL ALIGN -> OBS");
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                        continue;
-                    }
-
-                    // pivot control
-                    double kp = params.DRIVE_A;
-                    double kd = params.DRIVE_B;
-                    double w0 = cur_vel[2];
-                    double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
-                    pre_err_th = err_th;
-
-                    w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
-                    w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
-
-                    // send control
-                    if(!is_debug)
-                    {
-                        mobile->move(0, 0, w);
-                    }
-                }
-                else if(fsm_state.load() == AutoFsmState::OBS)
-                {
-                    if(obs_state == AUTO_OBS_STATE::CHECK)
-                    {
-                        if(obs_value == ObsDetectState::DYN)
-                        {
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::NEAR,
-                                                 StateCurGoal::NO_CHANGE);
-
-                            if(config->get_obs_avoid_mode() == 0)
-                            {
-                                // mode 0, just wait
-                                obs_state = AUTO_OBS_STATE::WAIT;
-                                obs_wait_st_time = get_time();
-
-                                logger->write_log("[AUTO] avoid mode 0, OBS_WAIT");
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                continue;
-                            }
-                            else
-                            {
-                                // mode 1, avoid
-                                obs_state = AUTO_OBS_STATE::AVOID;
-
-                                logger->write_log("[AUTO] avoid mode 1, OBS_AVOID");
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                continue;
-                            }
-                        }
-                        else if(obs_value == ObsDetectState::VIR)
-                        {
-                            // for mobile server
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::VIR,
-                                                 StateCurGoal::NO_CHANGE);
-
-                            // for vobs works
-                            obs_state = AUTO_OBS_STATE::VIR;
-                            obs_wait_st_time = get_time();
-
-                            logger->write_log("[AUTO] OBS_VIR");
+                            logger->write_log(QString("[AUTO] next global path, DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
                             std::this_thread::sleep_for(std::chrono::milliseconds(1));
                             continue;
                         }
                         else
                         {
-                            // just wait
-                            obs_state = AUTO_OBS_STATE::WAIT;
-                            obs_wait_st_time = get_time();
+                            fsm_state = AUTO_FSM_COMPLETE;
 
-                            logger->write_log("[AUTO] OBS_WAIT");
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
+                            clear_control_params();
+                            set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::MOVE);
+                            logger->write_log(QString("[AUTO] DRIVING -> COMPLETE(temp goal), err_d:%1").arg(goal_err_d));
+                            return;
                         }
-                    }
-                    else if(obs_state == AUTO_OBS_STATE::AVOID)
-                    {
-                        // calc avoid path
-                        avoid_path = calc_avoid_path(global_path);
-                        if(avoid_path.pos.size() > 0)
-                        {
-                            extend_dt = 0;
-                            pre_err_th = 0;
-
-                            fsm_state = (robot_model == RobotModel::MECANUM ? AutoFsmState::DRIVING : AutoFsmState::FIRST_ALIGN);
-
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::NO_CHANGE,
-                                                 StateCurGoal::MOVE);
-
-                            logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-                        else
-                        {
-                            obs_state = AUTO_OBS_STATE::RECOVERY;
-
-                            logger->write_log("[AUTO] avoid path failed, OBS_AVOID -> OBS_RECOVERY");
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-                    }
-                    else if(obs_state == AUTO_OBS_STATE::RECOVERY)
-                    {
-                        std::vector<Eigen::Vector3d> obs_pts = obsmap->get_obs_pts();
-
-                        const double check_deg = AUTOCONTROL_INFO::obs_recovery_collision_check_deg;
-
-                        Eigen::Vector3d vel(0,0,0);
-                        double max_d = 0;
-                        for(int deg = -check_deg; deg <= check_deg; deg += 10)
-                        {
-                            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(-0.1, 0, deg*D2R), 0.1, 1.0, cur_tf);
-                            if(obsmap->is_path_collision(traj) != ObsDetectState::NONE)
-                            {
-                                continue;
-                            }
-
-                            double min_d = 9999; //std::numeric_limits<double>::max();
-                            for(size_t p = 0; p < obs_pts.size(); p++)
-                            {
-                                double d = calc_dist_2d(obs_pts[p] - traj.back().block(0,3,3,1));
-                                if(d < min_d)
-                                {
-                                    min_d = d;
-                                }
-                            }
-
-                            if(min_d > max_d)
-                            {
-                                max_d = min_d;
-                                vel[0] = -0.1;
-                                vel[1] = 0;
-                                vel[2] = deg*D2R;
-                            }
-                        }
-
-                        for(int deg = -check_deg; deg <= check_deg; deg += 10)
-                        {
-                            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0.1, 0, deg*D2R), 0.1, 1.0, cur_tf);
-                            if(obsmap->is_path_collision(traj) != ObsDetectState::NONE)
-                            {
-                                continue;
-                            }
-
-                            double min_d = std::numeric_limits<double>::max();
-                            for(size_t p = 0; p < obs_pts.size(); p++)
-                            {
-                                double d = calc_dist_2d(obs_pts[p] - traj.back().block(0,3,3,1));
-                                if(d < min_d)
-                                {
-                                    min_d = d;
-                                }
-                            }
-
-                            if(min_d > max_d)
-                            {
-                                max_d = min_d;
-                                vel[0] = 0.1;
-                                vel[1] = 0;
-                                vel[2] = deg*D2R;
-                            }
-                        }
-
-                        double margin_dx = config->get_obs_safe_margin_x();
-                        double margin_dy = config->get_obs_safe_margin_y();
-
-                        double margin_d = std::sqrt(margin_dx*margin_dx+ margin_dy*margin_dy);
-                        if(max_d > config->get_robot_radius() + margin_d)
-                        {
-                            mobile->move(0, 0, 0);
-                            obs_state = AUTO_OBS_STATE::AVOID;
-                            logger->write_log(QString("[AUTO] max_d: %1, OBS_RECOVERY -> OBS_AVOID").arg(max_d));
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-
-                        double v0 = cur_vel[0];
-                        double w0 = cur_vel[2];
-                        double v = vel[0];
-                        double w = vel[2];
-                        v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
-                        v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
-                        w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
-                        w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
-
-                        if(!is_debug)
-                        {
-                            mobile->move(v, 0, w);
-                        }
-                    }
-                    else if(obs_state == AUTO_OBS_STATE::WAIT)
-                    {
-                        if(get_time() - obs_wait_st_time > AUTOCONTROL_INFO::obs_wait_time)
-                        {
-                            extend_dt  = 0;
-                            pre_err_th = 0;
-
-                            fsm_state = (robot_model == RobotModel::MECANUM ? AutoFsmState::DRIVING : AutoFsmState::FIRST_ALIGN);
-
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::NO_CHANGE,
-                                                 StateCurGoal::MOVE);
-
-                            obs_state = AUTO_OBS_STATE::CHECK;
-                            obs_value = ObsDetectState::NONE;
-
-                            logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-                    }
-                    else if(obs_state == AUTO_OBS_STATE::WAIT2)
-                    {
-                        if(get_time() - obs_wait_st_time > AUTOCONTROL_INFO::obs_wait_time)
-                        {
-                            extend_dt  = 0;
-                            pre_err_th = 0;
-
-                            fsm_state = AutoFsmState::FINAL_ALIGN;
-                            set_multi_infomation(StateMultiReq::NO_CHANGE,
-                                                 StateObsCondition::NO_CHANGE,
-                                                 StateCurGoal::MOVE);
-
-                            logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-                    }
-                    else if(obs_state == AUTO_OBS_STATE::VIR)
-                    {
-                        std::vector<Eigen::Vector3d> vir_pts = obsmap->get_vir_pts();
-                        if(vir_pts.size() == 0)
-                        {
-                            mobile->move(0, 0, 0);
-
-                            extend_dt = 0;
-                            pre_err_th = 0;
-
-                            obs_state = AUTO_OBS_STATE::WAIT;
-                            obs_wait_st_time = get_time();
-
-                            logger->write_log("[AUTO] OBS_VIR(no pts) -> OBS_WAIT");
-                            continue;
-                        }
-
-                        // global to local
-                        std::vector<Eigen::Vector3d> _vir_pts;
-                        for(size_t p = 0; p < vir_pts.size(); p++)
-                        {
-                            Eigen::Vector3d P = vir_pts[p];
-                            Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
-                            _vir_pts.push_back(_P);
-                        }
-
-                        // find min pt
-                        double min_d = std::numeric_limits<double>::max();
-                        Eigen::Vector3d min_pt(0, 0, 0);
-                        for(size_t p = 0; p < _vir_pts.size(); p++)
-                        {
-                            Eigen::Vector3d P = _vir_pts[p];
-                            double d = calc_dist_2d(P);
-                            if(d < min_d)
-                            {
-                                min_d = d;
-                                min_pt = P;
-                            }
-                        }
-
-                        // calc v
-                        double v = -0.1 * sgn(min_pt[0]);
-
-                        // check
-                        if(min_d >= config->get_robot_radius() + 0.05 || get_time() - obs_wait_st_time > AUTOCONTROL_INFO::obs_wait_time)
-                        {
-                            mobile->move(0, 0, 0);
-
-                            extend_dt = 0;
-                            pre_err_th = 0;
-
-                            obs_state = AUTO_OBS_STATE::WAIT;
-                            obs_wait_st_time = get_time();
-
-                            logger->write_log(QString("[AUTO] OBS_VIR -> OBS_WAIT, min_d: %1").arg(min_d));
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            continue;
-                        }
-
-                        mobile->move(v, 0, 0);
                     }
                 }
 
@@ -2823,44 +2781,518 @@ void AUTOCONTROL::control_loop()
                 }
                 else
                 {
-                    logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+                    logger->write_log(QString("[AUTO] driving loop time drift, dt:%1").arg(delta_loop_time));
                 }
-                process_time_control = delta_loop_time;
                 pre_loop_time = get_time();
-
+                continue;
             }
-            catch(const std::exception& e)
+
+            // obstacle deceleation
+            QString obs_condition = "none";
+            double obs_decel_v = config->get_obs_map_min_v();
             {
-                logger->write_log(QString("[AUTO] Unhandled exception in control loop: %1").arg(e.what()), "Red", true, false);
+                std::lock_guard<std::recursive_mutex> lock(mtx);
+                obs_value     = cur_obs_value;
+                obs_decel_v   = cur_obs_decel_v;
+                obs_condition = cur_obs_condition;
+            }
 
-                stop();
+            // obstacle stop
+            {               
+                double cur_velocity      = mobile->get_control_input()[0];
+                double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
+                double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
 
-                send_move_response("fail", "internal controller error");
+                dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                cur_deadzone = dynamic_deadzone;
+
+                int chk_idx = cur_idx + dynamic_deadzone/AUTOCONTROL_INFO::local_path_step;
+                //int chk_idx = cur_idx + config->get_obs_deadzone()/AUTOCONTROL_INFO::local_path_step;
+
+                if(chk_idx > (int)local_path.pos.size()-1)
+                {
+                    chk_idx = local_path.pos.size()-1;
+                }
+
+                std::vector<Eigen::Matrix4d> traj;
+                for(int p = cur_idx; p <= chk_idx; p++)
+                {
+                    traj.push_back(local_path.pose[p]);
+                }
+
+                obs_value = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+                if(obs_value != OBS_NONE)
+                {
+                    mobile->move(0, 0, 0);
+
+                    fsm_state = AUTO_FSM_OBS;
+                    obs_state = AUTO_OBS_CHECK;
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
+
+                    logger->write_log(QString("[AUTO] DRIVING -> OBS, cur_obs_val:%1, fsm_state:%2").arg(obs_value).arg((int)fsm_state));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+            }
+
+            // for mobile server         
+            set_obs_condition(obs_condition);
+
+            // calc heading error
+            Eigen::Matrix4d _tgt_tf = cur_tf_inv*tgt_tf;
+            Eigen::Vector3d _tgt_xi = TF_to_se2(_tgt_tf);
+            double err_d = calc_dist_2d(_tgt_xi);
+            double err_th = _tgt_xi[2];
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
+            // calc cross track error
+            double cte = calc_cte(local_path.pose, cur_pos);
+
+            // get ref_v -- prevent oscilation caused by localization jitter
+            double ref_v = 0.0;
+            double diff_from_start_pos = calc_dist_2d(cur_pos - cur_pos_at_start_driving);
+            if(diff_from_start_pos < 0.5 && ref_v_oscilation_end_flag == false)
+            {
+                // it is critical at staring point (vel from zero)
+                if(cur_idx > prev_local_ref_v_index)
+                {
+                    prev_local_ref_v_index = cur_idx;
+                }
+                ref_v = local_path.ref_v[prev_local_ref_v_index];
+            }
+            else
+            {
+                ref_v_oscilation_end_flag = true;
+                ref_v = local_path.ref_v[cur_idx];
+            }
+
+            // calc control input
+            double v0 = cur_vel[0];
+            double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
+
+            v = saturation(v, 0.0, obs_decel_v);
+            v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
+            v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+
+            double th = (params.DRIVE_A * err_th)
+                      + (params.DRIVE_B * (err_th-pre_err_th)/dt)
+                      +  std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+            th = saturation(th, -45.0*D2R, 45.0*D2R);
+            pre_err_th = err_th;
+
+            double w0 = cur_vel[2];
+            double w = std::tan(th) / params.DRIVE_L;
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
+
+            // scaling
+            double scale_v = 1.0 - params.DRIVE_T*std::abs(w/(params.LIMIT_W*D2R));
+            double scale_w = 1.0 - params.DRIVE_T*std::abs(v/params.LIMIT_V);
+            v *= scale_v;
+            w *= scale_w;
+
+            // deadzone v
+            double d_v = config->get_drive_v_deadzone();
+            if(std::abs(v) < d_v)
+            {
+                v = sgn(v)*d_v;
+            }
+
+            // deadzone w
+            double d_w = config->get_drive_w_deadzone()*D2R;
+            if(std::abs(w) < d_w)
+            {
+                w = 0;
+            }
+            else
+            {
+                w = sgn(w)*(std::abs(w)-d_w);
+            }
+
+            // send control
+            if(!is_debug)
+            {
+                mobile->move(v, 0, w);
             }
         }
+        else if(fsm_state == AUTO_FSM_FINAL_ALIGN)
+        {
+            // calc heading error
+            double err_th = deltaRad(goal_xi[2], cur_xi[2]);
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
+            // goal check
+            if(std::abs(err_th) < config->get_drive_goal_th()*D2R)
+            {
+                extend_dt += dt;
+                if(extend_dt > config->get_drive_extended_control_time())
+                {
+                    clear_control_params();
+
+                    fsm_state = AUTO_FSM_COMPLETE;
+                    set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
+
+                    // update move info
+                    {
+                        std::lock_guard<std::recursive_mutex> lock(mtx);
+                        cur_move_info.time    = get_time();
+                        cur_move_info.result  = "success";
+                        cur_move_info.message = "very good";
+                        cur_move_info.cur_pos = cur_pos;
+                        Q_EMIT signal_move_response(cur_move_info);
+                    }
+
+                    logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
+                    return;
+                }
+            }
+
+            // obs check
+            std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
+            obs_value = obsmap->is_path_collision(traj, true);
+            if(obs_value == OBS_DYN)
+            {
+                mobile->move(0, 0, 0);
+
+                fsm_state = AUTO_FSM_OBS;
+                obs_state = AUTO_OBS_WAIT2;
+                set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
+                obs_wait_st_time = get_time();
+
+                logger->write_log("[AUTO] FINAL ALIGN -> OBS");
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+
+            // pivot control
+            double kp = params.DRIVE_A;
+            double kd = params.DRIVE_B;
+            double w0 = cur_vel[2];
+            double w = kp*err_th + kd*(err_th - pre_err_th)/dt;
+            pre_err_th = err_th;
+
+            w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+            w = saturation(w, -params.LIMIT_PIVOT_W*D2R, params.LIMIT_PIVOT_W*D2R);
+
+            // send control
+            if(!is_debug)
+            {
+                mobile->move(0, 0, w);
+            }
+        }
+        else if(fsm_state == AUTO_FSM_OBS)
+        {
+            if(obs_state == AUTO_OBS_CHECK)
+            {
+                qDebug() << "obs check";
+
+                if(obs_value == OBS_DYN)
+                {
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NEAR, StateCurGoal::NO_CHANGE);
+
+                    if(config->get_obs_avoid_mode() == 0)
+                    {
+                        // mode 0, just wait
+                        obs_state = AUTO_OBS_WAIT;
+                        obs_wait_st_time = get_time();
+
+                        logger->write_log("[AUTO] avoid mode 0, OBS_WAIT");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
+                    else
+                    {
+                        // mode 1, avoid
+                        obs_state = AUTO_OBS_AVOID;
+
+                        logger->write_log("[AUTO] avoid mode 1, OBS_AVOID");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
+                }
+                else if(obs_value == OBS_VIR)
+                {
+                    // for mobile server
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::VIR, StateCurGoal::NO_CHANGE);
+
+                    // for vobs works
+                    obs_state = AUTO_OBS_VIR;
+                    obs_wait_st_time = get_time();
+
+                    logger->write_log("[AUTO] OBS_VIR");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+                else
+                {
+                    // just wait
+                    obs_state = AUTO_OBS_WAIT;
+                    obs_wait_st_time = get_time();
+
+                    logger->write_log("[AUTO] OBS_WAIT");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+            }
+            else if(obs_state == AUTO_OBS_AVOID)
+            {
+                // calc avoid path
+                avoid_path = calc_avoid_path(global_path);
+                if(avoid_path.pos.size() > 0)
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    fsm_state = AUTO_FSM_FIRST_ALIGN;
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+
+                    logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+                else
+                {
+                    obs_state = AUTO_OBS_RECOVERY;
+
+                    logger->write_log("[AUTO] avoid path failed, OBS_AVOID -> OBS_RECOVERY");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+            }
+            else if(obs_state == AUTO_OBS_RECOVERY)
+            {
+                std::vector<Eigen::Vector3d> obs_pts = obsmap->get_obs_pts();
+
+                Eigen::Vector3d vel(0,0,0);
+                double max_d = 0;
+                for(int deg = -30; deg <= 30; deg += 10)
+                {
+                    std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(-0.1, 0, deg*D2R), 0.1, 1.0, cur_tf);
+                    if(obsmap->is_path_collision(traj))
+                    {
+                        continue;
+                    }
+
+                    double min_d = 9999; //std::numeric_limits<double>::max();
+                    for(size_t p = 0; p < obs_pts.size(); p++)
+                    {
+                        double d = calc_dist_2d(obs_pts[p] - traj.back().block(0,3,3,1));
+                        if(d < min_d)
+                        {
+                            min_d = d;
+                        }
+                    }
+
+                    if(min_d > max_d)
+                    {
+                        max_d = min_d;
+                        vel[0] = -0.1;
+                        vel[1] = 0;
+                        vel[2] = deg*D2R;
+                    }
+                }
+
+                for(int deg = -30; deg <= 30; deg += 10)
+                {
+                    std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0.1, 0, deg*D2R), 0.1, 1.0, cur_tf);
+                    if(obsmap->is_path_collision(traj))
+                    {
+                        continue;
+                    }
+
+                    double min_d = std::numeric_limits<double>::max();
+                    for(size_t p = 0; p < obs_pts.size(); p++)
+                    {
+                        double d = calc_dist_2d(obs_pts[p] - traj.back().block(0,3,3,1));
+                        if(d < min_d)
+                        {
+                            min_d = d;
+                        }
+                    }
+
+                    if(min_d > max_d)
+                    {
+                        max_d = min_d;
+                        vel[0] = 0.1;
+                        vel[1] = 0;
+                        vel[2] = deg*D2R;
+                    }
+                }
+
+                double margin_dx = config->get_obs_safe_margin_x();
+                double margin_dy = config->get_obs_safe_margin_y();
+
+                double margin_d = std::sqrt(margin_dx*margin_dx+ margin_dy*margin_dy);
+                if(max_d > config->get_robot_radius() + margin_d)
+                {
+                    mobile->move(0, 0, 0);
+                    obs_state = AUTO_OBS_AVOID;
+                    logger->write_log(QString("[AUTO] max_d: %1, OBS_RECOVERY -> OBS_AVOID").arg(max_d));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+
+                double v0 = cur_vel[0];
+                double w0 = cur_vel[2];
+                double v = vel[0];
+                double w = vel[2];
+                v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_ACC*dt);
+                v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
+                w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
+                w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
+
+                if(!is_debug)
+                {
+                    mobile->move(v, 0, w);
+                }
+            }
+            else if(obs_state == AUTO_OBS_WAIT)
+            {
+                if(get_time() - obs_wait_st_time > 2.5)
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    obs_state = AUTO_OBS_CHECK;
+                    fsm_state = AUTO_FSM_FIRST_ALIGN;
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+                    obs_value = OBS_NONE;
+
+                    logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+            }
+            else if(obs_state == AUTO_OBS_WAIT2)
+            {
+                if(get_time() - obs_wait_st_time > 2.5)
+                {
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    fsm_state = AUTO_FSM_FINAL_ALIGN;
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+
+                    logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+            }
+            else if(obs_state == AUTO_OBS_VIR)
+            {
+                // check
+                std::vector<Eigen::Vector3d> vir_pts = obsmap->get_vir_pts();
+                if(vir_pts.size() == 0)
+                {
+                    mobile->move(0, 0, 0);
+
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    obs_state = AUTO_OBS_WAIT;
+                    obs_wait_st_time = get_time();
+                    logger->write_log("[AUTO] OBS_VIR(no pts) -> OBS_WAIT");
+                    continue;
+                }
+
+                // global to local
+                std::vector<Eigen::Vector3d> _vir_pts;
+                for(size_t p = 0; p < vir_pts.size(); p++)
+                {
+                    Eigen::Vector3d P = vir_pts[p];
+                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+                    _vir_pts.push_back(_P);
+                }
+
+                // find min pt
+                double min_d = std::numeric_limits<double>::max();
+                Eigen::Vector3d min_pt(0, 0, 0);
+                for(size_t p = 0; p < _vir_pts.size(); p++)
+                {
+                    Eigen::Vector3d P = _vir_pts[p];
+                    double d = calc_dist_2d(P);
+                    if(d < min_d)
+                    {
+                        min_d = d;
+                        min_pt = P;
+                    }
+                }
+
+                // calc v
+                double v = -0.1*sgn(min_pt[0]);
+
+                // check
+                if(min_d >= config->get_robot_radius() + 0.05 || get_time() - obs_wait_st_time > 0.5)
+                {
+                    mobile->move(0, 0, 0);
+
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    obs_state = AUTO_OBS_WAIT;
+                    obs_wait_st_time = get_time();
+
+                    logger->write_log(QString("[AUTO] OBS_VIR -> OBS_WAIT, min_d: %1").arg(min_d));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+
+                if(!is_debug)
+                {
+                    mobile->move(v, 0, 0);
+                }
+            }
+        }
+
+        // for real time loop
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+        }
+        process_time_control = delta_loop_time;
+        pre_loop_time = get_time();
     }
 
     if(is_path_overlap)
     {
         is_path_overlap = false;
-        set_multi_infomation(StateMultiReq::NO_CHANGE,
-                             StateObsCondition::NONE,
-                             StateCurGoal::NO_CHANGE);
-
+        set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NONE, StateCurGoal::NO_CHANGE);
         logger->write_log("[AUTO] path overlap, b_loop_pp stop");
+        return;
     }
 
     // manual stopped
-    fsm_state = AutoFsmState::COMPLETE;
-
     clear_control_params();
+    set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::CANCEL);
 
-    set_multi_infomation(StateMultiReq::NONE,
-                         StateObsCondition::NONE,
-                         StateCurGoal::CANCEL);
+    {
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-    send_move_response("fail", "manual stopped");
+        {
+            std::lock_guard<std::recursive_mutex> lock(mtx);
+            cur_move_info.cur_pos = cur_pos;
+            cur_move_info.result = "fail";
+            cur_move_info.message = "manual stopped";
+            cur_move_info.time = get_time();
+        }
+        Q_EMIT signal_move_response(cur_move_info);
+    }
 
+    fsm_state = AUTO_FSM_COMPLETE;
     logger->write_log("[AUTO] path stop, b_loop_pp stop");
 }
 
@@ -2871,35 +3303,35 @@ void AUTOCONTROL::obs_loop()
 
     logger->write_log("[AUTO] start obs loop");
 
+    double obs_v_debug = 0.0;
     while(obs_flag)
     {
         if(!is_moving)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
+            return;
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-        if(fsm_state == AutoFsmState::DRIVING || fsm_state == AutoFsmState::OBS)
+        if(fsm_state == AUTO_FSM_DRIVING || AUTO_FSM_OBS == AUTO_FSM_OBS)
         {
-            ObsDetectState obs_value = ObsDetectState::NONE;
+            int obs_value = OBS_NONE;
             QString obs_condition = "none";
-            double obs_decel_v = params.LIMIT_V;
+            double obs_decel_v = config->get_obs_map_min_v();
 
             // predict trajectory
             std::vector<Eigen::Matrix4d> traj;
             double predict_time = config->get_obs_predict_time();
-            for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V + 0.01; vv += 0.025)
+            for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
                 traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, predict_time, cur_tf);
 
                 bool is_collision = false;
                 for(const auto& tf : traj)
                 {
-                    ObsDetectState val = obsmap->is_tf_collision(tf, true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
-                    if(val != ObsDetectState::NONE)
+                    int val = obsmap->is_tf_collision(tf, true, config->get_obs_safe_margin_x(), config->get_obs_safe_margin_y());
+                    if(val != OBS_NONE)
                     {
                         is_collision = true;
                         obs_value = val;
@@ -2915,13 +3347,21 @@ void AUTOCONTROL::obs_loop()
 
                 obs_decel_v = vv;
             }
+            obs_v_debug = obs_decel_v;
 
             std::vector<Eigen::Vector3d> dyn_pts = obsmap->get_dyn_pts();
             double min_dyn_dist = std::numeric_limits<double>::max();
             bool found_forward_obs = false;
+
+            double yaw = std::atan2(cur_tf(1, 0), cur_tf(0, 0));
+            Eigen::Vector2d heading_vec(std::cos(yaw), std::sin(yaw));
+
             for(const auto& pt : dyn_pts)
             {
-                // Forward filtering (within 45 degrees)
+//                Forward filtering (within 45 degrees)
+                Eigen::Vector2d obs_vec(pt[0] - cur_pos[0], pt[1] - cur_pos[1]);
+                double forward_component = heading_vec.dot(obs_vec.normalized());
+
                 bool near_traj = false;
                 for(const auto& tf : traj)
                 {
@@ -3014,25 +3454,15 @@ void AUTOCONTROL::node_loop()
             else
             {
                 // calc pre node id
-                NODE node = unimap->get_node_by_id(_cur_node_id);
-                if(!node.id.isEmpty())
+                NODE *node = unimap->get_node_by_id(_cur_node_id);
+                if(node != nullptr)
                 {
-                    double d = calc_dist_2d(node.tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                    double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
                     if(d < config->get_robot_radius())
                     {
                         if(pre_node_id != _cur_node_id)
                         {
                             pre_node_id = _cur_node_id;
-
-                            std::vector<int> step = get_cur_global_step();
-                            if((int)step.size() <= last_step)
-                            {
-                                last_step.store((int)step.size());
-                            }
-                            else
-                            {
-                                last_step.store(last_step.load() + 1);
-                            }
 
                             // update
                             std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -3056,293 +3486,6 @@ void AUTOCONTROL::node_loop()
         pre_loop_time = cur_loop_time;
     }
     logger->write_log("[NODE] node loop stop");
-}
-
-void AUTOCONTROL::try_enque_global_path_queue(const CONTROL_COMMAND& _cmd)
-{
-    // if CommandTyoe is MOVE or UPDATE_PATH first calc global_path and enque global_path_que
-    if(_cmd.type == CommandType::MOVE)
-    {
-        // this function do calc global_path and enque global_path_queue
-        update_move(_cmd.goal_tf);
-    }
-    else if(_cmd.type == CommandType::UPDATE_PATH)
-    {
-        // this function do calc global_path and enque global_path_queue
-        update_path(_cmd.node_path);
-    }
-}
-
-bool AUTOCONTROL::initialize_drive_state(PATH& global_path, GOAL_INFO& goal_info)
-{
-    if(!try_pop_global_path_queue(global_path))
-    {
-        return false;
-    }
-
-    // check global path
-    logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
-
-    // update goal pose
-    goal_info.goal_tf  = global_path.ed_tf;
-    goal_info.goal_xi  = TF_to_se2(goal_info.goal_tf);
-    goal_info.goal_pos = goal_info.goal_tf.block(0,3,3,1);
-
-    // set initial state
-    fsm_state = (config->get_robot_model() == RobotModel::MECANUM ? AutoFsmState::DRIVING : AutoFsmState::FIRST_ALIGN);
-
-    // check already goal
-    if(global_path_que.unsafe_size() == 0)
-    {
-        ALREADY_GOAL_STATE already_state = check_already_goal(goal_info.goal_tf, global_path);
-        if(already_state == ALREADY_GOAL_STATE::GOAL)
-        {
-            fsm_state = AutoFsmState::COMPLETE;
-
-            // stop and reset flags
-            clear_control_params();
-
-            // send move response to rrs
-            send_move_response("success", "already_goal");
-
-            set_multi_infomation(StateMultiReq::NONE,
-                                 StateObsCondition::NONE,
-                                 StateCurGoal::COMPLETE);
-
-            logger->write_log(QString("[AUTO] COMPLETE (already goal)"));
-            return false;
-        }
-        else if(already_state == ALREADY_GOAL_STATE::TEMP_GOAL)
-        {
-            fsm_state = AutoFsmState::COMPLETE;
-
-            // stop and reset flags
-            clear_control_params();
-
-            set_multi_infomation(StateMultiReq::NONE,
-                                 StateObsCondition::NONE,
-                                 StateCurGoal::MOVE);
-
-            logger->write_log(QString("[AUTO] COMPLETE (already temp goal)"));
-            return false;
-        }
-        else if(already_state == ALREADY_GOAL_STATE::JUMP_FINAL_ALIGN)
-        {
-            fsm_state = AutoFsmState::FINAL_ALIGN;
-        }
-    }
-
-    return true;
-}
-
-ALREADY_GOAL_STATE AUTOCONTROL::check_already_goal(const Eigen::Matrix4d &_goal_tf, const PATH &_global_path)
-{
-    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-    Eigen::Vector3d dxi = TF_to_se2(cur_tf.inverse()*_goal_tf);
-    double err_d = calc_dist_2d(dxi);
-    double err_th = std::abs(dxi[2]);
-    if(err_d < config->get_drive_goal_dist())
-    {
-        if(!_global_path.is_final)
-        {
-            return ALREADY_GOAL_STATE::TEMP_GOAL;
-        }
-
-        if(err_th < config->get_drive_goal_th()*D2R)
-        {
-            return ALREADY_GOAL_STATE::GOAL;
-        }
-        else
-        {
-            return ALREADY_GOAL_STATE::JUMP_FINAL_ALIGN;
-        }
-    }
-
-    return ALREADY_GOAL_STATE::NONE;
-}
-
-bool AUTOCONTROL::check_update_path(CONTROL_COMMAND& cmd)
-{
-    std::lock_guard<std::recursive_mutex> lock(mtx);
-    if(latest_cmd.type == CommandType::UPDATE_PATH)
-    {
-        cmd = latest_cmd;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void AUTOCONTROL::update_move(const Eigen::Matrix4d& goal_tf)
-{
-    PATH path = calc_global_path(goal_tf);
-    if(path.pos.size() > 0)
-    {
-        global_path_que.clear();
-        global_path_que.push(path);
-    }
-}
-
-void AUTOCONTROL::update_path(const std::vector<QString>& node_path)
-{
-    // symmetric cut
-    std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
-
-    // loop cut
-    std::vector<std::vector<QString>> path_list2;
-    for(size_t p = 0; p < path_list.size(); p++)
-    {
-        std::vector<std::vector<QString>> res = loop_cut(path_list[p]);
-        for(size_t q = 0; q < res.size(); q++)
-        {
-            path_list2.push_back(res[q]);
-        }
-    }
-
-    if(path_list2.size() == 0)
-    {
-        logger->write_log("[AUTO] move_pp, path_list2 empty");
-        return;
-    }
-
-    // set flag
-    set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
-
-    logger->write_log("[AUTO] move_pp, recv path check");
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        logger->write_log(QString("[AUTO] path_%1").arg(p));
-        for(size_t q = 0; q < path_list2[p].size(); q++)
-        {
-            logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
-        }
-    }
-
-    QString final_goal_node_id = "";
-    QString final_goal_node_name = "";
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtx);
-        final_goal_node_id   = cur_move_info.goal_node_id;
-        final_goal_node_name = cur_move_info.goal_node_name;
-        logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
-    }
-
-    // set path
-    std::vector<PATH> tmp_storage;
-    for(size_t p = 0; p < path_list2.size(); p++)
-    {
-        // enque path
-        PATH path = calc_global_path(path_list2[p], p == 0);
-
-        // check final path
-        if(p == path_list2.size()-1)
-        {
-            NODE node = unimap->get_node_by_id(path_list2[p].back());
-            if(node.id.isEmpty())
-            {
-                logger->write_log("[AUTO] move_pp, path invalid");
-                return;
-            }
-
-            if(final_goal_node_name.contains("AMR-WAITING-01") && node.name.contains("AMR-WAITING-01"))
-            {
-                path.is_final = true;
-                logger->write_log("[AUTO] move_pp, waiting, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CHARGING-01") && node.name.contains("AMR-CHARGING-01"))
-            {
-                path.is_final = true;
-                logger->write_log("[AUTO] move_pp, charging, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-PACKING-01") && node.name.contains("AMR-PACKING-01"))
-            {
-                path.is_final = true;
-                logger->write_log("[AUTO] move_pp, packing, path set final");
-            }
-            else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node.name.contains("AMR-CONTAINER-01"))
-            {
-                path.is_final = true;
-                logger->write_log("[AUTO] move_pp, container, path set final");
-            }
-            else if(final_goal_node_id == node.id)
-            {
-                path.is_final = true;
-                logger->write_log("[AUTO] move_pp, path set final");
-            }
-        }
-
-        tmp_storage.push_back(path);
-    }
-
-    // check path overlap or reset
-    bool is_curve = false;
-    std::vector<Eigen::Matrix4d> merged_tf_list;
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        for(size_t q = 0; q < tmp_storage[p].pose.size(); q++)
-        {
-            merged_tf_list.push_back(tmp_storage[p].pose[q]);
-        }
-    }
-
-    Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-    Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
-    for(int p = 0; p < std::min<int>((int)merged_tf_list.size(), 20); p++) // 2m
-    {
-        Eigen::Vector3d xi = TF_to_se2(merged_tf_list[p]);
-        double th = deltaRad(xi[2], cur_xi[2]);
-        if(std::abs(th) > 30.0*D2R)
-        {
-            is_curve = true;
-            break;
-        }
-    }
-
-    if(is_curve)
-    {
-        mobile->move(0,0,0);
-        logger->write_log("[AUTO] move_pp, curve detected, stop");
-    }
-    else
-    {
-        logger->write_log("[AUTO] move_pp, no curve, just change path");
-    }
-
-    // set global path
-    global_path_que.clear();
-    for(size_t p = 0; p < tmp_storage.size(); p++)
-    {
-        global_path_que.push(tmp_storage[p]);
-    }
-}
-
-bool AUTOCONTROL::try_pop_global_path_queue(PATH& global_path)
-{
-    if(global_path_que.try_pop(global_path))
-    {
-        set_cur_global_path(global_path);
-        logger->write_log(QString("[AUTO] deque global path, size: %1").arg(global_path.pose.size()));
-    }
-    else
-    {
-        return false;
-    }
-
-    if(global_path.pose.size() == 0)
-    {
-        fsm_state.store(AutoFsmState::COMPLETE);
-        clear_control_params();
-        set_multi_infomation(StateMultiReq::NONE,
-                             StateObsCondition::NONE,
-                             StateCurGoal::FAIL);
-
-        logger->write_log(QString("[AUTO] global path invalid"));
-        return false;
-    }
-
-    return true;
 }
 
 void AUTOCONTROL::set_config_module(CONFIG* _config)

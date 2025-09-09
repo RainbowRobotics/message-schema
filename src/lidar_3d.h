@@ -49,7 +49,6 @@ public:
     TIME_PTS get_cur_frm();
 
     // setter func
-    void set_is_connected(bool flag);
     void set_is_sync(bool flag);                // set sync
     void set_cur_state(QString str);            // set cur state
 
