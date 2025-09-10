@@ -1126,12 +1126,6 @@ void MainWindow::bt_MapBuild()
     all_plot_clear();
     UNIMAP::instance()->clear();
 
-    // auto generation dir path
-    //QString _map_dir = QDir::homePath() + "/maps/" + get_time_str();
-    QString _map_dir = "/data/maps/" + get_time_str();
-    QDir().mkpath(_map_dir);
-    UNIMAP::instance()->set_map_path(_map_dir);
-
     // mapping start
     MAPPING::instance()->start();
 }
@@ -1142,6 +1136,27 @@ void MainWindow::bt_MapSave()
     {
         LOGGER::instance()->write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
         return;
+    }
+
+    if(!change_map_name)
+    {
+        // auto generation dir path
+        QString _map_dir = "/data/maps/" + get_time_str();
+        printf("[MAIN] Creating map directory: %s\n", _map_dir.toLocal8Bit().data());
+
+        QDir().mkpath(_map_dir);
+
+        UNIMAP::instance()->set_map_path(_map_dir);
+        map_dir = _map_dir;
+    }
+    else
+    {
+        QString _map_dir = "/data/maps/" + map_dir;
+        printf("[MAIN] Using existing map directory: %s\n", _map_dir.toLocal8Bit().data());
+        QDir().mkpath(_map_dir);
+
+        UNIMAP::instance()->set_map_path(_map_dir);
+        map_dir = _map_dir;
     }
 
     // check
@@ -1934,7 +1949,7 @@ void MainWindow::watch_loop()
             // plot mobile pose
             ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
 
-            if(cnt % 600 == 0)
+            if(cnt % 100 == 0)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }

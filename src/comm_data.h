@@ -695,6 +695,49 @@ struct DATA_FOOT
     }
 };
 
+struct DATA_SAFTYIO
+{
+    double time;
+
+    unsigned char mcu0_dio[8] ={0,};
+    unsigned char mcu1_dio[8] ={0,};
+
+    unsigned char mcu0_din[8] ={0,};
+    unsigned char mcu1_din[8] ={0,};
+
+    DATA_SAFTYIO()
+    {
+        time = 0.0;
+
+        memset(mcu0_dio, 0, sizeof(mcu0_dio));
+        memset(mcu1_dio, 0, sizeof(mcu1_dio));
+        memset(mcu0_din, 0, sizeof(mcu0_din));
+        memset(mcu1_din, 0, sizeof(mcu1_din));
+    }
+
+    DATA_SAFTYIO(const DATA_SAFTYIO& p)
+    {
+        time = p.time;
+
+        memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
+        memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
+        memcpy(mcu0_din, p.mcu0_din, sizeof(char)*8);
+        memcpy(mcu1_din, p.mcu1_din, sizeof(char)*8);
+    }
+
+    DATA_SAFTYIO& operator=(const DATA_SAFTYIO& p)
+    {
+        time = p.time;
+
+        memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
+        memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
+        memcpy(mcu0_din, p.mcu0_din, sizeof(char)*8);
+        memcpy(mcu1_din, p.mcu1_din, sizeof(char)*8);
+
+        return *this;
+    }
+};
+
 
 struct DATA_TEMPERATURE
 {
@@ -860,5 +903,6 @@ Q_DECLARE_METATYPE(DATA_FIELD)
 Q_DECLARE_METATYPE(DATA_CAM_INFO)
 Q_DECLARE_METATYPE(DATA_UPDATE_VARIABLE)
 Q_DECLARE_METATYPE(DATA_COMMON)
+Q_DECLARE_METATYPE(DATA_SAFTYIO)
 
 #endif // COMM_DATA_H

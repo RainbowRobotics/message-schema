@@ -172,6 +172,7 @@ void COMM_FMS::connected()
     {
         is_connected = true;
         logger->write_log("[COMM_FMS] connected");
+        qDebug()<<"ssssssssssssssssssssssssss!!!!!!!!!!!!!!!!!!!!1";
 
         if(!ctrl)
         {
@@ -434,6 +435,7 @@ void COMM_FMS::handle_common_cmd(QString cmd, const QJsonObject& data)
         DATA_MAPPING msg;
         msg.time    = get_json(data, "time").toDouble()/1000;
         msg.command = get_json(data, "command"); // "start", "stop", "save", "name", "reload"
+        msg.map_name = get_json(data, "name");
 
         DATA_COMMON cmsg;
         cmsg.type = DATA_COMMON::TYPE::MAPPING;

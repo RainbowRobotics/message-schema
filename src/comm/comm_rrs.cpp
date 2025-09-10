@@ -56,6 +56,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "fieldRequest",    std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "safetyioRequest", std::bind(&COMM_RRS::recv_safety_io_set,     this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -73,6 +74,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_vobs,            this, &COMM_RRS::slot_vobs);
     connect(this, &COMM_RRS::signal_software_update, this, &COMM_RRS::slot_software_update);
     connect(this, &COMM_RRS::signal_foot,            this, &COMM_RRS::slot_foot);
+    connect(this, &COMM_RRS::signal_safety_io,       this, &COMM_RRS::slot_safety_io);
 
     send_timer = new QTimer(this);
     connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
@@ -134,6 +136,26 @@ QString COMM_RRS::get_json(sio::message::ptr const& data, const QString& key)
     return "";
 }
 
+void COMM_RRS::fillArray_memcpy(unsigned char* arr, int arr_size, const QJsonArray& jsonArr)
+{
+    if (jsonArr.size() < 8)
+    {
+        return;
+    }
+
+    // Use the smaller value between the array size and the JSON array size
+    int n = qMin(arr_size, jsonArr.size());
+    unsigned char* tmp = new unsigned char[n];
+
+    for (int i = 0; i < n; ++i)
+    {
+        tmp[i] = static_cast<unsigned char>(jsonArr[i].toInt());
+    }
+
+    memcpy(arr, tmp, n);
+    delete[] tmp;
+}
+
 QString COMM_RRS::get_multi_state()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -162,6 +184,8 @@ void COMM_RRS::init()
         query["name"] = "slamnav";
 
         io->connect("ws://localhost:11337", query);
+//        io->connect("ws://10.108.1.12:11337", query);
+//        qDebug()<<"ws://10.108.1.12:11337";
     }
 }
 
@@ -538,6 +562,73 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
     }
 }
 
+void COMM_RRS::recv_safety_io_set(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
+{
+     printf("[COMM_RRS][DEBUG] recv_safety io called\n");
+
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        QString time_str = get_json(data, "time");
+        double time_sec = get_json(data, "time").toDouble() / 1000;
+
+        // printf("[COMM_RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
+
+        // get safety io msg
+        sio::message::ptr safetyio_msg = data->get_map()["safetyio"];
+        if(!safetyio_msg || safetyio_msg->get_flag() != sio::message::flag_object)
+        {
+            // printf("[COMM_RRS][DEBUG] 'foot' field missing or not object\n");
+            return;
+        }
+
+        auto map = safetyio_msg->get_map();
+
+        QJsonArray mcu0_dio_arr;
+        for (auto& v : map["mcu0_dio"]->get_vector())
+        {
+            mcu0_dio_arr.append(static_cast<int>(v->get_int()));
+        }
+
+        QJsonArray mcu1_dio_arr;
+        for (auto& v : map["mcu1_dio"]->get_vector())
+        {
+            mcu1_dio_arr.append(static_cast<int>(v->get_int()));
+        }
+
+        DATA_SAFTYIO msg;
+        fillArray_memcpy(msg.mcu0_dio, 8, mcu0_dio_arr);
+        fillArray_memcpy(msg.mcu1_dio, 8, mcu1_dio_arr);
+
+        //        If there are a lot of ios that need to be changed
+        for (int i = 0; i < 2; i++) // 0:mcu0, 1:mcu1
+        {
+            unsigned char* dio_arr = (i == 0) ? msg.mcu0_dio : msg.mcu1_dio;
+
+            for (int n = 0; n < 8; n++) // 0~7 port
+            {
+                bool value = dio_arr[n]; // 0/1 value
+                mobile->set_IO_individual_output(n, value);
+            }
+        }
+
+
+        if(logger)
+        {
+            // logger->write_log(
+            //             QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+            //             .arg(msg.connection)
+            //             .arg(msg.position)
+            //             .arg(msg.is_down)
+            //             .arg(msg.state)
+            //             .arg(msg.time),
+            //             "Green"
+            //             );
+        }
+
+        Q_EMIT signal_safety_io(msg);
+    }
+}
+
 // send functions
 void COMM_RRS::send_status()
 {
@@ -642,6 +733,21 @@ void COMM_RRS::send_status()
     robotStateObj["localization"] = cur_loc_state; // "none", "good", "fail"
     robotStateObj["power"]        = (ms.power_state == 1) ? "true" : "false";
     rootObj["robot_state"]        = robotStateObj;
+
+    auto toJsonArray = [](unsigned char arr[8])
+    {
+        QJsonArray jsonArr;
+        for (int i = 0; i < 8; ++i)
+            jsonArr.append(arr[i]);
+        return jsonArr;
+    };
+
+    QJsonObject robotIOObj;
+    robotIOObj["mcu0_dio"] = toJsonArray(ms.mcu0_dio);
+    robotIOObj["mcu1_dio"] = toJsonArray(ms.mcu1_dio);
+    robotIOObj["mcu0_din"] = toJsonArray(ms.mcu0_din);
+    robotIOObj["mcu1_din"] = toJsonArray(ms.mcu1_din);
+    rootObj["robot_safety_io_state"]  = robotIOObj;
 
     // Adding the power object
     QJsonObject powerObj;
@@ -1363,6 +1469,11 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
+            if(msg.map_name != "")
+            {
+                _main ->change_map_name = true;
+            }
+            _main -> map_dir =  msg.map_name;
             _main->bt_MapSave();
 
             const QString map_name = msg.map_name;
@@ -2079,6 +2190,12 @@ void COMM_RRS::slot_foot(DATA_FOOT msg)
     }
 }
 
+// for safetyio
+void COMM_RRS::slot_safety_io(DATA_SAFTYIO msg)
+{
+    send_safetyio_response(msg);
+}
+
 void COMM_RRS::send_move_response(const DATA_MOVE& msg)
 {
     if(!is_connected)
@@ -2342,6 +2459,51 @@ void COMM_RRS::send_software_update_response(const DATA_SOFTWARE& msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("swUpdateResponse", res);
+}
+
+void COMM_RRS::send_safetyio_response(const DATA_SAFTYIO& msg)
+{
+    // 사실 응답이 필요 없을 수도 있음.
+//    if(!is_connected)
+//    {
+//        return;
+//    }
+
+//    QJsonArray arr0;
+//    for (int i = 0; i < 8; i++)
+//    {
+//        arr0.append(msg.mcu0_dio[i]);
+//    }
+//    obj["mcu0_dio"] = arr0;
+
+//    QJsonArray arr1;
+//    for (int i = 0; i < 8; i++)
+//    {
+//        arr0.append(msg.mcu0_dio[i]);
+//    }
+//    obj["mcu1_dio"] = arr1;
+
+//    for (int i = 0; i < 8; i++)
+//    {
+//        arr2.append(msg.mcu0_din[i]);
+//    }
+//        obj["mcu0_din"] = arr2;
+
+//    QJsonArray arr3;
+//    for (int i = 0; i < 8; i++)
+//    {
+//        arr3.append(msg.mcu1_din[i]);
+//    }
+//    obj["mcu1_din"] = arr3;
+
+//    QJsonDocument doc(obj);
+//    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+//    io->socket()->emit("safetyioResponce", res);
+
+//    // for plot
+//    mtx.lock();
+//    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+//    mtx.unlock();
 }
 
 void COMM_RRS::set_config_module(CONFIG* _config)
