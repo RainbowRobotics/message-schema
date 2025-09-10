@@ -5,7 +5,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR/.."
 TEMPLATE="$SCRIPT_DIR/nginx.template.conf"
 OUTPUT="$SCRIPT_DIR/nginx.conf"
-SERVICES_DIR="$REPO_ROOT/services"
+SERVICES_DIR="$REPO_ROOT/backend/services"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dev)
+      DEV_MODE=true
+      shift
+      ;;
+  esac
+done
 
 SERVICE_BLOCKS=""
 
@@ -24,7 +33,19 @@ for service_path in "$SERVICES_DIR"/*; do
   [ -n "$SERVICE_NAME" ] || continue
   [ -n "$PORT" ] || continue
 
-  SERVICE_BLOCKS="${SERVICE_BLOCKS}
+  if [ "$DEV_MODE" = true ]; then
+    SERVICE_BLOCKS="${SERVICE_BLOCKS}
+        location /${SERVICE_NAME}/ {            
+            proxy_pass http://${SERVICE_NAME}:8000/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }"
+  else
+    SERVICE_BLOCKS="${SERVICE_BLOCKS}
         location /${SERVICE_NAME}/ {
             proxy_pass http://127.0.0.1:${PORT}/;
             proxy_http_version 1.1;
@@ -34,6 +55,7 @@ for service_path in "$SERVICES_DIR"/*; do
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }"
+  fi
 done
 
 {
