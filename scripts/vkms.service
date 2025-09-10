@@ -1,0 +1,12 @@
+[Unit]
+Description=Load vkms kernel module
+After=display-manager.service
+Requires=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/modprobe vkms
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

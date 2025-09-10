@@ -192,7 +192,8 @@ bool UNIMAP::load_2d()
                     std::unique_lock<std::shared_mutex> lock(mtx);
                     if(kdtree_cloud_2d)
                     {
-                        kdtree_cloud_2d->pts = voxel_filtering(pts, 0.05);
+                        // kdtree_cloud_2d->pts = voxel_filtering(pts, 0.05);
+                        kdtree_cloud_2d->pts = pts;
                     }
                 }
 

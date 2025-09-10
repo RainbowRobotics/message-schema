@@ -162,6 +162,7 @@ void CONFIG::load_localization_config(const QJsonObject &obj)
 
     check_and_set_string(obj_loc,   "MODE",             LOC_MODE,       "localization");
     check_and_set_bool(obj_loc,     "USE_ARUCO",        USE_ARUCO,      "localization");
+    check_and_set_bool(obj_loc,     "USE_EKF",        USE_EKF,      "localization");
 }
 
 void CONFIG::load_localization_2d_config(const QJsonObject &obj)
@@ -1000,6 +1001,12 @@ bool CONFIG::get_use_aruco()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_ARUCO;
+}
+
+bool CONFIG::get_use_ekf()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_EKF;
 }
 
 QString CONFIG::get_loc_mode()
