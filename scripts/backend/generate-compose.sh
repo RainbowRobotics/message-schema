@@ -58,9 +58,10 @@ for dir in "$BE/services"/*; do
     container_name: ${NAME}-service-dev
     environment:
       - SERVICE=${NAME}
-      - PORT=${PORT}
+      - PORT=8000
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - backend
     env_file:
       - ${CONF_PATH}
     volumes:
@@ -92,7 +93,31 @@ done
 
 # api-gateway, zenoh-router 공통 처리
 for FD in 3 4; do
-  cat >&$FD <<EOF
+  if [ "$FD" -eq 3 ]; then
+    cat >&$FD <<EOF
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    image: rrs-nginx:latest
+    environment:
+      - BUILDKIT_PROVENANCE=0
+      - BUILDKIT_SBOM_SCAN=0
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    volumes:
+      - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+EOF
+  else
+    cat >&$FD <<EOF
   api-gateway:
     build:
       context: ../api-gateway
@@ -108,6 +133,7 @@ for FD in 3 4; do
     network_mode: host
 
 EOF
+  fi
 done
 
 echo "✅ docker-compose.yml, docker-compose.prod.yml 생성 완료"

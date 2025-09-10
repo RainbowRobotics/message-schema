@@ -8,9 +8,10 @@ services:
     container_name: manipulate-service-dev
     environment:
       - SERVICE=manipulate
-      - PORT=8001
+      - PORT=8000
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - backend
     env_file:
       - ./services/manipulate/config.env
     volumes:
@@ -26,7 +27,13 @@ services:
       - BUILDKIT_SBOM_SCAN=0
     container_name: api-gateway
     restart: unless-stopped
+    ports:
+      - "3000:80"
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    network_mode: host
+    networks:
+      - backend
 
+networks:
+  backend:
+    driver: bridge
