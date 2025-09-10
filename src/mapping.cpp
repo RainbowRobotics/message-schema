@@ -88,10 +88,7 @@ void MAPPING::clear()
         kfrm_que.clear();
         kfrm_update_que.clear();
 
-        if(kfrm_storage)
-        {
-            kfrm_storage->clear();
-        }
+        kfrm_storage = std::make_shared<std::vector<KFRAME>>();
 
         if(live_tree)
         {
@@ -125,7 +122,7 @@ QString MAPPING::get_info_text()
     Eigen::Vector3d cur_xi = TF_to_se2(loc->get_cur_tf());
 
     QString res;
-    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d\npos: %.3f, %.3f, %.3f",
+    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nkq: %d, kfrm_num :%d\npos: %.3f, %.3f, %.3f",
                 (double)proc_time_map_a.load(), (double)proc_time_map_b.load(),
                 (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size(),
                 cur_xi[0], cur_xi[1], cur_xi[2]*R2D);
