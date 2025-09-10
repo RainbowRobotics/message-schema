@@ -482,6 +482,7 @@ name = "rb-zenoh"
 version = "0.1.0"
 source = { editable = "packages/rb_zenoh" }
 dependencies = [
+    { name = "fastapi" },
     { name = "flatbuffers" },
     { name = "psutil" },
 ]
@@ -493,6 +494,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastapi", specifier = ">=0.116.1" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
 ]
