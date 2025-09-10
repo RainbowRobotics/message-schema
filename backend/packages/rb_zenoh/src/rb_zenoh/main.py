@@ -14,8 +14,10 @@ from collections.abc import Callable
 from typing import Any
 
 import psutil
-from zenoh import Config, ZBytes, ZError
+from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError
 from zenoh import open as zenoh_open
+
+from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
 from .schema import CallbackEntry, OverflowPolicy, SubscribeOptions
 from .utils import invoke, recommend_cap, rough_size_of_fields
@@ -50,6 +52,8 @@ class ZenohClient:
         self._closing = False
 
         self.session = None
+
+        self._queryables: dict[str, Any] = {}
 
         self._loop: asyncio.AbstractEventLoop | None = None
         self._schema: dict[str, Callable[[str, memoryview], dict | None]] = {}
@@ -205,8 +209,8 @@ class ZenohClient:
         """
         if self.session is None:
             self.connect()
-        if "/" not in topic:
-            raise ValueError("토픽이 명확하지 않습니다. ex) 'telemetry/imu'")
+        # if "/" not in topic:
+        #     raise ValueError("토픽이 명확하지 않습니다. ex) 'telemetry/imu'")
 
         opts = options or SubscribeOptions()
 
@@ -303,6 +307,155 @@ class ZenohClient:
         for topic in list(self._cb_entries.keys()):
             self.unsubscribe_topic(topic)
 
+    def queryable(self, keyexpr: str, handler):
+        if self.session is None:
+            self.connect()
+
+        def _to_bytes(x):
+            if x is None:
+                return None
+            if isinstance(x, bytes | bytearray | memoryview):
+                return bytes(x)
+            if isinstance(x, str):
+                return x.encode("utf-8")
+            return json.dumps(x, ensure_ascii=False).encode("utf-8")
+
+        def _auto_check_encoding(original):
+            if isinstance(original, bytes | bytearray | memoryview):
+                return Encoding.APPLICATION_OCTET_STREAM
+
+            return Encoding.APPLICATION_JSON
+
+        def _handler(q):
+            try:
+                params = q.parameters or {}
+                payload = handler(params)
+                if payload is None:
+                    q.reply_del(q.key_expr)
+                    return
+                data = _to_bytes(payload)
+                att = f"sender={self.sender};sender_id={self.sender_id}"
+                q.reply(
+                    key_expr=q.key_expr,
+                    payload=ZBytes(data),
+                    encoding=_auto_check_encoding(payload),
+                    attachment=att,
+                )
+            except Exception as e:
+                q.reply_err(key_expr=q.key_expr, payload=ZBytes(str(e).encode("utf-8")))
+
+        qbl = self.session.declare_queryable(keyexpr, _handler)
+        self._queryables[keyexpr] = qbl
+        print(f"🛠️  queryable declared: {keyexpr}")
+
+        return qbl
+
+    def undeclare_queryable(self, keyexpr: str):
+        qbl = self._queryables.pop(keyexpr, None)
+        if qbl:
+            with contextlib.suppress(Exception):
+                qbl.undeclare()
+            print(f"🧹 queryable undeclared: {keyexpr}")
+
+    def query(
+        self,
+        keyexpr: str,
+        *,
+        timeout_ms: int = 3000,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ):
+        if self.session is None:
+            self.connect()
+
+        if isinstance(target, str):
+            target = {
+                "BEST_MATCHING": QueryTarget.BEST_MATCHING,
+                "ALL": QueryTarget.ALL,
+                "ALL_COMPLETE": QueryTarget.ALL_COMPLETE,
+            }.get(target.upper(), QueryTarget.BEST_MATCHING)
+
+        # dict_params = dict(params or {})
+        # sel = Selector(keyexpr, dict_params)
+
+        get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout_ms)
+
+        try:
+            for rep in get_result:
+                seen_any = True
+
+                if rep.ok is not None:
+                    samp = rep.ok
+                    res_payload = (
+                        bytes(samp.payload)
+                        if isinstance(samp.payload, ZBytes)
+                        else bytes(samp.payload)
+                    )
+                    att = samp.attachment
+                    # enc = str(samp.encoding or "flatbuffer").lower()
+
+                    if isinstance(att, bytes | bytearray):
+                        att = att.decode("utf-8", "ignore")
+                    elif hasattr(att, "to_bytes"):
+                        att = att.to_bytes().decode("utf-8", "ignore")
+
+                    att_dict = dict(
+                        (k.strip(), v.strip())
+                        for seg in (att or "").split(";")
+                        if "=" in seg
+                        for k, v in [seg.split("=", 1)]
+                    )
+
+                    ok_result = {
+                        "key": samp.key_expr,
+                        "payload": res_payload,
+                        "attachment": att_dict,
+                        "err": None,
+                    }
+
+                    yield ok_result
+
+                elif rep.err is not None:
+                    perr = rep.err
+                    res_payload = (
+                        bytes(perr.payload)
+                        if isinstance(perr.payload, ZBytes)
+                        else bytes(perr.payload)
+                    )
+
+                    try:
+                        msg = res_payload.decode("utf-8")
+                    except Exception:
+                        msg = res_payload
+
+                    err_result = {
+                        "key": samp.key_expr,
+                        "payload": res_payload,
+                        "attachment": att_dict,
+                        "err": msg,
+                    }
+
+                    yield err_result
+
+                if not seen_any:
+                    raise ZenohNoReply(timeout_ms)
+
+        except ZError as ze:
+            raise ZenohTransportError(str(ze)) from ze
+
+    def query_one(
+        self,
+        keyexpr: str,
+        *,
+        timeout_ms: int = 3000,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ):
+        try:
+            return next(self.query(keyexpr, timeout_ms=timeout_ms, target=target, payload=payload))
+        except StopIteration:
+            raise ZenohNoReply(timeout_ms) from None
+
     def close(self):
         if os.getpid() != getattr(self, "_owner_pid", os.getpid()):
             return
@@ -326,6 +479,11 @@ class ZenohClient:
                 self._subs.clear()
                 self._cb_entries.clear()
                 self._schema.clear()
+
+                for k in list(self._queryables.keys()):
+                    self.undeclare_queryable(k)
+
+                self._queryables.clear()
 
                 if self.session:
                     try:
