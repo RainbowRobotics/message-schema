@@ -195,8 +195,9 @@ void MAPPING::kfrm_loop()
     while(kfrm_flag)
     {
         FRAME frm;
-        if(lidar_2d->try_pop_merged_queue(frm))
+
         // if(lidar_2d->get_deskewing_frm(frm, 0))
+        if(lidar_2d->try_pop_merged_queue(frm))
         {
             // for processing time
             double st_time = get_time();
@@ -289,11 +290,10 @@ void MAPPING::kfrm_loop()
                     G = G * delta_tf;
                 }
 
-                // G = G * delta_tf;
-
                 Eigen::Matrix3d R0 = G.block(0,0,3,3);
                 Eigen::Vector3d t0 = G.block(0,3,3,1);
 
+                // pose estimation
                 double err = frm_icp(*live_tree, live_cloud, frm, G);
                 Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                 if(err < icp_error_threshold)
@@ -314,17 +314,8 @@ void MAPPING::kfrm_loop()
                 // if((moving_d > 0.05 || moving_th > 2.5*D2R) && !is_pause.load())
                 if(moving_d > 0.05 && !is_pause.load())
                 {
-                    // pose estimation
-                    // double err = frm_icp(*live_tree, live_cloud, frm, G);
-                    // Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                     if(err < icp_error_threshold)
                     {
-                        // if(config->get_use_ekf())
-                        // {
-                        //     ekf.estimate(G, ieir);
-                        //     G = ekf.get_cur_tf();
-                        // }
-
                         // local to global
                         std::vector<PT_XYZR> dsk;
                         // #pragma omp parallel for

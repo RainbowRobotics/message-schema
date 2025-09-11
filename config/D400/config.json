@@ -140,12 +140,12 @@
         "SLAM_ICP_DO_ACCUM_NUM": "2",
         "SLAM_ICP_DO_ERASE_GAP": "10",
         "SLAM_ICP_ERROR_THRESHOLD": "0.2",
-        "SLAM_ICP_MAX_FEATURE_NUM": "1000",
+        "SLAM_ICP_MAX_FEATURE_NUM": "1500",
         "SLAM_ICP_VIEW_THRESHOLD": "170",
         "SLAM_KFRM_LC_TRY_DIST": "3.0",
         "SLAM_KFRM_LC_TRY_OVERLAP": "0.25",
         "SLAM_KFRM_UPDATE_NUM": "50",
-        "SLAM_VOXEL_SIZE": "0.05",
+        "SLAM_VOXEL_SIZE": "0.01",
         "SLAM_WINDOW_SIZE": "100"
     },
     "obs": {

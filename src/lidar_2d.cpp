@@ -315,10 +315,7 @@ void LIDAR_2D::deskewing_loop(int idx)
                 Eigen::Matrix4d tf1 = se2_to_TF(frm.pose1);
                 Eigen::Matrix4d dtf = tf0.inverse() * tf1;
 
-                // test
-                // Eigen::Matrix4d dtf_tr = Eigen::Matrix4d::Identity();
-                // dtf_tr.block(0,3,3,1) = dtf.block(0,3,3,1);
-
+                deskewing_pts.reserve(frm.pts.size());
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     double t = frm.times[p];
@@ -326,10 +323,6 @@ void LIDAR_2D::deskewing_loop(int idx)
 
                     Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
                     deskewing_pts.push_back(tf.block(0,0,3,3)*frm.pts[p] + tf.block(0,3,3,1));
-
-                    // test
-                    // Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf_tr);
-                    // deskewing_pts.push_back(frm.pts[p]);
                 }
             }
 
@@ -355,13 +348,9 @@ void LIDAR_2D::deskewing_loop(int idx)
             deskewing_frm.t0 = frm.t0;
             deskewing_frm.t1 = frm.t1;
             deskewing_frm.mo = frm.mo;
-            //deskewing_frm.reflects = filtered_reflects;
-            //deskewing_frm.times = filtered_time;
-            //deskewing_frm.pts = filetered_deskewing;
-
-            deskewing_frm.reflects = std::move(frm.reflects);
-            deskewing_frm.times = std::move(frm.times);
-            deskewing_frm.pts = std::move(frm.pts);
+            deskewing_frm.reflects = std::move(filtered_reflects);
+            deskewing_frm.times    = std::move(filtered_time);
+            deskewing_frm.pts      = std::move(filetered_deskewing);
 
             // printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
 
