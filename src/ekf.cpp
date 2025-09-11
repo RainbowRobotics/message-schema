@@ -151,14 +151,20 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     Eigen::Matrix3d S_k = P_hat + R_k;
 
     // outlier detection - norm check
-    double y_norm = y_k.norm();
-    if(y_norm > 0.5)
+    double y_norm_xy = Eigen::Vector2d(y_k(0), y_k(1)).norm();
+    double y_th_deg = std::abs(y_k(2)) * R2D;
+    if(y_norm_xy > 0.5)
     {
-        printf("[EKF] ICP rejected, norm=%.3f\n", y_norm);
+        printf("[EKF] ICP rejected by xy-norm: %.3f m\n", y_norm_xy);
+        return;
+    }
+    if(y_th_deg > 10.0)
+    {
+        printf("[EKF] ICP rejected by theta: %.2f deg\n", y_th_deg);
         return;
     }
 
-    // outlier detection - mahalanobis distance check
+    // outlier detection - mahalanobis distance check (99% gate)
     double d2 = y_k.transpose() * S_k.ldlt().solve(y_k);
     if(d2 > 11.34)
     {
@@ -167,7 +173,6 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     }
 
     // calc kalman gain
-    // Eigen::Matrix3d K_k = P_hat * S_k.inverse();
     Eigen::Matrix3d K_k = P_hat * S_k.ldlt().solve(Eigen::Matrix3d::Identity());
 
     // state estimation
