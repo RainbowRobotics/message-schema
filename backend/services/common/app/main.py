@@ -95,6 +95,7 @@ class RelayNS(socketio.AsyncNamespace):
         return {"ok": True}
 
     async def trigger_event(self, event, sid, *args):
+        print("trigger_event", event, sid, args, flush=True)
         if event in ("join", "leave"):
             handler = getattr(self, f"on_{event}", None)
 
@@ -120,22 +121,24 @@ class RelayNS(socketio.AsyncNamespace):
         claims = sess.get("claims") or {"role": "client"}
         payload = args[0] if args else None
 
-        if claims.get("role") == "service":
+        service = route_service_by_event(event, payload)
+        expect_ack = bool(payload and payload.get("expectAck"))
+        svc_sid = SERVICE_SIDS.get(service)
+
+        print("expect_ack", service, expect_ack, flush=True)
+
+        if claims.get("role") == "service" and not expect_ack:
             await self.emit(event, payload, room=event)
             return
 
-        service = route_service_by_event(event, payload)
         if not service:
             return {"ok": False, "error": f"no route for event '{event}'"}
-
-        expect_ack = bool(payload and payload.get("expectAck"))
-        svc_sid = SERVICE_SIDS.get(service)
 
         if expect_ack:
             if not svc_sid:
                 return {"ok": False, "error": f"service '{service}' unavailable"}
             try:
-                res = await self.server.call(svc_sid, event, payload, timeout=3)
+                res = await self.server.call(svc_sid, event, payload, namespace="/", timeout=3)
                 return res
             except TimeoutError:
                 return {"ok": False, "error": "timeout"}
