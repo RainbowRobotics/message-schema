@@ -15,14 +15,11 @@ ROBOT_MODELS = ["cobot"]
 async def on_call_powercontrol(data, robot_model: str, meta: dict):
     dict_data = t_to_dict(data)
 
-    try:
-        res = await state_service.power_control(
-            robot_model=robot_model,
-            power_option=dict_data["power_option"],
-            sync_servo=dict_data["sync_servo"],
-        )
-    except Exception as e:
-        raise {"error": e} from e
+    res = await state_service.power_control(
+        robot_model=robot_model,
+        power_option=dict_data["power_option"],
+        sync_servo=dict_data["sync_servo"],
+    )
 
     return to_json(res)
 
@@ -33,13 +30,10 @@ async def on_call_powercontrol(data, robot_model: str, meta: dict):
 async def on_call_servocontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    try:
-        res = await state_service.servo_control(
-            robot_model=robot_model,
-            reference_option=dict_data["servo_option"],
-        )
-    except Exception as e:
-        raise {"error": e} from e
+    res = await state_service.servo_control(
+        robot_model=robot_model,
+        reference_option=dict_data["servo_option"],
+    )
 
     return to_json(res)
 
@@ -50,12 +44,9 @@ async def on_call_servocontrol(data, robot_model: str):
 async def on_call_referencecontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    try:
-        res = await state_service.reference_control(
-            robot_model=robot_model,
-            reference_option=dict_data["reference_option"],
-        )
-    except Exception as e:
-        raise {"error": e} from e
+    res = await state_service.reference_control(
+        robot_model=robot_model,
+        reference_option=dict_data["reference_option"],
+    )
 
     return to_json(res)
