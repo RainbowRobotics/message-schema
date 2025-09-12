@@ -7,25 +7,15 @@ TEMPLATE="$SCRIPT_DIR/nginx.template.conf"
 OUTPUT="$SCRIPT_DIR/nginx.conf"
 SERVICES_DIR="$REPO_ROOT/backend/services"
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --dev)
-      DEV_MODE=true
-      shift
-      ;;
-  esac
-done
-
 SERVICE_BLOCKS=""
 
 for service_path in "$SERVICES_DIR"/*; do
+  echo "service_path: $service_path"
   [ -d "$service_path" ] || continue
 
   CONF="$service_path/config.env"
-  RUN_PY="$service_path/run.py"
 
   [ -f "$CONF" ] || continue
-  [ -f "$RUN_PY" ] || continue
 
   SERVICE_NAME=$(grep -E '^SERVICE_NAME=' "$CONF" | cut -d= -f2 | tr -d '\r')
   PORT=$(grep -E '^PORT=' "$CONF" | cut -d= -f2 | tr -d '\r')
@@ -33,29 +23,27 @@ for service_path in "$SERVICES_DIR"/*; do
   [ -n "$SERVICE_NAME" ] || continue
   [ -n "$PORT" ] || continue
 
-  if [ "$DEV_MODE" = true ]; then
-    SERVICE_BLOCKS="${SERVICE_BLOCKS}
-        location /${SERVICE_NAME}/ {            
-            proxy_pass http://${SERVICE_NAME}:8000/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }"
-  else
-    SERVICE_BLOCKS="${SERVICE_BLOCKS}
-        location /${SERVICE_NAME}/ {
-            proxy_pass http://127.0.0.1:${PORT}/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }"
+  PROXY_PASS="http://127.0.0.1:${PORT}/"
+
+  LOCATION_PREFIX="$SERVICE_NAME"
+  if [ "$SERVICE_NAME" = "socket-server" ]; then
+    LOCATION_PREFIX="socket.io"
+    PROXY_PASS="http://127.0.0.1:${PORT}/socket.io/"
   fi
+
+
+  SERVICE_BLOCKS+="
+
+      location /${LOCATION_PREFIX}/ {
+          proxy_pass ${PROXY_PASS};
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade \$http_upgrade;
+          proxy_set_header Connection "upgrade";
+          proxy_set_header Host \$host;
+          proxy_set_header X-Real-IP \$remote_addr;
+          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      }"
+  
 done
 
 {
