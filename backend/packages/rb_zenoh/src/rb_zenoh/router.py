@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -36,6 +37,10 @@ class ZenohRouter:
         self._regs: list[_Reg] = []
         self._handles = []
 
+        self._lock = asyncio.Lock()
+        self._started = False
+        self._closed = False
+
     def _join_topic(self, prefix: str, topic: str) -> str:
         if not prefix:
             return topic
@@ -61,13 +66,33 @@ class ZenohRouter:
                 self._regs.append(reg)
 
     async def startup(self):
-        for r in self._regs:
-            h = self.client.subscribe(r.topic, r.cb, options=r.opts)
-            self._handles.append(h)
+        async with self._lock:
+            # 이미 시작되어 있고, 닫힌 상태가 아니면 무시
+            if self._started and not self._closed:
+                return
+            # 재시작 경로: 닫힘 플래그 해제
+            self._closed = False
+            self._started = True
+
+            # 구독 선언 (ZenohClient가 내부에서 세션을 lazy-open 한다 가정)
+            self._handles = []
+            for r in self._regs:
+                h = self.client.subscribe(r.topic, r.cb, options=r.opts)
+                self._handles.append(h)
 
     async def shutdown(self):
-        for h in self._handles:
+        async with self._lock:
+            # 이미 닫았으면 재진입 금지 (멱등)
+            if self._closed:
+                return
+            self._closed = True
+
+            # 1) 구독 핸들부터 닫기 (세션보다 먼저)
+            for h in self._handles:
+                with contextlib.suppress(Exception):
+                    h.close()
+            self._handles.clear()
+
+            # 2) 세션 닫기 — 이미 닫힌 세션이면 예외 억제
             with contextlib.suppress(Exception):
-                h.close()
-        self._handles.clear()
-        self.client.close()
+                self.client.close()

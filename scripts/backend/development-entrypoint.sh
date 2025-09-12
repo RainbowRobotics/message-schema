@@ -11,13 +11,8 @@ if [ -z "$PORT" ]; then
   exit 1
 fi
 
-BACKEND_PATH="./backend"
-APP_PATH="${BACKEND_PATH}/services/${SERVICE}"
+APP_PATH="./services/${SERVICE}"
 
-cd "$BACKEND_PATH"
+cd "$APP_PATH"
 
-uv sync --all-packages --frozen
-
-cd ../ && cd "$APP_PATH"
-
-exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT  --root-path=/$SERVICE --reload --reload-dir "../../" --reload-include '**/*.py'
+exec uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT --reload --reload-dir "../../" --reload-include '**/*.py'

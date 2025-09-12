@@ -1,21 +1,21 @@
 import flatbuffers
 from fastapi import HTTPException
-from flat_buffers.rb.v1 import Response_PowerControl
-from flat_buffers.rb.v1.Request_PowerControl import (
+from flat_buffers.IPC.Request_PowerControl import (
     Request_PowerControlAddPowerOption,
     Request_PowerControlEnd,
     Request_PowerControlStart,
 )
-from flat_buffers.rb.v1.Request_ReferenceControl import (
+from flat_buffers.IPC.Request_ReferenceControl import (
     Request_ReferenceControlAddRefcontrolOption,
     Request_ReferenceControlEnd,
     Request_ReferenceControlStart,
 )
-from flat_buffers.rb.v1.Request_ServoControl import (
+from flat_buffers.IPC.Request_ServoControl import (
     Request_ServoControlAddServoOption,
     Request_ServoControlEnd,
     Request_ServoControlStart,
 )
+from flat_buffers.IPC.Response_Functions import Response_Functions
 from rb_zenoh import zenoh_client
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
@@ -24,7 +24,7 @@ class StateService:
     def __init__(self):
         pass
 
-    def power_control(self, *, robot_model: str, power_option: int, sync_servo: bool):
+    async def power_control(self, *, robot_model: str, power_option: int, sync_servo: bool):
         # ObjectAPI
         # try:
         #     req = Request_PowerControlT()
@@ -54,12 +54,10 @@ class StateService:
             power_fb_payload = bytes(b.Output())
 
             power_res = zenoh_client.query_one(
-                f"{robot_model}/function_powercontrol", payload=power_fb_payload
+                f"{robot_model}/call_powercontrol", payload=power_fb_payload
             )
 
-            print(power_res)
-
-            tbl = Response_PowerControl.GetRootAs(power_res["payload"], 0)
+            tbl = Response_Functions.GetRootAs(power_res["payload"], 0)
             power_return_value = tbl.ReturnValue()
 
             if power_return_value != 0:
@@ -77,9 +75,7 @@ class StateService:
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise
         except Exception as e:
-            raise HTTPException(
-                status_code=502, detail=str(f"flatbuffers decode error: {e}")
-            ) from e
+            raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e
 
         return {"return_value": return_value}
 
@@ -93,10 +89,10 @@ class StateService:
             servo_fb_payload = bytes(b.Output())
 
             servo_res = zenoh_client.query_one(
-                f"{robot_model}/function_servocontrol", payload=servo_fb_payload
+                f"{robot_model}/call_servocontrol", payload=servo_fb_payload
             )
 
-            tbl = Response_PowerControl.GetRootAs(servo_res["payload"], 0)
+            tbl = Response_Functions.GetRootAs(servo_res["payload"], 0)
             return_value = tbl.ReturnValue()
 
             if return_value != 0:
@@ -121,10 +117,10 @@ class StateService:
             reference_fb_payload = bytes(b.Output())
 
             reference_res = zenoh_client.query_one(
-                f"{robot_model}/function_referencecontrol", payload=reference_fb_payload
+                f"{robot_model}/call_referencecontrol", payload=reference_fb_payload
             )
 
-            tbl = Response_PowerControl.GetRootAs(reference_res["payload"], 0)
+            tbl = Response_Functions.GetRootAs(reference_res["payload"], 0)
             return_value = tbl.ReturnValue()
 
             if return_value != 0:

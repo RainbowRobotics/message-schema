@@ -1,5 +1,24 @@
 version: '3.8'
 services:
+  socket-server:
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile.dev
+    image: rrs-fastapi-dev:latest
+    container_name: socket-server-service-dev
+    environment:
+      - SERVICE=socket-server
+      - PORT=11337
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    env_file:
+      - ./services/socket-server/config.env
+    volumes:
+      - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
+      - ./services/socket-server:/app/backend/services/socket-server
+      - ./packages:/app/backend/packages
+
   manipulate:
     build:
       context: ../
@@ -8,14 +27,16 @@ services:
     container_name: manipulate-service-dev
     environment:
       - SERVICE=manipulate
-      - PORT=8000
+      - PORT=8001
     restart: unless-stopped
-    networks:
-      - backend
+    network_mode: host
+    ipc: host
     env_file:
       - ./services/manipulate/config.env
     volumes:
-      - ../:/app
+      - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
+      - ./services/manipulate:/app/backend/services/manipulate
+      - ./packages:/app/backend/packages
 
   api-gateway:
     build:
@@ -27,13 +48,6 @@ services:
       - BUILDKIT_SBOM_SCAN=0
     container_name: api-gateway
     restart: unless-stopped
-    ports:
-      - "3000:80"
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - backend
-
-networks:
-  backend:
-    driver: bridge
+    network_mode: host

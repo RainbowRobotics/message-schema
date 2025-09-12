@@ -58,14 +58,16 @@ for dir in "$BE/services"/*; do
     container_name: ${NAME}-service-dev
     environment:
       - SERVICE=${NAME}
-      - PORT=8000
+      - PORT=${PORT}
     restart: unless-stopped
-    networks:
-      - backend
+    network_mode: host
+    ipc: host
     env_file:
       - ${CONF_PATH}
     volumes:
-      - ../:/app
+      - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
+      - ./services/${NAME}:/app/backend/services/${NAME}
+      - ./packages:/app/backend/packages
 
 EOF
 
@@ -105,16 +107,9 @@ for FD in 3 4; do
       - BUILDKIT_SBOM_SCAN=0
     container_name: api-gateway
     restart: unless-stopped
-    ports:
-      - "3000:80"
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - backend
-
-networks:
-  backend:
-    driver: bridge
+    network_mode: host
 EOF
   else
     cat >&$FD <<EOF
@@ -131,7 +126,6 @@ EOF
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
-
 EOF
   fi
 done

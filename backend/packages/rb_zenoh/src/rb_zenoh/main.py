@@ -380,6 +380,8 @@ class ZenohClient:
 
         get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout_ms)
 
+        seen_any = False
+
         try:
             for rep in get_result:
                 seen_any = True
@@ -461,7 +463,7 @@ class ZenohClient:
             return
 
         with self._mtx:
-            if self._closing:
+            if getattr(self, "_closing", False):
                 return
 
             self._closing = True
@@ -485,14 +487,13 @@ class ZenohClient:
 
                 self._queryables.clear()
 
-                if self.session:
-                    try:
-                        self.session.close()
-                    except Exception:
-                        pass
-                    finally:
-                        self.session = None
-                        print("🔌 Zenoh session closed.")
+                sess = getattr(self, "session", None)
+                self.session = None
+
+                if sess is not None:
+                    with contextlib.suppress(BaseException):
+                        sess.close()
+                    print("🔌 Zenoh session closed.")
             finally:
                 self._closing = False
 
@@ -631,6 +632,9 @@ class ZenohClient:
                 for t in tasks:
                     if isinstance(t, asyncio.Task):
                         t.add_done_callback(_done_cb)
+
+        if self._closing or loop is None or loop.is_closed():
+            return
 
         loop.call_soon_threadsafe(lambda: asyncio.create_task(_spawn_all()))
 

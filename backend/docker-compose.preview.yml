@@ -1,5 +1,22 @@
 
 services:
+  socket-server:
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile.prod
+    image: rrs-fastapi-preview:latest
+    container_name: socket-server-service-preview
+    environment:
+      - SERVICE=socket-server
+      - PORT=11337
+    restart: unless-stopped
+    env_file:
+      - ./services/socket-server/config.env
+    volumes:
+      - ./services/socket-server/socket-server.arm64.bin:/socket-server.bin
+    network_mode: host
+    ipc: host
+
   manipulate:
     build:
       context: ../
@@ -30,4 +47,3 @@ services:
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
-

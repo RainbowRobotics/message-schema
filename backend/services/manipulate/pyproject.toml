@@ -15,6 +15,7 @@ dependencies = [
   "utils",
   "rb_zenoh",
   "flat-buffers",
+  "rb_socketio",
   "pyinstaller>=6.15.0",
 ]
 
@@ -22,3 +23,4 @@ dependencies = [
 utils = { workspace = true }
 rb_zenoh = { workspace = true }
 flat-buffers = { workspace = true }
+rb_socketio = { workspace = true }

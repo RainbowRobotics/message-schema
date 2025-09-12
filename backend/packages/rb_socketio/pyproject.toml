@@ -1,0 +1,16 @@
+[project]
+name = "rb_socketio"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Rainbow SocketIO"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+    "aiohttp>=3.12.15",
+    "fastapi>=0.116.1",
+    "pydantic>=2.11.7",
+    "python-socketio>=5.13.0",
+]

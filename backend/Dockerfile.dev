@@ -4,10 +4,12 @@ RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && pip install uv==0.8.4
 
-ENV WORKDIR=/app
+ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
-COPY backend/ ./backend/
+COPY backend/ ./
+
+RUN uv sync --all-packages --frozen
 
 COPY scripts/backend/development-entrypoint.sh /usr/local/bin/development-entrypoint.sh
 RUN chmod +x /usr/local/bin/development-entrypoint.sh

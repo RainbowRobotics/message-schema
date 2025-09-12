@@ -1,0 +1,22 @@
+[project]
+name = "common"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Socket Server"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+  "utils",
+  "fastapi>=0.116.1,<0.117.0",
+  "uvicorn[standard]>=0.35.0,<0.36.0",
+  "python-dotenv>=1.1.1,<2.0.0",
+  "python-socketio>=5.13.0",
+  "pyinstaller>=6.15.0",
+  "redis>=6.4.0",
+]
+
+[tool.uv.sources]
+utils = { workspace = true }

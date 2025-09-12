@@ -1,0 +1,4 @@
+# Procfile
+proxy-server: docker compose -f ../api-gateway/docker-compose.yml up --build
+common:   make backend.local-dev SERVICE=common
+manipulate: make backend.local-dev SERVICE=manipulate
