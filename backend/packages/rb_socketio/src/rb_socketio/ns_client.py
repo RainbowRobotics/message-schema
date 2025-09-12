@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import itertools
 import re
@@ -102,10 +103,16 @@ class RBSocketIONsClient(socketio.AsyncClient):
                     if wants_meta:
                         kw["meta"] = meta
 
-                    if inspect.iscoroutinefunction(user_handler):
-                        return await user_handler(*payload, **kw)
-                    else:
-                        return user_handler(*payload, **kw)
+                    try:
+
+                        if inspect.iscoroutinefunction(user_handler):
+                            return await user_handler(*payload, **kw)
+                        else:
+                            return user_handler(*payload, **kw)
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as e:
+                        return {"error": True, "code": e.__class__.__name__, "message": str(e)}
 
                 parent_on(ev, handler=wrapped, **args)
 
