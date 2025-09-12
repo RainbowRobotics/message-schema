@@ -1,19 +1,19 @@
 
 services:
-  socket-server:
+  common:
     build:
       context: ../
       dockerfile: backend/Dockerfile.prod
     image: rrs-fastapi-preview:latest
-    container_name: socket-server-service-preview
+    container_name: common-service-preview
     environment:
-      - SERVICE=socket-server
+      - SERVICE=common
       - PORT=11337
     restart: unless-stopped
     env_file:
-      - ./services/socket-server/config.env
+      - ./services/common/config.env
     volumes:
-      - ./services/socket-server/socket-server.arm64.bin:/socket-server.bin
+      - ./services/common/common.arm64.bin:/common.bin
     network_mode: host
     ipc: host
 

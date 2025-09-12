@@ -1,22 +1,22 @@
 version: '3.8'
 services:
-  socket-server:
+  common:
     build:
       context: ../
       dockerfile: backend/Dockerfile.dev
     image: rrs-fastapi-dev:latest
-    container_name: socket-server-service-dev
+    container_name: common-service-dev
     environment:
-      - SERVICE=socket-server
+      - SERVICE=common
       - PORT=11337
     restart: unless-stopped
     network_mode: host
     ipc: host
     env_file:
-      - ./services/socket-server/config.env
+      - ./services/common/config.env
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
-      - ./services/socket-server:/app/backend/services/socket-server
+      - ./services/common:/app/backend/services/common
       - ./packages:/app/backend/packages
 
   manipulate:
