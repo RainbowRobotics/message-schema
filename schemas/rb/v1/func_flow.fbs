@@ -1,0 +1,30 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+table Request_MotionSpeedBar {
+  alpha: float;
+}
+
+table Request_MotionPause {
+}
+
+table Request_MotionResume {
+}
+
+table Request_MotionSmoothJogJ  {
+  targetspeed: IPC.N_JOINT_f;
+  frame: int;
+  unit: int;
+}
+
+table Request_MotionSmoothJogL {
+  targetspeed: IPC.N_CARTE_f;
+  frame: int;
+  unit: int;
+}
+
+table Request_MotionSmoothJogStop {
+  stoptime: float;
+}

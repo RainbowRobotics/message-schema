@@ -1,0 +1,15 @@
+namespace IPC;
+
+struct N_JOINT_f {
+ 
+  f: [float: 7];
+}
+struct N_CARTE_f {
+  f: [float: 7];
+}
+struct N_DIN_u {
+  u: [ubyte: 16];
+}
+struct N_DOUT_u {
+  u: [ubyte: 16];
+}

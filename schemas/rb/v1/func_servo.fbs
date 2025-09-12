@@ -1,4 +1,7 @@
-namespace rb.v1;
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
 
 table Request_PowerControl {
   power_option: int;
@@ -12,8 +15,4 @@ table Request_ServoControl {
 // function_referencecontrol
 table Request_ReferenceControl {
   refcontrol_option: int;
-}
-
-table Response_PowerControl {
-  return_value: int;
 }

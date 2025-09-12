@@ -1,0 +1,33 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+table State_Core {
+    joint_q_ref: N_JOINT_f;
+    joint_q_enc: N_JOINT_f;
+    joint_t_esti: N_JOINT_f;
+    joint_t_meas: N_JOINT_f;
+    joint_temper: N_JOINT_f;
+
+    carte_x_ref: N_CARTE_f;
+    carte_x_enc: N_CARTE_f;
+
+    cbox_digital_input: N_DIN_u;
+    cbox_digital_output: N_DOUT_u;
+    
+    motion_mode: ubyte;
+    motion_speed_bar: float;
+    motion_is_pause: ubyte;
+
+    status_lan2can: ubyte;
+    status_switch_emg: ubyte;
+    status_power_out: ubyte;
+    status_servo_num: ubyte;
+    status_is_refon: ubyte;
+    status_out_coll: ubyte;
+    status_self_coll: ubyte;
+    status_dt_mode: ubyte;
+}
+
+root_type State_Core;
