@@ -112,6 +112,7 @@ class RBSocketIONsClient(socketio.AsyncClient):
                     except asyncio.CancelledError:
                         raise
                     except Exception as e:
+                        print("socket error:", __ev, e, flush=True)
                         return {"error": True, "code": e.__class__.__name__, "message": str(e)}
 
                 parent_on(ev, handler=wrapped, **args)
