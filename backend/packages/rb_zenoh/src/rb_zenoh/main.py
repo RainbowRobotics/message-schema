@@ -231,6 +231,59 @@ class ZenohClient:
 
         return SubscriptionHandleImpl(self, topic, entry)
 
+    async def receive_one(
+        self,
+        topic: str,
+        *,
+        timeout: float = 3.0,
+        allow_self: bool = False,
+        parse_obj: bool = True,
+    ) -> tuple[str, memoryview, dict | None, dict]:
+        if self.session is None:
+            self.connect()
+
+        loop = self._ensure_loop()
+        fut: asyncio.Future = loop.create_future()
+
+        def _raw_cb(sample):
+            mv = (
+                memoryview(bytes(sample.payload))
+                if hasattr(sample.payload, "__bytes__")
+                else memoryview(sample.payload)
+            )
+            att = sample.attachment
+            if hasattr(att, "to_bytes"):
+                att = att.to_bytes().decode("utf-8", "ignore")
+            elif isinstance(att, bytes | bytearray):
+                att = att.decode("utf-8", "ignore")
+            parts = dict(seg.split("=", 1) for seg in (att or "").split(";") if "=" in seg)
+            sender_id = parts.get("sender_id")
+            if not allow_self and sender_id == self.sender_id:
+                return
+
+            obj = None
+            if parse_obj:
+                parser = self._schema.get(topic)
+                if parser:
+                    try:
+                        obj = parser(topic, mv)
+                    except Exception:
+                        obj = None
+
+            if not fut.done():
+                loop.call_soon_threadsafe(
+                    fut.set_result,
+                    (topic, mv, obj, {"sender": parts.get("sender"), "sender_id": sender_id}),
+                )
+
+        sub = self.session.declare_subscriber(topic, _raw_cb)
+
+        try:
+            return await asyncio.wait_for(fut, timeout=timeout)
+        finally:
+            with contextlib.suppress(Exception):
+                await asyncio.to_thread(sub.undeclare)
+
     # def subscribe(
     #     self,
     #     topic: str,
