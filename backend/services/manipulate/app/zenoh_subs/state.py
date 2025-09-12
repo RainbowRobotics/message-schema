@@ -9,7 +9,7 @@ zenoh_state_router = ZenohRouter()
 
 
 @zenoh_state_router.subscribe("cobot/state_core")
-async def on_state(*, topic, mv, obj, attachment):
+async def on_zenoh_sub_state(*, topic, mv, obj, attachment):
     try:
         buf = bytes(mv)
         obj = State_CoreT.InitFromPackedBuf(buf, 0)
