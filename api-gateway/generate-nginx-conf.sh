@@ -7,6 +7,16 @@ TEMPLATE="$SCRIPT_DIR/nginx.template.conf"
 OUTPUT="$SCRIPT_DIR/nginx.conf"
 SERVICES_DIR="$REPO_ROOT/backend/services"
 
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --dev*)
+      DEV_MODE=true
+      shift
+      ;;
+  esac
+done
+
+
 SERVICE_BLOCKS=""
 
 for service_path in "$SERVICES_DIR"/*; do
@@ -23,26 +33,29 @@ for service_path in "$SERVICES_DIR"/*; do
   [ -n "$SERVICE_NAME" ] || continue
   [ -n "$PORT" ] || continue
 
-  PROXY_PASS="http://127.0.0.1:${PORT}/"
-
-  LOCATION_PREFIX="$SERVICE_NAME"
-  if [ "$SERVICE_NAME" = "socket-server" ]; then
-    LOCATION_PREFIX="socket.io"
-    PROXY_PASS="http://127.0.0.1:${PORT}/socket.io/"
+  if [ "$DEV_MODE" = true ]; then
+    PROXY_PASS="http://${SERVICE_NAME}:${PORT}"
+  else
+    PROXY_PASS="http://127.0.0.1:${PORT}"
   fi
 
+  LOCATION_PREFIX="$SERVICE_NAME"
 
   SERVICE_BLOCKS+="
+  
+        set \$${LOCATION_PREFIX}_upstream ${PROXY_PASS};
+    
+        location ^~ /${LOCATION_PREFIX}/ {
+            rewrite ^/${LOCATION_PREFIX}/(.*)$ /\$1 break;
+            proxy_pass \$${LOCATION_PREFIX}_upstream;
 
-      location /${LOCATION_PREFIX}/ {
-          proxy_pass ${PROXY_PASS};
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade \$http_upgrade;
-          proxy_set_header Connection "upgrade";
-          proxy_set_header Host \$host;
-          proxy_set_header X-Real-IP \$remote_addr;
-          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-      }"
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }"
   
 done
 
