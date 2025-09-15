@@ -1,3 +1,4 @@
+from app.api.api_schema import BaseControlResponsePD
 from app.modules.state.state_module_service import StateService
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -6,7 +7,6 @@ from rb_zenoh import zenoh_client
 from utils.parser import t_to_dict
 
 from .state_api_schema import (
-    BaseControlResponsePD,
     PowerControlRequestPD,
     ReferenceControlRequestPD,
     ServoControlRequestPD,

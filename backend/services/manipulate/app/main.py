@@ -5,8 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from rb_zenoh.exeption import register_zenoh_exception_handlers
 
+from app.api.program.program_api_route import program_router
 from app.api.state.state_api_route import state_router
 from app.socket import socket_client
+from app.socket.program import program_socket_router
 from app.socket.state import state_socket_router
 
 from .zenoh_subs import zenoh_router
@@ -65,4 +67,7 @@ register_zenoh_exception_handlers(app)
 
 
 app.include_router(state_router)
+app.include_router(program_router)
+
 socket_client.socket_include_router(state_socket_router)
+socket_client.socket_include_router(program_socket_router)
