@@ -1,4 +1,6 @@
 PY ?= python3
+SHELL := /usr/bin/env bash
+.SHELLFLAGS := -eu -o pipefail -c
 ROOT_DIR := $(cd "$SCRIPT_DIR/../.." && pwd)
 WORKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 CONF_PORT ?= $(shell grep ^PORT= ${WORKDIR}/services/${SERVICE}/config.env | cut -d '=' -f2)
@@ -36,16 +38,21 @@ backend.local-dev: backend.lint backend.flatc
 .PHONY: backend.mac-dev
 backend.mac-dev:  ## Backend 개발 환경 실행
 	@bash ${WORKDIR}../api-gateway/generate-nginx-conf.sh
-	@bash ${WORKDIR}../scripts/backend/generate-compose.sh
 	@cd ${WORKDIR} && \
 	uv run honcho -f ${WORKDIR}/Procfile.dev start
 
-.PHONY: backend.dev
-backend.dev:
-	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
+backend.dev: backend.lint
+	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh --dev
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
-	@docker compose -f ${WORKDIR}/docker-compose.yml up
-
+	@bash -euo pipefail -c '\
+		set -Eeuo pipefail; \
+		compose="docker compose -f ${WORKDIR}/docker-compose.yml"; \
+		$${compose} pull --ignore-buildable || true; \
+		if $${compose} build; then \
+		  exec $${compose} up; \
+		else \
+		  exec $${compose} up --no-build; \
+		fi'
 .PHONY: backend.build
 backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
@@ -63,8 +70,15 @@ backend.preview: ## Backend 운영 환경 실행
 
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성
-	-@find ${WORKDIR}packages/flat_buffers/src/flat_buffers -name "*.py" ! -name "__init__.py" -delete
-	-@find ${WORKDIR}packages/flat_buffers/src/flat_buffers -name "*.py" ! -name "__init__.pyi" -delete
-	@find ${WORKDIR}../schemas -name "*.fbs" \
-		-exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy -o ${WORKDIR}/packages/flat_buffers/src/flat_buffers {} \;
-	@$(PY) ${WORKDIR}/packages/flat_buffers/scripts/patch_imports.py ${WORKDIR}/packages/flat_buffers/src/flat_buffers
+	@if command -v flatc >/dev/null 2>&1; then
+		find "${WORKDIR}packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.py" -delete
+		find "${WORKDIR}packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.pyi" -delete
+		find "${WORKDIR}../schemas" -name "*.fbs" \
+		  -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy \
+		    -o "${WORKDIR}/packages/flat_buffers/src/flat_buffers" {} \;
+		$(PY) "${WORKDIR}/packages/flat_buffers/scripts/patch_imports.py" \
+		  "${WORKDIR}/packages/flat_buffers/src/flat_buffers"
+	else
+		echo "‼️ flatc를 설치해주세요!"
+		exit 1
+	fi
