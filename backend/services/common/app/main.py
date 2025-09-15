@@ -102,6 +102,16 @@ class RelayNS(socketio.AsyncNamespace):
             if handler:
                 return await handler(sid, (args[0] if args else {}))
 
+        if event == "subscribe":
+            handler = getattr(self, "on_join", None)
+            if handler:
+                return await handler(sid, (args[0] if args else {}))
+
+        if event == "unsubscribe":
+            handler = getattr(self, "on_leave", None)
+            if handler:
+                return await handler(sid, (args[0] if args else {}))
+
         if event == "connect":
             environ = args[0] if len(args) > 0 else {}
             auth = args[1] if len(args) > 1 else None
