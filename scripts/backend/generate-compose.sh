@@ -35,6 +35,9 @@ echo "services:" >&3
 echo "" >&4
 echo "services:" >&4
 
+echo ""
+
+
 for dir in "$BE/services"/*; do
   [ -d "$dir" ] || continue
   CONF="$dir/config.env"
@@ -47,7 +50,6 @@ for dir in "$BE/services"/*; do
   [ -n "$PORT" ] || continue
 
   CONF_PATH="./services/${NAME}/config.env"
-
   # 개발용
   cat >&3 <<EOF
   ${NAME}:
@@ -59,11 +61,15 @@ for dir in "$BE/services"/*; do
     environment:
       - SERVICE=${NAME}
       - PORT=${PORT}
+      - IS_DEV=true
     restart: unless-stopped
-    network_mode: host
-    ipc: host
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - zenoh-router
     env_file:
       - ${CONF_PATH}
+    networks: [rb_net]
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/${NAME}:/app/backend/services/${NAME}
@@ -83,20 +89,24 @@ EOF
       - SERVICE=${NAME}
       - PORT=${PORT}
     restart: unless-stopped
+    ports:
+      - "${PORT}:${PORT}"
+    network_mode: host
+    ipc: host
     env_file:
       - ${CONF_PATH}
     volumes:
       - ./services/${NAME}/${NAME}.${CONVERTED_ARCH}.bin:/${NAME}.bin
-    network_mode: host
-    ipc: host
 
 EOF
 done
 
-# api-gateway, zenoh-router 공통 처리
 for FD in 3 4; do
-  if [ "$FD" -eq 3 ]; then
-    cat >&$FD <<EOF
+  API_GATEWAY_CONTAINER_NAME="api-gateway"
+  ZENOH_ROUTER_CONTAINER_NAME="zenoh-router"
+
+  if [ "$FD" = "3" ]; then
+    cat >&3 <<EOF
   api-gateway:
     build:
       context: ../api-gateway
@@ -105,14 +115,34 @@ for FD in 3 4; do
     environment:
       - BUILDKIT_PROVENANCE=0
       - BUILDKIT_SBOM_SCAN=0
-    container_name: api-gateway
+    container_name: api-gateway-dev
     restart: unless-stopped
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    network_mode: host
+    ports:
+      - "3000:3000"
+    networks: [rb_net]
+      
+  zenoh-router:
+    build:
+      context: ../zenoh-router
+      dockerfile: Dockerfile
+    image: zenoh-router:latest
+    container_name: ${ZENOH_ROUTER_CONTAINER_NAME}
+    volumes:
+      - ../zenoh-router/zenoh.json5:/etc/zenoh/zenoh.json5:ro
+    ports:
+      - "7447:7447/tcp"
+      - "7446:7446/udp"
+    networks: [rb_net]
+
+networks:
+  rb_net:
+    driver: bridge
+
 EOF
   else
-    cat >&$FD <<EOF
+    cat >&4 <<EOF
   api-gateway:
     build:
       context: ../api-gateway
@@ -121,13 +151,15 @@ EOF
     environment:
       - BUILDKIT_PROVENANCE=0
       - BUILDKIT_SBOM_SCAN=0
-    container_name: api-gateway
+    container_name: api-gateway-preview
     restart: unless-stopped
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
+    ipc: host
 EOF
   fi
 done
+
 
 echo "✅ docker-compose.yml, docker-compose.prod.yml 생성 완료"

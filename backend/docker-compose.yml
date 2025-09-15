@@ -8,12 +8,16 @@ services:
     container_name: common-service-dev
     environment:
       - SERVICE=common
-      - PORT=11337
+      - PORT=8000
+      - IS_DEV=true
     restart: unless-stopped
-    network_mode: host
-    ipc: host
+    ports:
+      - "8000:8000"
+    depends_on:
+      - zenoh-router
     env_file:
       - ./services/common/config.env
+    networks: [rb_net]
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/common:/app/backend/services/common
@@ -28,11 +32,15 @@ services:
     environment:
       - SERVICE=manipulate
       - PORT=8001
+      - IS_DEV=true
     restart: unless-stopped
-    network_mode: host
-    ipc: host
+    ports:
+      - "8001:8001"
+    depends_on:
+      - zenoh-router
     env_file:
       - ./services/manipulate/config.env
+    networks: [rb_net]
     volumes:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/manipulate:/app/backend/services/manipulate
@@ -46,8 +54,28 @@ services:
     environment:
       - BUILDKIT_PROVENANCE=0
       - BUILDKIT_SBOM_SCAN=0
-    container_name: api-gateway
+    container_name: api-gateway-dev
     restart: unless-stopped
     volumes:
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    network_mode: host
+    ports:
+      - "3000:3000"
+    networks: [rb_net]
+      
+  zenoh-router:
+    build:
+      context: ../zenoh-router
+      dockerfile: Dockerfile
+    image: zenoh-router:latest
+    container_name: zenoh-router
+    volumes:
+      - ../zenoh-router/zenoh.json5:/etc/zenoh/zenoh.json5:ro
+    ports:
+      - "7447:7447/tcp"
+      - "7446:7446/udp"
+    networks: [rb_net]
+
+networks:
+  rb_net:
+    driver: bridge
+
