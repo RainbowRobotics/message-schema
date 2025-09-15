@@ -1,0 +1,16 @@
+{
+  mode: "router",
+  listen: {
+    endpoints: {
+      router: ["tcp/0.0.0.0:7447"],
+    },
+  },
+  scouting: {
+    multicast: { enabled: true, ttl: 1 },
+    gossip: { enabled: true, target: { router: ["router", "peer"] } },
+  },
+
+  routing: {
+    router: { peers_failover_brokering: true },
+  },
+}
