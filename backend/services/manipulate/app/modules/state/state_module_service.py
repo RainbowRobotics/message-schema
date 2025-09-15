@@ -61,7 +61,11 @@ class StateService:
             power_return_value = tbl.ReturnValue()
 
             if power_return_value != 0:
-                raise HTTPException(status_code=500, detail="power control failed")
+                return {
+                    "error": True,
+                    "error_target": "call_powercontrol",
+                    "return_value": power_return_value,
+                }
 
             return_value = power_return_value
 
@@ -96,7 +100,7 @@ class StateService:
             return_value = tbl.ReturnValue()
 
             if return_value != 0:
-                raise HTTPException(status_code=500, detail="servo control failed")
+                return {"error": True, "return_value": return_value}
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise
@@ -124,7 +128,7 @@ class StateService:
             return_value = tbl.ReturnValue()
 
             if return_value != 0:
-                raise HTTPException(status_code=500, detail="reference control failed")
+                return {"error": True, "return_value": return_value}
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise

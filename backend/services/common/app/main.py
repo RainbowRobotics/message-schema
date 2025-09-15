@@ -108,7 +108,7 @@ class RelayNS(socketio.AsyncNamespace):
         return {"ok": True}
 
     async def trigger_event(self, event, sid, *args):
-        print("trigger_event", event, sid, args, flush=True)
+        print("trigger_event", event, flush=True)
         if event in ("join", "leave"):
             handler = getattr(self, f"on_{event}", None)
 

@@ -35,6 +35,10 @@ async def power_control(robot_model: str, request: PowerControlRequestPD):
     res = await state_service.power_control(
         robot_model=robot_model, power_option=request.power_option, sync_servo=request.sync_servo
     )
+
+    if res.get("error"):
+        return JSONResponse(content=res, status_code=500)
+
     return JSONResponse(res)
 
 
@@ -43,6 +47,10 @@ async def servo_control(robot_model: str, request: ServoControlRequestPD):
     res = await state_service.servo_control(
         robot_model=robot_model, servo_option=request.servo_option
     )
+
+    if res.get("error"):
+        return JSONResponse(content=res, status_code=500)
+
     return JSONResponse(res)
 
 
@@ -51,4 +59,8 @@ async def reference_control(robot_model: str, request: ReferenceControlRequestPD
     res = await state_service.reference_control(
         robot_model=robot_model, reference_option=request.reference_option
     )
+
+    if res.get("error"):
+        return JSONResponse(content=res, status_code=500)
+
     return JSONResponse(res)
