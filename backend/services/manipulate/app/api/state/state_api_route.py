@@ -18,7 +18,7 @@ state_service = StateService()
 state_router = APIRouter()
 
 
-@state_router.get("/{robot_model}/state", response_model=StateRequestPD)
+@state_router.get("/{robot_model}/state_core", response_model=StateRequestPD)
 async def state(robot_model: str):
     topic, mv, obj, attachment = await zenoh_client.receive_one(
         f"{robot_model}/state_core",
@@ -30,7 +30,7 @@ async def state(robot_model: str):
     return JSONResponse(t_to_dict(obj))
 
 
-@state_router.post("/{robot_model}/state/power", response_model=BaseControlResponsePD)
+@state_router.post("/{robot_model}/call_powercontrol", response_model=BaseControlResponsePD)
 async def power_control(robot_model: str, request: PowerControlRequestPD):
     res = await state_service.power_control(
         robot_model=robot_model, power_option=request.power_option, sync_servo=request.sync_servo
@@ -38,7 +38,7 @@ async def power_control(robot_model: str, request: PowerControlRequestPD):
     return JSONResponse(res)
 
 
-@state_router.post("/{robot_model}/state/servo", response_model=BaseControlResponsePD)
+@state_router.post("/{robot_model}/call_servocontrol", response_model=BaseControlResponsePD)
 async def servo_control(robot_model: str, request: ServoControlRequestPD):
     res = await state_service.servo_control(
         robot_model=robot_model, servo_option=request.servo_option
@@ -46,7 +46,7 @@ async def servo_control(robot_model: str, request: ServoControlRequestPD):
     return JSONResponse(res)
 
 
-@state_router.post("/{robot_model}/state/reference", response_model=BaseControlResponsePD)
+@state_router.post("/{robot_model}/call_referencecontrol", response_model=BaseControlResponsePD)
 async def reference_control(robot_model: str, request: ReferenceControlRequestPD):
     res = await state_service.reference_control(
         robot_model=robot_model, reference_option=request.reference_option
