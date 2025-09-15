@@ -14,7 +14,6 @@ class RBSocketIONsClient(socketio.AsyncClient):
         super().__init__(*a, **args)
 
     def _on_connect(self):
-        self.emit("join", {}, room=f"svc:{self.prefix_event_name}")
         print("on_connect", flush=True)
 
     def _check_event_name(self, event):

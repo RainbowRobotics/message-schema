@@ -86,12 +86,25 @@ class RelayNS(socketio.AsyncNamespace):
         sess = await self.get_session(sid)
         if sess.get("claims", {}).get("role") == "service":
             return {"ok": False, "error": "service cannot join client rooms"}
-        room = (data or {}).get("room")
+        room = (data or {}).get("room") or (data or {}).get("topic")
 
         if not room:
             return {"ok": False, "error": "room required"}
 
         await self.enter_room(sid, room)
+        return {"ok": True}
+
+    async def on_leave(self, sid, data):
+        """클라: { room: 'example-state' }"""
+        sess = await self.get_session(sid)
+        if sess.get("claims", {}).get("role") == "service":
+            return {"ok": False, "error": "service cannot leave client rooms"}
+        room = (data or {}).get("room") or (data or {}).get("topic")
+
+        if not room:
+            return {"ok": False, "error": "room required"}
+
+        await self.leave_room(sid, room)
         return {"ok": True}
 
     async def trigger_event(self, event, sid, *args):
