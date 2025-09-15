@@ -74,6 +74,7 @@ for dir in "$BE/services"/*; do
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/${NAME}:/app/backend/services/${NAME}
       - ./packages:/app/backend/packages
+      - ./schemas:/app/backend/schemas
 
 EOF
 
