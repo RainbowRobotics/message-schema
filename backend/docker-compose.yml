@@ -22,6 +22,7 @@ services:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/common:/app/backend/services/common
       - ./packages:/app/backend/packages
+      - ./schemas:/app/backend/schemas
 
   manipulate:
     build:
@@ -45,6 +46,7 @@ services:
       - ../api-gateway/nginx.conf:/app/api-gateway/nginx.conf:ro
       - ./services/manipulate:/app/backend/services/manipulate
       - ./packages:/app/backend/packages
+      - ./schemas:/app/backend/schemas
 
   api-gateway:
     build:
