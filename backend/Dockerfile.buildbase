@@ -2,7 +2,7 @@ FROM python:3.12-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl git python3-dev libffi-dev libssl-dev \
+    build-essential curl git python3-dev libffi-dev libssl-dev flatbuffers-compiler \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y
