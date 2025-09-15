@@ -33,14 +33,18 @@ backend.local-dev: backend.lint backend.flatc
 	
 
 
-.PHONY: backend.dev
-backend.dev:  ## Backend 개발 환경 실행
+.PHONY: backend.mac-dev
+backend.mac-dev:  ## Backend 개발 환경 실행
 	@bash ${WORKDIR}../api-gateway/generate-nginx-conf.sh
 	@bash ${WORKDIR}../scripts/backend/generate-compose.sh
 	@cd ${WORKDIR} && \
 	uv run honcho -f ${WORKDIR}/Procfile.dev start
 
-
+.PHONY: backend.dev
+backend.dev:
+	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
+	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
+	@docker compose -f ${WORKDIR}/docker-compose.yml up
 
 .PHONY: backend.build
 backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
