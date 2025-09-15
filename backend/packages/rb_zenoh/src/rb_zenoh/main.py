@@ -77,11 +77,13 @@ class ZenohClient:
             # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
             conf.insert_json5(
                 "listen/endpoints",
-                '{ "peer": ["tcp/0.0.0.0:7447", "tcp/[::]:7447#iface=rb_internal"] }',
+                '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
             )
             conf.insert_json5("listen/exit_on_failure", "false")
             conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
-            conf.insert_json5("connect/endpoints", '["tcp/127.0.0.1:7447"]')
+            conf.insert_json5(
+                "connect/endpoints", '["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447"]'
+            )
 
             delay = 0.5
             for _ in range(8):

@@ -10,6 +10,7 @@ from app.api.program.program_api_schema import (
 from app.modules.program.program_module_service import ProgramService
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from rb_zenoh import zenoh_client
 
 program_service = ProgramService()
 
@@ -50,3 +51,8 @@ async def smoothjog_l(robot_model: str, request: SmoothJogLRequestPD):
 async def smoothjog_stop(robot_model: str, request: SmoothJogStopRequestPD):
     res = await program_service.call_smoothjog_stop(robot_model=robot_model)
     return JSONResponse(res)
+
+
+@program_router.get("/demo/hello/example")
+async def demo_hello_example():
+    zenoh_client.publish("demo/hello/example", {"x": 1})

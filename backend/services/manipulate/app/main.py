@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -13,6 +14,10 @@ from app.socket.state import state_socket_router
 
 from .zenoh_subs import zenoh_router
 
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+PORT = os.getenv("PORT", "8000")
+SERVICE_NAME = os.getenv("SERVICE_NAME", "")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,8 +27,8 @@ async def lifespan(app: FastAPI):
 
     app.state._sio_connect_task = asyncio.create_task(
         socket_client.connect(
-            "http://localhost:11337",
-            auth={"role": "service", "serviceName": "manipulate"},
+            "http://common:8000" if IS_DEV else "http://127.0.0.1:8000",
+            auth={"role": "service", "serviceName": SERVICE_NAME},
             namespaces=["/"],
             socketio_path="/socket.io",
             transports=["websocket"],
