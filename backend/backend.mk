@@ -46,6 +46,10 @@ backend.dev:  ## Backend 개발 환경 실행
 backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
 
+.PHONY: backend.build-only
+backend.build-only:
+	@bash scripts/backend/build.sh
+
 .PHONY: backend.preview
 backend.preview: ## Backend 운영 환경 실행 
 	# @docker build -t rrs-nginx:latest api-gateway/

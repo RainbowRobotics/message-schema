@@ -13,7 +13,7 @@ services:
     env_file:
       - ./services/common/config.env
     volumes:
-      - ./services/common/common.arm64.bin:/common.bin
+      - ./services/common/common.amd64.bin:/common.bin
     network_mode: host
     ipc: host
 
@@ -30,7 +30,7 @@ services:
     env_file:
       - ./services/manipulate/config.env
     volumes:
-      - ./services/manipulate/manipulate.arm64.bin:/manipulate.bin
+      - ./services/manipulate/manipulate.amd64.bin:/manipulate.bin
     network_mode: host
     ipc: host
 
