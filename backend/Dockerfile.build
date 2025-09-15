@@ -7,7 +7,10 @@ WORKDIR ${WORKDIR}
 COPY backend/pyproject.toml backend/uv.lock ./
 COPY backend/services ./services
 COPY backend/packages ./packages
+COPY schemas ../schemas
+COPY Makefile ../Makefile
 
+RUN make backend.flatc
 RUN uv sync --project ./services/${SERVICE} --frozen --no-dev
 
 COPY --from=docker.io/dfd1123/zenoh-python-builder:py312-zenoh1.5.0-shm /wheels /wheels
