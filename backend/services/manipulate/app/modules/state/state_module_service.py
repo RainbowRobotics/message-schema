@@ -100,7 +100,11 @@ class StateService:
             return_value = tbl.ReturnValue()
 
             if return_value != 0:
-                return {"error": True, "return_value": return_value}
+                return {
+                    "error": True,
+                    "error_target": "call_servocontrol",
+                    "return_value": return_value,
+                }
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise
@@ -128,7 +132,11 @@ class StateService:
             return_value = tbl.ReturnValue()
 
             if return_value != 0:
-                return {"error": True, "return_value": return_value}
+                return {
+                    "error": True,
+                    "error_target": "call_referencecontrol",
+                    "return_value": return_value,
+                }
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise
