@@ -13,4 +13,7 @@ compile_commands.json
 __pycache__
 *.egg-info
 build
+
 backend/**/*.bin
+backend/docker-compose.yml
+backend/docker-compose.preview.yml
