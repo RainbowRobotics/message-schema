@@ -10,7 +10,6 @@ from app.api.program.program_api_schema import (
 from app.modules.program.program_module_service import ProgramService
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from rb_zenoh import zenoh_client
 
 program_service = ProgramService()
 
@@ -31,28 +30,35 @@ async def pause(robot_model: str, request: PauseRequestPD):
 
 @program_router.post("/{robot_model}/call_speedbar", response_model=BaseControlResponsePD)
 async def speedbar(robot_model: str, request: SpeedBarRequestPD):
-    res = await program_service.call_speedbar(robot_model=robot_model)
+    res = await program_service.call_speedbar(robot_model=robot_model, speedbar=request.speedbar)
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_j", response_model=BaseControlResponsePD)
 async def smoothjog_j(robot_model: str, request: SmoothJogJRequestPD):
-    res = await program_service.call_smoothjog_j(robot_model=robot_model)
+    res = await program_service.call_smoothjogj(
+        robot_model=robot_model,
+        targetspeed=request.targetspeed,
+        frame=request.frame,
+        unit=request.unit,
+    )
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_l", response_model=BaseControlResponsePD)
 async def smoothjog_l(robot_model: str, request: SmoothJogLRequestPD):
-    res = await program_service.call_smoothjog_l(robot_model=robot_model)
+    res = await program_service.call_smoothjog_l(
+        robot_model=robot_model,
+        targetspeed=request.targetspeed,
+        frame=request.frame,
+        unit=request.unit,
+    )
     return JSONResponse(res)
 
 
 @program_router.post("/{robot_model}/call_smoothjog_stop", response_model=BaseControlResponsePD)
 async def smoothjog_stop(robot_model: str, request: SmoothJogStopRequestPD):
-    res = await program_service.call_smoothjog_stop(robot_model=robot_model)
+    res = await program_service.call_smoothjog_stop(
+        robot_model=robot_model, stoptime=request.stoptime
+    )
     return JSONResponse(res)
-
-
-@program_router.get("/demo/hello/example")
-async def demo_hello_example():
-    zenoh_client.publish("demo/hello/example", {"x": 1})
