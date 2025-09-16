@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from rb_zenoh import zenoh_router
 
 from app.api.demo.demo_api_route import demo_router
+from app.api.state.state_api_route import state_router
 from app.socket import RelayNS, app_with_sio, sio
 
 
@@ -42,3 +43,4 @@ sio.register_namespace(RelayNS("/"))
 
 
 app.include_router(demo_router)
+app.include_router(state_router)
