@@ -83,7 +83,7 @@ class StateService:
 
         return {"return_value": return_value}
 
-    def servo_control(self, *, robot_model: str, servo_option: int):
+    async def servo_control(self, *, robot_model: str, servo_option: int):
         try:
             b = flatbuffers.Builder(32)
             Request_ServoControlStart(b)
@@ -115,7 +115,7 @@ class StateService:
 
         return {"return_value": return_value}
 
-    def reference_control(self, *, robot_model: str, reference_option: int):
+    async def reference_control(self, *, robot_model: str, reference_option: int):
         try:
             b = flatbuffers.Builder(32)
             Request_ReferenceControlStart(b)
