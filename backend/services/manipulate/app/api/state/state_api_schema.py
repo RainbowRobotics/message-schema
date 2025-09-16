@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class PowerControlRequestPD(BaseModel):
     power_option: int
-    sync_servo: bool
+    sync_servo: bool | None = True
 
 
 class ServoControlRequestPD(BaseModel):
