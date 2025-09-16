@@ -46,6 +46,7 @@ for service_path in "$SERVICES_DIR"/*; do
         set \$${LOCATION_PREFIX}_upstream ${PROXY_PASS};
     
         location ^~ /${LOCATION_PREFIX}/ {
+            rewrite ^/${LOCATION_PREFIX}/(.*)$ /\$1 break;
             proxy_pass \$${LOCATION_PREFIX}_upstream;
 
             proxy_http_version 1.1;
