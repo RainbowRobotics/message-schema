@@ -103,7 +103,7 @@ class ProgramService:
 
         return t_to_dict(res)
 
-    def call_smoothjog_stop(self, *, robot_model: str, stoptime: float):
+    async def call_smoothjog_stop(self, *, robot_model: str, stoptime: float):
         req = Request_MotionSmoothJogStopT()
         req.stoptime = stoptime
 
