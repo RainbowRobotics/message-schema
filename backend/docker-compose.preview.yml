@@ -17,7 +17,7 @@ services:
     env_file:
       - ./services/common/config.env
     volumes:
-      - ./services/common/common.amd64.bin:/common.bin
+      - ./services/common/common.arm64.bin:/common.bin
 
   manipulate:
     build:
@@ -36,7 +36,7 @@ services:
     env_file:
       - ./services/manipulate/config.env
     volumes:
-      - ./services/manipulate/manipulate.amd64.bin:/manipulate.bin
+      - ./services/manipulate/manipulate.arm64.bin:/manipulate.bin
 
   api-gateway:
     build:

@@ -18,6 +18,7 @@ def camel_to_snake(s: str) -> str:
 
 
 def t_to_dict(obj: Any) -> Any:
+
     # 원시형
     if obj is None or isinstance(obj, bool | int | float | str):
         return obj
