@@ -55,8 +55,10 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "vobs",            std::bind(&COMM_RRS::recv_vobs,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "swUpdate",        std::bind(&COMM_RRS::recv_software_update,   this, _1, _2, _3, _4));
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "fieldRequest",    std::bind(&COMM_RRS::recv_field_set,         this, _1, _2, _3, _4));
     BIND_EVENT(sock, "safetyioRequest", std::bind(&COMM_RRS::recv_safety_io_set,     this, _1, _2, _3, _4));
+
+    BIND_EVENT(sock, "safetyRequest",   std::bind(&COMM_RRS::recv_safety_request,      this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "settingRequest",  std::bind(&COMM_RRS::recv_config_request,     this, _1, _2, _3, _4));
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -65,7 +67,6 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_randomseq,       this, &COMM_RRS::slot_randomseq);
     connect(this, &COMM_RRS::signal_mapping,         this, &COMM_RRS::slot_mapping);
     connect(this, &COMM_RRS::signal_dock,            this, &COMM_RRS::slot_dock);
-    connect(this, &COMM_RRS::signal_field_set,       this, &COMM_RRS::slot_field_set);
     connect(this, &COMM_RRS::signal_view_lidar,      this, &COMM_RRS::slot_view_lidar);
     connect(this, &COMM_RRS::signal_view_path,       this, &COMM_RRS::slot_view_path);
     connect(this, &COMM_RRS::signal_led,             this, &COMM_RRS::slot_led);
@@ -75,6 +76,8 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_software_update, this, &COMM_RRS::slot_software_update);
     connect(this, &COMM_RRS::signal_foot,            this, &COMM_RRS::slot_foot);
     connect(this, &COMM_RRS::signal_safety_io,       this, &COMM_RRS::slot_safety_io);
+    connect(this, &COMM_RRS::signal_config_request,  this, &COMM_RRS::slot_config_request);
+    connect(this, &COMM_RRS::signal_safety_request,  this, &COMM_RRS::slot_safety_request);
 
     send_timer = new QTimer(this);
     connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
@@ -345,17 +348,16 @@ void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data,
     }
 }
 
-void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+void COMM_RRS::recv_safety_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
     if(data && data->get_flag() == sio::message::flag_object)
     {
         // parsing
-        DATA_FIELD msg;
-        msg.command = get_json(data, "command"); // "set", "get"
+        DATA_SAFETY msg;
+        msg.command = get_json(data, "command"); // "setField", "getField", "resetFlag"
+        msg.reset_flag = get_json(data, "reset_flag");
         msg.set_field = get_json(data, "set_field").toInt();
 
-
-        qDebug() << "recv_field_set_field:" << msg.set_field;
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
@@ -363,10 +365,137 @@ void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& 
         {
             logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        Q_EMIT signal_field_set(msg);
+        Q_EMIT signal_safety_request(msg);
     }
 }
 
+
+void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(!data || data->get_flag() != sio::message::flag_object)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return;
+    }
+
+    QString command = get_json(data, "command");
+
+    if(command == "getDriveParam" || command == "param_set" || command == "setParam")
+    {
+        // parsing
+        DATA_PDU_UPDATE msg;
+        msg.command = get_json(data, "command"); // "drive_param_get", "param_set" , "params_set"
+        msg.time = get_json(data, "time").toDouble() / 1000;
+
+        auto data_map = data->get_map();
+        auto params_it = data_map.find("param");
+
+        if(params_it != data_map.end() && params_it->second )
+        {
+            sio::message::ptr params_msg = params_it->second;
+
+            if(params_msg->get_flag() == sio::message::flag_array)
+            {
+                sio::array_message::ptr params_array = std::dynamic_pointer_cast<sio::array_message>(params_msg);
+
+                if(params_array)
+                {
+                    //                    qDebug() << "Parsed array size:" << params_array->get_vector().size();
+
+                    // size exception
+                    if(params_array->get_vector().size() > 1)
+                    {
+                        msg.result = "reject";
+                        msg.message = "params_array size is greater than 1";
+                        send_config_request_response(msg);
+                        return;
+                    }
+
+                    for(const auto& param_value : params_array->get_vector())
+                    {
+                        if(param_value->get_flag() == sio::message::flag_object)
+                        {
+                            sio::object_message::ptr param_obj = std::dynamic_pointer_cast<sio::object_message>(param_value);
+
+                            if(param_obj)
+                            {
+                                auto param_map = param_obj->get_map();
+
+                                QString key = "";
+                                QString type = "";
+                                QString value = "";
+
+                                // name  -- parameter name
+                                auto name_it = param_map.find("name");
+                                if(name_it != param_map.end() && name_it->second)
+                                {
+                                    if(name_it->second->get_flag() == sio::message::flag_string)
+                                    {
+                                        key = QString::fromStdString(name_it->second->get_string());
+                                    }
+                                }
+
+                                // type -- int,boolean , flaot
+                                auto type_it = param_map.find("type");
+                                if(type_it != param_map.end() && type_it->second)
+                                {
+                                    if(type_it->second->get_flag() == sio::message::flag_string)
+                                    {
+                                        type = QString::fromStdString(type_it->second->get_string());
+                                    }
+                                }
+
+                                // value -- parameter value
+                                auto value_it = param_map.find("value");
+                                if(value_it != param_map.end() && value_it->second)
+                                {
+                                    if(value_it->second->get_flag() == sio::message::flag_string)
+                                    {
+                                        value = QString::fromStdString(value_it->second->get_string());
+                                    }
+                                }
+
+                                if(!key.isEmpty() && !type.isEmpty())
+                                {
+                                    msg.param_list.push_back(DATA_PDU_UPDATE::PARAM_ITEM(key, type, value));
+                                }
+                                else
+                                {
+                                    qDebug() << "error : missing name or type field";
+                                    msg.result = "reject";
+                                    msg.message = "missing name or type field";
+                                    send_config_request_response(msg);
+                                    return;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            qDebug() << "error : param is not an object, type:" << param_value->get_flag();
+                            msg.result = "reject";
+                            msg.message = "param is not an object";
+                            send_config_request_response(msg);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            //maybe need to reject exception code here
+            qDebug() << "params field not found";
+        }
+
+        // action
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        }
+
+        Q_EMIT signal_config_request(msg);
+    }
+}
 
 void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -1804,19 +1933,17 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     }
 }
 
-void COMM_RRS::slot_field_set(DATA_FIELD msg)
+void COMM_RRS::slot_safety_request(DATA_SAFETY msg)
 {
 
     const QString command = msg.command;
+    const QString resetflag_ = msg.reset_flag;
 
-    if(command == "set")
+    if(command == "setField")
     {
         msg.result = "success";
-        qDebug() << "slot msg.sef_field:" << msg.set_field;
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
-
-        qDebug() << "parsing filed set:" << set_field_;
 
         if(mobile)
         {
@@ -1826,7 +1953,7 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
         send_field_set_response(msg);
     }
 
-    else if (command == "get")
+    else if (command == "getField")
     {
         msg.result = "success";
         msg.message = "";
@@ -1834,12 +1961,164 @@ void COMM_RRS::slot_field_set(DATA_FIELD msg)
         if(mobile)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
-            qDebug() << ms.lidar_field;
             msg.get_field = ms.lidar_field;
         }
-
         send_field_get_response(msg);
+    }
 
+    else if (command == "resetFlag")
+    {
+        if(resetflag_ == "bumper")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearbumperstop();
+            }
+
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "interlock")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearinterlockstop();
+            }
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "obstacle")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->clearobs();
+            }
+            send_safety_reset_response(msg);
+        }
+
+        else if (resetflag_ == "operationStop")
+        {
+            msg.result = "success";
+            msg.message = "";
+
+            if(mobile)
+            {
+                mobile->recover();
+            }
+            send_safety_reset_response(msg);
+
+        }
+    }
+}
+
+void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
+{
+    const QString command = msg.command;
+
+    if(command == "getDriveParam")
+    {
+        qDebug() << "slot in : param_get";
+
+        if(mobile)
+        {
+            MOBILE::instance()->robot_request();
+
+            QTimer::singleShot(1000, [this, msg]() {
+                MOBILE_SETTING ms = MOBILE::instance()->get_setting();
+
+                DATA_PDU_UPDATE response_msg = msg;
+                response_msg.result = "success";
+                response_msg.message = "";
+                response_msg.setting = ms;
+
+                send_config_request_response(response_msg);
+            });
+        }
+    }
+
+    else if(command == "setParam")
+    {
+        qDebug() << "set_param";
+
+        if(msg.param_list.size() > 1 || msg.param_list.size() == 0)
+        {
+            msg.result = "reject";
+            msg.message = "param_list size is greater than 1";
+            send_config_request_response(msg);
+            return;
+        }
+
+        if(mobile)
+        {
+            if(msg.param_list[0].key == "use_sf_obstacle_detect")
+            {
+                // type exception
+                if(msg.param_list[0].type != "boolean")
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid type";
+                    send_config_request_response(msg);
+                    return;
+                }
+
+                bool is_true ;
+
+                // value check
+                if(msg.param_list[0].value == "true")
+                {
+                    is_true = true;
+                }
+                else if(msg.param_list[0].value == "false")
+                {
+                    is_true = false;
+                }
+
+                // value exception
+                else
+                {
+                    msg.result = "reject";
+                    msg.message = "invalid value";
+                    send_config_request_response(msg);
+                    return;
+                }
+
+                MOBILE::instance()->set_detect_mode(is_true);
+
+                msg.result = "success";
+                msg.message = "";
+
+                send_config_request_response(msg);
+                return;
+            }
+            else
+            {
+                qDebug() << "invalid parameter name";
+                msg.result = "reject";
+                msg.message = "invalid parameter name";
+
+                send_config_request_response(msg);
+                return;
+            }
+        }
+    }
+    else
+    {
+        qDebug() << "slot in : invalid command";
+
+        msg.result = "reject";
+        msg.message = "invalid command";
+
+        send_config_request_response(msg);
+        return;
     }
 }
 
@@ -2377,7 +2656,7 @@ void COMM_RRS::send_dock_response(const DATA_DOCK& msg)
     mtx.unlock();
 }
 
-void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
+void COMM_RRS::send_field_set_response(const DATA_SAFETY& msg)
 {
     if(!is_connected)
     {
@@ -2400,7 +2679,7 @@ void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
     mtx.unlock();
 }
 
-void COMM_RRS::send_field_get_response(const DATA_FIELD& msg)
+void COMM_RRS::send_field_get_response(const DATA_SAFETY& msg)
 {
     if(!is_connected)
     {
@@ -2422,6 +2701,185 @@ void COMM_RRS::send_field_get_response(const DATA_FIELD& msg)
     mtx.lock();
     lastest_msg_str = doc.toJson(QJsonDocument::Indented);
     mtx.unlock();
+}
+
+void COMM_RRS::send_config_request_response(const DATA_PDU_UPDATE& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+
+    QJsonArray parameters;
+
+    if(msg.command == "getDriveParam")
+    {
+        // about parameter
+        QJsonObject param1;
+        param1["name"] = "version";
+        param1["value"] = QString::number(msg.setting.version);
+        param1["type"] = "int";
+        parameters.append(param1);
+
+        QJsonObject param2;
+        param2["name"] = "robot_type";
+        param2["value"] = QString::number(msg.setting.robot_type);
+        param2["type"] = "int";
+        parameters.append(param2);
+
+        QJsonObject param3;
+        param3["name"] = "v_limit";
+        param3["value"] = QString::number(msg.setting.v_limit, 'f', 3);
+        param3["type"] = "float";
+        parameters.append(param3);
+
+        QJsonObject param4;
+        param4["name"] = "w_limit";
+        param4["value"] = QString::number(msg.setting.w_limit * R2D, 'f', 3);
+        param4["type"] = "float";
+        parameters.append(param4);
+
+        QJsonObject param5;
+        param5["name"] = "a_limit";
+        param5["value"] = QString::number(msg.setting.a_limit, 'f', 3);
+        param5["type"] = "float";
+        parameters.append(param5);
+
+        QJsonObject param6;
+        param6["name"] = "b_limit";
+        param6["value"] = QString::number(msg.setting.b_limit * R2D, 'f', 3);
+        param6["type"] = "float";
+        parameters.append(param6);
+
+        QJsonObject param7;
+        param7["name"] = "v_limit_jog";
+        param7["value"] = QString::number(msg.setting.v_limit_jog, 'f', 3);
+        param7["type"] = "float";
+        parameters.append(param7);
+
+        QJsonObject param8;
+        param8["name"] = "w_limit_jog";
+        param8["value"] = QString::number(msg.setting.w_limit_jog * R2D, 'f', 3);
+        param8["type"] = "float";
+        parameters.append(param8);
+
+        QJsonObject param9;
+        param9["name"] = "a_limit_jog";
+        param9["value"] = QString::number(msg.setting.a_limit_jog, 'f', 3);
+        param9["type"] = "float";
+        parameters.append(param9);
+
+        QJsonObject param10;
+        param10["name"] = "b_limit_jog";
+        param10["value"] = QString::number(msg.setting.b_limit_jog * R2D, 'f', 3);
+        param10["type"] = "float";
+        parameters.append(param10);
+
+        QJsonObject param11;
+        param11["name"] = "v_limit_monitor";
+        param11["value"] = QString::number(msg.setting.v_limit_monitor, 'f', 3);
+        param11["type"] = "float";
+        parameters.append(param11);
+
+        QJsonObject param12;
+        param12["name"] = "w_limit_monitor";
+        param12["value"] = QString::number(msg.setting.w_limit_monitor * R2D, 'f', 3);
+        param12["type"] = "float";
+        parameters.append(param12);
+
+        QJsonObject param13;
+        param13["name"] = "safety_v_limit";
+        param13["value"] = QString::number(msg.setting.safety_v_limit, 'f', 3);
+        param13["type"] = "float";
+        parameters.append(param13);
+
+        QJsonObject param14;
+        param14["name"] = "safety_w_limit";
+        param14["value"] = QString::number(msg.setting.safety_w_limit * R2D, 'f', 3);
+        param14["type"] = "float";
+        parameters.append(param14);
+
+        QJsonObject param15;
+        param15["name"] = "w_s";
+        param15["value"] = QString::number(msg.setting.w_s, 'f', 3);
+        param15["type"] = "float";
+        parameters.append(param15);
+
+        QJsonObject param16;
+        param16["name"] = "w_r";
+        param16["value"] = QString::number(msg.setting.w_r, 'f', 3);
+        param16["type"] = "float";
+        parameters.append(param16);
+
+        QJsonObject param17;
+        param17["name"] = "gear";
+        param17["value"] = QString::number(msg.setting.gear, 'f', 3);
+        param17["type"] = "float";
+        parameters.append(param17);
+
+        QJsonObject param18;
+        param18["name"] = "dir";
+        param18["value"] = QString::number(msg.setting.dir, 'f', 3);
+        param18["type"] = "float";
+        parameters.append(param18);
+    }
+    else if(msg.command == "getParam" || msg.command == "setParam")
+    {
+        for(const auto& param : msg.param_list)
+        {
+            QJsonObject paramObj;
+            paramObj["name"] = param.key;
+            paramObj["value"] = param.value;
+            paramObj["type"] = param.type;
+            parameters.append(paramObj);
+        }
+        qDebug() << "set_param";
+    }
+
+    obj["param"] = parameters;
+
+
+    QJsonDocument doc(obj);
+
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("settingResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_RRS::send_safety_reset_response(const DATA_SAFETY& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["reset_flag"] = msg.reset_flag;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("safetyResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+
 }
 
 void COMM_RRS::send_path_response(const DATA_PATH& msg)
