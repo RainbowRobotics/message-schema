@@ -9,22 +9,25 @@ class OverflowPolicy(Enum):
     DROP_OLDEST = "drop_oldest"
     LATEST_ONLY = "latest_only"
 
+
 DispatchMode = Literal["immediate", "queue"]
+
 
 @dataclass
 class _BatchOptions:
     ms: int | None = None
     max: int = 256
 
+
 @dataclass
 class SubscribeOptions:
     dispatch: DispatchMode = "immediate"
 
     sample_every: int = 1
-     # 초당 콜백 호출 상한
+    # 초당 콜백 호출 상한
     rate_limit_per_sec: int | None = None
 
-    maxsize: int | None = None # 0/None → 자동용량(EMA+메모리 예산)
+    maxsize: int | None = None  # 0/None → 자동용량(EMA+메모리 예산)
     mem_budget_mb: float = 32.0
     ema_alpha: float = 0.25
     safety: float = 0.85
@@ -51,4 +54,3 @@ class CallbackEntry:
             "last_ts": None,
             "_sample_i": 0,
         }
-

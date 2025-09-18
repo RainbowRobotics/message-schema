@@ -5,6 +5,8 @@ import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from flatbuffers.table import Table
+
 from .main import ZenohClient
 from .schema import SubscribeOptions
 
@@ -13,6 +15,7 @@ from .schema import SubscribeOptions
 class _Reg:
     topic: str
     cb: Callable
+    flatbuffer_obj_t: Table
     opts: SubscribeOptions
 
 
@@ -49,11 +52,19 @@ class ZenohRouter:
         return f"{prefix}/{topic.lstrip('/')}"
 
     # 데코레이터: @router.subscribe("foo/bar")
-    def subscribe(self, topic: str, opts: SubscribeOptions | None = None):
+    def subscribe(
+        self,
+        topic: str,
+        *,
+        flatbuffer_obj_t: Table | None = None,
+        opts: SubscribeOptions | None = None,
+    ):
         full_topic = self._join_topic(self.prefix, topic)
 
         def deco(func: Callable):
-            self._regs.append(_Reg(full_topic, func, opts or self.default_options))
+            self._regs.append(
+                _Reg(full_topic, func, flatbuffer_obj_t or None, opts or self.default_options)
+            )
             return func
 
         return deco
@@ -77,7 +88,9 @@ class ZenohRouter:
             # 구독 선언 (ZenohClient가 내부에서 세션을 lazy-open 한다 가정)
             self._handles = []
             for r in self._regs:
-                h = self.client.subscribe(r.topic, r.cb, options=r.opts)
+                h = self.client.subscribe(
+                    r.topic, r.cb, flatbuffer_obj_t=r.flatbuffer_obj_t, options=r.opts
+                )
                 self._handles.append(h)
 
     async def shutdown(self):

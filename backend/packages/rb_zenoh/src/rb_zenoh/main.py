@@ -13,7 +13,10 @@ from collections.abc import Callable
 # import flatbuffers
 from typing import Any
 
+import flatbuffers
 import psutil
+from flatbuffers.table import Table
+from utils.parser import t_to_dict
 from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError
 from zenoh import open as zenoh_open
 
@@ -202,6 +205,7 @@ class ZenohClient:
         topic: str,
         callback: Callable[..., Any],
         *,
+        flatbuffer_obj_t: Table | None = None,
         options: SubscribeOptions | None = None,
     ):
         """
@@ -217,7 +221,9 @@ class ZenohClient:
         opts = options or SubscribeOptions()
 
         if topic not in self._subs:
-            sub = self.session.declare_subscriber(topic, self._make_on_sample(topic))
+            sub = self.session.declare_subscriber(
+                topic, self._make_on_sample(topic, flatbuffer_obj_t)
+            )
             self._subs[topic] = sub
             self._cb_entries.setdefault(topic, [])
             print(f"📥 zenoh subscribed: {topic}")
@@ -237,6 +243,7 @@ class ZenohClient:
         self,
         topic: str,
         *,
+        flatbuffer_obj_t: Table | None = None,
         timeout: float = 3.0,
         allow_self: bool = False,
         parse_obj: bool = True,
@@ -263,7 +270,11 @@ class ZenohClient:
             if not allow_self and sender_id == self.sender_id:
                 return
 
-            obj = None
+            if flatbuffer_obj_t is not None:
+                obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
+            else:
+                obj = None
+
             if parse_obj:
                 parser = self._schema.get(topic)
                 if parser:
@@ -417,11 +428,23 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout_ms: int = 3000,
+        flatbuffer_obj: Table | None = None,
+        flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
     ):
         if self.session is None:
             self.connect()
+
+        if flatbuffer_obj is not None:
+            if flatbuffer_buf_size is None:
+                raise ValueError(
+                    "flatbuffer_buf_size is required when flatbuffer_obj_t is provided"
+                )
+
+            b = flatbuffers.Builder(flatbuffer_buf_size)
+            b.Finish(flatbuffer_obj.Pack(b))
+            payload = bytes(b.Output())
 
         if isinstance(target, str):
             target = {
@@ -467,8 +490,14 @@ class ZenohClient:
                         "key": samp.key_expr,
                         "payload": res_payload,
                         "attachment": att_dict,
+                        "dict_payload": None,
                         "err": None,
                     }
+
+                    if flatbuffer_obj is not None:
+                        ok_result["dict_payload"] = t_to_dict(
+                            flatbuffer_obj.InitFromPackedBuf(res_payload, 0)
+                        )
 
                     yield ok_result
 
@@ -489,6 +518,7 @@ class ZenohClient:
                         "key": samp.key_expr,
                         "payload": res_payload,
                         "attachment": att_dict,
+                        "dict_payload": None,
                         "err": msg,
                     }
 
@@ -505,11 +535,22 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout_ms: int = 3000,
+        flatbuffer_obj: Table | None = None,
+        flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
     ):
         try:
-            return next(self.query(keyexpr, timeout_ms=timeout_ms, target=target, payload=payload))
+            return next(
+                self.query(
+                    keyexpr,
+                    flatbuffer_obj=flatbuffer_obj,
+                    flatbuffer_buf_size=flatbuffer_buf_size,
+                    timeout_ms=timeout_ms,
+                    target=target,
+                    payload=payload,
+                )
+            )
         except StopIteration:
             raise ZenohNoReply(timeout_ms) from None
 
@@ -552,7 +593,7 @@ class ZenohClient:
             finally:
                 self._closing = False
 
-    def _make_on_sample(self, topic: str):
+    def _make_on_sample(self, topic: str, flatbuffer_obj_t: Table | None = None):
         def _on_sample(sample):
             att = sample.attachment
 
@@ -586,7 +627,12 @@ class ZenohClient:
             }
 
             parser = self._schema.get(topic)
-            obj = None
+
+            if flatbuffer_obj_t is not None:
+                obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
+            else:
+                obj = None
+
             if parser:
                 try:
                     obj = parser(topic, mv)
