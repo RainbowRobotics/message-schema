@@ -30,18 +30,11 @@ backend.lint: ## python ruff로 lint check 후 fix
 	| xargs -0 uv run ruff check --fix --force-exclude
 
 .PHONY: backend.local-dev
-backend.local-dev: backend.lint backend.flatc
+backend.local-dev: backend.lint backend.flatc ## docker를 쓰지 않고 개발 환경 실행
 	@cd ${WORKDIR}/services/${SERVICE} && uv run uvicorn app.main:app --host 0.0.0.0 --port ${CONF_PORT} --reload --reload-dir ${WORKDIR} --reload-include '**/*.py'
-	
 
-
-.PHONY: backend.mac-dev
-backend.mac-dev:  ## Backend 개발 환경 실행
-	@bash ${WORKDIR}../api-gateway/generate-nginx-conf.sh
-	@cd ${WORKDIR} && \
-	uv run honcho -f ${WORKDIR}/Procfile.dev start
-
-backend.dev: backend.lint
+.PHONY: backend.dev
+backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh --dev
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
 	@bash -euo pipefail -c '\
@@ -53,12 +46,9 @@ backend.dev: backend.lint
 		else \
 		  exec $${compose} up --no-build; \
 		fi'
+
 .PHONY: backend.build
 backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
-	@bash scripts/backend/build.sh
-
-.PHONY: backend.build-only
-backend.build-only:
 	@bash scripts/backend/build.sh
 
 .PHONY: backend.preview
