@@ -4,6 +4,8 @@ include "common_struct.fbs";
 namespace IPC;
 
 table State_Core {
+    heart_beat: ubyte;
+    
     joint_q_ref: N_JOINT_f;
     joint_q_enc: N_JOINT_f;
     joint_t_esti: N_JOINT_f;
