@@ -8,6 +8,7 @@ from utils.parser import t_to_dict
 
 from .state_api_schema import (
     PowerControlRequestPD,
+    PowerControlResponsePD,
     ReferenceControlRequestPD,
     ServoControlRequestPD,
     StateRequestPD,
@@ -30,7 +31,7 @@ async def state(robot_model: str):
     return JSONResponse(t_to_dict(obj))
 
 
-@state_router.post("/{robot_model}/call_powercontrol", response_model=BaseControlResponsePD)
+@state_router.post("/{robot_model}/call_powercontrol", response_model=PowerControlResponsePD)
 async def power_control(robot_model: str, request: PowerControlRequestPD):
     res = await state_service.power_control(
         robot_model=robot_model, power_option=request.power_option, sync_servo=request.sync_servo
