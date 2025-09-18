@@ -4,16 +4,11 @@ table Request_State_Whoami {
 }
 
 table State_Whoami {
-  // software 이름 (ex. slamnav2, cobot)
-  category: string;
-  // software 버전 (ex. 1.0.0)
-  name: string;
-  // software 타입 (ex. rb-100, rb-200, S100-A)
-  model: string;
-  // component 별칭 (ex. left-arm, right-arm)
-  version: string;
-  // service 이름 (ex. manipulate, mobility, sensor)
-  alias: string;
+  category: string; // 대분류 ...manipulate, mobility, sensor
+  name: string; // 소분류 ...cobot, slamnav2, rbq
+  model: string; // 모델코드 ...S100-A, S100-B, S100-C
+  version: string; // 버전 ...1.0.0
+  alias: string; // UI 표기용 string 별칭 ...left-arm, right-arm
 }
 
 root_type State_Whoami;
