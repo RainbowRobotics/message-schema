@@ -747,6 +747,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "flatbuffers" },
     { name = "psutil" },
+    { name = "utils" },
 ]
 
 [package.dev-dependencies]
@@ -759,6 +760,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
+    { name = "utils", editable = "packages/utils" },
 ]
 
 [package.metadata.requires-dev]
