@@ -1,0 +1,20 @@
+[project]
+name = "rb_modules"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Rainbow Modules"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+    "psutil>=7.0.0,<8.0.0",
+    "flatbuffers>=25.2.10,<26.0.0",
+    "fastapi>=0.116.1",
+    "utils",
+    "pydantic-settings>=2.10.1",
+]
+
+[tool.uv.sources]
+utils = { workspace = true }
