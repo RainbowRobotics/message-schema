@@ -40,6 +40,16 @@ brew install make
 
 ## 3. Docker 설치
 
+## 3-1. Windows:
+
+### [Docker Desktop 다운로드]
+
+공식 페이지: https://www.docker.com/products/docker-desktop/
+
+- Windows 10/11 Pro, Enterprise, Education(WSL2 지원)에서 사용 권장
+- 설치 중 WSL 2 및 Hyper-V 옵션을 선택
+- 설치 후 재부팅
+
 ### 3-2. Linux (Ubuntu/Debian):
 
 #### [필수 패키지 설치]
@@ -82,9 +92,10 @@ docker --version
 
 #### [Docker Desktop 다운로드]
 
-https://www.docker.com/products/docker-desktop/
+공식 페이지: https://www.docker.com/products/docker-desktop/
 
-Intel 칩/Apple Silicon(M1, M2, M3)용 따로 제공되므로 맞는 버전 선택.
+- Intel 칩/Apple Silicon(M1, M2, M3)용 따로 제공되므로 맞는 버전 선택
+- 처음 실행 시 보안 권한 허용 필요
 
 
 ## 4. Backend 프로젝트 초기화
