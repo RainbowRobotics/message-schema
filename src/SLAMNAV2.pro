@@ -37,6 +37,7 @@ SOURCES += \
     cam/ORBBEC/ORBBEC.cpp \
     dockcontrol.cpp \
     ekf.cpp \
+    ekf_3d.cpp \
     lidar/RP/rp_lidar.cpp \
     lidar/SICK/sick.cpp \
     lidar_2d.cpp \
@@ -71,6 +72,7 @@ HEADERS += \
     comm_data.h \
     dockcontrol.h \
     ekf.h \
+    ekf_3d.h \
     lidar/RP/rp_lidar.h \
     lidar/SICK/sick.h \
     lidar_2d.h \
