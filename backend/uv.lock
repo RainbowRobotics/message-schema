@@ -8,6 +8,7 @@ members = [
     "flat-buffers",
     "manipulate",
     "rb-backend-server",
+    "rb-modules",
     "rb-socketio",
     "rb-zenoh",
     "utils",
@@ -718,6 +719,25 @@ dev = [
     { name = "mypy", specifier = "==1.17.1" },
     { name = "pytest", specifier = "==8.4.1" },
     { name = "ruff", specifier = "==0.12.7" },
+]
+
+[[package]]
+name = "rb-modules"
+version = "0.1.0"
+source = { virtual = "packages/rb_modules" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "flatbuffers" },
+    { name = "psutil" },
+    { name = "utils" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.116.1" },
+    { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
+    { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
+    { name = "utils", editable = "packages/utils" },
 ]
 
 [[package]]

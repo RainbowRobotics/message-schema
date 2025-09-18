@@ -70,15 +70,13 @@ backend.preview: ## Backend 운영 환경 실행
 
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성
-	@if command -v flatc >/dev/null 2>&1; then
-		find "${WORKDIR}packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.py" -delete
-		find "${WORKDIR}packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.pyi" -delete
-		find "${WORKDIR}../schemas" -name "*.fbs" \
-		  -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy \
-		    -o "${WORKDIR}/packages/flat_buffers/src/flat_buffers" {} \;
+	@if command -v flatc >/dev/null 2>&1; then \
+		find "${WORKDIR}/packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.py" -delete; \
+		find "${WORKDIR}/packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.pyi" -delete; \
+		find "${WORKDIR}/../schemas" -name "*.fbs" -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy -o "${WORKDIR}/packages/flat_buffers/src/flat_buffers" {} \; ; \
 		$(PY) "${WORKDIR}/packages/flat_buffers/scripts/patch_imports.py" \
-		  "${WORKDIR}/packages/flat_buffers/src/flat_buffers"
-	else
-		echo "‼️ flatc를 설치해주세요!"
-		exit 1
+		  "${WORKDIR}/packages/flat_buffers/src/flat_buffers"; \
+	else \
+		echo "‼️ flatc를 설치해주세요!"; \
+		exit 1; \
 	fi

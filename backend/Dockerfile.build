@@ -7,8 +7,11 @@ WORKDIR ${WORKDIR}
 COPY backend/pyproject.toml backend/uv.lock ./
 COPY backend/services ./services
 COPY backend/packages ./packages
+COPY scripts/ ../scripts/
 COPY schemas ../schemas
-COPY Makefile ../Makefile
+COPY backend/Makefile ./
+COPY backend/backend.mk ./
+
 
 RUN make backend.flatc
 RUN uv sync --project ./services/${SERVICE} --frozen --no-dev
