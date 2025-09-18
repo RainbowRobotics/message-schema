@@ -1,0 +1,19 @@
+namespace IPC;
+
+table Request_State_Whoami {
+}
+
+table State_Whoami {
+  // software 이름 (ex. slamnav2, cobot)
+  category: string;
+  // software 버전 (ex. 1.0.0)
+  name: string;
+  // software 타입 (ex. rb-100, rb-200, S100-A)
+  model: string;
+  // component 별칭 (ex. left-arm, right-arm)
+  version: string;
+  // service 이름 (ex. manipulate, mobility, sensor)
+  alias: string;
+}
+
+root_type State_Whoami;
