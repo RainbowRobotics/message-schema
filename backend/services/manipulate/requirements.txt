@@ -7,7 +7,9 @@
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/rb_zenoh
     # via manipulate (pyproject.toml)
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/utils
-    # via manipulate (pyproject.toml)
+    # via
+    #   manipulate (pyproject.toml)
+    #   rb-zenoh
 aiohappyeyeballs==2.6.1
     # via aiohttp
 aiohttp==3.12.15

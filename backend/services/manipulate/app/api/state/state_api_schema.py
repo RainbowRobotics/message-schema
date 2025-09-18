@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class PowerControlRequestPD(BaseModel):
     power_option: int
+    stoptime: float | None = 0.5
     sync_servo: bool | None = True
 
 

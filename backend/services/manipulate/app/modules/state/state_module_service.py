@@ -1,4 +1,5 @@
 import flatbuffers
+from app.modules.program.program_module_service import ProgramService
 from fastapi import HTTPException
 from flat_buffers.IPC.Request_PowerControl import (
     Request_PowerControlAddPowerOption,
@@ -19,12 +20,16 @@ from flat_buffers.IPC.Response_Functions import Response_Functions
 from rb_zenoh import zenoh_client
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
+program_service = ProgramService()
+
 
 class StateService:
     def __init__(self):
         pass
 
-    async def power_control(self, *, robot_model: str, power_option: int, sync_servo: bool):
+    async def power_control(
+        self, *, robot_model: str, power_option: int, sync_servo: bool, stoptime: int | None = 0.5
+    ):
         # ObjectAPI
         # try:
         #     req = Request_PowerControlT()
@@ -71,8 +76,14 @@ class StateService:
 
             if power_option == 0:
                 self.reference_control(robot_model=robot_model, reference_option=0)
+
+                if stoptime is not None:
+                    program_service.call_smoothjog_stop(robot_model=robot_model, stoptime=stoptime)
+
             elif power_option == 1 and sync_servo:
-                servo_return_value = self.servo_control(robot_model=robot_model, servo_option=1)
+                servo_return_value = await self.servo_control(
+                    robot_model=robot_model, servo_option=1
+                )
 
                 return_value = servo_return_value["return_value"]
 
