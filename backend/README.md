@@ -102,6 +102,8 @@ docker --version
 
 위 사항을 모두 다 했다면 아래의 명령어를 실행하여 backend 프로젝트를 최종적으로 세팅을 마무리 한다.
 
+> git clone 받고 초기에 한번만 하면 됩니다.
+
 ```bash
 bash script/backend/init-project.sh
 ```
