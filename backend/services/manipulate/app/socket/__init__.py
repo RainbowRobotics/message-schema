@@ -11,12 +11,12 @@ socket_client = RBSocketIONsClient(
 
 @socket_client.event
 def connect():
-    print("manipulate service connected to socket-server")
+    print("manipulate service connected to socket-server", flush=True)
 
 
 @socket_client.event
-def disconnect():
-    print("manipulate service disconnected from socket-server")
+def disconnect(sid):
+    print("manipulate service disconnected from socket-server", flush=True)
 
 
 @socket_client.event
