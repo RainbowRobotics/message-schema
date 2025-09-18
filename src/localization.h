@@ -110,7 +110,11 @@ private:
 
     std::atomic<bool> odometry_flag = {false};          // odometry thread flag (wheel odometry)
     std::unique_ptr<std::thread> odometry_thread;       // odometry thread
-    void odometry_loop();                               // odometry loop        
+    void odometry_loop();                               // odometry loop
+
+    std::atomic<bool> ekf_flag = {false};               // ekf thread flag (for localization)
+    std::unique_ptr<std::thread> ekf_thread;            // ekf thread
+    void ekf_loop();                                    // ekf loop
 
     std::atomic<bool> obs_flag = {false};               // obstacle thread flag (obstacle map update)
     std::unique_ptr<std::thread> obs_thread;            // obstacle thread
