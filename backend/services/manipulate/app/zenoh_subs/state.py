@@ -13,6 +13,4 @@ async def on_zenoh_sub_state(*, topic, mv, obj, attachment):
 
         await socket_client.emit(topic, obj)
     except Exception as e:
-        raise HTTPException(
-            status_code=502, detail=str(f"flatbuffers decode error Tlqkf: {e}")
-        ) from e
+        raise HTTPException(status_code=500, detail=str(f"error: {e}")) from e
