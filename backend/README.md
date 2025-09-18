@@ -40,9 +40,9 @@ brew install make
 
 ## 3. Docker 설치
 
-## 3-1. Windows:
+### 3-1. Windows:
 
-### [Docker Desktop 다운로드]
+#### [Docker Desktop 다운로드]
 
 공식 페이지: https://www.docker.com/products/docker-desktop/
 
