@@ -8,6 +8,22 @@
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
+**[설치 확인]**
+
+터미널을 닫고 다시 열어서 아래 명령어 입력
+```bash
+uv --version
+```
+
+버전이 안나올경우 
+
+```bash
+echo $env:Path
+```
+
+여기에 `C:\Users\<USERNAME>\.cargo\bin` 이 있는지 확인 후 없다면 Path 시스템 환경 변수에 `C:\Users\<USERNAME>\.cargo\bin` 추가
+
+
 ### 1-2. Linux/macOS:
 
 ```bash
