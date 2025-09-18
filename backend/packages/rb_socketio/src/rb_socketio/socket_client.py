@@ -80,7 +80,6 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
         def decorator(user_handler):
             expanded_events = self._expand_event_patterns(event, path_params)
-            print("expanded_events", expanded_events, args, flush=True)
 
             sig = inspect.signature(user_handler)
             param_names = set(sig.parameters.keys())
