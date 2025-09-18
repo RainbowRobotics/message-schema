@@ -31,17 +31,14 @@ class State_Core(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # State_Core
-    def JointQRef(self) -> Optional[N_JOINT_f]:
+    def HeartBeat(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            x = o + self._tab.Pos
-            obj = N_JOINT_f()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
 
     # State_Core
-    def JointQEnc(self) -> Optional[N_JOINT_f]:
+    def JointQRef(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             x = o + self._tab.Pos
@@ -51,7 +48,7 @@ class State_Core(object):
         return None
 
     # State_Core
-    def JointTEsti(self) -> Optional[N_JOINT_f]:
+    def JointQEnc(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             x = o + self._tab.Pos
@@ -61,7 +58,7 @@ class State_Core(object):
         return None
 
     # State_Core
-    def JointTMeas(self) -> Optional[N_JOINT_f]:
+    def JointTEsti(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             x = o + self._tab.Pos
@@ -71,7 +68,7 @@ class State_Core(object):
         return None
 
     # State_Core
-    def JointTemper(self) -> Optional[N_JOINT_f]:
+    def JointTMeas(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             x = o + self._tab.Pos
@@ -81,17 +78,17 @@ class State_Core(object):
         return None
 
     # State_Core
-    def CarteXRef(self) -> Optional[N_CARTE_f]:
+    def JointTemper(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = o + self._tab.Pos
-            obj = N_CARTE_f()
+            obj = N_JOINT_f()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # State_Core
-    def CarteXEnc(self) -> Optional[N_CARTE_f]:
+    def CarteXRef(self) -> Optional[N_CARTE_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             x = o + self._tab.Pos
@@ -101,8 +98,18 @@ class State_Core(object):
         return None
 
     # State_Core
-    def CboxDigitalInput(self) -> Optional[N_DIN_u]:
+    def CarteXEnc(self) -> Optional[N_CARTE_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_CARTE_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def CboxDigitalInput(self) -> Optional[N_DIN_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
         if o != 0:
             x = o + self._tab.Pos
             obj = N_DIN_u()
@@ -112,7 +119,7 @@ class State_Core(object):
 
     # State_Core
     def CboxDigitalOutput(self) -> Optional[N_DOUT_u]:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
         if o != 0:
             x = o + self._tab.Pos
             obj = N_DOUT_u()
@@ -122,203 +129,209 @@ class State_Core(object):
 
     # State_Core
     def MotionMode(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def MotionSpeedBar(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # State_Core
     def MotionIsPause(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
-        return 0
-
-    # State_Core
-    def StatusLan2can(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusSwitchEmg(self):
+    def StatusLan2can(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusPowerOut(self):
+    def StatusSwitchEmg(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusServoNum(self):
+    def StatusPowerOut(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusIsRefon(self):
+    def StatusServoNum(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusOutColl(self):
+    def StatusIsRefon(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusSelfColl(self):
+    def StatusOutColl(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
-    def StatusDtMode(self):
+    def StatusSelfColl(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
+    # State_Core
+    def StatusDtMode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(44))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return 0
+
 def State_CoreStart(builder: flatbuffers.Builder):
-    builder.StartObject(20)
+    builder.StartObject(21)
 
 def Start(builder: flatbuffers.Builder):
     State_CoreStart(builder)
 
+def State_CoreAddHeartBeat(builder: flatbuffers.Builder, heartBeat: int):
+    builder.PrependUint8Slot(0, heartBeat, 0)
+
+def AddHeartBeat(builder: flatbuffers.Builder, heartBeat: int):
+    State_CoreAddHeartBeat(builder, heartBeat)
+
 def State_CoreAddJointQRef(builder: flatbuffers.Builder, jointQRef: Any):
-    builder.PrependStructSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(jointQRef), 0)
+    builder.PrependStructSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(jointQRef), 0)
 
 def AddJointQRef(builder: flatbuffers.Builder, jointQRef: Any):
     State_CoreAddJointQRef(builder, jointQRef)
 
 def State_CoreAddJointQEnc(builder: flatbuffers.Builder, jointQEnc: Any):
-    builder.PrependStructSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(jointQEnc), 0)
+    builder.PrependStructSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(jointQEnc), 0)
 
 def AddJointQEnc(builder: flatbuffers.Builder, jointQEnc: Any):
     State_CoreAddJointQEnc(builder, jointQEnc)
 
 def State_CoreAddJointTEsti(builder: flatbuffers.Builder, jointTEsti: Any):
-    builder.PrependStructSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(jointTEsti), 0)
+    builder.PrependStructSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(jointTEsti), 0)
 
 def AddJointTEsti(builder: flatbuffers.Builder, jointTEsti: Any):
     State_CoreAddJointTEsti(builder, jointTEsti)
 
 def State_CoreAddJointTMeas(builder: flatbuffers.Builder, jointTMeas: Any):
-    builder.PrependStructSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(jointTMeas), 0)
+    builder.PrependStructSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(jointTMeas), 0)
 
 def AddJointTMeas(builder: flatbuffers.Builder, jointTMeas: Any):
     State_CoreAddJointTMeas(builder, jointTMeas)
 
 def State_CoreAddJointTemper(builder: flatbuffers.Builder, jointTemper: Any):
-    builder.PrependStructSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(jointTemper), 0)
+    builder.PrependStructSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(jointTemper), 0)
 
 def AddJointTemper(builder: flatbuffers.Builder, jointTemper: Any):
     State_CoreAddJointTemper(builder, jointTemper)
 
 def State_CoreAddCarteXRef(builder: flatbuffers.Builder, carteXRef: Any):
-    builder.PrependStructSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(carteXRef), 0)
+    builder.PrependStructSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(carteXRef), 0)
 
 def AddCarteXRef(builder: flatbuffers.Builder, carteXRef: Any):
     State_CoreAddCarteXRef(builder, carteXRef)
 
 def State_CoreAddCarteXEnc(builder: flatbuffers.Builder, carteXEnc: Any):
-    builder.PrependStructSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(carteXEnc), 0)
+    builder.PrependStructSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(carteXEnc), 0)
 
 def AddCarteXEnc(builder: flatbuffers.Builder, carteXEnc: Any):
     State_CoreAddCarteXEnc(builder, carteXEnc)
 
 def State_CoreAddCboxDigitalInput(builder: flatbuffers.Builder, cboxDigitalInput: Any):
-    builder.PrependStructSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalInput), 0)
+    builder.PrependStructSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalInput), 0)
 
 def AddCboxDigitalInput(builder: flatbuffers.Builder, cboxDigitalInput: Any):
     State_CoreAddCboxDigitalInput(builder, cboxDigitalInput)
 
 def State_CoreAddCboxDigitalOutput(builder: flatbuffers.Builder, cboxDigitalOutput: Any):
-    builder.PrependStructSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalOutput), 0)
+    builder.PrependStructSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalOutput), 0)
 
 def AddCboxDigitalOutput(builder: flatbuffers.Builder, cboxDigitalOutput: Any):
     State_CoreAddCboxDigitalOutput(builder, cboxDigitalOutput)
 
 def State_CoreAddMotionMode(builder: flatbuffers.Builder, motionMode: int):
-    builder.PrependUint8Slot(9, motionMode, 0)
+    builder.PrependUint8Slot(10, motionMode, 0)
 
 def AddMotionMode(builder: flatbuffers.Builder, motionMode: int):
     State_CoreAddMotionMode(builder, motionMode)
 
 def State_CoreAddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
-    builder.PrependFloat32Slot(10, motionSpeedBar, 0.0)
+    builder.PrependFloat32Slot(11, motionSpeedBar, 0.0)
 
 def AddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
     State_CoreAddMotionSpeedBar(builder, motionSpeedBar)
 
 def State_CoreAddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
-    builder.PrependUint8Slot(11, motionIsPause, 0)
+    builder.PrependUint8Slot(12, motionIsPause, 0)
 
 def AddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
     State_CoreAddMotionIsPause(builder, motionIsPause)
 
 def State_CoreAddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
-    builder.PrependUint8Slot(12, statusLan2can, 0)
+    builder.PrependUint8Slot(13, statusLan2can, 0)
 
 def AddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
     State_CoreAddStatusLan2can(builder, statusLan2can)
 
 def State_CoreAddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
-    builder.PrependUint8Slot(13, statusSwitchEmg, 0)
+    builder.PrependUint8Slot(14, statusSwitchEmg, 0)
 
 def AddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
     State_CoreAddStatusSwitchEmg(builder, statusSwitchEmg)
 
 def State_CoreAddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
-    builder.PrependUint8Slot(14, statusPowerOut, 0)
+    builder.PrependUint8Slot(15, statusPowerOut, 0)
 
 def AddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
     State_CoreAddStatusPowerOut(builder, statusPowerOut)
 
 def State_CoreAddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
-    builder.PrependUint8Slot(15, statusServoNum, 0)
+    builder.PrependUint8Slot(16, statusServoNum, 0)
 
 def AddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
     State_CoreAddStatusServoNum(builder, statusServoNum)
 
 def State_CoreAddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
-    builder.PrependUint8Slot(16, statusIsRefon, 0)
+    builder.PrependUint8Slot(17, statusIsRefon, 0)
 
 def AddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
     State_CoreAddStatusIsRefon(builder, statusIsRefon)
 
 def State_CoreAddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
-    builder.PrependUint8Slot(17, statusOutColl, 0)
+    builder.PrependUint8Slot(18, statusOutColl, 0)
 
 def AddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
     State_CoreAddStatusOutColl(builder, statusOutColl)
 
 def State_CoreAddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
-    builder.PrependUint8Slot(18, statusSelfColl, 0)
+    builder.PrependUint8Slot(19, statusSelfColl, 0)
 
 def AddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
     State_CoreAddStatusSelfColl(builder, statusSelfColl)
 
 def State_CoreAddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
-    builder.PrependUint8Slot(19, statusDtMode, 0)
+    builder.PrependUint8Slot(20, statusDtMode, 0)
 
 def AddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
     State_CoreAddStatusDtMode(builder, statusDtMode)
@@ -338,6 +351,7 @@ class State_CoreT(object):
 
     # State_CoreT
     def __init__(self):
+        self.heartBeat = 0  # type: int
         self.jointQRef = None  # type: Optional[N_JOINT_fT]
         self.jointQEnc = None  # type: Optional[N_JOINT_fT]
         self.jointTEsti = None  # type: Optional[N_JOINT_fT]
@@ -380,6 +394,7 @@ class State_CoreT(object):
     def _UnPack(self, stateCore):
         if stateCore is None:
             return
+        self.heartBeat = stateCore.HeartBeat()
         if stateCore.JointQRef() is not None:
             self.jointQRef = N_JOINT_fT.InitFromObj(stateCore.JointQRef())
         if stateCore.JointQEnc() is not None:
@@ -413,6 +428,7 @@ class State_CoreT(object):
     # State_CoreT
     def Pack(self, builder):
         State_CoreStart(builder)
+        State_CoreAddHeartBeat(builder, self.heartBeat)
         if self.jointQRef is not None:
             jointQRef = self.jointQRef.Pack(builder)
             State_CoreAddJointQRef(builder, jointQRef)
