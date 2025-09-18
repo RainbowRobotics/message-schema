@@ -30,8 +30,8 @@ void EKF::init(const Eigen::Matrix4d& tf)
 
     // set process noise, Q_k (odom)
     M_k = Eigen::Matrix3d::Zero();
-    M_k(0,0) = 0.01 * 0.01;
-    M_k(1,1) = 0.01 * 0.01;
+    M_k(0,0) = 0.05 * 0.05;
+    M_k(1,1) = 0.05 * 0.05;
     M_k(2,2) = (3.0 * D2R) * (3.0 * D2R);
 
     // set measurement noise, R_k (icp)
@@ -183,6 +183,8 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     Eigen::Matrix3d I3 = Eigen::Matrix3d::Identity();
     Eigen::Matrix3d I_minus_K = I3 - K_k;
     Eigen::Matrix3d P_new = I_minus_K * P_hat * I_minus_K.transpose() + K_k * R_k * K_k.transpose();
+
+    P_new = 0.5 * (P_new + P_new.transpose());
 
     // commit
     x_hat = x_new;
