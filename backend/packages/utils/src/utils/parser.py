@@ -18,23 +18,25 @@ def camel_to_snake(s: str) -> str:
 
 
 def t_to_dict(obj: Any) -> Any:
-
     # 원시형
     if obj is None or isinstance(obj, bool | int | float | str):
         return obj
     # numpy 배열
     if np is not None and isinstance(obj, np.ndarray):
         return obj.tolist()
-    # bytes류
+    # bytes류 → string 디코딩
     if isinstance(obj, bytes | bytearray | memoryview):
-        return list(obj)
+        try:
+            return obj.decode("utf-8")
+        except UnicodeDecodeError:
+            return list(obj)
     # dict류
     if isinstance(obj, Mapping):
         return {k: t_to_dict(v) for k, v in obj.items()}
     # 시퀀스
     if isinstance(obj, list | tuple | set):
         return [t_to_dict(v) for v in obj]
-    # 일반/T-object(예: State_CoreT, N_JOINT_fT)
+    # 일반/T-object
     if hasattr(obj, "__dict__"):
         return {k: t_to_dict(v) for k, v in vars(obj).items()}
     # 마지막 안전핀
