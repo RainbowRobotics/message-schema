@@ -8,7 +8,6 @@ members = [
     "flat-buffers",
     "manipulate",
     "rb-backend-server",
-    "rb-modules",
     "rb-socketio",
     "rb-zenoh",
     "utils",

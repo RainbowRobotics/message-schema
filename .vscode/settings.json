@@ -58,7 +58,7 @@
     "span": "cpp",
     "*.inc": "cpp"
   },
-  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/backend/services/manipulate",
     "${workspaceFolder}/bazel-bin/schemas"

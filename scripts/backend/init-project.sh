@@ -6,9 +6,27 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "🔍 Root: $ROOT"
 BE="$ROOT/backend"
 
+if ! command -v pyenv >/dev/null 2>&1; then
+  echo "❌ pyenv not found. Please install pyenv first."
+  exit 1
+fi
+
+wanted_python_version="$(cat "$ROOT/.python-version" | tr -d '\r\n')"
+current_pyton_version="$(pyenv version-name 2>/dev/null || true)"
+
+if [ "$wanted_python_version" != "$current_pyton_version" ]; then
+  echo "🔄 Switching Python $wanted_python_version → $current_pyton_version"
+  pyenv install -s "$wanted_python_version"
+  ( cd "$ROOT" && pyenv local "$wanted_python_version" )
+  pyenv rehash
+  hash -r
+else
+  echo "✅ Python version already matches: $current_pyton_version"
+fi
+
 if [ ! -d "$BE/.venv" ]; then
   echo "⚙️ Creating root .venv (dev only)"
-  (cd "$BE" && uv lock && uv sync --group dev)
+  (cd "$BE" && uv lock && uv sync --group dev --frozen)
 fi
 
 
@@ -22,22 +40,30 @@ while IFS= read -r -d '' d; do
   SERVICES+=("$(basename "$d")")
 done < <(find "$BE/services" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)
 
-source "$BE/.venv/bin/activate"
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+  # Windows (Git Bash, MSYS, etc.)
+  source "$BE/.venv/Scripts/activate"
+else
+  # Unix/Linux/macOS
+  source "$BE/.venv/bin/activate"
+fi
 
 for pkg in "${PACKAGES[@]}"; do
   if [ -f "$BE/packages/$pkg/pyproject.toml" ]; then
     echo "📦 Installing $pkg"
-    uv pip install -e "$BE/packages/$pkg"
+    uv pip install -e "$BE/packages/$pkg" --link-mode=copy
   else
     echo "⏭️ $pkg (no pyproject)"
   fi
 done
 
+export UV_PROJECT_DIR="$BE"
+
 for svc in "${SERVICES[@]}"; do
   if [ -f "$BE/services/$svc/pyproject.toml" ]; then
     echo "💉 Hydrating $svc"
-    (cd "$BE/services/$svc" && uv lock && uv pip compile pyproject.toml -o requirements.txt)
-    (cd "$BE/services/$svc" && uv pip install -r requirements.txt)
+    (cd "$BE" && uv lock --project "services/$svc"  --frozen)
+    (cd "$BE" && uv export --project "services/$svc" --frozen -o "services/$svc/requirements.txt")
   else
     echo "⏭️ $svc (no pyproject)"
   fi
