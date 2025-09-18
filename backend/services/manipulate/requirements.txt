@@ -2,6 +2,8 @@
 #    uv pip compile pyproject.toml -o requirements.txt
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/flat_buffers
     # via manipulate (pyproject.toml)
+-e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/rb_modules
+    # via manipulate (pyproject.toml)
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/rb_socketio
     # via manipulate (pyproject.toml)
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/rb_zenoh
@@ -9,6 +11,7 @@
 -e file:///Users/jongwankim/Desktop/workspace/rby2/backend/packages/utils
     # via
     #   manipulate (pyproject.toml)
+    #   rb-modules
     #   rb-zenoh
 aiohappyeyeballs==2.6.1
     # via aiohttp
@@ -35,11 +38,13 @@ click==8.2.1
 fastapi==0.116.1
     # via
     #   manipulate (pyproject.toml)
+    #   rb-modules
     #   rb-socketio
     #   rb-zenoh
 flatbuffers==25.2.10
     # via
     #   flat-buffers
+    #   rb-modules
     #   rb-zenoh
 frozenlist==1.7.0
     # via
@@ -73,6 +78,7 @@ propcache==0.3.2
     #   yarl
 psutil==7.0.0
     # via
+    #   rb-modules
     #   rb-zenoh
     #   utils
 pydantic==2.11.7
