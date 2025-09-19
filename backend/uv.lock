@@ -8,6 +8,7 @@ members = [
     "flat-buffers",
     "manipulate",
     "rb-backend-server",
+    "rb-modules",
     "rb-socketio",
     "rb-zenoh",
     "utils",
@@ -349,7 +350,6 @@ source = { virtual = "services/manipulate" }
 dependencies = [
     { name = "fastapi" },
     { name = "flat-buffers" },
-    { name = "pydantic-settings" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-modules" },
@@ -363,7 +363,6 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
     { name = "flat-buffers", editable = "packages/flat_buffers" },
-    { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },

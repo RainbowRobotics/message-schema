@@ -213,6 +213,8 @@ class ZenohClient:
         callback: (topic, mv, obj, attachment)  sync/async 모두 허용
         반환: handle(해지 시 handle.close())
         """
+
+        print("session >>", self.session)
         if self.session is None:
             self.connect()
         # if "/" not in topic:

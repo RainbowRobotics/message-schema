@@ -1,9 +1,10 @@
 from rb_modules.rb_fastapi_app import AppSettings, create_app
-from rb_zenoh import zenoh_router
 
 from app.api.state.state_api_route import state_router
 from app.api.whoami.whoami_api_route import whoami_router
 from app.socket import RelayNS, app_with_sio, sio
+
+from .zenoh_subs import zenoh_router
 
 setting = AppSettings()
 
