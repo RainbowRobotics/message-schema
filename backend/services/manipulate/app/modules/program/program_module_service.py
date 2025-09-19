@@ -78,6 +78,7 @@ class ProgramService:
 
         ncf = N_CARTE_fT()
         ncf.f = targetspeed
+        req.targetspeed = ncf
 
         req.frame = frame
         req.unit = unit
