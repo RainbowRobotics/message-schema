@@ -58,7 +58,7 @@
     "span": "cpp",
     "*.inc": "cpp"
   },
-  "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/backend/services/manipulate",
     "${workspaceFolder}/bazel-bin/schemas"
