@@ -213,6 +213,8 @@ class ZenohClient:
         callback: (topic, mv, obj, attachment)  sync/async 모두 허용
         반환: handle(해지 시 handle.close())
         """
+
+        print("session >>", self.session)
         if self.session is None:
             self.connect()
         # if "/" not in topic:
@@ -428,7 +430,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout_ms: int = 3000,
-        flatbuffer_obj: Table | None = None,
+        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_res_T_class: type[Table] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -436,14 +439,18 @@ class ZenohClient:
         if self.session is None:
             self.connect()
 
-        if flatbuffer_obj is not None:
+        if flatbuffer_req_obj is not None:
             if flatbuffer_buf_size is None:
                 raise ValueError(
                     "flatbuffer_buf_size is required when flatbuffer_obj_t is provided"
                 )
+            elif flatbuffer_res_T_class is None:
+                raise ValueError(
+                    "flatbuffer_res_T_class is required when flatbuffer_obj_t is provided"
+                )
 
             b = flatbuffers.Builder(flatbuffer_buf_size)
-            b.Finish(flatbuffer_obj.Pack(b))
+            b.Finish(flatbuffer_req_obj.Pack(b))
             payload = bytes(b.Output())
 
         if isinstance(target, str):
@@ -494,10 +501,13 @@ class ZenohClient:
                         "err": None,
                     }
 
-                    if flatbuffer_obj is not None:
+                    if flatbuffer_req_obj is not None:
                         ok_result["dict_payload"] = t_to_dict(
-                            flatbuffer_obj.InitFromPackedBuf(res_payload, 0)
+                            flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)
                         )
+
+                        if ok_result["dict_payload"] is None:
+                            raise ValueError("dict_payload is not a dict")
 
                     yield ok_result
 
@@ -535,7 +545,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout_ms: int = 3000,
-        flatbuffer_obj: Table | None = None,
+        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_res_T_class: type[Table] | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -544,7 +555,8 @@ class ZenohClient:
             return next(
                 self.query(
                     keyexpr,
-                    flatbuffer_obj=flatbuffer_obj,
+                    flatbuffer_req_obj=flatbuffer_req_obj,
+                    flatbuffer_res_T_class=flatbuffer_res_T_class,
                     flatbuffer_buf_size=flatbuffer_buf_size,
                     timeout_ms=timeout_ms,
                     target=target,

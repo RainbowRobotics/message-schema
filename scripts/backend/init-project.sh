@@ -6,22 +6,73 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "🔍 Root: $ROOT"
 BE="$ROOT/backend"
 
-if ! command -v pyenv >/dev/null 2>&1; then
-  echo "❌ pyenv not found. Please install pyenv first."
-  exit 1
+REQUIRED_PY=""
+if [[ -f "$ROOT/.python-version" ]]; then
+  REQUIRED_PY="$(tr -d '\r\n ' < "$ROOT/.python-version")"
+else
+  REQUIRES_LINE="$(grep -E '^\s*requires-python\s*=' "$BE/pyproject.toml" | head -n1 || true)"
+  if [[ -n "$REQUIRES_LINE" ]]; then
+    REQUIRED_PY="$(echo "$REQUIRES_LINE" | sed -n 's/.*"\(.*\)".*/\1/p' | tr ',' '\n' | grep -Eo '[0-9]+\.[0-9]+' | head -n1)"
+  fi
 fi
 
-wanted_python_version="$(cat "$ROOT/.python-version" | tr -d '\r\n')"
-current_pyton_version="$(pyenv version-name 2>/dev/null || true)"
+echo "📌 Required Python: $REQUIRED_PY"
 
-if [ "$wanted_python_version" != "$current_pyton_version" ]; then
-  echo "🔄 Switching Python $wanted_python_version → $current_pyton_version"
-  pyenv install -s "$wanted_python_version"
-  ( cd "$ROOT" && pyenv local "$wanted_python_version" )
-  pyenv rehash
-  hash -r
+venv_python_path() {
+  if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    echo "$BE/.venv/Scripts/python.exe"
+  else
+    echo "$BE/.venv/bin/python"
+  fi
+}
+
+ensure_uv_installed() {
+  if ! command -v uv >/dev/null 2>&1; then
+    echo "❌ uv not found. Install uv first: backend/README.md를 참고 하세요."
+    exit 1
+  fi
+}
+
+create_or_recreate_venv() {
+  echo "⚙️  Installing Python $REQUIRED_PY via uv and creating venv"
+  (
+    cd "$BE"
+    uv python install "$REQUIRED_PY"
+
+    rm -rf "$BE/.venv"
+    uv venv --python "$REQUIRED_PY" .venv
+  )
+}
+
+venv_matches_required() {
+  local py
+  py="$(venv_python_path)"
+  [[ -x "$py" ]] || return 1
+  # 주/부 버전만 비교(예: 3.12)
+  local ver
+  ver="$("$py" -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
+  [[ "$ver" == "$REQUIRED_PY" ]]
+}
+
+ensure_uv_installed
+
+if [[ ! -d "$BE/.venv" ]]; then
+  create_or_recreate_venv
 else
-  echo "✅ Python version already matches: $current_pyton_version"
+  if venv_matches_required; then
+    echo "✅ Existing .venv matches Python $REQUIRED_PY"
+  else
+    echo "♻️  .venv Python mismatch → recreating"
+    create_or_recreate_venv
+  fi
+fi
+
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+  # Windows (Git Bash/MSYS)
+  source "$BE/.venv/Scripts/activate"
+else
+  # Unix/macOS
+  source "$BE/.venv/bin/activate"
 fi
 
 if [ ! -d "$BE/.venv" ]; then
@@ -39,14 +90,6 @@ SERVICES=()
 while IFS= read -r -d '' d; do
   SERVICES+=("$(basename "$d")")
 done < <(find "$BE/services" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)
-
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-  # Windows (Git Bash, MSYS, etc.)
-  source "$BE/.venv/Scripts/activate"
-else
-  # Unix/Linux/macOS
-  source "$BE/.venv/bin/activate"
-fi
 
 for pkg in "${PACKAGES[@]}"; do
   if [ -f "$BE/packages/$pkg/pyproject.toml" ]; then

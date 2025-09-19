@@ -1,3 +1,4 @@
+from app.api.api_schema import BaseControlResponsePD
 from pydantic import BaseModel
 
 
@@ -40,3 +41,7 @@ class StateRequestPD(BaseModel):
     status_out_coll: int
     status_self_coll: int
     status_dt_mode: int
+
+
+class PowerControlResponsePD(BaseControlResponsePD):
+    target: str | None = None

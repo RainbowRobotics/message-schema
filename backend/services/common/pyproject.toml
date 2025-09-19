@@ -9,14 +9,16 @@ authors = [
 readme = "README.md"
 
 dependencies = [
+  "utils",
+  "rb_modules",
   "fastapi>=0.116.1,<0.117.0",
   "uvicorn[standard]>=0.35.0,<0.36.0",
   "python-dotenv>=1.1.1,<2.0.0",
   "python-socketio>=5.13.0",
   "pyinstaller>=6.15.0",
   "redis>=6.4.0",
-  "utils",
 ]
 
 [tool.uv.sources]
 utils = { workspace = true }
+rb_modules = { workspace = true }
