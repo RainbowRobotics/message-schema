@@ -16,6 +16,7 @@
 #include "obsmap.h"
 
 #include "ekf.h"
+#include "ekf_3d.h"
 
 #include <QObject>
 
@@ -114,7 +115,8 @@ private:
 
     std::atomic<bool> ekf_flag = {false};               // ekf thread flag (for localization)
     std::unique_ptr<std::thread> ekf_thread;            // ekf thread
-    void ekf_loop();                                    // ekf loop
+    void ekf_loop();                                    // ekf loop (2D)
+    void ekf_loop_3d();                                    // ekf loop (3D)
 
     std::atomic<bool> obs_flag = {false};               // obstacle thread flag (obstacle map update)
     std::unique_ptr<std::thread> obs_thread;            // obstacle thread
@@ -145,6 +147,7 @@ private:
 
     // extended kalman filter
     EKF ekf;
+    EKF_3D ekf_3d;
 };
 
 #endif // LOCALIZATION_H

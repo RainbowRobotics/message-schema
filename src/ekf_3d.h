@@ -35,6 +35,8 @@ private:
     // mutex
     std::mutex mtx;
 
+
+
     // state estimation (x, y, z, rx, ry, rz)
     Eigen::Vector6d x_hat;
 
@@ -56,7 +58,6 @@ private:
 
     // flags
     std::atomic<bool> has_pre_mo_tf = {false};
-
 };
 
 #endif // EKF_3D_H
