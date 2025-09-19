@@ -284,6 +284,19 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     size_t range_data_size = (size_t)((2*M_PI)/step);
     
     std::vector<double> range_data(range_data_size, lidar_max_range);
+    
+    const double robot_x_min = config->get_robot_size_x_min();
+    const double robot_x_max = config->get_robot_size_x_max();
+    const double robot_y_min = config->get_robot_size_y_min();
+    const double robot_y_max = config->get_robot_size_y_max();
+    const double robot_add_x = config->get_robot_size_add_x();
+    const double robot_add_y = config->get_robot_size_add_y();
+    
+    const double total_x_min = robot_x_min - robot_add_x;
+    const double total_x_max = robot_x_max + robot_add_x;
+    const double total_y_min = robot_y_min - robot_add_y;
+    const double total_y_max = robot_y_max + robot_add_y;
+    
     size_t pts_size = tpp.pts.size();
     for(size_t p = 0; p < pts_size; p++)
     {
@@ -295,6 +308,16 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         }
 
         double x = pt[0]; double y = pt[1];
+
+        // test S100B
+        //if(x > total_x_min && x < total_x_max && y > total_y_min && y < total_y_max)
+        //{
+        //    if(x > robot_x_min && x < robot_x_max && y > robot_y_min && y < robot_y_max)
+        //    {
+        //        continue;
+        //    }
+        //}
+        
         double th = std::atan2(y, x) + M_PI;
         int idx = (int)(th/step);
         if(idx >= 0 && idx < (int)range_data_size)

@@ -2,6 +2,595 @@
 
 #include "mainwindow.h"
 
+ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorContext context)
+{
+    ErrorInfo info;
+    
+    QString hex_str = QString::number(cause, 16).toUpper();
+    QString error_code = QString("R0%1").arg(hex_str);
+    QString alarm_code = QString::number(cause & 0x0FFF);
+    
+    info.category = getCategoryName(cause);
+    info.cause = getCauseName(cause);
+    info.context = getContextName(context);
+    info.error_code = error_code;
+    info.alarm_code = alarm_code;
+    
+    switch(cause)
+    {
+    case MAP_NOT_LOADED:
+        {
+            info.message = "map not loaded";
+            info.solution = "Load map file required";
+            info.description = "Map is not loaded";
+            info.level = "error";
+            info.remark = "Navigation/Localization/Initialization unavailable";
+            break;
+        }
+
+    case MAP_INVALID_PATH:
+        {
+            info.message = "invalid map dir";
+            info.solution = "Check map path required";
+            info.description = "Invalid map directory";
+            info.level = "error";
+            info.remark = "Map load failed";
+            break;
+        }
+
+    case MAP_LOAD_FAILED:
+        {
+            info.message = "map not load";
+            info.solution = "System restart required";
+            info.description = "Map load failed";
+            info.level = "error";
+            info.remark = "System error";
+            break;
+        }
+
+    case MAP_COPY_FAILED:
+        {
+            info.message = "copy failed";
+            info.solution = "Check storage space required";
+            info.description = "Map copy failed";
+            info.level = "warn";
+            info.remark = "Storage error";
+            break;
+        }
+
+    case TOPO_LOAD_FAILED:
+        {
+            info.message = "topo not load";
+            info.solution = "Check topology file required";
+            info.description = "Topology load failed";
+            info.level = "warn";
+            info.remark = "Topology error";
+            break;
+        }
+
+    case LOC_NOT_INITIALIZED:
+        {
+            info.message = "no localization";
+            info.solution = "Restart localization required";
+            info.description = "No localization available";
+            info.level = "error";
+            info.remark = "Navigation unavailable";
+            break;
+        }
+
+    case LOC_SENSOR_ERROR:
+        {
+            info.message = "lidar not connected";
+            info.solution = "Check LiDAR hardware required";
+            info.description = "Localization sensor error";
+            info.level = "error";
+            info.remark = "Sensor connection error";
+            break;
+        }
+
+    case LOC_ALREADY_RUNNING:
+        {
+            info.message = "already running";
+            info.solution = "Terminate existing process required";
+            info.description = "Already running";
+            info.level = "warn";
+            info.remark = "Duplicate execution prevention";
+            break;
+        }
+
+    case LOC_INIT_FAILED:
+        {
+            info.message = "localization init failed";
+            info.solution = "Reinitialize localization required";
+            info.description = "Localization initialization failed";
+            info.level = "error";
+            info.remark = "Initialization failed";
+            break;
+        }
+
+    case MOVE_NO_TARGET:
+        {
+            info.message = "no target specified";
+            info.solution = "Set target required";
+            info.description = "No target specified";
+            info.level = "error";
+            info.remark = "Target setting error";
+            break;
+        }
+
+    case MOVE_TARGET_INVALID:
+        {
+            info.message = "target invalid";
+            info.solution = "Reset target required";
+            info.description = "Target is invalid";
+            info.level = "error";
+            info.remark = "Target validity error";
+            break;
+        }
+
+    case MOVE_TARGET_OCCUPIED:
+        {
+            info.message = "target location occupied(static obs)";
+            info.solution = "Change target position required";
+            info.description = "Target position conflicts with static obstacle";
+            info.level = "error";
+            info.remark = "Target position collision";
+            break;
+        }
+
+    case MOVE_TARGET_OUT_RANGE:
+        {
+            info.message = "target location out of range";
+            info.solution = "Reset target position required";
+            info.description = "Target position is out of map range";
+            info.level = "error";
+            info.remark = "Target range exceeded";
+            break;
+        }
+
+    case MOVE_NODE_NOT_FOUND:
+        {
+            info.message = "can not find node";
+            info.solution = "Check node ID/name required";
+            info.description = "Node not found";
+            info.level = "error";
+            info.remark = "Target node missing";
+            break;
+        }
+
+    case MOVE_EMPTY_NODE_ID:
+        {
+            info.message = "empty node id";
+            info.solution = "Enter target node ID required";
+            info.description = "Empty node ID";
+            info.level = "error";
+            info.remark = "Target setting error";
+            break;
+        }
+
+    case SENSOR_LIDAR_DISCONNECTED:
+        {
+            info.message = "lidar not connected";
+            info.solution = "Check LiDAR hardware required";
+            info.description = "LiDAR not connected";
+            info.level = "error";
+            info.remark = "Sensor connection error/Sensor initialization failed/Mapping unavailable";
+            break;
+        }
+            
+    case SENSOR_LIDAR_DATA_ERROR:
+        {
+            info.message = "lidar data error";
+            info.solution = "Check LiDAR data quality required";
+            info.description = "LiDAR data error";
+            info.level = "warn";
+            info.remark = "Data quality degradation";
+            break;
+        }
+
+    case SENSOR_LIDAR_CALIB_ERROR:
+        {
+            info.message = "lidar calibration error";
+            info.solution = "Re-run LiDAR calibration required";
+            info.description = "LiDAR calibration error";
+            info.level = "warn";
+            info.remark = "Accuracy degradation";
+            break;
+        }
+            
+    case SENSOR_IMU_DISCONNECTED:
+        {
+            info.message = "IMU connection lost";
+            info.solution = "Check IMU hardware required";
+            info.description = "IMU connection lost";
+            info.level = "error";
+            info.remark = "Attitude control error";
+            break;
+        }
+
+    case SENSOR_IMU_DATA_ERROR:
+        {
+            info.message = "IMU data error";
+            info.solution = "Check IMU data quality required";
+            info.description = "IMU data error";
+            info.level = "warn";
+            info.remark = "Attitude information error";
+            break;
+        }
+
+    case SENSOR_CAM_DISCONNECTED:
+        {
+            info.message = "CAM connection lost";
+            info.solution = "Check CAM hardware required";
+            info.description = "CAM connection lost";
+            info.level = "warn";
+            info.remark = "CAM function limited";
+            break;
+        }
+
+    case SENSOR_CAM_DATA_ERROR:
+        {
+            info.message = "CAM data error";
+            info.solution = "Check CAM data quality required";
+            info.description = "CAM data error";
+            info.level = "info";
+            info.remark = "CAM quality degradation";
+            break;
+        }
+
+    case SENSOR_QR_ERROR:
+        {
+            info.message = "QR sensor error";
+            info.solution = "Check QR sensor required";
+            info.description = "QR sensor error";
+            info.level = "warn";
+            info.remark = "Recognition function limited";
+            break;
+        }
+
+    case SENSOR_TEMP_ERROR:
+        {
+            info.message = "temperature sensor error";
+            info.solution = "Check temperature sensor required";
+            info.description = "Temperature sensor error";
+            info.level = "info";
+            info.remark = "Monitoring limited";
+            break;
+        }
+
+    case SYS_NOT_SUPPORTED:
+        {
+            info.message = "not supported";
+            info.solution = "Use supported method required";
+            info.description = "Unsupported function";
+            info.level = "warn";
+            info.remark = "Function not supported";
+            break;
+        }
+
+    case SYS_MULTI_MODE_LIMIT:
+        {
+            info.message = "target command not supported by multi. use goal_id";
+            info.solution = "Use goal command required";
+            info.description = "Using target command in multi-robot mode";
+            info.level = "warn";
+            info.remark = "Multi-mode limitation";
+            break;
+        }
+
+    case SYS_PROCESS_START_FAILED:
+        {
+            info.message = "process failed to start";
+            info.solution = "System restart required";
+            info.description = "Process start failed";
+            info.level = "error";
+            info.remark = "System error";
+            break;
+        }
+
+    case SYS_PROCESS_FINISH_FAILED:
+        {
+            info.message = "process did not finish";
+            info.solution = "Force terminate process and restart required";
+            info.description = "Process completion failed";
+            info.level = "error";
+            info.remark = "System error";
+            break;
+        }
+
+    case SYS_NETWORK_ERROR:
+        {
+            info.message = "network connection error";
+            info.solution = "Check network connection required";
+            info.description = "Network communication error";
+            info.level = "warn";
+            info.remark = "Communication limited";
+            break;
+        }
+
+    case SAFETY_EMO_RELEASED:
+        {
+            info.message = "emo released";
+            info.solution = "Check emergency stop status required";
+            info.description = "Emergency stop released";
+            info.level = "critical";
+            info.remark = "Safety risk";
+            break;
+        }
+
+    case SAFETY_EMO_PRESSED:
+        {
+            info.message = "EMO pressed";
+            info.solution = "Release emergency stop required";
+            info.description = "Emergency stop button pressed";
+            info.level = "critical";
+            info.remark = "Immediate stop";
+            break;
+        }
+
+    case SAFETY_BUMPER_PRESSED:
+        {
+            info.message = "bumper pressed";
+            info.solution = "Remove obstacle and restart required";
+            info.description = "Bumper detected";
+            info.level = "critical";
+            info.remark = "Obstacle collision";
+            break;
+        }
+
+    case SAFETY_OBSTACLE_DETECTED:
+        {
+            info.message = "obstacle detected";
+            info.solution = "Change path or remove obstacle required";
+            info.description = "Obstacle detected";
+            info.level = "error";
+            info.remark = "Path change required";
+            break;
+        }
+
+    case SAFETY_ZONE_VIOLATION:
+        {
+            info.message = "safety zone violation";
+            info.solution = "Resolve safety zone violation required";
+            info.description = "Safety zone violation";
+            info.level = "error";
+            info.remark = "Safety risk";
+            break;
+        }
+
+    case BAT_NOT_CHARGING:
+        {
+            info.message = "not charging";
+            info.solution = "Check charging status required";
+            info.description = "Not charging";
+            info.level = "warn";
+            info.remark = "Battery management";
+            break;
+
+        }
+
+    case BAT_LOW:
+        {
+            info.message = "low battery";
+            info.solution = "Charging required";
+            info.description = "Low battery";
+            info.level = "error";
+            info.remark = "Charging required";
+            break;
+        }
+
+    case BAT_CRITICAL:
+        {
+            info.message = "battery critical";
+            info.solution = "Immediate charging required";
+            info.description = "Battery critical level";
+            info.level = "critical";
+            info.remark = "Immediate charging";
+            break;
+        }
+
+    case BAT_POWER_ERROR:
+        {
+            info.message = "power supply error";
+            info.solution = "Check power supply system required";
+            info.description = "Power supply error";
+            info.level = "error";
+            info.remark = "System error";
+            break;
+
+        }
+
+    case MOTOR_CONNECTION_LOST:
+        {
+            info.message = "motor connection lost";
+            info.solution = "Check motor hardware required";
+            info.description = "Motor connection lost";
+            info.level = "critical";
+            info.remark = "Navigation unavailable";
+            break;
+        }
+
+    case MOTOR_OVERHEAT:
+        {
+            info.message = "motor overheat";
+            info.solution = "Cool motor and restart required";
+            info.description = "Motor overheating";
+            info.level = "error";
+            info.remark = "Motor protection";
+            break;
+        }
+
+    case MOTOR_OVERLOAD:
+        {
+            info.message = "motor overload";
+            info.solution = "Reduce motor load required";
+            info.description = "Motor overload";
+            info.level = "error";
+            info.remark = "Performance limitation";
+            break;
+        }
+
+    case MOTOR_ENCODER_ERROR:
+        {
+            info.message = "motor encoder error";
+            info.solution = "Check motor encoder required";
+            info.description = "Motor encoder error";
+            info.level = "error";
+            info.remark = "Position control error";
+            break;
+        }
+
+    default:
+        {
+            info.error_code = "[D]R0Sx0000";
+            info.alarm_code = "[D]0000";
+            info.category = "[D]System";
+            info.cause = "[D]Unknown";
+            info.context = "[D]UNKNOWN";
+            info.message = "[D]unknown error";
+            info.solution = "[D]Contact system administrator required";
+            info.description = "[D]Unknown error";
+            info.level = "error";
+            info.remark = "[D]System error";
+            break;
+        }
+
+    }
+    
+    return info;
+}
+
+QString ERROR_MANAGER::getErrorMessage(ErrorCause cause, ErrorContext context)
+{
+    ErrorInfo info = getErrorInfo(cause, context);
+    return QString("[%1] %2").arg(info.error_code).arg(info.message);
+}
+
+void ERROR_MANAGER::logError(ErrorCause cause, ErrorContext context, const QString& additional_info)
+{
+    ErrorInfo info = getErrorInfo(cause, context);
+    
+    QString log_message = QString("[%1] %2 - %3 (Solution: %4)")
+                         .arg(info.error_code)
+                         .arg(info.message)
+                         .arg(info.description)
+                         .arg(info.solution);
+    
+    if(!additional_info.isEmpty())
+    {
+        log_message += QString(" [Additional Info: %1]").arg(additional_info);
+    }
+    
+    if(info.level == "critical")
+    {
+        spdlog::critical("{}", log_message.toStdString());
+    }
+    else if(info.level == "error")
+    {
+        spdlog::error("[COMM_RRS] {}", log_message.toStdString());
+    }
+    else if(info.level == "warn")
+    {
+        spdlog::warn("[COMM_RRS] {}", log_message.toStdString());
+    }
+    else
+    {
+        spdlog::info("[COMM_RRS] {}", log_message.toStdString());
+    }
+}
+
+QString ERROR_MANAGER::getCategoryName(ErrorCause cause)
+{
+    switch(cause & 0xF000)
+    {
+    case 0x1000:        return "Map Management";
+    case 0x2000:        return "Localization";
+    case 0x3000:        return "Navigation";
+    case 0x4000:        return "Sensor";
+    case 0x5000:        return "System";
+    case 0x6000:        return "Safety";
+    case 0x7000:        return "Battery";
+    case 0x8000:        return "Motor";
+    default:            return "Unknown";
+    }
+}
+
+QString ERROR_MANAGER::getCauseName(ErrorCause cause)
+{
+    switch(cause)
+    {
+    case MAP_NOT_LOADED:                return "Map Not Loaded";
+    case MAP_INVALID_PATH:              return "Map Path Error";
+    case MAP_LOAD_FAILED:               return "Map Load Failed";
+    case MAP_COPY_FAILED:               return "Map Copy Failed";
+    case TOPO_LOAD_FAILED:              return "Topology Load Failed";
+    case LOC_NOT_INITIALIZED:           return "Localization Not Initialized";
+    case LOC_SENSOR_ERROR:              return "Localization Sensor Error";
+    case LOC_ALREADY_RUNNING:           return "Localization Already Running";
+    case LOC_INIT_FAILED:               return "Localization Init Failed";
+    case MOVE_NO_TARGET:                return "No Target";
+    case MOVE_TARGET_INVALID:           return "Target Invalid";
+    case MOVE_TARGET_OCCUPIED:          return "Target Position Occupied";
+    case MOVE_TARGET_OUT_RANGE:         return "Target Out of Range";
+    case MOVE_NODE_NOT_FOUND:           return "Node Not Found";
+    case MOVE_EMPTY_NODE_ID:            return "Empty Node ID";
+    case SENSOR_LIDAR_DISCONNECTED:     return "LiDAR Disconnected";
+    case SENSOR_LIDAR_DATA_ERROR:       return "LiDAR Data Error";
+    case SENSOR_LIDAR_CALIB_ERROR:      return "LiDAR Calibration Error";
+    case SENSOR_IMU_DISCONNECTED:       return "IMU Disconnected";
+    case SENSOR_IMU_DATA_ERROR:         return "IMU Data Error";
+    case SENSOR_CAM_DISCONNECTED:       return "Camera Disconnected";
+    case SENSOR_CAM_DATA_ERROR:         return "Camera Data Error";
+    case SENSOR_QR_ERROR:               return "QR Sensor Error";
+    case SENSOR_TEMP_ERROR:             return "Temperature Sensor Error";
+    case SYS_NOT_SUPPORTED:             return "Function Not Supported";
+    case SYS_MULTI_MODE_LIMIT:          return "Multi Mode Limitation";
+    case SYS_PROCESS_START_FAILED:      return "Process Start Failed";
+    case SYS_PROCESS_FINISH_FAILED:     return "Process Finish Failed";
+    case SYS_NETWORK_ERROR:             return "Network Error";
+    case SAFETY_EMO_RELEASED:           return "Emergency Stop Released";
+    case SAFETY_EMO_PRESSED:            return "Emergency Stop Pressed";
+    case SAFETY_BUMPER_PRESSED:         return "Bumper Pressed";
+    case SAFETY_OBSTACLE_DETECTED:      return "Obstacle Detected";
+    case SAFETY_ZONE_VIOLATION:         return "Safety Zone Violation";
+    case BAT_NOT_CHARGING:              return "Not Charging";
+    case BAT_LOW:                       return "Low Battery";
+    case BAT_CRITICAL:                  return "Battery Critical";
+    case BAT_POWER_ERROR:               return "Power Supply Error";
+    case MOTOR_CONNECTION_LOST:         return "Motor Connection Lost";
+    case MOTOR_OVERHEAT:                return "Motor Overheat";
+    case MOTOR_OVERLOAD:                return "Motor Overload";
+    case MOTOR_ENCODER_ERROR:           return "Motor Encoder Error";
+    default:                            return "Unknown";
+    }
+}
+
+QString ERROR_MANAGER::getContextName(ErrorContext context) // for translate langauge
+{
+    switch(context)
+    {
+    case MOVE_TARGET:           return "MOVE_TARGET";
+    case MOVE_GOAL:             return "MOVE_GOAL";
+    case LOAD_MAP:              return "LOAD_MAP";
+    case LOAD_TOPO:             return "LOAD_TOPO";
+    case LOAD_CONFIG:           return "LOAD_CONFIG";
+    case MAPPING_START:         return "MAPPING_START";
+    case MAPPING_SAVE:          return "MAPPING_SAVE";
+    case LOC_SEMI_AUTO:         return "LOC_SEMIAUTO";
+    case LOC_INIT:              return "LOC_INIT";
+    case LOC_START:             return "LOC_START";
+    case LOC_STOP:              return "LOC_STOP";
+    case SOFTWARE_UPDATE:       return "SOFTWARE_UPDATE";
+    case DOCK_START:            return "DOCK_START";
+    case DOCK_STOP:             return "DOCK_STOP";
+    case LED_CONTROL:           return "LED_CONTROL";
+    case MOTOR_CONTROL:         return "MOTOR_CONTROL";
+    case FIELD_SET:             return "FIELD_SET";
+    case FIELD_GET:             return "FIELD_GET";
+    default:                    return "UNKNOWN";
+    }
+}
+
 COMM_RRS* COMM_RRS::instance(QObject* parent)
 {
     static COMM_RRS* inst = nullptr;
@@ -369,7 +958,8 @@ void COMM_RRS::recv_field_set(std::string const& name, sio::message::ptr const& 
         msg.set_field = get_json(data, "set_field").toInt();
 
 
-        qDebug() << "recv_field_set_field:" << msg.set_field;
+        //qDebug() << "recv_field_set_field:" << msg.set_field;
+        spdlog::info("[COMM_RRS] recv, field set filed",msg.set_field);
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
@@ -738,7 +1328,7 @@ void COMM_RRS::send_status()
         }
         else if(ms.charge_state == CHARGE_STATE_BATTERY_ON)
         {
-            charge_st_string = "battery_on";
+            charge_st_string = "BAT_on";
         }
         else if(ms.charge_state == CHARGE_STATE_CHARGING)
         {
@@ -1242,9 +1832,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->get_is_loaded() != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx1800] map not loaded";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
                 return;
             }
@@ -1252,9 +1843,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(!loc->get_is_loc())
             {
                 msg.result = "reject";
-                msg.message = "[R0Px1800] no localization";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_NOT_INITIALIZED, ERROR_MANAGER::MOVE_TARGET);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::LOC_NOT_INITIALIZED, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
                 return;
             }
@@ -1264,9 +1856,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(x < unimap->get_map_min_x() || x > unimap->get_map_max_x() || y < unimap->get_map_min_y() || y > unimap->get_map_max_y())
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1800] target location out of range";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
                 return;
             }
@@ -1276,9 +1869,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(obsmap->is_tf_collision(goal_tf))
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1801] target location occupied(static obs)";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
                 return;
             }
@@ -1286,9 +1880,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(config->get_use_multi())
             {
                 msg.result = "reject";
-                msg.message = "[R0Tx1802] target command not supported by multi. use goal_id";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
                 return;
             }
@@ -1305,8 +1900,9 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         else
         {
             msg.result = "reject";
-            msg.message = "[R0Sx1800]not supported";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
         }
     }
@@ -1318,9 +1914,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(unimap->get_is_loaded() != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx2000]map not loaded";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_GOAL);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_GOAL);
                 send_move_response(msg);
                 return;
             }
@@ -1328,9 +1925,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(!loc->get_is_loc())
             {
                 msg.result = "reject";
-                msg.message = "[R0Px2000]no localization";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_NOT_INITIALIZED, ERROR_MANAGER::MOVE_GOAL);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::LOC_NOT_INITIALIZED, ERROR_MANAGER::MOVE_GOAL);
                 send_move_response(msg);
                 return;
             }
@@ -1338,8 +1936,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(mobile->get_is_inter_lock_foot())
             {
                 msg.result = "reject";
-                msg.message = "inter lock foot";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
+                msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
                 send_move_response(msg);
                 return;
             }
@@ -1348,9 +1948,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             if(goal_id.isEmpty())
             {
                 msg.result = "reject";
-                msg.message = "[R0Nx2000]empty node id";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
                 msg.bat_percent = bat_percent;
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
                 send_move_response(msg);
                 return;
             }
@@ -1362,9 +1963,10 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 if(!node)
                 {
                     msg.result = "reject";
-                    msg.message = "[R0Nx2001]can not find node";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
                     msg.bat_percent = bat_percent;
 
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
                     send_move_response(msg);
                     return;
                 }
@@ -1413,22 +2015,28 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         else if(method == "hpp")
         {
             msg.result = "reject";
-            msg.message = "not supported yet";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             msg.bat_percent = bat_percent;
+
+            ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
         }
         else if(method == "tng")
         {
             msg.result = "reject";
-            msg.message = "not supported yet";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             msg.bat_percent = bat_percent;
+
+            ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
         }
         else
         {
             msg.result = "reject";
-            msg.message = "[R0Sx2000]not supported";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             msg.bat_percent = bat_percent;
+
+            ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
         }
     }
@@ -1487,8 +2095,9 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "reject";
-            msg.message = "[R0Lx0800]lidar not connected";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCONNECTED, ERROR_MANAGER::MAPPING_START);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::SENSOR_LIDAR_DISCONNECTED, ERROR_MANAGER::MAPPING_START);
             send_mapping_response(msg);
         }
     }
@@ -1532,8 +2141,9 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
             else
             {
                 msg.result = "fail";
-                msg.message = "[R1Cx2100]copy failed, check auto created folder";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::MAPPING_SAVE);
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::MAPPING_SAVE);
                 send_mapping_response(msg);
             }
         }
@@ -1562,8 +2172,9 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             if(!QDir(load_dir).exists())
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx0201]invalid map dir";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_MAP);
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_MAP);
                 send_load_response(msg);
                 return;
             }
@@ -1601,8 +2212,9 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
             else
             {
                 msg.result = "fail";
-                msg.message = "[R0Mx0200]map not load";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
 
+                ERROR_MANAGER::logError(ERROR_MANAGER::MAP_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
                 send_load_response(msg);
             }
         }
@@ -1621,7 +2233,9 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 if(!QDir(load_dir).exists())
                 {
                     msg.result = "reject";
-                    msg.message = "invalid map dir_topo_command";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_TOPO);
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_TOPO);
                     send_load_response(msg);
                     return;
                 }
@@ -1639,7 +2253,9 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 else
                 {
                     msg.result = "fail";
-                    msg.message = "topo not load_topo_command";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_TOPO);
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_TOPO);
                     send_load_response(msg);
                 }
             }
@@ -1662,8 +2278,9 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     else if(command == "configload")
     {
         msg.result = "reject";
-        msg.message = "[R0Sx0401]not support yet";
+        msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOAD_CONFIG);
 
+        ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOAD_CONFIG);
         send_load_response(msg);
     }
 }
@@ -1694,8 +2311,9 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(!unimap || unimap->get_is_loaded() != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "[R0Mx0602]not loaded map";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_SEMI_AUTO);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_SEMI_AUTO);
             send_localization_response(msg);
             return;
         }
@@ -1703,8 +2321,9 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(!lidar_2d || !lidar_2d->get_is_connected())
         {
             msg.result = "reject";
-            msg.message = "[R0Lx0601]not connected lidar";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_SENSOR_ERROR, ERROR_MANAGER::LOC_SEMI_AUTO);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::LOC_SENSOR_ERROR, ERROR_MANAGER::LOC_SEMI_AUTO);
             send_localization_response(msg);
             return;
         }
@@ -1712,8 +2331,9 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(!loc || loc->get_is_busy())
         {
             msg.result = "reject";
-            msg.message = "[R0Rx0600]already running";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_ALREADY_RUNNING, ERROR_MANAGER::LOC_SEMI_AUTO);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::LOC_ALREADY_RUNNING, ERROR_MANAGER::LOC_SEMI_AUTO);
             send_localization_response(msg);
             return;
         }
@@ -1759,16 +2379,18 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         if(!unimap || unimap->get_is_loaded() != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "[R0Mx0702]not loaded map";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_INIT);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_INIT);
             send_localization_response(msg);
             return;
         }
         if(!lidar_2d || !lidar_2d->get_is_connected())
         {
             msg.result = "reject";
-            msg.message = "[R0Lx0701]not connected lidar";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_SENSOR_ERROR, ERROR_MANAGER::LOC_INIT);
 
+            ERROR_MANAGER::logError(ERROR_MANAGER::LOC_SENSOR_ERROR, ERROR_MANAGER::LOC_INIT);
             send_localization_response(msg);
             return;
         }
@@ -2159,14 +2781,18 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
         if(ms.charge_state == 0)
         {
             msg.result = "false";
-            msg.message = "not charging";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::BAT_NOT_CHARGING, ERROR_MANAGER::SOFTWARE_UPDATE);
+
+            ERROR_MANAGER::logError(ERROR_MANAGER::BAT_NOT_CHARGING, ERROR_MANAGER::SOFTWARE_UPDATE);
             send_software_update_response(msg);
         }
 
         if(ms.motor_stop_state >= 1)
         {
             msg.result = "false";
-            msg.message = "emo released";
+            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SAFETY_EMO_RELEASED, ERROR_MANAGER::SOFTWARE_UPDATE);
+
+            ERROR_MANAGER::logError(ERROR_MANAGER::SAFETY_EMO_RELEASED, ERROR_MANAGER::SOFTWARE_UPDATE);
             send_software_update_response(msg);
         }
         return;
@@ -2185,7 +2811,9 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
     if(!process.waitForStarted())
     {
         msg.result = "false";
-        msg.message = "process failed to start";
+        msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_PROCESS_START_FAILED, ERROR_MANAGER::SOFTWARE_UPDATE);
+
+        ERROR_MANAGER::logError(ERROR_MANAGER::SYS_PROCESS_START_FAILED, ERROR_MANAGER::SOFTWARE_UPDATE);
         send_software_update_response(msg);
         return;
     }
@@ -2193,7 +2821,9 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
     if(!process.waitForFinished())
     {
         msg.result = "false";
-        msg.message = "process did not finish";
+        msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::SOFTWARE_UPDATE);
+
+        ERROR_MANAGER::logError(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::SOFTWARE_UPDATE);
         send_software_update_response(msg);
         return;
     }
@@ -2257,6 +2887,164 @@ void COMM_RRS::send_move_response(const DATA_MOVE& msg)
     obj["command"] = msg.command;
     obj["result"] = msg.result;
     obj["message"] = msg.message;
+
+    QJsonObject errorCode;
+    if(msg.result == "reject" || msg.result == "fail")
+    {
+        QString error_code = "R0Sx0000";
+        QString alarm_code = "0000";
+        QString category = "System";
+        QString cause = "Unknown";
+        QString level = "error";
+        QString solution = "Contact system administrator required";
+        
+        // Error code mapping
+        if(msg.message.contains("[R0Mx1001]"))
+        {
+            error_code = "R0Mx1001";
+            alarm_code = "1001";
+            category = "Map Management";
+            cause = "Map Not Loaded";
+            level = "error";
+            solution = "Load map file required";
+        }
+        else if(msg.message.contains("[R0Mx1002]"))
+        {
+            error_code = "R0Mx1002";
+            alarm_code = "1002";
+            category = "Map Management";
+            cause = "Map Path Error";
+            level = "error";
+            solution = "Check map path required";
+        }
+        else if(msg.message.contains("[R0Mx1003]"))
+        {
+            error_code = "R0Mx1003";
+            alarm_code = "1003";
+            category = "Map Management";
+            cause = "Map Load Failed";
+            level = "error";
+            solution = "System restart required";
+        }
+        else if(msg.message.contains("[R0Lx2001]"))
+        {
+            error_code = "R0Lx2001";
+            alarm_code = "2001";
+            category = "Localization";
+            cause = "Localization Not Initialized";
+            level = "error";
+            solution = "Restart localization required";
+        }
+        else if(msg.message.contains("[R0Lx2002]"))
+        {
+            error_code = "R0Lx2002";
+            alarm_code = "2002";
+            category = "Localization";
+            cause = "Localization Sensor Error";
+            level = "error";
+            solution = "Check LiDAR hardware required";
+        }
+        else if(msg.message.contains("[R0Lx2003]"))
+        {
+            error_code = "R0Lx2003";
+            alarm_code = "2003";
+            category = "Localization";
+            cause = "Localization Already Running";
+            level = "warn";
+            solution = "Terminate existing process required";
+        }
+        else if(msg.message.contains("[R0Nx3001]"))
+        {
+            error_code = "R0Nx3001";
+            alarm_code = "3001";
+            category = "Navigation";
+            cause = "No Target";
+            level = "error";
+            solution = "Set target required";
+        }
+        else if(msg.message.contains("[R0Nx3002]"))
+        {
+            error_code = "R0Nx3002";
+            alarm_code = "3002";
+            category = "Navigation";
+            cause = "Target Invalid";
+            level = "error";
+            solution = "Reset target required";
+        }
+        else if(msg.message.contains("[R0Nx3003]"))
+        {
+            error_code = "R0Nx3003";
+            alarm_code = "3003";
+            category = "Navigation";
+            cause = "Target Position Occupied";
+            level = "error";
+            solution = "Change target position required";
+        }
+        else if(msg.message.contains("[R0Nx3004]"))
+        {
+            error_code = "R0Nx3004";
+            alarm_code = "3004";
+            category = "Navigation";
+            cause = "Target Out of Range";
+            level = "error";
+            solution = "Reset target position required";
+        }
+        else if(msg.message.contains("[R0Nx3005]"))
+        {
+            error_code = "R0Nx3005";
+            alarm_code = "3005";
+            category = "Navigation";
+            cause = "Node Not Found";
+            level = "error";
+            solution = "Check node ID/name required";
+        }
+        else if(msg.message.contains("[R0Nx3006]"))
+        {
+            error_code = "R0Nx3006";
+            alarm_code = "3006";
+            category = "Navigation";
+            cause = "Empty Node ID";
+            level = "error";
+            solution = "Enter target node ID required";
+        }
+        else if(msg.message.contains("[R0Sx4001]"))
+        {
+            error_code = "R0Sx4001";
+            alarm_code = "4001";
+            category = "Sensor";
+            cause = "LiDAR Disconnected";
+            level = "error";
+            solution = "Check LiDAR hardware required";
+        }
+        else if(msg.message.contains("[R0Sx5001]"))
+        {
+            error_code = "R0Sx5001";
+            alarm_code = "5001";
+            category = "System";
+            cause = "Function Not Supported";
+            level = "warn";
+            solution = "Use supported method required";
+        }
+        else if(msg.message.contains("[R0Sx5002]"))
+        {
+            error_code = "R0Sx5002";
+            alarm_code = "5002";
+            category = "System";
+            cause = "Multi Mode Limitation";
+            level = "warn";
+            solution = "Use goal command required";
+        }
+        
+        errorCode["error_code"] = error_code;
+        errorCode["alarm_code"] = alarm_code;
+        errorCode["category"] = category;
+        errorCode["cause"] = cause;
+        errorCode["level"] = level;
+        errorCode["solution"] = solution;
+        errorCode["timestamp"] = QDateTime::currentDateTime().toUTC().toString(Qt::ISODate);
+        obj["message_detail"] = errorCode;
+    }
+
     obj["preset"] = QString::number(msg.preset, 10);
     obj["method"] = msg.method;
     obj["goal_id"] = msg.goal_node_id;

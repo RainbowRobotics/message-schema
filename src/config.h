@@ -64,6 +64,9 @@ public:
     double get_robot_size_y_max();      // robot y-axis maximum size
     double get_robot_size_z_min();      // robot z-axis minimum size
     double get_robot_size_z_max();      // robot z-axis maximum size
+    double get_robot_size_add_x();      // robot x-axis maximum size plus
+    double get_robot_size_add_y();      // robot y-axis maximum size plus
+    double get_robot_size_add_z();      // robot y-axis maximum size plus
     double get_robot_wheel_base();      // the distance between the robot's two wheels
     double get_robot_wheel_radius();    // robot wheel radius (mm)
     double get_robot_radius();          // robot radius (auto calc)
@@ -334,6 +337,9 @@ private:
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};
+    double ROBOT_SIZE_ADD_X = 0.0;  
+    double ROBOT_SIZE_ADD_Y = 0.0;  
+    double ROBOT_SIZE_ADD_Z = 0.0;  
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;

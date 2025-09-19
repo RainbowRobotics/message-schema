@@ -124,7 +124,7 @@ void LOGGER::init()
                 if(file.open(QIODevice::WriteOnly | QIODevice::Text))
                 {
                     QTextStream out(&file);
-                    out << "LOG_VERSION=2.0\n";
+                    out << "LOG_VERSION=1.0\n";
                     file.close();
                 }
             }

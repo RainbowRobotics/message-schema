@@ -134,6 +134,9 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Y",     ROBOT_SIZE_Y[1],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_Z",     ROBOT_SIZE_Z[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Z",     ROBOT_SIZE_Z[1],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_X",     ROBOT_SIZE_ADD_X,   "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_Y",     ROBOT_SIZE_ADD_Y,   "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_Z",     ROBOT_SIZE_ADD_Z,   "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_RADIUS",   ROBOT_WHEEL_RADIUS, "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_BASE",     ROBOT_WHEEL_BASE,   "robot");
 
@@ -226,6 +229,7 @@ void CONFIG::load_logging_config(const QJsonObject &obj)
     check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
     check_and_set_bool(obj_logging, "DEBUG_LIDAR_2D", DEBUG_LIDAR_2D, "logging");
     check_and_set_bool(obj_logging, "DEBUG_MOBILE", DEBUG_MOBILE, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_COMM_RRS", DEBUG_COMM_RRS, "logging");
     check_and_set_bool(obj_logging, "LOG_ENABLE_FILE_OUTPUT", LOG_ENABLE_FILE_OUTPUT, "logging");
     check_and_set_string(obj_logging, "LOG_FILE_PATH", LOG_FILE_PATH, "logging");
 }
@@ -915,6 +919,24 @@ double CONFIG::get_robot_size_z_max()
     return ROBOT_SIZE_Z[1];
 }
 
+double CONFIG::get_robot_size_add_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_X;
+}
+
+double CONFIG::get_robot_size_add_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_Y;
+}
+
+double CONFIG::get_robot_size_add_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_Z;
+}
+
 double CONFIG::get_robot_wheel_base()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1226,9 +1248,7 @@ void CONFIG::setup_spdlog_level()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     
-    // spdlog 레벨 문자열을 spdlog::level::level_enum으로 변환
-    spdlog::level::level_enum level = spdlog::level::info; // 기본값
-    
+    spdlog::level::level_enum level = spdlog::level::info;
     if (LOG_LEVEL == "trace")
     {
         level = spdlog::level::trace;
@@ -1253,9 +1273,9 @@ void CONFIG::setup_spdlog_level()
     {
         level = spdlog::level::critical;
     }
-    else if (LOG_LEVEL == "off")
+    else
     {
-        level = spdlog::level::off;
+
     }
     
     // spdlog 기본 레벨 설정
