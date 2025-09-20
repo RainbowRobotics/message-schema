@@ -7,48 +7,48 @@ from flatbuffers.compat import import_numpy
 from typing import Any
 np = import_numpy()
 
-class Request_State_Whoami(object):
+class Request_CallConfigToolList(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Request_State_Whoami()
+        x = Request_CallConfigToolList()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsRequest_State_Whoami(cls, buf, offset=0):
+    def GetRootAsRequest_CallConfigToolList(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Request_State_Whoami
+    # Request_CallConfigToolList
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-def Request_State_WhoamiStart(builder: flatbuffers.Builder):
+def Request_CallConfigToolListStart(builder: flatbuffers.Builder):
     builder.StartObject(0)
 
 def Start(builder: flatbuffers.Builder):
-    Request_State_WhoamiStart(builder)
+    Request_CallConfigToolListStart(builder)
 
-def Request_State_WhoamiEnd(builder: flatbuffers.Builder) -> int:
+def Request_CallConfigToolListEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Request_State_WhoamiEnd(builder)
+    return Request_CallConfigToolListEnd(builder)
 
 
-class Request_State_WhoamiT(object):
+class Request_CallConfigToolListT(object):
 
-    # Request_State_WhoamiT
+    # Request_CallConfigToolListT
     def __init__(self):
         pass
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        requestStateWhoami = Request_State_Whoami()
-        requestStateWhoami.Init(buf, pos)
-        return cls.InitFromObj(requestStateWhoami)
+        requestCallConfigToolList = Request_CallConfigToolList()
+        requestCallConfigToolList.Init(buf, pos)
+        return cls.InitFromObj(requestCallConfigToolList)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -56,18 +56,18 @@ class Request_State_WhoamiT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, requestStateWhoami):
-        x = Request_State_WhoamiT()
-        x._UnPack(requestStateWhoami)
+    def InitFromObj(cls, requestCallConfigToolList):
+        x = Request_CallConfigToolListT()
+        x._UnPack(requestCallConfigToolList)
         return x
 
-    # Request_State_WhoamiT
-    def _UnPack(self, requestStateWhoami):
-        if requestStateWhoami is None:
+    # Request_CallConfigToolListT
+    def _UnPack(self, requestCallConfigToolList):
+        if requestCallConfigToolList is None:
             return
 
-    # Request_State_WhoamiT
+    # Request_CallConfigToolListT
     def Pack(self, builder):
-        Request_State_WhoamiStart(builder)
-        requestStateWhoami = Request_State_WhoamiEnd(builder)
-        return requestStateWhoami
+        Request_CallConfigToolListStart(builder)
+        requestCallConfigToolList = Request_CallConfigToolListEnd(builder)
+        return requestCallConfigToolList

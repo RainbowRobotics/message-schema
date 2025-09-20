@@ -8,105 +8,105 @@ from typing import Any
 from typing import Optional
 np = import_numpy()
 
-class State_Whoami(object):
+class Response_CallWhoamI(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = State_Whoami()
+        x = Response_CallWhoamI()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsState_Whoami(cls, buf, offset=0):
+    def GetRootAsResponse_CallWhoamI(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # State_Whoami
+    # Response_CallWhoamI
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # State_Whoami
+    # Response_CallWhoamI
     def Category(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # State_Whoami
+    # Response_CallWhoamI
     def Name(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # State_Whoami
+    # Response_CallWhoamI
     def Model(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # State_Whoami
+    # Response_CallWhoamI
     def Version(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # State_Whoami
+    # Response_CallWhoamI
     def Alias(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-def State_WhoamiStart(builder: flatbuffers.Builder):
+def Response_CallWhoamIStart(builder: flatbuffers.Builder):
     builder.StartObject(5)
 
 def Start(builder: flatbuffers.Builder):
-    State_WhoamiStart(builder)
+    Response_CallWhoamIStart(builder)
 
-def State_WhoamiAddCategory(builder: flatbuffers.Builder, category: int):
+def Response_CallWhoamIAddCategory(builder: flatbuffers.Builder, category: int):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(category), 0)
 
 def AddCategory(builder: flatbuffers.Builder, category: int):
-    State_WhoamiAddCategory(builder, category)
+    Response_CallWhoamIAddCategory(builder, category)
 
-def State_WhoamiAddName(builder: flatbuffers.Builder, name: int):
+def Response_CallWhoamIAddName(builder: flatbuffers.Builder, name: int):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(name), 0)
 
 def AddName(builder: flatbuffers.Builder, name: int):
-    State_WhoamiAddName(builder, name)
+    Response_CallWhoamIAddName(builder, name)
 
-def State_WhoamiAddModel(builder: flatbuffers.Builder, model: int):
+def Response_CallWhoamIAddModel(builder: flatbuffers.Builder, model: int):
     builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(model), 0)
 
 def AddModel(builder: flatbuffers.Builder, model: int):
-    State_WhoamiAddModel(builder, model)
+    Response_CallWhoamIAddModel(builder, model)
 
-def State_WhoamiAddVersion(builder: flatbuffers.Builder, version: int):
+def Response_CallWhoamIAddVersion(builder: flatbuffers.Builder, version: int):
     builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
 
 def AddVersion(builder: flatbuffers.Builder, version: int):
-    State_WhoamiAddVersion(builder, version)
+    Response_CallWhoamIAddVersion(builder, version)
 
-def State_WhoamiAddAlias(builder: flatbuffers.Builder, alias: int):
+def Response_CallWhoamIAddAlias(builder: flatbuffers.Builder, alias: int):
     builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(alias), 0)
 
 def AddAlias(builder: flatbuffers.Builder, alias: int):
-    State_WhoamiAddAlias(builder, alias)
+    Response_CallWhoamIAddAlias(builder, alias)
 
-def State_WhoamiEnd(builder: flatbuffers.Builder) -> int:
+def Response_CallWhoamIEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return State_WhoamiEnd(builder)
+    return Response_CallWhoamIEnd(builder)
 
 
-class State_WhoamiT(object):
+class Response_CallWhoamIT(object):
 
-    # State_WhoamiT
+    # Response_CallWhoamIT
     def __init__(self):
         self.category = None  # type: str
         self.name = None  # type: str
@@ -116,9 +116,9 @@ class State_WhoamiT(object):
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        stateWhoami = State_Whoami()
-        stateWhoami.Init(buf, pos)
-        return cls.InitFromObj(stateWhoami)
+        responseCallWhoamI = Response_CallWhoamI()
+        responseCallWhoamI.Init(buf, pos)
+        return cls.InitFromObj(responseCallWhoamI)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -126,22 +126,22 @@ class State_WhoamiT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, stateWhoami):
-        x = State_WhoamiT()
-        x._UnPack(stateWhoami)
+    def InitFromObj(cls, responseCallWhoamI):
+        x = Response_CallWhoamIT()
+        x._UnPack(responseCallWhoamI)
         return x
 
-    # State_WhoamiT
-    def _UnPack(self, stateWhoami):
-        if stateWhoami is None:
+    # Response_CallWhoamIT
+    def _UnPack(self, responseCallWhoamI):
+        if responseCallWhoamI is None:
             return
-        self.category = stateWhoami.Category()
-        self.name = stateWhoami.Name()
-        self.model = stateWhoami.Model()
-        self.version = stateWhoami.Version()
-        self.alias = stateWhoami.Alias()
+        self.category = responseCallWhoamI.Category()
+        self.name = responseCallWhoamI.Name()
+        self.model = responseCallWhoamI.Model()
+        self.version = responseCallWhoamI.Version()
+        self.alias = responseCallWhoamI.Alias()
 
-    # State_WhoamiT
+    # Response_CallWhoamIT
     def Pack(self, builder):
         if self.category is not None:
             category = builder.CreateString(self.category)
@@ -153,16 +153,16 @@ class State_WhoamiT(object):
             version = builder.CreateString(self.version)
         if self.alias is not None:
             alias = builder.CreateString(self.alias)
-        State_WhoamiStart(builder)
+        Response_CallWhoamIStart(builder)
         if self.category is not None:
-            State_WhoamiAddCategory(builder, category)
+            Response_CallWhoamIAddCategory(builder, category)
         if self.name is not None:
-            State_WhoamiAddName(builder, name)
+            Response_CallWhoamIAddName(builder, name)
         if self.model is not None:
-            State_WhoamiAddModel(builder, model)
+            Response_CallWhoamIAddModel(builder, model)
         if self.version is not None:
-            State_WhoamiAddVersion(builder, version)
+            Response_CallWhoamIAddVersion(builder, version)
         if self.alias is not None:
-            State_WhoamiAddAlias(builder, alias)
-        stateWhoami = State_WhoamiEnd(builder)
-        return stateWhoami
+            Response_CallWhoamIAddAlias(builder, alias)
+        responseCallWhoamI = Response_CallWhoamIEnd(builder)
+        return responseCallWhoamI
