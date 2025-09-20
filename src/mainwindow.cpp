@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
+    COMM_MSA::instance(this);
 
     // for 3d viewer
     connect(ui->cb_ViewType,          SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -436,6 +437,21 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+    }
+
+    //comm cooperative module init(msa)
+    {
+        COMM_MSA::instance()->set_config_module(CONFIG::instance());
+        COMM_MSA::instance()->set_logger_module(LOGGER::instance());
+        COMM_MSA::instance()->set_mobile_module(MOBILE::instance());
+        COMM_MSA::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_MSA::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_MSA::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_MSA::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_MSA::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
+        COMM_MSA::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+        COMM_MSA::instance()->init();
     }
 
     // docking module init
@@ -1655,12 +1671,14 @@ void MainWindow::bt_QuickAddNode()
 void MainWindow::slot_local_path_updated()
 {
     COMM_RRS::instance()->set_local_path_update();
+    COMM_MSA::instance()->set_local_path_update();
     is_local_path_update = true;
 }
 
 void MainWindow::slot_global_path_updated()
 {
     COMM_RRS::instance()->set_global_path_update();
+    COMM_MSA::instance()->set_global_path_update();
     is_global_path_update = true;
 }
 

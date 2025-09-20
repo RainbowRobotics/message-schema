@@ -45,12 +45,34 @@ void LOCALIZATION::start()
 
     QString loc_mode = config->get_loc_mode();
 
+
     if(config->get_use_ekf())
     {
         if(loc_mode == "2D")
         {
             ekf_flag = true;
             ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop, this);
+        }
+        if(config ->get_use_sim())
+        {
+            if(loc_mode == "2D")
+            {
+                localization_flag = true;
+                localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_2d, this);
+            }
+            else if(loc_mode == "3D")
+            {
+                localization_flag = true;
+                localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_3d, this);
+            }
+            else
+            {
+                printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
+                is_loc = false;
+            }
+
+            odometry_flag = true;
+            odometry_thread = std::make_unique<std::thread>(&LOCALIZATION::odometry_loop, this);
         }
     }
     else
@@ -683,10 +705,13 @@ void LOCALIZATION::odometry_loop()
     // params
     MOBILE_POSE pre_mo = mobile->get_pose();
 
+
     printf("[LOCALIZATION] odometry loop start\n");
+    qDebug()<<"odometry_flag : "<<odometry_flag;
     while(odometry_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
+
         if(cur_mo.t > pre_mo.t && config->get_loc_2d_icp_odometry_fusion_ratio() != 0.0)
         {
             Eigen::Matrix4d pre_mo_tf = se2_to_TF(pre_mo.pose);

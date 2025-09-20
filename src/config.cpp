@@ -202,6 +202,7 @@ void CONFIG::load_network_config(const QJsonObject &obj)
     check_and_set_bool(obj_net, "USE_COOP",  USE_COMM_COOP, "network");
     check_and_set_bool(obj_net, "USE_RTSP",  USE_COMM_RTSP, "network");
     check_and_set_bool(obj_net, "USE_RRS",   USE_COMM_RRS,  "network");
+    check_and_set_bool(obj_net, "USE_MSA",   USE_COMM_MSA,  "network");
     check_and_set_bool(obj_net, "USE_FMS",   USE_COMM_FMS,  "network");
 }
 
@@ -1139,6 +1140,12 @@ bool CONFIG::get_use_rrs()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_COMM_RRS;
+}
+
+bool CONFIG::get_use_msa()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_MSA;
 }
 
 bool CONFIG::get_use_fms()

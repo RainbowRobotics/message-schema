@@ -100,6 +100,7 @@ public:
     bool get_use_coop();                // check if the robot mode is coop control (cooperation control)
     bool get_use_rtsp();                // check if the robot uses rtsp streaming (cam img)
     bool get_use_rrs();                 // check if the robot uses rrs communication (robot repeat server)
+    bool get_use_msa();
     bool get_use_fms();                 // check if the robot uses fms direct communication (must used test or simulation)
 
     /***********************
@@ -353,6 +354,7 @@ private:
     bool USE_COMM_COOP = false;
     bool USE_COMM_RTSP = false;
     bool USE_COMM_RRS  = false;
+    bool USE_COMM_MSA  = false;
     bool USE_COMM_FMS  = false;
 
     // debug
