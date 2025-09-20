@@ -6,10 +6,8 @@ from app.modules.program.program_module_service import ProgramService
 program_socket_router = RbSocketIORouter()
 program_service = ProgramService()
 
-ROBOT_MODELS = ["cobot"]
 
-
-@program_socket_router.on("{robot_model}/call_resume", path_params={"robot_model": ROBOT_MODELS})
+@program_socket_router.on("{robot_model}/call_resume")
 async def on_call_resume(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -20,7 +18,7 @@ async def on_call_resume(data, robot_model: str):
     return to_json(res)
 
 
-@program_socket_router.on("{robot_model}/call_pause", path_params={"robot_model": ROBOT_MODELS})
+@program_socket_router.on("{robot_model}/call_pause")
 async def on_call_pause(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -31,7 +29,7 @@ async def on_call_pause(data, robot_model: str):
     return to_json(res)
 
 
-@program_socket_router.on("{robot_model}/call_speedbar", path_params={"robot_model": ROBOT_MODELS})
+@program_socket_router.on("{robot_model}/call_speedbar")
 async def on_call_speedbar(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -44,9 +42,7 @@ async def on_call_speedbar(data, robot_model: str):
     return to_json(res)
 
 
-@program_socket_router.on(
-    "{robot_model}/call_smoothjog_j", path_params={"robot_model": ROBOT_MODELS}
-)
+@program_socket_router.on("{robot_model}/call_smoothjog_j")
 async def on_call_smoothjog_j(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -62,9 +58,7 @@ async def on_call_smoothjog_j(data, robot_model: str):
     return to_json(res)
 
 
-@program_socket_router.on(
-    "{robot_model}/call_smoothjog_l", path_params={"robot_model": ROBOT_MODELS}
-)
+@program_socket_router.on("{robot_model}/call_smoothjog_l")
 async def on_call_smoothjog_l(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -80,9 +74,7 @@ async def on_call_smoothjog_l(data, robot_model: str):
     return to_json(res)
 
 
-@program_socket_router.on(
-    "{robot_model}/call_smoothjog_stop", path_params={"robot_model": ROBOT_MODELS}
-)
+@program_socket_router.on("{robot_model}/call_smoothjog_stop")
 async def on_call_smoothjog_stop(data, robot_model: str):
     dict_data = t_to_dict(data)
 

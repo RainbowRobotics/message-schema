@@ -6,13 +6,10 @@ from app.modules.state.state_module_service import StateService
 state_socket_router = RbSocketIORouter()
 state_service = StateService()
 
-ROBOT_MODELS = ["cobot"]
 
-
-@state_socket_router.on(
-    "{robot_model}/call_powercontrol", path_params={"robot_model": ROBOT_MODELS}
-)
-async def on_call_powercontrol(data, robot_model: str, meta: dict):
+@state_socket_router.on("{robot_model}/call_powercontrol")
+async def on_call_powercontrol(data, robot_model: str):
+    print("on_call_powercontrol", data, flush=True)
     dict_data = t_to_dict(data)
 
     res = await state_service.power_control(
@@ -24,9 +21,7 @@ async def on_call_powercontrol(data, robot_model: str, meta: dict):
     return to_json(res)
 
 
-@state_socket_router.on(
-    "{robot_model}/call_servocontrol", path_params={"robot_model": ROBOT_MODELS}
-)
+@state_socket_router.on("{robot_model}/call_servocontrol")
 async def on_call_servocontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
@@ -38,9 +33,7 @@ async def on_call_servocontrol(data, robot_model: str):
     return to_json(res)
 
 
-@state_socket_router.on(
-    "{robot_model}/call_referencecontrol", path_params={"robot_model": ROBOT_MODELS}
-)
+@state_socket_router.on("{robot_model}/call_referencecontrol")
 async def on_call_referencecontrol(data, robot_model: str):
     dict_data = t_to_dict(data)
 
