@@ -1,0 +1,81 @@
+include "common_struct.fbs";
+
+namespace IPC;
+//--------------------------------------------------------------
+// Config
+//    ㄴ Control Box  : State_Config_ControlBox
+//    ㄴ Robot Arm    : State_Config_RobotArm
+//    ㄴ Tool List    : State_Config_ToolList
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+// Config for Control-Box : State_Config_ControlBox
+//--------------------------------------------------------------
+table State_Config_Area{
+  area_name: string;
+  area_type: int;
+  area_offset: Vec3f;
+  area_euler: Vec3f;
+  area_para: Vec3f;
+}
+table State_Config_ControlBox{
+  dout_special_func: N_DOUT_u;
+  din_special_func: N_DIN_u;
+  din_filter_count: N_DIN_u;
+
+  area_configs_0: State_Config_Area;
+  area_configs_1: State_Config_Area;
+  area_configs_2: State_Config_Area;
+  area_configs_3: State_Config_Area;
+  area_configs_4: State_Config_Area;
+  area_configs_5: State_Config_Area;
+  area_configs_6: State_Config_Area;
+  area_configs_7: State_Config_Area;
+}
+
+//--------------------------------------------------------------
+// Config for Robot-Arm : State_Config_RobotArm
+//--------------------------------------------------------------
+table State_Config_RobotArm{
+  out_coll_onoff: ubyte;
+  out_coll_react: ubyte;
+  out_coll_limit: float;
+
+  direct_teaching_sensitivity: N_JOINT_f;
+}
+
+//--------------------------------------------------------------
+// Config for Tool-List : State_Config_ToolList
+//--------------------------------------------------------------
+struct BoxParam {
+  f:[float:9];
+}
+
+table State_Config_Tool {
+  tool_name:string;
+
+  com_mass:float;
+  com_offset:Vec3f;
+
+  tcp_offset:Vec3f;
+  tcp_euler:Vec3f;
+
+  box_type:int;
+  box_parameter:BoxParam;
+}
+
+table State_Config_ToolList {
+    t_configs_0: State_Config_Tool;
+    t_configs_1: State_Config_Tool;
+    t_configs_2: State_Config_Tool;
+    t_configs_3: State_Config_Tool;
+    t_configs_4: State_Config_Tool;
+    t_configs_5: State_Config_Tool;
+    t_configs_6: State_Config_Tool;
+    t_configs_7: State_Config_Tool;
+}
+
+//--------------------------------------------------------------
+
+
+root_type State_Config_ControlBox;

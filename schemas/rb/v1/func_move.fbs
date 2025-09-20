@@ -1,0 +1,13 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+table Request_Move_J {
+    targetvalue: N_INPUT_f; //타겟 각도 값 N 개(7)
+    frame: int; // 조인트에서는 -1
+    unit: int;  // 일단 0
+
+    speed_rate: float;//0~1 속도 비율
+    accel_rate: float;//0~1 가속도 비율
+}

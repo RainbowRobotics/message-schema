@@ -1,7 +1,9 @@
 namespace IPC;
 
+struct N_INPUT_f {
+  f: [float: 7];
+}
 struct N_JOINT_f {
- 
   f: [float: 7];
 }
 struct N_CARTE_f {
@@ -12,4 +14,10 @@ struct N_DIN_u {
 }
 struct N_DOUT_u {
   u: [ubyte: 16];
+}
+struct Vec3f {
+  v:[float:3];
+}
+struct Mat3f {
+  m:[float:9];
 }

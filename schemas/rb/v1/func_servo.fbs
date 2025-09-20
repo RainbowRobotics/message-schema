@@ -7,12 +7,10 @@ table Request_PowerControl {
   power_option: int;
 }
 
-// function_servocontrol
 table Request_ServoControl {
   servo_option: int;
 }
 
-// function_referencecontrol
 table Request_ReferenceControl {
   refcontrol_option: int;
 }
