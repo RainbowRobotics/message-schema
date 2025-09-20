@@ -1,13 +1,7 @@
 from app.modules.program.program_module_service import ProgramService
-from flat_buffers.IPC.Request_PowerControl import (
-    Request_PowerControlT,
-)
-from flat_buffers.IPC.Request_ReferenceControl import (
-    Request_ReferenceControlT,
-)
-from flat_buffers.IPC.Request_ServoControl import (
-    Request_ServoControlT,
-)
+from flat_buffers.IPC.Request_PowerControl import Request_PowerControlT
+from flat_buffers.IPC.Request_ReferenceControl import Request_ReferenceControlT
+from flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_zenoh import zenoh_client
 
