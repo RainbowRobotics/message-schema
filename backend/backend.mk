@@ -51,6 +51,7 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
 
+
 .PHONY: backend.preview
 backend.preview: ## Backend 운영 환경 실행 
 	# @docker build -t rrs-nginx:latest api-gateway/
@@ -61,11 +62,11 @@ backend.preview: ## Backend 운영 환경 실행
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성
 	@if command -v flatc >/dev/null 2>&1; then \
-		find "${WORKDIR}/packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.py" -delete; \
-		find "${WORKDIR}/packages/flat_buffers/src/flat_buffers" -name "*.py" ! -name "__init__.pyi" -delete; \
+		find "$(WORKDIR)/packages/flat_buffers/src/flat_buffers" -mindepth 1 -exec rm -rf {} +; \
 		find "${WORKDIR}/../schemas" -name "*.fbs" -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy -o "${WORKDIR}/packages/flat_buffers/src/flat_buffers" {} \; ; \
 		$(PY) "${WORKDIR}/packages/flat_buffers/scripts/patch_imports.py" \
 		  "${WORKDIR}/packages/flat_buffers/src/flat_buffers"; \
+		find "${WORKDIR}/packages/flat_buffers/src/flat_buffers" -type d -exec sh -c 'for d in "$$@"; do : > "$$d/__init__.py"; done' _ {} +; \
 	else \
 		echo "‼️ flatc를 설치해주세요!"; \
 		exit 1; \
