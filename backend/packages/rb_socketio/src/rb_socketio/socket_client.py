@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 import itertools
 import re
@@ -11,6 +10,7 @@ from .socket_client_router import RbSocketIORouter
 class RBSocketIONsClient(socketio.AsyncClient):
     def __init__(self, prefix_event_name="", *a, **args):
         self.prefix_event_name = prefix_event_name.strip("/")
+        self.on_event_map: set[str] = set()
         super().__init__(*a, **args)
 
     def _on_connect(self):
@@ -66,55 +66,73 @@ class RBSocketIONsClient(socketio.AsyncClient):
     async def call(self, event, data=None, timeout=None, namespace=None, **args):
         return await super().call(event, data, namespace=namespace, timeout=timeout, **args)
 
-    def socket_include_router(self, router: RbSocketIORouter):
-        for r in router.routes:
-            self.on(r.event, path_params=r.path_params, **r.kwargs)(r.handler)
+    async def _trigger_event(self, event, namespace, *args):
+        for on_event_name in self.on_event_map:
+            template = self._check_event_name(on_event_name)
+            regex = re.sub(r"{(\w+)}", r"(?P<\1>[^/]+)", template)
+            m = re.fullmatch(regex, event)
+            if not m:
+                continue
 
-    def on(self, event, path_params: dict[str, list[str]] | None = None, **args):
+            path_params = m.groupdict()
+
+            base = list(args)
+            if not base:
+                base = [{}]
+            elif base[0] is None:
+                base[0] = {}
+
+            tail = dict(base.pop()) if len(base) >= 2 else {}
+
+            existing = tail.get("__path_params__", {})
+            tail["__path_params__"] = {**existing, **path_params}
+            new_args = (*base, tail)
+
+            return await super()._trigger_event(template, namespace, *new_args)
+
+        return await super()._trigger_event(event, namespace, *args)
+
+    def socket_include_router(self, router: RbSocketIORouter):
+        print("socket_include_router >>", router.routes)
+        for r in router.routes:
+            self.on_event_map.add(r.event)
+            self.on(r.event, **r.kwargs)(r.handler)
+
+    def on(self, event, handler=None, namespace=None, **kwargs):
         parent_on = super().on
 
-        if event not in ["join", "leave", "connect", "disconnect", "message"]:
-            event = self._check_event_name(event)
-
-        template = event
+        BUILTINS = {"join", "leave", "connect", "disconnect", "message"}
+        tpl_event = event if event in BUILTINS else self._check_event_name(event)
 
         def decorator(user_handler):
-            expanded_events = self._expand_event_patterns(event, path_params)
-
             sig = inspect.signature(user_handler)
-            param_names = set(sig.parameters.keys())
-            wants_meta = "meta" in param_names
+            param_names = set(sig.parameters)
 
-            for ev in expanded_events:
-                token_map = self._extract_params_from_event(template, ev)
+            print("param_names >>", param_names)
 
-                async def wrapped(*payload, __ev=ev, __token_map=token_map):
-                    meta = {
-                        "event": __ev,
-                        "template": template,
-                        "params": __token_map,
-                        "namespace": args.get("namespace"),
-                        "raw_args": payload,
-                    }
+            async def wrapped(*payload):
+                if len(payload) >= 2:
+                    extra = payload[-1]
+                    core = payload[:-1]
+                else:
+                    extra = {}
+                    core = payload
 
-                    kw = {k: v for k, v in __token_map.items() if k in param_names}
-                    if wants_meta:
-                        kw["meta"] = meta
+                path_params = extra.get("__path_params__", {}) or {}
+                cleaned = {k: v for k, v in path_params.items() if k in param_names}
 
-                    try:
+                if inspect.iscoroutinefunction(user_handler):
+                    return await user_handler(*core, **cleaned)
+                else:
+                    return user_handler(*core, **cleaned)
 
-                        if inspect.iscoroutinefunction(user_handler):
-                            return await user_handler(*payload, **kw)
-                        else:
-                            return user_handler(*payload, **kw)
-                    except asyncio.CancelledError:
-                        raise
-                    except Exception as e:
-                        print("socket error:", __ev, e, flush=True)
-                        return {"error": True, "code": e.__class__.__name__, "message": str(e)}
+            # 실제 등록은 부모에게 맡긴다 (namespace만 전달)
+            parent_on(tpl_event, handler=wrapped, namespace=namespace)
 
-                parent_on(ev, handler=wrapped, **args)
-
+            self.on_event_map.add(tpl_event)
             return user_handler
 
-        return decorator
+        if handler is None:
+            return decorator
+
+        return decorator(handler)
