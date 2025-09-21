@@ -249,9 +249,7 @@ pydantic-core==2.33.2 \
 pydantic-settings==2.10.1 \
     --hash=sha256:06f0062169818d0f5524420a360d632d5857b83cffd4d42fe29597807a1614ee \
     --hash=sha256:a60952460b99cf661dc25c29c0ef171721f98bfcb52ef8d9ea4c943d7c8cc796
-    # via
-    #   manipulate
-    #   rb-modules
+    # via rb-modules
 pyinstaller==6.15.0 \
     --hash=sha256:18f743069849dbaee3e10900385f35795a5743eabab55e99dcc42f204e40a0db \
     --hash=sha256:22193489e6a22435417103f61e7950363bba600ef36ec3ab1487303668c81092 \
