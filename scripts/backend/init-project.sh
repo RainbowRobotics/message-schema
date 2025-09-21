@@ -67,13 +67,13 @@ else
   fi
 fi
 
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-  # Windows (Git Bash/MSYS)
-  source "$BE/.venv/Scripts/activate"
-else
-  # Unix/macOS
-  source "$BE/.venv/bin/activate"
-fi
+# if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+#   # Windows (Git Bash/MSYS)
+#   source "$BE/.venv/Scripts/activate"
+# else
+#   # Unix/macOS
+#   source "$BE/.venv/bin/activate"
+# fi
 
 if [ ! -d "$BE/.venv" ]; then
   echo "⚙️ Creating root .venv (dev only)"

@@ -18,7 +18,6 @@ program_router = APIRouter()
 
 @program_router.post("/{robot_model}/call_resume", response_model=BaseControlResponsePD)
 async def resume(robot_model: str, request: ResumeRequestPD):
-    print("resume", robot_model, request, flush=True)
     res = await program_service.call_resume(robot_model=robot_model)
     return JSONResponse(res)
 
@@ -37,7 +36,6 @@ async def speedbar(robot_model: str, request: SpeedBarRequestPD):
 
 @program_router.post("/{robot_model}/call_smoothjog_j", response_model=BaseControlResponsePD)
 async def smoothjog_j(robot_model: str, request: SmoothJogJRequestPD):
-    print("Received SmoothJogJRequestPD:", request)  # Debug print statement
     res = await program_service.call_smoothjogj(
         robot_model=robot_model,
         targetspeed=request.targetspeed,
