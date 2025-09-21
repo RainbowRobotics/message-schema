@@ -17,14 +17,14 @@ COPY backend/services ./services
 COPY backend/packages ./packages
 COPY scripts/ ../scripts/
 COPY schemas ../schemas
-COPY backend/Makefile ./
-COPY backend/backend.mk ./
+COPY backend/Makefile ./ 
+COPY backend/backend.mk ./ 
 
-RUN make SHELL=/bin/bash backend.flatc
-RUN uv sync --all-packages --frozen
+RUN /bin/bash -c "source /opt/venv/bin/activate && make backend.flatc"
+RUN /bin/bash -c "source /opt/venv/bin/activate && uv sync --all-packages --frozen"
 
 COPY scripts/backend/development-entrypoint.sh /usr/local/bin/development-entrypoint.sh
 RUN dos2unix /usr/local/bin/development-entrypoint.sh \
   && chmod +x /usr/local/bin/development-entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/development-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/venv/bin/activate && /usr/local/bin/development-entrypoint.sh"]

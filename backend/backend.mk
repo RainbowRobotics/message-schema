@@ -1,5 +1,5 @@
 PY ?= python3
-SHELL := /usr/bin/env bash
+SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 ROOT_DIR := $(cd "$SCRIPT_DIR/../.." && pwd)
 WORKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
