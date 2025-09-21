@@ -18,6 +18,7 @@ program_router = APIRouter()
 
 @program_router.post("/{robot_model}/call_resume", response_model=BaseControlResponsePD)
 async def resume(robot_model: str, request: ResumeRequestPD):
+    print("resume", robot_model, request, flush=True)
     res = await program_service.call_resume(robot_model=robot_model)
     return JSONResponse(res)
 
