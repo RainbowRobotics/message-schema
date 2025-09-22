@@ -137,6 +137,16 @@ for FD in 3 4; do
       - "7446:7446/udp"
     networks: [rb_net]
 
+  rrs-mongo-dev:
+    image: mongo:7
+    ports: ["27017:27017"]
+    networks: [rb_net]
+    volumes:
+      - rrs-mongo-data:/data/db
+
+volumes:
+  rrs-mongo-data:
+
 networks:
   rb_net:
     driver: bridge
@@ -158,6 +168,16 @@ EOF
       - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
     ipc: host
+
+  rrs-mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    network_mode: host
+    volumes:
+      - rrs-mongo-data:/data/db
+
+volumes:
+  rrs-mongo-data:
 EOF
   fi
 done
