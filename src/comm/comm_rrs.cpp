@@ -7,19 +7,22 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
     ErrorInfo info;
     
     QString hex_str = QString::number(cause, 16).toUpper();
-    QString error_code = QString("%1").arg(hex_str);
-    QString alarm_code = QString::number(cause & 0x0FFF);
-    
+    //QString error_code = QString("%1").arg(hex_str);
+    QString alarm_code = hex_str;
+
+
     info.category = getCategoryName(cause);
     info.cause = getCauseName(cause);
     info.context = getContextName(context);
-    info.error_code = error_code;
     info.alarm_code = alarm_code;
+
+
     
     switch(cause)
     {
     case MAP_NOT_LOADED:
         {
+            info.error_code = "R0Mx" + info.alarm_code;
             info.message = "map not loaded";
             info.solution = "Load map file required";
             info.description = "Map is not loaded";
@@ -30,6 +33,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MAP_INVALID_PATH:
         {
+            info.error_code = "R0Mx" + info.alarm_code;
             info.message = "invalid map dir";
             info.solution = "Check map path required";
             info.description = "Invalid map directory";
@@ -40,6 +44,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MAP_LOAD_FAILED:
         {
+            info.error_code = "R0Mx" + info.alarm_code;
             info.message = "map not load";
             info.solution = "System restart required";
             info.description = "Map load failed";
@@ -50,6 +55,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MAP_COPY_FAILED:
         {
+            info.error_code = "R0Mx" + info.alarm_code;
             info.message = "copy failed";
             info.solution = "Check storage space required";
             info.description = "Map copy failed";
@@ -60,6 +66,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MAP_TOPO_LOAD_FAILED:
         {
+            info.error_code = "R0Mx" + info.alarm_code;
             info.message = "topo not load";
             info.solution = "Check topology file required";
             info.description = "Topology load failed";
@@ -70,6 +77,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case LOC_NOT_INIT:
         {
+            info.error_code = "R0Lx" + info.alarm_code;
             info.message = "no localization";
             info.solution = "Restart localization required";
             info.description = "No localization available";
@@ -80,6 +88,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case LOC_SENSOR_ERROR:
         {
+            info.error_code = "R0Lx" + info.alarm_code;
             info.message = "lidar not connected";
             info.solution = "Check LiDAR hardware required";
             info.description = "Localization sensor error";
@@ -90,6 +99,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case LOC_ALREADY_RUNNING:
         {
+            info.error_code = "R0Lx" + info.alarm_code;
             info.message = "already running";
             info.solution = "Terminate existing process required";
             info.description = "Already running";
@@ -100,6 +110,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case LOC_INIT_FAILED:
         {
+            info.error_code = "R0Lx" + info.alarm_code;
             info.message = "localization init failed";
             info.solution = "Reinitialize localization required";
             info.description = "Localization initialization failed";
@@ -110,6 +121,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_NO_TARGET:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "no target specified";
             info.solution = "Set target required";
             info.description = "No target specified";
@@ -120,6 +132,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_TARGET_INVALID:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "target invalid";
             info.solution = "Reset target required";
             info.description = "Target is invalid";
@@ -130,6 +143,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_TARGET_OCCUPIED:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "target location occupied(static obs)";
             info.solution = "Change target position required";
             info.description = "Target position conflicts with static obstacle";
@@ -140,6 +154,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_TARGET_OUT_RANGE:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "target location out of range";
             info.solution = "Reset target position required";
             info.description = "Target position is out of map range";
@@ -150,6 +165,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_NODE_NOT_FOUND:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "can not find node";
             info.solution = "Check node ID/name required";
             info.description = "Node not found";
@@ -160,6 +176,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOVE_EMPTY_NODE_ID:
         {
+            info.error_code = "R0Nx" + info.alarm_code;
             info.message = "empty node id";
             info.solution = "Enter target node ID required";
             info.description = "Empty node ID";
@@ -168,8 +185,10 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
             break;
         }
 
+    /* Sensor */
     case SENSOR_LIDAR_DISCON:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "lidar not connected";
             info.solution = "Check LiDAR hardware required";
             info.description = "LiDAR not connected";
@@ -180,6 +199,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
             
     case SENSOR_LIDAR_DATA_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "lidar data error";
             info.solution = "Check LiDAR data quality required";
             info.description = "LiDAR data error";
@@ -190,6 +210,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_LIDAR_CALIB_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "lidar calibration error";
             info.solution = "Re-run LiDAR calibration required";
             info.description = "LiDAR calibration error";
@@ -200,6 +221,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
             
     case SENSOR_IMU_DISCON:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "IMU connection lost";
             info.solution = "Check IMU hardware required";
             info.description = "IMU connection lost";
@@ -210,6 +232,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_IMU_DATA_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "IMU data error";
             info.solution = "Check IMU data quality required";
             info.description = "IMU data error";
@@ -220,6 +243,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_CAM_DISCON:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "CAM connection lost";
             info.solution = "Check CAM hardware required";
             info.description = "CAM connection lost";
@@ -230,6 +254,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_CAM_DATA_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "CAM data error";
             info.solution = "Check CAM data quality required";
             info.description = "CAM data error";
@@ -240,6 +265,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_QR_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "QR sensor error";
             info.solution = "Check QR sensor required";
             info.description = "QR sensor error";
@@ -250,6 +276,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SENSOR_TEMP_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "temperature sensor error";
             info.solution = "Check temperature sensor required";
             info.description = "Temperature sensor error";
@@ -260,6 +287,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SYS_NOT_SUPPORTED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "not supported";
             info.solution = "Use supported method required";
             info.description = "Unsupported function";
@@ -270,6 +298,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SYS_MULTI_MODE_LIMIT:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "target command not supported by multi. use goal_id";
             info.solution = "Use goal command required";
             info.description = "Using target command in multi-robot mode";
@@ -280,6 +309,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SYS_PROCESS_START_FAILED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "process failed to start";
             info.solution = "System restart required";
             info.description = "Process start failed";
@@ -290,6 +320,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SYS_PROCESS_FINISH_FAILED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "process did not finish";
             info.solution = "Force terminate process and restart required";
             info.description = "Process completion failed";
@@ -300,6 +331,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SYS_NETWORK_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "network connection error";
             info.solution = "Check network connection required";
             info.description = "Network communication error";
@@ -310,6 +342,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SAFETY_EMO_RELEASED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "emo released";
             info.solution = "Check emergency stop status required";
             info.description = "Emergency stop released";
@@ -320,6 +353,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SAFETY_EMO_PRESSED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "EMO pressed";
             info.solution = "Release emergency stop required";
             info.description = "Emergency stop button pressed";
@@ -330,6 +364,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SAFETY_BUMPER_PRESSED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "bumper pressed";
             info.solution = "Remove obstacle and restart required";
             info.description = "Bumper detected";
@@ -340,6 +375,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SAFETY_OBS_DETECTED:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "obstacle detected";
             info.solution = "Change path or remove obstacle required";
             info.description = "Obstacle detected";
@@ -350,6 +386,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case SAFETY_ZONE_VIOLATION:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "safety zone violation";
             info.solution = "Resolve safety zone violation required";
             info.description = "Safety zone violation";
@@ -360,6 +397,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case BAT_NOT_CHARGING:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "not charging";
             info.solution = "Check charging status required";
             info.description = "Not charging";
@@ -371,6 +409,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case BAT_LOW:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "low battery";
             info.solution = "Charging required";
             info.description = "Low battery";
@@ -381,6 +420,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case BAT_CRITICAL:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "battery critical";
             info.solution = "Immediate charging required";
             info.description = "Battery critical level";
@@ -391,6 +431,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case BAT_POWER_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "power supply error";
             info.solution = "Check power supply system required";
             info.description = "Power supply error";
@@ -402,6 +443,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOTOR_CONNECTION_LOST:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "motor connection lost";
             info.solution = "Check motor hardware required";
             info.description = "Motor connection lost";
@@ -412,6 +454,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOTOR_OVERHEAT:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "motor overheat";
             info.solution = "Cool motor and restart required";
             info.description = "Motor overheating";
@@ -422,6 +465,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOTOR_OVERLOAD:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "motor overload";
             info.solution = "Reduce motor load required";
             info.description = "Motor overload";
@@ -432,6 +476,7 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
 
     case MOTOR_ENCODER_ERROR:
         {
+            info.error_code = "R0Sx" + info.alarm_code;
             info.message = "motor encoder error";
             info.solution = "Check motor encoder required";
             info.description = "Motor encoder error";
@@ -465,7 +510,7 @@ QString ERROR_MANAGER::getErrorMessage(ErrorCause cause, ErrorContext context)
 {
     ErrorInfo info = getErrorInfo(cause, context);
     //return QString("[%1] %2 - %3").arg(info.error_code).arg(info.message).arg(info.remark);
-    return QString("[%1] %2, sol: %3").arg(info.error_code).arg(info.message).arg(info.solution);
+    return QString("[%1] %2, sol: %3").arg(info.alarm_code).arg(info.message).arg(info.solution);
 }
 
 void ERROR_MANAGER::logError(ErrorCause cause, ErrorContext context, const QString& additional_info)
@@ -3183,8 +3228,6 @@ void COMM_RRS::send_field_set_response(const DATA_FIELD& msg)
     obj["message"] = msg.message;
     obj["time"] = QString::number((long long)(msg.time*1000), 10);
 
-
-
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("fieldSetResponse", res);
@@ -3381,23 +3424,28 @@ QJsonObject COMM_RRS::getErrorCodeMapping(const QString& message)
     /* Sensor */
     else if(message.contains("[R0Sx4001]") || message.contains("4001"))
     {
-        error_code = "R0Sx4001";
-        alarm_code = "4001";
-        category = "Sensor";
-        cause = "LiDAR Disconnected";
-        level = "error";
-        solution = "Check LiDAR hardware required";
+        ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::MAPPING_START);
+        error_code = errorInfo.error_code;
+        alarm_code = errorInfo.alarm_code;
+        category = errorInfo.category;
+        cause = errorInfo.cause;
+        level = errorInfo.level;
+        solution = errorInfo.solution;
     }
 
     /* System */
     else if(message.contains("[R0Sx5001]") || message.contains("5001"))
     {
+        ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MAPPING_START);
         error_code = "R0Sx5001";
         alarm_code = "5001";
         category = "System";
-        cause = "Function Not Supported";
-        level = "warn";
-        solution = "Use supported method required";
+        //cause = "Function Not Supported";
+        //level = "warn";
+        //solution = "Use supported method required";
+        cause = errorInfo.cause;
+        level = errorInfo.level;
+        solution = errorInfo.solution;
     }
     else if(message.contains("[R0Sx5002]") || message.contains("5002"))
     {
