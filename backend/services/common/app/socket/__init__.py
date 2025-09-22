@@ -1,6 +1,7 @@
 import os
 
 import socketio
+from rb_socketio import RBSocketIONsClient
 
 _REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 _SERVICE_SIDS: dict[str, str] = {"manipulate": None, "mobility": None, "sensor": None}
@@ -121,7 +122,7 @@ class RelayNS(socketio.AsyncNamespace):
         payload = args[0] if args else None
 
         service = _route_service_by_event(event, payload)
-        expect_ack = bool(payload and payload.get("expectAck"))
+        expect_ack = bool(payload and isinstance(payload, dict) and payload.get("expectAck"))
         svc_sid = _SERVICE_SIDS.get(service)
 
         if claims.get("role") == "service" and not expect_ack:
@@ -146,3 +147,26 @@ class RelayNS(socketio.AsyncNamespace):
 
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 app_with_sio = socketio.ASGIApp(sio, socketio_path="/socket.io")
+
+socket_client = RBSocketIONsClient(
+    "common",
+    reconnection=True,  # 자동 재연결 활성화
+    reconnection_attempts=0,  # 0 = 무제한
+    reconnection_delay=1,  # 최초 재시도 간격(초)
+    reconnection_delay_max=30,  # 백오프 상한
+)
+
+
+@socket_client.event
+def connect():
+    print("common service connected to socket-server", flush=True)
+
+
+@socket_client.event
+def disconnect(sid):
+    print("common service disconnected from socket-server", flush=True)
+
+
+@socket_client.event
+def message(data):
+    print("common service received message from socket-server")
