@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
+from rb_database.mongo_db import close_db, init_db
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
 from rb_zenoh import ZenohRouter
 from rb_zenoh.exeption import register_zenoh_exception_handlers
@@ -25,6 +27,11 @@ class AppSettings(BaseSettings):
     SOCKET_URL_PROD: str | None = "http://127.0.0.1:8000"
     SOCKET_SERVER_URL: str | None = None
 
+    MONGO_URI_DEV: str | None = "mongodb://rrs-mongo-dev:27017"
+    MONGO_URI_PROD: str | None = "mongodb://127.0.0.1:27017"
+    MONGO_URI: str | None = None
+    MONGO_DB_NAME: str | None = "rrs"
+
     class Config:
         env_file = "conf.env"
         case_sensitive = False
@@ -34,6 +41,7 @@ class AppSettings(BaseSettings):
         self.ROOT_PATH = f"/{self.SERVICE_NAME}"
 
         self.SOCKET_SERVER_URL = self.SOCKET_URL_DEV if self.IS_DEV else self.SOCKET_URL_PROD
+        self.MONGO_URI = self.MONGO_URI_DEV if self.IS_DEV else self.MONGO_URI_PROD
         return self
 
 
@@ -46,10 +54,16 @@ def create_app(
     socket_routers: (
         Sequence[RbSocketIORouter] | None
     ) = None,  # [state_socket_router, ...] (client를 받아 등록)
+    bg_tasks: list[asyncio.Task] | None = None,
 ) -> FastAPI:
+
+    if bg_tasks is None:
+        bg_tasks = []
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        await init_db(app, settings.MONGO_URI, settings.MONGO_DB_NAME)
+
         await zenoh_router.startup()
         print("📡 zenoh subscribe 등록 완료", flush=True)
 
@@ -83,6 +97,14 @@ def create_app(
                 print("⛔ zenoh 연결 종료", flush=True)
                 if socket_client and getattr(socket_client, "connected", False):
                     await socket_client.disconnect()
+
+                for t in bg_tasks:
+                    t.cancel()
+                for t in bg_tasks:
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await t
+
+                await close_db(app)
             except Exception as e:
                 print(f"zenoh shutdown ignore: {e}", flush=True)
 
