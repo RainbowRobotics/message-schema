@@ -13,8 +13,10 @@ dependencies = [
     "flatbuffers>=25.2.10,<26.0.0",
     "fastapi>=0.116.1",
     "utils",
+    "rb_database",
     "pydantic-settings>=2.10.1",
 ]
 
 [tool.uv.sources]
 utils = { workspace = true }
+rb_database = { workspace = true }
