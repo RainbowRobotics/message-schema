@@ -60,7 +60,11 @@ class RBSocketIONsClient(socketio.AsyncClient):
         return m.groupdict() if m else {}
 
     async def emit(self, event, data=None, **args):
+        if not self.connected:
+            return
+
         event = self._check_event_name(event)
+
         return await super().emit(event, data, **args)
 
     async def call(self, event, data=None, timeout=None, namespace=None, **args):
