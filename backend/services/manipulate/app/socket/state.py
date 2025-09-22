@@ -9,7 +9,6 @@ state_service = StateService()
 
 @state_socket_router.on("{robot_model}/call_powercontrol")
 async def on_call_powercontrol(data, robot_model: str):
-    print("on_call_powercontrol", data, flush=True)
     dict_data = t_to_dict(data)
 
     res = await state_service.power_control(
