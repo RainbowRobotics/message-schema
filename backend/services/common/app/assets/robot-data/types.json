@@ -1,0 +1,10 @@
+{
+  "SRV": {
+    "name": "SRV",
+    "label": "SRV",
+    "description": "SRV 로봇",
+    "swComponents": [
+      "SRV"
+    ]
+  }
+}

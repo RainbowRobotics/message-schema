@@ -1,0 +1,48 @@
+{
+  "models": [
+    {
+      "name": "S100",
+      "label": "S100",
+      "description": "S100 로봇",
+      "types": [
+        "SRV",
+        "S100-A",
+        "S100-A-3D",
+        "S100-B",
+        "S100-B-3D"
+      ]
+    },
+    {
+      "name": "D400",
+      "label": "D400",
+      "description": "D400 로봇",
+      "types": [
+        "AMR_400"
+      ]
+    },
+    {
+      "name": "MECANUM",
+      "label": "MECANUM",
+      "description": "MECANUM 로봇",
+      "types": [
+        "MECANUM"
+      ]
+    },
+    {
+      "name": "SDC",
+      "label": "SDC",
+      "description": "SDC 로봇",
+      "types": [
+        "SDC"
+      ]
+    },
+    {
+      "name": "cobot",
+      "label": "Cobot",
+      "description": "협동 로봇",
+      "types": [
+        "cobot"
+      ]
+    }
+  ]
+}
