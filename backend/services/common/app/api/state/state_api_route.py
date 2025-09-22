@@ -1,5 +1,9 @@
 from app.api.api_schema import BaseControlResponsePD
-from app.api.state.state_api_schema import PowerControlRequestPD, ServoControlRequestPD
+from app.api.state.state_api_schema import (
+    AllSwConnectStateResponsePD,
+    PowerControlRequestPD,
+    ServoControlRequestPD,
+)
 from app.modules.state.state_module_service import StateService
 from fastapi import APIRouter
 from rb_zenoh.exeption import JSONResponse
@@ -7,6 +11,13 @@ from rb_zenoh.exeption import JSONResponse
 state_service = StateService()
 
 state_router = APIRouter()
+
+
+@state_router.get("/system_state", response_model=AllSwConnectStateResponsePD)
+async def system_state():
+    res = await state_service.get_system_state()
+
+    return JSONResponse(res)
 
 
 @state_router.post("/call_powercontrol", response_model=BaseControlResponsePD)
