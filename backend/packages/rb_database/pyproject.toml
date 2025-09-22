@@ -1,0 +1,19 @@
+[project]
+name = "rb_database"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Rainbow Database"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+    "fastapi>=0.116.1",
+    "utils",
+    "pydantic-settings>=2.10.1",
+    "motor>=3.7.1",
+]
+
+[tool.uv.sources]
+utils = { workspace = true }
