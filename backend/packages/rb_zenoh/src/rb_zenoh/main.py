@@ -158,48 +158,6 @@ class ZenohClient:
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
         self.session.put(topic, payload, attachment=attachment)
 
-    # def publish_fb(self, topic: str, *, FBClass: type, **fields):
-    #     """
-    #     - FBClass를 이용해 FBClassT를 찾아 객체를 만들고 fields를 set 후 Pack 수행
-    #     - 빌더 초기 사이즈는 자동 추정
-    #     사용 예:
-    #         zc.publish("people/person", Person, name="Alice", id=42)
-    #     """
-    #     ObjT = resolve_object_api(FBClass)
-
-    #     if ObjT is None:
-    #         raise RuntimeError(
-    #             f"[FlatBuffers] Object API 클래스를 찾을 수 없음: {FBClass.__name__}T. "
-    #         )
-
-    #     obj = ObjT()
-    #     set_attrs_loose(obj, fields)
-
-    #     # 초기 사이즈 추정
-    #     init_size = self._estimate_initial_size(topic, FBClass.__name__, fields)
-
-    #     b = flatbuffers.Builder(initialSize=init_size)
-
-    #     try:
-    #         off = obj.Pack(b)
-    #     except Exception as ex:
-    #         # 디버깅 도움: 필드 타입 스냅샷
-    #         bad = {k: type(getattr(obj, k)).__name__ for k in dir(obj)
-    #             if not k.startswith("_") and not callable(getattr(obj, k))}
-    #         raise RuntimeError(
-    #             f"[FlatBuffers] Pack 실패: {FBClass.__name__}T\n"
-    #             f"fields(types)={bad}\n"
-    #             f"hint: dict 중첩은 *T로 변환돼야 함(set_attrs_loose 확인)"
-    #         ) from ex
-
-    #     b.Finish(off)
-    #     payload = bytes(b.Output())
-
-    #     # 통계 업데이트(다음에 반영)
-    #     self._update_fb_stats(topic, FBClass.__name__, len(payload))
-
-    #     self.session.put(topic, payload)
-
     def subscribe(
         self,
         topic: str,
@@ -214,7 +172,6 @@ class ZenohClient:
         반환: handle(해지 시 handle.close())
         """
 
-        print("session >>", self.session)
         if self.session is None:
             self.connect()
         # if "/" not in topic:
@@ -254,7 +211,15 @@ class ZenohClient:
             self.connect()
 
         loop = self._ensure_loop()
-        fut: asyncio.Future = loop.create_future()
+        fut = loop.create_future()
+        done_once = False
+
+        def _complete(value):
+            nonlocal done_once
+            if done_once or fut.cancelled() or fut.done():
+                return
+            done_once = True
+            fut.set_result(value)
 
         def _raw_cb(sample):
             mv = (
@@ -265,18 +230,16 @@ class ZenohClient:
             att = sample.attachment
             if hasattr(att, "to_bytes"):
                 att = att.to_bytes().decode("utf-8", "ignore")
-            elif isinstance(att, bytes | bytearray):
+            elif isinstance(att, (bytes, bytearray)):
                 att = att.decode("utf-8", "ignore")
             parts = dict(seg.split("=", 1) for seg in (att or "").split(";") if "=" in seg)
             sender_id = parts.get("sender_id")
             if not allow_self and sender_id == self.sender_id:
                 return
 
+            obj = None
             if flatbuffer_obj_t is not None:
                 obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
-            else:
-                obj = None
-
             if parse_obj:
                 parser = self._schema.get(topic)
                 if parser:
@@ -285,55 +248,23 @@ class ZenohClient:
                     except Exception:
                         obj = None
 
-            if not fut.done():
-                loop.call_soon_threadsafe(
-                    fut.set_result,
-                    (topic, mv, obj, {"sender": parts.get("sender"), "sender_id": sender_id}),
-                )
+            loop.call_soon_threadsafe(
+                _complete,
+                (topic, mv, obj, {"sender": parts.get("sender"), "sender_id": sender_id}),
+            )
 
         sub = self.session.declare_subscriber(topic, _raw_cb)
 
         try:
-            return await asyncio.wait_for(fut, timeout=timeout)
+            try:
+                return await asyncio.wait_for(fut, timeout=timeout)
+            except TimeoutError:
+                if not fut.done():
+                    fut.cancel()
+                raise
         finally:
             with contextlib.suppress(Exception):
                 await asyncio.to_thread(sub.undeclare)
-
-    # def subscribe(
-    #     self,
-    #     topic: str,
-    #     callback: Callable[[str, memoryview, Optional[dict]], Any],
-    #     *,
-    #     options: Optional[SubscribeOptions] = None,
-    # ):
-    #     """
-    #     topic: 정확히 일치하는 토픽
-    #     callback: (topic, raw, obj)  sync/async 모두 허용
-    #     반환: handle(해지 시 handle.close())
-    #     """
-    #     if self.session is None:
-    #         self.connect()
-    #     if "/" not in topic:
-    #         raise ValueError("토픽이 명확하지 않습니다. ex) 'telemetry/imu'")
-
-    #     opts = options or SubscribeOptions()
-
-    #     if topic not in self._subs:
-    #         sub = self.session.declare_subscriber(topic, self._make_on_sample(topic))
-    #         self._subs[topic] = sub
-    #         self._cb_entries.setdefault(topic, [])
-    #         print(f"📥 zenoh subscribed: {topic}")
-
-    #     entry = CallbackEntry(topic=topic, callback=callback, opts=opts)
-    #     self._cb_entries[topic].append(entry)
-
-    #     if opts.dispatch == "queue":
-    #         loop = self._ensure_loop()
-    #         task = loop.create_task(self._worker(entry))
-    #         setattr(task, "_zz_entry", entry)  # 워커 ↔ 엔트리 연결
-    #         self._workers.append(task)
-
-    #     return SubscriptionHandleImpl(self, topic, entry)
 
     def _unsubscribe(self, topic: str, entry: "CallbackEntry"):
         lst = self._cb_entries.get(topic)
@@ -566,6 +497,37 @@ class ZenohClient:
         except StopIteration:
             raise ZenohNoReply(timeout_ms) from None
 
+    def query_all(
+        self,
+        keyexpr: str,
+        *,
+        timeout_ms: int = 3000,
+        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_buf_size: int | None = None,
+        target: QueryTarget | str = "BEST_MATCHING",
+        payload: bytes | bytearray | memoryview | None = None,
+    ):
+        res = list(
+            self.query(
+                keyexpr,
+                flatbuffer_req_obj=flatbuffer_req_obj,
+                flatbuffer_res_T_class=flatbuffer_res_T_class,
+                flatbuffer_buf_size=flatbuffer_buf_size,
+                timeout_ms=timeout_ms,
+                target=target,
+                payload=payload,
+            )
+        )
+
+        for r in res:
+            if flatbuffer_req_obj is not None:
+                del r["payload"]
+            else:
+                del r["dict_payload"]
+
+        return t_to_dict(res)
+
     def close(self):
         if os.getpid() != getattr(self, "_owner_pid", os.getpid()):
             return
@@ -608,6 +570,7 @@ class ZenohClient:
     def _make_on_sample(self, topic: str, flatbuffer_obj_t: Table | None = None):
         def _on_sample(sample):
             att = sample.attachment
+            origin_topic = str(sample.key_expr)
 
             mv = (
                 memoryview(bytes(sample.payload))
@@ -660,11 +623,11 @@ class ZenohClient:
 
             if imms:
                 self._fanout_immediate(
-                    entries=imms, topic=topic, mv=mv, obj=obj, attachment=attachment
+                    entries=imms, topic=origin_topic, mv=mv, obj=obj, attachment=attachment
                 )
 
             for e in queued:
-                self._push_to_entry(e=e, topic=topic, mv=mv, obj=obj, attachment=attachment)
+                self._push_to_entry(e=e, topic=origin_topic, mv=mv, obj=obj, attachment=attachment)
 
         return _on_sample
 
