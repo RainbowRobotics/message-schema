@@ -22,6 +22,7 @@ struct DATA_MOVE
 
     QString result;
     QString message;
+    //QString remark;
 
     DATA_MOVE()
     {
@@ -43,6 +44,7 @@ struct DATA_MOVE
 
         result = "";
         message = "";
+        //remark = "";
     }
 
     DATA_MOVE(const DATA_MOVE& p)
@@ -64,6 +66,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        //remark = p.remark;
     }
 
     DATA_MOVE& operator=(const DATA_MOVE& p)
@@ -85,6 +88,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        //remark = p.remark;
         return *this;
     }
 };

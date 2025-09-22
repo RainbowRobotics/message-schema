@@ -51,9 +51,9 @@ public:
 
     enum ErrorCategory
     {
-        MAP_MANAGEMENT = 0x1000,
-        LOCALIZATION = 0x2000,
-        NAVIGATION = 0x3000,
+        MAP = 0x1000,
+        LOC = 0x2000,
+        NAVI = 0x3000,
         SENSOR = 0x4000,
         SYSTEM = 0x5000,
         SAFETY = 0x6000,
@@ -68,7 +68,7 @@ public:
         MAP_INVALID_PATH = 0x1002,
         MAP_LOAD_FAILED = 0x1003,
         MAP_COPY_FAILED = 0x1004,
-        TOPO_LOAD_FAILED = 0x1005,
+        MAP_TOPO_LOAD_FAILED = 0x1005,
         
         // LOC
         LOC_NOT_INIT = 0x2001,
@@ -307,6 +307,8 @@ public Q_SLOTS:
     void send_path_response(const DATA_PATH& msg);
     void send_software_update_response(const DATA_SOFTWARE& msg);
     void send_safetyio_response(const DATA_SAFTYIO& msg);
+
+    QJsonObject getErrorCodeMapping(const QString& message);
 
     void send_loop();
 
