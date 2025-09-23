@@ -1404,7 +1404,48 @@ void MainWindow::bt_AutoMove2()
 
 void MainWindow::bt_AutoMove3()
 {
-    // turn & go move
+    if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+
+    if(pick.cur_node != "")
+    {
+        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(node != NULL)
+        {
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "side";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+
+            Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+
+        Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
+        return;
+    }
 }
 
 void MainWindow::bt_AutoStop()

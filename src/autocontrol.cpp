@@ -491,6 +491,21 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
         }
         else
         {
+            if(msg.method == "hpp")
+            {
+                cmd_method = CommandMethod::METHOD_HPP;
+                std::cout << "cmd_method: HPP" << std::endl;
+            }
+            else if(msg.method == "side")
+            {
+                cmd_method = CommandMethod::METHOD_SIDE;
+                std::cout << "cmd_method: SIDE" << std::endl;
+            }
+            else
+            {
+                cmd_method = CommandMethod::METHOD_PP;
+                std::cout << "cmd_method: PP" << std::endl;
+            }
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
             move(tf, msg.preset);
         }
@@ -1128,10 +1143,23 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
     }
 
     // divide and smooth metric path
-    std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
+    std::vector<Eigen::Matrix4d> path_pose;
+    std::vector<Eigen::Vector3d> path_pos;
+
+    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+    {
+        for(size_t p = 0; p < node_pose.size(); p++)
+        {
+            Eigen::Matrix4d tf0 = node_pose[p];
+            path_pose.push_back(tf0);
+        }
+    }
+    else
+    {
+        path_pose = reorientation_path(node_pose);
+    }
     path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::global_path_step);
 
-    std::vector<Eigen::Vector3d> path_pos;
     for(size_t p = 0; p < path_pose.size(); p++)
     {
         path_pos.push_back(path_pose[p].block(0,3,3,1));
@@ -1205,10 +1233,23 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
     }
 
     // divide and smooth metric path
-    std::vector<Eigen::Matrix4d> path_pose = reorientation_path(node_pose);
+    std::vector<Eigen::Matrix4d> path_pose;
+    std::vector<Eigen::Vector3d> path_pos;
+
+    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+    {
+        for(size_t p = 0; p < node_pose.size(); p++)
+        {
+            Eigen::Matrix4d tf0 = node_pose[p];
+            path_pose.push_back(tf0);
+        }
+    }
+    else
+    {
+        path_pose = reorientation_path(node_pose);
+    }
     path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::global_path_step);
 
-    std::vector<Eigen::Vector3d> path_pos;
     for(size_t p = 0; p < path_pose.size(); p++)
     {
         path_pos.push_back(path_pose[p].block(0,3,3,1));
@@ -1721,68 +1762,102 @@ void AUTOCONTROL::calc_ref_v(const std::vector<Eigen::Matrix4d>& src, std::vecto
 
     const int ld = params.DRIVE_L/step;
 
-    std::vector<double> _ref_th(src.size(), 0);
-    for(size_t p = 0; p < src.size(); p++)
+    if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
     {
-        int cur_idx = p-ld;
-        if(cur_idx < 0)
+        std::vector<double> _ref_v(src.size(), params.LIMIT_V);
+        for(size_t p = 0; p < src.size()-1; p++)
         {
-            cur_idx = 0;
+            int cur_idx = p;
+            int tgt_idx = p+ld;
+            if(tgt_idx > (int)src.size()-1)
+            {
+                tgt_idx = src.size()-1;
+            }
+
+            Eigen::Vector3d xi0 = TF_to_se2(src[cur_idx]);
+            Eigen::Vector3d xi1 = TF_to_se2(src[tgt_idx]);
+
+            double err_d = calc_dist_2d(xi1 - xi0);
+            double err_th = deltaRad(xi1[2], xi0[2]) * params.DRIVE_H;
+
+            double t_v = err_d/params.LIMIT_V;
+            double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
+            double t = std::max<double>(t_v, t_w);
+            double v = err_d/t;
+            _ref_v[p] = v;
         }
 
-        int tgt_idx = p+ld;
-        if(tgt_idx > (int)src.size()-1)
-        {
-            tgt_idx = src.size()-1;
-        }
+        _ref_v[_ref_v.size()-1] = _ref_v[_ref_v.size()-2];
+        _ref_v[0] = st_v;
 
-        if(cur_idx == tgt_idx)
-        {
-            continue;
-        }
-
-        double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
-        double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
-        double th = std::atan2(dy, dx);
-        _ref_th[p] = th;
+        // update result
+        ref_v = _ref_v;
     }
-
-    std::vector<double> _ref_v(src.size(), params.LIMIT_V);
-    for(size_t p = 0; p < src.size(); p++)
+    else
     {
-        int cur_idx = p-ld;
-        if(cur_idx < 0)
+        std::vector<double> _ref_th(src.size(), 0);
+        for(size_t p = 0; p < src.size(); p++)
         {
-            cur_idx = 0;
+            int cur_idx = p-ld;
+            if(cur_idx < 0)
+            {
+                cur_idx = 0;
+            }
+
+            int tgt_idx = p+ld;
+            if(tgt_idx > (int)src.size()-1)
+            {
+                tgt_idx = src.size()-1;
+            }
+
+            if(cur_idx == tgt_idx)
+            {
+                continue;
+            }
+
+            double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
+            double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
+            double th = std::atan2(dy, dx);
+            _ref_th[p] = th;
         }
 
-        int tgt_idx = p+ld;
-        if(tgt_idx > (int)src.size()-1)
+        std::vector<double> _ref_v(src.size(), params.LIMIT_V);
+        for(size_t p = 0; p < src.size(); p++)
         {
-            tgt_idx = src.size()-1;
+            int cur_idx = p-ld;
+            if(cur_idx < 0)
+            {
+                cur_idx = 0;
+            }
+
+            int tgt_idx = p+ld;
+            if(tgt_idx > (int)src.size()-1)
+            {
+                tgt_idx = src.size()-1;
+            }
+
+            if(cur_idx == tgt_idx)
+            {
+                continue;
+            }
+
+            double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
+            double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
+            double err_d = std::sqrt(dx*dx + dy*dy);
+            double err_th = deltaRad(std::atan2(dy, dx), _ref_th[cur_idx]) * params.DRIVE_H;
+
+            double t_v = err_d/params.LIMIT_V;
+            double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
+            double t = std::max<double>(t_v, t_w);
+            double v = err_d/t;
+            _ref_v[p] = v;
+
         }
+        _ref_v[0] = st_v;
 
-        if(cur_idx == tgt_idx)
-        {
-            continue;
-        }
-
-        double dx = src[tgt_idx](0,3) - src[cur_idx](0,3);
-        double dy = src[tgt_idx](1,3) - src[cur_idx](1,3);
-        double err_d = std::sqrt(dx*dx + dy*dy);
-        double err_th = deltaRad(std::atan2(dy, dx), _ref_th[cur_idx]) * params.DRIVE_H;
-
-        double t_v = err_d/params.LIMIT_V;
-        double t_w = std::abs(err_th)/(params.LIMIT_W*D2R);
-        double t = std::max<double>(t_v, t_w);
-        double v = err_d/t;
-        _ref_v[p] = v;
-
+        // update result
+        ref_v = _ref_v;
     }
-    _ref_v[0] = st_v;
-
-    // update result
-    ref_v = _ref_v;
 }
 
 std::vector<double> AUTOCONTROL::smoothing_v(const std::vector<double>& src, double path_step)
@@ -2013,21 +2088,35 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
     }
     else
     {
-        // resampling
-        std::vector<Eigen::Matrix4d> path_pose = reorientation_path(_path_pose);
-        path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
-
+        std::vector<Eigen::Matrix4d> path_pose;
         std::vector<Eigen::Vector3d> path_pos;
-        for(size_t p = 0; p < path_pose.size(); p++)
-        {
-            path_pos.push_back(path_pose[p].block(0,3,3,1));
-        }
 
-        // ccma
-        path_pos = path_ccma(path_pos);
-        for(size_t p = 0; p < path_pose.size(); p++)
+        if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
         {
-            path_pose[p].block(0,3,3,1) = path_pos[p];
+            // resampling
+            path_pose = path_resampling(_path_pose, AUTOCONTROL_INFO::local_path_step);
+            for(size_t p = 0; p < path_pose.size(); p++)
+            {
+                path_pos.push_back(path_pose[p].block(0,3,3,1));
+            }
+        }
+        else
+        {
+            // resampling
+            path_pose = reorientation_path(_path_pose);
+            path_pose = path_resampling(path_pose, AUTOCONTROL_INFO::local_path_step);
+
+            for(size_t p = 0; p < path_pose.size(); p++)
+            {
+                path_pos.push_back(path_pose[p].block(0,3,3,1));
+            }
+
+            // ccma
+            path_pos = path_ccma(path_pos);
+            for(size_t p = 0; p < path_pose.size(); p++)
+            {
+                path_pose[p].block(0,3,3,1) = path_pos[p];
+            }
         }
 
         // calc ref_v
@@ -2406,6 +2495,8 @@ void AUTOCONTROL::control_loop()
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
 
+    RobotModel robot_model = config->get_robot_model();
+
     // check global path
     logger->write_log(QString("[AUTO] global path que size: %1").arg((int)global_path_que.unsafe_size()));
     PATH global_path;
@@ -2435,7 +2526,13 @@ void AUTOCONTROL::control_loop()
     Eigen::Vector3d goal_pos = goal_tf.block(0,3,3,1);
 
     // set initial state
-    fsm_state = AUTO_FSM_FIRST_ALIGN;
+    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+    if(cmd_method == CommandMethod::METHOD_HPP){
+        std::cout << "CommandMethod:HPP ----- FSM_STATE : " << fsm_state << std::endl;
+    }else if(cmd_method == CommandMethod::METHOD_PP){
+        std::cout << "CommandMethod:PP ----- FSM_STATE : " << fsm_state << std::endl;
+    }
+
 
     // check already goal
     if(global_path_que.unsafe_size() == 0)
@@ -2570,7 +2667,8 @@ void AUTOCONTROL::control_loop()
                 // update local path
                 if(get_time() - local_path.t > AUTOCONTROL_INFO::local_path_calc_dt)
                 {
-                    local_path = calc_local_path_with_cur_vel(global_path);
+//                    local_path = calc_local_path_with_cur_vel(global_path);
+                    local_path = calc_local_path(global_path);
                 }
             }
 
@@ -2693,15 +2791,66 @@ void AUTOCONTROL::control_loop()
                 double v0 = cur_vel[0];
                 double v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
 
-                double temp_v = v0;
-                if(v0 > 0)
+                if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
                 {
-                    temp_v -= params.LIMIT_V_DCC/dt;
-                    if(temp_v < params.ED_V)
+                    double local_dx = _goal_pos[0];
+                    double local_dy = _goal_pos[1];
+
+                    double local_goal_d = std::sqrt(local_dx * local_dx + local_dy * local_dy);
+                    double local_dir_x = local_dx / (local_goal_d + 1.0e-6);
+                    double local_dir_y = local_dy / (local_goal_d + 1.0e-6);
+
+                    double local_vx = local_dir_x * v;
+                    double local_vy = local_dir_y * v;
+
+                    double vx_sat = saturation(local_vx, cur_vel[0] - params.LIMIT_V_DCC*dt, cur_vel[0] + params.LIMIT_V_DCC*dt);
+                    double vy_sat = saturation(local_vy, cur_vel[1] - params.LIMIT_V_DCC*dt, cur_vel[1] + params.LIMIT_V_DCC*dt);
+
+                    local_vx = vx_sat;
+                    local_vy = vy_sat;
+
+                    double _err_th = deltaRad(goal_xi[2], cur_xi[2]);
+                    double k_wz = 1.0 - std::exp(-std::abs(_err_th) * 3.0);
+                    double wz = k_wz * saturation(config->get_drive_goal_approach_gain() * _err_th, -3.0 * D2R, 3.0 * D2R);
+//                            double wz = saturation(config->get_drive_goal_approach_gain() * _err_th / config->get_drive_extended_control_time(), -3.0 * D2R, 3.0 * D2R);
+
+//                            printf("%.3f, %.3f, %.3f  ==  %.3f, %.3f, %.3f\n", v0, v, val_, local_vx, local_vy, wz*R2D);
+
+                    // send control
+                    if(robot_model == RobotModel::QD)
                     {
-                        temp_v = params.ED_V;
+                        if(cmd_method == CommandMethod::METHOD_HPP)
+                        {
+                            mobile->moveQD(local_vx, local_vy, wz, 1);
+//                                    std::cout << "MoveQD : HPP " << local_vx << ", " << local_vy << ", " << wz << std::endl;
+                        }
+                        else if(cmd_method == CommandMethod::METHOD_SIDE)
+                        {
+                            mobile->moveQD(local_vx, local_vy, wz, 2);
+//                                    std::cout << "MoveQD : SIDE " << local_vx << ", " << local_vy << ", " << wz << std::endl;
+                        }
                     }
-                    v = saturation(v, -temp_v, temp_v);
+                    else
+                    {
+                        mobile->move(local_vx, local_vy, wz);
+                    }
+
+//                            mobile->move(local_vx, local_vy, wz);
+                }
+                else
+                {
+                    double temp_v = v0;
+                    if(v0 > 0)
+                    {
+                        temp_v -= params.LIMIT_V_DCC/dt;
+                        if(temp_v < params.ED_V)
+                        {
+                            temp_v = params.ED_V;
+                        }
+                        v = saturation(v, -temp_v, temp_v);
+                    }
+
+                    mobile->move(v, 0, 0);
                 }
 
                 mobile->move(v, 0, 0);
@@ -2841,12 +2990,32 @@ void AUTOCONTROL::control_loop()
             // calc heading error
             Eigen::Matrix4d _tgt_tf = cur_tf_inv*tgt_tf;
             Eigen::Vector3d _tgt_xi = TF_to_se2(_tgt_tf);
-            double err_d = calc_dist_2d(_tgt_xi);
-            double err_th = _tgt_xi[2];
-            if(pre_err_th == 0)
+
+            // only use mecanum model
+            double dir_x = 0.0;
+            double dir_y = 0.0;
+
+            double err_d  = std::numeric_limits<double>::max();
+            double err_th = std::numeric_limits<double>::max();
+//                    if(robot_model == RobotModel::MECANUM)
+            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
             {
-                pre_err_th = err_th;
+                Eigen::Vector3d local_tgt_pos = _tgt_tf.block(0,3,3,1);
+
+                double local_dx = local_tgt_pos[0];
+                double local_dy = local_tgt_pos[1];
+
+                double local_d = std::sqrt(local_dx*local_dx+local_dy*local_dy);
+                dir_x = local_dx / (local_d + 1.0e-6);
+                dir_y = local_dy / (local_d + 1.0e-6);
+
+                err_d = calc_dist_2d(goal_pos - cur_pos);
             }
+            else
+            {
+                err_d  = calc_dist_2d(_tgt_xi);
+            }
+            err_th = _tgt_xi[2];
 
             // calc cross track error
             double cte = calc_cte(local_path.pose, cur_pos);
@@ -2873,18 +3042,39 @@ void AUTOCONTROL::control_loop()
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
 
+            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            {
+                v0 = std::sqrt(cur_vel[0]*cur_vel[0] + cur_vel[1]*cur_vel[1]);
+            }
+
             v = saturation(v, 0.0, obs_decel_v);
             v = saturation(v, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_ACC*dt);
             v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
 
-            double th = (params.DRIVE_A * err_th)
-                      + (params.DRIVE_B * (err_th-pre_err_th)/dt)
-                      +  std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
-            th = saturation(th, -45.0*D2R, 45.0*D2R);
+            if(pre_err_th == 0)
+            {
+                pre_err_th = err_th;
+            }
+
+            double w;
+            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+            {
+                // PD control
+                w = params.DRIVE_A * err_th + params.DRIVE_B * (err_th - pre_err_th)/dt;
+            }
+            else
+            {
+                // stanley control
+                double th = (params.DRIVE_A * err_th)
+                        + (params.DRIVE_B * (err_th-pre_err_th)/dt)
+                        +  std::atan2(params.DRIVE_K * cte, v + params.DRIVE_EPS);
+                th = saturation(th, -45.0 * D2R, 45.0 * D2R);
+                w = std::tan(th) / params.DRIVE_L;
+            }
             pre_err_th = err_th;
 
+
             double w0 = cur_vel[2];
-            double w = std::tan(th) / params.DRIVE_L;
             w = saturation(w, w0 - params.LIMIT_W_ACC*D2R*dt, w0 + params.LIMIT_W_ACC*D2R*dt);
             w = saturation(w, -params.LIMIT_W*D2R, params.LIMIT_W*D2R);
 
@@ -2912,9 +3102,33 @@ void AUTOCONTROL::control_loop()
                 w = sgn(w)*(std::abs(w)-d_w);
             }
 
-            // send control
-            if(!is_debug)
+            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
             {
+                double vx = dir_x * v;
+                double vy = dir_y * v;
+
+                // send control
+                if(robot_model == RobotModel::QD)
+                {
+                    if(cmd_method == CommandMethod::METHOD_HPP)
+                    {
+                        mobile->moveQD(vx, vy, w, 1);
+//                                std::cout << "MoveQD : HPP " << vx << ", " << vy << ", " << w << std::endl;
+                    }
+                    else if(cmd_method == CommandMethod::METHOD_SIDE)
+                    {
+                        mobile->moveQD(vx, vy, w, 2);
+//                                std::cout << "MoveQD : SIDE " << vx << ", " << vy << ", " << w << std::endl;
+                    }
+                }
+                else
+                {
+                    mobile->move(vx, vy, w);
+                }
+            }
+            else
+            {
+                // send control
                 mobile->move(v, 0, w);
             }
         }
@@ -3049,7 +3263,8 @@ void AUTOCONTROL::control_loop()
                     extend_dt = 0;
                     pre_err_th = 0;
 
-                    fsm_state = AUTO_FSM_FIRST_ALIGN;
+                    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+
                     set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
 
                     logger->write_log("[AUTO] avoid path found, OBS_AVOID -> FIRST_ALIGN");
@@ -3160,7 +3375,9 @@ void AUTOCONTROL::control_loop()
                     pre_err_th = 0;
 
                     obs_state = AUTO_OBS_CHECK;
-                    fsm_state = AUTO_FSM_FIRST_ALIGN;
+
+                    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+
                     set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
                     obs_value = OBS_NONE;
 

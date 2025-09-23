@@ -22,6 +22,45 @@
  * @brief robot path finding, path following control
  */
 
+enum class CommandType
+{
+    NONE,
+    REQ_CHANGE_GOAL,
+    MOVE,
+    UPDATE_PATH,
+};
+
+enum class CommandMethod
+{
+    METHOD_PP,
+    METHOD_HPP,
+    METHOD_SIDE
+};
+
+struct GOAL_INFO
+{
+    Eigen::Matrix4d goal_tf;
+    Eigen::Vector3d goal_xi;  // x,y,th
+    Eigen::Vector3d goal_pos; // x,y,z
+};
+
+struct CONTROL_COMMAND
+{
+    int preset;
+    CommandType type;
+
+    // for move
+    Eigen::Matrix4d goal_tf;
+
+    // for path
+    std::vector<QString> node_path;
+
+    CTRL_PARAM params;
+
+    // method
+    QString method;
+};
+
 struct AUTOCONTROL_INFO
 {
     static constexpr int control_loop_cnt = 20;
@@ -122,6 +161,7 @@ private:
 
     // mutex
     std::recursive_mutex mtx;
+    CommandMethod cmd_method;
 
     // other modules
     CONFIG* config;
