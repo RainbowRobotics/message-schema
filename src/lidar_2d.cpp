@@ -263,6 +263,33 @@ bool LIDAR_2D::try_pop_merged_queue(FRAME& frm)
     return false;
 }
 
+bool LIDAR_2D::get_deskewing_frm(FRAME &frm, int idx)
+{
+    if(idx < 0 || idx >= 2)
+    {
+        return false;
+    }
+
+    double served_t = last_served_dsk_t[idx].load();
+
+    {
+        std::shared_lock<std::shared_mutex> lock(mtx);
+        if(last_dsk_frm[idx].mo.t < 0.0 || last_dsk_frm[idx].mo.t <= served_t)
+        {
+            return false;
+        }
+
+        // raw frame -> frame
+        frm.t = last_dsk_frm[idx].mo.t;
+        frm.mo = last_dsk_frm[idx].mo;
+        frm.pts = last_dsk_frm[idx].pts;
+        frm.reflects = last_dsk_frm[idx].reflects;
+    }
+
+    last_served_dsk_t[idx] = frm.mo.t;
+    return true;
+}
+
 void LIDAR_2D::deskewing_loop(int idx)
 {
     double pre_loop_time = get_time();
@@ -308,10 +335,12 @@ void LIDAR_2D::deskewing_loop(int idx)
                 Eigen::Matrix4d tf1 = se2_to_TF(frm.pose1);
                 Eigen::Matrix4d dtf = tf0.inverse() * tf1;
 
+                deskewing_pts.reserve(frm.pts.size());
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     double t = frm.times[p];
                     double alpha = (t-t0)/((t1-t0) + 1e-06);
+
                     Eigen::Matrix4d tf = intp_tf(alpha, Eigen::Matrix4d::Identity(), dtf);
                     deskewing_pts.push_back(tf.block(0,0,3,3)*frm.pts[p] + tf.block(0,3,3,1));
                 }
@@ -339,15 +368,17 @@ void LIDAR_2D::deskewing_loop(int idx)
             deskewing_frm.t0 = frm.t0;
             deskewing_frm.t1 = frm.t1;
             deskewing_frm.mo = frm.mo;
-            //deskewing_frm.reflects = filtered_reflects;
-            //deskewing_frm.times = filtered_time;
-            //deskewing_frm.pts = filetered_deskewing;
-
-            deskewing_frm.reflects = std::move(frm.reflects);
-            deskewing_frm.times = std::move(frm.times);
-            deskewing_frm.pts = std::move(frm.pts);
+            deskewing_frm.reflects = std::move(filtered_reflects);
+            deskewing_frm.times    = std::move(filtered_time);
+            deskewing_frm.pts      = std::move(filetered_deskewing);
 
             //       printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
+
+            // for mapping
+            {
+                std::shared_lock<std::shared_mutex> lock(mtx);
+                last_dsk_frm[idx] = deskewing_frm;
+            }
 
             // set queue
             deskewing_que[idx].push(deskewing_frm);

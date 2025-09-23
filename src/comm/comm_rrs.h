@@ -271,8 +271,10 @@ public Q_SLOTS:
     void recv_led(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_motor(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_foot(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
-    void recv_field_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_safety_io_set(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+
+    void recv_safety_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_config_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
@@ -289,11 +291,12 @@ public Q_SLOTS:
     void slot_mapping(DATA_MAPPING msg);
     void slot_randomseq(DATA_RANDOMSEQ msg);
     void slot_view_path(DATA_VIEW_PATH msg);
-    void slot_field_set(DATA_FIELD msg);
     void slot_view_lidar(DATA_VIEW_LIDAR msg);
     void slot_localization(DATA_LOCALIZATION msg);
     void slot_software_update(DATA_SOFTWARE msg);
     void slot_safety_io(DATA_SAFTYIO msg);
+    void slot_safety_request(DATA_SAFETY msg);
+    void slot_config_request(DATA_PDU_UPDATE msg);
 
     /* send command response */
     void send_move_response(const DATA_MOVE& msg);
@@ -302,11 +305,13 @@ public Q_SLOTS:
     void send_randomseq_response(const DATA_RANDOMSEQ& msg);
     void send_mapping_response(const DATA_MAPPING& msg);
     void send_dock_response(const DATA_DOCK& msg);
-    void send_field_set_response(const DATA_FIELD& msg);
-    void send_field_get_response(const DATA_FIELD& msg);
     void send_path_response(const DATA_PATH& msg);
     void send_software_update_response(const DATA_SOFTWARE& msg);
     void send_safetyio_response(const DATA_SAFTYIO& msg);
+    void send_field_set_response(const DATA_SAFETY& msg);
+    void send_field_get_response(const DATA_SAFETY& msg);
+    void send_safety_reset_response(const DATA_SAFETY& msg);
+    void send_config_request_response(const DATA_PDU_UPDATE& msg);
 
     QJsonObject getErrorCodeMapping(const QString& message);
 
@@ -329,6 +334,8 @@ Q_SIGNALS:
     void signal_vobs(DATA_VOBS msg);
     void signal_software_update(DATA_SOFTWARE msg);
     void signal_safety_io(DATA_SAFTYIO msg);
+    void signal_safety_request(DATA_SAFETY msg);
+    void signal_config_request(DATA_PDU_UPDATE msg);
 
 };
 

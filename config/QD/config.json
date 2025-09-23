@@ -1,16 +1,15 @@
 {
     "robot": {
         "PLATFORM_TYPE": "D400",
-        "SPEAKER": true,
-      
-        "ROBOT_SIZE_MAX_X": "0.56",
+        
+        "ROBOT_SIZE_MAX_X": "0.375",
         "ROBOT_SIZE_MAX_Y": "0.375",
-        "ROBOT_SIZE_MAX_Z": "1.5",
-        "ROBOT_SIZE_MIN_X": "-0.56",
+        "ROBOT_SIZE_MAX_Z": "0.390",
+        "ROBOT_SIZE_MIN_X": "-0.375",
         "ROBOT_SIZE_MIN_Y": "-0.375",
         "ROBOT_SIZE_MIN_Z": "0",
-        "ROBOT_WHEEL_BASE": "0.6585",
-        "ROBOT_WHEEL_RADIUS": "0.075"
+        "ROBOT_WHEEL_BASE": "0.400",
+        "ROBOT_WHEEL_RADIUS": "0.090"
     },
     "sensors": {
         "USE_LIDAR_2D": true,
@@ -23,7 +22,7 @@
         
         "USE_CAM": false,
         "CAM_TYPE": "ORBBEC",
-        "CAM_NUM": "2",
+        "CAM_NUM": "1",
         
         "USE_BQR": false,
         "USE_IMU": false
@@ -31,43 +30,38 @@
     "localization": {
         "MODE": "2D",
         "USE_ARUCO": false,
-        "USE_EKF": false
+	"USE_EKF": true
     },
     "network": {
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": true,
+        "USE_RRS": false,
         "USE_FMS": false
     },
     "debug": {
         "USE_SIM": true,
         "USE_QTUI": false,
-        "USE_BEEP": false
-    },
-    "logging": {
-        "LOG_LEVEL": "info",
-        "DEBUG_LIDAR_2D": true,
-        "DEBUG_MOBILE": false
+        "USE_BEEP": true
     },
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
-            "TF": "0.43087, -0.30587, 0.21, 180.0, 0.0, 43.5"
+            "TF": "0.260185, -0.260185, 0.0, 180.0, 0.0, 45.0"
         },
         {
             "IP": "192.168.2.11",
-            "TF": "-0.43087, 0.30587, 0.21, 180.0, 0.0, -135.0"
+            "TF": "-0.260185, 0.260185, 0.0, 180.0, 0.0, -135.0"
         }
     ],
     "lidar_3d_config": [
         {
             "IP": "192.168.1.100",
-            "TF": "0.4515, -0.3265, 0.516, 0.0, 0.0, -45.0"
+            "TF": "0.360, -0.2228, 0.880, 0.0, 0.0, -90.0"
         },
         {
             "IP": "192.168.1.101",
-            "TF": "-0.4515, 0.3265, 0.516, 0.0, 0.0, 135.0"
+            "TF": "-0.360, 0.2228, 0.880, 0.0, 0.0, 180.0"
         }
     ],
     "cam_config": [
@@ -82,7 +76,7 @@
     ],
     "SICK": {
     	"LIDAR_2D_MAX_RANGE": "24.0",
-        "LIDAR_2D_MIN_RANGE": "0.15"
+        "LIDAR_2D_MIN_RANGE": "0.5"
     },
     "LAKI": {
         "LIDAR_2D_MAX_RANGE": "40.0",
@@ -101,17 +95,17 @@
         "CAM_HEIGHT_MIN": "0.1"
     },
     "motor": {
-        "MOTOR_DIR": "-1",
+        "MOTOR_DIR": "1",
         "MOTOR_GAIN_KD": "100",
         "MOTOR_GAIN_KI": "0",
         "MOTOR_GAIN_KP": "4400",
         "MOTOR_GEAR_RATIO": "12",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
-        "MOTOR_LIMIT_V": "1.0",
-        "MOTOR_LIMIT_V_ACC": "1.0",
-        "MOTOR_LIMIT_W": "90",
-        "MOTOR_LIMIT_W_ACC": "90"
+        "MOTOR_LIMIT_V": "2.0",
+        "MOTOR_LIMIT_V_ACC": "2.0",
+        "MOTOR_LIMIT_W": "180",
+        "MOTOR_LIMIT_W_ACC": "360"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -161,7 +155,7 @@
         "OBS_MAP_GRID_SIZE": "0.05",
         "OBS_MAP_MAX_Z": "1.0",
         "OBS_MAP_MIN_V": "0.3",
-        "OBS_MAP_MIN_Z": "0.0",
+        "OBS_MAP_MIN_Z": "-1.0",
         "OBS_MAP_RANGE": "5.0",
         "OBS_PATH_MARGIN_X": "0.05",
         "OBS_PATH_MARGIN_Y": "0.0",
@@ -178,27 +172,20 @@
         "DRIVE_W_DEADZONE": "1.0"
     },
     "docking": {
-    	"DOCKING_POINTDOCK_MARGIN": "0.3",
-    	"DOCKING_GOAL_D": "0.025", 
-    	"DOCKING_GOAL_TH": "0.005",
+    	"DOCKING_POINTDOCK_MARGIN": "0.18",
+    	"DOCKING_GOAL_D": "0.03",
+    	"DOCKING_GOAL_TH": "0.01745",
     	"DOCKING_TYPE": "0",
-    	"DOCKING_ICP_ERR_THRESHOLD": "0.01",
     	"DOCKING_CHG_LENGTH": "0.472",
-    	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX": "2.8",
-    	"DOCKING_CLUST_ANGLE_THRESHOLD": "0.785398",
-    	"DOCKING_CLUST_DIST_THRESHOLD_MAX": "2.8",
-   	"DOCKING_KD_th": "0.15",
-    	"DOCKING_KP_th": "0.25",
-    	"DOCKING_KD_d": "0.2",
-    	"DOCKING_KP_d": "0.25",
-    	"DOCKING_DWA_YAW_WEIGTH": "0.25",
-    	"DOCKING_CHECK_MOTOR_A": "300.0",
-	"DOCKING_X_OFFSET": "0.0",
-    	"DOCKING_Y_OFFSET": "-0.007"
+    	"DOCKING_K_ALPHA": "4.5",
+    	"DOCKING_K_BETA": "1.5",
+    	"DOCKING_K_RHO": "0.6",
+    	"DOCKING_CLUST_DIST_THRESHOLD_MAX" : "2.5",
+    	"DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX" : "2.5",
+    	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/data/maps/250804_unicos_update6_test"
+        "MAP_PATH": "/home/juyeon/maps/250903_unicos_2d"
     }
 }
-
 

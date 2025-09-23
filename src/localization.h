@@ -15,6 +15,8 @@
 #include "unimap.h"
 #include "obsmap.h"
 
+#include "ekf.h"
+
 #include <QObject>
 
 constexpr double lambda0    = 0.1;   // 0.1
@@ -110,6 +112,10 @@ private:
     std::unique_ptr<std::thread> odometry_thread;       // odometry thread
     void odometry_loop();                               // odometry loop
 
+    std::atomic<bool> ekf_flag = {false};               // ekf thread flag (for localization)
+    std::unique_ptr<std::thread> ekf_thread;            // ekf thread
+    void ekf_loop();                                    // ekf loop
+
     std::atomic<bool> obs_flag = {false};               // obstacle thread flag (obstacle map update)
     std::unique_ptr<std::thread> obs_thread;            // obstacle thread
     void obs_loop();                                    // obstacle loop
@@ -137,6 +143,8 @@ private:
     std::atomic<double> process_time_odometry = {0.0};
     std::atomic<double> process_time_obs = {0.0};
 
+    // extended kalman filter
+    EKF ekf;
 };
 
 #endif // LOCALIZATION_H

@@ -1321,7 +1321,7 @@ void MOBILE::move(double vx, double vy, double wz)
         memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
         memcpy(&send_byte[12], &_wz, 4); // param2 angular vel
     }
-    else if(robot_model == "MECANUM")
+    else if(robot_model == "MECANUM" || robot_model == "QD")
     {
         memcpy(&send_byte[8], &_vx, 4);  // param1 linear vel
         memcpy(&send_byte[12], &_vy, 4); // param2 linear vel

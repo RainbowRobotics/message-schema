@@ -169,6 +169,7 @@ void CONFIG::load_localization_config(const QJsonObject &obj)
 
     check_and_set_string(obj_loc,   "MODE",             LOC_MODE,       "localization");
     check_and_set_bool(obj_loc,     "USE_ARUCO",        USE_ARUCO,      "localization");
+    check_and_set_bool(obj_loc,     "USE_EKF",        USE_EKF,      "localization");
 }
 
 void CONFIG::load_localization_2d_config(const QJsonObject &obj)
@@ -208,6 +209,7 @@ void CONFIG::load_network_config(const QJsonObject &obj)
     check_and_set_bool(obj_net, "USE_COOP",  USE_COMM_COOP, "network");
     check_and_set_bool(obj_net, "USE_RTSP",  USE_COMM_RTSP, "network");
     check_and_set_bool(obj_net, "USE_RRS",   USE_COMM_RRS,  "network");
+    check_and_set_bool(obj_net, "USE_MSA",   USE_COMM_MSA,  "network");
     check_and_set_bool(obj_net, "USE_FMS",   USE_COMM_FMS,  "network");
 }
 
@@ -1039,6 +1041,12 @@ bool CONFIG::get_use_aruco()
     return USE_ARUCO;
 }
 
+bool CONFIG::get_use_ekf()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_EKF;
+}
+
 QString CONFIG::get_loc_mode()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1169,6 +1177,12 @@ bool CONFIG::get_use_rrs()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_COMM_RRS;
+}
+
+bool CONFIG::get_use_msa()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_COMM_MSA;
 }
 
 bool CONFIG::get_use_fms()

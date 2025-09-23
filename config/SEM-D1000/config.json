@@ -29,7 +29,8 @@
     },
     "localization": {
         "MODE": "2D",
-        "USE_ARUCO": false
+        "USE_ARUCO": false,
+        "USE_EKF": true
     },
     "network": {
         "USE_MULTI": false,

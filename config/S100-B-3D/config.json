@@ -44,11 +44,6 @@
         "USE_QTUI": false,
         "USE_BEEP": false
     },
-    "logging": {
-        "LOG_LEVEL": "info",
-        "DEBUG_LIDAR_2D": true,
-        "DEBUG_MOBILE": false
-    },
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
@@ -196,8 +191,7 @@
     	"DOCKING_Y_OFFSET": "-0.007"
     },
     "map": {
-        "MAP_PATH": "/data/maps/CAR_250117"
+        "MAP_PATH": ""
     }
 }
-
 

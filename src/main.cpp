@@ -104,7 +104,10 @@ int main(int argc, char *argv[])
     qRegisterMetaType<DATA_VOBS>();
     qRegisterMetaType<DATA_SOFTWARE>();
     qRegisterMetaType<DATA_FOOT>();
-    qRegisterMetaType<DATA_FIELD>();
+
+    qRegisterMetaType<DATA_SAFETY>();
+    qRegisterMetaType<DATA_PDU_UPDATE>();
+
 
     QApplication a(argc, argv);
 

@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
+    COMM_MSA::instance(this);
 
     // for 3d viewer
     connect(ui->cb_ViewType,          SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
@@ -70,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_MapSave,           SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
     connect(ui->bt_MapLoad,           SIGNAL(clicked()),  this, SLOT(bt_MapLoad()));                     // map load
     connect(ui->bt_MapLastLc,         SIGNAL(clicked()),  this, SLOT(bt_MapLastLc()));                   // manual loop closing
+    connect(ui->bt_MapPause,          SIGNAL(clicked()),  this, SLOT(bt_MapPause()));
+    connect(ui->bt_MapResume,         SIGNAL(clicked()),  this, SLOT(bt_MapResume()));
 
     // localization
     connect(ui->bt_LocInit,           SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
@@ -125,8 +128,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_LiftPowerOff,       SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
     connect(ui->bt_SetLidarField,      SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
 
-    // test
+    // others
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
+    connect(ui->ckb_PlotKfrm, SIGNAL(stateChanged(int)), this, SLOT(ckb_PlotKfrm()));
 
     // set effect
     init_ui_effect();
@@ -436,6 +440,21 @@ void MainWindow::init_modules()
         COMM_RRS::instance()->set_mapping_module(MAPPING::instance());
         COMM_RRS::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
         COMM_RRS::instance()->init();
+    }
+
+    //comm cooperative module init(msa)
+    {
+        COMM_MSA::instance()->set_config_module(CONFIG::instance());
+        COMM_MSA::instance()->set_logger_module(LOGGER::instance());
+        COMM_MSA::instance()->set_mobile_module(MOBILE::instance());
+        COMM_MSA::instance()->set_unimap_module(UNIMAP::instance());
+        COMM_MSA::instance()->set_obsmap_module(OBSMAP::instance());
+        COMM_MSA::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_MSA::instance()->set_autocontrol_module(AUTOCONTROL::instance());
+        COMM_MSA::instance()->set_localization_module(LOCALIZATION::instance());
+        COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
+        COMM_MSA::instance()->set_dockcontrol_module(DOCKCONTROL::instance());
+        COMM_MSA::instance()->init();
     }
 
     // docking module init
@@ -1198,6 +1217,10 @@ void MainWindow::bt_MapSave()
 
             Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
 
+            // int64_t x = _P[0];
+            // int64_t y = _P[1];
+            // int64_t z = _P[2];
+
             int64_t x = std::floor(_P[0]/voxel_size);
             int64_t y = std::floor(_P[1]/voxel_size);
             int64_t z = std::floor(_P[2]/voxel_size);
@@ -1236,7 +1259,7 @@ void MainWindow::bt_MapSave()
         }
 
         cloud_csv_file.close();
-        printf("[MAIN] %s saved\n", cloud_csv_path.toLocal8Bit().data());
+        printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
     }
 }
 
@@ -1259,6 +1282,18 @@ void MainWindow::bt_MapLoad()
 void MainWindow::bt_MapLastLc()
 {
     MAPPING::instance()->last_loop_closing();
+}
+
+void MainWindow::bt_MapPause()
+{
+    MAPPING::instance()->is_pause.store(true);
+    printf("[MAIN] mapping pasue\n");
+}
+
+void MainWindow::bt_MapResume()
+{
+    MAPPING::instance()->is_pause.store(false);
+    printf("[MAIN] mapping resume\n");
 }
 
 // localization
@@ -1500,6 +1535,18 @@ void MainWindow::bt_TestLed()
     printf("[MAIN] led test:%d\n", ui->spb_Led->value());
 }
 
+void MainWindow::ckb_PlotKfrm()
+{
+    if(ui->ckb_PlotKfrm->isChecked())
+    {
+        int num = MAPPING::instance()->kfrm_storage->size();
+        for(int p = 0; p < num; p++)
+        {
+            MAPPING::instance()->kfrm_update_que.push(p);
+        }
+    }
+}
+
 void MainWindow::bt_ReturnToCharging()
 {
     QString robot_serial_number = CONFIG::instance()->get_robot_serial_number();
@@ -1627,12 +1674,14 @@ void MainWindow::bt_QuickAddNode()
 void MainWindow::slot_local_path_updated()
 {
     COMM_RRS::instance()->set_local_path_update();
+    COMM_MSA::instance()->set_local_path_update();
     is_local_path_update = true;
 }
 
 void MainWindow::slot_global_path_updated()
 {
     COMM_RRS::instance()->set_global_path_update();
+    COMM_MSA::instance()->set_global_path_update();
     is_global_path_update = true;
 }
 
@@ -2995,6 +3044,7 @@ void MainWindow::plot_mapping()
         }
 
         // plot keyframe pts
+        if(ui->ckb_PlotKfrm->isChecked())
         {
             int kfrm_id;
             if(MAPPING::instance()->try_pop_kfrm_update_que(kfrm_id))
@@ -3053,6 +3103,21 @@ void MainWindow::plot_mapping()
 
                     // point size
                     pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, MAINWINDOW_INFO::plot_point_size, name.toStdString());
+                }
+            }
+        }
+        else
+        {
+            // remove keyframes
+            if(last_plot_kfrms.size() > 0)
+            {
+                for(size_t p = 0; p < last_plot_kfrms.size(); p++)
+                {
+                    QString name = last_plot_kfrms[p];
+                    if(pcl_viewer->contains(name.toStdString()))
+                    {
+                        pcl_viewer->removeShape(name.toStdString());
+                    }
                 }
             }
         }

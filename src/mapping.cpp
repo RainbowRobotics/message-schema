@@ -88,10 +88,7 @@ void MAPPING::clear()
         kfrm_que.clear();
         kfrm_update_que.clear();
 
-        if(kfrm_storage)
-        {
-            kfrm_storage->clear();
-        }
+        kfrm_storage = std::make_shared<std::vector<KFRAME>>();
 
         if(live_tree)
         {
@@ -122,10 +119,13 @@ size_t MAPPING::get_kfrm_storage_size()
 
 QString MAPPING::get_info_text()
 {
+    Eigen::Vector3d cur_xi = TF_to_se2(loc->get_cur_tf());
+
     QString res;
-    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nfq: %d, kq: %d, kfrm_num :%d",
+    res.sprintf("[MAPPING]\nmap_t(a,b): %.3f, %.3f\nkq: %d, kfrm_num :%d\npos: %.3f, %.3f, %.3f",
                 (double)proc_time_map_a.load(), (double)proc_time_map_b.load(),
-                (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size());
+                (int)kfrm_que.unsafe_size(), (int)get_kfrm_storage_size(),
+                cur_xi[0], cur_xi[1], cur_xi[2]*R2D);
 
     return res;
 }
@@ -183,6 +183,7 @@ void MAPPING::kfrm_loop()
     int frm_cnt = 0;
     int add_cnt = 0;
     int kfrm_id = 0;
+    ekf.initialized.store(false);
 
     // last frame
     FRAME frm0;
@@ -190,10 +191,12 @@ void MAPPING::kfrm_loop()
     // using new lidar frame
     lidar_2d->clear_merged_queue();
 
-    printf("[MAPPING] a_loop start\n");
+    printf("[MAPPING] kfrm_loop start\n");
     while(kfrm_flag)
     {
         FRAME frm;
+
+        // if(lidar_2d->get_deskewing_frm(frm, 0))
         if(lidar_2d->try_pop_merged_queue(frm))
         {
             // for processing time
@@ -249,6 +252,14 @@ void MAPPING::kfrm_loop()
                     live_tree->buildIndex();
                 }
 
+                if(config->get_use_ekf())
+                {
+                    if(!ekf.initialized.load())
+                    {
+                        ekf.init(G);
+                    }
+                }
+
                 // update global tf
                 loc->set_cur_tf(G);
 
@@ -265,19 +276,44 @@ void MAPPING::kfrm_loop()
 
                 // initial guess
                 Eigen::Matrix4d delta_tf = se2_to_TF(frm0.mo.pose).inverse()*se2_to_TF(frm.mo.pose);
-                G = G * delta_tf;
+
+                if(config->get_use_ekf())
+                {
+                    if(ekf.initialized.load())
+                    {
+                        ekf.predict(se2_to_TF(frm.mo.pose));
+                        G = ekf.get_cur_tf();
+                    }
+                }
+                else
+                {
+                    G = G * delta_tf;
+                }
 
                 Eigen::Matrix3d R0 = G.block(0,0,3,3);
                 Eigen::Vector3d t0 = G.block(0,3,3,1);
 
+                // pose estimation
+                double err = frm_icp(*live_tree, live_cloud, frm, G);
+                Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
+                if(err < icp_error_threshold)
+                {
+                    if(config->get_use_ekf())
+                    {
+                        ekf.estimate(G, ieir);
+                        G = ekf.get_cur_tf();
+                    }
+                }
+
+                // update global tf
+                loc->set_cur_tf(G);
+
                 // check moving
                 double moving_d = calc_dist_2d(delta_tf.block(0,3,3,1));
                 double moving_th = std::abs(TF_to_se2(delta_tf)[2]);
-                if(moving_d > 0.05 || moving_th > 2.5*D2R)
+                // if((moving_d > 0.05 || moving_th > 2.5*D2R) && !is_pause.load())
+                if(moving_d > 0.05 && !is_pause.load())
                 {
-                    // pose estimation
-                    double err = frm_icp(*live_tree, live_cloud, frm, G);
-                    Eigen::Vector2d ieir = loc->calc_ieir(*live_tree, frm, G);
                     if(err < icp_error_threshold)
                     {
                         // local to global
@@ -418,7 +454,7 @@ void MAPPING::kfrm_loop()
                         }
 
                         // update global tf
-                        loc->set_cur_tf(G);
+                        // loc->set_cur_tf(G);
 
                         // update previous frame
                         frm0 = frm;
@@ -438,7 +474,7 @@ void MAPPING::kfrm_loop()
                             kfrm.G = G;
                             kfrm.opt_G = G;
                             kfrm_que.push(kfrm);
-                            printf("[MAPPING] keyframe created, id:%d\n", kfrm.id);
+                            printf("[MAPPING] keyframe created, id:%d, pts: %zu\n", kfrm.id, kfrm.pts.size());
 
                             // inc keyframe id
                             kfrm_id++;
@@ -464,7 +500,7 @@ void MAPPING::kfrm_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    printf("[MAPPING] a_loop stop\n");
+    printf("[MAPPING] kfrm_loop stop\n");
 }
 
 void MAPPING::loop_closing_loop()
@@ -909,6 +945,9 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
         return std::numeric_limits<double>::max();
     }
+
+    // debug
+    // printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

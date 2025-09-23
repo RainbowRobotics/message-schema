@@ -1,7 +1,14 @@
 #ifndef COMM_DATA_H
 #define COMM_DATA_H
 
+#include <sio_client.h>
 #include "global_defines.h"
+
+struct SOCKET_MESSAGE
+{
+    QString event;
+    sio::message::ptr data;
+};
 
 struct DATA_MOVE
 {
@@ -10,6 +17,7 @@ struct DATA_MOVE
     QString method; // pp, hpp, tng
     QString goal_node_id;
     QString goal_node_name;
+    QString id;  // rrs give msg id
 
     int preset;
     Eigen::Vector3d cur_pos; // x, y, z
@@ -32,6 +40,7 @@ struct DATA_MOVE
 
         goal_node_id = "";
         goal_node_name = "";
+        id = "";
 
         preset = 0;
         cur_pos.setZero();
@@ -55,6 +64,7 @@ struct DATA_MOVE
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
         remaining_dist = p.remaining_dist;
+        id = p.id;
 
         preset = p.preset;
         cur_pos = p.cur_pos;
@@ -287,6 +297,121 @@ struct DATA_DOCK
     {
         time = p.time;
         command = p.command;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+struct DATA_PDU_UPDATE
+{
+    double time;
+    QString command; // "updatePduParam"
+
+    struct PARAM_ITEM
+    {
+        QString key;
+        QString type;
+        QString value;
+        
+        PARAM_ITEM() : key(""), type(""), value("") {}
+        PARAM_ITEM(const QString& k, const QString& t, const QString& v)
+            : key(k), type(t), value(v) {}
+    };
+    
+    std::vector<PARAM_ITEM> param_list; // key, type, value 배열
+    QString result;
+    QString message;
+    MOBILE_SETTING setting;
+
+    DATA_PDU_UPDATE()
+    {
+        time = 0.0;
+        command = "";
+
+        param_list.clear();
+
+        result = "";
+        message = "";
+        setting = MOBILE_SETTING();
+    }
+
+    DATA_PDU_UPDATE(const DATA_PDU_UPDATE& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        param_list = p.param_list;
+
+        result = p.result;
+        message = p.message;
+        setting = p.setting;
+    }
+
+    DATA_PDU_UPDATE& operator=(const DATA_PDU_UPDATE& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        param_list = p.param_list;
+
+        result = p.result;
+        message = p.message;
+        setting = p.setting;
+        return *this;
+    }
+
+    
+};
+
+
+struct DATA_SAFETY
+{
+    double time;
+    QString command; // set, get
+
+    QString reset_flag; // safety reset bumper, obs ...
+    int set_field;
+    int get_field;
+
+    QString result;
+    QString message;
+
+    DATA_SAFETY()
+    {
+        time = 0.0;
+        command = "";
+
+        reset_flag = "";
+        set_field = 0;
+        get_field = 0;
+
+        result = "";
+        message = "";
+    }
+
+    DATA_SAFETY(const DATA_SAFETY& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        reset_flag = p.reset_flag;
+        set_field = p.set_field;
+        get_field = p.get_field;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_SAFETY& operator=(const DATA_SAFETY& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        reset_flag = p.reset_flag;
+        get_field = p.get_field;
+        set_field = p.set_field;
 
         result = p.result;
         message = p.message;
@@ -908,5 +1033,8 @@ Q_DECLARE_METATYPE(DATA_CAM_INFO)
 Q_DECLARE_METATYPE(DATA_UPDATE_VARIABLE)
 Q_DECLARE_METATYPE(DATA_COMMON)
 Q_DECLARE_METATYPE(DATA_SAFTYIO)
+Q_DECLARE_METATYPE(DATA_SAFETY)
+Q_DECLARE_METATYPE(DATA_PDU_UPDATE)
+
 
 #endif // COMM_DATA_H
