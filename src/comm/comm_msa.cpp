@@ -1924,8 +1924,8 @@ void COMM_MSA::send_status()
     QString cur_loc_state = loc->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    QString robot_model = config->get_robot_model();
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    RobotModel robot_model = config->get_robot_model();
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
         {
@@ -1952,7 +1952,7 @@ void COMM_MSA::send_status()
             charge_st_string = "fail";
         }
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         if(ms.charge_state == 0)
         {
@@ -2008,12 +2008,12 @@ void COMM_MSA::send_status()
     powerObj->get_map()["tabos_rc"]       = sio::double_message::create(ms.tabos_rc);
     powerObj->get_map()["tabos_ae"]       = sio::double_message::create(ms.tabos_ae);
 
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         powerObj->get_map()["charge_current"]  = sio::double_message::create(ms.charge_current);
         powerObj->get_map()["contact_voltage"] = sio::double_message::create(ms.contact_voltage);
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         powerObj->get_map()["charge_current"]  = sio::double_message::create(0.0);
         powerObj->get_map()["contact_voltage"] = sio::double_message::create(0.0);
@@ -2021,7 +2021,7 @@ void COMM_MSA::send_status()
     rootObj->get_map()["power"] = powerObj;
 
     sio::object_message::ptr settingObj = sio::object_message::create();
-    settingObj->get_map()["platform_type"] = sio::string_message::create(config->get_robot_type().toStdString());
+    settingObj->get_map()["platform_type"] = sio::string_message::create(config->get_robot_type_str().toStdString());
     settingObj->get_map()["platform_name"] = sio::string_message::create("");
     rootObj->get_map()["setting"] = settingObj;
 

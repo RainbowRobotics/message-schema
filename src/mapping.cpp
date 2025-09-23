@@ -178,7 +178,7 @@ void MAPPING::kfrm_loop()
     const double y_min = config->get_robot_size_y_min(); const double y_max = config->get_robot_size_y_max();
     const double z_min = config->get_robot_size_z_min(); const double z_max = config->get_robot_size_z_max();
 
-    const QString robot_model = config->get_robot_model();
+    const RobotModel robot_model = config->get_robot_model();
 
     int frm_cnt = 0;
     int add_cnt = 0;
@@ -215,7 +215,7 @@ void MAPPING::kfrm_loop()
                 for(size_t p = 0; p < frm.pts.size(); p++)
                 {
                     Eigen::Vector3d _P = frm.pts[p];
-                    if(robot_model == "S100")
+                    if(robot_model == RobotModel::S100)
                     {
                         double dx = 1.0;
                         if(_P[0] > (x_min - dx) && _P[0] < (x_max + dx) &&
@@ -323,7 +323,7 @@ void MAPPING::kfrm_loop()
                         {
                             Eigen::Vector3d _P = frm.pts[p];
 
-                            if(robot_model == "S100")
+                            if(robot_model == RobotModel::S100)
                             {
                                 double dx = 1.0;
                                 if(_P[0] > x_min - dx && _P[0] < x_max + dx &&
@@ -667,7 +667,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
     double z_min = config->get_robot_size_z_min(), z_max = config->get_robot_size_z_max();
 
-    QString robot_model = config->get_robot_model();
+    RobotModel robot_model = config->get_robot_model();
 
     Eigen::Matrix3d R0 = G.block(0,0,3,3);
     Eigen::Vector3d t0 = G.block(0,3,3,1);
@@ -678,7 +678,7 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
     for(size_t p = 0; p < frm.pts.size(); p++)
     {
         Eigen::Vector3d _P = frm.pts[p];
-        if(robot_model == "S100")
+        if(robot_model == RobotModel::S100)
         {
             double dx = 1.0;
             if(_P[0] > x_min - dx && _P[0] < x_max + dx &&

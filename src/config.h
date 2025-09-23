@@ -51,9 +51,11 @@ public:
     /***********************
      * robot unique
      ***********************/
+    QString get_robot_type_str();       // robot type_str
+    QString get_robot_model_str();      // robot model_str
     QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
-    QString get_robot_type();           // robot type  : S100-A-3D
-    QString get_robot_model();          // robot model : S100, D400, Mecanum, SEM ...
+    RobotType get_robot_type();         // robot type  : S100-A-3D
+    RobotModel get_robot_model();       // robot model : S100, D400, Mecanum, SEM ...
 
     /***********************
      * robot hardware
@@ -316,8 +318,8 @@ private:
 
     // robot
     QString ROBOT_SERIAL_NUMBER = "RB-M-";
-    QString ROBOT_MODEL = "";
-    QString ROBOT_TYPE  = "";
+    RobotModel ROBOT_MODEL = RobotModel::NONE;
+    RobotType ROBOT_TYPE  = RobotType::NONE;
     QString PLATFORM_TYPE = "";
     QString MILEAGE = "";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max

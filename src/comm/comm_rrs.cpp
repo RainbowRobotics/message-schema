@@ -814,8 +814,8 @@ void COMM_RRS::send_status()
     QString cur_loc_state = loc->get_cur_loc_state();
     QString charge_st_string = "none";
 
-    QString robot_model = config->get_robot_model();
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    RobotModel robot_model = config->get_robot_model();
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         if(ms.charge_state == CHARGE_STATE_IDLE)
         {
@@ -842,7 +842,7 @@ void COMM_RRS::send_status()
             charge_st_string = "fail";
         }
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         if(ms.charge_state == 0)
         {
@@ -897,12 +897,12 @@ void COMM_RRS::send_status()
     powerObj["tabos_rc"]       = QString::number(ms.tabos_rc, 'f', 3);
     powerObj["tabos_ae"]       = QString::number(ms.tabos_ae, 'f' ,3);
 
-    if(robot_model == "D400" || robot_model == "MECANUM")
+    if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
         powerObj["charge_current"]  = QString::number(ms.charge_current, 'f', 3);
         powerObj["contact_voltage"] = QString::number(ms.contact_voltage, 'f', 3);
     }
-    else if(robot_model == "S100")
+    else if(robot_model == RobotModel::S100)
     {
         powerObj["charge_current"]  = QString::number(0.0, 'f', 3);
         powerObj["contact_voltage"] = QString::number(0.0, 'f', 3);
@@ -910,7 +910,7 @@ void COMM_RRS::send_status()
     rootObj["power"] = powerObj;
 
     QJsonObject settingObj;
-    settingObj["platform_type"] = config->get_robot_type();
+    settingObj["platform_type"] = config->get_robot_type_str();
     settingObj["platform_name"] = "";
     rootObj["setting"] = settingObj;
 

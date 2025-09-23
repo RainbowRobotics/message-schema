@@ -17,7 +17,7 @@
 // qt
 #include <QObject>
 
-enum class RobotType
+enum class RobotType_PDU
 {
     ROBOT_TYPE_UNKNOWN = 0,
     ROBOT_TYPE_D400    = 1,
@@ -103,6 +103,7 @@ public:
     void motor_on();
     void motor_off();
     void move(double vx, double vy, double wz);
+    void moveQD(double vx, double vy, double wz, int hpp_side);
     void move_linear_x(double d, double v);
     void move_linear_y(double d, double v);
     void move_rotate(double th, double w);

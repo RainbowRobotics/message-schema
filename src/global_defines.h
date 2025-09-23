@@ -132,6 +132,31 @@ constexpr double R2D  = 180.0/M_PI;
 #define S100_BAT_MIN_VOLTAGE 42.0
 
 // enumulator
+enum class RobotType
+{
+    S100_A,
+    S100_B,
+    S100_A_3D,
+    S100_B_3D,
+    D400,
+    QD,
+    MECANUM_Q150,
+    SEM,
+    SDC,
+    NONE
+};
+
+enum class RobotModel
+{
+    S100,
+    D400,
+    QD,
+    MECANUM,
+    SEM,
+    SDC,
+    NONE
+};
+
 enum FOOT_STATE
 {
     FOOT_STATE_IDLE = 0,         // 정지 상태

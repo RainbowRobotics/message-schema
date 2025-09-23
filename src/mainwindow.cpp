@@ -250,18 +250,18 @@ void MainWindow::init_modules()
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
-        QString robot_type = CONFIG::instance()->get_robot_type();
-        ui->lb_RobotType->setText(robot_type);
+        QString robot_type_str = CONFIG::instance()->get_robot_type_str();
+        ui->lb_RobotType->setText(robot_type_str);
 
         mileage = CONFIG::instance()->get_mileage();
 
-        if(robot_type.isEmpty())
+        if(robot_type_str.isEmpty())
         {
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
-            QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config.json";
+            QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
 
@@ -269,7 +269,7 @@ void MainWindow::init_modules()
             CONFIG::instance()->set_version_path(path_version);
             CONFIG::instance()->load_version();
 
-            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type + "/config_sn.json";
+            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config_sn.json";
             CONFIG::instance()->set_serial_number_path(path_cam_serial_number);
             CONFIG::instance()->load_cam_serial_number();
         }
