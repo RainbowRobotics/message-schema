@@ -47,11 +47,13 @@ void LIDAR_2D::init()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[LIDAR_2D] simulation mode\n");
+        spdlog::info("[LIDAR_2D] simulation mode init");
+
         return;
     }
 
-    std::cout << "config->get_lidar_2d_type(): " << config->get_lidar_2d_type().toStdString() << std::endl;
+    //std::cout << "config->get_lidar_2d_type(): " << config->get_lidar_2d_type().toStdString() << std::endl;
+    spdlog::info("[LIDAR_2D]config->get_lidar_2d_type(): {}", config->get_lidar_2d_type().toStdString());
 
     if(config->get_lidar_2d_type() == "SICK")
     {
@@ -64,7 +66,11 @@ void LIDAR_2D::init()
             sick->set_logger_module(this->logger);
             sick->set_mobile_module(this->mobile);
             sick->open();
-            printf("[LIDAR_2D] try to open SICK 2D lidar\n");
+            //printf("[LIDAR_2D] try to open SICK 2D lidar\n");
+            if(config)
+            {
+                spdlog::info("[LIDAR_2D] try to open SICK 2D lidar");
+            }
         }
     }
     else if(config->get_lidar_2d_type() == "RP")
@@ -78,7 +84,11 @@ void LIDAR_2D::init()
             rp->set_logger_module(this->logger);
             rp->set_mobile_module(this->mobile);
             rp->open();
-            printf("[LIDAR_2D] try to open RP 2D lidar\n");
+            //printf("[LIDAR_2D] try to open RP 2D lidar\n");
+            if(config && config->get_log_level() != "off")
+            {
+                spdlog::info("[LIDAR_2D] try to open RP 2D lidar");
+            }
         }
 
     }
@@ -89,11 +99,17 @@ void LIDAR_2D::open()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[LIDAR_2D] simulation mode\n");
+        //printf("[LIDAR_2D] simulation mode\n");
+
+          spdlog::info("[LIDAR_2D] simulation mode open");
         return;
     }
 
-    printf("[LIDAR_2D] open\n");
+    //printf("[LIDAR_2D] open\n");
+    if(config && config->get_log_level() != "off")
+    {
+        spdlog::info("[LIDAR_2D] open");
+    }
 
     // stop first
     close();
@@ -212,7 +228,8 @@ void LIDAR_2D::set_sync_flag(bool flag)
         for(int p = 0; p < lidar_num; p++)
         {
             sick->set_is_sync(p, flag);
-            printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
+            //printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
+            spdlog::info("[LIDAR_2D] set sick->is_sync = %d", flag);
         }
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
@@ -220,7 +237,8 @@ void LIDAR_2D::set_sync_flag(bool flag)
         for(int p = 0; p < lidar_num; p++)
         {
             rp->set_is_sync(p, flag);
-            printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
+            //printf("[LIDAR_2D] set rp->is_sync = %d\n", flag);
+            spdlog::info("[LIDAR_2D] set rp->is_sync = %d", flag);
         }
     }
 }
@@ -276,7 +294,9 @@ void LIDAR_2D::deskewing_loop(int idx)
 {
     double pre_loop_time = get_time();
 
-    printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
+    //printf("[LIDAR_2D] dsk_loop[%d] start\n", idx);
+    spdlog::info("[LIDAR_2D] dsk_loop[%d] start", idx);
+
     while(deskewing_flag[idx])
     {
         if(!is_connected)
@@ -352,7 +372,7 @@ void LIDAR_2D::deskewing_loop(int idx)
             deskewing_frm.times    = std::move(filtered_time);
             deskewing_frm.pts      = std::move(filetered_deskewing);
 
-            // printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
+            //       printf("dsk_frm[%d] t:%f, filtered_pts:%zu, pts:%zu\n", idx, dsk_frm.mo.t, dsk_frm.pts.size(), dsk.size());
 
             // for mapping
             {
@@ -376,7 +396,7 @@ void LIDAR_2D::deskewing_loop(int idx)
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_2D] deskewing_loop[%d] stop\n", idx);
+    spdlog::info("[LIDAR_2D] deskewing_loop[%d] stop", idx);
 }
 
 void LIDAR_2D::merge_loop()
@@ -392,7 +412,9 @@ void LIDAR_2D::merge_loop()
 
     double pre_loop_time = get_time();
 
-    printf("[LIDAR_2D] merge_loop start\n");
+    //printf("[LIDAR_2D] merge_loop start\n");
+    spdlog::info("[LIDAR_2D] merge_loop start");
+
     while(merge_flag)
     {
         // if single lidar
@@ -535,6 +557,10 @@ void LIDAR_2D::merge_loop()
             storage[1].erase(storage[1].begin(), storage[1].begin() + best_j + 1);
 
             //printf("[LIDAR] paired t=%.6f, idx: (%zu, %zu), pts0_t=%.6f, pts1_t=%.6f, pts0=%zu, pts1=%zu, total=%zu (storage: %zu, %zu))\n", merge_frm.t, ref_i, best_j, best0.t0, best1.t0, merge_frm.pts.size(), best0.pts.size(), best1_pts.size(), storage[0].size(), storage[1].size());
+            if(config->set_debug_lidar_2d())
+            {
+                spdlog::debug("[LIDAR] paired t={:.6f}, idx: ({}, {}), pts0_t={:.6f}, pts1_t={:.6f},pts0={}, pts1={}, total={} (storage: {}, {})",merge_frm.t,ref_i, best_j,best0.t0, best1.t0,merge_frm.pts.size(),best0.pts.size(), best1_pts.size(),storage[0].size(),storage[1].size());
+            }
         }
         else
         {
@@ -546,7 +572,8 @@ void LIDAR_2D::merge_loop()
                 if(storage[0].back().mo.t - last_recv_t[1] > wait_timeout)
                 {
                     use_idx = 0;
-                    // printf("[LIDAR] 0-time: %f - %f = %f\n", storage[0].back().t, last_recv_t[1], storage[0].back().t - last_recv_t[1]);
+
+                    //printf("[LIDAR] 0-time: %f - %f = %f\n", storage[0].back().t, last_recv_t[1], storage[0].back().t - last_recv_t[1]);
                 }
             }
             else if(storage[0].empty() && !storage[1].empty())
@@ -599,7 +626,7 @@ void LIDAR_2D::merge_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_2D] merge_loop stop\n");
+    spdlog::info("[LIDAR_2D] merge_loop stop");
 }
 
 bool LIDAR_2D::is_shadow(const double r1, const double r2, const double included_angle, const double min_angle_tan, const double max_angle_tan)

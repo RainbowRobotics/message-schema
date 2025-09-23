@@ -33,6 +33,15 @@
         "USE_COOP": "0",
         "USE_MULTI": "0"
     },
+    "logging": {
+        "LOG_LEVEL": "debug",
+        "LOG_ENABLE_LIDAR_DEBUG": "true"
+    },
+    "logging": {
+        "LOG_LEVEL": "info",
+        "DEBUG_LIDAR_2D": true,
+        "DEBUG_MOBILE": false
+    },
     "default": {
         "LIDAR_MAX_RANGE": "40.0",
         "LIDAR_MIN_RANGE": "0.5",

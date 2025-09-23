@@ -74,7 +74,8 @@ void CAM::init()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[CAM] simulation mode\n");
+        //printf("[CAM] simulation mode\n");
+        spdlog::info("[CAM] simulation mode\n");
         return;
     }
 
