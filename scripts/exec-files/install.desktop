@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Run Flag Executor
+Comment=Executes install.sh
+Exec=./install.sh
+Icon=./assets/Slamnav-download.png
+Terminal=false

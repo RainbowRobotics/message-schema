@@ -98,6 +98,7 @@ void CONFIG::load()
     load_localization_3d_config(obj);
     load_network_config(obj);
     load_debug_config(obj);
+    load_logging_config(obj);
     load_motor_config(obj);
     load_mapping_config(obj);
     load_obstacle_config(obj);
@@ -110,6 +111,9 @@ void CONFIG::load()
 
     is_load = true;
     printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
+
+    // spdlog 레벨 설정
+    setup_spdlog_level();
 
     if(has_missing_variables())
     {
@@ -130,6 +134,9 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Y",     ROBOT_SIZE_Y[1],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_Z",     ROBOT_SIZE_Z[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_Z",     ROBOT_SIZE_Z[1],    "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_X",     ROBOT_SIZE_ADD_X,   "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_Y",     ROBOT_SIZE_ADD_Y,   "robot");
+    check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_Z",     ROBOT_SIZE_ADD_Z,   "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_RADIUS",   ROBOT_WHEEL_RADIUS, "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_BASE",     ROBOT_WHEEL_BASE,   "robot");
 
@@ -215,6 +222,18 @@ void CONFIG::load_debug_config(const QJsonObject &obj)
     check_and_set_string(obj_debug, "SERVER_IP", SERVER_IP, "debug");
     check_and_set_string(obj_debug, "SERVER_ID", SERVER_ID, "debug");
     check_and_set_string(obj_debug, "SERVER_PW", SERVER_PW, "debug");
+}
+
+void CONFIG::load_logging_config(const QJsonObject &obj)
+{
+    QJsonObject obj_logging = obj["logging"].toObject();
+
+    check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LIDAR_2D", DEBUG_LIDAR_2D, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_MOBILE", DEBUG_MOBILE, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_COMM_RRS", DEBUG_COMM_RRS, "logging");
+    check_and_set_bool(obj_logging, "LOG_ENABLE_FILE_OUTPUT", LOG_ENABLE_FILE_OUTPUT, "logging");
+    check_and_set_string(obj_logging, "LOG_FILE_PATH", LOG_FILE_PATH, "logging");
 }
 
 void CONFIG::load_motor_config(const QJsonObject &obj)
@@ -732,7 +751,7 @@ bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
     QMutexLocker locker(&q_mtx);
 
     QFile file(path_config);
-    qDebug()<<"path_config : "<<path_config;
+    //qDebug()<<"path_config : "<<path_config;
     if(!file.open(QIODevice::ReadOnly))
     {
         return false;
@@ -900,6 +919,24 @@ double CONFIG::get_robot_size_z_max()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return ROBOT_SIZE_Z[1];
+}
+
+double CONFIG::get_robot_size_add_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_X;
+}
+
+double CONFIG::get_robot_size_add_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_Y;
+}
+
+double CONFIG::get_robot_size_add_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_SIZE_ADD_Z;
 }
 
 double CONFIG::get_robot_wheel_base()
@@ -1183,6 +1220,86 @@ QString CONFIG::get_server_pw()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return SERVER_PW;
 }
+
+QString CONFIG::get_log_level()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_LEVEL;
+}
+
+bool CONFIG::set_debug_lidar_2d()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_LIDAR_2D;
+}
+
+bool CONFIG::set_debug_mobile()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_MOBILE;
+}
+
+bool CONFIG::set_debug_comm_rrs()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DEBUG_COMM_RRS;
+}
+
+bool CONFIG::get_log_enable_file_output()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_ENABLE_FILE_OUTPUT;
+}
+
+QString CONFIG::get_log_file_path()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOG_FILE_PATH;
+}
+
+
+void CONFIG::setup_spdlog_level()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    
+    spdlog::level::level_enum level = spdlog::level::info;
+    if (LOG_LEVEL == "trace")
+    {
+        level = spdlog::level::trace;
+    }
+    else if (LOG_LEVEL == "debug")
+    {
+        level = spdlog::level::debug;
+    }
+    else if (LOG_LEVEL == "info")
+    {
+        level = spdlog::level::info;
+    }
+    else if (LOG_LEVEL == "warn")
+    {
+        level = spdlog::level::warn;
+    }
+    else if (LOG_LEVEL == "error")
+    {
+        level = spdlog::level::err;
+    }
+    else if (LOG_LEVEL == "critical")
+    {
+        level = spdlog::level::critical;
+    }
+    else
+    {
+
+    }
+    
+    // spdlog 기본 레벨 설정
+    spdlog::set_level(level);
+    
+    //printf("[CONFIG] spdlog level set to: %s\n", qUtf8Printable(LOG_LEVEL));
+    spdlog::info("[CONFIG] spdlog level set to: {}", LOG_LEVEL.toStdString());
+
+}
+
 
 double CONFIG::get_lidar_2d_min_range()
 {
