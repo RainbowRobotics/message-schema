@@ -35,8 +35,6 @@ private:
     // mutex
     std::mutex mtx;
 
-
-
     // state estimation (x, y, z, rx, ry, rz)
     Eigen::Vector6d x_hat;
 

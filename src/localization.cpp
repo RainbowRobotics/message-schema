@@ -90,8 +90,6 @@ void LOCALIZATION::stop()
 {
     is_loc = false;
 
-    ekf.reset();
-
     localization_flag = false;
     if(localization_thread && localization_thread->joinable())
     {
@@ -119,6 +117,9 @@ void LOCALIZATION::stop()
         obs_thread->join();
     }
     obs_thread.reset();
+
+    ekf.reset();
+    ekf_3d.reset();
 
     QString loc_mode = config->get_loc_mode();
     printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
@@ -1017,7 +1018,6 @@ void LOCALIZATION::ekf_loop_3d()
     }
     printf("[LOCALIZATION] ekf_loop_3d stop\n");
 }
-
 
 void LOCALIZATION::obs_loop()
 {
