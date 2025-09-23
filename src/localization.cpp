@@ -53,26 +53,10 @@ void LOCALIZATION::start()
             ekf_flag = true;
             ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop, this);
         }
-        if(config ->get_use_sim())
+        else if(loc_mode == "3D")
         {
-            if(loc_mode == "2D")
-            {
-                localization_flag = true;
-                localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_2d, this);
-            }
-            else if(loc_mode == "3D")
-            {
-                localization_flag = true;
-                localization_thread = std::make_unique<std::thread>(&LOCALIZATION::localization_loop_3d, this);
-            }
-            else
-            {
-                printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
-                is_loc = false;
-            }
-
-            odometry_flag = true;
-            odometry_thread = std::make_unique<std::thread>(&LOCALIZATION::odometry_loop, this);
+            ekf_flag = true;
+            ekf_thread = std::make_unique<std::thread>(&LOCALIZATION::ekf_loop_3d, this);
         }
     }
     else
@@ -107,8 +91,6 @@ void LOCALIZATION::stop()
 {
     is_loc = false;
 
-    ekf.reset();
-
     localization_flag = false;
     if(localization_thread && localization_thread->joinable())
     {
@@ -136,6 +118,9 @@ void LOCALIZATION::stop()
         obs_thread->join();
     }
     obs_thread.reset();
+
+    ekf.reset();
+    ekf_3d.reset();
 
     QString loc_mode = config->get_loc_mode();
     printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
@@ -839,6 +824,10 @@ void LOCALIZATION::odometry_loop()
 
 void LOCALIZATION::ekf_loop()
 {
+    // loop params
+    const double dt = 0.02; // 50hz
+    double pre_loop_time = get_time();
+
     lidar_2d->clear_merged_queue();
 
     printf("[LOCALIZATION] ekf_loop start\n");
@@ -908,7 +897,6 @@ void LOCALIZATION::ekf_loop()
 
             // set localization info for plot
             cur_tf_err = err;
-            process_time_localization = get_time() - st_time;
 
             // for speed
             lidar_2d->clear_merged_queue();
@@ -916,8 +904,123 @@ void LOCALIZATION::ekf_loop()
 
         // update
         set_cur_tf(G);
+
+        // set localization info for plot
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
+        }
+
+        process_time_localization = cur_loop_time - pre_loop_time;
+        pre_loop_time = cur_loop_time;
     }
     printf("[LOCALIZATION] ekf loop stop\n");
+}
+
+void LOCALIZATION::ekf_loop_3d()
+{
+    lidar_3d->clear_merged_queue();
+
+    // loop params
+    const double dt = 0.02; // 50hz
+    double pre_loop_time = get_time();
+
+    printf("[LOCALIZATION] ekf_loop_3d start\n");
+    while(ekf_flag)
+    {
+        MOBILE_POSE cur_mo = mobile->get_pose();
+
+        if(ekf_3d.initialized.load())
+        {
+            ekf_3d.predict(se2_to_TF(cur_mo.pose));
+        }
+
+        Eigen::Matrix4d G = ekf_3d.initialized.load() ? ekf_3d.get_cur_tf() : get_cur_tf();
+
+        TIME_PTS frm;
+        if(lidar_3d->try_pop_merged_queue(frm))
+        {
+            if(unimap->get_is_loaded() != MAP_LOADED)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
+            auto kdtree_index = unimap->get_kdtree_cloud_index();
+            auto kdtree_cloud = unimap->get_kdtree_cloud();
+
+            // icp
+            std::vector<Eigen::Vector3d> dsk = frm.pts;
+            double err = map_icp(dsk, G);
+
+            // check ieir
+            cur_ieir = calc_ieir(dsk, G);
+
+            if(err < config->get_loc_2d_icp_error_threshold())
+            {
+                if(!ekf_3d.initialized.load())
+                {
+                    ekf_3d.init(G);
+                }
+                else
+                {
+                    ekf_3d.estimate(G, cur_ieir);
+                }
+                G = ekf_3d.get_cur_tf();
+
+                // for obs loop
+                TIME_POSE_PTS tpp;
+                tpp.t = frm.t;
+                tpp.tf = G;
+                tpp.pts = frm.pts;
+                tpp_que.push(tpp);
+
+                // local to global deskewed point
+                std::vector<Eigen::Vector3d> pts(frm.pts.size());
+                for(size_t p = 0; p < frm.pts.size(); p++)
+                {
+                    Eigen::Vector3d P(frm.pts[p][0], frm.pts[p][1], frm.pts[p][2]);
+                    Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
+                    pts[p] = _P;
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_global_scan = pts;
+                }
+            }
+
+            // for speed
+            lidar_3d->clear_merged_queue();
+        }
+
+        // update
+        set_cur_tf(G);
+
+        // set localization info for plot
+        double cur_loop_time = get_time();
+        double delta_loop_time = cur_loop_time - pre_loop_time;
+        if(delta_loop_time < dt)
+        {
+            int sleep_ms = (dt-delta_loop_time)*1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+        }
+        else
+        {
+            //printf("[LOCALIZATION] odometry loop time drift, dt:%f\n", delta_loop_time);
+        }
+
+        process_time_localization = cur_loop_time - pre_loop_time;
+        pre_loop_time = cur_loop_time;
+    }
+    printf("[LOCALIZATION] ekf_loop_3d stop\n");
 }
 
 void LOCALIZATION::obs_loop()
