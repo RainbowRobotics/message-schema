@@ -45,8 +45,7 @@ void LOCALIZATION::start()
 
     QString loc_mode = config->get_loc_mode();
 
-
-    if(config->get_use_ekf())
+    if(config->get_use_ekf() && !config->get_use_sim())
     {
         if(loc_mode == "2D")
         {
