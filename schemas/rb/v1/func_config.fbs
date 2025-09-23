@@ -16,6 +16,8 @@ table Response_CallWhoamI{
     version     : string;            // 4.7.1
     alias       : string;            // Ui표기용 string 별칭
 }
+
+
 //--------------------------------------------------------------
 // Config
 //    ㄴ Control Box  : State_Config_ControlBox

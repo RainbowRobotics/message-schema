@@ -5,6 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
+from flat_buffers.IPC.N_AIN_f import N_AIN_f, N_AIN_fT
+from flat_buffers.IPC.N_AOUT_f import N_AOUT_f, N_AOUT_fT
 from flat_buffers.IPC.N_CARTE_f import N_CARTE_f, N_CARTE_fT
 from flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
 from flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
@@ -108,8 +110,85 @@ class State_Core(object):
         return None
 
     # State_Core
-    def CboxDigitalInput(self) -> Optional[N_DIN_u]:
+    def ToolName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # State_Core
+    def ToolTcpX(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolTcpY(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolTcpZ(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolTcpRx(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolTcpRy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolTcpRz(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolComM(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolComX(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolComY(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def ToolComZ(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Core
+    def CboxDigitalInput(self) -> Optional[N_DIN_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
         if o != 0:
             x = o + self._tab.Pos
             obj = N_DIN_u()
@@ -119,7 +198,7 @@ class State_Core(object):
 
     # State_Core
     def CboxDigitalOutput(self) -> Optional[N_DOUT_u]:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(44))
         if o != 0:
             x = o + self._tab.Pos
             obj = N_DOUT_u()
@@ -128,84 +207,184 @@ class State_Core(object):
         return None
 
     # State_Core
+    def CboxAnalogInput(self) -> Optional[N_AIN_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(46))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AIN_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def CboxAnalogOutput(self) -> Optional[N_AOUT_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(48))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AOUT_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ExDigitalInput(self) -> Optional[N_DIN_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(50))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_DIN_u()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ExDigitalOutput(self) -> Optional[N_DOUT_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(52))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_DOUT_u()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ExAnalogInput(self) -> Optional[N_AIN_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(54))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AIN_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ExAnalogOutput(self) -> Optional[N_AOUT_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(56))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AOUT_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ToolDigitalInput(self) -> Optional[N_DIN_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(58))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_DIN_u()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ToolDigitalOutput(self) -> Optional[N_DOUT_u]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_DOUT_u()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ToolAnalogInput(self) -> Optional[N_AIN_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(62))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AIN_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
+    def ToolAnalogOutput(self) -> Optional[N_AOUT_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        if o != 0:
+            x = o + self._tab.Pos
+            obj = N_AOUT_f()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # State_Core
     def MotionMode(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(66))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def MotionSpeedBar(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(68))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # State_Core
     def MotionIsPause(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(70))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusLan2can(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(72))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusSwitchEmg(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(74))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusPowerOut(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(76))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusServoNum(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusIsRefon(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusOutColl(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusSelfColl(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # State_Core
     def StatusDtMode(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(44))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
 def State_CoreStart(builder: flatbuffers.Builder):
-    builder.StartObject(21)
+    builder.StartObject(42)
 
 def Start(builder: flatbuffers.Builder):
     State_CoreStart(builder)
@@ -258,80 +437,206 @@ def State_CoreAddCarteXEnc(builder: flatbuffers.Builder, carteXEnc: Any):
 def AddCarteXEnc(builder: flatbuffers.Builder, carteXEnc: Any):
     State_CoreAddCarteXEnc(builder, carteXEnc)
 
+def State_CoreAddToolName(builder: flatbuffers.Builder, toolName: int):
+    builder.PrependUOffsetTRelativeSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(toolName), 0)
+
+def AddToolName(builder: flatbuffers.Builder, toolName: int):
+    State_CoreAddToolName(builder, toolName)
+
+def State_CoreAddToolTcpX(builder: flatbuffers.Builder, toolTcpX: float):
+    builder.PrependFloat32Slot(9, toolTcpX, 0.0)
+
+def AddToolTcpX(builder: flatbuffers.Builder, toolTcpX: float):
+    State_CoreAddToolTcpX(builder, toolTcpX)
+
+def State_CoreAddToolTcpY(builder: flatbuffers.Builder, toolTcpY: float):
+    builder.PrependFloat32Slot(10, toolTcpY, 0.0)
+
+def AddToolTcpY(builder: flatbuffers.Builder, toolTcpY: float):
+    State_CoreAddToolTcpY(builder, toolTcpY)
+
+def State_CoreAddToolTcpZ(builder: flatbuffers.Builder, toolTcpZ: float):
+    builder.PrependFloat32Slot(11, toolTcpZ, 0.0)
+
+def AddToolTcpZ(builder: flatbuffers.Builder, toolTcpZ: float):
+    State_CoreAddToolTcpZ(builder, toolTcpZ)
+
+def State_CoreAddToolTcpRx(builder: flatbuffers.Builder, toolTcpRx: float):
+    builder.PrependFloat32Slot(12, toolTcpRx, 0.0)
+
+def AddToolTcpRx(builder: flatbuffers.Builder, toolTcpRx: float):
+    State_CoreAddToolTcpRx(builder, toolTcpRx)
+
+def State_CoreAddToolTcpRy(builder: flatbuffers.Builder, toolTcpRy: float):
+    builder.PrependFloat32Slot(13, toolTcpRy, 0.0)
+
+def AddToolTcpRy(builder: flatbuffers.Builder, toolTcpRy: float):
+    State_CoreAddToolTcpRy(builder, toolTcpRy)
+
+def State_CoreAddToolTcpRz(builder: flatbuffers.Builder, toolTcpRz: float):
+    builder.PrependFloat32Slot(14, toolTcpRz, 0.0)
+
+def AddToolTcpRz(builder: flatbuffers.Builder, toolTcpRz: float):
+    State_CoreAddToolTcpRz(builder, toolTcpRz)
+
+def State_CoreAddToolComM(builder: flatbuffers.Builder, toolComM: float):
+    builder.PrependFloat32Slot(15, toolComM, 0.0)
+
+def AddToolComM(builder: flatbuffers.Builder, toolComM: float):
+    State_CoreAddToolComM(builder, toolComM)
+
+def State_CoreAddToolComX(builder: flatbuffers.Builder, toolComX: float):
+    builder.PrependFloat32Slot(16, toolComX, 0.0)
+
+def AddToolComX(builder: flatbuffers.Builder, toolComX: float):
+    State_CoreAddToolComX(builder, toolComX)
+
+def State_CoreAddToolComY(builder: flatbuffers.Builder, toolComY: float):
+    builder.PrependFloat32Slot(17, toolComY, 0.0)
+
+def AddToolComY(builder: flatbuffers.Builder, toolComY: float):
+    State_CoreAddToolComY(builder, toolComY)
+
+def State_CoreAddToolComZ(builder: flatbuffers.Builder, toolComZ: float):
+    builder.PrependFloat32Slot(18, toolComZ, 0.0)
+
+def AddToolComZ(builder: flatbuffers.Builder, toolComZ: float):
+    State_CoreAddToolComZ(builder, toolComZ)
+
 def State_CoreAddCboxDigitalInput(builder: flatbuffers.Builder, cboxDigitalInput: Any):
-    builder.PrependStructSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalInput), 0)
+    builder.PrependStructSlot(19, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalInput), 0)
 
 def AddCboxDigitalInput(builder: flatbuffers.Builder, cboxDigitalInput: Any):
     State_CoreAddCboxDigitalInput(builder, cboxDigitalInput)
 
 def State_CoreAddCboxDigitalOutput(builder: flatbuffers.Builder, cboxDigitalOutput: Any):
-    builder.PrependStructSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalOutput), 0)
+    builder.PrependStructSlot(20, flatbuffers.number_types.UOffsetTFlags.py_type(cboxDigitalOutput), 0)
 
 def AddCboxDigitalOutput(builder: flatbuffers.Builder, cboxDigitalOutput: Any):
     State_CoreAddCboxDigitalOutput(builder, cboxDigitalOutput)
 
+def State_CoreAddCboxAnalogInput(builder: flatbuffers.Builder, cboxAnalogInput: Any):
+    builder.PrependStructSlot(21, flatbuffers.number_types.UOffsetTFlags.py_type(cboxAnalogInput), 0)
+
+def AddCboxAnalogInput(builder: flatbuffers.Builder, cboxAnalogInput: Any):
+    State_CoreAddCboxAnalogInput(builder, cboxAnalogInput)
+
+def State_CoreAddCboxAnalogOutput(builder: flatbuffers.Builder, cboxAnalogOutput: Any):
+    builder.PrependStructSlot(22, flatbuffers.number_types.UOffsetTFlags.py_type(cboxAnalogOutput), 0)
+
+def AddCboxAnalogOutput(builder: flatbuffers.Builder, cboxAnalogOutput: Any):
+    State_CoreAddCboxAnalogOutput(builder, cboxAnalogOutput)
+
+def State_CoreAddExDigitalInput(builder: flatbuffers.Builder, exDigitalInput: Any):
+    builder.PrependStructSlot(23, flatbuffers.number_types.UOffsetTFlags.py_type(exDigitalInput), 0)
+
+def AddExDigitalInput(builder: flatbuffers.Builder, exDigitalInput: Any):
+    State_CoreAddExDigitalInput(builder, exDigitalInput)
+
+def State_CoreAddExDigitalOutput(builder: flatbuffers.Builder, exDigitalOutput: Any):
+    builder.PrependStructSlot(24, flatbuffers.number_types.UOffsetTFlags.py_type(exDigitalOutput), 0)
+
+def AddExDigitalOutput(builder: flatbuffers.Builder, exDigitalOutput: Any):
+    State_CoreAddExDigitalOutput(builder, exDigitalOutput)
+
+def State_CoreAddExAnalogInput(builder: flatbuffers.Builder, exAnalogInput: Any):
+    builder.PrependStructSlot(25, flatbuffers.number_types.UOffsetTFlags.py_type(exAnalogInput), 0)
+
+def AddExAnalogInput(builder: flatbuffers.Builder, exAnalogInput: Any):
+    State_CoreAddExAnalogInput(builder, exAnalogInput)
+
+def State_CoreAddExAnalogOutput(builder: flatbuffers.Builder, exAnalogOutput: Any):
+    builder.PrependStructSlot(26, flatbuffers.number_types.UOffsetTFlags.py_type(exAnalogOutput), 0)
+
+def AddExAnalogOutput(builder: flatbuffers.Builder, exAnalogOutput: Any):
+    State_CoreAddExAnalogOutput(builder, exAnalogOutput)
+
+def State_CoreAddToolDigitalInput(builder: flatbuffers.Builder, toolDigitalInput: Any):
+    builder.PrependStructSlot(27, flatbuffers.number_types.UOffsetTFlags.py_type(toolDigitalInput), 0)
+
+def AddToolDigitalInput(builder: flatbuffers.Builder, toolDigitalInput: Any):
+    State_CoreAddToolDigitalInput(builder, toolDigitalInput)
+
+def State_CoreAddToolDigitalOutput(builder: flatbuffers.Builder, toolDigitalOutput: Any):
+    builder.PrependStructSlot(28, flatbuffers.number_types.UOffsetTFlags.py_type(toolDigitalOutput), 0)
+
+def AddToolDigitalOutput(builder: flatbuffers.Builder, toolDigitalOutput: Any):
+    State_CoreAddToolDigitalOutput(builder, toolDigitalOutput)
+
+def State_CoreAddToolAnalogInput(builder: flatbuffers.Builder, toolAnalogInput: Any):
+    builder.PrependStructSlot(29, flatbuffers.number_types.UOffsetTFlags.py_type(toolAnalogInput), 0)
+
+def AddToolAnalogInput(builder: flatbuffers.Builder, toolAnalogInput: Any):
+    State_CoreAddToolAnalogInput(builder, toolAnalogInput)
+
+def State_CoreAddToolAnalogOutput(builder: flatbuffers.Builder, toolAnalogOutput: Any):
+    builder.PrependStructSlot(30, flatbuffers.number_types.UOffsetTFlags.py_type(toolAnalogOutput), 0)
+
+def AddToolAnalogOutput(builder: flatbuffers.Builder, toolAnalogOutput: Any):
+    State_CoreAddToolAnalogOutput(builder, toolAnalogOutput)
+
 def State_CoreAddMotionMode(builder: flatbuffers.Builder, motionMode: int):
-    builder.PrependUint8Slot(10, motionMode, 0)
+    builder.PrependUint8Slot(31, motionMode, 0)
 
 def AddMotionMode(builder: flatbuffers.Builder, motionMode: int):
     State_CoreAddMotionMode(builder, motionMode)
 
 def State_CoreAddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
-    builder.PrependFloat32Slot(11, motionSpeedBar, 0.0)
+    builder.PrependFloat32Slot(32, motionSpeedBar, 0.0)
 
 def AddMotionSpeedBar(builder: flatbuffers.Builder, motionSpeedBar: float):
     State_CoreAddMotionSpeedBar(builder, motionSpeedBar)
 
 def State_CoreAddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
-    builder.PrependUint8Slot(12, motionIsPause, 0)
+    builder.PrependUint8Slot(33, motionIsPause, 0)
 
 def AddMotionIsPause(builder: flatbuffers.Builder, motionIsPause: int):
     State_CoreAddMotionIsPause(builder, motionIsPause)
 
 def State_CoreAddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
-    builder.PrependUint8Slot(13, statusLan2can, 0)
+    builder.PrependUint8Slot(34, statusLan2can, 0)
 
 def AddStatusLan2can(builder: flatbuffers.Builder, statusLan2can: int):
     State_CoreAddStatusLan2can(builder, statusLan2can)
 
 def State_CoreAddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
-    builder.PrependUint8Slot(14, statusSwitchEmg, 0)
+    builder.PrependUint8Slot(35, statusSwitchEmg, 0)
 
 def AddStatusSwitchEmg(builder: flatbuffers.Builder, statusSwitchEmg: int):
     State_CoreAddStatusSwitchEmg(builder, statusSwitchEmg)
 
 def State_CoreAddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
-    builder.PrependUint8Slot(15, statusPowerOut, 0)
+    builder.PrependUint8Slot(36, statusPowerOut, 0)
 
 def AddStatusPowerOut(builder: flatbuffers.Builder, statusPowerOut: int):
     State_CoreAddStatusPowerOut(builder, statusPowerOut)
 
 def State_CoreAddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
-    builder.PrependUint8Slot(16, statusServoNum, 0)
+    builder.PrependUint8Slot(37, statusServoNum, 0)
 
 def AddStatusServoNum(builder: flatbuffers.Builder, statusServoNum: int):
     State_CoreAddStatusServoNum(builder, statusServoNum)
 
 def State_CoreAddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
-    builder.PrependUint8Slot(17, statusIsRefon, 0)
+    builder.PrependUint8Slot(38, statusIsRefon, 0)
 
 def AddStatusIsRefon(builder: flatbuffers.Builder, statusIsRefon: int):
     State_CoreAddStatusIsRefon(builder, statusIsRefon)
 
 def State_CoreAddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
-    builder.PrependUint8Slot(18, statusOutColl, 0)
+    builder.PrependUint8Slot(39, statusOutColl, 0)
 
 def AddStatusOutColl(builder: flatbuffers.Builder, statusOutColl: int):
     State_CoreAddStatusOutColl(builder, statusOutColl)
 
 def State_CoreAddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
-    builder.PrependUint8Slot(19, statusSelfColl, 0)
+    builder.PrependUint8Slot(40, statusSelfColl, 0)
 
 def AddStatusSelfColl(builder: flatbuffers.Builder, statusSelfColl: int):
     State_CoreAddStatusSelfColl(builder, statusSelfColl)
 
 def State_CoreAddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
-    builder.PrependUint8Slot(20, statusDtMode, 0)
+    builder.PrependUint8Slot(41, statusDtMode, 0)
 
 def AddStatusDtMode(builder: flatbuffers.Builder, statusDtMode: int):
     State_CoreAddStatusDtMode(builder, statusDtMode)
@@ -359,8 +664,29 @@ class State_CoreT(object):
         self.jointTemper = None  # type: Optional[N_JOINT_fT]
         self.carteXRef = None  # type: Optional[N_CARTE_fT]
         self.carteXEnc = None  # type: Optional[N_CARTE_fT]
+        self.toolName = None  # type: str
+        self.toolTcpX = 0.0  # type: float
+        self.toolTcpY = 0.0  # type: float
+        self.toolTcpZ = 0.0  # type: float
+        self.toolTcpRx = 0.0  # type: float
+        self.toolTcpRy = 0.0  # type: float
+        self.toolTcpRz = 0.0  # type: float
+        self.toolComM = 0.0  # type: float
+        self.toolComX = 0.0  # type: float
+        self.toolComY = 0.0  # type: float
+        self.toolComZ = 0.0  # type: float
         self.cboxDigitalInput = None  # type: Optional[N_DIN_uT]
         self.cboxDigitalOutput = None  # type: Optional[N_DOUT_uT]
+        self.cboxAnalogInput = None  # type: Optional[N_AIN_fT]
+        self.cboxAnalogOutput = None  # type: Optional[N_AOUT_fT]
+        self.exDigitalInput = None  # type: Optional[N_DIN_uT]
+        self.exDigitalOutput = None  # type: Optional[N_DOUT_uT]
+        self.exAnalogInput = None  # type: Optional[N_AIN_fT]
+        self.exAnalogOutput = None  # type: Optional[N_AOUT_fT]
+        self.toolDigitalInput = None  # type: Optional[N_DIN_uT]
+        self.toolDigitalOutput = None  # type: Optional[N_DOUT_uT]
+        self.toolAnalogInput = None  # type: Optional[N_AIN_fT]
+        self.toolAnalogOutput = None  # type: Optional[N_AOUT_fT]
         self.motionMode = 0  # type: int
         self.motionSpeedBar = 0.0  # type: float
         self.motionIsPause = 0  # type: int
@@ -409,10 +735,41 @@ class State_CoreT(object):
             self.carteXRef = N_CARTE_fT.InitFromObj(stateCore.CarteXRef())
         if stateCore.CarteXEnc() is not None:
             self.carteXEnc = N_CARTE_fT.InitFromObj(stateCore.CarteXEnc())
+        self.toolName = stateCore.ToolName()
+        self.toolTcpX = stateCore.ToolTcpX()
+        self.toolTcpY = stateCore.ToolTcpY()
+        self.toolTcpZ = stateCore.ToolTcpZ()
+        self.toolTcpRx = stateCore.ToolTcpRx()
+        self.toolTcpRy = stateCore.ToolTcpRy()
+        self.toolTcpRz = stateCore.ToolTcpRz()
+        self.toolComM = stateCore.ToolComM()
+        self.toolComX = stateCore.ToolComX()
+        self.toolComY = stateCore.ToolComY()
+        self.toolComZ = stateCore.ToolComZ()
         if stateCore.CboxDigitalInput() is not None:
             self.cboxDigitalInput = N_DIN_uT.InitFromObj(stateCore.CboxDigitalInput())
         if stateCore.CboxDigitalOutput() is not None:
             self.cboxDigitalOutput = N_DOUT_uT.InitFromObj(stateCore.CboxDigitalOutput())
+        if stateCore.CboxAnalogInput() is not None:
+            self.cboxAnalogInput = N_AIN_fT.InitFromObj(stateCore.CboxAnalogInput())
+        if stateCore.CboxAnalogOutput() is not None:
+            self.cboxAnalogOutput = N_AOUT_fT.InitFromObj(stateCore.CboxAnalogOutput())
+        if stateCore.ExDigitalInput() is not None:
+            self.exDigitalInput = N_DIN_uT.InitFromObj(stateCore.ExDigitalInput())
+        if stateCore.ExDigitalOutput() is not None:
+            self.exDigitalOutput = N_DOUT_uT.InitFromObj(stateCore.ExDigitalOutput())
+        if stateCore.ExAnalogInput() is not None:
+            self.exAnalogInput = N_AIN_fT.InitFromObj(stateCore.ExAnalogInput())
+        if stateCore.ExAnalogOutput() is not None:
+            self.exAnalogOutput = N_AOUT_fT.InitFromObj(stateCore.ExAnalogOutput())
+        if stateCore.ToolDigitalInput() is not None:
+            self.toolDigitalInput = N_DIN_uT.InitFromObj(stateCore.ToolDigitalInput())
+        if stateCore.ToolDigitalOutput() is not None:
+            self.toolDigitalOutput = N_DOUT_uT.InitFromObj(stateCore.ToolDigitalOutput())
+        if stateCore.ToolAnalogInput() is not None:
+            self.toolAnalogInput = N_AIN_fT.InitFromObj(stateCore.ToolAnalogInput())
+        if stateCore.ToolAnalogOutput() is not None:
+            self.toolAnalogOutput = N_AOUT_fT.InitFromObj(stateCore.ToolAnalogOutput())
         self.motionMode = stateCore.MotionMode()
         self.motionSpeedBar = stateCore.MotionSpeedBar()
         self.motionIsPause = stateCore.MotionIsPause()
@@ -427,6 +784,8 @@ class State_CoreT(object):
 
     # State_CoreT
     def Pack(self, builder):
+        if self.toolName is not None:
+            toolName = builder.CreateString(self.toolName)
         State_CoreStart(builder)
         State_CoreAddHeartBeat(builder, self.heartBeat)
         if self.jointQRef is not None:
@@ -450,12 +809,54 @@ class State_CoreT(object):
         if self.carteXEnc is not None:
             carteXEnc = self.carteXEnc.Pack(builder)
             State_CoreAddCarteXEnc(builder, carteXEnc)
+        if self.toolName is not None:
+            State_CoreAddToolName(builder, toolName)
+        State_CoreAddToolTcpX(builder, self.toolTcpX)
+        State_CoreAddToolTcpY(builder, self.toolTcpY)
+        State_CoreAddToolTcpZ(builder, self.toolTcpZ)
+        State_CoreAddToolTcpRx(builder, self.toolTcpRx)
+        State_CoreAddToolTcpRy(builder, self.toolTcpRy)
+        State_CoreAddToolTcpRz(builder, self.toolTcpRz)
+        State_CoreAddToolComM(builder, self.toolComM)
+        State_CoreAddToolComX(builder, self.toolComX)
+        State_CoreAddToolComY(builder, self.toolComY)
+        State_CoreAddToolComZ(builder, self.toolComZ)
         if self.cboxDigitalInput is not None:
             cboxDigitalInput = self.cboxDigitalInput.Pack(builder)
             State_CoreAddCboxDigitalInput(builder, cboxDigitalInput)
         if self.cboxDigitalOutput is not None:
             cboxDigitalOutput = self.cboxDigitalOutput.Pack(builder)
             State_CoreAddCboxDigitalOutput(builder, cboxDigitalOutput)
+        if self.cboxAnalogInput is not None:
+            cboxAnalogInput = self.cboxAnalogInput.Pack(builder)
+            State_CoreAddCboxAnalogInput(builder, cboxAnalogInput)
+        if self.cboxAnalogOutput is not None:
+            cboxAnalogOutput = self.cboxAnalogOutput.Pack(builder)
+            State_CoreAddCboxAnalogOutput(builder, cboxAnalogOutput)
+        if self.exDigitalInput is not None:
+            exDigitalInput = self.exDigitalInput.Pack(builder)
+            State_CoreAddExDigitalInput(builder, exDigitalInput)
+        if self.exDigitalOutput is not None:
+            exDigitalOutput = self.exDigitalOutput.Pack(builder)
+            State_CoreAddExDigitalOutput(builder, exDigitalOutput)
+        if self.exAnalogInput is not None:
+            exAnalogInput = self.exAnalogInput.Pack(builder)
+            State_CoreAddExAnalogInput(builder, exAnalogInput)
+        if self.exAnalogOutput is not None:
+            exAnalogOutput = self.exAnalogOutput.Pack(builder)
+            State_CoreAddExAnalogOutput(builder, exAnalogOutput)
+        if self.toolDigitalInput is not None:
+            toolDigitalInput = self.toolDigitalInput.Pack(builder)
+            State_CoreAddToolDigitalInput(builder, toolDigitalInput)
+        if self.toolDigitalOutput is not None:
+            toolDigitalOutput = self.toolDigitalOutput.Pack(builder)
+            State_CoreAddToolDigitalOutput(builder, toolDigitalOutput)
+        if self.toolAnalogInput is not None:
+            toolAnalogInput = self.toolAnalogInput.Pack(builder)
+            State_CoreAddToolAnalogInput(builder, toolAnalogInput)
+        if self.toolAnalogOutput is not None:
+            toolAnalogOutput = self.toolAnalogOutput.Pack(builder)
+            State_CoreAddToolAnalogOutput(builder, toolAnalogOutput)
         State_CoreAddMotionMode(builder, self.motionMode)
         State_CoreAddMotionSpeedBar(builder, self.motionSpeedBar)
         State_CoreAddMotionIsPause(builder, self.motionIsPause)

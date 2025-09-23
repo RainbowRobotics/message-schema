@@ -15,6 +15,12 @@ struct N_DIN_u {
 struct N_DOUT_u {
   u: [ubyte: 16];
 }
+struct N_AIN_f {
+  f: [float: 4];
+}
+struct N_AOUT_f {
+  f: [float: 4];
+}
 struct Vec3f {
   v:[float:3];
 }

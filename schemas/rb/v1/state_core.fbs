@@ -15,8 +15,32 @@ table State_Core {
   carte_x_ref: N_CARTE_f;
   carte_x_enc: N_CARTE_f;
 
+  tool_name: string;              //<--------------
+  tool_tcp_x: float;              //<--------------
+  tool_tcp_y: float;              //<--------------
+  tool_tcp_z: float;              //<--------------
+  tool_tcp_rx: float;             //<--------------
+  tool_tcp_ry: float;             //<--------------
+  tool_tcp_rz: float;             //<--------------
+  tool_com_m: float;              //<--------------
+  tool_com_x: float;              //<--------------
+  tool_com_y: float;              //<--------------
+  tool_com_z: float;              //<--------------
+
   cbox_digital_input: N_DIN_u;
   cbox_digital_output: N_DOUT_u;
+  cbox_analog_input: N_AIN_f;     //<--------------
+  cbox_analog_output: N_AOUT_f;   //<--------------
+
+  ex_digital_input: N_DIN_u;      //<--------------
+  ex_digital_output: N_DOUT_u;    //<--------------
+  ex_analog_input: N_AIN_f;       //<--------------
+  ex_analog_output: N_AOUT_f;     //<--------------
+
+  tool_digital_input: N_DIN_u;    //<--------------
+  tool_digital_output: N_DOUT_u;  //<--------------
+  tool_analog_input: N_AIN_f;       //<--------------
+  tool_analog_output: N_AOUT_f;     //<--------------
 
   motion_mode: ubyte;
   motion_speed_bar: float;

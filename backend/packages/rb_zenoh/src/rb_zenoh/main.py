@@ -230,10 +230,12 @@ class ZenohClient:
             att = sample.attachment
             if hasattr(att, "to_bytes"):
                 att = att.to_bytes().decode("utf-8", "ignore")
-            elif isinstance(att, (bytes, bytearray)):
+            elif isinstance(att, bytes | bytearray):
                 att = att.decode("utf-8", "ignore")
+
             parts = dict(seg.split("=", 1) for seg in (att or "").split(";") if "=" in seg)
             sender_id = parts.get("sender_id")
+
             if not allow_self and sender_id == self.sender_id:
                 return
 
