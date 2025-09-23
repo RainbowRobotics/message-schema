@@ -27,7 +27,7 @@ def register_zenoh_exception_handlers(app: FastAPI) -> None:
     async def _reply_err(_: Request, exc: ZenohReplyError):
         return JSONResponse(
             status_code=502,
-            content={"error": "peer error", "message": str(exc), "attachment": exc.attachment},
+            content={"error": "peer error", "message": str(exc)},
         )
 
     @app.exception_handler(ZenohNoReply)
@@ -37,7 +37,6 @@ def register_zenoh_exception_handlers(app: FastAPI) -> None:
             content={
                 "error": "zenoh no reply",
                 "message": f"timeout limit {exc.timeout_ms}",
-                "attachment": exc.attachment,
             },
         )
 

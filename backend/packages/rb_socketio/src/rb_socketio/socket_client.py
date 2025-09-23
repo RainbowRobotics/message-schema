@@ -65,6 +65,8 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
         event = self._check_event_name(event)
 
+        if event.endswith("state_message"):
+            print("event >>", event, flush=True)
         return await super().emit(event, data, **args)
 
     async def call(self, event, data=None, timeout=None, namespace=None, **args):

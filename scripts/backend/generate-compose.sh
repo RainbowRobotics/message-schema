@@ -139,6 +139,7 @@ for FD in 3 4; do
 
   rrs-mongo-dev:
     image: mongo:7
+    container_name: rrs-mongo-dev
     ports: ["27017:27017"]
     networks: [rb_net]
     volumes:
@@ -169,8 +170,9 @@ EOF
     network_mode: host
     ipc: host
 
-  rrs-mongo:
+  rrs-mongo-preview:
     image: mongo:7
+    container_name: rrs-mongo-preview
     ports: ["27017:27017"]
     network_mode: host
     volumes:

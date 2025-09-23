@@ -6,10 +6,12 @@ requires-python = "==3.12.*"
 members = [
     "common",
     "flat-buffers",
+    "log",
     "manipulate",
     "rb-backend-server",
     "rb-database",
     "rb-modules",
+    "rb-schemas",
     "rb-socketio",
     "rb-zenoh",
     "utils",
@@ -172,6 +174,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-socketio" },
     { name = "rb-modules" },
+    { name = "rb-schemas" },
     { name = "redis" },
     { name = "utils" },
     { name = "uvicorn", extra = ["standard"] },
@@ -184,6 +187,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "python-socketio", specifier = ">=5.13.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "redis", specifier = ">=6.4.0" },
     { name = "utils", editable = "packages/utils" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
@@ -342,6 +346,37 @@ wheels = [
 ]
 
 [[package]]
+name = "log"
+version = "0.1.0"
+source = { virtual = "services/log" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "flat-buffers" },
+    { name = "pyinstaller" },
+    { name = "python-dotenv" },
+    { name = "rb-modules" },
+    { name = "rb-schemas" },
+    { name = "rb-socketio" },
+    { name = "rb-zenoh" },
+    { name = "utils" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
+    { name = "flat-buffers", editable = "packages/flat_buffers" },
+    { name = "pyinstaller", specifier = ">=6.15.0" },
+    { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
+    { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
+    { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-zenoh", editable = "packages/rb_zenoh" },
+    { name = "utils", editable = "packages/utils" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
+]
+
+[[package]]
 name = "macholib"
 version = "1.16.3"
 source = { registry = "https://pypi.org/simple" }
@@ -363,6 +398,7 @@ dependencies = [
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-modules" },
+    { name = "rb-schemas" },
     { name = "rb-socketio" },
     { name = "rb-zenoh" },
     { name = "utils" },
@@ -376,6 +412,7 @@ requires-dist = [
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
     { name = "utils", editable = "packages/utils" },
@@ -821,6 +858,23 @@ requires-dist = [
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "utils", editable = "packages/utils" },
+]
+
+[[package]]
+name = "rb-schemas"
+version = "0.1.0"
+source = { editable = "packages/rb_schemas" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "flatbuffers" },
+    { name = "utils" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.116.1" },
+    { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "utils", editable = "packages/utils" },
 ]
 

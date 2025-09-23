@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from flatbuffers.table import Table
 
@@ -17,6 +18,7 @@ class _Reg:
     cb: Callable
     flatbuffer_obj_t: Table
     opts: SubscribeOptions
+    handle: Any | None = None
 
 
 class ZenohRouterError(Exception):
@@ -38,8 +40,6 @@ class ZenohRouter:
         self.tags = tags or []
         self.name = name or "zenoh"
         self._regs: list[_Reg] = []
-        self._handles = []
-
         self._lock = asyncio.Lock()
         self._started = False
         self._closed = False
@@ -47,7 +47,7 @@ class ZenohRouter:
     def _join_topic(self, prefix: str, topic: str) -> str:
         if not prefix:
             return topic
-        if not topic:  # topic == ""
+        if not topic:
             return prefix
         return f"{prefix}/{topic.lstrip('/')}"
 
@@ -62,19 +62,46 @@ class ZenohRouter:
         full_topic = self._join_topic(self.prefix, topic)
 
         def deco(func: Callable):
-            self._regs.append(
-                _Reg(full_topic, func, flatbuffer_obj_t or None, opts or self.default_options)
-            )
+            reg = _Reg(full_topic, func, flatbuffer_obj_t or None, opts or self.default_options)
+            self._regs.append(reg)
+
+            if self._started and not self._closed:
+                handle = self.client.subscribe(
+                    reg.topic, reg.cb, flatbuffer_obj_t=reg.flatbuffer_obj_t, options=reg.opts
+                )
+                reg.handle = handle
             return func
 
         return deco
 
-    def include_router(self, *others: ZenohRouter):
+    def include_router(self, *others: ZenohRouter, prefix: str | None = None):
+        ext_prefix = self._join_topic(self.prefix, (prefix or "").rstrip("/"))
+
         for other in others:
-            for reg in other._regs:
-                if any(existing_reg.topic == reg.topic for existing_reg in self._regs):
-                    raise ZenohRouterError(f"🚫 Duplicate topic: {reg.topic}")
+            for src in other._regs:
+                new_topic = self._join_topic(
+                    ext_prefix, src.topic if other.prefix == "" else src.topic
+                )
+
+                exists_idx = next(
+                    (i for i, r in enumerate(self._regs) if r.topic == new_topic), None
+                )
+                if exists_idx is not None:
+                    raise ZenohRouterError(f"🚫 Duplicate topic: {new_topic}")
+
+                reg = _Reg(
+                    topic=new_topic,
+                    cb=src.cb,
+                    flatbuffer_obj_t=src.flatbuffer_obj_t,
+                    opts=src.opts,
+                )
                 self._regs.append(reg)
+
+                if self._started and not self._closed:
+                    handle = self.client.subscribe(
+                        reg.topic, reg.cb, flatbuffer_obj_t=reg.flatbuffer_obj_t, options=reg.opts
+                    )
+                    reg.handle = handle
 
     async def startup(self):
         async with self._lock:
@@ -85,27 +112,27 @@ class ZenohRouter:
             self._closed = False
             self._started = True
 
-            # 구독 선언 (ZenohClient가 내부에서 세션을 lazy-open 한다 가정)
-            self._handles = []
             for r in self._regs:
+                if r.handle:  # 이미 동적으로 구독됐을 수 있음
+                    continue
                 h = self.client.subscribe(
                     r.topic, r.cb, flatbuffer_obj_t=r.flatbuffer_obj_t, options=r.opts
                 )
-                self._handles.append(h)
+                r.handle = h
 
     async def shutdown(self):
         async with self._lock:
-            # 이미 닫았으면 재진입 금지 (멱등)
             if self._closed:
                 return
             self._closed = True
 
-            # 1) 구독 핸들부터 닫기 (세션보다 먼저)
-            for h in self._handles:
-                with contextlib.suppress(Exception):
-                    h.close()
-            self._handles.clear()
+            # 구독 핸들부터 닫기
+            for r in self._regs:
+                if r.handle:
+                    with contextlib.suppress(Exception):
+                        r.handle.close()
+                    r.handle = None
 
-            # 2) 세션 닫기 — 이미 닫힌 세션이면 예외 억제
+            # 세션 닫기
             with contextlib.suppress(Exception):
                 self.client.close()

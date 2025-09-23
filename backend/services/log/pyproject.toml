@@ -1,0 +1,30 @@
+[project]
+name = "log"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Log"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+  "utils",
+  "rb_zenoh",
+  "flat-buffers",
+  "rb_socketio",
+  "rb_modules",
+  "rb_schemas",
+  "fastapi>=0.116.1,<0.117.0",
+  "uvicorn[standard]>=0.35.0,<0.36.0",
+  "python-dotenv>=1.1.1,<2.0.0",
+  "pyinstaller>=6.15.0",
+]
+
+[tool.uv.sources]
+utils = { workspace = true }
+rb_zenoh = { workspace = true }
+flat-buffers = { workspace = true }
+rb_socketio = { workspace = true }
+rb_modules = { workspace = true }
+rb_schemas = { workspace = true }

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 client: AsyncIOMotorClient | None = None
@@ -7,6 +7,7 @@ db: AsyncIOMotorDatabase | None = None
 
 async def init_indexes(db: AsyncIOMotorDatabase):
     await db["robots"].create_index("name", unique=True)
+    await db["state_logs"].create_index([("swName", 1), ("createdAt", -1)])
 
 
 async def init_db(app: FastAPI, uri: str, db_name: str):
@@ -25,3 +26,7 @@ async def close_db(app: FastAPI):
 
     if c:
         c.close()
+
+
+def get_db(request: Request) -> AsyncIOMotorDatabase:
+    return request.app.state.mongo_db

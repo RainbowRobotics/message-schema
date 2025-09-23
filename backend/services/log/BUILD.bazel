@@ -1,0 +1,61 @@
+load("@rules_python//python:defs.bzl", "py_library", "py_binary")
+load("@backend_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "manipulate_lib",
+    srcs = glob(["app/**/*.py"]),
+    imports = ["."],
+    deps = [
+        requirement("fastapi"),
+        requirement("pydantic"),
+        requirement("python-dotenv"),
+         requirement("uvicorn"),
+         requirement("pyinstaller"),
+        "//backend/packages/utils:utils",
+        "//backend/packages/rb_zenoh:rb_zenoh",
+        "//backend/packages/flat_buffers:flat_buffers",
+        "//schemas/rb/v1:rb_v1_py",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "serve",
+    srcs = ["run.py"],
+    main = "run.py",
+    imports = ["."],
+    deps = [
+        ":manipulate_lib",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "pyinstaller_tool",
+    srcs = ["freeze_entry.py"],
+     main = "freeze_entry.py",
+    deps = [
+        ":manipulate_lib",
+        requirement("pyinstaller"),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# 최종 bin 산출
+genrule(
+    name = "build",
+    srcs = ["run.py"],
+    tools = [":pyinstaller_tool"],
+    outs = ["run.bin"],
+    cmd = """
+      set -euo pipefail
+      OUTDIR=$(@D)
+      SERVICE=manipulate "$(location :pyinstaller_tool)" \
+        "$(location run.py)" "$${OUTDIR}"
+    """,
+    visibility = ["//visibility:public"],
+)
+
+
+
+exports_files(["pyproject.toml"])

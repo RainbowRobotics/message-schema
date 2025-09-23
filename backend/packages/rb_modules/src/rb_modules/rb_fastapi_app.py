@@ -49,13 +49,15 @@ def create_app(
     *,
     settings: AppSettings,
     socket_client: RBSocketIONsClient | None = None,
-    zenoh_router: ZenohRouter,
+    zenoh_routers: Sequence[ZenohRouter] | None = None,
     api_routers: Sequence[APIRouter] | None = None,  # [state_router, program_router, ...]
     socket_routers: (
         Sequence[RbSocketIORouter] | None
     ) = None,  # [state_socket_router, ...] (client를 받아 등록)
     bg_tasks: list[asyncio.Task] | None = None,
 ) -> FastAPI:
+
+    zenoh_router = ZenohRouter()
 
     if bg_tasks is None:
         bg_tasks = []
@@ -67,7 +69,7 @@ def create_app(
         await zenoh_router.startup()
         print("📡 zenoh subscribe 등록 완료", flush=True)
 
-        if socket_client:
+        if socket_client and not getattr(socket_client, "connected", False):
             app.state._sio_connect_task = asyncio.create_task(
                 socket_client.connect(
                     settings.SOCKET_SERVER_URL,
@@ -125,6 +127,10 @@ def create_app(
 
     register_zenoh_exception_handlers(app)
 
+    if zenoh_routers:
+        for r in zenoh_routers:
+            zenoh_router.include_router(r)
+
     if api_routers:
         for r in api_routers:
             app.include_router(r)
@@ -135,12 +141,25 @@ def create_app(
 
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
+        body_text = ""
+
+        if request.scope.get("type") == "http":
+            try:
+                b = await request.body()
+                body_text = b.decode("utf-8", "ignore") if b else ""
+            except RuntimeError:
+                body_text = "<unavailable>"
+            except Exception:
+                body_text = "<error reading body>"
+
         return JSONResponse(
             status_code=500,
             content={
                 "error": "Internal Server Error",
-                "body": request.body,
-                "query_params": request.query_params,
+                "method": request.method,
+                "url": str(request.url),
+                "query_params": dict(request.query_params),
+                "body": body_text,
                 "message": str(exc),
             },
         )

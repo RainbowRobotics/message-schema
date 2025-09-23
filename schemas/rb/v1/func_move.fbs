@@ -4,10 +4,19 @@ include "common_struct.fbs";
 namespace IPC;
 
 table Request_Move_J {
-    targetvalue: N_INPUT_f; //타겟 각도 값 N 개(7)
+    targetvalue: N_JOINT_f; //타겟 각도 값 N 개(7)
     frame: int; // 조인트에서는 -1
     unit: int;  // 일단 0
 
-    speed_rate: float;//0~1 속도 비율
-    accel_rate: float;//0~1 가속도 비율
+    speed_rate: float;//0~1 속도 비율 // 0.3
+    accel_rate: float;//0~1 가속도 비율 // 0.3
+}
+
+table Request_Move_L {
+    targetvalue: N_CARTE_f; //타겟 위치값 N 개(7)
+    frame: int; // 글로벌 0, 로컬 1 ...
+    unit: int;  // 일단 0
+
+    speed_mmps: float;
+    accel_mmpss: float;
 }

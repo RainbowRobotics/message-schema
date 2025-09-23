@@ -485,16 +485,19 @@ class ZenohClient:
         payload: bytes | bytearray | memoryview | None = None,
     ):
         try:
-            return next(
-                self.query(
-                    keyexpr,
-                    flatbuffer_req_obj=flatbuffer_req_obj,
-                    flatbuffer_res_T_class=flatbuffer_res_T_class,
-                    flatbuffer_buf_size=flatbuffer_buf_size,
-                    timeout_ms=timeout_ms,
-                    target=target,
-                    payload=payload,
+            return (
+                next(
+                    self.query(
+                        keyexpr,
+                        flatbuffer_req_obj=flatbuffer_req_obj,
+                        flatbuffer_res_T_class=flatbuffer_res_T_class,
+                        flatbuffer_buf_size=flatbuffer_buf_size,
+                        timeout_ms=timeout_ms,
+                        target=target,
+                        payload=payload,
+                    )
                 )
+                or {}
             )
         except StopIteration:
             raise ZenohNoReply(timeout_ms) from None

@@ -5,7 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from flat_buffers.IPC.N_INPUT_f import N_INPUT_f, N_INPUT_fT
+from flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
 from typing import Optional
 np = import_numpy()
 
@@ -28,11 +28,11 @@ class Request_Move_J(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Request_Move_J
-    def Targetvalue(self) -> Optional[N_INPUT_f]:
+    def Targetvalue(self) -> Optional[N_JOINT_f]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             x = o + self._tab.Pos
-            obj = N_INPUT_f()
+            obj = N_JOINT_f()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -116,7 +116,7 @@ class Request_Move_JT(object):
 
     # Request_Move_JT
     def __init__(self):
-        self.targetvalue = None  # type: Optional[N_INPUT_fT]
+        self.targetvalue = None  # type: Optional[N_JOINT_fT]
         self.frame = 0  # type: int
         self.unit = 0  # type: int
         self.speedRate = 0.0  # type: float
@@ -144,7 +144,7 @@ class Request_Move_JT(object):
         if requestMoveJ is None:
             return
         if requestMoveJ.Targetvalue() is not None:
-            self.targetvalue = N_INPUT_fT.InitFromObj(requestMoveJ.Targetvalue())
+            self.targetvalue = N_JOINT_fT.InitFromObj(requestMoveJ.Targetvalue())
         self.frame = requestMoveJ.Frame()
         self.unit = requestMoveJ.Unit()
         self.speedRate = requestMoveJ.SpeedRate()
