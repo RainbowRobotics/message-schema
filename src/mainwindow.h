@@ -20,9 +20,9 @@
 #include "dockcontrol.h"
 #include "policy.h"
 
-
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"
+#include "comm/comm_msa.h"
 
 // qt
 #include <QMainWindow>

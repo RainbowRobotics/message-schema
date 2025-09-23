@@ -64,6 +64,9 @@ public:
     double get_robot_size_y_max();      // robot y-axis maximum size
     double get_robot_size_z_min();      // robot z-axis minimum size
     double get_robot_size_z_max();      // robot z-axis maximum size
+    double get_robot_size_add_x();      // robot x-axis maximum size plus
+    double get_robot_size_add_y();      // robot y-axis maximum size plus
+    double get_robot_size_add_z();      // robot y-axis maximum size plus
     double get_robot_wheel_base();      // the distance between the robot's two wheels
     double get_robot_wheel_radius();    // robot wheel radius (mm)
     double get_robot_radius();          // robot radius (auto calc)
@@ -100,6 +103,7 @@ public:
     bool get_use_coop();                // check if the robot mode is coop control (cooperation control)
     bool get_use_rtsp();                // check if the robot uses rtsp streaming (cam img)
     bool get_use_rrs();                 // check if the robot uses rrs communication (robot repeat server)
+    bool get_use_msa();
     bool get_use_fms();                 // check if the robot uses fms direct communication (must used test or simulation)
 
     /***********************
@@ -110,6 +114,19 @@ public:
     QString get_server_ip();
     QString get_server_id();
     QString get_server_pw();
+
+    /***********************
+     * logging
+     ***********************/
+    QString get_log_level();            // get spdlog level (trace, debug, info, warn, error, critical, off)
+    bool set_debug_lidar_2d();          // enable/disable LIDAR debug logs
+    bool set_debug_mobile();            // enable/disable MOBILE debug logs
+    bool set_debug_comm_rrs();          // enable/disable COMM RRS debug logs
+
+    bool get_log_enable_file_output();  // enable/disable file output
+    QString get_log_file_path();        // get log file path
+    void setup_spdlog_level();          // setup spdlog level from config
+    void setup_spdlog_file_output();    // setup spdlog file output from config
 
     /***********************
      * 2d lidar sensor
@@ -276,6 +293,7 @@ private:
     void load_localization_config(const QJsonObject& obj);
     void load_network_config(const QJsonObject& obj);
     void load_debug_config(const QJsonObject& obj);
+    void load_logging_config(const QJsonObject& obj);
     void load_motor_config(const QJsonObject& obj);
     void load_localization_2d_config(const QJsonObject& obj);
     void load_localization_3d_config(const QJsonObject& obj);
@@ -322,6 +340,9 @@ private:
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};
+    double ROBOT_SIZE_ADD_X = 0.0;  
+    double ROBOT_SIZE_ADD_Y = 0.0;  
+    double ROBOT_SIZE_ADD_Z = 0.0;  
     double ROBOT_WHEEL_BASE = 0.387;
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
@@ -353,6 +374,7 @@ private:
     bool USE_COMM_COOP = false;
     bool USE_COMM_RTSP = false;
     bool USE_COMM_RRS  = false;
+    bool USE_COMM_MSA  = false;
     bool USE_COMM_FMS  = false;
 
     // debug
@@ -361,6 +383,14 @@ private:
     QString SERVER_IP = "127.0.0.1";
     QString SERVER_ID = "rainbow";
     QString SERVER_PW = "rainbow";
+
+    // logging
+    QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
+    bool DEBUG_LIDAR_2D = false;        // enable/disable LIDAR debug logs
+    bool DEBUG_MOBILE =  false;         // enable/disable MOBILE debug logs
+    bool DEBUG_COMM_RRS = false;        // enable/disable COMM RRS debug logs
+    bool LOG_ENABLE_FILE_OUTPUT = false; // enable/disable file output
+    QString LOG_FILE_PATH = "logs/app.log"; // log file path
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;

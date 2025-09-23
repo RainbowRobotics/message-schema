@@ -1,7 +1,14 @@
 #ifndef COMM_DATA_H
 #define COMM_DATA_H
 
+#include <sio_client.h>
 #include "global_defines.h"
+
+struct SOCKET_MESSAGE
+{
+    QString event;
+    sio::message::ptr data;
+};
 
 struct DATA_MOVE
 {
@@ -10,6 +17,7 @@ struct DATA_MOVE
     QString method; // pp, hpp, tng
     QString goal_node_id;
     QString goal_node_name;
+    QString id;  // rrs give msg id
 
     int preset;
     Eigen::Vector3d cur_pos; // x, y, z
@@ -22,6 +30,7 @@ struct DATA_MOVE
 
     QString result;
     QString message;
+    //QString remark;
 
     DATA_MOVE()
     {
@@ -31,6 +40,7 @@ struct DATA_MOVE
 
         goal_node_id = "";
         goal_node_name = "";
+        id = "";
 
         preset = 0;
         cur_pos.setZero();
@@ -43,6 +53,7 @@ struct DATA_MOVE
 
         result = "";
         message = "";
+        //remark = "";
     }
 
     DATA_MOVE(const DATA_MOVE& p)
@@ -53,6 +64,7 @@ struct DATA_MOVE
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
         remaining_dist = p.remaining_dist;
+        id = p.id;
 
         preset = p.preset;
         cur_pos = p.cur_pos;
@@ -64,6 +76,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        //remark = p.remark;
     }
 
     DATA_MOVE& operator=(const DATA_MOVE& p)
@@ -85,6 +98,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        //remark = p.remark;
         return *this;
     }
 };

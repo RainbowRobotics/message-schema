@@ -40,7 +40,7 @@
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
         "USE_BEEP": true
     },
@@ -194,7 +194,7 @@
     	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
-        "MAP_PATH": "/data/maps/250829_unicos"
+        "MAP_PATH": "/data/maps/250513_unicos_multi_test"
     }
 }
 

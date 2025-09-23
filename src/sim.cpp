@@ -76,7 +76,9 @@ void SIM::simulation_loop()
 
     Eigen::Matrix4d _cur_tf = get_cur_tf();
 
-    printf("[SIM] simultation_loop start\n");
+    //printf("[SIM] simultation_loop start\n");
+    spdlog::info("[SIM] simultation_loop start");
+
 
     const double motor_limit_v = config->get_motor_limit_v();
     const double motor_limit_w = config->get_motor_limit_w()*D2R;
@@ -156,7 +158,8 @@ void SIM::simulation_loop()
         distance += vx0*dt;
         pre_loop_time = get_time();
     }
-    printf("[SIM] simulation_loop stop\n");
+    //printf("[SIM] simulation_loop stop\n");
+    spdlog::info("[SIM] simulation_loop stop");
 }
 
 double SIM::calc_limit(double v0, double v1, double v_acc_limit, double dt, double tol)

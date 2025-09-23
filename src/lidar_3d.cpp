@@ -41,7 +41,9 @@ void LIDAR_3D::init()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[LIDAR_3D] simulation mode\n");
+        //printf("[LIDAR_3D] simulation mode\n");
+        spdlog::info("[LIDAR_3D] simulation mode init");
+
         return;
     }
 
@@ -56,7 +58,8 @@ void LIDAR_3D::init()
             livox->open();
         }
     }
-    printf("[LIDAR_3D] init\n");
+    //printf("[LIDAR_3D] init\n");
+    spdlog::info("[LIDAR_3D] init");
 }
 
 void LIDAR_3D::open()
@@ -64,11 +67,13 @@ void LIDAR_3D::open()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[LIDAR_3D] simulation mode\n");
+        //printf("[LIDAR_3D] simulation mode\n");
+        spdlog::info("[LIDAR_3D] simulation mode open");
         return;
     }
 
-    printf("[LIDAR_3D] open\n");
+    //printf("[LIDAR_3D] open\n");
+    spdlog::info("[LIDAR_3D] open");
 
     // stop first
     close();
@@ -176,7 +181,8 @@ IMU LIDAR_3D::get_best_imu(double ref_t)
     }
     else
     {
-        printf("[LIDAR_3D] unknown LIDAR type or lidar not initialized\n");
+        //printf("[LIDAR_3D] unknown LIDAR type or lidar not initialized\n");
+        spdlog::info("[LIDAR_3D] unknown LIDAR type or lidar not initialized");
         return IMU();
     }
 
@@ -208,7 +214,8 @@ IMU LIDAR_3D::get_best_imu(double ref_t, int idx)
     }
     else
     {
-        printf("[LIDAR_3D] unknown LIDAR type or lidar not initialized\n");
+        //printf("[LIDAR_3D] unknown LIDAR type or lidar not initialized\n");
+        spdlog::info("[LIDAR_3D] unknown LIDAR type or lidar not initialized");
         return IMU();
     }
 
@@ -268,7 +275,8 @@ void LIDAR_3D::set_is_sync(bool flag)
         if(lidar_type == "LIVOX" && livox != nullptr)
         {
             livox->set_is_sync(idx, flag);
-            printf("[LIDAR_3D] set livox->is_sync[%d] = %d\n",idx, flag);
+            //printf("[LIDAR_3D] set livox->is_sync[%d] = %d\n",idx, flag);
+            spdlog::info("[LIDAR_3D] set livox->is_sync[{}] = {}",idx, flag);
         }
     }
 }
@@ -294,7 +302,9 @@ void LIDAR_3D::deskewing_loop(int idx)
 
     double pre_loop_time = get_time();
 
-    printf("[LIDAR_3D] dsk_loop[%d] start\n", idx);
+    //printf("[LIDAR_3D] dsk_loop[%d] start\n", idx);
+    spdlog::info("[LIDAR_3D] dsk_loop[{}] start", idx);
+
     while(deskewing_flag[idx])
     {
         if(!is_connected)
@@ -357,7 +367,9 @@ void LIDAR_3D::deskewing_loop(int idx)
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_3D] dsk_loop[%d] stop\n", idx);
+    //printf("[LIDAR_3D] dsk_loop[%d] stop\n", idx);
+    spdlog::info("[LIDAR_3D] dsk_loop[{}] stop", idx);
+
 }
 
 void LIDAR_3D::merge_loop()
@@ -372,7 +384,8 @@ void LIDAR_3D::merge_loop()
 
     double pre_loop_time = get_time();
 
-    printf("[LIDAR_3D] a_loop start\n");
+    //printf("[LIDAR_3D] a_loop start\n");
+    spdlog::info("[LIDAR_3D] a_loop start");
     while(merge_flag)
     {
         TIME_PTS merge_frm;
@@ -563,7 +576,8 @@ void LIDAR_3D::merge_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LIDAR_3D] a_loop stop\n");
+    //printf("[LIDAR_3D] a_loop stop\n");
+    spdlog::info("[LIDAR_3D] a_loop stop");
 }
 
 void LIDAR_3D::set_config_module(CONFIG* _config)
