@@ -1147,6 +1147,7 @@ void MainWindow::bt_MapBuild()
 
     // mapping start
     MAPPING::instance()->start();
+    change_map_name =  false;
 }
 
 void MainWindow::bt_MapSave()

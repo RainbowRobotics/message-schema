@@ -106,6 +106,7 @@ struct DATA_MOVE
 struct DATA_LOCALIZATION
 {
     double time;
+    QString id;
     QString command; // autoinit, semiautoinit, init, start, stop, randominit
     QString seed;
     Eigen::Vector4d tgt_pose_vec; // x, y, z, th
@@ -116,6 +117,7 @@ struct DATA_LOCALIZATION
     DATA_LOCALIZATION()
     {
         time = 0.0;
+        id = "";
         command = "";
         seed = "";
         tgt_pose_vec.setIdentity();
@@ -127,6 +129,7 @@ struct DATA_LOCALIZATION
     DATA_LOCALIZATION(const DATA_LOCALIZATION& p)
     {
         time = p.time;
+        id = p.id;
         command = p.command;
         seed = p.seed;
         tgt_pose_vec = p.tgt_pose_vec;
@@ -139,6 +142,7 @@ struct DATA_LOCALIZATION
     {
         time = p.time;
         command = p.command;
+        id = p.id;
         seed = p.seed;
         tgt_pose_vec = p.tgt_pose_vec;
 
@@ -151,6 +155,7 @@ struct DATA_LOCALIZATION
 struct DATA_LOAD
 {
     double time;
+    QString id;
     QString command; // mapload
     QString map_name; // map name
 
@@ -159,6 +164,7 @@ struct DATA_LOAD
 
     DATA_LOAD()
     {
+        id = "";
         time = 0.0;
         command = "";
         map_name = "";
@@ -169,6 +175,7 @@ struct DATA_LOAD
 
     DATA_LOAD(const DATA_LOAD& p)
     {
+        id = p.id;
         time = p.time;
         command = p.command;
         map_name = p.map_name;
@@ -180,6 +187,7 @@ struct DATA_LOAD
     DATA_LOAD& operator=(const DATA_LOAD& p)
     {
         time = p.time;
+        id = p.id;
         command = p.command;
         map_name = p.map_name;
 
@@ -226,9 +234,87 @@ struct DATA_RANDOMSEQ
     }
 };
 
+struct DATA_CONTROL
+{
+    static constexpr const char* SetSafetyField = "setSafetyField";
+    static constexpr const char* GetSafetyField = "getSafetyField";
+    static constexpr const char* ResetSafetyField = "resetSafetyField";
+    static constexpr const char* Dock = "dock";
+    static constexpr const char* Undock = "undock";
+    static constexpr const char* RandomSeq = "randomSeq";
+    static constexpr const char* LedControl = "ledControl";
+    static constexpr const char* LidarOnOff = "lidarOnOff";
+    static constexpr const char* PathOnOff = "pathOnOff";
+    static constexpr const char* MotorOnOff = "motorOnOff";
+    double time;
+    QString id;
+    QString command;
+
+    bool onoff;
+    QString color;
+    int frequency;
+    unsigned char mcu0_dio[8] ={0,};
+    unsigned char mcu1_dio[8] ={0,};
+    QString safetyField;
+    QString resetField;
+
+    QString result;
+    QString message;
+
+    DATA_CONTROL(){
+        time = 0.0;
+        command = "";
+        id = "";
+        onoff = false;
+        color = "";
+        frequency = 0;
+        memset(mcu0_dio, 0, sizeof(mcu0_dio));
+        memset(mcu1_dio, 0, sizeof(mcu1_dio));
+        safetyField = "";
+        resetField = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_CONTROL(const DATA_CONTROL& p)
+    {
+        time = p.time;
+        id = p.id;
+        command = p.command;
+        onoff = p.onoff;
+        color = p.color;
+        frequency = p.frequency;
+        memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
+        memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
+        safetyField = p.safetyField;
+        resetField = p.resetField;
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_CONTROL& operator=(const DATA_CONTROL& p)
+    {
+        time = p.time;
+        id = p.id;
+        command = p.command;
+        onoff = p.onoff;
+        color = p.color;
+        frequency = p.frequency;
+        memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
+        memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
+        safetyField = p.safetyField;
+        resetField = p.resetField;
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
 struct DATA_MAPPING
 {
     double time;
+    QString id;
     QString command; // start, stop, save, reload
     QString map_name;
 
@@ -238,6 +324,7 @@ struct DATA_MAPPING
     DATA_MAPPING()
     {
         time = 0.0;
+        id = "";
         command = "";
         map_name = "";
 
@@ -248,6 +335,7 @@ struct DATA_MAPPING
     DATA_MAPPING(const DATA_MAPPING& p)
     {
         time = p.time;
+        id = p.id;
         command = p.command;
         map_name = p.map_name;
 
@@ -258,6 +346,7 @@ struct DATA_MAPPING
     DATA_MAPPING& operator=(const DATA_MAPPING& p)
     {
         time = p.time;
+        id = p.id;
         command = p.command;
         map_name = p.map_name;
 
@@ -314,12 +403,12 @@ struct DATA_PDU_UPDATE
         QString key;
         QString type;
         QString value;
-        
+
         PARAM_ITEM() : key(""), type(""), value("") {}
         PARAM_ITEM(const QString& k, const QString& t, const QString& v)
             : key(k), type(t), value(v) {}
     };
-    
+
     std::vector<PARAM_ITEM> param_list; // key, type, value 배열
     QString result;
     QString message;
@@ -362,7 +451,7 @@ struct DATA_PDU_UPDATE
         return *this;
     }
 
-    
+
 };
 
 
@@ -639,6 +728,7 @@ struct DATA_PATH
     QString response;
     QString result;
     QString message;
+    QString direction;
 
     DATA_PATH()
     {
@@ -651,6 +741,7 @@ struct DATA_PATH
         response = "";
         result = "";
         message = "";
+        direction = "";
     }
 
     DATA_PATH(const DATA_PATH& p)
@@ -664,6 +755,7 @@ struct DATA_PATH
         response = p.response;
         result = p.result;
         message = p.message;
+        direction = p.direction;
     }
 
     DATA_PATH& operator=(const DATA_PATH& p)
@@ -677,6 +769,7 @@ struct DATA_PATH
         response = p.response;
         result = p.result;
         message = p.message;
+        direction = p.direction;
         return *this;
     }
 };
@@ -995,7 +1088,8 @@ struct DATA_COMMON
         MOTOR,
         SW_UPDATE,
         UPDATE_VARIABLE,
-        CAM_INFO
+        CAM_INFO,
+        DATA_CONTROL
     };
     TYPE type;
 
@@ -1011,6 +1105,7 @@ struct DATA_COMMON
     DATA_SOFTWARE dsw;
     DATA_UPDATE_VARIABLE duv;
     DATA_CAM_INFO dci;
+    DATA_CONTROL dctl;
 };
 
 
@@ -1035,6 +1130,7 @@ Q_DECLARE_METATYPE(DATA_COMMON)
 Q_DECLARE_METATYPE(DATA_SAFTYIO)
 Q_DECLARE_METATYPE(DATA_SAFETY)
 Q_DECLARE_METATYPE(DATA_PDU_UPDATE)
+Q_DECLARE_METATYPE(DATA_CONTROL)
 
 
 #endif // COMM_DATA_H

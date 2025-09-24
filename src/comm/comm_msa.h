@@ -32,6 +32,8 @@
 #include <QCoreApplication>
 #include <QProcess>
 
+#include <filesystem>
+
 struct COMM_MSA_INFO
 {
     static constexpr unsigned int send_move_status_cnt = 10;
@@ -63,6 +65,7 @@ public:
     void set_logger_module(LOGGER* _logger);
     void set_mobile_module(MOBILE* _mobile);
     void set_lidar_2d_module(LIDAR_2D* _lidar_2d);
+    void set_lidar_3d_module(LIDAR_3D* _lidar_3d);
     void set_cam_module(CAM* _cam);
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
@@ -72,9 +75,6 @@ public:
     void set_mapping_module(MAPPING* _mapping);
     void set_global_path_update();
     void set_local_path_update();
-
-    void send_move_response(DATA_MOVE msg);
-
 
 private:
     explicit COMM_MSA(QObject *parent = nullptr);
@@ -93,7 +93,7 @@ private:
     QObject* main;
     MAPPING* mapping;
     LIDAR_2D* lidar_2d;
-    LIDAR_2D* lidar_3d;
+    LIDAR_3D* lidar_3d;
     AUTOCONTROL* ctrl;
     DOCKCONTROL* dctrl;
     LOCALIZATION* loc;
@@ -129,19 +129,34 @@ private:
     void recv_loop();
 
     std::mutex move_mtx;
+    std::mutex load_mtx;
+    std::mutex mapping_mtx;
+    std::mutex localization_mtx;
+    std::mutex control_mtx;
     std::mutex path_mtx;
     std::mutex vobs_mtx;
     std::mutex common_mtx;
     std::mutex response_mtx;
     std::mutex status_mtx;
 
+    //MSA queue
     std::queue<DATA_MOVE> move_queue;
+    std::queue<DATA_LOAD> load_queue;
+    std::queue<DATA_CONTROL> control_queue;
+    std::queue<DATA_MAPPING> mapping_queue;
+    std::queue<DATA_LOCALIZATION> localization_queue;
+
+
     std::queue<DATA_PATH> path_queue;
     std::queue<DATA_VOBS> vobs_queue;
     std::queue<DATA_COMMON> common_queue;
     std::queue<std::function<void()>> response_queue;
 
     std::condition_variable move_cv;
+    std::condition_variable load_cv;
+    std::condition_variable localization_cv;
+    std::condition_variable control_cv;
+    std::condition_variable mapping_cv;
     std::condition_variable path_cv;
     std::condition_variable vobs_cv;
     std::condition_variable common_cv;
@@ -152,6 +167,10 @@ private:
     std::atomic<int> path_view_frequency  = {2};
 
     std::atomic<bool> is_move_running = {true};
+    std::atomic<bool> is_load_running = {true};
+    std::atomic<bool> is_mapping_running = {true};
+    std::atomic<bool> is_control_running = {true};
+    std::atomic<bool> is_localization_running = {true};
     std::atomic<bool> is_path_running = {true};
     std::atomic<bool> is_vobs_running = {true};
     std::atomic<bool> is_common_running = {true};
@@ -159,6 +178,10 @@ private:
     std::atomic<bool> is_send_status_running = {true};
 
     std::unique_ptr<std::thread> move_thread;
+    std::unique_ptr<std::thread> load_thread;
+    std::unique_ptr<std::thread> control_thread;
+    std::unique_ptr<std::thread> localization_thread;
+    std::unique_ptr<std::thread> mapping_thread;
     std::unique_ptr<std::thread> path_thread;
     std::unique_ptr<std::thread> vobs_thread;
     std::unique_ptr<std::thread> common_thread;
@@ -166,24 +189,32 @@ private:
     std::unique_ptr<std::thread> status_thread;
 
     void move_loop();
+    void control_loop();
+    void localization_loop();
+    void mapping_loop();
+    void load_loop();
     void path_loop();
     void vobs_loop();
     void common_loop();
     void response_loop();
     void send_status_loop();
 
+    //MSA handle
     void handle_move_cmd(const QJsonObject& data);
+    void handle_load_cmd(const QJsonObject& data);
+    void handle_mapping_cmd(const QJsonObject& data);
+    void handle_localization_cmd(const QJsonObject& data);
+    void handle_control_cmd(const QJsonObject& data);
+
     void handle_move_jog(const DATA_MOVE& msg);
     void handle_move_goal(DATA_MOVE& msg);
     void handle_move_stop(DATA_MOVE& msg);
     void handle_move_pause(DATA_MOVE& msg);
     void handle_move_resume(DATA_MOVE& msg);
     void handle_move_target(DATA_MOVE& msg);
-//    void handle_load_cmd(const QJsonObject& data);
-    void handle_mapping_cmd(const QJsonObject& data);
+    void handle_mapping(DATA_MAPPING msg);
 
-    //    void handle_localization_cmd(DATA_LOCALIZATION msg);
-//    void handle_localization_cmd(const QJsonObject& data);
+    void handle_localization_cmd(DATA_LOCALIZATION msg);
 
     void calc_remaining_time_distance(DATA_MOVE& msg);
 
@@ -254,7 +285,15 @@ private Q_SLOTS:
     void slot_localization(DATA_LOCALIZATION msg);
     void slot_safety_io(DATA_SAFTYIO msg);
 
-    void send_localization_response(const DATA_LOCALIZATION& msg);
+    //MSA
+    void send_move_response(DATA_MOVE msg);
+    void send_localization_response(DATA_LOCALIZATION msg);
+    void send_control_response(DATA_CONTROL msg);
+    void send_mapping_response(DATA_MAPPING msg);
+    void send_load_response(DATA_LOAD msg);
+
+
+//    void send_localization_response(const DATA_LOCALIZATION& msg);
 
     //    void send_move_response(DATA_MOVE msg);
     void send_path_response(DATA_PATH msg);
