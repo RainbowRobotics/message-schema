@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Query
 from rb_zenoh.exeption import JSONResponse
 
 from app.modules.schema import Response_ReturnValuePD
@@ -15,8 +17,10 @@ state_router = APIRouter(tags=["State"])
 
 
 @state_router.get("/system_state", response_model=AllSwConnectStateResponsePD)
-async def system_state():
-    res = await state_service.get_system_state()
+async def system_state(
+    namespaces: Annotated[list[str], Query(alias="namespaces[]")],
+):
+    res = await state_service.get_system_state(namespaces)
 
     return JSONResponse(res)
 

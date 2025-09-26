@@ -29,17 +29,28 @@ class SmoothJogStopRequestPD(BaseModel):
     stoptime: float
 
 
+class MoveInputTarget(BaseModel):
+    tar_values: list[float]
+    tar_frame: int
+    tar_unit: int
+
+
+class MoveInputSpeed(BaseModel):
+    spd_mode: int
+    spd_vel_para: float
+    spd_acc_para: float
+
+
+class MoveInputType(BaseModel):
+    pnt_type: int
+    pnt_para: float
+
+
 class Request_MoveJPD(BaseModel):
-    targetspeed: list[float]
-    frame: int
-    unit: int
-    speed_rate: float
-    accel_rate: float
+    target: MoveInputTarget
+    speed: MoveInputSpeed
 
 
 class Request_MoveLPD(BaseModel):
-    targetspeed: list[float]
-    frame: int
-    unit: int
-    speed_mmps: float
-    accel_mmpss: float
+    target: MoveInputTarget
+    speed: MoveInputSpeed

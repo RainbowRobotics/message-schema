@@ -4,11 +4,14 @@
     # via rb-modules
 -e ./packages/rb_modules
     # via common
+-e ./packages/rb_schemas
+    # via common
 -e ./packages/utils
     # via
     #   common
     #   rb-database
     #   rb-modules
+    #   rb-schemas
 altgraph==0.17.4 \
     --hash=sha256:1b5afbb98f6c4dcadb2e2ae6ab9fa994bbb8c1d75f4fa96d340f9437ae454406 \
     --hash=sha256:642743b4750de17e655e6711601b077bc6598dbfa3ba5fa2b2a35ce12b508dff
@@ -50,10 +53,13 @@ fastapi==0.116.1 \
     #   common
     #   rb-database
     #   rb-modules
+    #   rb-schemas
 flatbuffers==25.2.10 \
     --hash=sha256:97e451377a41262f8d9bd4295cc836133415cc03d8cb966410a4af92eb00d26e \
     --hash=sha256:ebba5f4d5ea615af3f7fd70fc310636fbb2bbd1f566ac0a23d98dd412de50051
-    # via rb-modules
+    # via
+    #   rb-modules
+    #   rb-schemas
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
     --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86

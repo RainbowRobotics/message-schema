@@ -1,9 +1,10 @@
 import asyncio
-import socket
 import time
 
 import flatbuffers
 import psutil
+import rb_database.mongo_db as mongo_db
+from app.modules.info.info_module_service import InfoService
 from app.modules.program.program_module_service import ProgramService
 from app.socket import socket_client
 from fastapi import HTTPException
@@ -15,92 +16,144 @@ from flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
 from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
+from rb_resources.json import read_json_file
 from rb_zenoh import zenoh_client
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+from utils.asyncio_helper import fire_and_log
+from utils.helper import get_current_ip
 from utils.parser import t_to_dict
 
 programService = ProgramService()
+info_service = InfoService()
 
 
 class StateService:
     def __init__(self):
         self._all_connect_state_period = 1
         self._prev_all_connected_status = None
+        self._robot_models = read_json_file("robot_models.json")
 
-    async def get_system_state(self):
-        hostname = socket.gethostname()
-        ip = socket.gethostbyname(hostname)
-        res = self.get_all_robots_info()
+    async def get_system_state(self, namespaces: list[str]):
+        ip = await get_current_ip()
 
         all_connected = "DISCONNECT"
         core_sw_list = []
 
-        for r in res:
-            if r["err"] is not None:
+        for namespace in namespaces:
+            robot_model = self._robot_models.get(namespace)
+
+            if not robot_model:
+                print(f"no robot model: {namespace}", flush=True)
                 continue
 
-            core_sw_info = r["dict_payload"]
-            core_sw_info["connected"] = "DISCONNECT"
+            core_sw_list.append(
+                {
+                    "sw_name": namespace,
+                    "alias": robot_model["alias"],
+                    "be_service": robot_model["be_service"],
+                    "model": robot_model["model"],
+                    "connected": "DISCONNECT",
+                }
+            )
 
-            be_service = r["dict_payload"]["category"]
-            robot_namespace = r["dict_payload"]["name"]
+        for core_sw in core_sw_list:
 
-            if be_service == "manipulate":
-                topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"{robot_namespace}/state_core",
-                    flatbuffer_obj_t=State_CoreT,
-                )
+            try:
+                if core_sw["be_service"] == "manipulate":
+                    topic, mv, obj, attachment = await zenoh_client.receive_one(
+                        f"{core_sw["sw_name"]}/state_core", flatbuffer_obj_t=State_CoreT, timeout=1
+                    )
 
-                if obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 1:
-                    all_connected = "CONNECTED"
-                    core_sw_info["connected"] = "CONNECTED"
-                elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 1:
-                    all_connected = "UNSTABLE"
-                    core_sw_info["connected"] = "UNSTABLE"
+                    if obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
+                        all_connected = "CONNECTED"
+                        core_sw["connected"] = "CONNECTED"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 1:
+                        all_connected = "UNSTABLE"
+                        core_sw["connected"] = "POWER CHECKED"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 2:
+                        all_connected = "UNSTABLE"
+                        core_sw["connected"] = "COMM CHECKED"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 3:
+                        all_connected = "UNSTABLE"
+                        core_sw["connected"] = "PARAM CHECKED"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 4:
+                        all_connected = "UNSTABLE"
+                        core_sw["connected"] = "JOINT CHECKED"
+                    elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 5:
+                        all_connected = "UNSTABLE"
+                        core_sw["connected"] = "SYSTEM CHECKED"
 
-            elif be_service == "mobility":
-                topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"{robot_namespace}/state",
-                )
-            elif be_service == "sensor":
-                topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"{robot_namespace}/state_core",
-                )
-
-            core_sw_list.append(core_sw_info)
+                elif core_sw["be_service"] == "mobility":
+                    topic, mv, obj, attachment = await zenoh_client.receive_one(
+                        f"{core_sw.namespace}/state",
+                    )
+                elif core_sw["be_service"] == "sensor":
+                    topic, mv, obj, attachment = await zenoh_client.receive_one(
+                        f"{core_sw.namespace}/state_core",
+                    )
+            except (
+                asyncio.exceptions.TimeoutError,
+                ZenohNoReply,
+                ZenohReplyError,
+                ZenohTransportError,
+            ):
+                all_connected = "DISCONNECT"
+                core_sw["connected"] = "DISCONNECT"
 
         return {
             "ip": ip,
             "all_connected": all_connected,
-            "cpu_usage": psutil.cpu_percent(interval=1),
-            "core_sw_num": len(core_sw_list),
+            "cpu_usage": psutil.cpu_percent(interval=None),
             "core_sw_list": core_sw_list,
         }
 
     async def repeat_get_system_state(self):
-        next_ts = time.monotonic()
+        try:
+            await mongo_db.wait_db_ready()
 
-        while True:
-            res = await self.get_system_state()
+            next_ts = time.monotonic()
 
-            if self._prev_all_connected_status != res and socket_client.connected:
-                await socket_client.emit("system_state", res)
-                self._prev_all_connected_status = res
+            col = mongo_db.db["robot_info"]
 
-            next_ts += self._all_connect_state_period
-            await asyncio.sleep(max(0, next_ts - time.monotonic()))
+            while True:
+                doc = await col.find_one({}, {"_id": 0, "components": 1}) or {}
+
+                raw_components = doc.get("components")
+                namespaces = list(raw_components or [])
+
+                if not namespaces:
+                    print("no namespaces", flush=True)
+                    continue
+
+                res = await self.get_system_state(namespaces=namespaces)
+
+                fire_and_log(socket_client.emit("system_state", res))
+
+                next_ts += self._all_connect_state_period
+                await asyncio.sleep(max(0, next_ts - time.monotonic()))
+        except Exception as e:
+            print(f"error: here repeat_get_system_state {e}", flush=True)
 
     def get_all_robots_info(self):
-        req = Request_CallWhoAmIT()
+        try:
+            req = Request_CallWhoAmIT()
 
-        results = zenoh_client.query_all(
-            "*/call_whoami",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_CallWhoamIT,
-            flatbuffer_buf_size=1024,
-        )
+            results = zenoh_client.query_all(
+                "*/call_whoami",
+                flatbuffer_req_obj=req,
+                flatbuffer_res_T_class=Response_CallWhoamIT,
+                flatbuffer_buf_size=1024,
+                timeout=5,
+            )
 
-        return results
+            return results
+        except (
+            asyncio.exceptions.TimeoutError,
+            ZenohNoReply,
+            ZenohReplyError,
+            ZenohTransportError,
+        ):
+            return list([])
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: int | None = 0.5

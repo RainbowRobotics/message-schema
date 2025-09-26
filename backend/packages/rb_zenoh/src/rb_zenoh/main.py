@@ -362,7 +362,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout_ms: int = 3000,
+        timeout: int = 3,
         flatbuffer_req_obj: Table | None = None,
         flatbuffer_res_T_class: type[Table] | None = None,
         flatbuffer_buf_size: int | None = None,
@@ -396,7 +396,7 @@ class ZenohClient:
         # dict_params = dict(params or {})
         # sel = Selector(keyexpr, dict_params)
 
-        get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout_ms)
+        get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout)
 
         seen_any = False
 
@@ -452,23 +452,24 @@ class ZenohClient:
                         else bytes(perr.payload)
                     )
 
+                    key_expr = getattr(perr, "key_expr", None)
+
                     try:
                         msg = res_payload.decode("utf-8")
                     except Exception:
                         msg = res_payload
 
                     err_result = {
-                        "key": samp.key_expr,
+                        "key": key_expr,
                         "payload": res_payload,
-                        "attachment": att_dict,
+                        "attachment": {},
                         "dict_payload": None,
                         "err": msg,
                     }
-
                     yield err_result
 
-                if not seen_any:
-                    raise ZenohNoReply(timeout_ms)
+            if not seen_any:
+                raise ZenohNoReply(timeout)
 
         except ZError as ze:
             raise ZenohTransportError(str(ze)) from ze
@@ -477,7 +478,7 @@ class ZenohClient:
         self,
         keyexpr: str,
         *,
-        timeout_ms: int = 3000,
+        timeout: int = 3,
         flatbuffer_req_obj: Table | None = None,
         flatbuffer_res_T_class: type[Table] | None = None,
         flatbuffer_buf_size: int | None = None,
@@ -492,7 +493,7 @@ class ZenohClient:
                         flatbuffer_req_obj=flatbuffer_req_obj,
                         flatbuffer_res_T_class=flatbuffer_res_T_class,
                         flatbuffer_buf_size=flatbuffer_buf_size,
-                        timeout_ms=timeout_ms,
+                        timeout=timeout,
                         target=target,
                         payload=payload,
                     )
@@ -500,13 +501,13 @@ class ZenohClient:
                 or {}
             )
         except StopIteration:
-            raise ZenohNoReply(timeout_ms) from None
+            raise ZenohNoReply(timeout) from None
 
     def query_all(
         self,
         keyexpr: str,
         *,
-        timeout_ms: int = 3000,
+        timeout: int = 3,
         flatbuffer_req_obj: Table | None = None,
         flatbuffer_res_T_class: type[Table] | None = None,
         flatbuffer_buf_size: int | None = None,
@@ -519,7 +520,7 @@ class ZenohClient:
                 flatbuffer_req_obj=flatbuffer_req_obj,
                 flatbuffer_res_T_class=flatbuffer_res_T_class,
                 flatbuffer_buf_size=flatbuffer_buf_size,
-                timeout_ms=timeout_ms,
+                timeout=timeout,
                 target=target,
                 payload=payload,
             )

@@ -76,12 +76,7 @@ async def on_call_move_j(data, robot_model: str):
     dict_data = t_to_dict(data)
 
     res = await program_service.call_move_j(
-        robot_model=robot_model,
-        targetspeed=dict_data["targetspeed"],
-        frame=dict_data["frame"],
-        unit=dict_data["unit"],
-        speed_rate=dict_data["speed_rate"],
-        accel_rate=dict_data["accel_rate"],
+        robot_model=robot_model, target=dict_data["target"], speed=dict_data["speed"]
     )
 
     return to_json(res)
@@ -92,12 +87,7 @@ async def on_call_move_l(data, robot_model: str):
     dict_data = t_to_dict(data)
 
     res = await program_service.call_move_l(
-        robot_model=robot_model,
-        targetspeed=dict_data["targetspeed"],
-        frame=dict_data["frame"],
-        unit=dict_data["unit"],
-        speed_mmps=dict_data["speed_mmps"],
-        accel_mmpss=dict_data["accel_mmpss"],
+        robot_model=robot_model, target=dict_data["target"], speed=dict_data["speed"]
     )
 
     return to_json(res)

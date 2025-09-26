@@ -3,20 +3,29 @@ include "common_struct.fbs";
 
 namespace IPC;
 
-table Request_Move_J {
-    targetvalue: N_JOINT_f; //타겟 각도 값 N 개(7)
-    frame: int; // 조인트에서는 -1
-    unit: int;  // 일단 0
+table MoveInput_Target {
+    tar_values: N_INPUT_f;
+    tar_frame: int;  // 조인트 -1, 글로벌 0, 로컬 1
+    tar_unit: int;
+}
 
-    speed_rate: float;//0~1 속도 비율 // 0.3
-    accel_rate: float;//0~1 가속도 비율 // 0.3
+table MoveInput_Type {
+    pnt_type: int;
+    pnt_para: float;
+}
+
+table MoveInput_Speed {
+    spd_mode: int;
+    spd_vel_para: float; // MoveJ: 60, MoveL: 250
+    spd_acc_para: float; // MoveJ: 120, MoveL: 1000
+}
+
+table Request_Move_J {
+    target: MoveInput_Target;
+    speed: MoveInput_Speed;
 }
 
 table Request_Move_L {
-    targetvalue: N_CARTE_f; //타겟 위치값 N 개(7)
-    frame: int; // 글로벌 0, 로컬 1 ...
-    unit: int;  // 일단 0
-
-    speed_mmps: float;
-    accel_mmpss: float;
+    target: MoveInput_Target;
+    speed: MoveInput_Speed;
 }

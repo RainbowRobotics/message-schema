@@ -70,12 +70,7 @@ async def smoothjog_stop(robot_model: str, request: SmoothJogStopRequestPD):
 @program_router.post("/{robot_model}/call_move_j", response_model=Response_ReturnValuePD)
 async def move_j(robot_model: str, request: Request_MoveJPD):
     res = await program_service.call_move_j(
-        robot_model=robot_model,
-        targetspeed=request.targetspeed,
-        frame=request.frame,
-        unit=request.unit,
-        speed_rate=request.speed_rate,
-        accel_rate=request.accel_rate,
+        robot_model=robot_model, target=request.target, speed=request.speed
     )
     return JSONResponse(res)
 
@@ -83,11 +78,6 @@ async def move_j(robot_model: str, request: Request_MoveJPD):
 @program_router.post("/{robot_model}/call_move_l", response_model=Response_ReturnValuePD)
 async def move_l(robot_model: str, request: Request_MoveLPD):
     res = await program_service.call_move_l(
-        robot_model=robot_model,
-        targetspeed=request.targetspeed,
-        frame=request.frame,
-        unit=request.unit,
-        speed_mmps=request.speed_mmps,
-        accel_mmpss=request.accel_mmpss,
+        robot_model=robot_model, target=request.target, speed=request.speed
     )
     return JSONResponse(res)

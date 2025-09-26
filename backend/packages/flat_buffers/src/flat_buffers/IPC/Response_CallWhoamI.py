@@ -34,35 +34,28 @@ class Response_CallWhoamI(object):
         return None
 
     # Response_CallWhoamI
-    def Name(self) -> Optional[str]:
+    def Model(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # Response_CallWhoamI
-    def Model(self) -> Optional[str]:
+    def Version(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # Response_CallWhoamI
-    def Version(self) -> Optional[str]:
+    def Alias(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # Response_CallWhoamI
-    def Alias(self) -> Optional[str]:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
 def Response_CallWhoamIStart(builder: flatbuffers.Builder):
-    builder.StartObject(5)
+    builder.StartObject(4)
 
 def Start(builder: flatbuffers.Builder):
     Response_CallWhoamIStart(builder)
@@ -73,26 +66,20 @@ def Response_CallWhoamIAddCategory(builder: flatbuffers.Builder, category: int):
 def AddCategory(builder: flatbuffers.Builder, category: int):
     Response_CallWhoamIAddCategory(builder, category)
 
-def Response_CallWhoamIAddName(builder: flatbuffers.Builder, name: int):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(name), 0)
-
-def AddName(builder: flatbuffers.Builder, name: int):
-    Response_CallWhoamIAddName(builder, name)
-
 def Response_CallWhoamIAddModel(builder: flatbuffers.Builder, model: int):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(model), 0)
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(model), 0)
 
 def AddModel(builder: flatbuffers.Builder, model: int):
     Response_CallWhoamIAddModel(builder, model)
 
 def Response_CallWhoamIAddVersion(builder: flatbuffers.Builder, version: int):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
 
 def AddVersion(builder: flatbuffers.Builder, version: int):
     Response_CallWhoamIAddVersion(builder, version)
 
 def Response_CallWhoamIAddAlias(builder: flatbuffers.Builder, alias: int):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(alias), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(alias), 0)
 
 def AddAlias(builder: flatbuffers.Builder, alias: int):
     Response_CallWhoamIAddAlias(builder, alias)
@@ -109,7 +96,6 @@ class Response_CallWhoamIT(object):
     # Response_CallWhoamIT
     def __init__(self):
         self.category = None  # type: str
-        self.name = None  # type: str
         self.model = None  # type: str
         self.version = None  # type: str
         self.alias = None  # type: str
@@ -136,7 +122,6 @@ class Response_CallWhoamIT(object):
         if responseCallWhoamI is None:
             return
         self.category = responseCallWhoamI.Category()
-        self.name = responseCallWhoamI.Name()
         self.model = responseCallWhoamI.Model()
         self.version = responseCallWhoamI.Version()
         self.alias = responseCallWhoamI.Alias()
@@ -145,8 +130,6 @@ class Response_CallWhoamIT(object):
     def Pack(self, builder):
         if self.category is not None:
             category = builder.CreateString(self.category)
-        if self.name is not None:
-            name = builder.CreateString(self.name)
         if self.model is not None:
             model = builder.CreateString(self.model)
         if self.version is not None:
@@ -156,8 +139,6 @@ class Response_CallWhoamIT(object):
         Response_CallWhoamIStart(builder)
         if self.category is not None:
             Response_CallWhoamIAddCategory(builder, category)
-        if self.name is not None:
-            Response_CallWhoamIAddName(builder, name)
         if self.model is not None:
             Response_CallWhoamIAddModel(builder, model)
         if self.version is not None:

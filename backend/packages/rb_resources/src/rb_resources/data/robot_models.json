@@ -1,0 +1,12 @@
+{
+  "C500920": {
+    "model": "C500920",
+    "be_service":"manipulate",
+    "alias": "SB5-920E",
+    "useCharge": false,
+    "urdfFileName": "rb5_850e.urdf",
+    "components": [
+      "C500920"
+    ]
+  }
+}

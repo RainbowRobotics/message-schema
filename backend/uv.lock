@@ -11,6 +11,7 @@ members = [
     "rb-backend-server",
     "rb-database",
     "rb-modules",
+    "rb-resources",
     "rb-schemas",
     "rb-socketio",
     "rb-zenoh",
@@ -174,6 +175,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-socketio" },
     { name = "rb-modules" },
+    { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "redis" },
     { name = "utils" },
@@ -187,6 +189,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "python-socketio", specifier = ">=5.13.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "redis", specifier = ">=6.4.0" },
     { name = "utils", editable = "packages/utils" },
@@ -355,6 +358,7 @@ dependencies = [
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-modules" },
+    { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
     { name = "rb-zenoh" },
@@ -369,6 +373,7 @@ requires-dist = [
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
@@ -398,6 +403,7 @@ dependencies = [
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-modules" },
+    { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
     { name = "rb-zenoh" },
@@ -412,6 +418,7 @@ requires-dist = [
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
+    { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
@@ -860,6 +867,11 @@ requires-dist = [
     { name = "rb-database", editable = "packages/rb_database" },
     { name = "utils", editable = "packages/utils" },
 ]
+
+[[package]]
+name = "rb-resources"
+version = "0.1.0"
+source = { editable = "packages/rb_resources" }
 
 [[package]]
 name = "rb-schemas"

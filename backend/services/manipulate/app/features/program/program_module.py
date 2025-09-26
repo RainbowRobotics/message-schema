@@ -1,4 +1,8 @@
+from app.features.program.program_schema import MoveInputSpeed, MoveInputTarget
+from flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
+from flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from flat_buffers.IPC.N_CARTE_f import N_CARTE_fT
+from flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
 from flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from flat_buffers.IPC.Request_MotionSmoothJogJ import Request_MotionSmoothJogJT
@@ -108,23 +112,26 @@ class ProgramService:
         return res["dict_payload"]
 
     async def call_move_j(
-        self,
-        *,
-        robot_model: str,
-        targetspeed: list[float],
-        frame: int,
-        unit: int,
-        speed_rate: float,
-        accel_rate: float,
+        self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
         req = Request_Move_JT()
-        nj = N_JOINT_fT()
-        nj.f = targetspeed
-        req.targetspeed = nj
-        req.frame = frame
-        req.unit = unit
-        req.speed_rate = speed_rate
-        req.accel_rate = accel_rate
+        move_input_target = MoveInput_TargetT()
+        move_input_speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = target.tar_values
+
+        move_input_target.tarValues = ni
+        move_input_target.tarFrame = target.tar_frame
+        move_input_target.tarUnit = target.tar_values
+
+        move_input_speed.spdMode = speed.spd_mode
+        move_input_speed.spdVelPara = speed.spd_vel_para
+        move_input_speed.spdAccPara = speed.spd_acc_para
+
+        req.target = move_input_target
+        req.speed = move_input_speed
+
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_j",
             flatbuffer_req_obj=req,
@@ -135,23 +142,26 @@ class ProgramService:
         return res["dict_payload"]
 
     async def call_move_l(
-        self,
-        *,
-        robot_model: str,
-        targetspeed: list[float],
-        frame: int,
-        unit: int,
-        speed_mmps: float,
-        accel_mmpss: float,
+        self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
         req = Request_Move_LT()
-        ncf = N_CARTE_fT()
-        ncf.f = targetspeed
-        req.targetspeed = ncf
-        req.frame = frame
-        req.unit = unit
-        req.speed_mmps = speed_mmps
-        req.accel_mmpss = accel_mmpss
+        move_input_target = MoveInput_TargetT()
+        move_input_speed = MoveInput_SpeedT()
+
+        ni = N_INPUT_fT()
+        ni.f = target.tar_values
+
+        move_input_target.tarValues = ni
+        move_input_target.tarFrame = target.tar_frame
+        move_input_target.tarUnit = target.tar_values
+
+        move_input_speed.spdMode = speed.spd_mode
+        move_input_speed.spdVelPara = speed.spd_vel_para
+        move_input_speed.spdAccPara = speed.spd_acc_para
+
+        req.target = move_input_target
+        req.speed = move_input_speed
+
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_l",
             flatbuffer_req_obj=req,

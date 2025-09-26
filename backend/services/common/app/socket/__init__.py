@@ -42,17 +42,41 @@ def _parse_auth(auth: dict | None):
 
 class RelayNS(socketio.AsyncNamespace):
     async def on_connect(self, sid, environ, auth):
-        claims = _parse_auth(auth)
-        await self.save_session(sid, {"claims": claims})
+        try:
+            claims = _parse_auth(auth)
+            await self.save_session(sid, {"claims": claims})
+            print(f"[ns:/] CONNECT sid={sid} claims={claims}", flush=True)
 
-        if claims.get("role") == "service":
-            svc = claims.get("serviceName")
-            await self.enter_room(sid, f"svc:{svc}")
-            _SERVICE_SIDS[svc] = sid
+            if claims.get("role") == "service":
+                svc = claims.get("serviceName")
+                if not svc:
+                    print("[ns:/] REJECT: serviceName required", flush=True)
+                    return False
+
+                old = _SERVICE_SIDS.get(svc)
+                if old and old != sid:
+                    # 중복 접속 → 정책: 새 세션 우선, 이전 세션 종료
+                    print(
+                        f"[ns:/] DUPLICATE for {svc}: old={old}, new={sid} → disconnect old",
+                        flush=True,
+                    )
+                    try:
+                        await self.disconnect(old)  # 이전 세션 명시 종료
+                    except Exception as e:
+                        print(f"[ns:/] disconnect(old) error: {e}", flush=True)
+
+                await self.enter_room(sid, f"svc:{svc}")
+                _SERVICE_SIDS[svc] = sid
+                print(f"[ns:/] SET {_SERVICE_SIDS}", flush=True)
+
+        except Exception as e:
+            print(f"[ns:/] on_connect error: {type(e).__name__}: {e}", flush=True)
+            return False
 
     async def on_disconnect(self, sid):
         sess = await self.get_session(sid)
         claims = sess.get("claims", {})
+        print(f"[ns:/] on_disconnect claims={sess.get('claims')}", flush=True)
         if claims.get("role") == "service":
             svc = claims.get("serviceName")
 
@@ -145,7 +169,14 @@ class RelayNS(socketio.AsyncNamespace):
             return {"ok": True}
 
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+sio = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins="*",
+    ping_interval=20,
+    ping_timeout=45,  # 일단 30~45로 시작
+    # logger=True,
+    # engineio_logger=True,
+)
 app_with_sio = socketio.ASGIApp(sio, socketio_path="/socket.io")
 
 socket_client = RBSocketIONsClient(
@@ -153,7 +184,8 @@ socket_client = RBSocketIONsClient(
     reconnection=True,  # 자동 재연결 활성화
     reconnection_attempts=0,  # 0 = 무제한
     reconnection_delay=1,  # 최초 재시도 간격(초)
-    reconnection_delay_max=30,  # 백오프 상한
+    # logger=True,
+    # engineio_logger=True,
 )
 
 

@@ -73,10 +73,9 @@ def create_app(
             app.state._sio_connect_task = asyncio.create_task(
                 socket_client.connect(
                     settings.SOCKET_SERVER_URL,
-                    auth={"role": "service", "serviceName": settings.SERVICE_NAME},
-                    namespaces=["/"],
-                    socketio_path="/socket.io",
-                    transports=["websocket"],
+                    auth=lambda: {"role": "service", "serviceName": settings.SERVICE_NAME},
+                    socketio_path=settings.SOCKET_PATH,
+                    transports=["websocket", "polling"],
                     retry=True,
                     wait=True,
                 )
@@ -84,21 +83,14 @@ def create_app(
 
             print("🔌 socket.io connect issued (non-blocking)", flush=True)
 
-        async def _on_net_change(_cur):
-            print("🔁 network change detected → restart zenoh", flush=True)
-            try:
-                await zenoh_router.shutdown()
-            finally:
-                await zenoh_router.startup()
-
         try:
             yield
         finally:
             try:
                 await zenoh_router.shutdown()
                 print("⛔ zenoh 연결 종료", flush=True)
-                if socket_client and getattr(socket_client, "connected", False):
-                    await socket_client.disconnect()
+
+                socket_client.disconnect()
 
                 for t in bg_tasks:
                     t.cancel()

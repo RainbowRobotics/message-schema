@@ -1,10 +1,9 @@
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
 
 from app.features.log.log_schema import LogItem, Response_LogCntPD, Response_LogListPD
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from rb_database import AsyncIOMotorDatabase, get_db
+from rb_database import MongoDB
 
 from .log_module import LogService
 
@@ -12,7 +11,6 @@ log_service = LogService()
 
 log_router = APIRouter(tags=["Log"])
 
-Db = Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 
 # @log_router.get("/list", response_model=Response_LogListPD)
 # async def list_logs(
@@ -79,16 +77,16 @@ Db = Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 
 
 @log_router.get("/list", response_model=Response_LogListPD)
-async def get_log_list(db: Db):
-    cursor = db["state_logs"].find({}).sort([("createdAt", -1), ("_id", -1)]).limit(30)
-    docs = await cursor.to_list(length=30)
+async def get_log_list(db: MongoDB, limit: int = 30):
+    cursor = db["state_logs"].find({}).sort([("createdAt", -1), ("_id", -1)]).limit(limit=limit)
+    docs = await cursor.to_list(length=limit)
 
     items = [LogItem.model_validate(d) for d in docs]
     return {"items": items}
 
 
 @log_router.get("/error_log_count_for_24h", response_model=Response_LogCntPD)
-async def error_log_count_for_24h(db: Db):
+async def error_log_count_for_24h(db: MongoDB):
     now_utc = datetime.now(UTC)
 
     cutoff_iso = (now_utc - timedelta(hours=24)).isoformat()

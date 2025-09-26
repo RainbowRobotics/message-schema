@@ -5,7 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from flat_buffers.IPC.N_JOINT_f import N_JOINT_f, N_JOINT_fT
+from flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
+from flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
 from typing import Optional
 np = import_numpy()
 
@@ -28,78 +29,42 @@ class Request_Move_J(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Request_Move_J
-    def Targetvalue(self) -> Optional[N_JOINT_f]:
+    def Target(self) -> Optional[MoveInput_Target]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            x = o + self._tab.Pos
-            obj = N_JOINT_f()
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = MoveInput_Target()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # Request_Move_J
-    def Frame(self):
+    def Speed(self) -> Optional[MoveInput_Speed]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # Request_Move_J
-    def Unit(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # Request_Move_J
-    def SpeedRate(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
-
-    # Request_Move_J
-    def AccelRate(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = MoveInput_Speed()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
 
 def Request_Move_JStart(builder: flatbuffers.Builder):
-    builder.StartObject(5)
+    builder.StartObject(2)
 
 def Start(builder: flatbuffers.Builder):
     Request_Move_JStart(builder)
 
-def Request_Move_JAddTargetvalue(builder: flatbuffers.Builder, targetvalue: Any):
-    builder.PrependStructSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(targetvalue), 0)
+def Request_Move_JAddTarget(builder: flatbuffers.Builder, target: int):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(target), 0)
 
-def AddTargetvalue(builder: flatbuffers.Builder, targetvalue: Any):
-    Request_Move_JAddTargetvalue(builder, targetvalue)
+def AddTarget(builder: flatbuffers.Builder, target: int):
+    Request_Move_JAddTarget(builder, target)
 
-def Request_Move_JAddFrame(builder: flatbuffers.Builder, frame: int):
-    builder.PrependInt32Slot(1, frame, 0)
+def Request_Move_JAddSpeed(builder: flatbuffers.Builder, speed: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(speed), 0)
 
-def AddFrame(builder: flatbuffers.Builder, frame: int):
-    Request_Move_JAddFrame(builder, frame)
-
-def Request_Move_JAddUnit(builder: flatbuffers.Builder, unit: int):
-    builder.PrependInt32Slot(2, unit, 0)
-
-def AddUnit(builder: flatbuffers.Builder, unit: int):
-    Request_Move_JAddUnit(builder, unit)
-
-def Request_Move_JAddSpeedRate(builder: flatbuffers.Builder, speedRate: float):
-    builder.PrependFloat32Slot(3, speedRate, 0.0)
-
-def AddSpeedRate(builder: flatbuffers.Builder, speedRate: float):
-    Request_Move_JAddSpeedRate(builder, speedRate)
-
-def Request_Move_JAddAccelRate(builder: flatbuffers.Builder, accelRate: float):
-    builder.PrependFloat32Slot(4, accelRate, 0.0)
-
-def AddAccelRate(builder: flatbuffers.Builder, accelRate: float):
-    Request_Move_JAddAccelRate(builder, accelRate)
+def AddSpeed(builder: flatbuffers.Builder, speed: int):
+    Request_Move_JAddSpeed(builder, speed)
 
 def Request_Move_JEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -116,11 +81,8 @@ class Request_Move_JT(object):
 
     # Request_Move_JT
     def __init__(self):
-        self.targetvalue = None  # type: Optional[N_JOINT_fT]
-        self.frame = 0  # type: int
-        self.unit = 0  # type: int
-        self.speedRate = 0.0  # type: float
-        self.accelRate = 0.0  # type: float
+        self.target = None  # type: Optional[MoveInput_TargetT]
+        self.speed = None  # type: Optional[MoveInput_SpeedT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -143,22 +105,21 @@ class Request_Move_JT(object):
     def _UnPack(self, requestMoveJ):
         if requestMoveJ is None:
             return
-        if requestMoveJ.Targetvalue() is not None:
-            self.targetvalue = N_JOINT_fT.InitFromObj(requestMoveJ.Targetvalue())
-        self.frame = requestMoveJ.Frame()
-        self.unit = requestMoveJ.Unit()
-        self.speedRate = requestMoveJ.SpeedRate()
-        self.accelRate = requestMoveJ.AccelRate()
+        if requestMoveJ.Target() is not None:
+            self.target = MoveInput_TargetT.InitFromObj(requestMoveJ.Target())
+        if requestMoveJ.Speed() is not None:
+            self.speed = MoveInput_SpeedT.InitFromObj(requestMoveJ.Speed())
 
     # Request_Move_JT
     def Pack(self, builder):
+        if self.target is not None:
+            target = self.target.Pack(builder)
+        if self.speed is not None:
+            speed = self.speed.Pack(builder)
         Request_Move_JStart(builder)
-        if self.targetvalue is not None:
-            targetvalue = self.targetvalue.Pack(builder)
-            Request_Move_JAddTargetvalue(builder, targetvalue)
-        Request_Move_JAddFrame(builder, self.frame)
-        Request_Move_JAddUnit(builder, self.unit)
-        Request_Move_JAddSpeedRate(builder, self.speedRate)
-        Request_Move_JAddAccelRate(builder, self.accelRate)
+        if self.target is not None:
+            Request_Move_JAddTarget(builder, target)
+        if self.speed is not None:
+            Request_Move_JAddSpeed(builder, speed)
         requestMoveJ = Request_Move_JEnd(builder)
         return requestMoveJ

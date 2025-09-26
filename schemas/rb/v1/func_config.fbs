@@ -11,7 +11,6 @@ table Request_CallWhoAmI {
 
 table Response_CallWhoamI{
     category    : string;            // 대분류 ...manipulate, mobile, sesnor
-    name        : string;            // cobot, quadbo
     model       : string;            // 모델코드
     version     : string;            // 4.7.1
     alias       : string;            // Ui표기용 string 별칭

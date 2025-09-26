@@ -10,6 +10,7 @@ zenoh_state_router = ZenohRouter()
 @zenoh_state_router.subscribe("*/state_message", flatbuffer_obj_t=State_MessageT)
 async def on_demo_state_message(*, topic, mv, obj, attachment):
     try:
+        print("🔎 subscribe */state_message", flush=True)
         sw_name = topic.split("/")[0]
 
         obj["swName"] = sw_name

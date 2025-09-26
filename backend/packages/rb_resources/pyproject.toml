@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rb_resources"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Rainbow Resources"
+authors = [
+    { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+rb_resources = ["data/**/*"]

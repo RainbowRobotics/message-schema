@@ -11,7 +11,7 @@ class RBSocketIONsClient(socketio.AsyncClient):
     def __init__(self, prefix_event_name="", *a, **args):
         self.prefix_event_name = prefix_event_name.strip("/")
         self.on_event_map: set[str] = set()
-        super().__init__(*a, **args)
+        super().__init__(*a, **args, request_timeout=30)
 
     def _on_connect(self):
         print("on_connect", flush=True)
@@ -61,18 +61,31 @@ class RBSocketIONsClient(socketio.AsyncClient):
 
     async def emit(self, event, data=None, **args):
         if not self.connected:
+            print("🚫 emit not connected", flush=True)
             return
 
         event = self._check_event_name(event)
 
-        if event.endswith("state_message"):
-            print("event >>", event, flush=True)
         return await super().emit(event, data, **args)
 
     async def call(self, event, data=None, timeout=None, namespace=None, **args):
         return await super().call(event, data, namespace=namespace, timeout=timeout, **args)
 
     async def _trigger_event(self, event, namespace, *args):
+        BUILTINS = {
+            "join",
+            "leave",
+            "connect",
+            "reconnect",
+            "reconnect_error",
+            "reconnect_failed",
+            "disconnect",
+            "message",
+        }
+        if event in BUILTINS:
+            print("trigger_event >>", event)
+            return await super()._trigger_event(event, namespace, *args)
+
         for on_event_name in self.on_event_map:
             template = self._check_event_name(on_event_name)
             regex = re.sub(r"{(\w+)}", r"(?P<\1>[^/]+)", template)
@@ -107,7 +120,16 @@ class RBSocketIONsClient(socketio.AsyncClient):
     def on(self, event, handler=None, namespace=None, **kwargs):
         parent_on = super().on
 
-        BUILTINS = {"join", "leave", "connect", "disconnect", "message"}
+        BUILTINS = {
+            "join",
+            "leave",
+            "connect",
+            "reconnect",
+            "reconnect_error",
+            "reconnect_failed",
+            "disconnect",
+            "message",
+        }
         tpl_event = event if event in BUILTINS else self._check_event_name(event)
 
         def decorator(user_handler):

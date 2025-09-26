@@ -5,7 +5,8 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
-from flat_buffers.IPC.N_CARTE_f import N_CARTE_f, N_CARTE_fT
+from flat_buffers.IPC.MoveInput_Speed import MoveInput_Speed, MoveInput_SpeedT
+from flat_buffers.IPC.MoveInput_Target import MoveInput_Target, MoveInput_TargetT
 from typing import Optional
 np = import_numpy()
 
@@ -28,78 +29,42 @@ class Request_Move_L(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Request_Move_L
-    def Targetvalue(self) -> Optional[N_CARTE_f]:
+    def Target(self) -> Optional[MoveInput_Target]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            x = o + self._tab.Pos
-            obj = N_CARTE_f()
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = MoveInput_Target()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # Request_Move_L
-    def Frame(self):
+    def Speed(self) -> Optional[MoveInput_Speed]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # Request_Move_L
-    def Unit(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # Request_Move_L
-    def SpeedMmps(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
-
-    # Request_Move_L
-    def AccelMmpss(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = MoveInput_Speed()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
 
 def Request_Move_LStart(builder: flatbuffers.Builder):
-    builder.StartObject(5)
+    builder.StartObject(2)
 
 def Start(builder: flatbuffers.Builder):
     Request_Move_LStart(builder)
 
-def Request_Move_LAddTargetvalue(builder: flatbuffers.Builder, targetvalue: Any):
-    builder.PrependStructSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(targetvalue), 0)
+def Request_Move_LAddTarget(builder: flatbuffers.Builder, target: int):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(target), 0)
 
-def AddTargetvalue(builder: flatbuffers.Builder, targetvalue: Any):
-    Request_Move_LAddTargetvalue(builder, targetvalue)
+def AddTarget(builder: flatbuffers.Builder, target: int):
+    Request_Move_LAddTarget(builder, target)
 
-def Request_Move_LAddFrame(builder: flatbuffers.Builder, frame: int):
-    builder.PrependInt32Slot(1, frame, 0)
+def Request_Move_LAddSpeed(builder: flatbuffers.Builder, speed: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(speed), 0)
 
-def AddFrame(builder: flatbuffers.Builder, frame: int):
-    Request_Move_LAddFrame(builder, frame)
-
-def Request_Move_LAddUnit(builder: flatbuffers.Builder, unit: int):
-    builder.PrependInt32Slot(2, unit, 0)
-
-def AddUnit(builder: flatbuffers.Builder, unit: int):
-    Request_Move_LAddUnit(builder, unit)
-
-def Request_Move_LAddSpeedMmps(builder: flatbuffers.Builder, speedMmps: float):
-    builder.PrependFloat32Slot(3, speedMmps, 0.0)
-
-def AddSpeedMmps(builder: flatbuffers.Builder, speedMmps: float):
-    Request_Move_LAddSpeedMmps(builder, speedMmps)
-
-def Request_Move_LAddAccelMmpss(builder: flatbuffers.Builder, accelMmpss: float):
-    builder.PrependFloat32Slot(4, accelMmpss, 0.0)
-
-def AddAccelMmpss(builder: flatbuffers.Builder, accelMmpss: float):
-    Request_Move_LAddAccelMmpss(builder, accelMmpss)
+def AddSpeed(builder: flatbuffers.Builder, speed: int):
+    Request_Move_LAddSpeed(builder, speed)
 
 def Request_Move_LEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -116,11 +81,8 @@ class Request_Move_LT(object):
 
     # Request_Move_LT
     def __init__(self):
-        self.targetvalue = None  # type: Optional[N_CARTE_fT]
-        self.frame = 0  # type: int
-        self.unit = 0  # type: int
-        self.speedMmps = 0.0  # type: float
-        self.accelMmpss = 0.0  # type: float
+        self.target = None  # type: Optional[MoveInput_TargetT]
+        self.speed = None  # type: Optional[MoveInput_SpeedT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -143,22 +105,21 @@ class Request_Move_LT(object):
     def _UnPack(self, requestMoveL):
         if requestMoveL is None:
             return
-        if requestMoveL.Targetvalue() is not None:
-            self.targetvalue = N_CARTE_fT.InitFromObj(requestMoveL.Targetvalue())
-        self.frame = requestMoveL.Frame()
-        self.unit = requestMoveL.Unit()
-        self.speedMmps = requestMoveL.SpeedMmps()
-        self.accelMmpss = requestMoveL.AccelMmpss()
+        if requestMoveL.Target() is not None:
+            self.target = MoveInput_TargetT.InitFromObj(requestMoveL.Target())
+        if requestMoveL.Speed() is not None:
+            self.speed = MoveInput_SpeedT.InitFromObj(requestMoveL.Speed())
 
     # Request_Move_LT
     def Pack(self, builder):
+        if self.target is not None:
+            target = self.target.Pack(builder)
+        if self.speed is not None:
+            speed = self.speed.Pack(builder)
         Request_Move_LStart(builder)
-        if self.targetvalue is not None:
-            targetvalue = self.targetvalue.Pack(builder)
-            Request_Move_LAddTargetvalue(builder, targetvalue)
-        Request_Move_LAddFrame(builder, self.frame)
-        Request_Move_LAddUnit(builder, self.unit)
-        Request_Move_LAddSpeedMmps(builder, self.speedMmps)
-        Request_Move_LAddAccelMmpss(builder, self.accelMmpss)
+        if self.target is not None:
+            Request_Move_LAddTarget(builder, target)
+        if self.speed is not None:
+            Request_Move_LAddSpeed(builder, speed)
         requestMoveL = Request_Move_LEnd(builder)
         return requestMoveL

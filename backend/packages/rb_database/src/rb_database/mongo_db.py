@@ -1,4 +1,8 @@
-from fastapi import FastAPI, Request
+import asyncio
+import time
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, Request
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 client: AsyncIOMotorClient | None = None
@@ -30,3 +34,15 @@ async def close_db(app: FastAPI):
 
 def get_db(request: Request) -> AsyncIOMotorDatabase:
     return request.app.state.mongo_db
+
+
+async def wait_db_ready(timeout: int = 2) -> AsyncIOMotorDatabase:
+    start = time.monotonic()
+    while db is None:
+        print("🔎 wait db ready", flush=True)
+        if time.monotonic() - start > timeout:
+            raise RuntimeError("MongoDB not ready")
+        await asyncio.sleep(0.05)
+
+
+MongoDB = Annotated[AsyncIOMotorDatabase, Depends(get_db)]

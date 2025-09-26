@@ -6,6 +6,8 @@
     # via rb-modules
 -e ./packages/rb_modules
     # via manipulate
+-e ./packages/rb_schemas
+    # via manipulate
 -e ./packages/rb_socketio
     # via manipulate
 -e ./packages/rb_zenoh
@@ -15,6 +17,7 @@
     #   manipulate
     #   rb-database
     #   rb-modules
+    #   rb-schemas
     #   rb-zenoh
 aiohappyeyeballs==2.6.1 \
     --hash=sha256:c3f9d0113123803ccadfdf3f0faa505bc78e6a72d1cc4806cbd719826e943558 \
@@ -89,6 +92,7 @@ fastapi==0.116.1 \
     #   manipulate
     #   rb-database
     #   rb-modules
+    #   rb-schemas
     #   rb-socketio
     #   rb-zenoh
 flatbuffers==25.2.10 \
@@ -97,6 +101,7 @@ flatbuffers==25.2.10 \
     # via
     #   flat-buffers
     #   rb-modules
+    #   rb-schemas
     #   rb-zenoh
 frozenlist==1.7.0 \
     --hash=sha256:15a7eaba63983d22c54d255b854e8108e7e5f3e89f647fc854bd77a237e767df \

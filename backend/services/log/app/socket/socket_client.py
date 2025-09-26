@@ -15,7 +15,7 @@ def connect():
 
 
 @socket_client.event
-def disconnect(sid):
+def disconnect():
     print("log service disconnected from socket-server", flush=True)
 
 

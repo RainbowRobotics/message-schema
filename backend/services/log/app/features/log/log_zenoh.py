@@ -13,6 +13,7 @@ zenoh_log_router = ZenohRouter()
 @zenoh_log_router.subscribe("*/state_log", flatbuffer_obj_t=State_LogT)
 async def on_zenoh_sub_state(*, topic, mv, obj, attachment):
     try:
+        print("🔎 subscribe */state_log", flush=True)
         now_utc = datetime.now(UTC)
         sw_name = topic.split("/")[0]
 
