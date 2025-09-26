@@ -33,6 +33,10 @@ public:
     /***********************
      * interface funcs
      ***********************/
+
+    QString get_cur_node();
+    QString get_cur_link();
+
     QString get_cur_info();
     void set_cur_info(QString str);
 
@@ -65,11 +69,18 @@ private:
     std::unique_ptr<std::thread> node_thread;
     void node_loop();
 
+    // node loop
+    std::atomic<bool> link_flag = {false};
+    std::unique_ptr<std::thread> link_thread;
+    void link_loop();
+
     // zone loop
     std::atomic<bool> zone_flag = {false};
     std::unique_ptr<std::thread> zone_thread;
     void zone_loop();
 
+    QString cur_node = "";
+    QString cur_link = "";
     QString cur_zone = "";
     QString cur_info = "";
 

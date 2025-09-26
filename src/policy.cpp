@@ -31,9 +31,11 @@ void POLICY::init()
 
 void POLICY::open()
 {
-    // todo
-    // node_flag = true;
-    // node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
+    node_flag = true;
+    node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
+
+    link_flag = true;
+    link_thread = std::make_unique<std::thread>(&POLICY::link_loop, this);
 
     zone_flag = true;
     zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
@@ -50,6 +52,13 @@ void POLICY::close()
     }
     node_thread.reset();
 
+    link_flag = false;
+    if(link_thread && link_thread->joinable())
+    {
+        link_thread->join();
+    }
+    link_thread.reset();
+
     zone_flag = false;
     if(zone_thread && zone_thread->joinable())
     {
@@ -59,12 +68,27 @@ void POLICY::close()
     printf("[POLICY] close\n");
 }
 
+QString POLICY::get_cur_node()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = cur_node;
+    return res;
+}
+
+QString POLICY::get_cur_link()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    QString res = cur_link;
+    return res;
+}
+
 QString POLICY::get_cur_info()
 {
     std::lock_guard<std::mutex> lock(mtx);
     QString res = cur_info;
     return res;
 }
+
 
 void POLICY::set_cur_info(QString str)
 {
@@ -107,6 +131,8 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
 
 void POLICY::node_loop()
 {
+    QString pre_node_id = "";
+
     printf("[POLICY] node_loop start\n");
     while(node_flag)
     {
@@ -117,12 +143,63 @@ void POLICY::node_loop()
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        QString _cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+        if(pre_node_id == "")
+        {
+            pre_node_id = _cur_node_id;
 
+            // update
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_node = pre_node_id;
+        }
+        else
+        {
+            // calc pre node id
+            NODE *node = unimap->get_node_by_id(_cur_node_id);
+            if(node != nullptr)
+            {
+                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                if(d < config->get_robot_radius())
+                {
+                    if(pre_node_id != _cur_node_id)
+                    {
+                        pre_node_id = _cur_node_id;
+
+                        // update
+                        std::lock_guard<std::mutex> lock(mtx);
+                        cur_node = pre_node_id;
+                    }
+                }
+            }
+        }
+
+        // printf("[NODE] node=%s\n", _cur_node_id.toStdString().c_str());
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[POLICY] node_loop stop\n");
 }
+
+void POLICY::link_loop()
+{
+    printf("[POLICY] link_loop start\n");
+    while(link_flag)
+    {
+        if(unimap->get_is_loaded() != MAP_LOADED)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+
+
+        // printf("[NODE] node=%s\n", _cur_node_id.toStdString().c_str());
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[POLICY] link_loop stop\n");
+}
+
 
 void POLICY::zone_loop()
 {
