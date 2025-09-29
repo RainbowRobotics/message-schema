@@ -84,6 +84,8 @@ private:
     QString cur_zone = "";
     QString cur_info = "";
 
+    std::vector<LINK_INFO> link_list;
+
 };
 
 #endif // POLICY_H

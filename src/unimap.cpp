@@ -366,6 +366,8 @@ bool UNIMAP::load_node()
         return false;
     }
 
+    std::vector<LINK_INFO> links;
+
     QFile node_file(node_path);
     if(node_file.open(QIODevice::ReadOnly))
     {
@@ -384,6 +386,44 @@ bool UNIMAP::load_node()
             node.info   = obj["info"].toString();
             node.tf     = string_to_TF(obj["pose"].toString());
             node.linked = array_to_links(obj["links"].toArray());
+
+            {
+                QJsonArray link_arr = obj["links"].toArray();
+                QString last_link = "";
+                for(int i = 0; i < link_arr.size(); i++)
+                {
+                    const QJsonValue &lv = link_arr.at(i);
+                    if(lv.isString())
+                    {
+                        last_link = lv.toString();
+                    }
+                    else if(lv.isObject())
+                    {
+                        QJsonObject lo = lv.toObject();
+                        if(lo.contains("info"))
+                        {
+                            QString ed = last_link;
+                            if(lo.contains("id") && lo["id"].isString())
+                            {
+                                ed = lo["id"].toString();
+                            }
+                            if(!ed.isEmpty())
+                            {
+                                LINK_INFO link;
+                                link.st_id = node.id;
+                                link.ed_id = ed;
+                                link.info  = lo["info"].toString();
+                                link.st.setZero();
+                                link.ed.setZero();
+                                link.mid.setZero();
+                                link.length = 0.0;
+                                links.push_back(link);
+                            }
+                        }
+                    }
+                }
+            }
+
             temp_nodes.push_back(node);
         }
         node_file.close();
@@ -398,6 +438,59 @@ bool UNIMAP::load_node()
             
             // rebuild node maps with indices
             rebuild_node_maps();
+
+            // test
+            special_links.clear();
+            special_links.reserve(links.size());
+            for(size_t i = 0; i < links.size(); i++)
+            {
+                LINK_INFO s = links[i];
+
+                Eigen::Vector3d st_pos(0.0, 0.0, 0.0);
+                Eigen::Vector3d ed_pos(0.0, 0.0, 0.0);
+
+                auto it_st = nodes_id_map.find(s.st_id);
+                auto it_ed = nodes_id_map.find(s.ed_id);
+                if(it_st != nodes_id_map.end() && it_ed != nodes_id_map.end())
+                {
+                    size_t idx_st = it_st->second;
+                    size_t idx_ed = it_ed->second;
+
+                    if(is_valid_node_index(idx_st) && is_valid_node_index(idx_ed))
+                    {
+                        const NODE &nst = (*nodes)[idx_st];
+                        const NODE &ned = (*nodes)[idx_ed];
+
+                        st_pos = nst.tf.block(0, 3, 3, 1);
+                        ed_pos = ned.tf.block(0, 3, 3, 1);
+                    }
+                }
+
+                s.st = st_pos;
+                s.ed = ed_pos;
+                s.mid = 0.5 * (s.st + s.ed);
+                s.length = (s.ed - s.st).norm();
+
+                special_links.push_back(s);
+
+                // === debug print: special_links ===
+                {
+                    printf("[UNIMAP] special_links size = %zu\n", special_links.size());
+                    for(size_t i = 0; i < special_links.size(); i++)
+                    {
+                        const LINK_INFO &s = special_links[i];
+                        printf("[UNIMAP][SPECIAL_LINK][%zu]\n", i);
+                        printf("  st_id = %s, ed_id = %s, info = %s\n",
+                               s.st_id.toStdString().c_str(),
+                               s.ed_id.toStdString().c_str(),
+                               s.info.toStdString().c_str());
+                        printf("  length = %.3f\n", s.length);
+                        printf("  st  = (%.3f, %.3f, %.3f)\n", s.st.x(), s.st.y(), s.st.z());
+                        printf("  ed  = (%.3f, %.3f, %.3f)\n", s.ed.x(), s.ed.y(), s.ed.z());
+                        printf("  mid = (%.3f, %.3f, %.3f)\n", s.mid.x(), s.mid.y(), s.mid.z());
+                    }
+                }
+            }
             
             // build KD-tree for nodes
             std::vector<Eigen::Vector3d> node_pos; 
@@ -506,6 +599,13 @@ std::shared_ptr<std::vector<NODE>> UNIMAP::get_nodes_origin()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return nodes;
 }
+
+std::vector<LINK_INFO> UNIMAP::get_special_links()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return special_links;
+}
+
 
 QString UNIMAP::gen_node_id()
 {

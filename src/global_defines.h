@@ -1651,6 +1651,60 @@ struct NODE_INFO
     }
 };
 
+struct LINK_INFO
+{
+    QString st_id;
+    QString ed_id;
+
+    Eigen::Vector3d st;
+    Eigen::Vector3d ed;
+    Eigen::Vector3d mid;
+
+    double length = 0.0;
+
+    QString info;
+
+    LINK_INFO()
+    {
+        st.setZero();
+        ed.setZero();
+        mid.setZero();
+
+        length = 0.0;
+    }
+
+    LINK_INFO(const LINK_INFO& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        st = p.st;
+        ed = p.ed;
+        mid = p.mid;
+
+        length = p.length;
+
+        info = p.info;
+    }
+
+    LINK_INFO& operator=(const LINK_INFO& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        st = p.st;
+        ed = p.ed;
+        mid = p.mid;
+
+        length = p.length;
+
+        info = p.info;
+
+        return *this;
+    }
+};
+
+
 // tree typedef
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZR_CLOUD>, XYZR_CLOUD, 3> KD_TREE_XYZR;
 

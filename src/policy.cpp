@@ -182,6 +182,12 @@ void POLICY::node_loop()
 
 void POLICY::link_loop()
 {
+    bool is_ready = false;
+    QString pre_link = "";
+
+    static Eigen::Vector2d prev_pos(0.0, 0.0);
+    static bool has_prev_pos = false;
+
     printf("[POLICY] link_loop start\n");
     while(link_flag)
     {
@@ -191,15 +197,57 @@ void POLICY::link_loop()
             continue;
         }
 
+        QString cur_node_id = get_cur_node();
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector2d pos = Eigen::Vector2d(cur_tf(0,3), cur_tf(1,3));
 
+        QString inside_link = "";
+        QString inside_info = "";
 
-        // printf("[NODE] node=%s\n", _cur_node_id.toStdString().c_str());
+        double half_width = 0.40;
+
+        std::vector<LINK_INFO> links = unimap->get_special_links();
+        for(size_t i = 0; i < links.size(); i++)
+        {
+            LINK_INFO& link = links[i];
+
+            double L = link.length;
+            if(L <= 1e-9)
+            {
+                continue;
+            }
+
+            double ux = link.ed.x() - link.st.x();
+            double uy = link.ed.y() - link.st.y();
+
+            double vx = pos.x() - link.mid.x();
+            double vy = pos.y() - link.mid.y();
+
+            double along  = std::abs((vx*ux + vy*uy) / L);
+            double across = std::abs((vx*uy - vy*ux) / L);
+            if(along <= 0.5*L && across <= half_width)
+            {
+                inside_link = link.st_id + "-" + link.ed_id;
+                inside_info = link.info;
+                break;
+            }
+        }
+
+        if(inside_link.isEmpty())
+        {
+            cur_link = "";
+        }
+        else
+        {
+            cur_link = inside_link;
+            cur_info = inside_info;
+        }
+
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[POLICY] link_loop stop\n");
 }
-
 
 void POLICY::zone_loop()
 {
