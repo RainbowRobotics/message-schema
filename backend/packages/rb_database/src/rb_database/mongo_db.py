@@ -3,7 +3,7 @@ import time
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Request
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 client: AsyncIOMotorClient | None = None
 db: AsyncIOMotorDatabase | None = None
@@ -46,3 +46,4 @@ async def wait_db_ready(timeout: int = 2) -> AsyncIOMotorDatabase:
 
 
 MongoDB = Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+MongoCollection = AsyncIOMotorCollection
