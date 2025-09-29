@@ -23,7 +23,7 @@ from zenoh import open as zenoh_open
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
 from .schema import CallbackEntry, OverflowPolicy, SubscribeOptions
-from .utils import invoke, recommend_cap, rough_size_of_fields
+from .utils import recommend_cap, rough_size_of_fields
 
 # 로그/트레이스 세팅(원하면 조정)
 os.environ.setdefault("ZENOH_LOG", "info")
@@ -272,10 +272,10 @@ class ZenohClient:
         try:
             try:
                 return await asyncio.wait_for(fut, timeout=timeout)
-            except TimeoutError:
+            except TimeoutError as err:
                 if not fut.done():
                     fut.cancel()
-                raise
+                raise ZenohNoReply(timeout) from err
         finally:
             with contextlib.suppress(Exception):
                 await asyncio.to_thread(sub.undeclare)
@@ -837,7 +837,22 @@ class ZenohClient:
                         if rate_count >= opts.rate_limit_per_sec:
                             continue
                         rate_count += 1
-                    await invoke(e.callback, item)
+
+                    kwargs = self._select_callback_kwargs(
+                        e.callback,
+                        topic=item.get("topic"),
+                        mv=item.get("mv"),
+                        obj=item.get("obj"),
+                        attachment=item.get("attachment"),
+                    )
+
+                    if inspect.iscoroutinefunction(e.callback):
+                        await e.callback(**kwargs)
+                    else:
+                        loop = asyncio.get_running_loop()
+                        # 동기 콜백은 run_in_executor로 실행
+                        await loop.run_in_executor(None, lambda cb=e.callback, kw=kwargs: cb(**kw))
+
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
                     continue
 
@@ -868,7 +883,20 @@ class ZenohClient:
                     rate_count += 1
 
                 for it in batch_buf:
-                    await invoke(e.callback, it)
+                    kwargs = self._select_callback_kwargs(
+                        e.callback,
+                        topic=it.get("topic"),
+                        mv=it.get("mv"),
+                        obj=it.get("obj"),
+                        attachment=it.get("attachment"),
+                    )
+
+                    if inspect.iscoroutinefunction(e.callback):
+                        await e.callback(**kwargs)
+                    else:
+                        loop = asyncio.get_running_loop()
+                        await loop.run_in_executor(None, lambda cb=e.callback, kw=kwargs: cb(**kw))
+
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
                 batch_buf.clear()
         except asyncio.CancelledError:
