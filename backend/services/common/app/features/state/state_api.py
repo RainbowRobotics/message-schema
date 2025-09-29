@@ -1,15 +1,15 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Query
+from rb_schemas.base import Response_ReturnValuePD
 from rb_zenoh.exeption import JSONResponse
 
-from app.modules.schema import Response_ReturnValuePD
-from app.modules.state.state_module_schema import (
+from .state_module import StateService
+from .state_schema import (
     AllSwConnectStateResponsePD,
     PowerControlRequestPD,
     ServoControlRequestPD,
 )
-from app.modules.state.state_module_service import StateService
 
 state_service = StateService()
 

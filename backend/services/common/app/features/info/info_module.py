@@ -1,14 +1,32 @@
 import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorCollection
+from rb_database.mongo_db import MongoDB
+from rb_resources.json import read_json_file
+
+from .info_schema import RobotInfo
 
 
 class InfoService:
     def __init__(self):
         self._cache_robot_info = {}
 
-    async def get_info(self):
-        pass
+    async def get_robot_info(self, *, db: MongoDB):
+        robot_models = read_json_file("robot_models.json")
+
+        if "robot_info" not in await db.list_collection_names():
+            await db.create_collection("robot_info")
+
+        doc = await db["robot_info"].find_one({}, {"_id": 0})
+
+        if not doc:
+            doc = dict(RobotInfo())
+
+        robot_model_key = doc.get("robotModel")
+
+        model_info = robot_models.get(robot_model_key)
+
+        return {"info": doc, "modelInfo": model_info}
 
     async def get_cache_robot_info(self):
         return self._cache_robot_info

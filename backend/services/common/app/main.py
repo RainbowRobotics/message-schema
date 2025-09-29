@@ -2,14 +2,15 @@ import asyncio
 
 from rb_modules.rb_fastapi_app import AppSettings, create_app
 
-from app.api.info import info_router
-from app.api.state import state_router
-from app.api.whoami import whoami_router
-from app.modules.state.state_module_service import StateService
-from app.modules.whomai.whoami_module_service import WhoamiService
-from app.socket import RelayNS, app_with_sio, sio, socket_client
-from app.socket.whoami import whoami_socket_router
-from app.zenoh_subs.state import zenoh_state_router
+from app.features.info.info_api import info_router
+from app.features.state.state_api import state_router
+from app.features.state.state_module import StateService
+from app.features.state.state_zenoh import zenoh_state_router
+from app.features.whoami.whoami_api import whoami_router
+from app.features.whoami.whoami_module import WhoamiService
+from app.features.whoami.whoami_socket import whoami_socket_router
+from app.socket.socket_client import socket_client
+from app.socket.socket_server import RelayNS, app_with_sio, sio
 
 setting = AppSettings()
 

@@ -1,10 +1,10 @@
 import asyncio
 import time
 
+from app.socket.socket_client import socket_client
 from rb_socketio import RbSocketIORouter
 
-from app.modules.whomai.whoami_module_service import WhoamiService
-from app.socket import sio
+from .whoami_module import WhoamiService
 
 whoami_socket_router = RbSocketIORouter()
 whoamiService = WhoamiService()
@@ -21,7 +21,7 @@ async def on_whoami(data):
         res = await whoamiService.get_whoami()
 
         if _prev_res != res:
-            await sio.emit("whoami", res)
+            await socket_client.emit("whoami", res)
 
         next_ts += _period
         await asyncio.sleep(max(0, next_ts - time.monotonic()))

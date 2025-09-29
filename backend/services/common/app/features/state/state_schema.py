@@ -1,11 +1,17 @@
 from enum import StrEnum
 
-from app.modules.whomai.whoami_module_schema import Response_CallWhoamIPD
+from app.features.whoami.whoami_schema import Response_CallWhoamIPD
 from pydantic import BaseModel
 
 
 class Request_System_StatePD(BaseModel):
     namespaces: list[str]
+
+
+class StateMessageItemPD(BaseModel):
+    type: int
+    code: int
+    sub_str: str
 
 
 class ConnectStatus(StrEnum):

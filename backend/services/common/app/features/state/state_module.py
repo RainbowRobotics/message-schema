@@ -4,9 +4,9 @@ import time
 import flatbuffers
 import psutil
 import rb_database.mongo_db as mongo_db
-from app.modules.info.info_module_service import InfoService
-from app.modules.program.program_module_service import ProgramService
-from app.socket import socket_client
+from app.features.info.info_module import InfoService
+from app.features.program.program_module import ProgramService
+from app.socket.socket_client import socket_client
 from fastapi import HTTPException
 from flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
 from flat_buffers.IPC.Request_PowerControl import (
@@ -16,12 +16,15 @@ from flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
 from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
+from rb_modules.log import rb_log
 from rb_resources.json import read_json_file
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
 from utils.helper import get_current_ip
 from utils.parser import t_to_dict
+
+from .state_schema import StateMessageItemPD
 
 program_service = ProgramService()
 info_service = InfoService()
@@ -155,6 +158,14 @@ class StateService:
             ZenohTransportError,
         ):
             return list([])
+
+    async def get_state_message(self, *, topic: str, message: StateMessageItemPD):
+        rb_log.debug("🔎 subscribe */state_message")
+
+        sw_name = topic.split("/")[0]
+
+        message["swName"] = sw_name
+        await socket_client.emit("state_message", message)
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: int | None = 0.5

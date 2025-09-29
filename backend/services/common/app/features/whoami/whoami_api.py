@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.modules.whomai.whoami_module_schema import Response_CallWhoamIPD
-from app.modules.whomai.whoami_module_service import WhoamiService
+from .whoami_module import WhoamiService
+from .whoami_schema import Response_CallWhoamIPD
 
 whoami_service = WhoamiService()
 
