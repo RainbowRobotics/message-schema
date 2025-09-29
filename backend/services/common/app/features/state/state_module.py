@@ -136,7 +136,7 @@ class StateService:
                 next_ts += self._all_connect_state_period
                 await asyncio.sleep(max(0, next_ts - time.monotonic()))
         except Exception as e:
-            print(f"error: here repeat_get_system_state {e}", flush=True)
+            rb_log.error(f"repeat_get_system_state {e}")
 
     def get_all_robots_info(self):
         try:
