@@ -6,6 +6,8 @@
     # via rb-modules
 -e ./packages/rb_modules
     # via manipulate
+-e ./packages/rb_resources
+    # via manipulate
 -e ./packages/rb_schemas
     # via manipulate
 -e ./packages/rb_socketio

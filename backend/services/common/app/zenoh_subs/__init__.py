@@ -1,4 +1,4 @@
-from rb_zenoh import ZenohRouter
+from rb_zenoh.router import ZenohRouter
 
 zenoh_router = ZenohRouter()
 

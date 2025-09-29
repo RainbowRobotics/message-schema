@@ -4,6 +4,8 @@
     # via rb-modules
 -e ./packages/rb_modules
     # via common
+-e ./packages/rb_resources
+    # via common
 -e ./packages/rb_schemas
     # via common
 -e ./packages/utils

@@ -10,8 +10,8 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
 from rb_socketio import RBSocketIONsClient, RbSocketIORouter
-from rb_zenoh import ZenohRouter
 from rb_zenoh.exeption import register_zenoh_exception_handlers
+from rb_zenoh.router import ZenohRouter
 
 from rb_modules.log import rb_log
 
