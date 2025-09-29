@@ -56,7 +56,7 @@ class ProgramService:
 
         return res["dict_payload"]
 
-    async def call_smoothjogj(
+    async def call_smoothjog_j(
         self, *, robot_model: str, targetspeed: list[float], frame: int, unit: int
     ):
         req = Request_MotionSmoothJogJT()
@@ -119,15 +119,15 @@ class ProgramService:
         move_input_speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = target.tar_values
+        ni.f = target["tar_values"]
 
         move_input_target.tarValues = ni
-        move_input_target.tarFrame = target.tar_frame
-        move_input_target.tarUnit = target.tar_values
+        move_input_target.tarFrame = target["tar_frame"]
+        move_input_target.tarUnit = target["tar_unit"]
 
-        move_input_speed.spdMode = speed.spd_mode
-        move_input_speed.spdVelPara = speed.spd_vel_para
-        move_input_speed.spdAccPara = speed.spd_acc_para
+        move_input_speed.spdMode = speed["spd_mode"]
+        move_input_speed.spdVelPara = speed["spd_vel_para"]
+        move_input_speed.spdAccPara = speed["spd_acc_para"]
 
         req.target = move_input_target
         req.speed = move_input_speed
@@ -149,15 +149,15 @@ class ProgramService:
         move_input_speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = target.tar_values
+        ni.f = target["tar_values"]
 
         move_input_target.tarValues = ni
-        move_input_target.tarFrame = target.tar_frame
-        move_input_target.tarUnit = target.tar_values
+        move_input_target.tarFrame = target["tar_frame"]
+        move_input_target.tarUnit = target["tar_unit"]
 
-        move_input_speed.spdMode = speed.spd_mode
-        move_input_speed.spdVelPara = speed.spd_vel_para
-        move_input_speed.spdAccPara = speed.spd_acc_para
+        move_input_speed.spdMode = speed["spd_mode"]
+        move_input_speed.spdVelPara = speed["spd_vel_para"]
+        move_input_speed.spdAccPara = speed["spd_acc_para"]
 
         req.target = move_input_target
         req.speed = move_input_speed

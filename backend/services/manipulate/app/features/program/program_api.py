@@ -39,7 +39,7 @@ async def speedbar(robot_model: str, request: SpeedBarRequestPD):
 
 @program_router.post("/{robot_model}/call_smoothjog_j", response_model=Response_ReturnValuePD)
 async def smoothjog_j(robot_model: str, request: SmoothJogJRequestPD):
-    res = await program_service.call_smoothjogj(
+    res = await program_service.call_smoothjog_j(
         robot_model=robot_model,
         targetspeed=request.targetspeed,
         frame=request.frame,

@@ -3,8 +3,8 @@ from rb_database.schema import PyObjectId
 
 
 class RealTimeLogItem(BaseModel):
-    swName: str
-    level: int
+    swName: str | None = None
+    level: int | str
     timestamp: str
     contents: str
     createdAt: str

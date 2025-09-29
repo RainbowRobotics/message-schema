@@ -14,9 +14,11 @@ dependencies = [
     "fastapi>=0.116.1",
     "utils",
     "rb_database",
+    "rb_zenoh",
     "pydantic-settings>=2.10.1",
 ]
 
 [tool.uv.sources]
 utils = { workspace = true }
 rb_database = { workspace = true }
+rb_zenoh = { workspace = true }

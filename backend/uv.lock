@@ -855,6 +855,7 @@ dependencies = [
     { name = "psutil" },
     { name = "pydantic-settings" },
     { name = "rb-database" },
+    { name = "rb-zenoh" },
     { name = "utils" },
 ]
 
@@ -865,6 +866,7 @@ requires-dist = [
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-zenoh", editable = "packages/rb_zenoh" },
     { name = "utils", editable = "packages/utils" },
 ]
 
@@ -917,6 +919,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "flatbuffers" },
     { name = "psutil" },
+    { name = "rb-modules" },
     { name = "utils" },
 ]
 
@@ -930,6 +933,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
+    { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "utils", editable = "packages/utils" },
 ]
 

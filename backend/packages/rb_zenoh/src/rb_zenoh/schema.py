@@ -35,6 +35,7 @@ class SubscribeOptions:
     batch_opts: _BatchOptions = field(default_factory=_BatchOptions)
     # 예상 평균 바이트(EMA 초기 힌트). 없으면 첫 메시지 크기에서 시작
     expected_avg_bytes: int | None = None
+    allowed_same_sender: bool = False
 
 
 class CallbackEntry:

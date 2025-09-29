@@ -1,8 +1,5 @@
-from datetime import UTC, datetime, timedelta
-
-from app.features.log.log_schema import LogItem, Response_LogCntPD, Response_LogListPD
+from app.features.log.log_schema import Response_LogCntPD, Response_LogListPD
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
 from rb_database import MongoDB
 
 from .log_module import LogService
@@ -78,21 +75,9 @@ log_router = APIRouter(tags=["Log"])
 
 @log_router.get("/list", response_model=Response_LogListPD)
 async def get_log_list(db: MongoDB, limit: int = 30):
-    cursor = db["state_logs"].find({}).sort([("createdAt", -1), ("_id", -1)]).limit(limit=limit)
-    docs = await cursor.to_list(length=limit)
-
-    items = [LogItem.model_validate(d) for d in docs]
-    return {"items": items}
+    return await log_service.get_log_list(db=db, limit=limit)
 
 
 @log_router.get("/error_log_count_for_24h", response_model=Response_LogCntPD)
 async def error_log_count_for_24h(db: MongoDB):
-    now_utc = datetime.now(UTC)
-
-    cutoff_iso = (now_utc - timedelta(hours=24)).isoformat()
-
-    cnt = await db["state_logs"].count_documents({"level": 2, "createdAt": {"$gte": cutoff_iso}})
-
-    res = {"count": cnt}
-
-    return JSONResponse(res)
+    return await log_service.error_log_count_for_24h(db=db)

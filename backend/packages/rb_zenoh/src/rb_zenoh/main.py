@@ -146,14 +146,26 @@ class ZenohClient:
             alpha = 0.2
             s["ema"] = int((1 - alpha) * ema + alpha * payload_len)
 
-    def publish(self, topic: str, data: bytes | bytearray | memoryview | dict):
+    def publish(
+        self,
+        topic: str,
+        *,
+        payload: bytes | bytearray | memoryview | dict | None = None,
+        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_buf_size: int | None = None,
+    ):
         if self.session is None:
             self.connect()
-        payload: bytes
-        if isinstance(data, bytes | bytearray | memoryview):
-            payload = bytes(data)
-        else:
-            payload = json.dumps(data).encode("utf-8")
+
+        if flatbuffer_req_obj is not None:
+            if flatbuffer_buf_size is None:
+                raise ValueError(
+                    "flatbuffer_buf_size is required when flatbuffer_req_obj is provided"
+                )
+
+            b = flatbuffers.Builder(flatbuffer_buf_size)
+            b.Finish(flatbuffer_req_obj.Pack(b))
+            payload = bytes(b.Output())
 
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
         self.session.put(topic, payload, attachment=attachment)
@@ -596,15 +608,9 @@ class ZenohClient:
                 for k, v in [seg.split("=", 1)]
             )
 
-            sender = parts.get("sender")
-            sender_id = parts.get("sender_id")
-
-            if sender_id == self.sender_id:
-                return
-
             attachment = {
-                "sender": sender,
-                "sender_id": sender_id,
+                "sender": parts.get("sender"),
+                "sender_id": parts.get("sender_id"),
             }
 
             parser = self._schema.get(topic)
@@ -637,6 +643,21 @@ class ZenohClient:
 
         return _on_sample
 
+    def _select_callback_kwargs(
+        self, cb: Callable, topic: str, mv: memoryview, obj: dict | None, attachment: dict
+    ):
+        sig = inspect.signature(cb)
+        kwargs = {}
+        if "topic" in sig.parameters:
+            kwargs["topic"] = topic
+        if "mv" in sig.parameters:
+            kwargs["mv"] = mv
+        if "obj" in sig.parameters:
+            kwargs["obj"] = obj
+        if "attachment" in sig.parameters:
+            kwargs["attachment"] = attachment or {}
+        return kwargs
+
     def _fanout_immediate(
         self,
         *,
@@ -655,6 +676,9 @@ class ZenohClient:
             for e in entries:
                 opts = e.opts
                 m = e.metrics
+
+                if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
+                    continue
 
                 # 샘플링
                 if opts.sample_every and opts.sample_every > 1:
@@ -679,24 +703,16 @@ class ZenohClient:
                     continue
 
                 if inspect.iscoroutinefunction(e.callback):
-                    tasks.append(
-                        asyncio.create_task(invoke(e.callback, (topic, mv, obj, attachment)))
+                    kwargs = self._select_callback_kwargs(
+                        e.callback, topic=topic, mv=mv, obj=obj, attachment=attachment
                     )
+                    tasks.append(asyncio.create_task(e.callback(**kwargs)))
                 else:
                     # run_in_executor은 인자 전개가 어려워 래퍼 사용
                     def _sync_call(cb=e.callback, t=topic, r=mv, o=obj, a=attachment):
-                        sig = inspect.signature(cb)
-                        kwargs = {}
-
-                        if "topic" in sig.parameters:
-                            kwargs["topic"] = t
-                        if "mv" in sig.parameters:
-                            kwargs["mv"] = r
-                        if "obj" in sig.parameters:
-                            kwargs["obj"] = o
-                        if "attachment" in sig.parameters:
-                            kwargs["attachment"] = a
-
+                        kwargs = self._select_callback_kwargs(
+                            cb, topic=t, mv=r, obj=o, attachment=a
+                        )
                         cb(**kwargs)
 
                     tasks.append(loop.run_in_executor(None, _sync_call))
@@ -727,6 +743,9 @@ class ZenohClient:
         m = e.metrics
         raw_len = len(mv)
 
+        if not e.opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
+            return
+
         # EMA
         if m.get("ema_bytes") is None:
             m["ema_bytes"] = float(e.opts.expected_avg_bytes or raw_len)
@@ -744,9 +763,11 @@ class ZenohClient:
         q: asyncio.Queue = e.q
 
         def _push():
+            payload = {"topic": topic, "mv": mv, "obj": obj, "attachment": attachment}
+
             if q.qsize() < cap:
                 try:
-                    q.put_nowait((topic, mv, obj, attachment))
+                    q.put_nowait(payload)
                     m["last_qsize"] = q.qsize()
                     m["last_ts"] = time.time()
                     return
@@ -761,7 +782,7 @@ class ZenohClient:
                 try:
                     q.get_nowait()
                     m["dropped_oldest"] = m.get("dropped_oldest", 0) + 1
-                    q.put_nowait((topic, mv, obj, attachment))
+                    q.put_nowait(payload)
                     m["last_qsize"] = q.qsize()
                 except Exception:
                     m["dropped_new"] = m.get("dropped_new", 0) + 1
@@ -775,7 +796,7 @@ class ZenohClient:
                 except Exception:
                     pass
                 try:
-                    q.put_nowait((topic, mv, obj, attachment))
+                    q.put_nowait(payload)
                     m["last_qsize"] = q.qsize()
                 except Exception:
                     m["dropped_new"] = m.get("dropped_new", 0) + 1

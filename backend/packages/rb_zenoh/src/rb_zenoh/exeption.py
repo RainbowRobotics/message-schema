@@ -25,6 +25,7 @@ class ZenohTransportError(ZenohQueryException):
 def register_zenoh_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ZenohReplyError)
     async def _reply_err(_: Request, exc: ZenohReplyError):
+        app.rb_log.error(f"ZenohReplyError: {exc}")
         return JSONResponse(
             status_code=502,
             content={"error": "peer error", "message": str(exc)},
@@ -32,6 +33,7 @@ def register_zenoh_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(ZenohNoReply)
     async def _no_reply(_: Request, exc: ZenohNoReply):
+        app.rb_log.error(f"ZenohNoReply: {exc}")
         return JSONResponse(
             status_code=504,
             content={
@@ -42,6 +44,7 @@ def register_zenoh_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(ZenohTransportError)
     async def _transport(_: Request, exc: ZenohTransportError):
+        app.rb_log.error(f"ZenohTransportError: {exc}")
         return JSONResponse(
             status_code=502,
             content={"error": "transport error", "message": str(exc), "attachment": exc.attachment},

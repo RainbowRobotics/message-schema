@@ -13,6 +13,8 @@ from rb_socketio import RBSocketIONsClient, RbSocketIORouter
 from rb_zenoh import ZenohRouter
 from rb_zenoh.exeption import register_zenoh_exception_handlers
 
+from rb_modules.log import rb_log
+
 
 class AppSettings(BaseSettings):
     IS_DEV: bool = Field(default=False)
@@ -81,6 +83,8 @@ def create_app(
                 )
             )
 
+            app.rb_log = rb_log
+
             print("🔌 socket.io connect issued (non-blocking)", flush=True)
 
         try:
@@ -102,7 +106,6 @@ def create_app(
             except Exception as e:
                 print(f"zenoh shutdown ignore: {e}", flush=True)
 
-    print(">>settings.ROOT_PATH", settings.ROOT_PATH)
     app = FastAPI(
         lifespan=lifespan,
         root_path=settings.ROOT_PATH,
@@ -134,6 +137,8 @@ def create_app(
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
         body_text = ""
+
+        rb_log.error(f"Internal Server Error: {exc}")
 
         if request.scope.get("type") == "http":
             try:
