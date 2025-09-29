@@ -32,7 +32,7 @@ def fire_and_log(coro, *, name=None):
         try:
             t.result()  # 결과를 꺼내면 GC가 안전하게 정리
         except Exception as e:
-            print(f"[task:{t.get_name() or id(t)}] error: {e}")
+            print(f"[task:{t.get_name() or id(t)}] error: {e}", flush=True)
 
     task.add_done_callback(_done)
     return task
