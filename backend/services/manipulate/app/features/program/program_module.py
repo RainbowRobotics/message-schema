@@ -12,7 +12,9 @@ from flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from flat_buffers.IPC.Request_Move_J import Request_Move_JT
 from flat_buffers.IPC.Request_Move_L import Request_Move_LT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
+
+zenoh_client = ZenohClient()
 
 
 class ProgramService:

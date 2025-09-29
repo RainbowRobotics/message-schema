@@ -3,9 +3,11 @@ from fastapi import HTTPException
 from flat_buffers.IPC.Request_MotionSmoothJogStop import Request_MotionSmoothJogStopT
 from flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.parser import t_to_dict
+
+zenoh_client = ZenohClient()
 
 
 class ProgramService:

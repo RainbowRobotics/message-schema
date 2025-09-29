@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from .main import ZenohClient
+from .client import ZenohClient
 from .router import ZenohRouter
 from .schema import SubscribeOptions
 

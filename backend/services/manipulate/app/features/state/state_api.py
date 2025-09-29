@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.base import Response_ReturnValuePD
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
 from utils.parser import t_to_dict
 
 from .state_module import StateService
@@ -15,7 +15,7 @@ from .state_schema import (
 )
 
 state_service = StateService()
-
+zenoh_client = ZenohClient()
 state_router = APIRouter(tags=["State"])
 
 

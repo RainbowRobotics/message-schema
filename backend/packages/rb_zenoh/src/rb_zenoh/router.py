@@ -8,7 +8,7 @@ from typing import Any
 
 from flatbuffers.table import Table
 
-from .main import ZenohClient
+from .client import ZenohClient
 from .schema import SubscribeOptions
 
 

@@ -1,6 +1,8 @@
 from flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
 from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
+
+zenoh_client = ZenohClient()
 
 
 class WhoamiService:

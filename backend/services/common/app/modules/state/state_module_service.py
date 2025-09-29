@@ -17,14 +17,15 @@ from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_resources.json import read_json_file
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
 from utils.helper import get_current_ip
 from utils.parser import t_to_dict
 
-programService = ProgramService()
+program_service = ProgramService()
 info_service = InfoService()
+zenoh_client = ZenohClient()
 
 
 class StateService:
@@ -173,7 +174,7 @@ class StateService:
                 res = await self.servo_control(servo_option=power_option)
 
                 if power_option == 0 and stoptime is not None:
-                    await programService.call_smoothjog_stop(stoptime=stoptime)
+                    await program_service.call_smoothjog_stop(stoptime=stoptime)
 
             return t_to_dict(res)
 

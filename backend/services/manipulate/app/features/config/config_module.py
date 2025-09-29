@@ -14,7 +14,7 @@ from flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigCo
 from flat_buffers.IPC.Response_CallConfigRobotArm import Response_CallConfigRobotArmT
 from flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigToolListT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_zenoh import zenoh_client
+from rb_zenoh.client import ZenohClient
 
 from .config_schema import (
     Request_Save_Area_ParameterPD,
@@ -24,6 +24,8 @@ from .config_schema import (
     Request_Save_SideDout_FunctionPD,
     Request_Save_Tool_List_ParameterPD,
 )
+
+zenoh_client = ZenohClient()
 
 
 class ConfigService:
