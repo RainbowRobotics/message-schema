@@ -3,9 +3,8 @@ from pydantic import BaseModel
 
 class RobotModelInfo(BaseModel):
     model: str
-    name: str
     alias: str
-    be_service: list[str]
+    be_service: str
     useCharge: bool
     urdfFileName: str
     components: list[str]
