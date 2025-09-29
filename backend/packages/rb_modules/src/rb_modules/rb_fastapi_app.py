@@ -136,29 +136,36 @@ def create_app(
 
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
-        body_text = ""
+        try:
+            body_text = ""
 
-        rb_log.error(f"Internal Server Error: {exc}")
+            rb_log.error(f"Internal Server Error: {exc}")
 
-        if request.scope.get("type") == "http":
-            try:
-                b = await request.body()
-                body_text = b.decode("utf-8", "ignore") if b else ""
-            except RuntimeError:
-                body_text = "<unavailable>"
-            except Exception:
-                body_text = "<error reading body>"
+            if request.scope.get("type") == "http":
+                try:
+                    b = await request.body()
+                    body_text = b.decode("utf-8", "ignore") if b else ""
+                except RuntimeError:
+                    body_text = "<unavailable>"
+                except Exception:
+                    body_text = "<error reading body>"
 
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Internal Server Error",
-                "method": request.method,
-                "url": str(request.url),
-                "query_params": dict(request.query_params),
-                "body": body_text,
-                "message": str(exc),
-            },
-        )
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error": "Internal Server Error",
+                    "method": request.method,
+                    "url": str(request.url),
+                    "query_params": dict(request.query_params),
+                    "body": body_text,
+                    "message": str(exc),
+                },
+            )
+        except Exception as e:
+            rb_log.error(f"Internal Server Error: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Internal Server Error", "message": str(e)},
+            )
 
     return app
