@@ -1510,7 +1510,7 @@ void MainWindow::bt_AutoPath()
         return;
     }
 
-    QString direction = "foward";
+    QString direction = "forward";
     if (ui->ckb_MoveBackWard->isChecked() == 1)
     {
         direction = "backward";
