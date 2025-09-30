@@ -36,12 +36,11 @@ public:
 
     QString get_cur_node();
     QString get_cur_link();
-
-    QString get_cur_info();
-    void set_cur_info(QString str);
-
     QString get_cur_zone();
-    void set_cur_zone(QString str);
+
+    NODE_INFO get_node_info();
+    NODE_INFO get_link_info();
+    NODE_INFO get_zone_info();
 
     /***********************
      * set other modules
@@ -79,10 +78,28 @@ private:
     std::unique_ptr<std::thread> zone_thread;
     void zone_loop();
 
+    // policy loop
+    std::atomic<bool> policy_flag = {false};
+    std::unique_ptr<std::thread> policy_thread;
+    void policy_loop();
+
+    void apply_slow(bool on);
+    void apply_fast(bool on);
+    void apply_warning_beep(bool on);
+    void apply_ignore_2d(bool on);
+    void apply_ignore_3d(bool on);
+    void apply_ignore_cam(bool on);
+    void apply_ignore_obs_2d(bool on);
+    void apply_ignore_obs_3d(bool on);
+    void apply_ignore_obs_cam(bool on);
+
     QString cur_node = "";
     QString cur_link = "";
     QString cur_zone = "";
-    QString cur_info = "";
+
+    NODE_INFO node_info;
+    NODE_INFO link_info;
+    NODE_INFO zone_info;
 
     std::vector<LINK_INFO> link_list;
 

@@ -1590,11 +1590,12 @@ struct COPY_INFO
 
 struct NODE_INFO
 {
-    // size
+    QString info;
+
     Eigen::Vector3d sz;
 
-    QString speed;
-
+    bool slow;
+    bool fast;
     bool warning_beep;
     bool ignore_2d;
     bool ignore_3d;
@@ -1605,10 +1606,12 @@ struct NODE_INFO
 
     NODE_INFO()
     {
+        info = "";
+
         sz.setZero();
 
-        speed = "";
-
+        slow           = false;
+        fast           = false;
         warning_beep   = false;
         ignore_2d      = false;
         ignore_3d      = false;
@@ -1620,10 +1623,12 @@ struct NODE_INFO
 
     NODE_INFO(const NODE_INFO& p)
     {
+        info = p.info;
+
         sz = p.sz;
 
-        speed = p.speed;
-
+        slow           = p.slow;
+        fast           = p.fast;
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1635,10 +1640,12 @@ struct NODE_INFO
 
     NODE_INFO& operator=(const NODE_INFO& p)
     {
+        info = p.info;
+
         sz = p.sz;
 
-        speed = p.speed;
-
+        slow           = p.slow;
+        fast           = p.fast;
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;

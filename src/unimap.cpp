@@ -387,6 +387,7 @@ bool UNIMAP::load_node()
             node.tf     = string_to_TF(obj["pose"].toString());
             node.linked = array_to_links(obj["links"].toArray());
 
+            // link info
             {
                 QJsonArray link_arr = obj["links"].toArray();
                 QString last_link = "";
@@ -439,7 +440,7 @@ bool UNIMAP::load_node()
             // rebuild node maps with indices
             rebuild_node_maps();
 
-            // test
+            // link info
             special_links.clear();
             special_links.reserve(links.size());
             for(size_t i = 0; i < links.size(); i++)
@@ -473,7 +474,7 @@ bool UNIMAP::load_node()
 
                 special_links.push_back(s);
 
-                // === debug print: special_links ===
+                // debug
                 {
                     printf("[UNIMAP] special_links size = %zu\n", special_links.size());
                     for(size_t i = 0; i < special_links.size(); i++)

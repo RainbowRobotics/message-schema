@@ -3571,11 +3571,13 @@ void MainWindow::plot_ctrl()
         // plot policy info
         {
             QString text;
-            text.sprintf("node: %s, link: %s, zone:%s, info:%s",
+            text.sprintf("node: %s, link: %s, zone:%s, info:%s, %s, %s",
                          POLICY::instance()->get_cur_node().toLocal8Bit().data(),
                          POLICY::instance()->get_cur_link().toLocal8Bit().data(),
                          POLICY::instance()->get_cur_zone().toLocal8Bit().data(),
-                         POLICY::instance()->get_cur_info().toLocal8Bit().data());
+                         POLICY::instance()->get_node_info().info.toLocal8Bit().data(),
+                         POLICY::instance()->get_link_info().info.toLocal8Bit().data(),
+                         POLICY::instance()->get_zone_info().info.toLocal8Bit().data());
             ui->lb_Policy->setText(text);
         }
 

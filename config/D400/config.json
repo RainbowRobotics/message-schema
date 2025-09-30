@@ -36,7 +36,7 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": true,
+        "USE_RRS": false,
         "USE_FMS": false
     },
     "debug": {
@@ -194,7 +194,7 @@
     	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250905_unicos_2d"
+        "MAP_PATH": "/home/juyeon/maps/250904_unicos_2d"
     }
 }
 

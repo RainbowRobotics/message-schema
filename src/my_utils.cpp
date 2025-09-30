@@ -1053,6 +1053,9 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
 {
     bool matched = false;
 
+    result.info.clear();
+    QStringList info_tokens;
+
     QStringList lines = info.split("\n", Qt::KeepEmptyParts);
 
     for (int i = 0; i < lines.size(); i++)
@@ -1086,21 +1089,21 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
             continue;
         }
 
-        // ---- SPEED ----
-        if(key == "SPEED_SLOW")
         {
-            result.speed = "SLOW";
-            matched = true;
-            continue;
-        }
-        if(key == "SPEED_FAST")
-        {
-            result.speed = "FAST";
-            matched = true;
-            continue;
+            for(int t = 0; t < parts.size(); t++)
+            {
+                QString tok = parts[t].trimmed();
+                if(tok.isEmpty())
+                {
+                    continue;
+                }
+                info_tokens.push_back(tok);
+            }
         }
 
-        // ---- flags ----
+        // ---- INFO ----
+        if (key == "SLOW")           { result.slow           = true; matched = true; continue; }
+        if (key == "FAST")           { result.fast           = true; matched = true; continue; }
         if (key == "WARNING_BEEP")   { result.warning_beep   = true; matched = true; continue; }
         if (key == "IGNORE_2D")      { result.ignore_2d      = true; matched = true; continue; }
         if (key == "IGNORE_3D")      { result.ignore_3d      = true; matched = true; continue; }
@@ -1108,6 +1111,24 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
         if (key == "IGNORE_OBS_2D")  { result.ignore_obs_2d  = true; matched = true; continue; }
         if (key == "IGNORE_OBS_3D")  { result.ignore_obs_3d  = true; matched = true; continue; }
         if (key == "IGNORE_OBS_CAM") { result.ignore_obs_cam = true; matched = true; continue; }
+
+        if(key != "SIZE")
+        {
+            for(int t = 0; t < parts.size(); t++)
+            {
+                const QString tok = parts[t];
+                if(tok.isEmpty())
+                {
+                    continue;
+                }
+            }
+        }
+    }
+
+    if(!info_tokens.isEmpty())
+    {
+        result.info = info_tokens.join(", ");
+        matched = true;
     }
 
     return matched;

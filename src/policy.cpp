@@ -40,6 +40,9 @@ void POLICY::open()
     zone_flag = true;
     zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
 
+    policy_flag = true;
+    policy_thread = std::make_unique<std::thread>(&POLICY::policy_loop, this);
+
     printf("[POLICY] open\n");
 }
 
@@ -65,6 +68,14 @@ void POLICY::close()
         zone_thread->join();
     }
     zone_thread.reset();
+
+    policy_flag = false;
+    if(policy_thread && policy_thread->joinable())
+    {
+        policy_thread->join();
+    }
+    policy_thread.reset();
+
     printf("[POLICY] close\n");
 }
 
@@ -82,20 +93,6 @@ QString POLICY::get_cur_link()
     return res;
 }
 
-QString POLICY::get_cur_info()
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    QString res = cur_info;
-    return res;
-}
-
-
-void POLICY::set_cur_info(QString str)
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    cur_info = str;
-}
-
 QString POLICY::get_cur_zone()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -103,10 +100,25 @@ QString POLICY::get_cur_zone()
     return res;
 }
 
-void POLICY::set_cur_zone(QString str)
+NODE_INFO POLICY::get_node_info()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    cur_zone = str;
+    NODE_INFO res = node_info;
+    return res;
+}
+
+NODE_INFO POLICY::get_link_info()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    NODE_INFO res = link_info;
+    return res;
+}
+
+NODE_INFO POLICY::get_zone_info()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    NODE_INFO res = zone_info;
+    return res;
 }
 
 void POLICY::set_config_module(CONFIG* _config)
@@ -129,10 +141,36 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
     loc = _loc;
 }
 
+void POLICY::apply_slow(bool on)
+{
+    // prevent duplication
+    static bool prev = false;
+    if(on == prev)
+    {
+        return;
+    }
+
+    prev = on;
+
+    printf("[POLICY] SLOW %s\n", on ? "ON" : "OFF");
+}
+
+void POLICY::apply_fast(bool on)
+{
+    // prevent duplication
+    static bool prev = false;
+    if(on == prev)
+    {
+        return;
+    }
+
+    prev = on;
+
+    printf("[POLICY] FAST %s\n", on ? "ON" : "OFF");
+}
+
 void POLICY::node_loop()
 {
-    QString pre_node_id = "";
-
     printf("[POLICY] node_loop start\n");
     while(node_flag)
     {
@@ -143,34 +181,32 @@ void POLICY::node_loop()
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        QString _cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
-        if(pre_node_id == "")
-        {
-            pre_node_id = _cur_node_id;
+        QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+        NODE *node = unimap->get_node_by_id(cur_node_id);
 
-            // update
-            std::lock_guard<std::mutex> lock(mtx);
-            cur_node = pre_node_id;
-        }
-        else
+        QString inside_node = "";
+        NODE_INFO inside_info;
+
+        if(node != nullptr)
         {
-            // calc pre node id
-            NODE *node = unimap->get_node_by_id(_cur_node_id);
-            if(node != nullptr)
+            double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+            if(d < config->get_robot_radius())
             {
-                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                if(d < config->get_robot_radius())
+                inside_node = cur_node_id;
+                NODE_INFO res;
+                if(parse_info(node->info, "", res))
                 {
-                    if(pre_node_id != _cur_node_id)
-                    {
-                        pre_node_id = _cur_node_id;
-
-                        // update
-                        std::lock_guard<std::mutex> lock(mtx);
-                        cur_node = pre_node_id;
-                    }
+                    inside_info = res;
                 }
+
             }
+        }
+
+        // update
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_node = inside_node;
+            node_info = inside_info;
         }
 
         // printf("[NODE] node=%s\n", _cur_node_id.toStdString().c_str());
@@ -182,12 +218,6 @@ void POLICY::node_loop()
 
 void POLICY::link_loop()
 {
-    bool is_ready = false;
-    QString pre_link = "";
-
-    static Eigen::Vector2d prev_pos(0.0, 0.0);
-    static bool has_prev_pos = false;
-
     printf("[POLICY] link_loop start\n");
     while(link_flag)
     {
@@ -202,7 +232,7 @@ void POLICY::link_loop()
         Eigen::Vector2d pos = Eigen::Vector2d(cur_tf(0,3), cur_tf(1,3));
 
         QString inside_link = "";
-        QString inside_info = "";
+        NODE_INFO inside_info;
 
         double half_width = 0.40;
 
@@ -228,21 +258,22 @@ void POLICY::link_loop()
             if(along <= 0.5*L && across <= half_width)
             {
                 inside_link = link.st_id + "-" + link.ed_id;
-                inside_info = link.info;
+
+                NODE_INFO res;
+                if(parse_info(link.info, "", res))
+                {
+                    inside_info = res;
+                }
                 break;
             }
         }
 
-        if(inside_link.isEmpty())
+        // update
         {
-            cur_link = "";
-        }
-        else
-        {
+            std::lock_guard<std::mutex> lock(mtx);
             cur_link = inside_link;
-            cur_info = inside_info;
+            link_info = inside_info;
         }
-
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -280,7 +311,7 @@ void POLICY::zone_loop()
 
         // check zone
         QString zone = "";
-        QString info = "";
+        NODE_INFO info;
 
         std::vector<QString> zones = unimap->get_nodes("ZONE");
         for(size_t p = 0; p < zones.size(); p++)
@@ -289,7 +320,6 @@ void POLICY::zone_loop()
             if(node != NULL)
             {
                 QString name = node->name;
-                // QString info = node->info;
 
                 NODE_INFO res;
                 if(parse_info(node->info, "", res))
@@ -306,28 +336,7 @@ void POLICY::zone_loop()
                     {
                         // current zone
                         zone = name;
-
-                        QStringList parts;
-
-                        // speed
-                        if(res.speed == "SLOW")      parts << "SPEED_SLOW";
-                        else if(res.speed == "FAST") parts << "SPEED_FAST";
-
-                        // flags
-                        if(res.warning_beep)   parts << "WARNING_BEEP";
-                        if(res.ignore_2d)      parts << "IGNORE_2D";
-                        if(res.ignore_3d)      parts << "IGNORE_3D";
-                        if(res.ignore_cam)     parts << "IGNORE_CAM";
-                        if(res.ignore_obs_2d)  parts << "IGNORE_OBS_2D";
-                        if(res.ignore_obs_3d)  parts << "IGNORE_OBS_3D";
-                        if(res.ignore_obs_cam) parts << "IGNORE_OBS_CAM";
-
-                        info = parts.join(", ");
-
-                        // printf("[ZONE] active zone=%s, info=%s\n",
-                        //        zone.toStdString().c_str(),
-                        //        info.toStdString().c_str());
-
+                        info = res;
                         break;
                     }
                 }
@@ -335,10 +344,72 @@ void POLICY::zone_loop()
         }
 
         // update
-        set_cur_zone(zone);
-        set_cur_info(info);
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_zone = zone;
+            zone_info = info;
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[POLICY] zone_loop stop\n");
+}
+
+void POLICY::policy_loop()
+{
+    QString last_info = "";
+
+    printf("[POLICY] policy_loop start\n");
+
+    while(policy_flag)
+    {
+        NODE_INFO z = get_zone_info();
+        NODE_INFO l = get_link_info();
+        NODE_INFO n = get_node_info();
+
+        bool slow            = (z.slow           || l.slow           || n.slow);
+        bool fast            = (z.fast           || l.fast           || n.fast);
+        bool warning_beep    = (z.warning_beep   || l.warning_beep   || n.warning_beep);
+        bool ignore_2d       = (z.ignore_2d      || l.ignore_2d      || n.ignore_2d);
+        bool ignore_3d       = (z.ignore_3d      || l.ignore_3d      || n.ignore_3d);
+        bool ignore_cam      = (z.ignore_cam     || l.ignore_cam     || n.ignore_cam);
+        bool ignore_obs_2d   = (z.ignore_obs_2d  || l.ignore_obs_2d  || n.ignore_obs_2d);
+        bool ignore_obs_3d   = (z.ignore_obs_3d  || l.ignore_obs_3d  || n.ignore_obs_3d);
+        bool ignore_obs_cam  = (z.ignore_obs_cam || l.ignore_obs_cam || n.ignore_obs_cam);
+
+        if(slow && fast)
+        {
+            fast = false;
+        }
+
+        QString info = QString("S%1 F%2 W%3 I2%4 I3%5 IC%6 O2%7 O3%8 OC%9")
+                .arg(slow ? "1" : "0")
+                .arg(fast ? "1" : "0")
+                .arg(warning_beep ? "1" : "0")
+                .arg(ignore_2d    ? "1" : "0")
+                .arg(ignore_3d    ? "1" : "0")
+                .arg(ignore_cam   ? "1" : "0")
+                .arg(ignore_obs_2d? "1" : "0")
+                .arg(ignore_obs_3d? "1" : "0")
+                .arg(ignore_obs_cam? "1" : "0");
+
+        if(info != last_info)
+        {
+            apply_slow(slow);
+            apply_fast(fast);
+            // apply_warning_beep(warning_beep);
+            // apply_ignore_2d(ignore_2d);
+            // apply_ignore_3d(ignore_3d);
+            // apply_ignore_cam(ignore_cam);
+            // apply_ignore_obs_2d(ignore_obs_2d);
+            // apply_ignore_obs_3d(ignore_obs_3d);
+            // apply_ignore_obs_cam(ignore_obs_cam);
+
+            last_info = info;
+            printf("[POLICY] applied flags: %s\n", info.toStdString().c_str());
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[POLICY] policy_loop stop\n");
 }
