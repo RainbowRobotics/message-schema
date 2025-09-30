@@ -1719,14 +1719,7 @@ PATH AUTOCONTROL::calc_global_path(std::vector<QString> node_path, bool add_cur_
 
     // smoothing ref_v
     ref_v = smoothing_v(ref_v, AUTOCONTROL_INFO::global_path_step);
-
-    // for obs loop obs_state == AUTO_OBS_AVOID -> using <avoid_path = calc_avoid_path(global_path);>
-    if(back_mode == true)
-    {
-        for(auto& v : ref_v)
-            v = -v;
-    }
-
+    
     // set result
     PATH res;
     res.t = get_time();
