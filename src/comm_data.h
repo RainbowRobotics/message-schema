@@ -246,6 +246,8 @@ struct DATA_CONTROL
     static constexpr const char* LidarOnOff = "lidarOnOff";
     static constexpr const char* PathOnOff = "pathOnOff";
     static constexpr const char* MotorOnOff = "motorOnOff";
+    static constexpr const char* safetyIO = "safetyIO";
+
     double time;
     QString id;
     QString command;
@@ -450,8 +452,6 @@ struct DATA_PDU_UPDATE
         setting = p.setting;
         return *this;
     }
-
-
 };
 
 
@@ -729,6 +729,7 @@ struct DATA_PATH
     QString result;
     QString message;
     QString direction;
+    QString action;
 
     DATA_PATH()
     {
@@ -742,6 +743,7 @@ struct DATA_PATH
         result = "";
         message = "";
         direction = "";
+        action = "";
     }
 
     DATA_PATH(const DATA_PATH& p)
@@ -756,6 +758,7 @@ struct DATA_PATH
         result = p.result;
         message = p.message;
         direction = p.direction;
+        action = p.action;
     }
 
     DATA_PATH& operator=(const DATA_PATH& p)
@@ -770,6 +773,7 @@ struct DATA_PATH
         result = p.result;
         message = p.message;
         direction = p.direction;
+        action = p.action;
         return *this;
     }
 };
@@ -919,7 +923,9 @@ struct DATA_FOOT
 
 struct DATA_SAFTYIO
 {
+    QString id = "";
     double time;
+    QString command = "";
 
     unsigned char mcu0_dio[8] ={0,};
     unsigned char mcu1_dio[8] ={0,};
@@ -929,7 +935,9 @@ struct DATA_SAFTYIO
 
     DATA_SAFTYIO()
     {
+        id = "";
         time = 0.0;
+        command = "";
 
         memset(mcu0_dio, 0, sizeof(mcu0_dio));
         memset(mcu1_dio, 0, sizeof(mcu1_dio));
@@ -939,7 +947,9 @@ struct DATA_SAFTYIO
 
     DATA_SAFTYIO(const DATA_SAFTYIO& p)
     {
+        id = p.id;
         time = p.time;
+        command = p.command;
 
         memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
@@ -949,7 +959,9 @@ struct DATA_SAFTYIO
 
     DATA_SAFTYIO& operator=(const DATA_SAFTYIO& p)
     {
+        id = p.id;
         time = p.time;
+        command = p.command;
 
         memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);

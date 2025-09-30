@@ -1282,7 +1282,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1643,7 +1643,7 @@ LC</string>
              <widget class="QPushButton" name="bt_ReturnToCharging">
               <property name="geometry">
                <rect>
-                <x>10</x>
+                <x>60</x>
                 <y>50</y>
                 <width>51</width>
                 <height>31</height>
@@ -1656,9 +1656,9 @@ LC</string>
              <widget class="QLabel" name="lb_Mileage">
               <property name="geometry">
                <rect>
-                <x>70</x>
+                <x>120</x>
                 <y>50</y>
-                <width>241</width>
+                <width>191</width>
                 <height>41</height>
                </rect>
               </property>
@@ -1681,6 +1681,71 @@ LC</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoBackMove">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>50</y>
+                <width>51</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Back
+Move
+(pp)</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoPath">
+              <property name="geometry">
+               <rect>
+                <x>264</x>
+                <y>107</y>
+                <width>51</width>
+                <height>50</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>path
+(pp)</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_AutoPathAppend">
+              <property name="geometry">
+               <rect>
+                <x>190</x>
+                <y>130</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>append</string>
+              </property>
+             </widget>
+             <widget class="QTextEdit" name="te_path">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>100</y>
+                <width>171</width>
+                <height>70</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="ckb_MoveBackWard">
+              <property name="geometry">
+               <rect>
+                <x>189</x>
+                <y>103</y>
+                <width>92</width>
+                <height>23</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>BackWard</string>
               </property>
              </widget>
             </widget>

@@ -76,6 +76,8 @@ public:
     void set_global_path_update();
     void set_local_path_update();
 
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
+
 private:
     explicit COMM_MSA(QObject *parent = nullptr);
     ~COMM_MSA();
@@ -110,6 +112,7 @@ private:
 
     QString robot_id = "";
     QString multi_state = "none"; // "none", "req_path", "recv_path"
+    QString old_path = "";
 
     // for semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
@@ -205,6 +208,7 @@ private:
     void handle_mapping_cmd(const QJsonObject& data);
     void handle_localization_cmd(const QJsonObject& data);
     void handle_control_cmd(const QJsonObject& data);
+    void handle_safetyio_cmd(const QJsonObject& data);
 
     void handle_move_jog(const DATA_MOVE& msg);
     void handle_move_goal(DATA_MOVE& msg);
@@ -264,6 +268,8 @@ private:
     int path_view_cnt  = 0;
 
     QByteArray lastest_msg_str;
+
+    unsigned char dio_arr_old[16] = {0};
 
 private Q_SLOTS:
     void send_loop();

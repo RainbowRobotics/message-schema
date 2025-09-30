@@ -143,6 +143,8 @@ public:
    // vars
    QString map_dir = "";
 
+   QString path_append_id = "";
+
     // plot funcs
     void plot_map();
     void plot_node();
@@ -219,12 +221,15 @@ public Q_SLOTS:
 
     // for autocontrol
     void bt_AutoMove();
+    void bt_AutoBackMove();
     void bt_AutoMove2();
     void bt_AutoMove3();
+    void bt_AutoPath();
     void bt_AutoStop();
     void bt_AutoPause();
     void bt_AutoResume();
     void bt_ReturnToCharging();
+    void bt_AutoPathAppend();
 
     // for dockcontrol
     void bt_DockStart();
