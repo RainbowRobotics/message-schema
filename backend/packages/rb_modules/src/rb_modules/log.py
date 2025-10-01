@@ -27,7 +27,7 @@ class RBLog:
             "GENERAL": 6,
         }
 
-    def info(self, message: str, *, disable_db: bool = False):
+    def info(self, message: str, disable_db: bool = False):
         self._print(message, "INFO")
         self._publish_zenoh(message, "INFO", disable_db=disable_db)
 
