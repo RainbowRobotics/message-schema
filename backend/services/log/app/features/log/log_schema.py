@@ -23,6 +23,27 @@ class Cursor(BaseModel):
     id: PyObjectId
 
 
+class Request_LogListParamsPD(BaseModel):
+    limit: int | None = None
+    pageNum: int | None = None
+    level: list[int | str] | int | str | None = None
+    swName: str | None = None
+    searchText: str | None = None
+    fromDate: str | None = None
+    toDate: str | None = None
+
+
 class Response_LogListPD(BaseModel):
     items: list[LogItem]
+    hasNext: bool
+    totalCount: int
     # nextCursor: Cursor | None
+
+
+class Request_ExportStateLogsParamsPD(BaseModel):
+    fromDate: str
+    toDate: str
+    swName: str | None = None
+    searchText: str | None = None
+    level: list[int | str] | int | str | None = None
+    filename: str | None = None

@@ -1,5 +1,12 @@
-from app.features.log.log_schema import Response_LogCntPD, Response_LogListPD
-from fastapi import APIRouter
+from typing import Annotated
+
+from app.features.log.log_schema import (
+    Request_ExportStateLogsParamsPD,
+    Response_LogCntPD,
+    Response_LogListPD,
+)
+from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
 from rb_database import MongoDB
 
 from .log_module import LogService
@@ -74,10 +81,47 @@ log_router = APIRouter(tags=["Log"])
 
 
 @log_router.get("/list", response_model=Response_LogListPD)
-async def get_log_list(db: MongoDB, limit: int = 30):
-    return await log_service.get_log_list(db=db, limit=limit)
+async def get_log_list(
+    db: MongoDB,
+    limit: int | None = None,
+    pageNum: int | None = None,
+    searchText: str | None = None,
+    level: Annotated[list[str | int] | str | int | None, Query(alias="level[]")] = None,
+    swName: str | None = None,
+    fromDate: str | None = None,
+    toDate: str | None = None,
+):
+    return await log_service.get_log_list(
+        db=db,
+        params={
+            "limit": limit,
+            "pageNum": pageNum,
+            "searchText": searchText,
+            "level": level,
+            "swName": swName,
+            "fromDate": fromDate,
+            "toDate": toDate,
+        },
+    )
 
 
 @log_router.get("/error_log_count_for_24h", response_model=Response_LogCntPD)
 async def error_log_count_for_24h(db: MongoDB):
     return await log_service.error_log_count_for_24h(db=db)
+
+
+@log_router.post("/export/state_logs", response_class=StreamingResponse)
+async def export_state_logs_csv(
+    db: MongoDB,
+    request: Request_ExportStateLogsParamsPD,
+):
+
+    return await log_service.export_state_logs_csv(
+        db=db,
+        swName=request.swName,
+        level=request.level,
+        searchText=request.searchText,
+        fromDate=request.fromDate,
+        toDate=request.toDate,
+        filename=request.filename,
+    )
