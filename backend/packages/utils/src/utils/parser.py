@@ -1,5 +1,6 @@
 import json
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any
 
 try:
@@ -45,3 +46,10 @@ def t_to_dict(obj: Any) -> Any:
 
 def to_json(obj: Any) -> str:
     return json.dumps(t_to_dict(obj), ensure_ascii=False)
+
+
+def to_iso(val: str | datetime):
+    if isinstance(val, datetime):
+        return val.isoformat()
+
+    return val
