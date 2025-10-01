@@ -150,6 +150,8 @@ void POLICY::apply_slow(bool on)
         return;
     }
 
+
+
     prev = on;
 
     printf("[POLICY] SLOW %s\n", on ? "ON" : "OFF");
@@ -219,6 +221,162 @@ void POLICY::node_loop()
 void POLICY::link_loop()
 {
     printf("[POLICY] link_loop start\n");
+
+    QString last_undir = "";
+    QString last_oriented = "";
+    double  last_t = 0.0;
+    bool    has_last_t = false;
+
+    int outside_cnt = 0;
+
+    while(link_flag)
+    {
+        if(unimap->get_is_loaded() != MAP_LOADED)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        QString cur_node_id = get_cur_node();
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
+
+        QString inside_link = "";
+        NODE_INFO inside_info;
+
+        double half_width = 0.40;
+
+        int inside_idx = -1;
+        double best_across = 1e9;
+
+        std::vector<LINK_INFO> links = unimap->get_special_links();
+        for(size_t i = 0; i < links.size(); i++)
+        {
+            LINK_INFO& link = links[i];
+
+            double L = link.length;
+            if(L <= 1e-9)
+            {
+                continue;
+            }
+
+            double ux = link.ed.x() - link.st.x();
+            double uy = link.ed.y() - link.st.y();
+
+            double vx = pos.x() - link.mid.x();
+            double vy = pos.y() - link.mid.y();
+
+            double along  = std::abs((vx*ux + vy*uy) / L);
+            double across = std::abs((vx*uy - vy*ux) / L);
+
+            if(along <= 0.5*L && across <= half_width)
+            {
+                if(across < best_across)
+                {
+                    best_across = across;
+                    inside_idx = (int)i;
+                }
+            }
+        }
+
+        if(inside_idx >= 0)
+        {
+            LINK_INFO& link = links[(size_t)inside_idx];
+
+            QString cur_undir = (link.st_id < link.ed_id) ? (link.st_id + "|" + link.ed_id) : (link.ed_id + "|" + link.st_id);
+
+            if(last_undir != cur_undir)
+            {
+                last_undir = cur_undir;
+                has_last_t = false;
+                last_oriented.clear();
+            }
+
+            Eigen::Vector2d st2(link.st.x(), link.st.y());
+            Eigen::Vector2d u(link.ed.x() - link.st.x(), link.ed.y() - link.st.y());
+            double L = u.norm();
+            double t = 0.0;
+            if(L > 1e-12)
+            {
+                Eigen::Vector2d w = pos - st2;
+                t = w.dot(u) / L;
+            }
+
+            if(has_last_t)
+            {
+                if(t > last_t +  0.02)
+                {
+                    last_oriented = link.st_id + "->" + link.ed_id;
+                }
+                else if(t < last_t -  0.02)
+                {
+                    last_oriented = link.ed_id + "->" + link.st_id;
+                }
+
+                if(last_oriented.isEmpty())
+                {
+                    double ds = (pos - st2).squaredNorm();
+                    double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
+                    last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
+                }
+            }
+            else
+            {
+                double ds = (pos - st2).squaredNorm();
+                double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
+                last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
+                has_last_t = true;
+            }
+
+            last_t = t;
+            outside_cnt = 0;
+
+            inside_link = last_oriented;
+
+            NODE_INFO res;
+            if(parse_info(link.info, "", res))
+            {
+                inside_info = res;
+            }
+        }
+        else
+        {
+            outside_cnt++;
+            if(outside_cnt >= 3)
+            {
+                last_undir.clear();
+                last_oriented.clear();
+                has_last_t = false;
+
+                inside_link.clear();
+                inside_info = NODE_INFO();
+            }
+            else
+            {
+                inside_link = last_oriented;
+                inside_info = NODE_INFO();
+            }
+        }
+
+        // update
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_link = inside_link;
+            link_info = inside_info;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    printf("[POLICY] link_loop stop\n");
+}
+
+/*
+void POLICY::link_loop()
+{
+    QString pre_node_id = "";
+
+    printf("[POLICY] link_loop start\n");
     while(link_flag)
     {
         if(unimap->get_is_loaded() != MAP_LOADED)
@@ -231,10 +389,17 @@ void POLICY::link_loop()
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Vector2d pos = Eigen::Vector2d(cur_tf(0,3), cur_tf(1,3));
 
+        if(!cur_node_id.isEmpty())
+        {
+            pre_node_id = cur_node_id;
+        }
+
         QString inside_link = "";
         NODE_INFO inside_info;
 
         double half_width = 0.40;
+
+        bool is_link = false;
 
         std::vector<LINK_INFO> links = unimap->get_special_links();
         for(size_t i = 0; i < links.size(); i++)
@@ -257,7 +422,20 @@ void POLICY::link_loop()
             double across = std::abs((vx*uy - vy*ux) / L);
             if(along <= 0.5*L && across <= half_width)
             {
-                inside_link = link.st_id + "-" + link.ed_id;
+                is_link = true;
+
+                if(pre_node_id == link.st_id)
+                {
+                    inside_link = link.st_id + "->" + link.ed_id;
+                }
+                else if(pre_node_id == link.ed_id)
+                {
+                    inside_link = link.ed_id + "->" + link.st_id;
+                }
+                else
+                {
+                    inside_link = link.st_id + "->" + link.ed_id;
+                }
 
                 NODE_INFO res;
                 if(parse_info(link.info, "", res))
@@ -267,6 +445,12 @@ void POLICY::link_loop()
                 break;
             }
         }
+
+        if(!is_link && !cur_node_id.isEmpty())
+        {
+            pre_node_id = cur_node_id;
+        }
+        printf("[LINK] pre_node_id=%s\n", pre_node_id.toStdString().c_str());
 
         // update
         {
@@ -279,6 +463,7 @@ void POLICY::link_loop()
     }
     printf("[POLICY] link_loop stop\n");
 }
+*/
 
 void POLICY::zone_loop()
 {
@@ -401,7 +586,7 @@ void POLICY::policy_loop()
             // apply_ignore_2d(ignore_2d);
             // apply_ignore_3d(ignore_3d);
             // apply_ignore_cam(ignore_cam);
-            // apply_ignore_obs_2d(ignore_obs_2d);
+            // apply_ignore_odbs_2d(ignore_obs_2d);
             // apply_ignore_obs_3d(ignore_obs_3d);
             // apply_ignore_obs_cam(ignore_obs_cam);
 
