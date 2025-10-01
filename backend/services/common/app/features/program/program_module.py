@@ -15,7 +15,6 @@ from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
 from utils.parser import t_to_dict
-from zenoh import ZError
 
 zenoh_client = ZenohClient()
 
@@ -57,7 +56,7 @@ class ProgramService:
                 await self.control_speed_bar(components=components, speedbar=min_speedbar)
 
             return {"speedbar": min_speedbar}
-        except ZError as e:
+        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
         except Exception as e:
             rb_log.error(f"get_all_speedbar {e}")
@@ -77,7 +76,11 @@ class ProgramService:
                 components = list(doc.get("components") or [])
 
                 res = await self.get_all_speedbar(components=components)
-                fire_and_log(socket_client.emit("speedbar", res))
+                if isinstance(res, dict) and "speedbar" in res:
+                    fire_and_log(socket_client.emit("speedbar", res))
+                else:
+                    rb_log.error(f"repeat_get_all_speedbar res: {res}")
+
                 next_ts += 1
                 await asyncio.sleep(max(0, next_ts - time.monotonic()))
 
