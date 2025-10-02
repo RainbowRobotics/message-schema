@@ -108,7 +108,8 @@ void CONFIG::load()
     load_lidar_configs(obj);
     load_camera_configs(obj);
     load_sensor_specific_configs(obj);
-
+    load_safety_config(obj);
+    
     is_load = true;
     printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
 
@@ -329,6 +330,66 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_X_OFFSET", DOCKING_X_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_Y_OFFSET", DOCKING_Y_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
+}
+
+
+void CONFIG::load_safety_config(const QJsonObject &obj)
+{
+    QJsonObject obj_safety = obj["safety"].toObject();
+    
+    check_and_set_int(obj_safety, "MONITORING_FIELD_COUNT", MONITORING_FIELD_COUNT, "safety");
+    
+    MONITORING_FIELD.clear();
+    MONITORING_FIELD.reserve(MONITORING_FIELD_COUNT);
+    
+    // JSON에서 monitoring field 배열 로드
+    if(obj_safety.contains("MONITORING_FIELDS") && obj_safety["MONITORING_FIELDS"].isArray())
+    {
+        QJsonArray fields_array = obj_safety["MONITORING_FIELDS"].toArray();
+
+        // exception handling
+        if( fields_array.size() != MONITORING_FIELD_COUNT)
+        {
+            qDebug() << "[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()";
+            return;
+        }
+
+        for(int i = 0; i < MONITORING_FIELD_COUNT; i++)
+        {
+            QJsonObject field_obj = fields_array[i].toObject();
+            MonitoringField field;
+            field.monitor_id = i;
+            field.min_x = field_obj["min_x"].toDouble();
+            field.max_x = field_obj["max_x"].toDouble();
+            field.min_y = field_obj["min_y"].toDouble();
+            field.max_y = field_obj["max_y"].toDouble();
+            field.is_blocked = field_obj["is_blocked"].toBool(false);
+        
+            MONITORING_FIELD.push_back(field);
+        }
+    }
+    else
+    {
+        // 기본값으로 초기화
+        for(int i = 0; i < MONITORING_FIELD_COUNT; i++)
+        {
+            MonitoringField field;
+            field.monitor_id = i;
+            field.min_x = 0.0;
+            field.max_x = 0.0;
+            field.min_y = 0.0;
+            field.max_y = 0.0;
+            field.is_blocked = false;
+            MONITORING_FIELD.push_back(field);
+        }
+    }
+}
+
+std::vector<MonitoringField> CONFIG::get_monitoring_field()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    std::vector<MonitoringField> res = MONITORING_FIELD;
+    return res;
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)

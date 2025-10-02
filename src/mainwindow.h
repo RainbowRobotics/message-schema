@@ -19,6 +19,7 @@
 #include "sim.h"
 #include "dockcontrol.h"
 #include "policy.h"
+#include "safety.h"
 
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"

@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     SIM::instance(this);
     DOCKCONTROL::instance(this);
     POLICY::instance(this);
+    SAFETY::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -477,6 +478,17 @@ void MainWindow::init_modules()
         POLICY::instance()->set_localization_module(LOCALIZATION::instance());
         POLICY::instance()->init();
         POLICY::instance()->open();
+    }
+
+    // safety module init
+    {
+        SAFETY::instance()->set_config_module(CONFIG::instance());
+        SAFETY::instance()->set_logger_module(LOGGER::instance());
+        SAFETY::instance()->set_mobile_module(MOBILE::instance());
+        SAFETY::instance()->set_unimap_module(UNIMAP::instance());
+        SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
+        SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
+        SAFETY::instance()->init();
     }
 
     // start jog loop
