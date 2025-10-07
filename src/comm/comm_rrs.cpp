@@ -1730,10 +1730,12 @@ void COMM_RRS::send_move_status()
     QString cur_node_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
     {
-        NODE* node = unimap->get_node_by_id(cur_node_id);
-        if(node != nullptr)
+        cur_node_id = AUTOCONTROL::instance()->get_cur_node_id();
+        NODE *cur_node = UNIMAP::instance()->get_node_by_id(cur_node_id);
+
+        if(cur_node != nullptr)
         {
-            cur_node_name = node->name;
+            cur_node_name = cur_node -> name;
         }
     }
 

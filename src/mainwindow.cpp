@@ -3665,7 +3665,7 @@ void MainWindow::plot_ctrl()
             pcl_viewer->removeShape("cur_node");
         }
 
-        QString cur_node_id; // = ctrl.get_cur_node_id();
+        QString cur_node_id = AUTOCONTROL::instance()->get_cur_node_id();
         if(cur_node_id != "")
         {
             NODE *node = UNIMAP::instance()->get_node_by_id(cur_node_id);

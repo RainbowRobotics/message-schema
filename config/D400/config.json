@@ -33,7 +33,7 @@
         "USE_EKF": true
     },
     "network": {
-        "USE_MULTI": false,
+        "USE_MULTI": true,
         "USE_COOP": false,
         "USE_RTSP": false,
         "USE_RRS": true,

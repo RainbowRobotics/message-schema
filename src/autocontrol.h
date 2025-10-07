@@ -155,6 +155,7 @@ public Q_SLOTS:
     // slot func move(receive path) (start control loop)
     void slot_path(DATA_PATH msg);
     void slot_path();
+    void slot_path(QString direction);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -267,12 +268,21 @@ private:
     std::unique_ptr<std::thread> node_thread;           // node thread
     void node_loop();                                   // node loop
 
+    // calc current node
+    std::atomic<bool> a_flag = {false};
+    std::thread *current_node_thread = NULL;
+    void current_node_loop();
+
     // for plot
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
 
     tbb::concurrent_queue<PATH> global_path_que;
+
+    // for where is robot
+    std::shared_mutex node_mtx;
+    QString last_node_id = "";
 
     // for multi-robot control
     int global_preset = 0;
@@ -306,7 +316,7 @@ private:
 
     // obs
     int cur_obs_value = OBS_NONE;
-    double cur_obs_decel_v = 0.0;
+    double cur_obs_decel_v = 0.3;
 
     // driving local ref v oscilation prevent
     int prev_local_ref_v_index = 0;

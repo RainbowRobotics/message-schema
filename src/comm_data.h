@@ -18,6 +18,7 @@ struct DATA_MOVE
     QString goal_node_id;
     QString goal_node_name;
     QString id;  // rrs give msg id
+    QString direction;
 
     int preset;
     Eigen::Vector3d cur_pos; // x, y, z
@@ -53,6 +54,7 @@ struct DATA_MOVE
 
         result = "";
         message = "";
+        direction = "";
         //remark = "";
     }
 
@@ -76,6 +78,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        direction = p.direction;
         //remark = p.remark;
     }
 
@@ -98,6 +101,7 @@ struct DATA_MOVE
 
         result = p.result;
         message = p.message;
+        direction = p.direction;
         //remark = p.remark;
         return *this;
     }
@@ -728,8 +732,8 @@ struct DATA_PATH
     QString response;
     QString result;
     QString message;
-    QString direction;
     QString action;
+    QString direction;
 
     DATA_PATH()
     {
@@ -742,8 +746,8 @@ struct DATA_PATH
         response = "";
         result = "";
         message = "";
-        direction = "";
         action = "";
+        direction = "";
     }
 
     DATA_PATH(const DATA_PATH& p)
@@ -757,8 +761,8 @@ struct DATA_PATH
         response = p.response;
         result = p.result;
         message = p.message;
-        direction = p.direction;
         action = p.action;
+        direction = p.direction;
     }
 
     DATA_PATH& operator=(const DATA_PATH& p)
@@ -772,8 +776,8 @@ struct DATA_PATH
         response = p.response;
         result = p.result;
         message = p.message;
-        direction = p.direction;
         action = p.action;
+        direction = p.direction;
         return *this;
     }
 };

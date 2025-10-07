@@ -252,6 +252,8 @@ private:
 
     void handle_common_motor(DATA_MOTOR& msg);
 
+    QJsonValue convertItem(sio::message::ptr item);
+
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};
 
@@ -271,6 +273,8 @@ private:
 
     unsigned char dio_arr_old[16] = {0};
 
+    QString fms_cmd_direction = "";
+
 private Q_SLOTS:
     void send_loop();
 
@@ -278,6 +282,8 @@ private Q_SLOTS:
     void disconnected();
     //    void recv_message(const QString &buf);
     void recv_message(sio::event& e);
+    void recv_message_array(sio::event& ev);
+
     void reconnect_loop();
 
     void send_move_status();
