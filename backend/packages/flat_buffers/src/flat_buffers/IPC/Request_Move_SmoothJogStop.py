@@ -7,61 +7,61 @@ from flatbuffers.compat import import_numpy
 from typing import Any
 np = import_numpy()
 
-class Request_MotionSmoothJogStop(object):
+class Request_Move_SmoothJogStop(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset: int = 0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Request_MotionSmoothJogStop()
+        x = Request_Move_SmoothJogStop()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsRequest_MotionSmoothJogStop(cls, buf, offset=0):
+    def GetRootAsRequest_Move_SmoothJogStop(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Request_MotionSmoothJogStop
+    # Request_Move_SmoothJogStop
     def Init(self, buf: bytes, pos: int):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Request_MotionSmoothJogStop
+    # Request_Move_SmoothJogStop
     def Stoptime(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-def Request_MotionSmoothJogStopStart(builder: flatbuffers.Builder):
+def Request_Move_SmoothJogStopStart(builder: flatbuffers.Builder):
     builder.StartObject(1)
 
 def Start(builder: flatbuffers.Builder):
-    Request_MotionSmoothJogStopStart(builder)
+    Request_Move_SmoothJogStopStart(builder)
 
-def Request_MotionSmoothJogStopAddStoptime(builder: flatbuffers.Builder, stoptime: float):
+def Request_Move_SmoothJogStopAddStoptime(builder: flatbuffers.Builder, stoptime: float):
     builder.PrependFloat32Slot(0, stoptime, 0.0)
 
 def AddStoptime(builder: flatbuffers.Builder, stoptime: float):
-    Request_MotionSmoothJogStopAddStoptime(builder, stoptime)
+    Request_Move_SmoothJogStopAddStoptime(builder, stoptime)
 
-def Request_MotionSmoothJogStopEnd(builder: flatbuffers.Builder) -> int:
+def Request_Move_SmoothJogStopEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
 def End(builder: flatbuffers.Builder) -> int:
-    return Request_MotionSmoothJogStopEnd(builder)
+    return Request_Move_SmoothJogStopEnd(builder)
 
 
-class Request_MotionSmoothJogStopT(object):
+class Request_Move_SmoothJogStopT(object):
 
-    # Request_MotionSmoothJogStopT
+    # Request_Move_SmoothJogStopT
     def __init__(self):
         self.stoptime = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
-        requestMotionSmoothJogStop = Request_MotionSmoothJogStop()
-        requestMotionSmoothJogStop.Init(buf, pos)
-        return cls.InitFromObj(requestMotionSmoothJogStop)
+        requestMoveSmoothJogStop = Request_Move_SmoothJogStop()
+        requestMoveSmoothJogStop.Init(buf, pos)
+        return cls.InitFromObj(requestMoveSmoothJogStop)
 
     @classmethod
     def InitFromPackedBuf(cls, buf, pos=0):
@@ -69,20 +69,20 @@ class Request_MotionSmoothJogStopT(object):
         return cls.InitFromBuf(buf, pos+n)
 
     @classmethod
-    def InitFromObj(cls, requestMotionSmoothJogStop):
-        x = Request_MotionSmoothJogStopT()
-        x._UnPack(requestMotionSmoothJogStop)
+    def InitFromObj(cls, requestMoveSmoothJogStop):
+        x = Request_Move_SmoothJogStopT()
+        x._UnPack(requestMoveSmoothJogStop)
         return x
 
-    # Request_MotionSmoothJogStopT
-    def _UnPack(self, requestMotionSmoothJogStop):
-        if requestMotionSmoothJogStop is None:
+    # Request_Move_SmoothJogStopT
+    def _UnPack(self, requestMoveSmoothJogStop):
+        if requestMoveSmoothJogStop is None:
             return
-        self.stoptime = requestMotionSmoothJogStop.Stoptime()
+        self.stoptime = requestMoveSmoothJogStop.Stoptime()
 
-    # Request_MotionSmoothJogStopT
+    # Request_Move_SmoothJogStopT
     def Pack(self, builder):
-        Request_MotionSmoothJogStopStart(builder)
-        Request_MotionSmoothJogStopAddStoptime(builder, self.stoptime)
-        requestMotionSmoothJogStop = Request_MotionSmoothJogStopEnd(builder)
-        return requestMotionSmoothJogStop
+        Request_Move_SmoothJogStopStart(builder)
+        Request_Move_SmoothJogStopAddStoptime(builder, self.stoptime)
+        requestMoveSmoothJogStop = Request_Move_SmoothJogStopEnd(builder)
+        return requestMoveSmoothJogStop
