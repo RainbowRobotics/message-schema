@@ -9,6 +9,9 @@ program_service = ProgramService()
 
 @program_socket_router.on("speedbar")
 async def on_change_speedbar(data):
+    if data.get("components") is None:
+        return
+
     res = await program_service.control_speed_bar(
         components=data["components"], speedbar=data["speedbar"]
     )
