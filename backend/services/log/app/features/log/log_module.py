@@ -23,12 +23,12 @@ from utils.file import content_disposition_header, sanitize_filename
 class LogService:
     def __init__(self):
         self._level_to_name = {
-            1: "info",
-            2: "warning",
-            3: "error",
-            4: "user",
-            5: "debug",
-            6: "general",
+            0: "info",
+            1: "warning",
+            2: "error",
+            3: "user",
+            4: "debug",
+            5: "general",
         }
 
     async def get_log_list(
