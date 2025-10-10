@@ -19,12 +19,12 @@ class RBLog:
         }
 
         self._log_numbers = {
-            "INFO": 1,
-            "WARNING": 2,
-            "ERROR": 3,
-            "USER": 4,
-            "DEBUG": 5,
-            "GENERAL": 6,
+            "INFO": 0,
+            "WARNING": 1,
+            "ERROR": 2,
+            "USER": 3,
+            "DEBUG": 4,
+            "GENERAL": 5,
         }
 
     def info(self, message: str, disable_db: bool = False):
