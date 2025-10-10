@@ -3,26 +3,22 @@ FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y git curl flatbuffers-compiler dos2unix bash make && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv /opt/venv
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="/opt/venv/bin:${PATH}"
-
-RUN pip install --upgrade pip && pip install uv==0.8.4
+RUN pip install --upgrade pip && pip install uv==0.8.18
 
 ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
+COPY backend/services ./services
+COPY backend/packages ./packages
 COPY backend/pyproject.toml ./pyproject.toml
 COPY backend/uv.lock ./uv.lock
 
-RUN --mount=type=cache,target=/root/.cache/pip \
-  --mount=type=cache,target=/root/.cache/pip/wheels \
-  uv sync --all-packages --frozen
+RUN uv sync --all-packages --frozen --group dev
 
-COPY backend/services ./services
-COPY backend/packages ./packages
 COPY scripts/ ../scripts/
 COPY schemas ../schemas
+COPY backend/Makefile ./
+COPY backend/backend.mk ./
 
 RUN make backend.flatc
 
