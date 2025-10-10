@@ -9,7 +9,7 @@ from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_database import mongo_db
 from rb_modules.log import rb_log
-from rb_resources.json import read_json_file
+from rb_resources.file import read_json_file
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
@@ -19,7 +19,7 @@ zenoh_client = ZenohClient()
 
 class ProgramService:
     def __init__(self) -> None:
-        self._robot_models = read_json_file("robot_models.json")
+        self._robot_models = read_json_file("data", "robot_models.json")
 
     async def get_all_speedbar(self, *, components: list[str]):
         try:

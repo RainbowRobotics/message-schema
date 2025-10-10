@@ -2,7 +2,7 @@ import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rb_database.mongo_db import MongoDB
-from rb_resources.json import read_json_file
+from rb_resources.file import read_json_file
 
 from .info_schema import RobotInfo
 
@@ -12,7 +12,7 @@ class InfoService:
         self._cache_robot_info = {}
 
     async def get_robot_info(self, *, db: MongoDB):
-        robot_models = read_json_file("robot_models.json")
+        robot_models = read_json_file("data", "robot_models.json")
 
         if "robot_info" not in await db.list_collection_names():
             await db.create_collection("robot_info")

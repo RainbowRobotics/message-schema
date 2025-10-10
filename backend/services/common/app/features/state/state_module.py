@@ -16,7 +16,7 @@ from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_modules.log import rb_log
-from rb_resources.json import read_json_file
+from rb_resources.file import read_json_file
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
@@ -34,7 +34,7 @@ class StateService:
     def __init__(self):
         self._all_connect_state_period = 1
         self._prev_all_connected_status = None
-        self._robot_models = read_json_file("robot_models.json")
+        self._robot_models = read_json_file("data", "robot_models.json")
 
     async def get_system_state(self, namespaces: list[str]):
         ip = await get_current_ip()
