@@ -15,7 +15,7 @@ COPY backend/uv.lock ./uv.lock
 
 RUN uv sync --all-packages --frozen --group dev
 
-COPY scripts/ ../scripts/
+COPY scripts ../scripts
 COPY schemas ../schemas
 COPY backend/Makefile ./
 COPY backend/backend.mk ./
