@@ -2,10 +2,12 @@ import asyncio
 import contextlib
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
+from importlib.resources import as_file, files
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 from rb_database.mongo_db import close_db, init_db
@@ -94,7 +96,7 @@ def create_app(
                 await zenoh_router.shutdown()
                 print("⛔ zenoh 연결 종료", flush=True)
 
-                socket_client.disconnect()
+                await socket_client.disconnect()
 
                 for t in bg_tasks:
                     t.cancel()
@@ -110,6 +112,7 @@ def create_app(
         lifespan=lifespan,
         root_path=settings.ROOT_PATH,
         title=f"{settings.SERVICE_NAME.capitalize()} Service",
+        docs_url=None,
     )
 
     app.add_middleware(
@@ -133,6 +136,29 @@ def create_app(
     if socket_routers:
         for r in socket_routers:
             socket_client.socket_include_router(r)
+
+    @app.get("/swagger-ui/swagger-ui.css")
+    def _css():
+        res = files("rb_resources").joinpath("swagger-ui", "swagger-ui.css")
+        with as_file(res) as p:
+            return FileResponse(str(p), media_type="text/css")
+
+    @app.get("/swagger-ui/swagger-ui.js")
+    def _js():
+        res = files("rb_resources").joinpath("swagger-ui", "swagger-ui.js")
+        with as_file(res) as p:
+            return FileResponse(str(p), media_type="application/javascript")
+
+    @app.get("/docs", include_in_schema=False)
+    def swagger_docs():
+        prefix = (app.root_path or "").rstrip("/")
+
+        return get_swagger_ui_html(
+            openapi_url=f"{prefix}/openapi.json",
+            title=f"{settings.SERVICE_NAME.capitalize()} Service",
+            swagger_css_url=f"{prefix}/swagger-ui/swagger-ui.css",
+            swagger_js_url=f"{prefix}/swagger-ui/swagger-ui.js",
+        )
 
     @app.exception_handler(Exception)
     async def global_exeption_handler(request: Request, exc: Exception):
