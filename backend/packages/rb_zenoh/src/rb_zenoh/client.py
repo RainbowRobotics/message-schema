@@ -546,6 +546,14 @@ class ZenohClient:
 
         return t_to_dict(res)
 
+    async def _cancel_and_drain(self, tasks):
+        for t in tasks:
+            t.cancel()
+        await asyncio.sleep(0)
+        with contextlib.suppress(Exception):
+            await asyncio.gather(*tasks, return_exceptions=True)
+        self._workers.clear()
+
     def close(self):
         if os.getpid() != getattr(self, "_owner_pid", os.getpid()):
             return
@@ -557,11 +565,12 @@ class ZenohClient:
             self._closing = True
 
             try:
-                for t in list(self._workers):
-                    if not t.done():
-                        t.cancel()
+                loop = self._loop
+                tasks = list(self._workers)
 
-                self._workers.clear()
+                if loop and not loop.is_closed():
+                    fut = asyncio.run_coroutine_threadsafe(self._cancel_and_drain(tasks), loop)
+                    fut.result(timeout=3)
 
                 for _topic, sub in list(self._subs.items()):
                     with contextlib.suppress(Exception):
@@ -587,6 +596,9 @@ class ZenohClient:
 
     def _make_on_sample(self, topic: str, flatbuffer_obj_t: Table | None = None):
         def _on_sample(sample):
+            if getattr(self, "_closing", False):
+                return
+
             att = sample.attachment
             origin_topic = str(sample.key_expr)
 
@@ -740,6 +752,9 @@ class ZenohClient:
     def _push_to_entry(
         self, *, e: "CallbackEntry", topic: str, mv: memoryview, obj: dict | None, attachment: dict
     ):
+        if getattr(self, "_closing", False):
+            return
+
         m = e.metrics
         raw_len = len(mv)
 
@@ -763,6 +778,9 @@ class ZenohClient:
         q: asyncio.Queue = e.q
 
         def _push():
+            if getattr(self, "_closing", False):
+                return
+
             payload = {"topic": topic, "mv": mv, "obj": obj, "attachment": attachment}
 
             if q.qsize() < cap:
