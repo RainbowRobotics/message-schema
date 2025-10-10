@@ -1,7 +1,6 @@
 import asyncio
 import time
 
-import flatbuffers
 import psutil
 import rb_database.mongo_db as mongo_db
 from app.features.info.info_module import InfoService
@@ -40,7 +39,7 @@ class StateService:
     async def get_system_state(self, namespaces: list[str]):
         ip = await get_current_ip()
 
-        all_connected = "DISCONNECT"
+        all_connected = "STABLE"
         core_sw_list = []
 
         for namespace in namespaces:
@@ -61,7 +60,6 @@ class StateService:
             )
 
         for core_sw in core_sw_list:
-
             try:
                 if core_sw["be_service"] == "manipulate":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -69,23 +67,24 @@ class StateService:
                     )
 
                     if obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
-                        all_connected = "CONNECTED"
-                        core_sw["connected"] = "CONNECTED"
+                        if obj["statusOutColl"] == 1:
+                            core_sw["connected"] = "OUT_COLLISION"
+                        elif obj["statusSelfColl"] == 1:
+                            core_sw["connected"] = "SELF_COLLISION"
+                        elif obj["statusSwitchEmg"] == 1:
+                            core_sw["connected"] = "EMERGENCY_STOP"
+                        else:
+                            core_sw["connected"] = "STABLE"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 1:
-                        all_connected = "UNSTABLE"
-                        core_sw["connected"] = "POWER CHECKED"
+                        core_sw["connected"] = "POWER_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 2:
-                        all_connected = "UNSTABLE"
-                        core_sw["connected"] = "COMM CHECKED"
+                        core_sw["connected"] = "COMM_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 3:
-                        all_connected = "UNSTABLE"
-                        core_sw["connected"] = "PARAM CHECKED"
+                        core_sw["connected"] = "PARAM_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 4:
-                        all_connected = "UNSTABLE"
-                        core_sw["connected"] = "JOINT CHECKED"
+                        core_sw["connected"] = "JOINT_CHECKED"
                     elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 5:
-                        all_connected = "UNSTABLE"
-                        core_sw["connected"] = "SYSTEM CHECKED"
+                        core_sw["connected"] = "SYSTEM_CHECKED"
 
                 elif core_sw["be_service"] == "mobility":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -101,8 +100,15 @@ class StateService:
                 ZenohReplyError,
                 ZenohTransportError,
             ):
-                all_connected = "DISCONNECT"
                 core_sw["connected"] = "DISCONNECT"
+
+        statuses = [sw["connected"] for sw in core_sw_list]
+        if all(s == "STABLE" for s in statuses):
+            all_connected = "STABLE"
+        elif all(s == "DISCONNECT" for s in statuses):
+            all_connected = "DISCONNECT"
+        else:
+            all_connected = "UNSTABLE"
 
         return {
             "ip": ip,
@@ -181,11 +187,11 @@ class StateService:
                 flatbuffer_buf_size=32,
             )
 
-            if sync_servo:
+            if sync_servo and power_option == 1:
                 res = await self.servo_control(servo_option=power_option)
 
-                if power_option == 0 and stoptime is not None:
-                    await program_service.call_smoothjog_stop(stoptime=stoptime)
+            if power_option == 0 and stoptime is not None:
+                await program_service.call_smoothjog_stop(stoptime=stoptime)
 
             return t_to_dict(res)
 
@@ -197,20 +203,20 @@ class StateService:
     async def servo_control(self, *, servo_option: int):
         try:
             req = Request_ServoControlT()
-            req.servo_option = servo_option
+            req.servoOption = servo_option
 
-            b = flatbuffers.Builder(32)
-            b.Finish(req.Pack(b))
-            fb_payload = bytes(b.Output())
+            res = zenoh_client.query_one(
+                "*/call_servocontrol",
+                flatbuffer_req_obj=req,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=32,
+            )
 
-            res = zenoh_client.query_one("*/call_servocontrol", payload=fb_payload)
+            rb_log.debug(f"all server control >> {res["dict_payload"]}")
 
-            buf = res["payload"]
-            res = Response_FunctionsT.InitFromPackedBuf(buf, 0)
-
-            return t_to_dict(res)
+            return res["dict_payload"]
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError):
             raise
         except Exception as e:
-            raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e
+            raise HTTPException(status_code=502, detail=str(f"error: servo {e}")) from e
