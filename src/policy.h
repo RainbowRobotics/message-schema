@@ -68,11 +68,6 @@ private:
     std::unique_ptr<std::thread> node_thread;
     void node_loop();
 
-    // node loop
-    std::atomic<bool> link_flag = {false};
-    std::unique_ptr<std::thread> link_thread;
-    void link_loop();
-
     // zone loop
     std::atomic<bool> zone_flag = {false};
     std::unique_ptr<std::thread> zone_thread;
