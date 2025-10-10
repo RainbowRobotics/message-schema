@@ -54,3 +54,29 @@ class Request_MoveJPD(BaseModel):
 class Request_MoveLPD(BaseModel):
     target: MoveInputTarget
     speed: MoveInputSpeed
+
+
+class Request_MoveTickJogJPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+
+
+class Request_MoveTickJogLPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+
+
+class Request_MoveJBAddPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+    type: MoveInputType
+
+
+class Request_MoveLBAddPD(BaseModel):
+    target: MoveInputTarget
+    speed: MoveInputSpeed
+    type: MoveInputType
+
+
+class Request_MoveLBRunPD(BaseModel):
+    orientation: int

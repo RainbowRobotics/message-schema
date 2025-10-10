@@ -112,3 +112,15 @@ class Request_Save_SideDin_FunctionPD(BaseModel):
 class Request_Save_SideDout_FunctionPD(BaseModel):
     port_num: int
     desired_function: int
+
+
+class Request_Save_Collision_ParameterPD(BaseModel):
+    onoff: int
+    react: int
+    threshold: float
+
+
+class Request_Save_SelfColl_ParameterPD(BaseModel):
+    mode: int
+    dist_internal: float
+    dist_external: float

@@ -1,11 +1,10 @@
 import asyncio
 import time
 
-import flatbuffers
 from app.socket.socket_client import socket_client
 from fastapi import HTTPException
-from flat_buffers.IPC.Request_MotionSmoothJogStop import Request_MotionSmoothJogStopT
 from flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
+from flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_database import mongo_db
@@ -14,7 +13,6 @@ from rb_resources.json import read_json_file
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 from utils.asyncio_helper import fire_and_log
-from utils.parser import t_to_dict
 
 zenoh_client = ZenohClient()
 
@@ -127,20 +125,25 @@ class ProgramService:
             rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
             raise
         except Exception as e:
-            rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
+            rb_log.error(f"control_speed_bar error: {e}", disable_db=True)
             raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e
 
     async def call_smoothjog_stop(self, *, stoptime: float):
-        req = Request_MotionSmoothJogStopT()
-        req.stoptime = stoptime
+        try:
+            req = Request_Move_SmoothJogStopT()
+            req.stoptime = stoptime
 
-        b = flatbuffers.Builder(32)
-        b.Finish(req.Pack(b))
-        fb_payload = bytes(b.Output())
+            res = zenoh_client.query_one(
+                "*/call_smoothjog_stop",
+                flatbuffer_req_obj=req,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=32,
+            )
 
-        res = zenoh_client.query_one("*/call_smoothjog_stop", payload=fb_payload)
-
-        buf = res["payload"]
-        res = Response_FunctionsT.InitFromPackedBuf(buf, 0)
-
-        return t_to_dict(res)
+            return res["dict_payload"]
+        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
+            rb_log.error(f"call_smoothjog_stop zenoh error: {e}", disable_db=True)
+            raise
+        except Exception as e:
+            rb_log.error(f"call_smoothjog_stop error: {e}", disable_db=True)
+            raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e

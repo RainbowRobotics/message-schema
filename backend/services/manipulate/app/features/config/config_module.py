@@ -3,9 +3,11 @@ from flat_buffers.IPC.Request_CallConfigControlBox import Request_CallConfigCont
 from flat_buffers.IPC.Request_CallConfigRobotArm import Request_CallConfigRobotArmT
 from flat_buffers.IPC.Request_CallConfigToolList import Request_CallConfigToolListT
 from flat_buffers.IPC.Request_Save_Area_Para import Request_Save_Area_ParaT
+from flat_buffers.IPC.Request_Save_Collision_Parameter import Request_Save_Collision_ParameterT
 from flat_buffers.IPC.Request_Save_Direct_Teach_Sensitivity import (
     Request_Save_Direct_Teach_SensitivityT,
 )
+from flat_buffers.IPC.Request_Save_SelfColl_Parameter import Request_Save_SelfColl_ParameterT
 from flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCountT
 from flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
 from flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFuncT
@@ -18,7 +20,9 @@ from rb_zenoh.client import ZenohClient
 
 from .config_schema import (
     Request_Save_Area_ParameterPD,
+    Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
+    Request_Save_SelfColl_ParameterPD,
     Request_Save_SideDin_FilterPD,
     Request_Save_SideDin_FunctionPD,
     Request_Save_SideDout_FunctionPD,
@@ -185,6 +189,40 @@ class ConfigService:
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
+        )
+
+        return res
+
+    def save_collision_parameter(
+        self, robot_model: str, *, request: Request_Save_Collision_ParameterPD
+    ):
+        req = Request_Save_Collision_ParameterT()
+        req.onoff = request.onoff
+        req.react = request.react
+        req.threshold = request.threshold
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_collision_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
+        )
+
+        return res
+
+    def save_selfcoll_parameter(
+        self, robot_model: str, *, request: Request_Save_SelfColl_ParameterPD
+    ):
+        req = Request_Save_SelfColl_ParameterT()
+        req.mode = request.mode
+        req.dist_internal = request.dist_internal
+        req.dist_external = request.dist_external
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_selfcoll_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
         )
 
         return res

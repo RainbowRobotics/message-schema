@@ -5,7 +5,9 @@ from rb_schemas.base import Response_ReturnValuePD
 from .config_module import ConfigService
 from .config_schema import (
     Request_Save_Area_ParameterPD,
+    Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
+    Request_Save_SelfColl_ParameterPD,
     Request_Save_SideDin_FilterPD,
     Request_Save_SideDin_FunctionPD,
     Request_Save_SideDout_FunctionPD,
@@ -83,4 +85,20 @@ async def save_side_din_function(robot_model: str, *, request: Request_Save_Side
 @config_router.post("/{robot_model}/save_side_dout_function", response_model=Response_ReturnValuePD)
 async def save_side_dout_function(robot_model: str, *, request: Request_Save_SideDout_FunctionPD):
     res = config_service.save_side_dout_function(robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post(
+    "/{robot_model}/save_collision_parameter", response_model=Response_ReturnValuePD
+)
+async def save_collision_parameter(
+    robot_model: str, *, request: Request_Save_Collision_ParameterPD
+):
+    res = config_service.save_collision_parameter(robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/save_selfcoll_parameter", response_model=Response_ReturnValuePD)
+async def save_selfcoll_parameter(robot_model: str, *, request: Request_Save_SelfColl_ParameterPD):
+    res = config_service.save_selfcoll_parameter(robot_model, request=request)
     return JSONResponse(res)

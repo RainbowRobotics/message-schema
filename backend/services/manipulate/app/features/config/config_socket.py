@@ -59,3 +59,15 @@ def on_save_side_din_function(data, robot_model: str):
 def on_save_side_dout_function(data, robot_model: str):
     res = config_service.save_side_dout_function(robot_model, request=data)
     return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/save_collision_parameter")
+def on_save_collision_parameter(data, robot_model: str):
+    res = config_service.save_collision_parameter(robot_model, request=data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/save_selfcoll_parameter")
+def on_save_selfcoll_parameter(data, robot_model: str):
+    res = config_service.save_selfcoll_parameter(robot_model, request=data)
+    return to_json(res)
