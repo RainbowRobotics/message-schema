@@ -92,8 +92,10 @@ class ProgramService:
     async def control_speed_bar(self, *, components: list[str], speedbar: int):
         try:
             failed_component = []
+            rb_log.debug(f"components>{components}")
             for component in components:
                 model_info = self._robot_models.get(component)
+                rb_log.debug(f"model_info => ${model_info}")
                 be_service = model_info.get("be_service")
                 if be_service == "manipulate":
                     req = Request_MotionSpeedBarT()

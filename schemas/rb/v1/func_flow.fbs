@@ -13,18 +13,4 @@ table Request_MotionPause {
 table Request_MotionResume {
 }
 
-table Request_MotionSmoothJogJ{
-    targetspeed: N_JOINT_f;
-    frame:  int;
-    unit:   int;
-}
 
-table Request_MotionSmoothJogL{
-    targetspeed: N_CARTE_f;
-    frame:  int;
-    unit:   int;
-}
-
-table Request_MotionSmoothJogStop{
-    stoptime: float;
-}

@@ -3,29 +3,81 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+//---------------------------------------------------------------
 table MoveInput_Target {
-    tar_values: N_INPUT_f;
-    tar_frame: int;  // 조인트 -1, 글로벌 0, 로컬 1
-    tar_unit: int;
+    tar_values:     N_INPUT_f;
+    tar_frame:      int;  // 조인트 -1, 글로벌 0, 로컬 1
+    tar_unit:       int;
 }
-
-table MoveInput_Type {
-    pnt_type: int;
-    pnt_para: float;
+table MoveInput_Type{
+    pnt_type:       int;
+    pnt_para:       float;
 }
-
 table MoveInput_Speed {
-    spd_mode: int;
-    spd_vel_para: float; // MoveJ: 60, MoveL: 250
-    spd_acc_para: float; // MoveJ: 120, MoveL: 1000
+    spd_mode:       int;
+    spd_vel_para:   float; // MoveJ: 60, MoveL: 250
+    spd_acc_para:   float; // MoveJ: 120, MoveL: 1000
 }
-
+//---------------------------------------------------------------
+// Jog - Smooth
+//---------------------------------------------------------------
+table Request_Move_SmoothJogJ{
+    target:         MoveInput_Target;
+}
+table Request_Move_SmoothJogL{
+    target:         MoveInput_Target;
+}
+table Request_Move_SmoothJogStop{
+    stoptime:       float;
+}
+//---------------------------------------------------------------
+// Jog - Tick
+//---------------------------------------------------------------
+table Request_Move_TickJogJ {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+table Request_Move_TickJogL {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+//---------------------------------------------------------------
+// Move J
+//---------------------------------------------------------------
 table Request_Move_J {
-    target: MoveInput_Target;
-    speed: MoveInput_Speed;
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
 }
-
+//---------------------------------------------------------------
+// Move L
+//---------------------------------------------------------------
 table Request_Move_L {
-    target: MoveInput_Target;
-    speed: MoveInput_Speed;
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
 }
+//---------------------------------------------------------------
+// Move JB
+//---------------------------------------------------------------
+table Request_Move_JB_CLR {
+}
+table Request_Move_JB_ADD {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    type:           MoveInput_Type;
+}
+table Request_Move_JB_RUN {
+}
+//---------------------------------------------------------------
+// Move LB
+//---------------------------------------------------------------
+table Request_Move_LB_CLR {
+}
+table Request_Move_LB_ADD {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    type:           MoveInput_Type;
+}
+table Request_Move_LB_RUN {
+    orientation:    int;
+}
+//---------------------------------------------------------------

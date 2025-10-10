@@ -3,17 +3,22 @@
 -e ./packages/rb_database
     # via rb-modules
 -e ./packages/rb_modules
-    # via common
+    # via
+    #   common
+    #   rb-zenoh
 -e ./packages/rb_resources
     # via common
 -e ./packages/rb_schemas
     # via common
+-e ./packages/rb_zenoh
+    # via rb-modules
 -e ./packages/utils
     # via
     #   common
     #   rb-database
     #   rb-modules
     #   rb-schemas
+    #   rb-zenoh
 altgraph==0.17.4 \
     --hash=sha256:1b5afbb98f6c4dcadb2e2ae6ab9fa994bbb8c1d75f4fa96d340f9437ae454406 \
     --hash=sha256:642743b4750de17e655e6711601b077bc6598dbfa3ba5fa2b2a35ce12b508dff
@@ -56,12 +61,14 @@ fastapi==0.116.1 \
     #   rb-database
     #   rb-modules
     #   rb-schemas
+    #   rb-zenoh
 flatbuffers==25.2.10 \
     --hash=sha256:97e451377a41262f8d9bd4295cc836133415cc03d8cb966410a4af92eb00d26e \
     --hash=sha256:ebba5f4d5ea615af3f7fd70fc310636fbb2bbd1f566ac0a23d98dd412de50051
     # via
     #   rb-modules
     #   rb-schemas
+    #   rb-zenoh
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
     --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
@@ -111,6 +118,7 @@ psutil==7.0.0 \
     --hash=sha256:ba3fcef7523064a6c9da440fc4d6bd07da93ac726b5733c29027d7dc95b39d99
     # via
     #   rb-modules
+    #   rb-zenoh
     #   utils
 pydantic==2.11.7 \
     --hash=sha256:d989c3c6cb79469287b1569f7447a17848c998458d49ebe294e975b9baf0f0db \

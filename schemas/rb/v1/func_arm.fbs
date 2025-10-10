@@ -3,6 +3,18 @@ include "common_struct.fbs";
 
 namespace IPC;
 
+table Request_Save_Collision_Parameter {
+  onoff: int;
+  react: int;
+  threshold: float;
+}
+
+table Request_Save_SelfColl_Parameter {
+  mode: int;
+  dist_internal: float;
+  dist_external: float;
+}
+
 table Request_Save_Direct_Teach_Sensitivity {
   sensitivity: N_JOINT_f;
 }

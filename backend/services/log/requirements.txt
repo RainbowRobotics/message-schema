@@ -5,7 +5,9 @@
 -e ./packages/rb_database
     # via rb-modules
 -e ./packages/rb_modules
-    # via log
+    # via
+    #   log
+    #   rb-zenoh
 -e ./packages/rb_resources
     # via log
 -e ./packages/rb_schemas
@@ -13,7 +15,9 @@
 -e ./packages/rb_socketio
     # via log
 -e ./packages/rb_zenoh
-    # via log
+    # via
+    #   log
+    #   rb-modules
 -e ./packages/utils
     # via
     #   log

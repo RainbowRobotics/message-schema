@@ -146,7 +146,7 @@ class LogService:
 
     async def insert_db_and_emit_24h_count(self, db: MongoDB, d: dict, now_dt: datetime):
         try:
-            level = self._level_to_name[d["level"]] or "unknown"
+            level = self._level_to_name.get(d["level"]) or "unknown"
             int_level = int(d["level"])
             d["level"] = level
 
@@ -158,6 +158,8 @@ class LogService:
                 and last_log.get("contents") == d.get("contents")
             ):
                 return
+
+            rb_log.debug(f"debug >> {d}")
 
             await db["state_logs"].insert_one(d)
 
@@ -173,7 +175,7 @@ class LogService:
                 await socket_client.emit("warning_log_count_for_24h", {"count": cnt})
 
         except Exception as e:
-            print(f"[state_log persist/count error] {e}", flush=True)
+            rb_log.error(f"[state_log persist/count error] {e}")
 
     async def export_state_logs_csv(
         self,

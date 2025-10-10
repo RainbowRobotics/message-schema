@@ -2,7 +2,7 @@
 namespace IPC;
 
 table State_Message {
-    type: int; // 1: Info, 2: Warning, 3: Error, 4: User, 5: Debug, 6: General
+    type: int; // 0: Info, 1: Warning, 2: Error, 3: User, 4: Debug, 5: General
     code: int;
     sub_str: string; // General일때 시스템에서 실어온 메세지
 }

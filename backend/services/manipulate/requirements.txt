@@ -5,7 +5,9 @@
 -e ./packages/rb_database
     # via rb-modules
 -e ./packages/rb_modules
-    # via manipulate
+    # via
+    #   manipulate
+    #   rb-zenoh
 -e ./packages/rb_resources
     # via manipulate
 -e ./packages/rb_schemas
@@ -13,7 +15,9 @@
 -e ./packages/rb_socketio
     # via manipulate
 -e ./packages/rb_zenoh
-    # via manipulate
+    # via
+    #   manipulate
+    #   rb-modules
 -e ./packages/utils
     # via
     #   manipulate
