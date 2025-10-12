@@ -38,12 +38,12 @@ jobs:
           fi
 
           echo "SERVICE_NAMES=$SERVICE_NAMES" >> $GITHUB_ENV
-          echo "SERVICE_ARRAY=(${SERVICE_ARRAY[@]})" >> $GITHUB_ENV
 
-          echo "🔹 Service list:"
-          for s in "${SERVICE_ARRAY[@]}"; do
-            echo " - $s"
-          done
+          {
+            echo 'SERVICE_LIST<<EOF'
+            printf '%s\n' "${SERVICE_ARRAY[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
 
       - name: Get Branch Name
         run: |
@@ -60,6 +60,8 @@ jobs:
 
       - name: Check service directory and build binary file
         run: |
+          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
+
           for SERVICE in "${SERVICE_ARRAY[@]}"; do
             APP_DIR="backend/services/${SERVICE}"
 
@@ -91,6 +93,8 @@ jobs:
           rm -rf dist
           mkdir -p dist
           mkdir -p dist/scripts
+
+          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           for SERVICE in "${SERVICE_ARRAY[@]}"; do
             mkdir -p dist/${SERVICE}
@@ -210,6 +214,8 @@ jobs:
           rm -f ../version.json
 
           ls -al
+
+          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           JOINS_SERVICES=$(IFS=','; echo "${SERVICE_ARRAY[*]}")
 
