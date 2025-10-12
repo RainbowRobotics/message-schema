@@ -240,7 +240,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
+          STATUS='${{ job.status }}'
+
           cd $GITHUB_WORKSPACE
 
-          # 태그 삭제
           git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.APP_NAME }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+
+          rm -rf ./api-gateway.zip
+          rm -rf ./${{ env.VERSION }}.zip
