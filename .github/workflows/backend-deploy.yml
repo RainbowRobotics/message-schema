@@ -40,6 +40,7 @@ jobs:
           SERVICE_ARRAY=$(echo "$SERVICE_ARRAY" | tr -s ' ')
 
           echo "SERVICE_LIST=$SERVICE_ARRAY" >> "$GITHUB_ENV"
+          echo "SERVICE_NAMES=$SERVICE_NAMES" >> "$GITHUB_ENV"
 
       - name: Get Branch Name
         run: |
