@@ -90,18 +90,21 @@ jobs:
           rm -rf dist
           mkdir -p dist
           mkdir -p dist/scripts
+          mkdir -p dist/services
           mkdir -p dist/api-gateway
 
           IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           for SERVICE in "${SERVICE_ARRAY[@]}"; do
-            mkdir -p dist/${SERVICE}
+            mkdir -p dist/services/${SERVICE}
             APP_DIR="backend/services/${SERVICE}"
 
-            cp -R $APP_DIR/${SERVICE}.arm64.bin dist/${SERVICE}
-            cp -R $APP_DIR/${SERVICE}.amd64.bin dist/${SERVICE}
-            cp -R $APP_DIR/config.env dist/${SERVICE}
+            cp -R $APP_DIR/${SERVICE}.arm64.bin dist/services/${SERVICE}
+            cp -R $APP_DIR/${SERVICE}.amd64.bin dist/services/${SERVICE}
+            cp -R $APP_DIR/config.env dist/services/${SERVICE}
           done
+
+          cp -R backend/docker-compose.yml dist
 
           cp -R api-gateway/nginx.conf dist/api-gateway
           cp -R api-gateway/watchdog.sh dist/api-gateway
