@@ -175,9 +175,6 @@ jobs:
 
           chmod +x install/s3-install.sh
 
-          cp scripts/exec-files/install.desktop install/install.desktop
-          cp -r scripts/exec-files/assets install/assets
-
           (cd install && zip -r ../install.zip .)
 
           rm -rf install
