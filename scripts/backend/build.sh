@@ -53,7 +53,8 @@ if [[ -z "${SERVICE:-}" ]]; then
   SERVICES_LIST=$(find "$SERVICES_DIR" -name pyproject.toml -exec dirname {} \; | xargs -n1 basename | sort)
 else
   echo "📦 선택 빌드: ${SERVICE}"
-  SERVICES_LIST=$(printf '%s\n' ${SERVICE})
+  IFS=',' read -r -a SERVICES_ARR <<< "$SERVICE"
+  SERVICES_LIST=$(printf '%s\n' "${SERVICES_ARR[@]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed '/^$/d')
 fi
 
 ARCHS="${ARCHS:-amd64 arm64}"

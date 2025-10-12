@@ -57,6 +57,7 @@ function get_service_name() {
                 app_names+=("${app_name}")
             else
                 print_string "warning" "'backend/services/${app_name}' 디렉토리가 존재하지 않습니다." > /dev/tty
+                get_service_name
             fi
         done
     fi
@@ -81,6 +82,19 @@ function ask_hotfix() {
     fi
 
     echo "${hotfix_response}"
+}
+
+# .bin 추적 해제 및 ignore 복구 커밋
+function git_cleanup_bin_track() {
+    local bin_files=($(find backend/services -type f -name "*.bin"))
+
+    if [ ${#bin_files[@]} -gt 0 ]; then
+        print_string "info" "🧹 .bin 추적 해제 및 ignore 복구 커밋..."
+        for bf in "${bin_files[@]}"; do
+            git rm --cached -q "$bf" || true
+        done
+        git commit -m "chore: untrack binaries after deploy" || true
+    fi
 }
 
 # Git tag 작업 수행
@@ -108,36 +122,21 @@ function git_tag_work() {
 
     git tag -d "${tag_version}" || { print_string "error" "Git tag 삭제 실패"; return 1; }
 
-    git reset --mixed HEAD~1 || { print_string "error" "Git reset 실패"; return 1; }
+    print_string "success" "✅ 태그 생성"
 
-    if [ ${#bin_files[@]} -gt 0 ]; then
-        print_string "info" "🧹 .bin 파일 ignore 상태 복구 중..."
-        for bf in "${bin_files[@]}"; do
-            git update-index --assume-unchanged "$bf" || true
-        done
-    fi
-
-    print_string "success" "✅ 태그 생성 및 cleanup 완료"
     return 0
 }
 
 
 # 빌드 프로세스
 function build_project() {
-    local -n app_names=$1
+    local app_names=$1
 
-    echo "app_names: ${app_names[@]}"
+    echo "app_names: ${app_names}"
 
     print_string "info" "프로젝트 빌드 중..."
     
-    local build_filters=""
-    
-    for app in "${app_names[@]}"; do
-        app=$(echo "${app}" | tr [:upper:] [:lower:])
-        build_filters+="${app} "
-    done
-    
-    make backend.build SERVICE=${build_filters} || { 
+    make backend.build SERVICE="${app_names}" || { 
         print_string "error" "빌드 실패"
         return 1
     }
@@ -302,7 +301,7 @@ IFS=',' read -ra app_names <<< "${names_str}"
 underscore_names_str="${names_str//,/__}"
 
 # 빌드 실행
-# build_project "${app_names}" || exit 1
+build_project "${names_str}" || exit 1
 
 # 태그 버전 생성
 if [ "${is_hotfix}" = "yes" ]; then
@@ -325,6 +324,9 @@ if [[ "$last_git_work_status" = "normal" ]]; then
     git_tag_work "${new_version}" "${tag_version}" "${deploy_message}" || last_git_work_status="bad"
 fi
 
+# .bin 추적 해제 및 ignore 복구 커밋
+git_cleanup_bin_track
+
 
 if [[ "${last_git_work_status}" = "bad" ]]; then
     git tag -d $tag_version
@@ -338,62 +340,3 @@ if [ "$last_git_work_status" = "normal" ]; then
 else
     exit 1
 fi
-
-
-# # 각 앱에 대해 반복 처리
-# for i in "${!app_names[@]}"; do
-#     app_name="${app_names[$i]}"
-#     app_dir="${app_dirs[$i]}"
-
-#     if [[ "$last_git_work_status" = "bad" ]]; then
-#         break
-#     fi
-    
-#     # 현재 버전 생성
-#     new_version="${app_name}-${timestamp}"
-
-#     if [[ "$current_branch" = "main" ]]; then
-#         new_version=$(get_app_version $version_type $app_name)
-#     fi
-
-#     # 태그 버전 생성
-#     if [ "$is_hotfix" = "yes" ]; then
-#         tag_version="deploy_hotfix/${app_name}/${current_branch}/${new_version}"
-#     else
-#         tag_version="deploy/${app_name}/${current_branch}/${new_version}"
-#     fi
-
-#     # 배포 메시지 생성
-#     deploy_message="deploy: [App: ${app_name}, Version: ${new_version}] release 배포"
-
-#     if [[ "$current_branch" = "main" ]] && [[ "$last_git_work_status" = "normal" ]]; then
-#         release_tag_version="release/${app_name}/${new_version}"
-#         git_tag_work "$new_version" "$release_tag_version" "$app_dir" "$app_name" "$release_message" || last_git_work_status="bad"
-#         create_github_release "$release_tag_version" "$release_message" || last_git_work_status="bad"
-#     fi
-
-#     if [[ "$last_git_work_status" = "normal" ]]; then
-#         # Git 작업 실행
-#         git_tag_work "$new_version" "$tag_version" "$app_dir" "$app_name" "$deploy_message" || last_git_work_status="bad"
-#     fi
-
-
-#     if [[ "$last_git_work_status" = "bad" ]]; then
-#         git tag -d $tag_version
-#         git push origin --delete $tag_version
-#     else
-#         if [[  "$current_branch" = "main" ]]; then
-#             new_versions+=("$app_name: v$new_version")
-#         else
-#             new_versions+=("v $new_version")
-#         fi
-#     fi
-# done
-
-# # 완료 메시지 출력
-# if [ "$last_git_work_status" = "normal" ]; then
-#     print_completion_message "$new_versions"
-#     exit 0
-# else
-#     exit 1
-# fi
