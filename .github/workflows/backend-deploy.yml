@@ -56,7 +56,7 @@ jobs:
 
       - name: Check service directory and build binary file
         run: |
-          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
+          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           for SERVICE in "${SERVICE_ARRAY[@]}"; do
             APP_DIR="backend/services/${SERVICE}"
@@ -90,7 +90,7 @@ jobs:
           mkdir -p dist
           mkdir -p dist/scripts
 
-          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
+          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           for SERVICE in "${SERVICE_ARRAY[@]}"; do
             mkdir -p dist/${SERVICE}
