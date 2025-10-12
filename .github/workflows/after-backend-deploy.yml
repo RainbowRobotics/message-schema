@@ -1,7 +1,7 @@
 name: after-backend-deploy
 on:
   workflow_run:
-    workflows: ["backend-deploy"] # 위에 올려준 그 워크플로우 이름
+    workflows: ["backend-deploy"]
     types: [completed]
 
 permissions:
@@ -11,10 +11,6 @@ permissions:
 jobs:
   start:
     runs-on: self-hosted
-
-    concurrency:
-      group: after-backend-deploy-group
-      cancel-in-progress: true
 
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
