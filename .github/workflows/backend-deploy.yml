@@ -235,7 +235,7 @@ jobs:
           git config --global user.email "dfd1123@naver.com"
           git config --global user.name "dfd1123"
           git add .
-          git commit -m "Release App:robot-repeater-server, Service: [${JOINS_SERVICES}], Version: ${VERSION}, Hotfix: ${HOTFIX}, [Download build file](https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${BRANCH}/${VERSION}.zip)"
+          git commit -m "Release App:robot-repeater-server, Service: [${JOINS_SERVICES}], Version: ${VERSION}, Hotfix: ${HOTFIX}, Download: https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${BRANCH}/${VERSION}.zip"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
           git push origin ${BRANCH}
 
