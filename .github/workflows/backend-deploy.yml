@@ -223,6 +223,7 @@ jobs:
 
           mkdir -p "${APP_DIR}"
           mv ../install.zip "$APP_DIR/${VERSION}.zip"
+          mv ../version.json "$APP_DIR/version.json"
 
           ls -al
 
