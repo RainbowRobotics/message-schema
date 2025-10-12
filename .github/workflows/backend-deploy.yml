@@ -96,6 +96,15 @@ jobs:
 
           ls -al
 
+      - name: Make version.json
+        run: |
+          HOTFIX_LINE=""
+          if [ "${{ env.HOTFIX }}" == "true" ]; then
+            HOTFIX_LINE=", \"hotfix\": true"
+          fi
+
+          echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > version.json
+
       - name: Upload dist file to s3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -130,44 +139,29 @@ jobs:
           fi
 
           aws s3 cp "$FILE_NAME" "s3://$S3_BUCKET/$S3_SERVICE_PATH/$FILE_NAME"
+          aws s3 cp "version.json" "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json"
           aws s3 cp "$API_GATEWAY_FILE_NAME" "s3://$S3_BUCKET/$S3_PREFIX/api-gateway.zip"
 
-          HOTFIX_LINE=""
-          if [ "${{ env.HOTFIX }}" == "true" ]; then
-            HOTFIX_LINE=", \"hotfix\": true"
-          fi
+      - name: Create install.zip file
+        run: |
+          mkdir -p install
 
-           # S3에서 version.json 파일 확인 및 생성/갱신
-          if aws s3 ls "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" > /dev/null 2>&1; then
-            aws s3 cp "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" version.json.tmp
-            
-            if [ -f version.json.tmp ]; then
-              if [ "${HOTFIX:-false}" = "true" ]; then
-                sed -E "s/\"new_version\": *\"[^\"]*\"/\"new_version\": \"${VERSION}\", \"hotfix\": true/" version.json.tmp \
-                  > version.json.new
-              else
-                sed -E "s/\"new_version\": *\"[^\"]*\"/\"new_version\": \"${VERSION}\"/" version.json.tmp \
-                  | sed -E "s/, *\"hotfix\": *true//" \
-                  > version.json.new
-              fi
-            else
-              # 없으면 새로 생성
-              if [ "${HOTFIX:-false}" = "true" ]; then
-                echo "{\"new_version\": \"${VERSION}\", \"hotfix\": true}" > version.json.new
-              else
-                echo "{\"new_version\": \"${VERSION}\"}" > version.json.new
-              fi
-            fi
+          BRANCH_NAME=${{ env.BRANCH_NAME }}
+          VERSION=${{ env.VERSION }}
+          SERVICE_NAME=${{ env.APP_NAME }}
 
+          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/backend/s3-service-install.sh \
+          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
+          > install/s3-service-install.sh
+          | sed "s/^SERVICE_NAME=.*/SERVICE_NAME=\"$SERVICE_NAME\"/" \
+          > install/s3-service-install.sh
 
-            aws s3 cp version.json.new "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" --content-type application/json
-            rm -f version.json.tmp version.json.new
-          else
-            # 파일이 없으면 새로 생성
-            echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > version.json.new
-            aws s3 cp version.json.new "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json"
-            rm -f version.json.new
-          fi
+          chmod +x install/s3-install.sh
+
+          (cd install && zip -r ../install.zip .)
+
+          rm -rf install
+
       - name: Clone release apps repository
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
@@ -195,17 +189,13 @@ jobs:
           cd rainbow-release-apps
           APP_DIR="robot-repeater-server/${{ env.APP_NAME }}"
 
+          VERSION=${{ env.VERSION }}
+          HOTFIX=${{ env.HOTFIX }}
+          BRANCH=${{ env.BRANCH_NAME }}
+          SERVICE_NAME=${{ env.APP_NAME }}
+
           # 디렉토리가 존재하는지 확인하고 생성
           mkdir -p "$APP_DIR"
-
-          # hotfix 여부 확인
-          HOTFIX_LINE=""
-          if [ "${{ env.HOTFIX }}" == "true" ]; then
-            HOTFIX_LINE=", \"hotfix\": true"
-          fi
-
-           # version.json 파일 생성/갱신
-          echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > "$APP_DIR/version.json"
 
           # 현재 버전 디렉토리 수 확인 및 정리
           DIR_COUNT=$(ls -1 "$APP_DIR" | wc -l)
@@ -214,16 +204,17 @@ jobs:
             rm -rf "$APP_DIR/$OLDEST_DIR"
           fi
 
+          # version.json 이동
+          rm -rf "$APP_DIR/version.json"
+          mv ../version.json "$APP_DIR/version.json"
+
           # 서비스 압축파일 이동
-          mkdir -p "$APP_DIR/${{ env.VERSION }}"
-          mv ../${{ env.VERSION }}.zip "$APP_DIR/"
+          mv ../install.zip "$APP_DIR/${VERSION}.zip"
 
           # api-gateway 압축파일 이동
           rm -f "robot-repeater-server/api-gateway.zip"
           mv ../api-gateway.zip "robot-repeater-server/"
 
-          rm -f ../${{ env.VERSION }}.zip
-          rm -f ../api-gateway.zip
 
           ls -al
 
@@ -246,5 +237,6 @@ jobs:
 
           git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.APP_NAME }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
 
+          rm -rf ./install.zip
           rm -rf ./api-gateway.zip
           rm -rf ./${{ env.VERSION }}.zip
