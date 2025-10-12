@@ -206,9 +206,13 @@ jobs:
           cd rainbow-release-apps
           APP_DIR="robot-repeater-server"
 
+          VERSION=${{ env.VERSION }}
+          HOTFIX=${{ env.HOTFIX }}
+          BRANCH=${{ env.BRANCH_NAME }}
+
           # 디렉토리가 존재하는지 확인하고 생성
           mkdir -p "$APP_DIR"
-          mkdir -p "$APP_DIR/${{ env.VERSION }}"
+          mkdir -p "$APP_DIR/${VERSION}"
 
           # 현재 버전 디렉토리 수 확인 및 정리
           DIR_COUNT=$(ls -1 "$APP_DIR" | wc -l)
@@ -218,7 +222,7 @@ jobs:
           fi
 
           mkdir -p "${APP_DIR}"
-          mv ../install.zip "$APP_DIR/${{ env.VERSION }}.zip"
+          mv ../install.zip "$APP_DIR/${VERSION}.zip"
 
           ls -al
 
@@ -230,9 +234,9 @@ jobs:
           git config --global user.email "dfd1123@naver.com"
           git config --global user.name "dfd1123"
           git add .
-          git commit -m "Release App:robot-repeater-server, Service: [${JOINS_SERVICES}], Version: ${{ env.VERSION }}"
+          git commit -m "Release App:robot-repeater-server, Service: [${JOINS_SERVICES}], Version: ${VERSION}, Hotfix: ${HOTFIX}, [Download build file](https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${BRANCH}/${VERSION}.zip)"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
-          git push origin ${{ env.BRANCH_NAME }}
+          git push origin ${BRANCH}
 
       - name: Delete release tag
         if: always()

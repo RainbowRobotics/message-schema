@@ -203,7 +203,8 @@ function get_release_message() {
         release_message=$(get_release_message)
     fi
     
-    echo "${release_message}\n [Download build file](https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${branch}/${version}.zip)"
+    printf '%s\n\n[Download build file](https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/%s/%s.zip)\n' \
+  "$release_message" "$branch" "$version"
 }
 
 # Release 버전 조회 후 새로운 버전 생성
@@ -281,7 +282,11 @@ read names_str <<< $(get_service_name)
 # 공백 제거
 names_str=$(echo "${names_str}" | xargs)
 
+new_version="${timestamp}"
+
 if [[ "${current_branch}" = "main" ]]; then
+    new_version=$(get_app_version $version_type)
+
     # 메인 스크립트 실행 부분에 hotfix 여부 확인 추가
     is_hotfix=$(ask_hotfix)
     echo "Hotfix 여부: ${is_hotfix}"
@@ -298,12 +303,6 @@ underscore_names_str="${names_str//,/__}"
 
 # 빌드 실행
 # build_project "${app_names}" || exit 1
-
-new_version="${timestamp}"
-
-if [[ "${current_branch}" = "main" ]]; then
-    new_version=$(get_app_version $version_type)
-fi
 
 # 태그 버전 생성
 if [ "${is_hotfix}" = "yes" ]; then
