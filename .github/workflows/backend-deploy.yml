@@ -1,4 +1,4 @@
-name: backend-deploy
+name: release-deploy
 
 on:
   push:
@@ -27,20 +27,11 @@ jobs:
             echo "HOTFIX=false" >> $GITHUB_ENV
           fi
 
-      - name: Get Service Names
+      - name: Get App Name
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          SERVICE_NAMES=$(echo $TAG_NAME | cut -d'/' -f2)
-          if [ "$SERVICE_NAMES" = "all" ]; then
-            SERVICE_ARRAY=$(ls -1d backend/services/*/ | xargs -n1 basename | tr '\n' ' ')
-          else
-            SERVICE_ARRAY=$(echo "$SERVICE_NAMES" | tr '__' ' ')
-          fi
-
-          SERVICE_ARRAY=$(echo "$SERVICE_ARRAY" | tr -s ' ')
-
-          echo "SERVICE_LIST=$SERVICE_ARRAY" >> "$GITHUB_ENV"
-          echo "SERVICE_NAMES=$SERVICE_NAMES" >> "$GITHUB_ENV"
+          APP_NAME=$(echo $TAG_NAME | cut -d'/' -f2)
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
 
       - name: Get Branch Name
         run: |
@@ -55,33 +46,27 @@ jobs:
           VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Check service directory and build binary file
+      - name: Check App Directory and dist file
         run: |
-          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
-
-          for SERVICE in "${SERVICE_ARRAY[@]}"; do
-            APP_DIR="backend/services/${SERVICE}"
-
-            if [ ! -d "$APP_DIR" ]; then
-              echo "Error: ${SERVICE} directory not found: $APP_DIR"
-              exit 1
-            fi
-
-            if [ ! -f "$APP_DIR/${SERVICE}.arm64.bin" ] || [ ! -f "$APP_DIR/${SERVICE}.amd64.bin" ]; then
-              echo "Error: bin file not found: $APP_DIR/${SERVICE}.arm64.bin or $APP_DIR/${SERVICE}.amd64.bin"
-              exit 1
-            fi
-
-            if [ ! -f "$APP_DIR/config.env" ]; then
-              echo "Error: config.env file not found: $APP_DIR/config.env"
-              exit 1
-            fi
-          done
-
+          APP_DIR="backend/services/${{ env.APP_NAME }}"
           API_GATEWAY_DIR="api-gateway"
+
+          ls -al
+
+          ls -al $APP_DIR
+
+          if [ ! -d "$APP_DIR" ]; then
+            echo "Error: ${{ env.APP_NAME }} directory not found: $APP_DIR"
+            exit 1
+          fi
 
           if [ ! -d "$API_GATEWAY_DIR" ]; then
             echo "Error: API Gateway directory not found: $API_GATEWAY_DIR"
+            exit 1
+          fi
+
+          if [ ! -f "$APP_DIR/${{ env.APP_NAME }}.arm64.bin" ] || [ ! -f "$APP_DIR/${{ env.APP_NAME }}.amd64.bin" ]; then
+            echo "Error: bin file not found: $APP_DIR/${{ env.APP_NAME }}.arm64.bin or $APP_DIR/${{ env.APP_NAME }}.amd64.bin"
             exit 1
           fi
 
@@ -90,46 +75,26 @@ jobs:
           rm -rf dist
           mkdir -p dist
           mkdir -p dist/scripts
-          mkdir -p dist/services
-          mkdir -p dist/api-gateway
 
-          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
+          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
+          cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
+          cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
 
-          for SERVICE in "${SERVICE_ARRAY[@]}"; do
-            mkdir -p dist/services/${SERVICE}
-            APP_DIR="backend/services/${SERVICE}"
+          cp -R scripts/production-entrypoint.sh dist/scripts/
 
-            cp -R $APP_DIR/${SERVICE}.arm64.bin dist/services/${SERVICE}
-            cp -R $APP_DIR/${SERVICE}.amd64.bin dist/services/${SERVICE}
-            cp -R $APP_DIR/config.env dist/services/${SERVICE}
-          done
-
-          cp -R backend/docker-compose.yml dist
-
-          cp -R api-gateway/nginx.conf dist/api-gateway
-          cp -R api-gateway/watchdog.sh dist/api-gateway
-          cp -R api-gateway/Dockerfile dist/api-gateway
-
-          cp -R scripts/backend/production-entrypoint.sh dist/scripts/
-
-          cp -R backend/Dockerfile.prod dist/
+          cp -R Dockerfile.prod dist/
 
           cd dist
 
           zip -r "../${{ env.VERSION }}.zip" .
 
+          cd ../api-gateway
+
+          zip -r "../api-gateway.zip" .
+
           cd $GITHUB_WORKSPACE
 
-          ls -a
-
-      - name: Make version.json
-        run: |
-          HOTFIX_LINE=""
-          if [ "${{ env.HOTFIX }}" == "true" ]; then
-            HOTFIX_LINE=", \"hotfix\": true"
-          fi
-
-          echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > version.json
+          ls -al
 
       - name: Upload dist file to s3
         env:
@@ -140,10 +105,12 @@ jobs:
         run: |
           S3_BUCKET="rainbow-deploy"
           S3_PREFIX="robot-repeater-server/${{ env.BRANCH_NAME }}"
-
+          S3_SERVICE_PATH="$S3_PREFIX/${{ env.APP_NAME }}"
+          API_GATEWAY_FILE_NAME="api-gateway.zip"
           FILE_NAME="${{ env.VERSION }}.zip"
 
-          DIRS=$(aws s3 ls "s3://$S3_BUCKET/$S3_PREFIX/" | grep "\.zip$" | awk '{print $4}')
+          # 현재 디렉토리 목록 가져오기 (VERSION 디렉토리)
+          DIRS=$(aws s3 ls "s3://$S3_BUCKET/$S3_SERVICE_PATH/" | grep "\.zip$" | awk '{print $4}')
 
           DIR_COUNT=$(echo "$DIRS" | wc -l)
           echo "현재 버전 파일 개수: $DIR_COUNT"
@@ -156,32 +123,51 @@ jobs:
 
             for FILE in $DELETE_DIRS; do
               echo "삭제: $FILE"
-              aws s3 rm "s3://$S3_BUCKET/$S3_PREFIX/$FILE"
+              aws s3 rm "s3://$S3_BUCKET/$S3_SERVICE_PATH/$FILE"
             done
           else
             echo "삭제할 디렉토리 없음"
           fi
 
-          aws s3 cp "$FILE_NAME" "s3://$S3_BUCKET/$S3_PREFIX/$FILE_NAME"
+          aws s3 cp "$FILE_NAME" "s3://$S3_BUCKET/$S3_SERVICE_PATH/$FILE_NAME"
+          aws s3 cp "$API_GATEWAY_FILE_NAME" "s3://$S3_BUCKET/$S3_PREFIX/api-gateway.zip"
 
-          aws s3 cp version.json "s3://$S3_BUCKET/$S3_PREFIX/version.json"
+          HOTFIX_LINE=""
+          if [ "${{ env.HOTFIX }}" == "true" ]; then
+            HOTFIX_LINE=", \"hotfix\": true"
+          fi
 
-      - name: Create install.zip file
-        run: |
-          mkdir -p install
+           # S3에서 version.json 파일 확인 및 생성/갱신
+          if aws s3 ls "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" > /dev/null 2>&1; then
+            aws s3 cp "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" version.json.tmp
+            
+            if [ -f version.json.tmp ]; then
+              if [ "${HOTFIX:-false}" = "true" ]; then
+                sed -E "s/\"new_version\": *\"[^\"]*\"/\"new_version\": \"${VERSION}\", \"hotfix\": true/" version.json.tmp \
+                  > version.json.new
+              else
+                sed -E "s/\"new_version\": *\"[^\"]*\"/\"new_version\": \"${VERSION}\"/" version.json.tmp \
+                  | sed -E "s/, *\"hotfix\": *true//" \
+                  > version.json.new
+              fi
+            else
+              # 없으면 새로 생성
+              if [ "${HOTFIX:-false}" = "true" ]; then
+                echo "{\"new_version\": \"${VERSION}\", \"hotfix\": true}" > version.json.new
+              else
+                echo "{\"new_version\": \"${VERSION}\"}" > version.json.new
+              fi
+            fi
 
-          BRANCH_NAME=${{ env.BRANCH_NAME }}
-          VERSION=${{ env.VERSION }}
 
-          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/backend/s3-install.sh \
-          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
-          > install/s3-install.sh
-
-          chmod +x install/s3-install.sh
-
-          (cd install && zip -r ../install.zip .)
-
-          rm -rf install
+            aws s3 cp version.json.new "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json" --content-type application/json
+            rm -f version.json.tmp version.json.new
+          else
+            # 파일이 없으면 새로 생성
+            echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > version.json.new
+            aws s3 cp version.json.new "s3://$S3_BUCKET/$S3_SERVICE_PATH/version.json"
+            rm -f version.json.new
+          fi
       - name: Clone release apps repository
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
@@ -207,15 +193,19 @@ jobs:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
           cd rainbow-release-apps
-          APP_DIR="robot-repeater-server"
-
-          VERSION=${{ env.VERSION }}
-          HOTFIX=${{ env.HOTFIX }}
-          BRANCH=${{ env.BRANCH_NAME }}
+          APP_DIR="robot-repeater-server/${{ env.APP_NAME }}"
 
           # 디렉토리가 존재하는지 확인하고 생성
           mkdir -p "$APP_DIR"
-          mkdir -p "$APP_DIR/${VERSION}"
+
+          # hotfix 여부 확인
+          HOTFIX_LINE=""
+          if [ "${{ env.HOTFIX }}" == "true" ]; then
+            HOTFIX_LINE=", \"hotfix\": true"
+          fi
+
+           # version.json 파일 생성/갱신
+          echo "{\"new_version\": \"${{ env.VERSION }}\"$HOTFIX_LINE}" > "$APP_DIR/version.json"
 
           # 현재 버전 디렉토리 수 확인 및 정리
           DIR_COUNT=$(ls -1 "$APP_DIR" | wc -l)
@@ -224,38 +214,33 @@ jobs:
             rm -rf "$APP_DIR/$OLDEST_DIR"
           fi
 
-          mkdir -p "${APP_DIR}"
-          mv ../install.zip "$APP_DIR/${VERSION}.zip"
-          mv ../version.json "$APP_DIR/version.json"
+          # 서비스 압축파일 이동
+          mkdir -p "$APP_DIR/${{ env.VERSION }}"
+          mv ../${{ env.VERSION }}.zip "$APP_DIR/"
+
+          # api-gateway 압축파일 이동
+          rm -f "robot-repeater-server/api-gateway.zip"
+          mv ../api-gateway.zip "robot-repeater-server/"
+
+          rm -f ../${{ env.VERSION }}.zip
+          rm -f ../api-gateway.zip
 
           ls -al
-
-          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
-
-          JOINS_SERVICES=$(IFS=','; echo "${SERVICE_ARRAY[*]}")
 
           # 새 버전 배포
           git config --global user.email "dfd1123@naver.com"
           git config --global user.name "dfd1123"
           git add .
-          git commit -m "Release App:robot-repeater-server, Service: [${JOINS_SERVICES}], Version: ${VERSION}, Hotfix: ${HOTFIX}, Download: (https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${BRANCH}/${VERSION}.zip)"
+          git commit -m "Release App:${{ env.APP_NAME }}, Version: ${{ env.VERSION }}"
           git remote set-url origin https://$GH_TOKEN@github.com/rainbow-mobile/rainbow-release-apps.git
-          git push origin ${BRANCH}
+          git push origin ${{ env.BRANCH_NAME }}
 
       - name: Delete release tag
         if: always()
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
-          STATUS='${{ job.status }}'
-
           cd $GITHUB_WORKSPACE
 
-          if [ "${{ env.BRANCH_NAME }}" != "main" ] || [ "${STATUS}" == "failure" ]; then
-            # 태그 삭제
-            git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.SERVICE_NAMES }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
-          fi
-
-          rm -rf ./install.zip
-          rm -rf ./version.json
-          rm -rf ./${{ env.VERSION }}.zip
+          # 태그 삭제
+          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.APP_NAME }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
