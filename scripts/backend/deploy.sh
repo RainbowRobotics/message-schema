@@ -171,7 +171,7 @@ function create_github_release() {
     # Release 생성
     gh release create "${tag_version}" \
         --title "Release ${tag_version}" \
-        --notes "$release_message" \
+        --notes "${release_message}" \
         --repo "$(git config --get remote.origin.url | sed 's/.*github.com[:/]//' | sed 's/\.git$//')" || {
             print_string "error" "GitHub Release 생성 실패"
             return 1
@@ -184,6 +184,9 @@ function create_github_release() {
 
 # 작업 내역 입력 받는 함수
 function get_release_message() {
+    local branch=$1
+    local version=$2
+
     local release_message=""
     
     # print_string 출력을 /dev/tty로 강제 지정
@@ -200,7 +203,7 @@ function get_release_message() {
         release_message=$(get_release_message)
     fi
     
-    echo "${release_message}"
+    echo "${release_message}\n [Download build file](https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${branch}/${version}.zip)"
 }
 
 # Release 버전 조회 후 새로운 버전 생성
@@ -286,7 +289,7 @@ if [[ "${current_branch}" = "main" ]]; then
     version_type=$(ask_version_type)
     echo "버전 타입: ${version_type}"
 
-    release_message=$(get_release_message)
+    release_message=$(get_release_message "${current_branch}" "${new_version}")
 fi
 
 # 문자열을 다시 배열로 변환

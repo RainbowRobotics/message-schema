@@ -89,6 +89,7 @@ jobs:
           rm -rf dist
           mkdir -p dist
           mkdir -p dist/scripts
+          mkdir -p dist/api-gateway
 
           IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
 
@@ -161,6 +162,25 @@ jobs:
 
           aws s3 cp version.json "s3://$S3_BUCKET/$S3_PREFIX/version.json"
 
+      - name: Create install.zip file
+        run: |
+          mkdir -p install
+
+          BRANCH_NAME=${{ env.BRANCH_NAME }}
+          VERSION=${{ env.VERSION }}
+
+          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/backend/s3-install.sh \
+          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
+          > install/s3-install.sh
+
+          chmod +x install/s3-install.sh
+
+          cp scripts/exec-files/install.desktop install/install.desktop
+          cp -r scripts/exec-files/assets install/assets
+
+          (cd install && zip -r ../install.zip .)
+
+          rm -rf install
       - name: Clone release apps repository
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
@@ -199,19 +219,12 @@ jobs:
             rm -rf "$APP_DIR/$OLDEST_DIR"
           fi
 
-          # 서비스 압축파일 이동
-          mv ../${{ env.VERSION }}.zip "$APP_DIR/"
-
-          # version.json 이동
-          mv ../version.json "$APP_DIR/"
-
-
-          rm -f ../${{ env.VERSION }}.zip
-          rm -f ../version.json
+          mkdir -p "${APP_DIR}"
+          mv ../install.zip "$APP_DIR/${{ env.VERSION }}.zip"
 
           ls -al
 
-          readarray -t SERVICE_ARRAY <<< "$SERVICE_LIST"
+          IFS=' ' read -r -a SERVICE_ARRAY <<< "$SERVICE_LIST"
 
           JOINS_SERVICES=$(IFS=','; echo "${SERVICE_ARRAY[*]}")
 
