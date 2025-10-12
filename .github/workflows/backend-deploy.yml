@@ -80,9 +80,9 @@ jobs:
           cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
           cp -R backend/services/${{ env.APP_NAME }}/config.env dist/
 
-          cp -R scripts/production-entrypoint.sh dist/scripts/
+          cp -R scripts/backend/production-entrypoint.sh dist/scripts/
 
-          cp -R Dockerfile.prod dist/
+          cp -R backend/Dockerfile.prod dist/
 
           cd dist
 
