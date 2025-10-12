@@ -243,5 +243,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
 
+          rm -rf ./install.zip
+          rm -rf ./version.json
+          rm -rf ./${{ env.VERSION }}.zip
+
           # 태그 삭제
           git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.SERVICE_NAMES }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
