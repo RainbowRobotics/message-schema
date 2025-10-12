@@ -243,3 +243,38 @@ jobs:
           rm -rf ./install.zip
           rm -rf ./api-gateway.zip
           rm -rf ./${{ env.VERSION }}.zip
+
+      - uses: actions/github-script@v7
+        id: lastcheck
+        if: ${{ success() }}
+        with:
+          script: |
+            const wfName = "backend-deploy";
+            const branch = process.env.BRANCH_NAME || context.ref.replace("refs/heads/","");
+            const { data: { workflows } } = await github.rest.actions.listRepoWorkflows({ owner: context.repo.owner, repo: context.repo.repo });
+            const wf = workflows.find(w => w.name === wfName);
+            if (!wf) core.setFailed(`WF not found: ${wfName}`);
+
+            const statuses = ["in_progress","queued","waiting"];
+            let pending = 0;
+            for (const status of statuses) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: wf.id,
+                branch, status
+              });
+              pending += data.total_count;
+            }
+            core.setOutput('ready', pending === 0 ? 'true' : 'false');
+
+      - name: Trigger after workflow
+        if: ${{ steps.lastcheck.outputs.ready == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/dispatches \
+            -f event_type='end-backend-deploy' \
+            -f client_payload='{"branch":"${{ env.BRANCH_NAME }}"}'

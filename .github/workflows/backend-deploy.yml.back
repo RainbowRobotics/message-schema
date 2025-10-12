@@ -182,6 +182,7 @@ jobs:
           (cd install && zip -r ../install.zip .)
 
           rm -rf install
+
       - name: Clone release apps repository
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
