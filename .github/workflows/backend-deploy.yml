@@ -159,7 +159,7 @@ jobs:
               "$SRC" > "$DST"
 
 
-          chmod +x install/s3-install.sh
+          chmod +x install/s3-service-install.sh
 
           (cd install && zip -r ../install.zip .)
 
