@@ -4,11 +4,12 @@ on:
     workflows: ["backend-deploy"] # 위에 올려준 그 워크플로우 이름
     types: [completed]
 
+permissions:
+  actions: write
+  contents: read
+
 concurrency:
-  group: >-
-    after-backend-deploy-${{ github.event.workflow_run.head_repository.id }}-${{
-      github.event.workflow_run.head_branch || 'tags'
-    }}
+  group: after-backend-deploy-group
   cancel-in-progress: true
 
 jobs:
