@@ -100,7 +100,7 @@ for pkg in "${PACKAGES[@]}"; do
   fi
 done
 
-export UV_PROJECT_DIR="$BE"
+export UV_PROJECT_ROOT="$BE"
 
 for svc in "${SERVICES[@]}"; do
   if [ -f "$BE/services/$svc/pyproject.toml" ]; then
