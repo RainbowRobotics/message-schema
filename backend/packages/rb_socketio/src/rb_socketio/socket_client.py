@@ -83,7 +83,6 @@ class RBSocketIONsClient(socketio.AsyncClient):
             "message",
         }
         if event in BUILTINS:
-            print("trigger_event >>", event)
             return await super()._trigger_event(event, namespace, *args)
 
         for on_event_name in self.on_event_map:
@@ -112,7 +111,6 @@ class RBSocketIONsClient(socketio.AsyncClient):
         return await super()._trigger_event(event, namespace, *args)
 
     def socket_include_router(self, router: RbSocketIORouter):
-        print("socket_include_router >>", router.routes)
         for r in router.routes:
             self.on_event_map.add(r.event)
             self.on(r.event, **r.kwargs)(r.handler)
@@ -135,8 +133,6 @@ class RBSocketIONsClient(socketio.AsyncClient):
         def decorator(user_handler):
             sig = inspect.signature(user_handler)
             param_names = set(sig.parameters)
-
-            print("param_names >>", param_names)
 
             async def wrapped(*payload):
                 if len(payload) >= 2:

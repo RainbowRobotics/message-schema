@@ -1,0 +1,59 @@
+import os
+
+from app.socket.socket_client import socket_client
+from flat_buffers.deploy.Response_Deploy_Progress import Response_Deploy_ProgressT
+from rb_modules.log import rb_log
+from rb_zenoh.client import ZenohClient
+from utils.asyncio_helper import fire_and_log
+
+from .deploy_schema import DeployProgressSchemaPD
+
+zenoh_client = ZenohClient()
+
+
+class DeployService:
+    def __init__(self):
+        self.DEPLOY_TOKEN = os.environ.get("DEPLOY_TOKEN", "")
+
+    def deploy_progress(
+        self,
+        request: DeployProgressSchemaPD,
+    ):
+        sw_name = request["sw_name"]
+        ip = request["ip"]
+        mode = request["mode"]
+        tag = request["tag"]
+        percentage = request["percentage"]
+        service_name = request["service_name"]
+        result = request["result"]
+
+        if result not in ["success", "fail"]:
+            error_msg = f"[Deploy Progress] sw_name: {sw_name}, result: {result} => result must be 'success' or 'fail'"
+            rb_log.error(error_msg)
+            raise ValueError(error_msg)
+
+        rb_log.debug(f"[Deploy Progress] {sw_name}/{mode}/{service_name}/{tag} {percentage}%")
+
+        payload = {
+            "sw_name": sw_name,
+            "mode": mode,
+            "tag": tag,
+            "percentage": percentage,
+            "service_name": service_name,
+            "result": result,
+        }
+
+        req = Response_Deploy_ProgressT()
+        req.swName = payload["sw_name"]
+        req.mode = payload["mode"]
+        req.tag = payload["tag"]
+        req.percentage = payload["percentage"]
+        req.serviceName = payload["service_name"]
+        req.result = payload["result"]
+
+        topic_name = f"deploy/{sw_name}/{ip}/progress"
+
+        fire_and_log(socket_client.emit(topic_name, req))
+        zenoh_client.publish(topic_name, flatbuffer_req_obj=req, flatbuffer_buf_size=100)
+
+        return req
