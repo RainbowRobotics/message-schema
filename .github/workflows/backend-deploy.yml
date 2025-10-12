@@ -32,18 +32,14 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           SERVICE_NAMES=$(echo $TAG_NAME | cut -d'/' -f2)
           if [ "$SERVICE_NAMES" = "all" ]; then
-            SERVICE_ARRAY=($(ls -d backend/services/*/ | xargs -n1 basename))
+            SERVICE_ARRAY=$(ls -1d backend/services/*/ | xargs -n1 basename | tr '\n' ' ')
           else
-            IFS='__' read -r -a SERVICE_ARRAY <<< "$SERVICE_NAMES"
+            SERVICE_ARRAY=$(echo "$SERVICE_NAMES" | tr '__' ' ')
           fi
 
-          echo "SERVICE_NAMES=$SERVICE_NAMES" >> $GITHUB_ENV
+          SERVICE_ARRAY=$(echo "$SERVICE_ARRAY" | tr -s ' ')
 
-          {
-            echo 'SERVICE_LIST<<EOF'
-            printf '%s\n' "${SERVICE_ARRAY[@]}"
-            echo 'EOF'
-          } >> "$GITHUB_ENV"
+          echo "SERVICE_LIST=$SERVICE_ARRAY" >> "$GITHUB_ENV"
 
       - name: Get Branch Name
         run: |
