@@ -1,4 +1,4 @@
-name: release-deploy
+name: backend-deploy
 
 on:
   push:
@@ -150,11 +150,14 @@ jobs:
           VERSION=${{ env.VERSION }}
           SERVICE_NAME=${{ env.APP_NAME }}
 
-          sed "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" scripts/backend/s3-service-install.sh \
-          | sed "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
-          > install/s3-service-install.sh
-          | sed "s/^SERVICE_NAME=.*/SERVICE_NAME=\"$SERVICE_NAME\"/" \
-          > install/s3-service-install.sh
+          SRC="scripts/backend/s3-service-install.sh"
+          DST="install/s3-service-install.sh"
+
+          sed -e "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" \
+              -e "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
+              -e "s/^SERVICE_NAME=.*/SERVICE_NAME=\"$SERVICE_NAME\"/" \
+              "$SRC" > "$DST"
+
 
           chmod +x install/s3-install.sh
 
