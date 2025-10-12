@@ -8,13 +8,13 @@ permissions:
   actions: write
   contents: read
 
-concurrency:
-  group: after-backend-deploy-group
-  cancel-in-progress: true
-
 jobs:
   start:
     runs-on: self-hosted
+
+    concurrency:
+      group: after-backend-deploy-group
+      cancel-in-progress: true
 
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
