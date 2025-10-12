@@ -36,6 +36,9 @@ class AppSettings(BaseSettings):
     MONGO_URI: str | None = None
     MONGO_DB_NAME: str | None = "rrs"
 
+    no_init_db: bool = False
+    socket_role: str = "service"
+
     class Config:
         env_file = "conf.env"
         case_sensitive = False
@@ -68,7 +71,8 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        await init_db(app, settings.MONGO_URI, settings.MONGO_DB_NAME)
+        if not settings.no_init_db:
+            await init_db(app, settings.MONGO_URI, settings.MONGO_DB_NAME)
 
         await zenoh_router.startup()
         print("📡 zenoh subscribe 등록 완료", flush=True)
@@ -77,7 +81,12 @@ def create_app(
             app.state._sio_connect_task = asyncio.create_task(
                 socket_client.connect(
                     settings.SOCKET_SERVER_URL,
-                    auth=lambda: {"role": "service", "serviceName": settings.SERVICE_NAME},
+                    auth=lambda: {
+                        "role": settings.socket_role,
+                        "serviceName": (
+                            settings.SERVICE_NAME if settings.socket_role == "service" else None
+                        ),
+                    },
                     socketio_path=settings.SOCKET_PATH,
                     transports=["websocket", "polling"],
                     retry=True,
@@ -137,13 +146,13 @@ def create_app(
         for r in socket_routers:
             socket_client.socket_include_router(r)
 
-    @app.get("/swagger-ui/swagger-ui.css")
+    @app.get("/swagger-ui/swagger-ui.css", include_in_schema=False)
     def _css():
         res = files("rb_resources").joinpath("swagger-ui", "swagger-ui.css")
         with as_file(res) as p:
             return FileResponse(str(p), media_type="text/css")
 
-    @app.get("/swagger-ui/swagger-ui.js")
+    @app.get("/swagger-ui/swagger-ui.js", include_in_schema=False)
     def _js():
         res = files("rb_resources").joinpath("swagger-ui", "swagger-ui.js")
         with as_file(res) as p:
