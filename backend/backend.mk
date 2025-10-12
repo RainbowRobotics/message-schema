@@ -71,3 +71,7 @@ backend.flatc: ## FlatBuffers 코드 생성
 		echo "‼️ flatc를 설치해주세요!"; \
 		exit 1; \
 	fi
+
+.PHONY: backend.deploy
+backend.deploy: ## 모든 Backend 서비스 또는 지정된 Backend 서비스 배포
+	@bash scripts/backend/deploy.sh
