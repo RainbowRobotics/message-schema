@@ -244,10 +244,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RAINBOW_RELEASE_APPS_TOKEN }}
         run: |
+          STATUS='${{ job.status }}'
+
           cd $GITHUB_WORKSPACE
 
-          # 태그 삭제
-          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.SERVICE_NAMES }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+          if [ "${{ env.BRANCH_NAME }}" != "main" ] || [ "${STATUS}" == "failure" ]; then
+            # 태그 삭제
+            git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.SERVICE_NAMES }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+          fi
 
           rm -rf ./install.zip
           rm -rf ./version.json
