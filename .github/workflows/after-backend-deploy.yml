@@ -5,7 +5,10 @@ on:
     types: [completed]
 
 concurrency:
-  group: after-backend-deploy-${{ github.event.workflow_run.head_branch || 'tag' }}
+  group: >-
+    after-backend-deploy-${{ github.event.workflow_run.head_repository.id }}-${{
+      github.event.workflow_run.head_branch || 'tags'
+    }}
   cancel-in-progress: true
 
 jobs:
@@ -16,11 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Download trigger tag from upstream run
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-deploy-branch
+          run-id: ${{ github.event.workflow_run.id }}
+
       - name: Get Branch Name
         run: |
-          TAG_NAME='${{ github.event.workflow_run.display_title }}'
-
-          BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
+          BRANCH_NAME=$(cat backend_deploy_branch.txt)
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Service Names
@@ -29,7 +36,6 @@ jobs:
             if [ -d "${dir}" ]; then
                 # 디렉토리 경로에서 앱 이름만 추출
                 APP_NAME=$(basename "${dir}")
-                # 중복 체크 후 추가
                 if [[ ! " ${APP_NAMES[@]} " =~ " ${APP_NAME} " ]]; then
                     APP_NAMES+=("$APP_NAME")
                 fi
@@ -52,11 +58,10 @@ jobs:
             echo "⚠️  매칭되는 태그 없음(패턴: release/total/* or release/dev-total/*)"
             exit 1
           else
-            # 마지막 슬래시 뒤(버전)만 추출
             VERSION="${TAG_NAME##*/}"
           fi
 
-          echo "TAG_NAME=${TAG_NAME}"      # 로그 확인용
+          echo "TAG_NAME=${TAG_NAME}"
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Download dist file from s3

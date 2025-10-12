@@ -37,6 +37,7 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
+          echo "${BRANCH_NAME}" > backend_deploy_branch.txt
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Release Version
@@ -45,6 +46,13 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Upload backend deploy branch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deploy-branch
+          path: backend_deploy_branch.txt
+          retention-days: 1
 
       - name: Check App Directory and dist file
         run: |
