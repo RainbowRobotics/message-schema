@@ -1,7 +1,12 @@
 name: after-backend-deploy
 on:
-  repository_dispatch:
-    types: [end-backend-deploy]
+  workflow_run:
+    workflows: ["backend-deploy"] # 위에 올려준 그 워크플로우 이름
+    types: [completed]
+
+concurrency:
+  group: after-backend-deploy-${{ github.event.workflow_run.head_branch || 'tag' }}
+  cancel-in-progress: true
 
 jobs:
   start:
@@ -13,7 +18,9 @@ jobs:
 
       - name: Get Branch Name
         run: |
-          BRANCH_NAME=${{ github.event.client_payload.branch }}
+          TAG_NAME='${{ github.event.workflow_run.display_title }}'
+
+          BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Service Names
@@ -31,6 +38,27 @@ jobs:
 
           echo "APP_NAMES=$APP_NAMES" >> $GITHUB_ENV
 
-      # - name: Download dist file from s3
-      #   run: |
-      #     S3_BASE_URL="https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/$BRANCH_NAME"
+      - name: Get Version
+        run: |
+          git fetch --tags --force --prune --quiet
+
+          if [[ "$BRANCH_NAME" = "main" ]]; then
+            TAG_NAME="$(git tag --list "release/total/*" --sort=-v:refname | head -n 1 || true)"
+          else
+            TAG_NAME="$(git tag --list "release/dev-total/*" --sort=-v:refname | head -n 1 || true)"
+          fi
+
+          if [[ -z "${TAG_NAME}" ]]; then
+            echo "⚠️  매칭되는 태그 없음(패턴: release/total/* or release/dev-total/*)"
+            exit 1
+          else
+            # 마지막 슬래시 뒤(버전)만 추출
+            VERSION="${TAG_NAME##*/}"
+          fi
+
+          echo "TAG_NAME=${TAG_NAME}"      # 로그 확인용
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Download dist file from s3
+        run: |
+          S3_BASE_URL="https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/$BRANCH_NAME"
