@@ -47,24 +47,6 @@ jobs:
           VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Get Last Flag
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          LAST=$(echo $TAG_NAME | cut -d'/' -f5)
-
-          if [ "$LAST" == "last" ]; then
-            echo "IS_LAST=true" >> $GITHUB_ENV
-          else
-            echo "IS_LAST=false" >> $GITHUB_ENV
-          fi
-
-      - name: Upload backend deploy branch artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-deploy-branch
-          path: backend_deploy_branch.txt
-          retention-days: 1
-
       - name: Check App Directory and dist file
         run: |
           APP_DIR="backend/services/${{ env.APP_NAME }}"
