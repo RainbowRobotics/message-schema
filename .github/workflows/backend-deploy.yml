@@ -47,6 +47,17 @@ jobs:
           VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      - name: Get Last Flag
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          LAST=$(echo $TAG_NAME | cut -d'/' -f5)
+
+          if [ "$LAST" == "last" ]; then
+            echo "IS_LAST=true" >> $GITHUB_ENV
+          else
+            echo "IS_LAST=false" >> $GITHUB_ENV
+          fi
+
       - name: Upload backend deploy branch artifact
         uses: actions/upload-artifact@v4
         with:
@@ -251,3 +262,19 @@ jobs:
           rm -rf ./install.zip
           rm -rf ./api-gateway.zip
           rm -rf ./${{ env.VERSION }}.zip
+
+      - name: Trigger after-backend-deploy
+        if: ${{ env.IS_LAST == 'true' && success() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/dispatches \
+            -f event_type='post-deploy' \
+            -f client_payload='{
+              "BRANCH_NAME":"${{ env.BRANCH_NAME }}",
+              "VERSION":"${{ env.VERSION }}",
+              "APP_NAME":"${{ env.APP_NAME }}",
+              "HOTFIX":"${{ env.HOTFIX }}"
+            }'

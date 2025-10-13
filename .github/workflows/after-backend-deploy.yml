@@ -1,8 +1,7 @@
 name: after-backend-deploy
 on:
-  workflow_run:
-    workflows: ["backend-deploy"]
-    types: [completed]
+  repository_dispatch:
+    types: [post-deploy]
 
 permissions:
   actions: write
@@ -12,19 +11,18 @@ jobs:
   start:
     runs-on: self-hosted
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Download trigger tag from upstream run
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-deploy-branch
-          run-id: ${{ github.event.workflow_run.id }}
-
       - name: Get Branch Name
         run: |
-          BRANCH_NAME=$(cat backend_deploy_branch.txt)
+          BRANCH_NAME=${{ github.event.client_payload.BRANCH_NAME }}
+
+          git switch $BRANCH_NAME
+          git pull origin $BRANCH_NAME
+
+          git fetch --tags --force --prune --quiet
+
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Service Names
@@ -63,4 +61,4 @@ jobs:
 
       - name: Download dist file from s3
         run: |
-          S3_BASE_URL="https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/$BRANCH_NAME"
+          S3_BASE_URL="https://rainbow-deploy.s3.ap-northeast-2.amazonaws.com/robot-repeater-server/${{ env.BRANCH_NAME }}"
