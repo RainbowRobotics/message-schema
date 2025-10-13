@@ -4,6 +4,15 @@ on:
     tags:
       - "release/total/**"
       - "release/dev-total/**"
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: "BRANCH_NAME (ex: main, dev)"
+        required: true
+        default: "main"
+      version:
+        description: "VERSION (ex: 0.0.9). 비우면 태그에서 파싱"
+        required: false
 
 permissions:
   actions: write
@@ -18,51 +27,27 @@ jobs:
 
       - name: Get Branch Name
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BRANCH_NAME=${{ github.event.inputs.branch_name }}
+          else
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
+          fi
+
           echo "${BRANCH_NAME}" > backend_deploy_branch.txt
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Release Version
         id: get_release_version
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION=${{ github.event.inputs.version }}
+          else
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            VERSION=$(echo $TAG_NAME | cut -d'/' -f4)
+          fi
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Get Service Names
-        run: |
-          for dir in backend/services/*/; do
-            if [ -d "${dir}" ]; then
-                # 디렉토리 경로에서 앱 이름만 추출
-                APP_NAME=$(basename "${dir}")
-                if [[ ! " ${APP_NAMES[@]} " =~ " ${APP_NAME} " ]]; then
-                    APP_NAMES+=("$APP_NAME")
-                fi
-            fi
-          done
-
-          echo "APP_NAMES=$APP_NAMES" >> $GITHUB_ENV
-
-      - name: Get Version
-        run: |
-          git fetch --tags --force --prune --quiet
-
-          if [[ "$BRANCH_NAME" = "main" ]]; then
-            TAG_NAME="$(git tag --list "release/total/*" --sort=-v:refname | head -n 1 || true)"
-          else
-            TAG_NAME="$(git tag --list "release/dev-total/*" --sort=-v:refname | head -n 1 || true)"
-          fi
-
-          if [[ -z "${TAG_NAME}" ]]; then
-            echo "⚠️  매칭되는 태그 없음(패턴: release/total/* or release/dev-total/*)"
-            exit 1
-          else
-            VERSION="${TAG_NAME##*/}"
-          fi
-
-          echo "TAG_NAME=${TAG_NAME}"
-          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Download dist file from s3
         run: |
@@ -71,19 +56,16 @@ jobs:
 
           need() { command -v "$1" >/dev/null 2>&1 || return 0; }
           if ! command -v jq >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y jq;
             echo "jq 필요"; exit 127;
           fi
           if ! command -v unzip >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y unzip;
-            echo "unzip 필요"; exit 127;
+            sudo apt-get update && sudo apt-get install -y unzip;            echo "unzip 필요"; exit 127;
           fi
           if ! command -v curl >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y curl;
             echo "curl 필요"; exit 127;
           fi
 
-          DIST="${{ env.VERSION }}"
+          DIST="${{ github.env.VERSION }}"
           mkdir -p "${DIST}"
           mkdir -p "${DIST}/services"
           mkdir -p "${DIST}/api-gateway"
