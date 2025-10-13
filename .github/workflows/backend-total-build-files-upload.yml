@@ -34,7 +34,6 @@ jobs:
             BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
           fi
 
-          echo "${BRANCH_NAME}" > backend_deploy_branch.txt
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Release Version
@@ -58,8 +57,8 @@ jobs:
           if ! command -v jq >/dev/null 2>&1; then
             echo "jq 필요"; exit 127;
           fi
-          if ! command -v unzip >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y unzip;            echo "unzip 필요"; exit 127;
+          if ! command -v unzip >/dev/null 2>&1; then           
+            echo "unzip 필요"; exit 127;
           fi
           if ! command -v curl >/dev/null 2>&1; then
             echo "curl 필요"; exit 127;
@@ -74,7 +73,7 @@ jobs:
           mkdir -p "${DIST}/api-gateway"
 
           AGG_JSON="${DIST}/services/version.json"
-          echo '{}' > "$AGG_JSON"
+          echo "{\"branch\": \"${{ env.BRANCH_NAME }}\"}" > "$AGG_JSON"
 
           shopt -s nullglob
           for dir in backend/services/*/; do
@@ -151,9 +150,7 @@ jobs:
 
           # 현재 디렉토리 목록 가져오기 (VERSION 디렉토리)
           DIRS=$(aws s3 ls "s3://$S3_BUCKET/$S3_PREFIX/" \
-            | awk '{print $4}' \
-            | grep -E '\.zip$' \
-            | grep -v '^api-gateway\.zip$')
+            | awk '$4 ~ /\.zip$/ && $4 != "api-gateway.zip" {print $4}')
 
           DIR_COUNT=$(echo "$DIRS" | wc -l)
           echo "현재 버전 파일 개수: $DIR_COUNT"
@@ -175,7 +172,7 @@ jobs:
           aws s3 cp "$FILE_NAME" "s3://$S3_BUCKET/$S3_PREFIX/$FILE_NAME"
           aws s3 cp "version.json" "s3://$S3_BUCKET/$S3_PREFIX/version.json"
 
-      - name: Create install.zip file
+      - name: Create install.sh file
         run: |
           mkdir -p install
 
@@ -183,18 +180,14 @@ jobs:
           VERSION=${{ env.VERSION }}
 
           SRC="scripts/backend/s3-install.sh"
-          DST="install/s3-install.sh"
+          DST="s3-install.sh"
 
           sed -e "s/^BRANCH=.*/BRANCH=\"$BRANCH_NAME\"/" \
               -e "s/^VERSION=.*/VERSION=\"$VERSION\"/" \
               "$SRC" > "$DST"
 
 
-          chmod +x install/s3-install.sh
-
-          (cd install && zip -r ../install.zip .)
-
-          rm -rf install
+          chmod +x s3-install.sh
 
       - name: Clone release apps repository
         env:
@@ -226,8 +219,11 @@ jobs:
           VERSION=${{ env.VERSION }}
           BRANCH=${{ env.BRANCH_NAME }}
 
+          rm -rf "${APP_DIR}/${VERSION}"
+
           # 디렉토리가 존재하는지 확인하고 생성
           mkdir -p "$APP_DIR"
+          mkdir -p "${APP_DIR}/${VERSION}"
 
           mapfile -t TOTAL_BUILD_DIRS < <(find "$TARGET" -maxdepth 1 -type f -name '*.zip' \
             ! -name 'api-gateway.zip' -printf '%f\n' 2>/dev/null || \
@@ -244,8 +240,12 @@ jobs:
           rm -rf "$APP_DIR/version.json"
           mv ../version.json "$APP_DIR/version.json"
 
-          # 서비스 압축파일 이동
-          mv ../install.zip "$APP_DIR/${VERSION}.zip"
+          # install.sh 이동
+          mv ../s3-install.sh "${APP_DIR}/${VERSION}/s3-install.sh"
+
+          (cd "$APP_DIR" && zip -qr -X -FS "${VERSION}.zip" "${VERSION}")
+
+          rm -rf "${APP_DIR}/${VERSION}"
 
 
           ls -al
@@ -267,4 +267,4 @@ jobs:
 
           rm -rf "${DIST}.zip"
           rm -rf "version.json"
-          rm -rf "install.zip"
+          rm -rf "s3-install.sh"
