@@ -257,7 +257,7 @@ jobs:
 
           cd $GITHUB_WORKSPACE
 
-          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.APP_NAME }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}"
+          git push origin --delete "${{ env.RELEASE_TYPE }}/${{ env.APP_NAME }}/${{ env.BRANCH_NAME }}/${{ env.VERSION }}" >/dev/null 2>&1 || true
 
           rm -rf ./install.zip
           rm -rf ./api-gateway.zip
