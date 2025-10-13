@@ -285,81 +285,125 @@ void MOBILE::recv_loop()
     spdlog::info("[MOBILE] try connect, ip:{}, port:{}",pdu_ip.toStdString(),pdu_port);
 
 
-    // connection
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(fd < 0)
+    // connection with retry (3 attempts)
+    int retry_count = 0;
+    const int max_retries = 3;
+    bool connection_success = false;
+
+    while(retry_count < max_retries && !connection_success && recv_flag)
     {
-        //logger->write_log("[MOBILE] socket create failed", "Red", true, false);
-        spdlog::error("[MOBILE] socket create failed");
-        return;
+        retry_count++;
+        spdlog::info("[MOBILE] connection attempt %d/%d\n", retry_count, max_retries);
+
+        // connection
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        if(fd < 0)
+        {
+            //logger->write_log("[MOBILE] socket create failed", "Red", true, false);
+            spdlog::error("[MOBILE] socket create failed");
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            return;
+        }
+
+        // set option
+        {
+            int val = 1;
+            ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+        }
+
+        // set non-blocking
+        int flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+        int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
+        if(status < 0 && errno != EINPROGRESS)
+        {
+            //logger->write_log("[MOBILE] connect failed", "Red", true, false);
+            spdlog::error("[MOBILE] connect failed");
+            close(fd);
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+
+            return;
+        }
+
+        // wait for connection with timeout
+        fd_set writefds;
+        struct timeval tv;
+        tv.tv_sec = 10; // 10 seconds timeout
+        tv.tv_usec = 0;
+
+        FD_ZERO(&writefds);
+        FD_SET(fd, &writefds);
+
+        status = select(fd + 1, NULL, &writefds, NULL, &tv);
+        if(status <= 0) // timeout or error
+        {
+            //logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
+            spdlog::error("[MOBILE] connect timeout or error");
+            close(fd);
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            return;
+        }
+
+        // socket error check after select()
+        int so_error = 0;
+        socklen_t len = sizeof(so_error);
+        if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) < 0)
+        {
+            //QString errStr;
+            //errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
+            //logger->write_log(errStr, "Red", true, false);
+            int er = errno;
+            spdlog::error("[MOBILE] getsockopt failed: {})",std::error_code(er, std::system_category()).message(), er);
+            close(fd);
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            return;
+        }
+        if(so_error!=0)
+        {
+            //QString errStr;
+            //errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
+            //logger->write_log(errStr, "Red", true, false);
+            int er = errno;
+            spdlog::error("[MOBILE] connect error after select: {} (so_error={})",std::error_code(er, std::system_category()).message(), er);
+            close(fd);
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            return;
+        }
+
+        // set back to blocking mode
+        fcntl(fd, F_SETFL, flags);
+
+        connection_success = true;
+        is_connected = true;
+        //logger->write_log("[MOBILE] connected", "Green", true, false);
+        spdlog::info("[MOBILE] connected");
+        spdlog::info("[MOBILE] PDU connection established on attempt %d\n", retry_count);
     }
 
-    // set option
+    if(!connection_success)
     {
-        int val = 1;
-        ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+        spdlog::error("[MOBILE] PDU connection failed after 3 attempts");
     }
-
-    // set non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-    int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
-    if(status < 0 && errno != EINPROGRESS)
-    {
-        //logger->write_log("[MOBILE] connect failed", "Red", true, false);
-        spdlog::error("[MOBILE] connect failed");
-        return;
-    }
-
-    // wait for connection with timeout
-    fd_set writefds;
-    struct timeval tv;
-    tv.tv_sec = 10; // 10 seconds timeout
-    tv.tv_usec = 0;
-
-    FD_ZERO(&writefds);
-    FD_SET(fd, &writefds);
-
-    status = select(fd + 1, NULL, &writefds, NULL, &tv);
-    if(status <= 0) // timeout or error
-    {
-        //logger->write_log("[MOBILE] connect timeout or error", "Red", true, false);
-        spdlog::error("[MOBILE] connect timeout or error");
-        close(fd);
-        return;
-    }
-
-    // socket error check after select()
-    int so_error = 0;
-    socklen_t len = sizeof(so_error);
-    if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) < 0)
-    {
-        //QString errStr;
-        //errStr.sprintf("[MOBILE] getsockopt failed: %s", strerror(errno));
-        //logger->write_log(errStr, "Red", true, false);
-        int er = errno;
-        spdlog::error("[MOBILE] getsockopt failed: {})",std::error_code(er, std::system_category()).message(), er);
-        close(fd);
-        return;
-    }
-    if(so_error!=0)
-    {
-        //QString errStr;
-        //errStr.sprintf("[MOBILE] connect error after select: %s", strerror(so_error));
-        //logger->write_log(errStr, "Red", true, false);
-        int er = errno;
-        spdlog::error("[MOBILE] connect error after select: {} (so_error={})",std::error_code(er, std::system_category()).message(), er);
-        close(fd);
-        return;
-    }
-
-    // set back to blocking mode
-    fcntl(fd, F_SETFL, flags);
-
-    is_connected = true;
-    //logger->write_log("[MOBILE] connected", "Green", true, false);
-    spdlog::info("[MOBILE] connected");
 
     std::vector<uchar> buf;
     int drop_cnt = MOBILE_INFO::drop_cnt;

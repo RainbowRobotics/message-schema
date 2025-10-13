@@ -2684,6 +2684,28 @@ void MainWindow::plot_info()
         ui->lb_AutoInfo->setText(auto_info_str);
     }
 
+    // plot map info
+    {
+        QString map_name = "";
+        if(UNIMAP::instance()->get_is_loaded() == MAP_LOADED)
+        {
+            QString map_path = UNIMAP::instance()->get_map_path();
+            if(!map_path.isEmpty())
+            {
+                map_name = map_path.split("/").last();
+            }
+        }
+
+        if(map_name.isEmpty())
+        {
+            ui->lb_MapName->setText("No Map Loaded");
+        }
+        else
+        {
+            ui->lb_MapName->setText("Map: " + map_name);
+        }
+    }
+
 }
 
 void MainWindow::plot_safety()
