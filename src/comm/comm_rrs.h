@@ -279,6 +279,8 @@ public Q_SLOTS:
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_software_update(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_obs_box_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+
 
     void slot_led(DATA_LED msg);
     void slot_move(DATA_MOVE msg);
@@ -297,6 +299,8 @@ public Q_SLOTS:
     void slot_safety_io(DATA_SAFTYIO msg);
     void slot_safety_request(DATA_SAFETY msg);
     void slot_config_request(DATA_PDU_UPDATE msg);
+    void slot_obs_box_setting(DATA_OBS_BOX msg);
+
 
     /* send command response */
     void send_move_response(const DATA_MOVE& msg);
@@ -312,6 +316,8 @@ public Q_SLOTS:
     void send_field_get_response(const DATA_SAFETY& msg);
     void send_safety_reset_response(const DATA_SAFETY& msg);
     void send_config_request_response(const DATA_PDU_UPDATE& msg);
+    void send_obs_box_setting_response(const DATA_OBS_BOX& msg);
+
 
     QJsonObject getErrorCodeMapping(const QString& message);
 
@@ -336,6 +342,8 @@ Q_SIGNALS:
     void signal_safety_io(DATA_SAFTYIO msg);
     void signal_safety_request(DATA_SAFETY msg);
     void signal_config_request(DATA_PDU_UPDATE msg);
+    void signal_obs_box_setting(DATA_OBS_BOX msg);
+
 
 };
 

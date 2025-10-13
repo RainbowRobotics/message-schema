@@ -703,8 +703,11 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "safetyioRequest", std::bind(&COMM_RRS::recv_safety_io_set,     this, _1, _2, _3, _4));
 
-    BIND_EVENT(sock, "safetyRequest",   std::bind(&COMM_RRS::recv_safety_request,      this, _1, _2, _3, _4));
-    BIND_EVENT(sock, "settingRequest",  std::bind(&COMM_RRS::recv_config_request,     this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "safetyRequest",   std::bind(&COMM_RRS::recv_safety_request,    this, _1, _2, _3, _4));
+    BIND_EVENT(sock, "settingRequest",  std::bind(&COMM_RRS::recv_config_request,    this, _1, _2, _3, _4));
+
+    BIND_EVENT(sock, "controlRequest",   std::bind(&COMM_RRS::recv_obs_box_request,  this, _1, _2, _3, _4));
+
 
     // connect recv signals -> recv slots
     connect(this, &COMM_RRS::signal_move,            this, &COMM_RRS::slot_move);
@@ -724,6 +727,8 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_safety_io,       this, &COMM_RRS::slot_safety_io);
     connect(this, &COMM_RRS::signal_config_request,  this, &COMM_RRS::slot_config_request);
     connect(this, &COMM_RRS::signal_safety_request,  this, &COMM_RRS::slot_safety_request);
+    connect(this, &COMM_RRS::signal_obs_box_setting, this, &COMM_RRS::slot_obs_box_setting);
+
 
     send_timer = new QTimer(this);
     connect(send_timer, SIGNAL(timeout()), this, SLOT(send_loop()));
@@ -1033,6 +1038,30 @@ void COMM_RRS::recv_safety_request(std::string const& name, sio::message::ptr co
     }
 }
 
+void COMM_RRS::recv_obs_box_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        DATA_OBS_BOX msg;
+        msg.command = get_json(data, "command"); // "getObsBox", "setObsBox"
+        msg.obs_box_min_z = get_json(data, "minZ").toDouble();
+        msg.obs_box_max_z = get_json(data, "maxZ").toDouble();
+        msg.obs_box_map_range = get_json(data, "mapRange").toDouble();
+        msg.time = get_json(data, "time").toDouble() / 1000;
+
+        //qDebug()<<"recv_obs_box_request";
+
+
+        // action
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_RRS] recv_obs_box_request, command: %1, min_z: %2, max_z: %3, map_range: %4, time: %5")
+                             .arg(msg.command).arg(msg.obs_box_min_z).arg(msg.obs_box_max_z).arg(msg.obs_box_map_range).arg(msg.time), "Green");
+        }
+        Q_EMIT signal_obs_box_setting(msg);
+    }
+}
 
 void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -2745,6 +2774,54 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
     }
 }
 
+void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
+{
+    const QString command = msg.command;
+
+    //qDebug()<<"slot_obs_box_setting";
+
+    if(command == "setObsBox" && obsmap)
+    {
+        obsmap->set_obs_box_z_values(msg.obs_box_min_z, msg.obs_box_max_z);
+        obsmap->set_obs_box_map_range(msg.obs_box_map_range);
+        msg.result = "success";
+        msg.message = QString("obs_box z values set: min_z=%1, max_z=%2, map_range=%3").arg(msg.obs_box_min_z).arg(msg.obs_box_max_z).arg(msg.obs_box_map_range);
+        printf("[COMM_RRS] slot_obs_box_setting : setObsBox - success\n");
+        printf("[COMM_RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
+        //printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+        if (obsmap)
+        {
+            printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
+                   obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
+        }
+
+    }
+    else if(command == "getObsBox" && obsmap)
+    {
+        msg.result = "success";
+        msg.message = "obs_box values return";
+        msg.obs_box_min_z = obsmap->get_obs_box_map_min_z() - config->get_obs_map_min_z();
+        msg.obs_box_max_z = obsmap->get_obs_box_map_max_z() - config->get_obs_map_max_z();
+        msg.obs_box_map_range = obsmap->get_obs_box_map_range() - config->get_obs_map_range();
+        printf("[COMM_RRS] slot_obs_box_setting : getObsBox - success\n");
+        printf("[COMM_RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
+        if (obsmap)
+        {
+            printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
+                   obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
+        }
+
+    }
+    else
+    {
+        msg.result = "error";
+        msg.message = "Invalid command or obsmap not available";
+    }
+
+    // Send response back
+    send_obs_box_setting_response(msg);
+}
+
 void COMM_RRS::slot_safety_request(DATA_SAFETY msg)
 {
 
@@ -3561,6 +3638,33 @@ void COMM_RRS::send_field_get_response(const DATA_SAFETY& msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("fieldGetResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_RRS::send_obs_box_setting_response(const DATA_OBS_BOX& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+    //qDebug()<<"send_obs_box_setting_response";
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["minZ"] = msg.obs_box_min_z;
+    obj["maxZ"] = msg.obs_box_max_z;
+    obj["mapRange"] = msg.obs_box_map_range;
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("controlResponse", res);
 
     // for plot
     mtx.lock();

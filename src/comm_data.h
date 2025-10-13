@@ -458,6 +458,53 @@ struct DATA_PDU_UPDATE
     }
 };
 
+struct DATA_OBS_BOX
+{
+    double time;
+    QString command; // set, get
+    double obs_box_min_z;
+    double obs_box_max_z;
+    double obs_box_map_range;
+
+    QString result;
+    QString message;
+
+    DATA_OBS_BOX()
+    {
+        time = 0.0;
+        command = "";
+        obs_box_min_z = 0.0;
+        obs_box_max_z = 0.0;
+        obs_box_map_range = 0.0;
+        result = "";
+        message = "";
+    }
+
+    DATA_OBS_BOX(const DATA_OBS_BOX& p)
+    {
+        time = p.time;
+        command = p.command;
+        obs_box_min_z = p.obs_box_min_z;
+        obs_box_max_z = p.obs_box_max_z;
+        obs_box_map_range = p.obs_box_map_range;
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_OBS_BOX& operator=(const DATA_OBS_BOX& p)
+    {
+        time = p.time;
+        command = p.command;
+        obs_box_min_z = p.obs_box_min_z;
+        obs_box_max_z = p.obs_box_max_z;
+        obs_box_map_range = p.obs_box_map_range;
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
+Q_DECLARE_METATYPE(DATA_OBS_BOX)
 
 struct DATA_SAFETY
 {

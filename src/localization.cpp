@@ -1027,6 +1027,13 @@ void LOCALIZATION::obs_loop()
     printf("[LOCALIZATION] obs_loop start\n");
     double pre_loop_time = get_time();
 
+    printf("[LOCALIZATION] get_obs_map_max_z: %.3f, get_obs_map_min_z: %.3f, get_obs_map_range: %.3f\n", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
+
+    if(obsmap)
+    {
+        printf("[LOCALIZATION] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+    }
+
     std::vector<Eigen::Vector3d> temp_pts;
     temp_pts.reserve(10000);
 
