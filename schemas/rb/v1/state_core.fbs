@@ -15,6 +15,10 @@ table State_Core {
   carte_x_ref: N_CARTE_f;
   carte_x_enc: N_CARTE_f;
 
+  userf_selection_no: int;
+  userf_x_ref: N_CARTE_f;
+
+  tool_selection_no: int;
   tool_name: string; 
   tool_tcp_x: float; 
   tool_tcp_y: float; 
