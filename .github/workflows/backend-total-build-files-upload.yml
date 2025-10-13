@@ -11,8 +11,8 @@ on:
         required: true
         default: "main"
       version:
-        description: "VERSION (ex: 0.0.9). 비우면 태그에서 파싱"
-        required: false
+        description: "VERSION (ex: 0.0.9)"
+        required: true
 
 permissions:
   actions: write
@@ -65,7 +65,7 @@ jobs:
             echo "curl 필요"; exit 127;
           fi
 
-          DIST="${{ github.env.VERSION }}"
+          DIST="${{ env.VERSION }}"
           mkdir -p "${DIST}"
           mkdir -p "${DIST}/services"
           mkdir -p "${DIST}/api-gateway"
