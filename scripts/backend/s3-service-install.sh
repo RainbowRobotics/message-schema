@@ -11,8 +11,10 @@ INDEX=1
 echo "🌐 바이너리 파일 다운로드 및 압축 해제 시작"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LIB_DIR="${SCRIPT_DIR}/${SERVICE_NAME}"
+LIB_DIR="${SCRIPT_DIR}"
 DEST="${LIB_DIR}/${VERSION}.zip"
+
+mkdir -p "$LIB_DIR"
 
 if curl -fLo "$DEST" "$S3_BASE_URL" 2>/dev/null; then
   echo "🗃️ S3에서 다운로드 성공, 압축 해제 진행중..."
