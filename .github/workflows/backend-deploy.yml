@@ -75,7 +75,7 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist
-          mkdir -p dist/scripts
+          mkdir -p dist/scripts/backend/
 
           cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.arm64.bin dist/
           cp -R backend/services/${{ env.APP_NAME }}/${{ env.APP_NAME }}.amd64.bin dist/
