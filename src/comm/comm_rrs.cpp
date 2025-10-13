@@ -3398,7 +3398,7 @@ void COMM_RRS::send_move_response(const DATA_MOVE& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3459,7 +3459,7 @@ void COMM_RRS::send_localization_response(const DATA_LOCALIZATION& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3489,7 +3489,7 @@ void COMM_RRS::send_load_response(const DATA_LOAD& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3518,7 +3518,7 @@ void COMM_RRS::send_randomseq_response(const DATA_RANDOMSEQ& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3549,7 +3549,7 @@ void COMM_RRS::send_mapping_response(const DATA_MAPPING& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3579,7 +3579,7 @@ void COMM_RRS::send_dock_response(const DATA_DOCK& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3631,7 +3631,7 @@ void COMM_RRS::send_field_get_response(const DATA_SAFETY& msg)
 
     if(msg.result == "reject" || msg.result == "fail")
     {
-        QJsonObject errorCode = getErrorCodeMapping(msg.message);
+        QJsonObject errorCode = get_error_code_mapping(msg.message);
         obj["message_detail"] = errorCode;
     }
 
@@ -3870,7 +3870,8 @@ void COMM_RRS::send_path_response(const DATA_PATH& msg)
 }
 
 
-QJsonObject COMM_RRS::getErrorCodeMapping(const QString& message)
+//QJsonObject COMM_RRS::getErrorCodeMapping(const QString& message)
+QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
 {
     QJsonObject errorCode;
     QString error_code = "Unknown";

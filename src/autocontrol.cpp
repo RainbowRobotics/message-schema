@@ -584,7 +584,8 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
 
     const int preset = msg.preset;
 
-    qDebug()<<"msg.direction : "<<msg.direction;
+    //qDebug()<<"msg.direction : "<<msg.direction;
+    spdlog::info("msg direction:{} ",msg.direction.toUtf8().constData());
 
     if(msg.direction == "forward")
     {
@@ -603,7 +604,8 @@ void AUTOCONTROL::slot_path()
 
 void AUTOCONTROL::slot_path(QString direction)
 {
-    qDebug()<<"fms_cmd_direction : "<<direction;
+    //qDebug()<<"fms_cmd_direction : "<<direction;
+    spdlog::info("fms_cmd_direction:{}",direction.toUtf8().constData());
     if(direction == "forward")
     {
         move();
@@ -614,7 +616,8 @@ void AUTOCONTROL::slot_path(QString direction)
     }
     else
     {
-        qDebug()<<"방향이 설정되지 않아 이동할 수 없습니다.";
+        //qDebug()<<"방향이 설정되지 않아 이동할 수 없습니다.";
+        spdlog::error("방향이 설정되지 않아 이동할 수 없습니다.");
     }
 }
 
@@ -719,14 +722,18 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             NODE* node = unimap->get_node_by_id(path_list2[p].back());
             if(node == NULL)
             {
-                logger->write_log("[AUTO] move_pp, path invalid");
-                qDebug() << "[AUTO] node null";
+                //logger->write_log("[AUTO] move_pp, path invalid");
+                //qDebug() << "[AUTO] node null";
+                spdlog::info("[AUTO] move_pp, path invalid");
                 stop();
                 return;
             }
 
-            qDebug()<<"final_goal_node_id:"<<final_goal_node_id;
-            qDebug()<<"node->id :"<<node->id;
+            //qDebug()<<"final_goal_node_id:"<<final_goal_node_id;
+            //qDebug()<<"node->id :"<<node->id;
+
+            spdlog::info("[AUTO] final_goal_node_id:{}", final_goal_node_id.toUtf8().constData());
+            spdlog::info("[AUTO] node->id: {}", node->id.toUtf8().constData());
 
 
             if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
@@ -1096,7 +1103,7 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
 
 void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
 {
-    qDebug()<<"click hear!!!!";
+    //qDebug()<<"click hear!!!!";
     // stop first
     stop();
 
@@ -1201,7 +1208,7 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
             if(node == NULL)
             {
                 logger->write_log("[AUTO] move_pp, path invalid");
-                qDebug() << "[AUTO] node null";
+                //qDebug() << "[AUTO] node null";
                 stop();
                 return;
             }
@@ -3493,6 +3500,7 @@ void AUTOCONTROL::control_loop()
                 if(extend_dt > config->get_drive_extended_control_time())
                 {
                     //                    qDebug()<<"extended ctrl time!!!!!1";
+                    spdlog::debug("extended ctrl time!");
                     mobile->move(0, 0, 0);
 
                     extend_dt = 0;
@@ -3807,6 +3815,8 @@ void AUTOCONTROL::control_loop()
             // calc heading error
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 //            qDebug()<<"err_th : "<<err_th;
+
+            spdlog::debug("err_th: {}", err_th);
             if(pre_err_th == 0)
             {
                 pre_err_th = err_th;
@@ -3875,7 +3885,8 @@ void AUTOCONTROL::control_loop()
         {
             if(obs_state == AUTO_OBS_CHECK)
             {
-                qDebug() << "obs check";
+                //qDebug() << "obs check";
+                spdlog::debug("obs check");
 
                 if(obs_value == OBS_DYN)
                 {
