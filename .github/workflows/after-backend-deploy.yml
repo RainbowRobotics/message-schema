@@ -1,7 +1,9 @@
 name: after-backend-deploy
 on:
-  repository_dispatch:
-    types: [post-deploy]
+  push:
+    tags:
+      - "release/total/**"
+      - "release/dev-total/**"
 
 permissions:
   actions: write
@@ -16,13 +18,9 @@ jobs:
 
       - name: Get Branch Name
         run: |
-          BRANCH_NAME=${{ github.event.client_payload.BRANCH_NAME }}
-
-          git switch $BRANCH_NAME
-          git pull origin $BRANCH_NAME
-
-          git fetch --tags --force --prune --quiet
-
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          BRANCH_NAME=$(echo $TAG_NAME | cut -d'/' -f3)
+          echo "${BRANCH_NAME}" > backend_deploy_branch.txt
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Get Service Names
