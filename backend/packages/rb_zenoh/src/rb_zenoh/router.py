@@ -112,6 +112,8 @@ class ZenohRouter:
             self._closed = False
             self._started = True
 
+            self.client.set_loop(asyncio.get_running_loop())
+
             for r in self._regs:
                 if r.handle:  # 이미 동적으로 구독됐을 수 있음
                     continue

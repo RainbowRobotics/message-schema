@@ -39,7 +39,7 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
 	@bash -euo pipefail -c '\
 		set -Eeuo pipefail; \
-		compose="docker compose -f ${WORKDIR}/docker-compose.yml"; \
+		compose="docker compose -f ${WORKDIR}/docker-compose.dev.yml"; \
 		$${compose} pull --ignore-buildable || true; \
 		if $${compose} build; then \
 		  exec $${compose} up; \
@@ -48,7 +48,7 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 		fi'
 
 .PHONY: backend.build
-backend.build: backend.flatc backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
+backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
 
 
@@ -57,7 +57,7 @@ backend.preview: ## Backend 운영 환경 실행
 	# @docker build -t rrs-nginx:latest api-gateway/
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
 	@bash ${ROOT_DIR}scripts/backend/generate-compose.sh
-	@docker compose -f ${WORKDIR}/docker-compose.preview.yml up
+	@docker compose -f ${WORKDIR}/docker-compose.preview.yml up --build
 
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성

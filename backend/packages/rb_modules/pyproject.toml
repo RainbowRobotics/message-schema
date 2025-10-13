@@ -15,6 +15,10 @@ dependencies = [
     "utils",
     "rb_database",
     "rb_zenoh",
+    "rb_socketio",
+    "rb_schemas",
+    "rb_resources",
+    "flat_buffers",
     "pydantic-settings>=2.10.1",
 ]
 
@@ -22,3 +26,7 @@ dependencies = [
 utils = { workspace = true }
 rb_database = { workspace = true }
 rb_zenoh = { workspace = true }
+rb_socketio = { workspace = true }
+rb_schemas = { workspace = true }
+rb_resources = { workspace = true }
+flat_buffers = { workspace = true }

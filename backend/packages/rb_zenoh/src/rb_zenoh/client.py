@@ -111,6 +111,9 @@ class ZenohClient:
             except RuntimeError:
                 self._loop = None
 
+    def set_loop(self, loop: asyncio.AbstractEventLoop):
+        self._loop = loop
+
     # def publish(self, topic: str, data: Union[bytes, bytearray, memoryview, dict]):
     #     if self.session is None:
     #         self.connect()
@@ -689,6 +692,11 @@ class ZenohClient:
                 opts = e.opts
                 m = e.metrics
 
+                print(
+                    f"🔎 _spawn_all: {opts.allowed_same_sender} {attachment['sender_id']} {self.sender_id}",
+                    flush=True,
+                )
+
                 if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
                     continue
 
@@ -921,14 +929,11 @@ class ZenohClient:
             pass
 
     def _ensure_loop(self) -> asyncio.AbstractEventLoop:
-        if self._loop is None:
-            try:
-                self._loop = asyncio.get_running_loop()
-            except RuntimeError:
-                raise RuntimeError(  # noqa: B904
-                    "No running asyncio loop; call from within an event loop"
-                )  # noqa: B904
-        return self._loop
+        if self._loop and self._loop.is_running():
+            return self._loop
+        raise RuntimeError(
+            "No running asyncio loop; make sure ZenohClient.set_loop(loop) was called from lifespan"
+        )
 
     def is_shm_active(self, topic="diag/shmcheck", seconds=1.0, mb=8):
         if self.session is None:

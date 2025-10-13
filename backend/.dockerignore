@@ -6,4 +6,6 @@ bazel-bin
 bazel-out
 bazel-testlogs
 node_modules
+dist
+build
 *.log

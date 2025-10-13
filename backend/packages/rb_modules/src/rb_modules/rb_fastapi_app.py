@@ -98,6 +98,17 @@ def create_app(
 
             print("🔌 socket.io connect issued (non-blocking)", flush=True)
 
+        if bg_tasks:
+            for task_fn in bg_tasks:
+                if asyncio.iscoroutinefunction(task_fn):
+                    app_task = asyncio.create_task(task_fn())
+                elif isinstance(task_fn, asyncio.Task):
+                    app_task = task_fn
+                else:
+                    raise TypeError(f"Invalid bg_task type: {type(task_fn)}")
+
+                bg_tasks[bg_tasks.index(task_fn)] = app_task
+
         try:
             yield
         finally:

@@ -13,35 +13,50 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKDIR="${REPO_ROOT}/backend"
 SERVICES_DIR="$WORKDIR/services"
 
+CACHE_ROOT="${REPO_ROOT}/.buildx-cache"
+KEEP_STORAGE="${KEEP_STORAGE:-20GB}"
+BUILDER="${BUILDER:-rrs-py-buildx}"
+
 build_one() {
   local svc="$1" arch="$2"
   case "$arch" in amd64|arm64) ;; *) echo "❌ invalid arch: '$arch'"; return 2;; esac
   local outdir="$SERVICES_DIR/$svc/.out-$arch"
+  local cache_dir="${CACHE_ROOT}/${svc}-${arch}" 
 
   echo "➡️  ${svc} (${arch}) → ${outdir}"
-  rm -rf "$outdir" && mkdir -p "$outdir"
+  rm -rf "$outdir" && mkdir -p "$outdir" "$cache_dir"
+
+  local common=(
+    --builder "$BUILDER"
+    --platform "linux/${arch}"
+    --build-arg "SERVICE=${svc}"
+    -f "$WORKDIR/Dockerfile.build"
+    --target artifacts
+    --output "type=local,dest=${outdir}"
+    --provenance=false         # 메타데이터 저장 축소
+    --sbom=false               # SBOM 미생성(필요할 때만 켜기)
+  )
 
   if [[ "${VERBOSE:-0}" == "1" ]]; then
-    DOCKER_BUILDKIT=1 docker buildx build \
-      --platform "linux/${arch}" \
-      --build-arg "SERVICE=${svc}" \
-      -f "$WORKDIR/Dockerfile.build" \
-      --target artifacts \
-      --output "type=local,dest=${outdir}" \
-      "$REPO_ROOT"
+    DOCKER_BUILDKIT=1 docker buildx build "${common[@]}" "$REPO_ROOT"
   else
-    DOCKER_BUILDKIT=1 docker buildx build \
-      --platform "linux/${arch}" \
-      --build-arg "SERVICE=${svc}" \
-      -f "$WORKDIR/Dockerfile.build" \
-      --target artifacts \
-      --output "type=local,dest=${outdir}" \
-      "$REPO_ROOT" >/dev/null
+    DOCKER_BUILDKIT=1 docker buildx build "${common[@]}" "$REPO_ROOT" >/dev/null
   fi
 
   mv "${outdir}/run.bin" "$SERVICES_DIR/${svc}/${svc}.${arch}.bin"
   rm -rf "$outdir"
 }
+
+if ! docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
+  docker buildx create --name "$BUILDER" --driver docker-container >/dev/null
+fi
+
+docker buildx inspect "$BUILDER" >/dev/null
+docker buildx inspect "$BUILDER" | grep -q 'Driver: docker-container' || {
+  echo "❌ 빌더 '$BUILDER' driver 가 docker-container 가 아님"; exit 2;
+}
+# 빌더가 준비 안됐으면 부트스트랩
+docker buildx inspect "$BUILDER" | grep -q 'Status: running' || docker buildx inspect "$BUILDER" --bootstrap >/dev/null
 
 command -v docker >/dev/null || { echo "docker 필요"; exit 127; }
 docker buildx version >/dev/null 2>&1 || { echo "docker buildx 필요"; exit 127; }
@@ -56,6 +71,9 @@ else
   IFS=',' read -r -a SERVICES_ARR <<< "$SERVICE"
   SERVICES_LIST=$(printf '%s\n' "${SERVICES_ARR[@]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed '/^$/d')
 fi
+# 스크립트 안에서 SERVICES_LIST 만든 다음:
+echo "count=$(printf '%s\n' "$SERVICES_LIST" | sed '/^$/d' | wc -l)"
+printf '%s\n' "$SERVICES_LIST" | nl -ba | cat -v
 
 ARCHS="${ARCHS:-amd64 arm64}"
 for a in $ARCHS; do case "$a" in amd64|arm64) ;; *) echo "❌ invalid arch '$a'"; exit 2;; esac; done
@@ -87,5 +105,8 @@ for pid in "${pids[@]}"; do
   if ! wait "$pid"; then fail=1; fi
 done
 exec 3>&-
+
+echo "🧹 buildx 캐시 정리 (builder=${BUILDER}, keep=${KEEP_STORAGE})"
+docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
 
 [[ $fail -eq 0 ]] && echo "🎉 병렬 빌드 완료" || { echo "⛔ 일부 실패"; exit 1; }
