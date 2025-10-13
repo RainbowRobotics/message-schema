@@ -4075,7 +4075,10 @@ void MainWindow::getIPv4()
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
-        if(addr.protocol() == QAbstractSocket::IPv4Protocol && addr != QHostAddress::LocalHost)
+        if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
+                addr != QHostAddress::LocalHost &&
+                addr != QHostAddress("192.168.1.5") &&
+                addr != QHostAddress("192.168.2.2"))
         {
             ui->lb_RobotIP->setText(addr.toString());
             return;

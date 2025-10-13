@@ -1125,7 +1125,8 @@ void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr co
                                 }
                                 else
                                 {
-                                    qDebug() << "error : missing name or type field";
+                                    //qDebug() << "error : missing name or type field";
+                                    spdlog::error("missing name or type field");
                                     msg.result = "reject";
                                     msg.message = "missing name or type field";
                                     send_config_request_response(msg);
@@ -1135,7 +1136,10 @@ void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr co
                         }
                         else
                         {
-                            qDebug() << "error : param is not an object, type:" << param_value->get_flag();
+                            //qDebug() << "error : param is not an object, type:" << param_value->get_flag();
+                            //spdlog::error("error : param is not an object, type: {}", param_value->get_flag());
+                            spdlog::error("error : param is not an object, type: {}", static_cast<int>(param_value->get_flag()));
+
                             msg.result = "reject";
                             msg.message = "param is not an object";
                             send_config_request_response(msg);
@@ -1148,7 +1152,8 @@ void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr co
         else
         {
             //maybe need to reject exception code here
-            qDebug() << "params field not found";
+            //qDebug() << "params field not found";
+            spdlog::error("params field not found");
         }
 
         // action
