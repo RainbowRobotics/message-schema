@@ -6,7 +6,26 @@ if [ -z "$SERVICE" ]; then
   exit 1
 fi
 
-BIN_NAME="$SERVICE.bin"
+ARCH=$(uname -m)
+
+case "$ARCH" in
+  x86_64)
+    CONVERTED_ARCH="amd64"
+    ;;
+  aarch64)
+    CONVERTED_ARCH="arm64"
+    ;;
+  arm64)
+    CONVERTED_ARCH="arm64"
+    ;;
+  *)
+    echo "❌ 지원하지 않는 아키텍처: $ARCH"
+    exit 1
+    ;;
+esac
+
+
+BIN_NAME="${SERVICE}.${CONVERTED_ARCH}.bin"
 BIN_PATH="$WORKDIR/$BIN_NAME"
 
 if [ ! -f "$BIN_PATH" ]; then
