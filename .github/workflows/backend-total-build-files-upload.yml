@@ -73,7 +73,7 @@ jobs:
           mkdir -p "${DIST}/api-gateway"
 
           AGG_JSON="${DIST}/services/version.json"
-          echo "{\"branch\": \"${{ env.BRANCH_NAME }}\"}" > "$AGG_JSON"
+          echo "{}" > "$AGG_JSON"
 
           shopt -s nullglob
           for dir in backend/services/*/; do
@@ -135,7 +135,7 @@ jobs:
 
       - name: Make version.json
         run: |
-          echo "{\"new_version\": \"${{ env.VERSION }}\"}" > version.json
+          echo "{\"new_version\": \"${{ env.VERSION }}\", \"branch\": \"${{ env.BRANCH_NAME }}\"}" > version.json
 
       - name: Upload dist file to s3
         env:
