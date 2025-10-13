@@ -1,7 +1,7 @@
 {
     "robot": {
         "PLATFORM_NAME": "MECANUM",
-        "PLATFORM_TYPE": "Q150",
+        "PLATFORM_TYPE": "VALEO",
         
         "ROBOT_SIZE_MAX_X": "0.34",
         "ROBOT_SIZE_MAX_Y": "0.30",
