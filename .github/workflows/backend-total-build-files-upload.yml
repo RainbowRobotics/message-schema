@@ -66,6 +66,9 @@ jobs:
           fi
 
           DIST="${{ env.VERSION }}"
+          rm -rf "${DIST}"
+          rm -rf "${DIST}.zip"
+
           mkdir -p "${DIST}"
           mkdir -p "${DIST}/services"
           mkdir -p "${DIST}/api-gateway"
@@ -258,6 +261,10 @@ jobs:
       - name: Delete release tag
         if: always()
         run: |
-          DIST_ROOT="rrs-py-${{ env.VERSION }}"
+          cd $GITHUB_WORKSPACE
 
-          rm -rf "${DIST_ROOT}.zip"
+          DIST="${{ env.VERSION }}"
+
+          rm -rf "${DIST}.zip"
+          rm -rf "version.json"
+          rm -rf "install.zip"
