@@ -492,6 +492,101 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
             break;
         }
 
+    case RRS_CONNECTION_FAILED:     // 0x9001
+            {
+                info.error_code = "R0Rx" + info.alarm_code; // R: RRS
+                info.message = "RRS connection failed";
+                info.solution = "Check RRS server status and network";
+                info.description = "Failed to connect to RRS server";
+                info.level = "critical";
+                info.remark = "Remote control unavailable";
+                break;
+            }
+
+    case RRS_TIMEOUT:               // 0x9002
+            {
+                info.error_code = "R0Rx" + info.alarm_code;
+                info.message = "RRS response timeout";
+                info.solution = "Check RRS server for responsiveness";
+                info.description = "No response from RRS within the time limit";
+                info.level = "warn";
+                info.remark = "Communication delay";
+                break;
+            }
+
+    case RRS_INVALID_MESSAGE:       // 0x9003
+            {
+                info.error_code = "R0Rx" + info.alarm_code;
+                info.message = "invalid message from RRS";
+                info.solution = "Check RRS message format";
+                info.description = "Received a malformed or unexpected message from RRS";
+                info.level = "warn";
+                info.remark = "Protocol mismatch";
+                break;
+            }
+
+    case RRS_RESPONSE_ERROR:        // 0x9004
+            {
+                info.error_code = "R0Rx" + info.alarm_code;
+                info.message = "RRS returned an error";
+                info.solution = "Check RRS server logs for details";
+                info.description = "RRS responded with an error status to a request";
+                info.level = "error";
+                info.remark = "Command rejected by RRS";
+                break;
+            }
+
+    case COBOT1_CONNECTION_FAILED:   // 0xA001
+        {
+            info.error_code = "R0Cx" + info.alarm_code; // C: Cobot
+            info.message = "cobot1 connection failed";
+            info.solution = "Check Cobot1 power, cable, and network settings";
+            info.description = "Failed to establish communication with the cobot1";
+            info.level = "critical";
+            info.remark = "Cobot1 operation unavailable";
+            break;
+        }
+    case COBOT1_COMMAND_FAILED:      // 0xA002
+        {
+            info.error_code = "R0Cx" + info.alarm_code;
+            info.message = "cobot1 command failed";
+            info.solution = "Check cobot1 status and command validity";
+            info.description = "The command sent to the cobot1 could not be executed";
+            info.level = "error";
+            info.remark = "Cobot1 task failed";
+            break;
+        }
+    case COBOT1_STATUS_ERROR:        // 0xA003
+        {
+            info.error_code = "R0Cx" + info.alarm_code;
+            info.message = "cobot1 status error";
+            info.solution = "Reset cobot1 or clear the error";
+            info.description = "The cobot1 is in an error or fault state";
+            info.level = "error";
+            info.remark = "Cobot1 requires intervention";
+            break;
+        }
+    case COBOT1_EMERGENCY_STOP:      // 0xA004
+        {
+            info.error_code = "R0Cx" + info.alarm_code;
+            info.message = "cobot1 E-stop pressed";
+            info.solution = "Release the emergency stop button on the cobot1";
+            info.description = "Cobot1 emergency stop is active";
+            info.level = "critical";
+            info.remark = "Immediate stop";
+            break;
+        }
+    case COBOT1_TIMEOUT:             // 0xA005
+        {
+            info.error_code = "R0Cx" + info.alarm_code;
+            info.message = "cobot1 response timeout";
+            info.solution = "Check cobot1 controller and communication link";
+            info.description = "The cobot1 did not respond to a command in time";
+            info.level = "warn";
+            info.remark = "Potential cobot1 freeze or network issue";
+            break;
+        }
+
     default:
         {
             info.error_code = "[D]R0Sx0000";
@@ -568,6 +663,9 @@ QString ERROR_MANAGER::getCategoryName(ErrorCause cause)
     case 0x6000:        return "Safety";
     case 0x7000:        return "Battery";
     case 0x8000:        return "Motor";
+    case 0x9000:        return "COMM_RRS";
+    case 0xA000:        return "Cobot";
+
     default:            return "Unknown";
     }
 }
@@ -581,16 +679,19 @@ QString ERROR_MANAGER::getCauseName(ErrorCause cause)
     case MAP_LOAD_FAILED:               return "Map Load Failed";
     case MAP_COPY_FAILED:               return "Map Copy Failed";
     case MAP_TOPO_LOAD_FAILED:          return "Topology Load Failed";
+
     case LOC_NOT_INIT:                  return "Localization Not Initialized";
     case LOC_SENSOR_ERROR:              return "Localization Sensor Error";
     case LOC_ALREADY_RUNNING:           return "Localization Already Running";
     case LOC_INIT_FAILED:               return "Localization Init Failed";
+
     case MOVE_NO_TARGET:                return "No Target";
     case MOVE_TARGET_INVALID:           return "Target Invalid";
     case MOVE_TARGET_OCCUPIED:          return "Target Position Occupied";
     case MOVE_TARGET_OUT_RANGE:         return "Target Out of Range";
     case MOVE_NODE_NOT_FOUND:           return "Node Not Found";
     case MOVE_EMPTY_NODE_ID:            return "Empty Node ID";
+
     case SENSOR_LIDAR_DISCON:           return "LiDAR Disconnected";
     case SENSOR_LIDAR_DATA_ERROR:       return "LiDAR Data Error";
     case SENSOR_LIDAR_CALIB_ERROR:      return "LiDAR Calibration Error";
@@ -600,24 +701,40 @@ QString ERROR_MANAGER::getCauseName(ErrorCause cause)
     case SENSOR_CAM_DATA_ERROR:         return "Camera Data Error";
     case SENSOR_QR_ERROR:               return "QR Sensor Error";
     case SENSOR_TEMP_ERROR:             return "Temperature Sensor Error";
+
     case SYS_NOT_SUPPORTED:             return "Function Not Supported";
     case SYS_MULTI_MODE_LIMIT:          return "Multi Mode Limitation";
     case SYS_PROCESS_START_FAILED:      return "Process Start Failed";
     case SYS_PROCESS_FINISH_FAILED:     return "Process Finish Failed";
     case SYS_NETWORK_ERROR:             return "Network Error";
+
     case SAFETY_EMO_RELEASED:           return "Emergency Stop Released";
     case SAFETY_EMO_PRESSED:            return "Emergency Stop Pressed";
     case SAFETY_BUMPER_PRESSED:         return "Bumper Pressed";
     case SAFETY_OBS_DETECTED:           return "Obstacle Detected";
     case SAFETY_ZONE_VIOLATION:         return "Safety Zone Violation";
+
     case BAT_NOT_CHARGING:              return "Not Charging";
     case BAT_LOW:                       return "Low Battery";
     case BAT_CRITICAL:                  return "Battery Critical";
     case BAT_POWER_ERROR:               return "Power Supply Error";
+
     case MOTOR_CONNECTION_LOST:         return "Motor Connection Lost";
     case MOTOR_OVERHEAT:                return "Motor Overheat";
     case MOTOR_OVERLOAD:                return "Motor Overload";
     case MOTOR_ENCODER_ERROR:           return "Motor Encoder Error";
+
+    case RRS_CONNECTION_FAILED:         return "RRS Connection Failed";
+    case RRS_TIMEOUT:                   return "RRS Timeout";
+    case RRS_INVALID_MESSAGE:           return "RRS Invalid Message";
+    case RRS_RESPONSE_ERROR:            return "RRS Response Error";
+
+    case COBOT1_CONNECTION_FAILED:      return "Cobot1 Connection Failed";
+    case COBOT1_COMMAND_FAILED:         return "Cobot1 Command Failed";
+    case COBOT1_STATUS_ERROR:           return "Cobot1 Status Error";
+    case COBOT1_EMERGENCY_STOP:         return "Cobot1 Emergency Stop";
+    case COBOT1_TIMEOUT:                return "Cobot1 Timeout";
+
     default:                            return "Unknown";
     }
 }
@@ -628,22 +745,34 @@ QString ERROR_MANAGER::getContextName(ErrorContext context) // for translate lan
     {
     case MOVE_TARGET:           return "MOVE_TARGET";
     case MOVE_GOAL:             return "MOVE_GOAL";
+
     case LOAD_MAP:              return "LOAD_MAP";
     case LOAD_TOPO:             return "LOAD_TOPO";
     case LOAD_CONFIG:           return "LOAD_CONFIG";
+
     case MAPPING_START:         return "MAPPING_START";
     case MAPPING_SAVE:          return "MAPPING_SAVE";
+
     case LOC_SEMI_AUTO:         return "LOC_SEMIAUTO";
     case LOC_INIT:              return "LOC_INIT";
     case LOC_START:             return "LOC_START";
     case LOC_STOP:              return "LOC_STOP";
+
     case SOFTWARE_UPDATE:       return "SOFTWARE_UPDATE";
+
     case DOCK_START:            return "DOCK_START";
     case DOCK_STOP:             return "DOCK_STOP";
+
     case LED_CONTROL:           return "LED_CONTROL";
+
     case MOTOR_CONTROL:         return "MOTOR_CONTROL";
+
     case FIELD_SET:             return "FIELD_SET";
     case FIELD_GET:             return "FIELD_GET";
+
+    case RRS_COMMUNICATION:     return "RRS_COMMUNICATION";
+    case COBOT_OPERATION:       return "COBOT_OPERATION";
+
     default:                    return "UNKNOWN";
     }
 }
@@ -2125,6 +2254,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         {
             msg.result = "reject";
             msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+            msg.bat_percent = bat_percent;
 
             ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
@@ -2238,12 +2368,91 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         }
         else if(method == "hpp")
         {
-            msg.result = "reject";
-            msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
-            msg.bat_percent = bat_percent;
 
-            ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
-            send_move_response(msg);
+            if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO)
+            {
+                if(unimap->get_is_loaded() != MAP_LOADED)
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                    msg.bat_percent = bat_percent;
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                    send_move_response(msg);
+                    return;
+                }
+
+                if(!loc->get_is_loc())
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                    msg.bat_percent = bat_percent;
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                    send_move_response(msg);
+                    return;
+                }
+
+                const double x = msg.tgt_pose_vec[0];
+                const double y = msg.tgt_pose_vec[1];
+                if(x < unimap->get_map_min_x() || x > unimap->get_map_max_x() || y < unimap->get_map_min_y() || y > unimap->get_map_max_y())
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
+                    msg.bat_percent = bat_percent;
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
+                    send_move_response(msg);
+                    return;
+                }
+
+                const Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
+                const Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3] * D2R));
+                if(obsmap->is_tf_collision(goal_tf))
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
+                    msg.bat_percent = bat_percent;
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
+                    send_move_response(msg);
+                    return;
+                }
+
+                if(config->get_use_multi())
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
+                    msg.bat_percent = bat_percent;
+
+                    ERROR_MANAGER::logError(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
+                    send_move_response(msg);
+                    return;
+                }
+
+
+                msg.result = "accept";
+                msg.message = "";
+                msg.bat_percent = bat_percent;
+
+                send_move_response(msg);
+
+                // pure pursuit
+                Q_EMIT ctrl->signal_move(msg);
+            }
+
+            else
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+                msg.bat_percent = bat_percent;
+
+                ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+                send_move_response(msg);
+            }
+
+
+
         }
         else if(method == "tng")
         {
@@ -4007,7 +4216,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         //remark = errorInfo.remark;
     }
 
-    /* Navigation */////////////////////////////////////////////////////////////////////////////////////////////////////
+    /* MOVE - Navigation */////////////////////////////////////////////////////////////////////////////////////////////////////
     else if(message.contains("[R0Nx3001]") || message.contains("3001"))
     {
         apply(ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::MOVE_NO_TARGET, ERROR_MANAGER::MOVE_TARGET));
