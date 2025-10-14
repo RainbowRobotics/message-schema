@@ -3654,9 +3654,7 @@ void MainWindow::plot_ctrl()
 
         Eigen::Vector3d control_input = MOBILE::instance()->get_control_input();
         QString text;
-        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f, info:%s, zone:%s", control_input[0], control_input[1], control_input[2]*R2D
-                , POLICY::instance()->get_cur_info().toLocal8Bit().data()
-                , POLICY::instance()->get_cur_zone().toLocal8Bit().data());
+        text.sprintf("vx:%.2f, vy:%.2f, wz:%.2f", control_input[0], control_input[1], control_input[2]*R2D);
         ui->lb_RobotVel->setText(text);
 
         // draw cur node
@@ -3677,6 +3675,20 @@ void MainWindow::plot_ctrl()
                 pcl_viewer->addPolygonMesh(donut, "cur_node");
             }
         }
+
+        // plot policy info
+        {
+            QString text;
+            text.sprintf("node: %s, link: %s, zone:%s, info:%s, %s, %s",
+                         POLICY::instance()->get_cur_node().toLocal8Bit().data(),
+                         POLICY::instance()->get_cur_link().toLocal8Bit().data(),
+                         POLICY::instance()->get_cur_zone().toLocal8Bit().data(),
+                         POLICY::instance()->get_node_info().info.toLocal8Bit().data(),
+                         POLICY::instance()->get_link_info().info.toLocal8Bit().data(),
+                         POLICY::instance()->get_zone_info().info.toLocal8Bit().data());
+            ui->lb_Policy->setText(text);
+        }
+
     }
 
 
