@@ -4271,7 +4271,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     }
 
     /* Battery */////////////////////////////////////////////////////////////////////////////////////////////////////
-    else if(message.contains("[R0Sx7001]") || message.contains("7001"))
+    else if(message.contains("[R0Bx7001]") || message.contains("7001"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::BAT_NOT_CHARGING, ERROR_MANAGER::FIELD_GET);
         error_code = errorInfo.error_code;
@@ -4282,7 +4282,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx7002]") || message.contains("7002"))
+    else if(message.contains("[R0Bx7002]") || message.contains("7002"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::BAT_LOW, ERROR_MANAGER::FIELD_GET);
         error_code = errorInfo.error_code;
@@ -4293,7 +4293,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx7003]") || message.contains("7003"))
+    else if(message.contains("[R0Bx7003]") || message.contains("7003"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::BAT_CRITICAL, ERROR_MANAGER::FIELD_GET);
         error_code = errorInfo.error_code;
@@ -4304,7 +4304,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx7004]") || message.contains("7004"))
+    else if(message.contains("[R0Bx7004]") || message.contains("7004"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::BAT_POWER_ERROR, ERROR_MANAGER::FIELD_GET);
         error_code = errorInfo.error_code;
@@ -4317,7 +4317,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     }
 
     /* Motor */////////////////////////////////////////////////////////////////////////////////////////////////////
-    else if(message.contains("[R0Sx8001]") || message.contains("8001"))
+    else if(message.contains("[R0Mx8001]") || message.contains("8001"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::MOTOR_CONNECTION_LOST, ERROR_MANAGER::MOTOR_CONTROL);
         error_code = errorInfo.error_code;
@@ -4328,7 +4328,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx8002]") || message.contains("8002"))
+    else if(message.contains("[R0Mx8002]") || message.contains("8002"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::MOTOR_OVERHEAT, ERROR_MANAGER::MOTOR_CONTROL);
         error_code = errorInfo.error_code;
@@ -4339,7 +4339,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx8003]") || message.contains("8003"))
+    else if(message.contains("[R0Mx8003]") || message.contains("8003"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::MOTOR_OVERLOAD, ERROR_MANAGER::MOTOR_CONTROL);
         error_code = errorInfo.error_code;
@@ -4350,7 +4350,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         solution = errorInfo.solution;
         remark = errorInfo.remark;
     }
-    else if(message.contains("[R0Sx8004]") || message.contains("8004"))
+    else if(message.contains("[R0Mx8004]") || message.contains("8004"))
     {
         ERROR_MANAGER::ErrorInfo errorInfo = ERROR_MANAGER::getErrorInfo(ERROR_MANAGER::MOTOR_ENCODER_ERROR, ERROR_MANAGER::MOTOR_CONTROL);
         error_code = errorInfo.error_code;
