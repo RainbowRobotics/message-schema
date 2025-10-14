@@ -14,8 +14,36 @@ WORKDIR="${REPO_ROOT}/backend"
 SERVICES_DIR="$WORKDIR/services"
 
 CACHE_ROOT="${REPO_ROOT}/.buildx-cache"
-KEEP_STORAGE="${KEEP_STORAGE:-20GB}"
+KEEP_STORAGE="${KEEP_STORAGE:-10GB}"
 BUILDER="${BUILDER:-rrs-py-buildx}"
+
+ensure_builder() {
+  docker context use default >/dev/null 2>&1 || true
+
+  if docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
+    docker buildx rm -f "$BUILDER" >/dev/null 2>&1 || true
+  fi
+
+  docker ps -a --format '{{.ID}} {{.Names}}' \
+    | awk -v b="$BUILDER" '$2 ~ ("buildx_buildkit_" b) {print $1}' \
+    | xargs -r docker rm -f >/dev/null 2>&1
+
+  if [ -d "$HOME/.docker/buildx/instances" ]; then
+    find "$HOME/.docker/buildx/instances" -maxdepth 1 -type f -name "${BUILDER}*" -print0 \
+      | xargs -0 -r rm -f >/dev/null 2>&1
+  fi
+
+  echo "🚀 새 빌더 '${BUILDER}' 생성(docker-container)"
+  docker buildx create \
+    --name "$BUILDER" \
+    --driver docker-container \
+    --node "${BUILDER}-0" \
+    --driver-opt env.BUILDKIT_KEEP_STORAGE=$((8*1024*1024*1024)) \
+    --use >/dev/null
+
+  echo "🔧 빌더 부트스트랩 중..."
+  docker buildx inspect "$BUILDER" --bootstrap >/dev/null
+}
 
 build_one() {
   local svc="$1" arch="$2"
@@ -47,16 +75,7 @@ build_one() {
   rm -rf "$outdir"
 }
 
-if ! docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
-  docker buildx create --name "$BUILDER" --driver docker-container >/dev/null
-fi
-
-docker buildx inspect "$BUILDER" >/dev/null
-docker buildx inspect "$BUILDER" | grep -q 'Driver: docker-container' || {
-  echo "❌ 빌더 '$BUILDER' driver 가 docker-container 가 아님"; exit 2;
-}
-# 빌더가 준비 안됐으면 부트스트랩
-docker buildx inspect "$BUILDER" | grep -q 'Status: running' || docker buildx inspect "$BUILDER" --bootstrap >/dev/null
+ensure_builder
 
 command -v docker >/dev/null || { echo "docker 필요"; exit 127; }
 docker buildx version >/dev/null 2>&1 || { echo "docker buildx 필요"; exit 127; }
@@ -106,7 +125,12 @@ for pid in "${pids[@]}"; do
 done
 exec 3>&-
 
+
+
 echo "🧹 buildx 캐시 정리 (builder=${BUILDER}, keep=${KEEP_STORAGE})"
+
+docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
+sleep 2
 docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
 
 [[ $fail -eq 0 ]] && echo "🎉 병렬 빌드 완료" || { echo "⛔ 일부 실패"; exit 1; }
