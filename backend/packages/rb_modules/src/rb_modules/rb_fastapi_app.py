@@ -40,7 +40,7 @@ class AppSettings(BaseSettings):
     socket_role: str = "service"
 
     class Config:
-        env_file = "conf.env"
+        env_file = "config.env"
         case_sensitive = False
 
     @model_validator(mode="after")
