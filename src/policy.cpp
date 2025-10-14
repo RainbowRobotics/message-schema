@@ -199,12 +199,15 @@ void POLICY::node_loop()
                     has_last_t = false;
                     outside_cnt = 0;
 
+                    NODE_INFO node_info;
+                    parse_info(node->info, "", node_info);
+
                     // update
                     {
                         std::lock_guard<std::mutex> lock(mtx);
                         cur_node = cur_node_id;
                         cur_link.clear();
-                        link_info = NODE_INFO();
+                        link_info = node_info;
                     }
 
                     // skip link decision
