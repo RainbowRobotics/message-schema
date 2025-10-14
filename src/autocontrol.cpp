@@ -4286,7 +4286,8 @@ void AUTOCONTROL::obs_loop()
     {
         if(!is_moving)
         {
-            std::cout<<"not moving!!";
+            //std::cout<<"not moving!!";
+            spdlog::info("[AUTO] not moving: obs_loop");
             break;
         }
         //        qDebug()<<"obs";

@@ -2248,7 +2248,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
             send_move_response(msg);
 
             // pure pursuit
-            Q_EMIT ctrl->signal_move(msg);
+            Q_EMIT (ctrl->signal_move(msg));
         }
         else
         {
@@ -2393,52 +2393,73 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                     return;
                 }
 
-                const double x = msg.tgt_pose_vec[0];
-                const double y = msg.tgt_pose_vec[1];
-                if(x < unimap->get_map_min_x() || x > unimap->get_map_max_x() || y < unimap->get_map_min_y() || y > unimap->get_map_max_y())
+                QString goal_id = msg.goal_node_id;
+                if(goal_id.isEmpty())
                 {
                     msg.result = "reject";
-                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
+                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
                     msg.bat_percent = bat_percent;
 
-                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET);
+                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
                     send_move_response(msg);
                     return;
                 }
 
-                const Eigen::Vector4d pose_vec = msg.tgt_pose_vec;
-                const Eigen::Matrix4d goal_tf = se2_to_TF(Eigen::Vector3d(pose_vec[0], pose_vec[1], pose_vec[3] * D2R));
-                if(obsmap->is_tf_collision(goal_tf))
+                NODE* node = unimap->get_node_by_id(goal_id);
+                if(!node)
                 {
-                    msg.result = "reject";
-                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
-                    msg.bat_percent = bat_percent;
+                    node = unimap->get_node_by_name(goal_id);
+                    if(!node)
+                    {
+                        msg.result = "reject";
+                        msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                        msg.bat_percent = bat_percent;
 
-                    ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET);
-                    send_move_response(msg);
-                    return;
+                        ERROR_MANAGER::logError(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                        send_move_response(msg);
+                        return;
+                    }
+
+                    // convert name to id
+                    msg.goal_node_id = node->id;
+                    msg.goal_node_name = node->name;
+                }
+                else
+                {
+                    msg.goal_node_name = node->name;
                 }
 
-                if(config->get_use_multi())
-                {
-                    msg.result = "reject";
-                    msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
-                    msg.bat_percent = bat_percent;
+                const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+                const Eigen::Vector3d cur_pos = cur_tf.block(0, 3, 3, 1);
+                msg.cur_pos = cur_pos;
 
-                    ERROR_MANAGER::logError(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_TARGET);
-                    send_move_response(msg);
-                    return;
-                }
+                const Eigen::Vector3d xi = TF_to_se2(node->tf);
+                msg.tgt_pose_vec[0] = xi[0];
+                msg.tgt_pose_vec[1] = xi[1];
+                msg.tgt_pose_vec[2] = node->tf(2, 3);
+                msg.tgt_pose_vec[3] = xi[2];
 
-
-                msg.result = "accept";
-                msg.message = "";
                 msg.bat_percent = bat_percent;
+
+                // calc eta (estimation time arrival)
+                const Eigen::Matrix4d goal_tf = node->tf;
+                PATH global_path = ctrl->calc_global_path(goal_tf);
+                if(global_path.pos.size() < 2)
+                {
+                    msg.result = "accept";
+                    msg.message = "success";
+                    msg.remaining_time = 0.0;
+                }
+                else
+                {
+                    msg.result = "accept";
+                    msg.message = "success";
+                }
 
                 send_move_response(msg);
 
                 // pure pursuit
-                Q_EMIT ctrl->signal_move(msg);
+                Q_EMIT (ctrl->signal_move(msg));
             }
 
             else
@@ -2450,8 +2471,6 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
                 ERROR_MANAGER::logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
                 send_move_response(msg);
             }
-
-
 
         }
         else if(method == "tng")
