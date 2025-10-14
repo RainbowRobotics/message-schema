@@ -1861,4 +1861,37 @@ struct CLOUD
 };
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, CLOUD>, CLOUD, 3> KD_TREE;
 
+
+struct MonitoringField
+{
+    int monitor_id;                          
+    double min_x, max_x, min_y, max_y;     
+    bool is_blocked;                        
+    
+    MonitoringField() : monitor_id(-1),
+                  min_x(0), max_x(0), min_y(0), max_y(0), 
+                  is_blocked(false) {}
+    
+    MonitoringField(const MonitoringField& p)
+    {
+        monitor_id = p.monitor_id;
+        min_x = p.min_x;
+        max_x = p.max_x;
+        min_y = p.min_y;
+        max_y = p.max_y;
+        is_blocked = p.is_blocked;
+    }
+    
+    MonitoringField& operator=(const MonitoringField& p)
+    {
+        monitor_id = p.monitor_id;
+        min_x = p.min_x;
+        max_x = p.max_x;
+        min_y = p.min_y;
+        max_y = p.max_y;
+        is_blocked = p.is_blocked;
+        return *this;
+    }
+};
+
 #endif // GLOBAL_DEFINES_H

@@ -76,6 +76,8 @@ public:
     void set_global_path_update();
     void set_local_path_update();
 
+    void send_safetyio_response(const DATA_SAFTYIO& msg);
+
 private:
     explicit COMM_MSA(QObject *parent = nullptr);
     ~COMM_MSA();
@@ -110,6 +112,7 @@ private:
 
     QString robot_id = "";
     QString multi_state = "none"; // "none", "req_path", "recv_path"
+    QString old_path = "";
 
     // for semi auto init
     std::atomic<bool> semi_auto_init_flag = {false};
@@ -205,6 +208,7 @@ private:
     void handle_mapping_cmd(const QJsonObject& data);
     void handle_localization_cmd(const QJsonObject& data);
     void handle_control_cmd(const QJsonObject& data);
+    void handle_safetyio_cmd(const QJsonObject& data);
 
     void handle_move_jog(const DATA_MOVE& msg);
     void handle_move_goal(DATA_MOVE& msg);
@@ -248,6 +252,8 @@ private:
 
     void handle_common_motor(DATA_MOTOR& msg);
 
+    QJsonValue convertItem(sio::message::ptr item);
+
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};
 
@@ -265,6 +271,10 @@ private:
 
     QByteArray lastest_msg_str;
 
+    unsigned char dio_arr_old[16] = {0};
+
+    QString fms_cmd_direction = "";
+
 private Q_SLOTS:
     void send_loop();
 
@@ -272,6 +282,8 @@ private Q_SLOTS:
     void disconnected();
     //    void recv_message(const QString &buf);
     void recv_message(sio::event& e);
+    void recv_message_array(sio::event& ev);
+
     void reconnect_loop();
 
     void send_move_status();

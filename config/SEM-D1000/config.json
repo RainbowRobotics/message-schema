@@ -200,6 +200,32 @@
     },
     "map": {
         "MAP_PATH": "/data/maps/250829_unicos"
+    },
+    "safety": {
+        "MONITORING_FIELD_COUNT": "3",
+        "MONITORING_FIELDS": [
+            {
+                "min_x": -2.0,
+                "max_x": 2.0,
+                "min_y": -2.0,
+                "max_y": 2.0,
+                "is_blocked": false
+            },
+            {
+                "min_x": -5.0,
+                "max_x": 5.0,
+                "min_y": -5.0,
+                "max_y": 5.0,
+                "is_blocked": false
+            },
+            {
+                "min_x": -10.0,
+                "max_x": 10.0,
+                "min_y": -10.0,
+                "max_y": 10.0,
+                "is_blocked": true
+            }
+        ]
     }
 }
 

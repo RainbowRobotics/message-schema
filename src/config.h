@@ -273,6 +273,15 @@ public:
     QString get_map_path();
     void set_map_path(const QString& path);
 
+
+    /***********************
+     * safety monitoring
+     ***********************/
+     int get_monitoring_field_count();                    
+     std::vector<MonitoringField> get_monitoring_field();
+
+
+
     //set mileage
     double get_mileage();
 
@@ -307,6 +316,7 @@ private:
     void load_lidar_configs(const QJsonObject& obj);
     void load_camera_configs(const QJsonObject& obj);
     void load_sensor_specific_configs(const QJsonObject& obj);
+    void load_safety_config(const QJsonObject& obj);
 
     /***********************
      * helper functions for loading json
@@ -512,6 +522,10 @@ private:
     double DOCKING_X_OFFSET = 0.0;
     double DOCKING_Y_OFFSET = 0.0;
     double DOCKING_LINEAR_X_OFFSET = -0.035;
+
+    // safety
+    int MONITORING_FIELD_COUNT = 0;
+    std::vector<MonitoringField> MONITORING_FIELD;
 
     QStringList load_folder_list();
 

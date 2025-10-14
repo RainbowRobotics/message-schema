@@ -150,10 +150,12 @@ public:
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
     void slot_move(DATA_MOVE msg);
+    void slot_backward_move(DATA_MOVE msg);
 
     // slot func move(receive path) (start control loop)
     void slot_path(DATA_PATH msg);
     void slot_path();
+    void slot_path(QString direction);
 
 private:
     explicit AUTOCONTROL(QObject *parent = nullptr);
@@ -183,6 +185,13 @@ private:
     // [multi robot] move (input param: node path)
     void move(std::vector<QString> node_path, int preset);
     void move();
+
+    // [single robot] backwardmove (input param: goal transform matrix)
+    void backwardmove(Eigen::Matrix4d goal_tf, int preset);
+
+    // [multi robot] backwardmove (input param: node path)
+    void backwardmove(std::vector<QString> node_path, int preset);
+    void backwardmove();
 
     // flag, path, state
     void clear_control_params();
@@ -259,12 +268,21 @@ private:
     std::unique_ptr<std::thread> node_thread;           // node thread
     void node_loop();                                   // node loop
 
+    // calc current node
+    std::atomic<bool> a_flag = {false};
+    std::thread *current_node_thread = NULL;
+    void current_node_loop();
+
     // for plot
     Eigen::Vector3d last_cur_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_tgt_pos    = Eigen::Vector3d(0,0,0);
     Eigen::Vector3d last_local_goal = Eigen::Vector3d(0,0,0);
 
     tbb::concurrent_queue<PATH> global_path_que;
+
+    // for where is robot
+    std::shared_mutex node_mtx;
+    QString last_node_id = "";
 
     // for multi-robot control
     int global_preset = 0;
@@ -284,6 +302,7 @@ private:
     std::atomic<bool> multi_inter_lock       = {false};
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
+    std::atomic<bool> back_mode              = {false};
 
     // params for rrs & plot
     PATH cur_local_path;
@@ -297,7 +316,7 @@ private:
 
     // obs
     int cur_obs_value = OBS_NONE;
-    double cur_obs_decel_v = 0.0;
+    double cur_obs_decel_v = 0.3;
 
     // driving local ref v oscilation prevent
     int prev_local_ref_v_index = 0;
@@ -312,6 +331,7 @@ private:
 
 Q_SIGNALS:
     void signal_move(DATA_MOVE msg);
+    void signal_backward_move(DATA_MOVE msg);
     void signal_path();
     void signal_path(DATA_PATH msg);
     void signal_move_response(DATA_MOVE msg);

@@ -444,6 +444,8 @@ void ORBBEC::grab_loop(int idx)
                     }
                 }
             }
+
+
         }
         catch(const ob::Error &e)
         {

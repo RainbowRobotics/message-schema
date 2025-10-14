@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     SIM::instance(this);
     DOCKCONTROL::instance(this);
     POLICY::instance(this);
+    SAFETY::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -85,6 +86,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // autocontrol
     connect(ui->bt_AutoMove,          SIGNAL(clicked()),                    this, SLOT(bt_AutoMove()));                                      // move A to B (use stanley, differential type)
+    connect(ui->bt_AutoBackMove,      SIGNAL(clicked()),                    this, SLOT(bt_AutoBackMove()));
     connect(ui->bt_AutoMove2,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove2()));                                     // move A to B (use holonomic pure pursuit, mecanum type)
     connect(ui->bt_AutoMove3,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove3()));                                     // move A to B (use PID, turn & go mode)
     connect(ui->bt_AutoStop,          SIGNAL(clicked()),                    this, SLOT(bt_AutoStop()));                                      // stop auto-control
@@ -93,6 +95,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_ReturnToCharging,  SIGNAL(clicked()),                    this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
+    connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
+    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                      // move clicked node
 
     // dockcontrol
     connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
@@ -474,6 +478,17 @@ void MainWindow::init_modules()
         POLICY::instance()->set_localization_module(LOCALIZATION::instance());
         POLICY::instance()->init();
         POLICY::instance()->open();
+    }
+
+    // safety module init
+    {
+        SAFETY::instance()->set_config_module(CONFIG::instance());
+        SAFETY::instance()->set_logger_module(LOGGER::instance());
+        SAFETY::instance()->set_mobile_module(MOBILE::instance());
+        SAFETY::instance()->set_unimap_module(UNIMAP::instance());
+        SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
+        SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
+        SAFETY::instance()->init();
     }
 
     // start jog loop
@@ -1360,6 +1375,52 @@ void MainWindow::bt_AutoMove()
     }
 }
 
+// for autocontrol
+void MainWindow::bt_AutoBackMove()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+    if(pick.cur_node != "")
+    {
+        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(node)
+        {
+            Eigen::Vector3d xi = TF_to_se2(node->tf);
+
+            DATA_MOVE msg;
+            msg.command = "goal";
+            msg.method = "pp";
+            msg.preset = 0;
+            msg.goal_node_id = node->id;
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2,3);
+            msg.tgt_pose_vec[3] = xi[2];
+
+            Q_EMIT (AUTOCONTROL::instance()->signal_backward_move(msg));
+        }
+        return;
+    }
+
+    if(pick.last_btn == 1)
+    {
+        Eigen::Matrix4d tf = se2_to_TF(pick.r_pose);
+        Eigen::Vector3d xi = TF_to_se2(tf);
+
+        DATA_MOVE msg;
+        msg.tgt_pose_vec[0] = xi[0];
+        msg.tgt_pose_vec[1] = xi[1];
+        msg.tgt_pose_vec[2] = 0;
+        msg.tgt_pose_vec[3] = xi[2];
+
+        Q_EMIT (AUTOCONTROL::instance()->signal_backward_move(msg));
+        return;
+    }
+}
+
 void MainWindow::bt_AutoMove2()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
@@ -1449,6 +1510,53 @@ void MainWindow::bt_AutoMove3()
 
         Q_EMIT (AUTOCONTROL::instance()->signal_move(msg));
         return;
+    }
+}
+
+// for autocontrol
+void MainWindow::bt_AutoPath()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+
+    QString direction = "forward";
+    if (ui->ckb_MoveBackWard->isChecked() == 1)
+    {
+        direction = "backward";
+    }
+
+    DATA_PATH msg;
+    msg.command = "goal";
+    msg.path = path_append_id;
+    msg.preset = 0;
+    msg.direction = direction;
+
+    Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
+    path_append_id = "";
+    ui -> te_path -> setText(path_append_id);
+
+    return;
+}
+
+void MainWindow::bt_AutoPathAppend()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        printf("[MAIN] check map load\n");
+        return;
+    }
+    if(pick.cur_node != "")
+    {
+        NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+        if(node)
+        {
+            QString goal_node_id = node->id;
+            path_append_id += goal_node_id + ",";
+            ui -> te_path -> setText(path_append_id);
+        }
     }
 }
 
@@ -2562,7 +2670,7 @@ void MainWindow::plot_info()
         QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
 
-//        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
+        //        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
         QString auto_info_str;
         auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
                               AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
@@ -3555,7 +3663,7 @@ void MainWindow::plot_ctrl()
             pcl_viewer->removeShape("cur_node");
         }
 
-        QString cur_node_id; // = ctrl.get_cur_node_id();
+        QString cur_node_id = AUTOCONTROL::instance()->get_cur_node_id();
         if(cur_node_id != "")
         {
             NODE *node = UNIMAP::instance()->get_node_by_id(cur_node_id);
@@ -3599,7 +3707,7 @@ void MainWindow::plot_cam()
             cv::Mat plot = CAM::instance()->get_time_img(i).img;
             if(!plot.empty())
             {
-//                cv::flip(plot,plot,0);
+                //                cv::flip(plot,plot,0);
 
                 // QLabel name create dynamically
                 QString labelName = QString("lb_Screen%1").arg(i+2); // lb_Screen2, lb_Screen3 ...
