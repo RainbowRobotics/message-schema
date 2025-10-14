@@ -61,7 +61,7 @@ public:
         MOTOR = 0x8000
     };
     
-    enum ErrorCause
+    enum ErrorCause // mobile robot
     {
         // Map manage
         MAP_NOT_LOADED = 0x1001,
