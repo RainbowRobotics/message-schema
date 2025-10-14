@@ -112,6 +112,11 @@ class ZenohRouter:
             self._closed = False
             self._started = True
 
+            for _ in range(10):
+                if self.client.session is not None:
+                    break
+                await asyncio.sleep(0.05)
+
             self.client.set_loop(asyncio.get_running_loop())
 
             for r in self._regs:
