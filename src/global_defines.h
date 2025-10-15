@@ -822,6 +822,9 @@ struct MOBILE_STATUS
     unsigned short tabos_tte = 0;   // time to empty-min
     unsigned char tabos_soc  = 0;   // state of charge-%
     unsigned char tabos_soh  = 0;   // state of health-%
+
+    uint8_t bms_type         = 0;
+
 };
 
 struct MOBILE_POSE

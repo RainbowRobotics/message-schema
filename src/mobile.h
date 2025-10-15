@@ -17,13 +17,23 @@
 // qt
 #include <QObject>
 
+enum class RobotWheelModel
+{
+    ROBOT_WHEEL_MODEL_UNKNOWN = 0,
+    ROBOT_WHEEL_MODEL_DD = 1,
+    ROBOT_WHEEL_MODEL_QD= 2,
+    ROBOT_WHEEL_MODEL_MECHANUM = 3
+};
+
+
 enum class RobotType_PDU
 {
     ROBOT_TYPE_UNKNOWN = 0,
     ROBOT_TYPE_D400    = 1,
     ROBOT_TYPE_S100    = 2,
     ROBOT_TYPE_MECANUM = 3,
-    ROBOT_TYPE_SAFETY  = 4
+    ROBOT_TYPE_SAFETY  = 4,
+    ROBOT_TYPE_SAFETY_V2 = 5
 };
 
 struct MOBILE_INFO
@@ -34,6 +44,9 @@ struct MOBILE_INFO
     static constexpr int packet_size_d400    = 126;
     static constexpr int packet_size_mecanum = 129;
     static constexpr int packet_size_safety  = 199;
+    static constexpr int packet_size_safety_v2_high = 100;
+    static constexpr int packet_size_safety_v2_mid = 50;
+    static constexpr int packet_size_safety_v2_low = 150;
 
     static constexpr double pdu_tick_resolution = 0.002;
 
@@ -157,7 +170,9 @@ private:
     std::atomic<bool> recv_flag = {false};
     std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
-
+    bool connect_to_pdu(const QString& ip, int port);
+    void receive_data_loop();
+    
     // send loop
     std::atomic<bool> send_flag = {false};
     std::unique_ptr<std::thread> send_thread;
@@ -179,6 +194,10 @@ private:
     MOBILE_SETTING cur_setting;
     Eigen::Vector3d cur_imu;
     QString cur_pdu_state = "none";
+    bool is_imu_used = false;
+    uint8_t bms_type = 0x00; // 0x0A: not_used, 0x0B: bms_tabos
+
+    RobotWheelModel wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_UNKNOWN;
 
     std::atomic<double> bat_soc = 0.0;
 
