@@ -8,6 +8,7 @@ from typing import Any
 from flat_buffers.IPC.N_DIN_u import N_DIN_u, N_DIN_uT
 from flat_buffers.IPC.N_DOUT_u import N_DOUT_u, N_DOUT_uT
 from flat_buffers.IPC.ST_Config_Area import ST_Config_Area, ST_Config_AreaT
+from flat_buffers.IPC.ST_Config_UserFrame import ST_Config_UserFrame, ST_Config_UserFrameT
 from typing import Optional
 np = import_numpy()
 
@@ -139,8 +140,88 @@ class Response_CallConfigControlBox(object):
             return obj
         return None
 
+    # Response_CallConfigControlBox
+    def UserFrame0(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame1(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame2(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame3(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame4(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame5(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame6(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # Response_CallConfigControlBox
+    def UserFrame7(self) -> Optional[ST_Config_UserFrame]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            obj = ST_Config_UserFrame()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def Response_CallConfigControlBoxStart(builder: flatbuffers.Builder):
-    builder.StartObject(11)
+    builder.StartObject(19)
 
 def Start(builder: flatbuffers.Builder):
     Response_CallConfigControlBoxStart(builder)
@@ -211,6 +292,54 @@ def Response_CallConfigControlBoxAddAreaConfigs7(builder: flatbuffers.Builder, a
 def AddAreaConfigs7(builder: flatbuffers.Builder, areaConfigs7: int):
     Response_CallConfigControlBoxAddAreaConfigs7(builder, areaConfigs7)
 
+def Response_CallConfigControlBoxAddUserFrame0(builder: flatbuffers.Builder, userFrame0: int):
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame0), 0)
+
+def AddUserFrame0(builder: flatbuffers.Builder, userFrame0: int):
+    Response_CallConfigControlBoxAddUserFrame0(builder, userFrame0)
+
+def Response_CallConfigControlBoxAddUserFrame1(builder: flatbuffers.Builder, userFrame1: int):
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame1), 0)
+
+def AddUserFrame1(builder: flatbuffers.Builder, userFrame1: int):
+    Response_CallConfigControlBoxAddUserFrame1(builder, userFrame1)
+
+def Response_CallConfigControlBoxAddUserFrame2(builder: flatbuffers.Builder, userFrame2: int):
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame2), 0)
+
+def AddUserFrame2(builder: flatbuffers.Builder, userFrame2: int):
+    Response_CallConfigControlBoxAddUserFrame2(builder, userFrame2)
+
+def Response_CallConfigControlBoxAddUserFrame3(builder: flatbuffers.Builder, userFrame3: int):
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame3), 0)
+
+def AddUserFrame3(builder: flatbuffers.Builder, userFrame3: int):
+    Response_CallConfigControlBoxAddUserFrame3(builder, userFrame3)
+
+def Response_CallConfigControlBoxAddUserFrame4(builder: flatbuffers.Builder, userFrame4: int):
+    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame4), 0)
+
+def AddUserFrame4(builder: flatbuffers.Builder, userFrame4: int):
+    Response_CallConfigControlBoxAddUserFrame4(builder, userFrame4)
+
+def Response_CallConfigControlBoxAddUserFrame5(builder: flatbuffers.Builder, userFrame5: int):
+    builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame5), 0)
+
+def AddUserFrame5(builder: flatbuffers.Builder, userFrame5: int):
+    Response_CallConfigControlBoxAddUserFrame5(builder, userFrame5)
+
+def Response_CallConfigControlBoxAddUserFrame6(builder: flatbuffers.Builder, userFrame6: int):
+    builder.PrependUOffsetTRelativeSlot(17, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame6), 0)
+
+def AddUserFrame6(builder: flatbuffers.Builder, userFrame6: int):
+    Response_CallConfigControlBoxAddUserFrame6(builder, userFrame6)
+
+def Response_CallConfigControlBoxAddUserFrame7(builder: flatbuffers.Builder, userFrame7: int):
+    builder.PrependUOffsetTRelativeSlot(18, flatbuffers.number_types.UOffsetTFlags.py_type(userFrame7), 0)
+
+def AddUserFrame7(builder: flatbuffers.Builder, userFrame7: int):
+    Response_CallConfigControlBoxAddUserFrame7(builder, userFrame7)
+
 def Response_CallConfigControlBoxEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
 
@@ -237,6 +366,14 @@ class Response_CallConfigControlBoxT(object):
         self.areaConfigs5 = None  # type: Optional[ST_Config_AreaT]
         self.areaConfigs6 = None  # type: Optional[ST_Config_AreaT]
         self.areaConfigs7 = None  # type: Optional[ST_Config_AreaT]
+        self.userFrame0 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame1 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame2 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame3 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame4 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame5 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame6 = None  # type: Optional[ST_Config_UserFrameT]
+        self.userFrame7 = None  # type: Optional[ST_Config_UserFrameT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -281,6 +418,22 @@ class Response_CallConfigControlBoxT(object):
             self.areaConfigs6 = ST_Config_AreaT.InitFromObj(responseCallConfigControlBox.AreaConfigs6())
         if responseCallConfigControlBox.AreaConfigs7() is not None:
             self.areaConfigs7 = ST_Config_AreaT.InitFromObj(responseCallConfigControlBox.AreaConfigs7())
+        if responseCallConfigControlBox.UserFrame0() is not None:
+            self.userFrame0 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame0())
+        if responseCallConfigControlBox.UserFrame1() is not None:
+            self.userFrame1 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame1())
+        if responseCallConfigControlBox.UserFrame2() is not None:
+            self.userFrame2 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame2())
+        if responseCallConfigControlBox.UserFrame3() is not None:
+            self.userFrame3 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame3())
+        if responseCallConfigControlBox.UserFrame4() is not None:
+            self.userFrame4 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame4())
+        if responseCallConfigControlBox.UserFrame5() is not None:
+            self.userFrame5 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame5())
+        if responseCallConfigControlBox.UserFrame6() is not None:
+            self.userFrame6 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame6())
+        if responseCallConfigControlBox.UserFrame7() is not None:
+            self.userFrame7 = ST_Config_UserFrameT.InitFromObj(responseCallConfigControlBox.UserFrame7())
 
     # Response_CallConfigControlBoxT
     def Pack(self, builder):
@@ -300,6 +453,22 @@ class Response_CallConfigControlBoxT(object):
             areaConfigs6 = self.areaConfigs6.Pack(builder)
         if self.areaConfigs7 is not None:
             areaConfigs7 = self.areaConfigs7.Pack(builder)
+        if self.userFrame0 is not None:
+            userFrame0 = self.userFrame0.Pack(builder)
+        if self.userFrame1 is not None:
+            userFrame1 = self.userFrame1.Pack(builder)
+        if self.userFrame2 is not None:
+            userFrame2 = self.userFrame2.Pack(builder)
+        if self.userFrame3 is not None:
+            userFrame3 = self.userFrame3.Pack(builder)
+        if self.userFrame4 is not None:
+            userFrame4 = self.userFrame4.Pack(builder)
+        if self.userFrame5 is not None:
+            userFrame5 = self.userFrame5.Pack(builder)
+        if self.userFrame6 is not None:
+            userFrame6 = self.userFrame6.Pack(builder)
+        if self.userFrame7 is not None:
+            userFrame7 = self.userFrame7.Pack(builder)
         Response_CallConfigControlBoxStart(builder)
         if self.doutSpecialFunc is not None:
             doutSpecialFunc = self.doutSpecialFunc.Pack(builder)
@@ -326,5 +495,21 @@ class Response_CallConfigControlBoxT(object):
             Response_CallConfigControlBoxAddAreaConfigs6(builder, areaConfigs6)
         if self.areaConfigs7 is not None:
             Response_CallConfigControlBoxAddAreaConfigs7(builder, areaConfigs7)
+        if self.userFrame0 is not None:
+            Response_CallConfigControlBoxAddUserFrame0(builder, userFrame0)
+        if self.userFrame1 is not None:
+            Response_CallConfigControlBoxAddUserFrame1(builder, userFrame1)
+        if self.userFrame2 is not None:
+            Response_CallConfigControlBoxAddUserFrame2(builder, userFrame2)
+        if self.userFrame3 is not None:
+            Response_CallConfigControlBoxAddUserFrame3(builder, userFrame3)
+        if self.userFrame4 is not None:
+            Response_CallConfigControlBoxAddUserFrame4(builder, userFrame4)
+        if self.userFrame5 is not None:
+            Response_CallConfigControlBoxAddUserFrame5(builder, userFrame5)
+        if self.userFrame6 is not None:
+            Response_CallConfigControlBoxAddUserFrame6(builder, userFrame6)
+        if self.userFrame7 is not None:
+            Response_CallConfigControlBoxAddUserFrame7(builder, userFrame7)
         responseCallConfigControlBox = Response_CallConfigControlBoxEnd(builder)
         return responseCallConfigControlBox

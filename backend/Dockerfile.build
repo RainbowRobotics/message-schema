@@ -6,33 +6,26 @@ ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
 COPY backend/pyproject.toml backend/uv.lock ./
-COPY backend/services ./services
+COPY backend/services/${SERVICE} ./services/${SERVICE}
 COPY backend/packages ./packages
 COPY scripts/ ../scripts/
 COPY schemas ../schemas
 COPY backend/Makefile ./
 COPY backend/backend.mk ./
 
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
-    uv sync --project ./services/${SERVICE} --frozen --no-dev
+
+RUN make backend.flatc
+RUN uv sync --project ./services/${SERVICE} --frozen --no-dev
 
 COPY --from=docker.io/dfd1123/zenoh-python-builder:py312-zenoh1.5.0-shm /wheels /wheels
-
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
-    uv pip install -e ./packages/flat_buffers -e ./packages/rb_modules -e ./packages/rb_database -e ./packages/rb_zenoh -e ./packages/utils
-
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
-    uv pip install --project ./services/${SERVICE} --no-deps --force-reinstall /wheels/*.whl
+RUN uv pip install --project ./services/${SERVICE} --no-deps --force-reinstall /wheels/*.whl
 
 RUN uv run --project ./services/${SERVICE} python - <<'PY'
 import zenoh
 print("zenoh import OK")
 PY
 
-RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
+RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-${SERVICE}-${TARGETARCH} \
     uv run pyinstaller --onefile --clean \
     --distpath=/app/dist \
     --name=run.bin \
