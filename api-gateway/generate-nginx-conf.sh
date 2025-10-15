@@ -6,6 +6,9 @@ REPO_ROOT="$SCRIPT_DIR/.."
 TEMPLATE="$SCRIPT_DIR/nginx.template.conf"
 OUTPUT="$SCRIPT_DIR/nginx.conf"
 SERVICES_DIR="$REPO_ROOT/backend/services"
+DEV_MODE=false
+
+echo "DEV_MODE: $DEV_MODE"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
