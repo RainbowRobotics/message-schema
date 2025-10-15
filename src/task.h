@@ -6,7 +6,8 @@
 
 #include "config.h"
 #include "unimap.h"
-#include "slam_2d.h"
+//#include "slam_2d.h"
+#include "localization.h"
 #include "obsmap.h"
 #include "autocontrol.h"
 
@@ -15,30 +16,41 @@
 class TASK : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(TASK)
+
 public:
-    explicit TASK(QObject *parent = nullptr);
-    ~TASK();
+    static TASK* instance(QObject* parent = nullptr);
 
     // mutex
     std::recursive_mutex mtx;
 
+
     // other modules
-    CONFIG *config    = NULL;
-    UNIMAP *unimap = NULL;
-    SLAM_2D *slam     = NULL;
-    OBSMAP *obsmap    = NULL;
-    AUTOCONTROL *ctrl = NULL;
-    MOBILE *mobile    = NULL;
+    //CONFIG *config    = NULL;
+    //UNIMAP *unimap = NULL;
+    //OBSMAP *obsmap    = NULL;
+    //AUTOCONTROL *ctrl = NULL;
+    //MOBILE *mobile    = NULL;
+    CONFIG          *config;
+    UNIMAP          *unimap;
+    OBSMAP          *obsmap;
+    LOCALIZATION    *loc;
+    MOBILE          *mobile;
+    AUTOCONTROL     *ctrl;
+
 
     // interface funcs
+    void init();
     void play(QString _driving_mode);
     void pause();
     void cancel();
 
-    void add_task(NODE* node);
+    void add_task(const NODE* node);
     void del_task(NODE* node);
     void save_task(QString path);
     void load_task(QString path);
+
+
 
     // task list
     std::vector<QString> task_node_list;
@@ -65,6 +77,10 @@ public:
     bool accuracy_save_enabled = false;
     std::vector<Eigen::Matrix4d> recorded_positions;
     QString accuracyLogFileName;
+
+private:
+    explicit TASK();
+    ~TASK();
 
 };
 

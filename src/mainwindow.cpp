@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     POLICY::instance(this);
     SAFETY::instance(this);
 
+    TASK::instance(this);
+
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
     COMM_MSA::instance(this);
@@ -131,6 +133,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_LiftPowerOn,        SIGNAL(clicked()), this, SLOT(bt_LiftPowerOn()));
     connect(ui->bt_LiftPowerOff,       SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
     connect(ui->bt_SetLidarField,      SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
+
+    // task
+    connect(ui->bt_TaskAdd,             SIGNAL(clicked()), this, SLOT(bt_TaskAdd()));
+    connect(ui->bt_TaskDel,             SIGNAL(clicked()), this, SLOT(bt_TaskDel()));
+    connect(ui->bt_TaskSave,            SIGNAL(clicked()), this, SLOT(bt_TaskSave()));
+    connect(ui->bt_TaskLoad,            SIGNAL(clicked()), this, SLOT(bt_TaskLoad()));
+    connect(ui->bt_TaskPlay,            SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
+    connect(ui->bt_TaskPause,           SIGNAL(clicked()), this, SLOT(bt_TaskPause()));
+    connect(ui->bt_TaskCancel,          SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
+
 
     // others
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
@@ -254,6 +266,7 @@ void MainWindow::setup_vtk()
 
 void MainWindow::init_modules()
 {
+
     // load config
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
@@ -489,6 +502,14 @@ void MainWindow::init_modules()
         SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
         SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
         SAFETY::instance()->init();
+    }
+
+    // Task
+    {
+        TASK::instance()->init();
+        TASK::instance()->pause();
+        TASK::instance()->cancel();
+
     }
 
     // start jog loop
@@ -1840,6 +1861,177 @@ void MainWindow::bt_ObsClear()
 {
     OBSMAP::instance()->clear();
     obs_update();
+}
+
+void MainWindow::ui_tasks_update()
+{
+    //ui->lw_TaskList->clear();
+    //for(size_t i = 0; i < task.task_node_list.size(); i++)
+    //{
+    //    ui->lw_TaskList->addItem(task.task_node_list[i]);
+    //}
+    //is_topo_update = true;
+
+    const std::vector<QString>& node_list_vec = TASK::instance()->task_node_list;
+
+
+    QStringList node_id_list;
+    node_id_list.reserve(node_list_vec.size());
+    for (const QString& node_id : node_list_vec)
+    {
+        node_id_list.append(node_id);
+    }
+
+    ui->lw_TaskList->clear();
+    ui->lw_TaskList->addItems(node_id_list);
+
+    is_topo_update = true;
+}
+
+
+void MainWindow::bt_TaskAdd()
+{
+    if(pick.cur_node.isEmpty())
+    {
+        spdlog::warn("[TASK] No selected node");
+        return;
+    }
+
+    const NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+    if(node == nullptr)
+    {
+        spdlog::error("[TASK] Node nullptr");
+        return;
+    }
+
+    if(node->type == "GOAL" || node->type == "INIT")
+    {
+        //task.add_task(node);
+        TASK::instance()->add_task(node);
+    }
+    else
+    {
+        //printf("[TASK] Unselectable node\n");
+        spdlog::error("[TASK] Unselectable node");
+        return;
+    }
+
+    ui_tasks_update();
+
+}
+
+void MainWindow::bt_TaskDel()
+{
+    NODE* node_to_delete = nullptr;
+
+    if (!ui->lw_TaskList->selectedItems().isEmpty())
+    {
+        QString id = ui->lw_TaskList->selectedItems().front()->text();
+        node_to_delete = UNIMAP::instance()->get_node_by_id(id);
+    }
+    else if (!pick.cur_node.isEmpty())
+    {
+        node_to_delete = UNIMAP::instance()->get_node_by_id(pick.cur_node);
+    }
+    else
+    {
+        //QMessageBox::warning(this, "작업 삭제 실패", "삭제할 노드를 목록 또는 맵에서 선택해주세요.");
+        spdlog::warn("[TASK] fail, Can not find Task");
+        return;
+    }
+
+    if (node_to_delete != nullptr)
+    {
+        TASK::instance()->del_task(node_to_delete);
+        //qInfo() << "[TASK] Node" << node_to_delete->id << "deleted from the task list.";
+        spdlog::info("[TASK] Deleted from the task list Node:{}", node_to_delete->id.toStdString());
+
+    }
+    else
+    {
+        //QMessageBox::critical(this, "오류", "선택된 노드 정보를 찾을 수 없습니다.");
+        //qCritical() << "[TASK] Delete failed: Selected node returned nullptr.";
+        spdlog::error("[TASK] Delete failed: Selected node returned nullptr.");
+    }
+
+    ui_tasks_update();
+
+}
+
+void MainWindow::bt_TaskSave()
+{
+    //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
+    //{
+    //    QMessageBox::warning(this, "저장 실패", "맵이 로드되지 않았습니다.");
+    //    return;
+    //}
+
+    //if (TASK::instance()->task_node_list.empty())
+    //{
+    //    QMessageBox::warning(this, "저장 실패", "저장할 작업 목록이 비어있습니다.");
+    //    return;
+    //}
+
+    //TASK::instance()->save_task(UNIMAP::instance()->map_dir);
+    //QMessageBox::information(this, "저장 완료", "현재 작업 목록을 파일로 저장했습니다.");
+
+
+}
+
+void MainWindow::bt_TaskLoad()
+{
+    spdlog::info("[TASK] TaskLoad. but not yet");
+}
+
+void MainWindow::bt_TaskPlay()
+{
+
+    //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
+    //{
+    //    QMessageBox::warning(this, "실행 실패", "맵이 로드되지 않았습니다.");
+    //    return;
+    //}
+    //if (LOCALIZATION::instance()->get_is_loc())
+    //{
+    //    QMessageBox::warning(this, "실행 실패", "로봇의 현재 위치를 알 수 없습니다. (Localization 미실행)");
+    //    return;
+    //}
+    if (TASK::instance()->task_node_list.empty())
+    {
+        //QMessageBox::warning(this, "실행 실패", "실행할 작업 목록이 비어있습니다.");
+        spdlog::warn("[TASK] Empty task list");
+        return;
+    }
+    if (TASK::instance()->is_tasking)
+    {
+        //QMessageBox::information(this, "알림", "이미 다른 작업이 실행 중입니다.");
+        spdlog::info("[TASK] Alreay working");
+        return;
+    }
+
+    TASK::instance()->accuracy_save_enabled = ui->ckb_AccuracySave->isChecked();
+    TASK::instance()->is_start = true;
+    TASK::instance()->use_looping = ui->ckb_Looping->isChecked();
+    //qDebug() << "[TASK] Use looping:" << TASK::instance()->use_looping;
+    spdlog::debug("[TASK] Use looping:{}",TASK::instance()->use_looping.load());
+
+
+    QString mode = ui->cb_TaskDrivingMode->currentText();
+
+    TASK::instance()->play(mode);
+
+}
+
+void MainWindow::bt_TaskPause()
+{
+    spdlog::info("[TASK] TaskPause. but not yet");
+    TASK::instance()->pause();
+}
+
+void MainWindow::bt_TaskCancel()
+{
+    spdlog::info("[TASK] TaskCancel");
+    TASK::instance()->cancel();
 }
 
 // jog

@@ -960,6 +960,12 @@ void COMM_RRS::init()
         return;
     }
 
+    if(!config->get_use_rrs())
+    {
+        spdlog::info("[COMM_RRS] use_rrs = false, skip connect");
+        return;
+    }
+
     if(config->get_use_rrs())
     {
         logger->write_log("[COMM_RRS] try to connect RRS", "Green");
