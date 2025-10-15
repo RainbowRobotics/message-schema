@@ -410,6 +410,8 @@ done
 git_cleanup_bin_track "${app_names}"
 
 if [[ "$last_git_work_status" = "normal" ]]; then
+    sleep 10
+
     if [[ "$current_branch" = "main" ]]; then
         new_total_version=$(get_app_version $version_type "total")
         release_tag_version="release/total/${current_branch}/${new_total_version}"
