@@ -19,3 +19,15 @@ table Request_Save_Area_Para {
     area_para_1: float;
     area_para_2: float;
 }
+
+table Request_Save_User_Frame {
+    userf_no: int;
+
+    userf_name: string;
+    userf_x: float;
+    userf_y: float;
+    userf_z: float;
+    userf_rx: float;
+    userf_ry: float;
+    userf_rz: float;
+}

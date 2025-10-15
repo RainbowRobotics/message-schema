@@ -9,6 +9,7 @@ from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from flat_buffers.IPC.State_Core import State_CoreT
 from rb_database import mongo_db
 from rb_modules.log import rb_log
+from rb_modules.service import BaseService
 from rb_resources.file import read_json_file
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
@@ -17,13 +18,13 @@ from utils.asyncio_helper import fire_and_log
 zenoh_client = ZenohClient()
 
 
-class ProgramService:
+class ProgramService(BaseService):
     def __init__(self) -> None:
         self._robot_models = read_json_file("data", "robot_models.json")
 
     async def get_all_speedbar(self, *, components: list[str]):
         try:
-            diff_flag = False
+            # diff_flag = False
             min_speedbar = 1.0
 
             for component in components:
@@ -38,7 +39,7 @@ class ProgramService:
 
                     if speedbar < min_speedbar:
                         min_speedbar = speedbar
-                        diff_flag = True
+                        # diff_flag = True
 
                 elif be_service == "mobility":
                     # TODO: mobility speedbar
@@ -50,8 +51,8 @@ class ProgramService:
                     # TODO: other speedbar
                     continue
 
-            if diff_flag:
-                await self.control_speed_bar(components=components, speedbar=min_speedbar)
+            # if diff_flag:
+            #     await self.control_speed_bar(components=components, speedbar=min_speedbar)
 
             return {"speedbar": min_speedbar}
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:

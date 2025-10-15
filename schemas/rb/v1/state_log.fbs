@@ -2,7 +2,7 @@
 namespace IPC;
 
 table State_Log {
-    level: int; // 0: Info, 1: Warning, 2: Error, 3: User, 4: Debug, 5: General
+    level: int;
     timestamp: string;
     contents: string;
 }

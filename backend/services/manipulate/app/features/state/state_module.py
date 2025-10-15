@@ -22,9 +22,7 @@ class StateService:
                 robot_model=robot_model, reference_option=0
             )
 
-            reference_return_value = dict_reference_res.get(
-                "returnValue", dict_reference_res.get("return_value", None)
-            )
+            reference_return_value = dict_reference_res.get("returnValue", None)
 
             if reference_return_value != 0:
                 dict_reference_res["target"] = "call_referencecontrol"
@@ -35,20 +33,16 @@ class StateService:
                     robot_model=robot_model, stoptime=stoptime
                 )
 
-                smoothjog_stop_return_value = dict_smoothjog_stop_res.get(
-                    "returnValue", dict_smoothjog_stop_res.get("return_value", None)
-                )
+                smoothjog_stop_return_value = dict_smoothjog_stop_res.get("returnValue", None)
 
                 if smoothjog_stop_return_value != 0:
                     dict_smoothjog_stop_res["target"] = "call_smoothjog_stop"
                     return dict_smoothjog_stop_res
 
-        elif power_option == 1 and sync_servo:
-            dict_servo_res = await self.servo_control(robot_model=robot_model, servo_option=1)
+            if sync_servo:
+                dict_servo_res = await self.servo_control(robot_model=robot_model, servo_option=1)
 
-            servo_return_value = dict_servo_res.get(
-                "returnValue", dict_servo_res.get("return_value", None)
-            )
+                servo_return_value = dict_servo_res.get("returnValue", None)
 
             if servo_return_value != 0:
                 dict_servo_res["target"] = "call_servocontrol"
@@ -63,6 +57,15 @@ class StateService:
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=32,
         )
+
+        if power_option == 1 and sync_servo:
+            dict_servo_res = await self.servo_control(robot_model=robot_model, servo_option=1)
+
+            servo_return_value = dict_servo_res.get("returnValue", None)
+
+            if servo_return_value != 0:
+                dict_servo_res["target"] = "call_servocontrol"
+                return dict_servo_res
 
         dict_power_res = power_res["dict_payload"]
 

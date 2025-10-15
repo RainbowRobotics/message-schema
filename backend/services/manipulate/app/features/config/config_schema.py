@@ -124,3 +124,7 @@ class Request_Save_SelfColl_ParameterPD(BaseModel):
     mode: int
     dist_internal: float
     dist_external: float
+
+
+class Request_Set_Tool_ListPD(BaseModel):
+    target_tool_num: int

@@ -6,7 +6,7 @@ namespace IPC;
 //---------------------------------------------------------------
 table MoveInput_Target {
     tar_values:     N_INPUT_f;
-    tar_frame:      int;  // 조인트 -1, 글로벌 0, 로컬 1
+    tar_frame:      int;
     tar_unit:       int;
 }
 table MoveInput_Type{
@@ -15,8 +15,8 @@ table MoveInput_Type{
 }
 table MoveInput_Speed {
     spd_mode:       int;
-    spd_vel_para:   float; // MoveJ: 60, MoveL: 250
-    spd_acc_para:   float; // MoveJ: 120, MoveL: 1000
+    spd_vel_para:   float;
+    spd_acc_para:   float;
 }
 //---------------------------------------------------------------
 // Jog - Smooth

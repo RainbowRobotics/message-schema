@@ -40,6 +40,12 @@ table ST_Config_Area{
   area_para: Vec3f;
 }
 
+table ST_Config_UserFrame{
+  userf_name: string;
+  userf_offset: Vec3f;
+  userf_euler: Vec3f;
+}
+
 table Response_CallConfigControlBox{
   dout_special_func: N_DOUT_u;
   din_special_func: N_DIN_u;
@@ -53,6 +59,15 @@ table Response_CallConfigControlBox{
   area_configs_5: ST_Config_Area;
   area_configs_6: ST_Config_Area;
   area_configs_7: ST_Config_Area;
+
+  user_frame_0: ST_Config_UserFrame;
+  user_frame_1: ST_Config_UserFrame;
+  user_frame_2: ST_Config_UserFrame;
+  user_frame_3: ST_Config_UserFrame;
+  user_frame_4: ST_Config_UserFrame;
+  user_frame_5: ST_Config_UserFrame;
+  user_frame_6: ST_Config_UserFrame;
+  user_frame_7: ST_Config_UserFrame;
 }
 
 table Response_CallConfigRobotArm{

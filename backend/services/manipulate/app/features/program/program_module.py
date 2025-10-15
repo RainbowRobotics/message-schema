@@ -20,7 +20,9 @@ from flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogSt
 from flat_buffers.IPC.Request_Move_TickJogJ import Request_Move_TickJogJT
 from flat_buffers.IPC.Request_Move_TickJogL import Request_Move_TickJogLT
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
+from rb_modules.service import BaseService
 from rb_zenoh.client import ZenohClient
+from utils.parser import t_to_dict
 
 from .program_schema import (
     Request_MoveJBAddPD,
@@ -33,7 +35,7 @@ from .program_schema import (
 zenoh_client = ZenohClient()
 
 
-class ProgramService:
+class ProgramService(BaseService):
     def __init__(self):
         pass
 
@@ -134,6 +136,9 @@ class ProgramService:
     async def call_move_j(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
+        target = t_to_dict(target)
+        speed = t_to_dict(speed)
+
         req = Request_Move_JT()
         move_input_target = MoveInput_TargetT()
         move_input_speed = MoveInput_SpeedT()
@@ -164,6 +169,9 @@ class ProgramService:
     async def call_move_l(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
+        target = t_to_dict(target)
+        speed = t_to_dict(speed)
+
         req = Request_Move_LT()
         move_input_target = MoveInput_TargetT()
         move_input_speed = MoveInput_SpeedT()
@@ -192,20 +200,23 @@ class ProgramService:
         return res["dict_payload"]
 
     def call_tickjog_j(self, *, robot_model: str, request: Request_MoveTickJogJPD):
+        target = t_to_dict(request.target)
+        speed = t_to_dict(request.speed)
+
         req = Request_Move_TickJogJT()
         req.target = MoveInput_TargetT()
         req.speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = request.target["tar_values"]
+        ni.f = target["tar_values"]
 
         req.target.tarValues = ni
-        req.target.tarFrame = request.target["tar_frame"]
-        req.target.tarUnit = request.target["tar_unit"]
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
 
-        req.speed.spdMode = request.speed["spd_mode"]
-        req.speed.spdVelPara = request.speed["spd_vel_para"]
-        req.speed.spdAccPara = request.speed["spd_acc_para"]
+        req.speed.spdMode = speed["spd_mode"]
+        req.speed.spdVelPara = speed["spd_vel_para"]
+        req.speed.spdAccPara = speed["spd_acc_para"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_tickjog_j",
@@ -217,20 +228,23 @@ class ProgramService:
         return res["dict_payload"]
 
     def call_tickjog_l(self, *, robot_model: str, request: Request_MoveTickJogLPD):
+        target = t_to_dict(request.target)
+        speed = t_to_dict(request.speed)
+
         req = Request_Move_TickJogLT()
         req.target = MoveInput_TargetT()
         req.speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = request.target["tar_values"]
+        ni.f = target["tar_values"]
 
         req.target.tarValues = ni
-        req.target.tarFrame = request.target["tar_frame"]
-        req.target.tarUnit = request.target["tar_unit"]
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
 
-        req.speed.spdMode = request.speed["spd_mode"]
-        req.speed.spdVelPara = request.speed["spd_vel_para"]
-        req.speed.spdAccPara = request.speed["spd_acc_para"]
+        req.speed.spdMode = speed["spd_mode"]
+        req.speed.spdVelPara = speed["spd_vel_para"]
+        req.speed.spdAccPara = speed["spd_acc_para"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_tickjog_l",
@@ -254,24 +268,28 @@ class ProgramService:
         return res["dict_payload"]
 
     def call_move_jb_add(self, *, robot_model: str, request: Request_MoveJBAddPD):
+        target = t_to_dict(request.target)
+        speed = t_to_dict(request.speed)
+        type = t_to_dict(request.type)
+
         req = Request_Move_JB_ADDT()
         req.target = MoveInput_TargetT()
         req.speed = MoveInput_SpeedT()
         req.type = MoveInput_TypeT()
 
         ni = N_INPUT_fT()
-        ni.f = request.target["tar_values"]
+        ni.f = target["tar_values"]
 
         req.target.tarValues = ni
-        req.target.tarFrame = request.target["tar_frame"]
-        req.target.tarUnit = request.target["tar_unit"]
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
 
-        req.speed.spdMode = request.speed["spd_mode"]
-        req.speed.spdVelPara = request.speed["spd_vel_para"]
-        req.speed.spdAccPara = request.speed["spd_acc_para"]
+        req.speed.spdMode = speed["spd_mode"]
+        req.speed.spdVelPara = speed["spd_vel_para"]
+        req.speed.spdAccPara = speed["spd_acc_para"]
 
-        req.type.pntType = request.type["pnt_type"]
-        req.type.pntPara = request.type["pnt_para"]
+        req.type.pntType = type["pnt_type"]
+        req.type.pntPara = type["pnt_para"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_jb_add",
@@ -307,24 +325,28 @@ class ProgramService:
         return res["dict_payload"]
 
     def call_move_lb_add(self, *, robot_model: str, request: Request_MoveLBAddPD):
+        target = t_to_dict(request.target)
+        speed = t_to_dict(request.speed)
+        type = t_to_dict(request.type)
+
         req = Request_Move_LB_ADDT()
         req.target = MoveInput_TargetT()
         req.speed = MoveInput_SpeedT()
         req.type = MoveInput_TypeT()
 
         ni = N_INPUT_fT()
-        ni.f = request.target["tar_values"]
+        ni.f = target["tar_values"]
 
         req.target.tarValues = ni
-        req.target.tarFrame = request.target["tar_frame"]
-        req.target.tarUnit = request.target["tar_unit"]
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
 
-        req.speed.spdMode = request.speed["spd_mode"]
-        req.speed.spdVelPara = request.speed["spd_vel_para"]
-        req.speed.spdAccPara = request.speed["spd_acc_para"]
+        req.speed.spdMode = speed["spd_mode"]
+        req.speed.spdVelPara = speed["spd_vel_para"]
+        req.speed.spdAccPara = speed["spd_acc_para"]
 
-        req.type.pntType = request.type["pnt_type"]
-        req.type.pntPara = request.type["pnt_para"]
+        req.type.pntType = type["pnt_type"]
+        req.type.pntPara = type["pnt_para"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_lb_add",
@@ -336,8 +358,10 @@ class ProgramService:
         return res["dict_payload"]
 
     def call_move_lb_run(self, *, robot_model: str, request: Request_MoveLBRunPD):
+        orientation = t_to_dict(request.orientation)
+
         req = Request_Move_LB_RUNT()
-        req.orientation = request.orientation
+        req.orientation = orientation
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_lb_run",

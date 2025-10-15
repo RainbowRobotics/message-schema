@@ -85,6 +85,8 @@ class StateService:
                         core_sw["connected"] = "JOINT_CHECKED"
                     elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 5:
                         core_sw["connected"] = "SYSTEM_CHECKED"
+                    elif obj["statusPowerOut"] == 0:
+                        core_sw["connected"] = "POWER_OFF"
 
                 elif core_sw["be_service"] == "mobility":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
@@ -132,7 +134,6 @@ class StateService:
                 namespaces = list(raw_components or [])
 
                 if not namespaces:
-                    print("no namespaces", flush=True)
                     continue
 
                 res = await self.get_system_state(namespaces=namespaces)
@@ -180,6 +181,12 @@ class StateService:
             req = Request_PowerControlT()
             req.power_option = power_option
 
+            if sync_servo and power_option == 0:
+                res = await self.servo_control(servo_option=power_option)
+
+            if power_option == 0 and stoptime is not None:
+                await program_service.call_smoothjog_stop(stoptime=stoptime)
+
             res = zenoh_client.query_one(
                 "*/call_powercontrol",
                 flatbuffer_req_obj=req,
@@ -189,9 +196,6 @@ class StateService:
 
             if sync_servo and power_option == 1:
                 res = await self.servo_control(servo_option=power_option)
-
-            if power_option == 0 and stoptime is not None:
-                await program_service.call_smoothjog_stop(stoptime=stoptime)
 
             return t_to_dict(res)
 

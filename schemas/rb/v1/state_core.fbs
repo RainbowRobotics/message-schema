@@ -41,23 +41,23 @@ table State_Core {
   ex_analog_input: N_AIN_f;   
   ex_analog_output: N_AOUT_f; 
 
-  tool_digital_input: N_DIN_u;    //<--------------
-  tool_digital_output: N_DOUT_u;  //<--------------
-  tool_analog_input: N_AIN_f;       //<--------------
-  tool_analog_output: N_AOUT_f;     //<--------------
+  tool_digital_input: N_DIN_u;    
+  tool_digital_output: N_DOUT_u;
+  tool_analog_input: N_AIN_f;
+  tool_analog_output: N_AOUT_f;
 
   motion_mode: ubyte;
   motion_speed_bar: float;
   motion_is_pause : ubyte;
 
-  status_lan2can: ubyte; // 0 통신 미연결 1 통신 연결
-  status_switch_emg: ubyte; // 0 긴급정지 미감지 1 긴급정지 감지
-  status_power_out: ubyte; // 0 전원 미공급 1 전원 공급
-  status_servo_num: ubyte; // 0 비활성화 1 전원부체크완료, 2 통신상태연결완료 3 파라미터 설정 및 체크 완료 4 조인트 관절 구동 준비 완료 5 시스템 부하 검사 완료 6 완료 
-  status_is_refon: ubyte; // 0 시뮬레이션 1 실제작동
-  status_out_coll: ubyte; // 0 외부 충돌 미감지 1 외부 충돌 감지
-  status_self_coll: ubyte; // 0 자가 충돌 미감지 1 자가 충돌 감지
-  status_dt_mode: ubyte; // 0 직접 교시 아님 1 직접 교시 실행중
+  status_lan2can: ubyte;
+  status_switch_emg: ubyte;
+  status_power_out: ubyte;
+  status_servo_num: ubyte;
+  status_is_refon: ubyte;
+  status_out_coll: ubyte;
+  status_self_coll: ubyte;
+  status_dt_mode: ubyte;
 }
 
 root_type State_Core;

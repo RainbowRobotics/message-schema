@@ -22,3 +22,5 @@ backend/.buildx-cache-info
 backend/docker-compose.yml
 backend/docker-compose.dev.yml
 backend/docker-compose.preview.yml
+
+.buildx-cache

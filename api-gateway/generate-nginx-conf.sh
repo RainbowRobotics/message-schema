@@ -8,8 +8,6 @@ OUTPUT="$SCRIPT_DIR/nginx.conf"
 SERVICES_DIR="$REPO_ROOT/backend/services"
 DEV_MODE=false
 
-echo "DEV_MODE: $DEV_MODE"
-
 while [[ $# -gt 0 ]]; do
   case $1 in
     --dev*)
@@ -21,6 +19,10 @@ done
 
 
 SERVICE_BLOCKS=""
+
+if [ "$DEV_MODE" = true ]; then
+  OUTPUT="$SCRIPT_DIR/nginx.dev.conf"
+fi
 
 for service_path in "$SERVICES_DIR"/*; do
   echo "service_path: $service_path"

@@ -128,7 +128,7 @@ for FD in 3 4 5; do
     container_name: api-gateway-dev
     restart: unless-stopped
     volumes:
-      - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../api-gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "3000:3000"
     networks: [rb_net]
@@ -175,7 +175,7 @@ EOF
     container_name: api-gateway-preview
     restart: unless-stopped
     volumes:
-      - ../api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../api-gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     network_mode: host
 
   rrs-mongo-preview:

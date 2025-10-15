@@ -73,5 +73,6 @@ backend.flatc: ## FlatBuffers 코드 생성
 	fi
 
 .PHONY: backend.deploy
-backend.deploy: ## 모든 Backend 서비스 또는 지정된 Backend 서비스 배포
-	@bash scripts/backend/deploy.sh
+backend.deploy:  ## 모든 Backend 서비스 또는 지정된 Backend 서비스 배포
+	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
+	@bash ${ROOT_DIR}scripts/backend/deploy.sh

@@ -12,6 +12,7 @@ from .config_schema import (
     Request_Save_SideDin_FunctionPD,
     Request_Save_SideDout_FunctionPD,
     Request_Save_Tool_List_ParameterPD,
+    Request_Set_Tool_ListPD,
     Response_CallConfigControlBoxPD,
     Response_CallConfigRobotArmPD,
     Response_CallConfigToolListPD,
@@ -27,6 +28,12 @@ config_router = APIRouter(tags=["Config"])
 )
 async def config_toollist(robot_model: str):
     res = config_service.config_tool_list(robot_model)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/call_change_toollist", response_model=Response_ReturnValuePD)
+async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
+    res = config_service.change_toollist(robot_model, request=request)
     return JSONResponse(res)
 
 

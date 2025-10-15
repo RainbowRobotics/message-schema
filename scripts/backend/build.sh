@@ -133,4 +133,17 @@ docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/de
 sleep 2
 docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
 
+
+docker buildx stop "$BUILDER" >/dev/null 2>&1 || true
+docker buildx rm -f "$BUILDER" >/dev/null 2>&1 || true
+
+docker ps -a --format '{{.ID}} {{.Names}}' \
+  | awk -v b="$BUILDER" '$2 ~ ("buildx_buildkit_" b) {print $1}' \
+  | xargs -r docker rm -f >/dev/null 2>&1 || true
+
+if [ -d "$HOME/.docker/buildx/instances" ]; then
+  find "$HOME/.docker/buildx/instances" -maxdepth 1 -type f -name "${BUILDER}*" -print0 \
+    | xargs -0 -r rm -f >/dev/null 2>&1 || true
+fi
+
 [[ $fail -eq 0 ]] && echo "🎉 병렬 빌드 완료" || { echo "⛔ 일부 실패"; exit 1; }
