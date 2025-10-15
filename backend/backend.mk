@@ -47,19 +47,8 @@ backend.dev: backend.lint ## docker를 쓰고 개발 환경 실행
 		  exec $${compose} up --no-build; \
 		fi'
 
-.PHONY: ensure-buildx
-ensure-buildx: ## buildx 빌더 확인 및 수정
-	@drv=$$(docker buildx inspect rrs-py-buildx 2>/dev/null | awk -F': ' '/Driver:/ {print $$2}'); \
-	if [ "$$drv" != "docker-container" ]; then \
-	  echo "fix builder: rrs-py-buildx (driver=$$drv -> docker-container)"; \
-	  docker buildx rm -f rrs-py-buildx >/dev/null 2>&1 || true; \
-	  docker buildx create --name rrs-py-buildx --driver docker-container --node rrs-py-buildx-0 \
-	    --driver-opt env.BUILDKIT_KEEP_STORAGE=$$((8*1024*1024*1024)) --use >/dev/null; \
-	  docker buildx inspect rrs-py-buildx --bootstrap >/dev/null; \
-	fi
-
 .PHONY: backend.build
-backend.build: backend.lint ensure-buildx ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
+backend.build: backend.lint ## 모든 Backend 서비스 또는 지정된 Backend 서비스 빌드
 	@bash scripts/backend/build.sh
 
 

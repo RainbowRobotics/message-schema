@@ -1,149 +1,209 @@
 #!/usr/bin/env bash
-# 병렬로 services/* 를 docker buildx 로 빌드해서 run.bin 아티팩트를 추출한다.
-# ENV:
-#   WORKDIR  : backend 디렉토리 경로 (기본: 이 스크립트가 있는 디렉토리)
-#   SERVICE  : 특정 서비스만 빌드 (예: SERVICE=manipulate)
-#   JOBS     : 동시에 빌드할 작업 개수 (기본 4)
-#   VERBOSE  : 1 이면 docker 로그 출력(기본은 조용히)
-
+# set -euo pipefail: 기존 스크립트의 오류 처리 방식 유지
 set -euo pipefail
+
+: "${SERVICE:=}"
+: "${ARCHS:=amd64 arm64}"
+: "${BUILDER_NAME:=rrs_python_builder}"
+: "${CACHE_ROOT:=.buildx-cache}"
+
+: "${MAX_CACHE_SIZE_GB:=1}"
+: "${MIN_FREE_DAYS:=7}"
+
+
+
+OS="$(uname -s)"
+
+STAT_FORMAT_ATIME='%a %N' 
+STAT_FORMAT_SIZE='%z'     
+
+if [[ "$OS" == "Linux" ]]; then
+    STAT_FORMAT_ATIME='%X %n'
+    STAT_FORMAT_SIZE='%s'
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKDIR="${REPO_ROOT}/backend"
 SERVICES_DIR="$WORKDIR/services"
+DOCKERFILE="$WORKDIR/Dockerfile.build"
 
-CACHE_ROOT="${REPO_ROOT}/.buildx-cache"
-KEEP_STORAGE="${KEEP_STORAGE:-10GB}"
-BUILDER="${BUILDER:-rrs-py-buildx}"
-
-ensure_builder() {
-  docker context use default >/dev/null 2>&1 || true
-
-  if docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
-    docker buildx rm -f "$BUILDER" >/dev/null 2>&1 || true
+prune_local_cache_by_size() {
+  local arch=$1
+  local cache_dir="${REPO_ROOT}/${CACHE_ROOT}-${arch}"
+  local target_dir="${cache_dir}/blobs/sha256"
+  local max_bytes=$((MAX_CACHE_SIZE_GB * 1024 * 1024 * 1024))
+  
+  if [[ ! -d "$target_dir" ]]; then
+    return 0
   fi
 
-  docker ps -a --format '{{.ID}} {{.Names}}' \
-    | awk -v b="$BUILDER" '$2 ~ ("buildx_buildkit_" b) {print $1}' \
-    | xargs -r docker rm -f >/dev/null 2>&1
+  local current_kb
+  current_kb=$(du -s -k "$cache_dir" | awk '{print $1}') 
+  local current_bytes=$((current_kb * 1024)) 
+  local current_size_gb=$(echo "scale=2; $current_bytes / (1024*1024*1024)" | bc)
+  
+  echo "➡️  캐시 크기 확인 (${arch}): 현재 ${current_size_gb} GB / 최대 ${MAX_CACHE_SIZE_GB} GB"
 
-  if [ -d "$HOME/.docker/buildx/instances" ]; then
-    find "$HOME/.docker/buildx/instances" -maxdepth 1 -type f -name "${BUILDER}*" -print0 \
-      | xargs -0 -r rm -f >/dev/null 2>&1
+  if (( current_bytes < max_bytes )); then
+    echo "✅ 캐시 크기가 허용 범위 내에 있습니다. 정리하지 않습니다."
+    return 0
   fi
 
-  echo "🚀 새 빌더 '${BUILDER}' 생성(docker-container)"
-  docker buildx create \
-    --name "$BUILDER" \
-    --driver docker-container \
-    --node "${BUILDER}-0" \
-    --driver-opt env.BUILDKIT_KEEP_STORAGE=$((8*1024*1024*1024)) \
-    --use >/dev/null
+  echo "⚠️  최대 용량(${MAX_CACHE_SIZE_GB} GB) 초과! 정리 시작..."
 
-  echo "🔧 빌더 부트스트랩 중..."
-  docker buildx inspect "$BUILDER" --bootstrap >/dev/null
+  local total_removed_count=0
+  
+  local deleted_count
+  deleted_count=$(find "$target_dir" -type f -atime +"${MIN_FREE_DAYS}" -delete -print 2>/dev/null | wc -l)
+  total_removed_count=${deleted_count}
+  
+  current_kb=$(du -s -k "$cache_dir" | awk '{print $1}')
+  current_bytes=$((current_kb * 1024))
+  current_size_gb=$(echo "scale=2; $current_bytes / (1024*1024*1024)" | bc)
+
+  if (( current_bytes >= max_bytes )); then
+    
+    local bytes_to_remove=$((current_bytes - max_bytes))
+    local removed_bytes=0
+    local removed_count=0
+
+    find "$target_dir" -type f -print0 | xargs -0 stat -f "$STAT_FORMAT_ATIME" | sort -n | while read -r atime filename; do
+      if (( removed_bytes >= bytes_to_remove )); then
+          break
+      fi
+      
+      local file_size
+      file_size=$(stat -f "$STAT_FORMAT_SIZE" "$filename")
+      
+      rm -f "$filename" 2>/dev/null
+      
+      if [[ $? -eq 0 ]]; then
+        removed_bytes=$((removed_bytes + file_size))
+        removed_count=$((removed_count + 1))
+      fi
+    done
+    
+    total_removed_count=$((total_removed_count + removed_count))
+
+    current_kb=$(du -s -k "$cache_dir" | awk '{print $1}')
+    current_bytes=$((current_kb * 1024))
+    current_size_gb=$(echo "scale=2; $current_bytes / (1024*1024*1024)" | bc)
+  fi
+
+  if (( total_removed_count > 0 )); then
+    echo "✔ 총 ${total_removed_count}개 파일 삭제됨. (최종 크기: ${current_size_gb} GB)"
+    local max_bytes_check=$((MAX_CACHE_SIZE_GB * 1024 * 1024 * 1024))
+    if (( current_bytes >= max_bytes_check )); then
+      echo "❌ 최종 경고: 캐시가 여전히 최대 용량(${MAX_CACHE_SIZE_GB} GB)을 초과합니다. 수동 정리가 필요할 수 있습니다."
+    fi
+  fi
 }
 
-build_one() {
-  local svc="$1" arch="$2"
-  case "$arch" in amd64|arm64) ;; *) echo "❌ invalid arch: '$arch'"; return 2;; esac
-  local outdir="$SERVICES_DIR/$svc/.out-$arch"
-  local cache_dir="${CACHE_ROOT}/${svc}-${arch}" 
 
-  echo "➡️  ${svc} (${arch}) → ${outdir}"
-  rm -rf "$outdir" && mkdir -p "$outdir" "$cache_dir"
+cleanup() {
+  echo "🧹 빌더 컨테이너 캐시 정리 중..."
 
-  local common=(
-    --builder "$BUILDER"
-    --platform "linux/${arch}"
-    --build-arg "SERVICE=${svc}"
-    -f "$WORKDIR/Dockerfile.build"
-    --target artifacts
-    --output "type=local,dest=${outdir}"
-    --provenance=false         # 메타데이터 저장 축소
-    --sbom=false               # SBOM 미생성(필요할 때만 켜기)
-  )
+  docker buildx prune -af --builder "$BUILDER_NAME" >/dev/null 2>&1 || true
 
-  if [[ "${VERBOSE:-0}" == "1" ]]; then
-    DOCKER_BUILDKIT=1 docker buildx build "${common[@]}" "$REPO_ROOT"
+  if [[ $? -ne 0 ]]; then
+      echo "❌ 일부 병렬 빌드가 실패했거나 중단되었습니다."
   else
-    DOCKER_BUILDKIT=1 docker buildx build "${common[@]}" "$REPO_ROOT" >/dev/null
+      echo "✅ 정리/빌드 완료 => services: ${SERVICES[@]}"
   fi
-
-  mv "${outdir}/run.bin" "$SERVICES_DIR/${svc}/${svc}.${arch}.bin"
-  rm -rf "$outdir"
 }
 
-ensure_builder
+trap cleanup EXIT INT TERM
+
 
 command -v docker >/dev/null || { echo "docker 필요"; exit 127; }
 docker buildx version >/dev/null 2>&1 || { echo "docker buildx 필요"; exit 127; }
-[[ -f "$WORKDIR/Dockerfile.build" ]] || { echo "Dockerfile.build 없음: $WORKDIR/Dockerfile.build"; exit 2; }
-[[ -d "$SERVICES_DIR" ]] || { echo "services 디렉토리 없음: $SERVICES_DIR"; exit 2; }
+command -v du >/dev/null || { echo "du(disk usage) 필요"; exit 127; }
+command -v bc >/dev/null || { echo "bc(계산기) 필요"; exit 127; }
 
-if [[ -z "${SERVICE:-}" ]]; then
-  echo "🔄 모든 서비스 빌드"
-  SERVICES_LIST=$(find "$SERVICES_DIR" -name pyproject.toml -exec dirname {} \; | xargs -n1 basename | sort)
+
+if docker buildx inspect "${BUILDER_NAME}" >/dev/null 2>&1; then
+  cur_drv="$(docker buildx ls | awk -v n="${BUILDER_NAME}" '$1==n {print $2}')"
+  if [[ "${cur_drv}" != "docker-container" && -n "${cur_drv}" ]]; then
+    docker buildx rm -f "${BUILDER_NAME}" >/dev/null 2>&1 || true
+    docker buildx create --name "${BUILDER_NAME}" --driver docker-container --use --bootstrap >/dev/null
+  else
+    docker buildx use "${BUILDER_NAME}" >/dev/null
+    docker buildx inspect --bootstrap >/dev/null
+  fi
 else
-  echo "📦 선택 빌드: ${SERVICE}"
-  IFS=',' read -r -a SERVICES_ARR <<< "$SERVICE"
-  SERVICES_LIST=$(printf '%s\n' "${SERVICES_ARR[@]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed '/^$/d')
+  docker buildx create --name "${BUILDER_NAME}" --driver docker-container --use --bootstrap >/dev/null
 fi
-# 스크립트 안에서 SERVICES_LIST 만든 다음:
-echo "count=$(printf '%s\n' "$SERVICES_LIST" | sed '/^$/d' | wc -l)"
-printf '%s\n' "$SERVICES_LIST" | nl -ba | cat -v
 
-ARCHS="${ARCHS:-amd64 arm64}"
-for a in $ARCHS; do case "$a" in amd64|arm64) ;; *) echo "❌ invalid arch '$a'"; exit 2;; esac; done
-
-JOBS="${JOBS:-4}"
-
-sem_fifo="$(mktemp -u)"; mkfifo "$sem_fifo"; exec 3<>"$sem_fifo"; rm -f "$sem_fifo"
-for _ in $(seq 1 "$JOBS"); do echo >&3; done
-
-fail=0
-pids=()
-
-while IFS= read -r svc; do
-  [[ -z "$svc" ]] && continue
-  case "$svc" in amd64|arm64) echo "❌ SERVICES에 arch 섞임: '$svc'"; exit 2;; esac
-  for arch in $ARCHS; do
-    read -u3
-    (
-      if ! build_one "$svc" "$arch"; then
-        echo "❌ 실패: $svc ($arch)" >&2
-        exit 1
-      fi
-      echo >&3
-    ) & pids+=($!)
+if [[ -z "$SERVICE" ]]; then
+  echo "🔄 모든 서비스 빌드 (병렬)"
+  SERVICES=()
+  while IFS= read -r line; do SERVICES+=("$line"); done \
+    < <(find "$SERVICES_DIR" -name pyproject.toml -exec dirname {} \; | xargs -n1 basename | sort)
+else
+  echo "📦 선택 빌드: ${SERVICE} (병렬)"
+  IFS=',' read -r -a SERVICES <<< "$SERVICE"
+  for i in "${!SERVICES[@]}"; do
+    SERVICES[$i]="$(printf '%s' "${SERVICES[$i]}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
   done
-done <<< "$SERVICES_LIST"
-
-for pid in "${pids[@]}"; do
-  if ! wait "$pid"; then fail=1; fi
-done
-exec 3>&-
-
-
-
-echo "🧹 buildx 캐시 정리 (builder=${BUILDER}, keep=${KEEP_STORAGE})"
-
-docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
-sleep 2
-docker buildx prune -af --builder "$BUILDER" --keep-storage "$KEEP_STORAGE" >/dev/null
-
-
-docker buildx stop "$BUILDER" >/dev/null 2>&1 || true
-docker buildx rm -f "$BUILDER" >/dev/null 2>&1 || true
-
-docker ps -a --format '{{.ID}} {{.Names}}' \
-  | awk -v b="$BUILDER" '$2 ~ ("buildx_buildkit_" b) {print $1}' \
-  | xargs -r docker rm -f >/dev/null 2>&1 || true
-
-if [ -d "$HOME/.docker/buildx/instances" ]; then
-  find "$HOME/.docker/buildx/instances" -maxdepth 1 -type f -name "${BUILDER}*" -print0 \
-    | xargs -0 -r rm -f >/dev/null 2>&1 || true
 fi
 
-[[ $fail -eq 0 ]] && echo "🎉 병렬 빌드 완료" || { echo "⛔ 일부 실패"; exit 1; }
+build_service() {
+  local svc=$1
+  local arch=$2
+  local cache_dir="${REPO_ROOT}/${CACHE_ROOT}-${arch}"
+  local outdir="$SERVICES_DIR/$svc/.out-$arch"
+  
+  [[ -d "$SERVICES_DIR/$svc" ]] || { echo "skip: $svc not found"; return 0; }
+
+  mkdir -p "$cache_dir"
+  rm -rf "$outdir"; mkdir -p "$outdir"
+
+  echo "➡️  빌드 시작: ${svc} (${arch}) | 캐시: $(basename "$cache_dir")"
+
+  cmd=(
+    docker buildx build
+    --builder "$BUILDER_NAME"
+    --platform "linux/${arch}"
+    --build-arg "SERVICE=${svc}"
+    -f "$DOCKERFILE"
+    --target artifacts
+    --output "type=local,dest=${outdir}"
+    --cache-to "type=local,dest=${cache_dir},mode=min"
+  )
+
+  if [[ -f "${cache_dir}/index.json" ]]; then
+    cmd+=( --cache-from "type=local,src=${cache_dir}" )
+  fi
+
+  cmd+=( "$REPO_ROOT" )
+
+  if ! "${cmd[@]}"; then
+    echo "❌ 빌드 실패: ${svc} (${arch})" >&2
+    return 1
+  fi
+  
+  mv "${outdir}/run.bin" "$SERVICES_DIR/${svc}/${svc}.${arch}.bin"
+  rm -rf "$outdir"
+  echo "✔ 완료"
+  return 0
+}
+
+
+echo "🔄 로컬 캐시 용량 기반 사전 정리 시작..."
+for arch in $ARCHS; do
+  prune_local_cache_by_size "$arch" &
+done
+wait
+echo "✅ 로컬 캐시 사전 정리 완료."
+
+
+for arch in $ARCHS; do
+  for svc in "${SERVICES[@]}"; do
+    build_service "$svc" "$arch" & 
+    BUILD_PIDS+=($!)
+  done
+done
+
+
+wait
