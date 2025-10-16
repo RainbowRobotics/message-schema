@@ -177,6 +177,7 @@ class StateService:
         self, *, power_option: int, sync_servo: bool, stoptime: int | None = 0.5
     ):
         try:
+            rb_log.debug(f"power_control {power_option} {sync_servo} {stoptime}")
             req = Request_PowerControlT()
             req.power_option = power_option
 
@@ -187,7 +188,7 @@ class StateService:
                 await program_service.call_smoothjog_stop(stoptime=stoptime)
 
             res = zenoh_client.query_one(
-                "*/call_powercontrol",
+                "C500920/call_powercontrol",
                 flatbuffer_req_obj=req,
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=32,
@@ -214,8 +215,6 @@ class StateService:
                 flatbuffer_res_T_class=Response_FunctionsT,
                 flatbuffer_buf_size=32,
             )
-
-            rb_log.debug(f"all server control >> {res["dict_payload"]}")
 
             return res["dict_payload"]
 
