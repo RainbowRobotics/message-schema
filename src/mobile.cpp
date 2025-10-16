@@ -299,15 +299,24 @@ bool MOBILE::connect_to_pdu(const QString& pdu_ip, int pdu_port)
         return false;
     }
 
-    // set option
+    while(retry_count < max_retries && !connection_success && recv_flag)
     {
-        int val = 1;
-        ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-    }
+        retry_count++;
+        spdlog::info("[MOBILE] connection attempt %d/%d\n", retry_count, max_retries);
 
-    // set non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        // connection
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        if(fd < 0)
+        {
+            //logger->write_log("[MOBILE] socket create failed", "Red", true, false);
+            spdlog::error("[MOBILE] socket create failed");
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            return;
+        }
 
     int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
     if(status < 0 && errno != EINPROGRESS)
@@ -317,14 +326,21 @@ bool MOBILE::connect_to_pdu(const QString& pdu_ip, int pdu_port)
         return false;
     }
 
-    // wait for connection with timeout
-    fd_set writefds;
-    struct timeval tv;
-    tv.tv_sec = 10; // 10 seconds timeout
-    tv.tv_usec = 0;
+        // set non-blocking
+        int flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
-    FD_ZERO(&writefds);
-    FD_SET(fd, &writefds);
+        int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
+        if(status < 0 && errno != EINPROGRESS)
+        {
+            //logger->write_log("[MOBILE] connect failed", "Red", true, false);
+            spdlog::error("[MOBILE] connect failed");
+            close(fd);
+            if(retry_count < max_retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
 
     status = select(fd + 1, NULL, &writefds, NULL, &tv);
     if(status <= 0) // timeout or error

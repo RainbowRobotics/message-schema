@@ -127,6 +127,37 @@ void OBSMAP::set_unimap_module(UNIMAP* _unimap)
     unimap = _unimap;
 }
 
+void OBSMAP::set_obs_box_z_values(double _obs_box_min_z, double _obs_box_max_z)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    obs_box_min_z = _obs_box_min_z;
+    obs_box_max_z = _obs_box_max_z;
+}
+
+void OBSMAP::set_obs_box_map_range(double _obs_box_map_range)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    obs_box_map_range = _obs_box_map_range;
+}
+
+double OBSMAP::get_obs_box_map_min_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return config->get_obs_map_min_z() + obs_box_min_z;
+}
+
+double OBSMAP::get_obs_box_map_max_z()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return config->get_obs_map_max_z() + obs_box_max_z;
+}
+
+double OBSMAP::get_obs_box_map_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return config->get_obs_map_range() + obs_box_map_range;
+}
+
 void OBSMAP::set_vobs_list_robots(const std::vector<Eigen::Vector3d>& _vobs_r_list)
 {
     std::unique_lock<std::shared_mutex> lock(mtx);
@@ -163,8 +194,8 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
     double sq_radius0 = config->get_obs_map_range();
     double sq_radius = sq_radius0*sq_radius0;
 
-    double obs_map_min_z = config->get_obs_map_min_z();
-    double obs_map_max_z = config->get_obs_map_max_z();
+    double obs_map_min_z = config->get_obs_map_min_z() + obs_box_min_z;
+    double obs_map_max_z = config->get_obs_map_max_z() + obs_box_max_z;
 
     std::vector<nanoflann::ResultItem<unsigned int, double>> res_idxs;
     nanoflann::SearchParameters params;

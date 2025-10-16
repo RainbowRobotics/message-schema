@@ -51,97 +51,128 @@ public:
 
     enum ErrorCategory
     {
-        MAP = 0x1000,
-        LOC = 0x2000,
-        NAVI = 0x3000,
-        SENSOR = 0x4000,
-        SYSTEM = 0x5000,
-        SAFETY = 0x6000,
-        BATTERY = 0x7000,
-        MOTOR = 0x8000
+        MAP =                       0x1000,
+        LOC =                       0x2000,
+        //NAVI = 0x3000,
+        MOVE =                      0x3000,
+        SENSOR =                    0x4000,
+        SYSTEM =                    0x5000,
+        SAFETY =                    0x6000,
+        BATTERY =                   0x7000,
+        MOTOR =                     0x8000,
+        COMM_RRS =                  0x9000,
+        COBOT =                     0xA000
+
     };
     
-    enum ErrorCause
+    enum ErrorCause // mobile robot
     {
         // Map manage
-        MAP_NOT_LOADED = 0x1001,
-        MAP_INVALID_PATH = 0x1002,
-        MAP_LOAD_FAILED = 0x1003,
-        MAP_COPY_FAILED = 0x1004,
-        MAP_TOPO_LOAD_FAILED = 0x1005,
+        MAP_NOT_LOADED =            0x1001,
+        MAP_INVALID_PATH =          0x1002,
+        MAP_LOAD_FAILED =           0x1003,
+        MAP_COPY_FAILED =           0x1004,
+        MAP_TOPO_LOAD_FAILED =      0x1005,
         
         // LOC
-        LOC_NOT_INIT = 0x2001,
-        LOC_SENSOR_ERROR = 0x2002,
-        LOC_ALREADY_RUNNING = 0x2003,
-        LOC_INIT_FAILED = 0x2004,
+        LOC_NOT_INIT =              0x2001,
+        LOC_SENSOR_ERROR =          0x2002,
+        LOC_ALREADY_RUNNING =       0x2003,
+        LOC_INIT_FAILED =           0x2004,
         
         // MOVE
-        MOVE_NO_TARGET = 0x3001,
-        MOVE_TARGET_INVALID = 0x3002,
-        MOVE_TARGET_OCCUPIED = 0x3003,
-        MOVE_TARGET_OUT_RANGE = 0x3004,
-        MOVE_NODE_NOT_FOUND = 0x3005,
-        MOVE_EMPTY_NODE_ID = 0x3006,
+        MOVE_NO_TARGET =            0x3001,
+        MOVE_TARGET_INVALID =       0x3002,
+        MOVE_TARGET_OCCUPIED =      0x3003,
+        MOVE_TARGET_OUT_RANGE =     0x3004,
+        MOVE_NODE_NOT_FOUND =       0x3005,
+        MOVE_EMPTY_NODE_ID =        0x3006,
         
         // SENSOR
-        SENSOR_LIDAR_DISCON = 0x4001,
-        SENSOR_LIDAR_DATA_ERROR = 0x4002,
-        SENSOR_LIDAR_CALIB_ERROR = 0x4003,
-        SENSOR_IMU_DISCON = 0x4004,
-        SENSOR_IMU_DATA_ERROR = 0x4005,
-        SENSOR_CAM_DISCON = 0x4006,
-        SENSOR_CAM_DATA_ERROR = 0x4007,
-        SENSOR_QR_ERROR = 0x4008,
-        SENSOR_TEMP_ERROR = 0x4009,
+        SENSOR_LIDAR_DISCON =       0x4001,
+        SENSOR_LIDAR_DATA_ERROR =   0x4002,
+        SENSOR_LIDAR_CALIB_ERROR =  0x4003,
+        SENSOR_IMU_DISCON =         0x4004,
+        SENSOR_IMU_DATA_ERROR =     0x4005,
+        SENSOR_CAM_DISCON =         0x4006,
+        SENSOR_CAM_DATA_ERROR =     0x4007,
+        SENSOR_QR_ERROR =           0x4008,
+        SENSOR_TEMP_ERROR =         0x4009,
         
         // SYSTEM (0x5000)
-        SYS_NOT_SUPPORTED = 0x5001,
-        SYS_MULTI_MODE_LIMIT = 0x5002,
-        SYS_PROCESS_START_FAILED = 0x5003,
+        SYS_NOT_SUPPORTED =         0x5001,
+        SYS_MULTI_MODE_LIMIT =      0x5002,
+        SYS_PROCESS_START_FAILED =  0x5003,
         SYS_PROCESS_FINISH_FAILED = 0x5004,
-        SYS_NETWORK_ERROR = 0x5005,
+        SYS_NETWORK_ERROR =         0x5005,
         
         // SAFETY (0x6000)
-        SAFETY_EMO_RELEASED = 0x6001,
-        SAFETY_EMO_PRESSED = 0x6002,
-        SAFETY_BUMPER_PRESSED = 0x6003,
-        SAFETY_OBS_DETECTED = 0x6004,
-        SAFETY_ZONE_VIOLATION = 0x6005,
+        SAFETY_EMO_RELEASED =       0x6001,
+        SAFETY_EMO_PRESSED =        0x6002,
+        SAFETY_BUMPER_PRESSED =     0x6003,
+        SAFETY_OBS_DETECTED =       0x6004,
+        SAFETY_ZONE_VIOLATION =     0x6005,
         
         // BATTEREEY (0x7000)
-        BAT_NOT_CHARGING = 0x7001,
-        BAT_LOW = 0x7002,
-        BAT_CRITICAL = 0x7003,
-        BAT_POWER_ERROR = 0x7004,
+        BAT_NOT_CHARGING =          0x7001,
+        BAT_LOW =                   0x7002,
+        BAT_CRITICAL =              0x7003,
+        BAT_POWER_ERROR =           0x7004,
         
         // MOTOR (0x8000)
-        MOTOR_CONNECTION_LOST = 0x8001,
-        MOTOR_OVERHEAT = 0x8002,
-        MOTOR_OVERLOAD = 0x8003,
-        MOTOR_ENCODER_ERROR = 0x8004
+        MOTOR_CONNECTION_LOST =     0x8001,
+        MOTOR_OVERHEAT =            0x8002,
+        MOTOR_OVERLOAD =            0x8003,
+        MOTOR_ENCODER_ERROR =       0x8004,
+
+        // COMM_RRS (0x9000)
+        RRS_CONNECTION_FAILED =     0x9001,
+        RRS_TIMEOUT =               0x9002,
+        RRS_INVALID_MESSAGE =       0x9003,
+        RRS_RESPONSE_ERROR =        0x9004,
+
+        // COBOT1 (0xA000)
+        COBOT1_CONNECTION_FAILED =   0xA001,
+        COBOT1_COMMAND_FAILED =      0xA002,
+        COBOT1_STATUS_ERROR =        0xA003,
+        COBOT1_EMERGENCY_STOP =      0xA004,
+        COBOT1_TIMEOUT =             0xA005
+
+
+
     };
 
     enum ErrorContext
     {
         MOVE_TARGET,
         MOVE_GOAL,
+
         LOAD_MAP,
         LOAD_TOPO,
         LOAD_CONFIG,
+
         MAPPING_START,
         MAPPING_SAVE,
+
         LOC_SEMI_AUTO,
         LOC_INIT,
         LOC_START,
         LOC_STOP,
+
         SOFTWARE_UPDATE,
+
         DOCK_START,
         DOCK_STOP,
+
         LED_CONTROL,
+
         MOTOR_CONTROL,
+
         FIELD_SET,
-        FIELD_GET
+        FIELD_GET,
+
+        RRS_COMMUNICATION,
+        COBOT_OPERATION
     };
 
     struct ErrorInfo
@@ -279,6 +310,8 @@ public Q_SLOTS:
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_software_update(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_obs_box_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+
 
     void slot_led(DATA_LED msg);
     void slot_move(DATA_MOVE msg);
@@ -297,6 +330,8 @@ public Q_SLOTS:
     void slot_safety_io(DATA_SAFTYIO msg);
     void slot_safety_request(DATA_SAFETY msg);
     void slot_config_request(DATA_PDU_UPDATE msg);
+    void slot_obs_box_setting(DATA_OBS_BOX msg);
+
 
     /* send command response */
     void send_move_response(const DATA_MOVE& msg);
@@ -312,8 +347,10 @@ public Q_SLOTS:
     void send_field_get_response(const DATA_SAFETY& msg);
     void send_safety_reset_response(const DATA_SAFETY& msg);
     void send_config_request_response(const DATA_PDU_UPDATE& msg);
+    void send_obs_box_setting_response(const DATA_OBS_BOX& msg);
 
-    QJsonObject getErrorCodeMapping(const QString& message);
+
+    QJsonObject get_error_code_mapping(const QString& message);
 
     void send_loop();
 
@@ -336,6 +373,8 @@ Q_SIGNALS:
     void signal_safety_io(DATA_SAFTYIO msg);
     void signal_safety_request(DATA_SAFETY msg);
     void signal_config_request(DATA_PDU_UPDATE msg);
+    void signal_obs_box_setting(DATA_OBS_BOX msg);
+
 
 };
 

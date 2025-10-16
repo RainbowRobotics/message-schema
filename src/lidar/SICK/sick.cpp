@@ -30,7 +30,14 @@ SICK::~SICK()
 
 void SICK::open()
 {
-    printf("[SICK] open\n");
+    if (!config || !config->get_use_lidar_2d())
+    {
+        printf("[SICK] disabled -> skip open\n");
+        return;
+    }
+
+    //printf("[SICK] open\n");
+    spdlog::info("[SICK] open");
 
     // stop first
     close();
@@ -40,7 +47,8 @@ void SICK::open()
         pts_tf[i] = string_to_TF(config->get_lidar_2d_tf(i));
     }
 
-    printf("[LIVOX] init\n");
+    //printf("[LIVOX] init\n");
+    spdlog::info("[SICK] init");
 
     // loop start
     for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)

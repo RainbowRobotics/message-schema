@@ -80,6 +80,19 @@ public:
     void set_unimap_module(UNIMAP* _unimap);
 
     /***********************
+     * set obs box values
+     ***********************/
+    void set_obs_box_z_values(double _obs_box_min_z, double _obs_box_max_z);
+    void set_obs_box_map_range(double _obs_box_map_range);
+
+    /***********************
+     * get obs map z bounds
+     ***********************/
+    double get_obs_box_map_min_z();
+    double get_obs_box_map_max_z();
+    double get_obs_box_map_range();
+
+    /***********************
      * check collision
      ***********************/
     int is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn = false, double margin_x = 0, double margin_y = 0);
@@ -123,6 +136,11 @@ private:
 
     std::atomic<double> last_obs_update_time = {0.0};
     std::atomic<double> last_vobs_update_time = {0.0};
+
+    // obs box z values
+    double obs_box_min_z = 0.0;
+    double obs_box_max_z = 0.0;
+    double obs_box_map_range = 0.0;
 
     int w = 300;
     int h = 300;

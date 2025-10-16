@@ -20,6 +20,7 @@
 #include "dockcontrol.h"
 #include "policy.h"
 #include "safety.h"
+#include "task.h"
 
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"
@@ -76,6 +77,7 @@ public:
     void update_jog_values(double vx, double vy, double wz);
     void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
     void all_plot_clear();
+    void ui_tasks_update();
     void init_ui_effect();
     void set_opacity(QWidget* w, double opacity);
     void init_modules();
@@ -219,6 +221,15 @@ public Q_SLOTS:
 
     // for obsmap
     void bt_ObsClear();
+
+    // for task
+    void bt_TaskAdd();
+    void bt_TaskDel();
+    void bt_TaskSave();
+    void bt_TaskLoad();
+    void bt_TaskPlay();
+    void bt_TaskPause();
+    void bt_TaskCancel();
 
     // for autocontrol
     void bt_AutoMove();

@@ -1,6 +1,13 @@
 #include "task.h"
 
-TASK::TASK(QObject *parent) : QObject{parent}
+TASK* TASK::instance(QObject* parent)
+{
+    //static TASK inst = nullptr;
+    static TASK inst;
+    return &inst;
+}
+
+TASK:: TASK() : QObject(nullptr)
 {
 
 }
@@ -10,21 +17,52 @@ TASK::~TASK()
     if(a_thread != NULL)
     {
         a_flag = false;
-        a_thread->join();
+        if(a_thread->joinable())
+        {
+            a_thread->join();
+        }
         a_thread = NULL;
+    }
+}
+
+void TASK::init()
+{
+    spdlog::info("[TASK] task init");
+
+    config = CONFIG::instance();
+    unimap = UNIMAP::instance();
+    obsmap = OBSMAP::instance();
+    loc = LOCALIZATION::instance();
+    mobile = MOBILE::instance();
+    ctrl = AUTOCONTROL::instance();
+
+    if (ctrl == nullptr || unimap == nullptr || loc == nullptr)
+    {
+        spdlog::critical("[TASK] Failed to initialize required modules!");
+    }
+    else
+    {
+        spdlog::info("[TASK] Initialized with required modules.");
     }
 }
 
 void TASK::play(QString _driving_mode)
 {
+    spdlog::info("[TASK] play start");
     // stop first
     if(a_thread != NULL)
     {
         a_flag = false;
-        a_thread->join();
+        if(a_thread->joinable())
+        {
+            a_thread->join();
+        }
         a_thread = NULL;
     }
-    ctrl->stop();
+    //ctrl->stop();
+    //AUTOCONTROL::instance()->stop();
+    if(ctrl) ctrl->stop();
+
 
     driving_mode = _driving_mode;
 
@@ -38,29 +76,45 @@ void TASK::play(QString _driving_mode)
 
 void TASK::pause()
 {
-
+    spdlog::info("[TASK] Pause command received. but not yet");
 }
 
 void TASK::cancel()
 {
+    spdlog::info("[TASK] Cancel command received.");
+
     // cancel
     if(a_thread != NULL)
     {
         a_flag = false;
-        a_thread->join();
+        if(a_thread->joinable())
+        {
+            a_thread->join();
+        }
         a_thread = NULL;
     }
 
-    ctrl->stop();
+    if(ctrl) ctrl->stop();
 }
 
-void TASK::add_task(NODE* node)
+void TASK::add_task(const NODE* node)
 {
-    task_node_list.push_back(node->id);
+    spdlog::info("[TASK] Add task");
+
+    if (node)
+    {
+        task_node_list.push_back(node->id);
+    }
 }
 
 void TASK::del_task(NODE* node)
 {
+    spdlog::info("[TASK] Delete task");
+    if (!node)
+    {
+        return;
+    }
+
     auto it = std::find(task_node_list.begin(), task_node_list.end(), node->id);
     if(it != task_node_list.end())
     {
@@ -69,7 +123,7 @@ void TASK::del_task(NODE* node)
     }
     else
     {
-        qDebug() << "[TASK] not found to be deleted";
+        spdlog::warn("[TASK] Node with ID {} not found in task list to be deleted.", node->id.toStdString());
     }
 }
 
@@ -93,47 +147,72 @@ void TASK::save_task(QString path)
         task_file.write(doc.toJson());
         task_file.close();
 
-        printf("[TASK] %s saved\n", task_path.toLocal8Bit().data());
+        //printf("[TASK] %s saved\n", task_path.toLocal8Bit().data());
+        spdlog::info("[TASK] %s saved\n", task_path.toLocal8Bit().data());
     }
 }
 
 void TASK::load_task(QString path)
 {
-    printf("[TASK] load\n");
+    spdlog::info("[TASK] Loading task from: {}", path.toStdString());
 
     // clear flag
     is_loaded = false;
 
     // load topology file
-    QFileInfo task_info(path);
-    if(task_info.exists() && task_info.isFile())
+    //QFileInfo task_info(path);
+    QFile task_file(path);
+
+    if(task_file.open(QIODevice::ReadOnly))
     {
-        QFile task_file(path);
-        if(task_file.open(QIODevice::ReadOnly))
+        task_node_list.clear();
+        QByteArray data = task_file.readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        QJsonArray arr = doc.array();
+
+        for(const QJsonValue &val : arr)
         {
-            task_node_list.clear();
-
-            QByteArray data = task_file.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-
-            QJsonArray arr = doc.array();
-            Q_FOREACH(const QJsonValue &val, arr)
-            {
-                QJsonObject obj = val.toObject();
-
-                QString task;
-                task = obj["id"].toString();
-
-                task_node_list.push_back(task);
-            }
-            task_file.close();
-
-            printf("[TASK] %s loaded\n", path.toStdString().c_str());
+            QJsonObject obj = val.toObject();
+            task_node_list.push_back(obj["id"].toString());
         }
-    }
+        task_file.close();
+        spdlog::info("[TASK] {} loaded successfully. {} tasks found.", path.toStdString(), task_node_list.size());
+        is_loaded = true;
 
-    // set flag
-    is_loaded = true;
+    }
+    else
+    {
+        spdlog::error("[TASK] Failed to open task file: {}", path.toStdString());
+
+    }
+    //if(task_info.exists() && task_info.isFile())
+    //{
+    //    QFile task_file(path);
+    //    if(task_file.open(QIODevice::ReadOnly))
+    //    {
+    //        task_node_list.clear();
+
+    //        QByteArray data = task_file.readAll();
+    //        QJsonDocument doc = QJsonDocument::fromJson(data);
+
+    //        QJsonArray arr = doc.array();
+    //        Q_FOREACH(const QJsonValue &val, arr)
+    //        {
+    //            QJsonObject obj = val.toObject();
+
+    //            QString task;
+    //            task = obj["id"].toString();
+
+    //            task_node_list.push_back(task);
+    //        }
+    //        task_file.close();
+
+    //        printf("[TASK] %s loaded\n", path.toStdString().c_str());
+    //    }
+    //}
+
+    //// set flag
+    //is_loaded = true;
 }
 
 
@@ -141,17 +220,18 @@ void TASK::load_task(QString path)
 void TASK::a_loop()
 {
     is_tasking = true;
+    spdlog::info("[TASK] Task loop started.");
 
     //get task list
     std::vector<QString> node_list = task_node_list;
     for(size_t p = 0; p < node_list.size(); p++)
     {
-        printf("[TASK] seq: %d, node_id: %s\n", (int)p, node_list[p].toLocal8Bit().data());
+        spdlog::info("[TASK] Sequence: {}, Node ID: {}", p, node_list[p].toStdString());
     }
 
     if (accuracy_save_enabled)
     {
-        printf("[TASK] accuracy_save_enabled\n");
+        spdlog::info("[TASK] Accuracy save enabled.");
         QString logFolder = QCoreApplication::applicationDirPath() + "/home/rainbow/slamnav2/snlog";
         QDir dir(logFolder);
         if (!dir.exists())
@@ -178,7 +258,6 @@ void TASK::a_loop()
     // seq num
     int idx = 0;
 
-    printf("[TASK] task_loop start\n");
     while(a_flag)
     {
 
@@ -189,7 +268,8 @@ void TASK::a_loop()
                 idx = 0;
                 state = TASK_MOVE;
                 last_task_state = state;
-                printf("[TASK] TASK_IDLE -> TASK_MOVE\n");
+                //printf("[TASK] TASK_IDLE -> TASK_MOVE\n");
+                spdlog::info("[TASK] TASK_IDLE -> TASK_MOVE");
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
             }
@@ -201,7 +281,7 @@ void TASK::a_loop()
             {
                 state = TASK_WAIT;
                 last_task_state = state;
-                printf("[TASK] TASK_MOVE -> TASK_WAIT(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
+                spdlog::warn("[TASK] State: MOVE -> WAIT (Node null for seq: {}, id: {})", idx, node_list[idx].toStdString());
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
             }
@@ -221,16 +301,17 @@ void TASK::a_loop()
 
             state = TASK_CHECK_MOVE;
             last_task_state = state;
-            printf("[TASK] TASK_MOVE -> TASK_CHECK_MOVE(seq:%d, node_id:%s)\n", idx, node_list[idx].toLocal8Bit().data());
+            spdlog::info("[TASK] State: MOVE -> CHECK_MOVE (seq: {}, id: {})", idx, node_list[idx].toStdString());
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
         else if(state == TASK_CHECK_MOVE)
         {
-            QString multi_state = ctrl->get_multi_req();
+            QString multi_state = ctrl->get_multi_reqest_state();
             if(multi_state == "recv_path")
             {
-                printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
+                //printf("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS\n");
+                spdlog::info("[TASK] TASK_CHECK_MOVE -> TASK_PROGRESS");
 
                 state = TASK_PROGRESS;
                 last_task_state = state;
@@ -240,10 +321,11 @@ void TASK::a_loop()
         }
         else if(state == TASK_PROGRESS)
         {
-            QString multi_state = ctrl->get_multi_req();
+            QString multi_state = ctrl->get_multi_reqest_state();
             if(multi_state == "none")
             {
-                printf("[TASK] TASK_PROGRESS -> TASK_WAIT\n");
+                //printf("[TASK] TASK_PROGRESS -> TASK_WAIT\n");
+                spdlog::info("[TASK] TASK_PROGRESS -> TASK_WAIT");
 
                 state = TASK_WAIT;
                 last_task_state = state;
@@ -258,7 +340,7 @@ void TASK::a_loop()
 
             if(accuracy_save_enabled)
             {
-                Eigen::Matrix4d current_pose = slam->get_cur_tf();
+                Eigen::Matrix4d current_pose = loc->get_cur_tf();
                 double actual_x = current_pose(0,3);
                 double actual_y = current_pose(1,3);
                 double actual_theta = TF_to_se2(current_pose)[2];
@@ -284,7 +366,7 @@ void TASK::a_loop()
                 double error_angle_deg = std::abs((actual_theta - planned_theta) * R2D);
 
                 // ieir - slam
-                Eigen::Vector2d cur_ieir = slam->get_cur_ieir();
+                Eigen::Vector2d cur_ieir = loc->get_cur_ieir();
                 double cur_ie = cur_ieir[0];
                 double cur_ir = cur_ieir[1];
 
@@ -309,7 +391,8 @@ void TASK::a_loop()
                 }
                 else
                 {
-                    printf("[TASK] failed wrtie CSV file \n");
+                    //printf("[TASK] failed wrtie CSV file \n");
+                    spdlog::warn("[TASK] failed wrtie CSV file");
                 }
             }
 
@@ -328,7 +411,8 @@ void TASK::a_loop()
                     state = TASK_MOVE;
                     last_task_state = state;
 
-                    printf("[TASK] TASK RESTART -> TASK_MOVE\n");
+                    //printf("[TASK] TASK RESTART -> TASK_MOVE\n");
+                    spdlog::warn("[TASK] TASK RESTART -> TASK_MOVE");
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     continue;
                 }
@@ -338,20 +422,24 @@ void TASK::a_loop()
 
                     state = TASK_IDLE;
                     last_task_state = state;
-                    printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");
+                    //printf("[TASK] TASK_COMPLETE -> TASK_IDLE\n");
+                    spdlog::warn("[TASK] TASK_COMPLETE -> TASK_IDLE");
                     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     break;
                 }
             }
 
-            printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
+            //printf("[TASK] do next seq (%d->%d)\n", idx-1, idx);
+            spdlog::info("[TASK] do next seq ({}->{})",idx-1, idx);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    printf("[TASK] task_loop stop\n");
+    //printf("[TASK] task_loop stop\n");
+    spdlog::info("[TASK] Task loop stopped.");
+
 
     //clear
     is_start = false;

@@ -231,8 +231,13 @@ void CONFIG::load_logging_config(const QJsonObject &obj)
 
     check_and_set_string(obj_logging, "LOG_LEVEL", LOG_LEVEL, "logging");
     check_and_set_bool(obj_logging, "DEBUG_LIDAR_2D", DEBUG_LIDAR_2D, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LIDAR_3D", DEBUG_LIDAR_3D, "logging");
     check_and_set_bool(obj_logging, "DEBUG_MOBILE", DEBUG_MOBILE, "logging");
     check_and_set_bool(obj_logging, "DEBUG_COMM_RRS", DEBUG_COMM_RRS, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_AUTOCONTROL", DEBUG_MOBILE, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_LOCALIZATION", DEBUG_COMM_RRS, "logging");
+    check_and_set_bool(obj_logging, "DEBUG_OBSMAP", DEBUG_COMM_RRS, "logging");
+
     check_and_set_bool(obj_logging, "LOG_ENABLE_FILE_OUTPUT", LOG_ENABLE_FILE_OUTPUT, "logging");
     check_and_set_string(obj_logging, "LOG_FILE_PATH", LOG_FILE_PATH, "logging");
 }
@@ -650,6 +655,10 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::MECANUM_Q150;
         }
+        else if(robot_type_str == "MECANUM-VALEO")
+        {
+            ROBOT_TYPE = RobotType::MECANUM_VALEO;
+        }
         else if(robot_type_str == "SEM")
         {
             ROBOT_TYPE = RobotType::SEM;
@@ -1043,6 +1052,10 @@ QString CONFIG::get_robot_type_str()
     else if(_robot_type == RobotType::MECANUM_Q150)
     {
         return "MECANUM-Q150";
+    }
+    else if(_robot_type == RobotType::MECANUM_VALEO)
+    {
+        return "MECANUM-VALEO";
     }
     else
     {

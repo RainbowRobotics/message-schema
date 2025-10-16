@@ -122,8 +122,12 @@ public:
      ***********************/
     QString get_log_level();            // get spdlog level (trace, debug, info, warn, error, critical, off)
     bool set_debug_lidar_2d();          // enable/disable LIDAR debug logs
+    bool set_debug_lidar_3d();
     bool set_debug_mobile();            // enable/disable MOBILE debug logs
     bool set_debug_comm_rrs();          // enable/disable COMM RRS debug logs
+    bool set_debug_autocontrol();
+    bool set_debug_localization();
+    bool set_debug_obsmap();
 
     bool get_log_enable_file_output();  // enable/disable file output
     QString get_log_file_path();        // get log file path
@@ -399,8 +403,13 @@ private:
     // logging
     QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
     bool DEBUG_LIDAR_2D = false;        // enable/disable LIDAR debug logs
+    bool DEBUG_LIDAR_3D = false;
     bool DEBUG_MOBILE =  false;         // enable/disable MOBILE debug logs
     bool DEBUG_COMM_RRS = false;        // enable/disable COMM RRS debug logs
+    bool DEBUG_AUTOCONTROL = false;
+    bool DEBUG_LOCALIZATION = false;
+    bool DEBUG_OBSMAP = false;
+
     bool LOG_ENABLE_FILE_OUTPUT = false; // enable/disable file output
     QString LOG_FILE_PATH = "logs/app.log"; // log file path
 

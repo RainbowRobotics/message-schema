@@ -62,7 +62,8 @@ SOURCES += \
     obsmap.cpp \
     sim.cpp \
     policy.cpp \
-    safety.cpp
+    safety.cpp \
+    task.cpp
 
 
 
@@ -102,7 +103,8 @@ HEADERS += \
     obsmap.h \
     sim.h \
     policy.h \
-    safety.h
+    safety.h \
+    task.h
 
 
 FORMS += \

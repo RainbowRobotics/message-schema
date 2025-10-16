@@ -146,6 +146,7 @@ enum class RobotType
     D400,
     QD,
     MECANUM_Q150,
+    MECANUM_VALEO,
     SEM,
     SDC,
     NONE

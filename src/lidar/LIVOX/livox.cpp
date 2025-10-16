@@ -154,6 +154,7 @@ void LIVOX::grab_loop()
 {
     // Disable logger
     DisableLivoxSdkConsoleLogger();
+    std::this_thread::sleep_for(std::chrono::seconds(5));
     printf("[LIVOX] Disable debug message\n");
 
     // Init Livox SDK2
