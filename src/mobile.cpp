@@ -267,6 +267,7 @@ void MOBILE::recv_loop()
         }
 
         // 연결 성공 시 데이터 수신 루프
+        config_parameter_send();
         receive_data_loop();
 
         // 연결이 끊어진 경우 소켓 정리
@@ -474,11 +475,6 @@ void MOBILE::receive_data_loop()
 
                         if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
                         {
-                            if(mobile_first_connected == true)
-                            {
-                                config_parameter_send();
-                            }
-
                             // HighFreq Data - Pose, Velocity, IMU
                             uint32_t tick;
                             memcpy(&tick, &_buf[index], dlc_f); index += dlc_f;
@@ -702,8 +698,6 @@ void MOBILE::receive_data_loop()
                             }
 
                             QString mobile_status_str = "[MOBILE_STATUS]";
-
-                            qDebug() << "wheel_model: " << (int)wheel_model;
                             
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
@@ -1019,8 +1013,6 @@ void MOBILE::receive_data_loop()
 
                             cur_status.bms_type = bms_header;
                             mtx.unlock();
-
-                            mobile_first_connected = true;
                         }
 
 
@@ -2067,7 +2059,7 @@ void MOBILE::motor_on()
             msg_que.push(send_byte);
         }
     }
-    
+
     // set init
     {
         std::vector<uchar> send_byte(25, 0);
