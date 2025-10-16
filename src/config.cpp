@@ -667,6 +667,14 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::SEM;
         }
+        else if(robot_type_str == "SEC_CORE")
+        {
+            ROBOT_TYPE = RobotType::SEC_CORE;
+        }
+        else if(robot_type_str == "SEC_CORE_EE")
+        {
+            ROBOT_TYPE = RobotType::SEC_EE;
+        }
         else if(robot_type_str == "SDC")
         {
             ROBOT_TYPE = RobotType::SDC;
@@ -1066,6 +1074,14 @@ QString CONFIG::get_robot_type_str()
     else if(_robot_type == RobotType::MECANUM_VALEO)
     {
         return "MECANUM-VALEO";
+    }
+    else if(_robot_type == RobotType::SEC_CORE)
+    {
+        return "SEC_CORE";
+    }
+    else if(_robot_type == RobotType::SEC_EE)
+    {
+        return "SEC_EE";
     }
     else
     {

@@ -149,6 +149,8 @@ enum class RobotType
     MECANUM_VALEO,
     SEM,
     SDC,
+    SEC_CORE,
+    SEC_EE,
     NONE
 };
 
