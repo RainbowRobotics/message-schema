@@ -172,7 +172,7 @@ private:
     void recv_loop();
     bool connect_to_pdu(const QString& ip, int port);
     void receive_data_loop();
-    
+
     // send loop
     std::atomic<bool> send_flag = {false};
     std::unique_ptr<std::thread> send_thread;

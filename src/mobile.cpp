@@ -268,15 +268,15 @@ void MOBILE::recv_loop()
 
         // 연결 성공 시 데이터 수신 루프
         receive_data_loop();
-        
+
         // 연결이 끊어진 경우 소켓 정리
         close(fd);
         is_connected = false;
-        
+
         // 재접속을 위한 짧은 대기
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    
+
     spdlog::info("[MOBILE] recv loop stop");
 }
 
@@ -299,24 +299,15 @@ bool MOBILE::connect_to_pdu(const QString& pdu_ip, int pdu_port)
         return false;
     }
 
-    while(retry_count < max_retries && !connection_success && recv_flag)
+    // set option
     {
-        retry_count++;
-        spdlog::info("[MOBILE] connection attempt %d/%d\n", retry_count, max_retries);
+        int val = 1;
+        ::setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+    }
 
-        // connection
-        fd = socket(AF_INET, SOCK_STREAM, 0);
-        if(fd < 0)
-        {
-            //logger->write_log("[MOBILE] socket create failed", "Red", true, false);
-            spdlog::error("[MOBILE] socket create failed");
-            if(retry_count < max_retries)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                continue;
-            }
-            return;
-        }
+    // set non-blocking
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
     int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
     if(status < 0 && errno != EINPROGRESS)
@@ -326,21 +317,14 @@ bool MOBILE::connect_to_pdu(const QString& pdu_ip, int pdu_port)
         return false;
     }
 
-        // set non-blocking
-        int flags = fcntl(fd, F_GETFL, 0);
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    // wait for connection with timeout
+    fd_set writefds;
+    struct timeval tv;
+    tv.tv_sec = 10; // 10 seconds timeout
+    tv.tv_usec = 0;
 
-        int status = ::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr));
-        if(status < 0 && errno != EINPROGRESS)
-        {
-            //logger->write_log("[MOBILE] connect failed", "Red", true, false);
-            spdlog::error("[MOBILE] connect failed");
-            close(fd);
-            if(retry_count < max_retries)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                continue;
-            }
+    FD_ZERO(&writefds);
+    FD_SET(fd, &writefds);
 
     status = select(fd + 1, NULL, &writefds, NULL, &tv);
     if(status <= 0) // timeout or error
@@ -356,14 +340,14 @@ bool MOBILE::connect_to_pdu(const QString& pdu_ip, int pdu_port)
     if(getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) < 0)
     {
         int er = errno;
-        spdlog::error("[MOBILE] getsockopt failed: {} (errno={})", 
+        spdlog::error("[MOBILE] getsockopt failed: {} (errno={})",
                      std::error_code(er, std::system_category()).message(), er);
         close(fd);
         return false;
     }
     if(so_error != 0)
     {
-        spdlog::error("[MOBILE] connect error after select: {} (so_error={})", 
+        spdlog::error("[MOBILE] connect error after select: {} (so_error={})",
                      std::error_code(so_error, std::system_category()).message(), so_error);
         close(fd);
         return false;
@@ -432,14 +416,14 @@ void MOBILE::receive_data_loop()
          * Safety  total 186  -> data 199
          * Mecanum total 136  -> data 129
          */
-        
+
         while((int)buf.size() > MOBILE_INFO::min_packet_size && recv_flag)
         {
             if(buf[0] == 0x24)
             {
                 // Header
                 int data_size = (unsigned short)(buf[1]|(buf[2]<<8));
-                
+
                 if(data_size + 7 <= buf.size())
                 {
                     if(buf[data_size + 6] == 0x25)
@@ -493,37 +477,37 @@ void MOBILE::receive_data_loop()
                             // HighFreq Data - Pose, Velocity, IMU
                             uint32_t tick;
                             memcpy(&tick, &_buf[index], dlc_f); index += dlc_f;
-                            
+
                             uint32_t recv_tick;
                             memcpy(&recv_tick, &_buf[index], dlc_f); index += dlc_f;
-                            
+
                             float pc_time_received;
                             memcpy(&pc_time_received, &_buf[index], dlc_f); index += dlc_f;
-                            
+
                             // calc mobile(pdu) & pc time
                             double pc_t = get_time();
                             double mobile_t = tick * MOBILE_INFO::pdu_tick_resolution;
-                            
+
                             float x, y, th;
                             memcpy(&x, &_buf[index], dlc_f);     index += dlc_f;
                             memcpy(&y, &_buf[index], dlc_f);     index += dlc_f;
                             memcpy(&th, &_buf[index], dlc_f);    index += dlc_f;
-                            
+
                             float local_vx, local_vy, local_wz;
                             memcpy(&local_vx, &_buf[index], dlc_f); index += dlc_f;
                             memcpy(&local_vy, &_buf[index], dlc_f); index += dlc_f;
                             memcpy(&local_wz, &_buf[index], dlc_f); index += dlc_f;
-                            
+
                             uint8_t imu_flag;
                             memcpy(&imu_flag, &_buf[index], dlc); index += dlc;
-                            
+
                             float q0,q1,q2,q3;
                             float imu_gyr_x, imu_gyr_y, imu_gyr_z;
                             float imu_acc_x, imu_acc_y, imu_acc_z;
 
                             if(imu_flag == 0x01)
-                            {   
-                                //imu not used     
+                            {
+                                //imu not used
                                 is_imu_used = false;
                                 index += dlc_f*10;
                             }
@@ -536,11 +520,11 @@ void MOBILE::receive_data_loop()
                                 memcpy(&q1, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&q2, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&q3, &_buf[index], dlc_f); index += dlc_f;
-                                
+
                                 memcpy(&imu_gyr_x, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&imu_gyr_y, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&imu_gyr_z, &_buf[index], dlc_f); index += dlc_f;
-                                
+
                                 memcpy(&imu_acc_x, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&imu_acc_y, &_buf[index], dlc_f); index += dlc_f;
                                 memcpy(&imu_acc_z, &_buf[index], dlc_f); index += dlc_f;
@@ -599,7 +583,7 @@ void MOBILE::receive_data_loop()
                             // control input processing
                             Eigen::Vector3d cmd = get_control_input();
 
-                            // storing 
+                            // storing
                             mtx.lock();
 
                             QString mobile_pose_str;
@@ -619,7 +603,7 @@ void MOBILE::receive_data_loop()
                             {
                                 pose_storage.erase(pose_storage.begin());
                             }
-                            
+
                             if(is_imu_used)
                             {
                                 imu_storage.push_back(imu);
@@ -645,7 +629,7 @@ void MOBILE::receive_data_loop()
 
                             memcpy(&safety_state_1, &_buf[index], dlc); index += dlc;
                             memcpy(&safety_state_2, &_buf[index], dlc); index += dlc;
-                            
+
                             uint8_t om_state, ri_state, charge_state, interlock_state, bumper_state;
 
                             memcpy(&om_state, &_buf[index], dlc);        index += dlc;
@@ -653,25 +637,25 @@ void MOBILE::receive_data_loop()
                             memcpy(&charge_state, &_buf[index], dlc);    index += dlc;
                             memcpy(&interlock_state, &_buf[index], dlc); index += dlc;
                             memcpy(&bumper_state, &_buf[index], dlc);    index += dlc;
-                            
+
                             uint8_t io_info_raw;
 
                             memcpy(&io_info_raw, &_buf[index], dlc); index += dlc;
-                            
+
                             uint8_t lidar_field;
 
                             memcpy(&lidar_field, &_buf[index], dlc); index += dlc;
-                            
+
                             uint8_t mcu0_dout_raw, mcu1_dout_raw;
 
                             memcpy(&mcu0_dout_raw, &_buf[index], dlc); index += dlc;
                             memcpy(&mcu1_dout_raw, &_buf[index], dlc); index += dlc;
-                            
+
                             uint8_t mcu0_din_raw, mcu1_din_raw;
 
                             memcpy(&mcu0_din_raw, &_buf[index], dlc); index += dlc;
                             memcpy(&mcu1_din_raw, &_buf[index], dlc); index += dlc;
-                            
+
                             // Update status
                             mtx.lock();
 
@@ -681,7 +665,7 @@ void MOBILE::receive_data_loop()
                             cur_status.inter_lock_state = interlock_state;
                             cur_status.bumper_state = bumper_state;
                             cur_status.lidar_field = lidar_field;
-                            
+
                             // Parse safety states from safety_state bytes if needed
                             // Safety state 1
                             cur_status.safety_state_bumper_stop_1 = (safety_state_1 >> 0) & 0x01;
@@ -702,7 +686,7 @@ void MOBILE::receive_data_loop()
                             cur_status.safety_state_over_speed_2 = (safety_state_2 >> 5) & 0x01;
                             cur_status.safety_state_ref_meas_mismatch_2 = (safety_state_2 >> 6) & 0x01;
                             cur_status.safety_state_emo_pressed_2 = (safety_state_2 >> 7) & 0x01;
-                            
+
                             // DIO/DIN
                             for(int i=0; i<8; i++)
                             {
@@ -711,62 +695,62 @@ void MOBILE::receive_data_loop()
                                 cur_status.mcu0_din[i] = (mcu0_din_raw >> i) & 0x01;
                                 cur_status.mcu1_din[i] = (mcu1_din_raw >> i) & 0x01;
                             }
-                            
+
                             QString mobile_status_str = "[MOBILE_STATUS]";
 
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
                                 // connection 정보
-                                mobile_status_str += "connection(m0,m1):" + QString::number(cur_status.connection_m0) + "," + 
-                                QString::number(cur_status.connection_m1) + 
-                                ", status(m0,m1):" + QString::number(cur_status.status_m0) + "," + 
+                                mobile_status_str += "connection(m0,m1):" + QString::number(cur_status.connection_m0) + "," +
+                                QString::number(cur_status.connection_m1) +
+                                ", status(m0,m1):" + QString::number(cur_status.status_m0) + "," +
                                 QString::number(cur_status.status_m1) + "\n";
 
                                 // temp 정보
-                                mobile_status_str += "temp(m0,m1): " + QString::number(cur_status.temp_m0) + "," + 
-                                QString::number(cur_status.temp_m1) + ",(" + 
-                                QString::number(cur_status.esti_temp_m0) + "," + 
+                                mobile_status_str += "temp(m0,m1): " + QString::number(cur_status.temp_m0) + "," +
+                                QString::number(cur_status.temp_m1) + ",(" +
+                                QString::number(cur_status.esti_temp_m0) + "," +
                                 QString::number(cur_status.esti_temp_m1) + "), " +
-                                "cur(m0,m1):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," + 
+                                "cur(m0,m1):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," +
                                 QString::number((double)cur_status.cur_m1/10.0, 'f', 2) + "\n";
                             }
                             else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECHANUM)
                             {
                                 // connection 정보
-                                mobile_status_str += "connection(m0,m1,m2,m3):" + QString::number(cur_status.connection_m0) + "," + 
-                                QString::number(cur_status.connection_m1) + "," + 
-                                QString::number(cur_status.connection_m2) + "," + 
-                                QString::number(cur_status.connection_m3) + 
-                                ", status(m0,m1,m2,m3):" + QString::number(cur_status.status_m0) + "," + 
-                                QString::number(cur_status.status_m1) + "," + 
-                                QString::number(cur_status.status_m2) + "," + 
+                                mobile_status_str += "connection(m0,m1,m2,m3):" + QString::number(cur_status.connection_m0) + "," +
+                                QString::number(cur_status.connection_m1) + "," +
+                                QString::number(cur_status.connection_m2) + "," +
+                                QString::number(cur_status.connection_m3) +
+                                ", status(m0,m1,m2,m3):" + QString::number(cur_status.status_m0) + "," +
+                                QString::number(cur_status.status_m1) + "," +
+                                QString::number(cur_status.status_m2) + "," +
                                 QString::number(cur_status.status_m3) + "\n";
 
                                 // temp 정보 (4개 모터)
-                                mobile_status_str += "temp(m0,m1,m2,m3): " + QString::number(cur_status.temp_m0) + "," + 
-                                QString::number(cur_status.temp_m1) + "," + 
-                                QString::number(cur_status.temp_m2) + "," + 
-                                QString::number(cur_status.temp_m3) + ",(" + 
-                                QString::number(cur_status.esti_temp_m0) + "," + 
-                                QString::number(cur_status.esti_temp_m1) + "," + 
-                                QString::number(cur_status.esti_temp_m2) + "," + 
+                                mobile_status_str += "temp(m0,m1,m2,m3): " + QString::number(cur_status.temp_m0) + "," +
+                                QString::number(cur_status.temp_m1) + "," +
+                                QString::number(cur_status.temp_m2) + "," +
+                                QString::number(cur_status.temp_m3) + ",(" +
+                                QString::number(cur_status.esti_temp_m0) + "," +
+                                QString::number(cur_status.esti_temp_m1) + "," +
+                                QString::number(cur_status.esti_temp_m2) + "," +
                                 QString::number(cur_status.esti_temp_m3) + "), " +
-                                "cur(m0,m1,m2,m3):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," + 
-                                QString::number((double)cur_status.cur_m1/10.0, 'f', 2) + "," + 
-                                QString::number((double)cur_status.cur_m2/10.0, 'f', 2) + "," + 
+                                "cur(m0,m1,m2,m3):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," +
+                                QString::number((double)cur_status.cur_m1/10.0, 'f', 2) + "," +
+                                QString::number((double)cur_status.cur_m2/10.0, 'f', 2) + "," +
                                 QString::number((double)cur_status.cur_m3/10.0, 'f', 2) + "\n";
                             }
 
                             // charge, om_state, emo, ri_state 정보
-                            mobile_status_str += "charge,om_state,emo,ri_state:" + QString::number(cur_status.charge_state) + "," + 
-                            QString::number(cur_status.om_state) + "," + 
-                            QString::number(cur_status.motor_stop_state) + "," + 
+                            mobile_status_str += "charge,om_state,emo,ri_state:" + QString::number(cur_status.charge_state) + "," +
+                            QString::number(cur_status.om_state) + "," +
+                            QString::number(cur_status.motor_stop_state) + "," +
                             QString::number(cur_status.ri_state) + "\n";
 
                             // BAT 정보
-                            mobile_status_str += "BAT(in,out,cur,per):" + QString::number(cur_status.bat_in, 'f', 3) + "," + 
-                            QString::number(cur_status.bat_out, 'f', 3) + "," + 
-                            QString::number(cur_status.bat_current, 'f', 3) + "," + 
+                            mobile_status_str += "BAT(in,out,cur,per):" + QString::number(cur_status.bat_in, 'f', 3) + "," +
+                            QString::number(cur_status.bat_out, 'f', 3) + "," +
+                            QString::number(cur_status.bat_current, 'f', 3) + "," +
                             QString::number(cur_status.bat_percent) + " %\n";
 
                             // power 정보
@@ -782,33 +766,33 @@ void MOBILE::receive_data_loop()
                                 "tabos_ttf:" + QString::number(cur_status.tabos_ttf) + ", " +
                                 "tabos_tte:" + QString::number(cur_status.tabos_tte) + ", " +
                                 "tabos_soc:" + QString::number(cur_status.tabos_soc) + " \n";
-    
+
                                 mobile_status_str += "tabos_soh:" + QString::number(cur_status.tabos_soh) + ", " +
                                 "tabos_temp:" + QString::number(cur_status.tabos_temperature, 'f', 2) + ", " +
                                 "tabos_rc:" + QString::number(cur_status.tabos_rc, 'f', 2) + ", " +
                                 "tabos_ae:" + QString::number(cur_status.tabos_ae, 'f', 2) + ", " +
                                 "tabos_sat:" + QString::number(cur_status.tabos_status) + " \n";
-    
+
                             }
                             // SFTY 정보
-                            mobile_status_str += "SFTY(emo,refm,spd,obs,sfld,intlk,op):{" + 
-                            QString::number(cur_status.safety_state_emo_pressed_1) + "," + 
+                            mobile_status_str += "SFTY(emo,refm,spd,obs,sfld,intlk,op):{" +
+                            QString::number(cur_status.safety_state_emo_pressed_1) + "," +
                             QString::number(cur_status.safety_state_emo_pressed_2) + "},{" +
-                            QString::number(cur_status.safety_state_ref_meas_mismatch_1) + "," + 
+                            QString::number(cur_status.safety_state_ref_meas_mismatch_1) + "," +
                             QString::number(cur_status.safety_state_ref_meas_mismatch_2) + "},{" +
-                            QString::number(cur_status.safety_state_over_speed_1) + "," + 
+                            QString::number(cur_status.safety_state_over_speed_1) + "," +
                             QString::number(cur_status.safety_state_over_speed_2) + "},{" +
-                            QString::number(cur_status.safety_state_obstacle_detected_1) + "," + 
+                            QString::number(cur_status.safety_state_obstacle_detected_1) + "," +
                             QString::number(cur_status.safety_state_obstacle_detected_2) + "},{" +
-                            QString::number(cur_status.safety_state_speed_field_mismatch_1) + "," + 
+                            QString::number(cur_status.safety_state_speed_field_mismatch_1) + "," +
                             QString::number(cur_status.safety_state_speed_field_mismatch_2) + "},{" +
-                            QString::number(cur_status.safety_state_interlock_stop_1) + "," + 
+                            QString::number(cur_status.safety_state_interlock_stop_1) + "," +
                             QString::number(cur_status.safety_state_interlock_stop_2) + "},{" +
-                            QString::number(cur_status.operational_stop_state_flag_1) + "," + 
+                            QString::number(cur_status.operational_stop_state_flag_1) + "," +
                             QString::number(cur_status.operational_stop_state_flag_2) + "}\n";
 
                             // bumper과 lidar_field 정보
-                            mobile_status_str += "bumper:{" + QString::number(cur_status.safety_state_bumper_stop_1) + "," + 
+                            mobile_status_str += "bumper:{" + QString::number(cur_status.safety_state_bumper_stop_1) + "," +
                             QString::number(cur_status.safety_state_bumper_stop_2) + "} " +
                             "lidar_field:" + QString::number(cur_status.lidar_field) + ")";
 
@@ -817,7 +801,7 @@ void MOBILE::receive_data_loop()
                             //                 "charge,om_state,emo,ri_state:%d,%d,%d,%d\n"
                             //                 "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
                             //                 "power:%.3f, c.c:%.3f, c.v:%.3f\n"
-                            //                 "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n" 
+                            //                 "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n"
                             //                 "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
                             //                 "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
                             //                 "bumper:{%d,%d} lidar_field:%d)",
@@ -842,44 +826,44 @@ void MOBILE::receive_data_loop()
                             status_text = mobile_status_str;
 
                             mtx.unlock();
-                        
+
                         }
 
                         if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
                         {
                             // LowFreq Data - Power Info, Motor Info, BMS Info
-                            
+
                             // Power data (all uint16_t, convert to float by *0.01)
                             uint16_t voltage_inlet_raw, voltage_outlet_raw, current_line_raw;
                             memcpy(&voltage_inlet_raw, &_buf[index], dlc_s);    index += dlc_s;
                             memcpy(&voltage_outlet_raw, &_buf[index], dlc_s);   index += dlc_s;
                             memcpy(&current_line_raw, &_buf[index], dlc_s);     index += dlc_s;
-                            
+
                             uint16_t voltage_inlet_lift_raw, voltage_outlet_lift_raw, current_line_lift_raw;
                             memcpy(&voltage_inlet_lift_raw, &_buf[index], dlc_s);  index += dlc_s;
                             memcpy(&voltage_outlet_lift_raw, &_buf[index], dlc_s); index += dlc_s;
                             memcpy(&current_line_lift_raw, &_buf[index], dlc_s);   index += dlc_s;
-                            
+
                             uint16_t voltage_battery_raw;
                             memcpy(&voltage_battery_raw, &_buf[index], dlc_s);  index += dlc_s;
-                            
+
                             uint16_t voltage_contact_raw;
                             memcpy(&voltage_contact_raw, &_buf[index], dlc_s);  index += dlc_s;
-                            
+
                             uint16_t voltage_battery_raw_2;  // duplicate
                             memcpy(&voltage_battery_raw_2, &_buf[index], dlc_s);  index += dlc_s;
-                            
+
                             uint16_t current_charge_raw;
                             memcpy(&current_charge_raw, &_buf[index], dlc_s);   index += dlc_s;
-                            
+
                             // Main power (float, 4 bytes)
                             float main_power;
                             memcpy(&main_power, &_buf[index], dlc_f);  index += dlc_f;
-                            
+
                             // Motor header (robot type)
                             uint8_t motor_robot_type;
                             memcpy(&motor_robot_type, &_buf[index], dlc);  index += dlc;
-                            
+
                             if(motor_robot_type == 0x01)
                             {
                                 wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_DD;
@@ -892,7 +876,7 @@ void MOBILE::receive_data_loop()
                             {
                                 wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_MECHANUM;
                             }
-                            else 
+                            else
                             {
                                 wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_UNKNOWN;
                                 spdlog::error("[MOBILE] Unknown motor robot type: {}", motor_robot_type);
@@ -906,41 +890,41 @@ void MOBILE::receive_data_loop()
                             uint8_t motor_cur[MAX_MC_BOARD];
                             uint8_t motor_temp_estimate[MAX_MC_BOARD];
                             uint8_t motor_connection_status[MAX_MC_BOARD];
-                            
+
                             // Motor status
                             for(int i = 0; i < MAX_MC_BOARD; i++)
                             {
                                 memcpy(&motor_stat[i], &_buf[index], dlc);  index += dlc;
                             }
-                            
+
                             // Motor temperature
                             for(int i = 0; i < MAX_MC_BOARD; i++)
                             {
                                 memcpy(&motor_temp[i], &_buf[index], dlc);  index += dlc;
                             }
-                            
+
                             // Motor current (scaled by 10.0 in firmware)
                             for(int i = 0; i < MAX_MC_BOARD; i++)
                             {
                                 memcpy(&motor_cur[i], &_buf[index], dlc);  index += dlc;
                             }
-                            
+
                             // Motor temperature estimate
                             for(int i = 0; i < MAX_MC_BOARD; i++)
                             {
                                 memcpy(&motor_temp_estimate[i], &_buf[index], dlc);  index += dlc;
                             }
-                            
+
                             // Motor connection status
                             for(int i = 0; i < MAX_MC_BOARD; i++)
                             {
                                 memcpy(&motor_connection_status[i], &_buf[index], dlc);  index += dlc;
                             }
-                            
+
                             // BMS Header
                             uint8_t bms_header;
                             memcpy(&bms_header, &_buf[index], dlc);  index += dlc;
-                            
+
                             // TABOS/BMS data
                             uint16_t tabos_voltage_raw;
                             int16_t tabos_current_raw;
@@ -949,7 +933,7 @@ void MOBILE::receive_data_loop()
                             uint16_t tabos_soc_raw, tabos_soh_raw;
                             int16_t tabos_temperature_raw;
                             uint16_t tabos_rc_raw, tabos_ae_raw;
-                            
+
                             memcpy(&tabos_voltage_raw, &_buf[index], dlc_s);      index += dlc_s;
                             memcpy(&tabos_current_raw, &_buf[index], dlc_s);      index += dlc_s;
                             memcpy(&tabos_status, &_buf[index], dlc_s);           index += dlc_s;
@@ -960,7 +944,7 @@ void MOBILE::receive_data_loop()
                             memcpy(&tabos_temperature_raw, &_buf[index], dlc_s);  index += dlc_s;
                             memcpy(&tabos_rc_raw, &_buf[index], dlc_s);           index += dlc_s;
                             memcpy(&tabos_ae_raw, &_buf[index], dlc_s);           index += dlc_s;
-                            
+
                             // Convert to actual values
                             float bat_in = voltage_inlet_raw * 0.1f;
                             float bat_out = voltage_outlet_raw * 0.1f;
@@ -971,7 +955,7 @@ void MOBILE::receive_data_loop()
                             float battery_voltage = voltage_battery_raw * 0.1f;
                             float contact_voltage = voltage_contact_raw * 0.1f;
                             float charge_current = current_charge_raw * 0.01f;
-                            
+
                             float tabos_voltage = tabos_voltage_raw * 0.1f;
                             float tabos_current = tabos_current_raw * 0.1f;
                             uint8_t tabos_soc = (uint8_t)(tabos_soc_raw & 0xFF);
@@ -979,10 +963,10 @@ void MOBILE::receive_data_loop()
                             float tabos_temperature = tabos_temperature_raw * 0.1f;
                             float tabos_rc = tabos_rc_raw * 0.01f;
                             float tabos_ae = tabos_ae_raw * 0.1f;
-                            
+
                             // Update mobile status with LowFreq data
                             mtx.lock();
-                            
+
                             // Power info
                             cur_status.bat_in = bat_in;
                             cur_status.bat_out = bat_out;
@@ -994,7 +978,7 @@ void MOBILE::receive_data_loop()
                             cur_status.contact_voltage = contact_voltage;
                             cur_status.charge_current = charge_current;
                             cur_status.power = main_power;
-                            
+
                             // Setting Motor info
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
@@ -1004,7 +988,7 @@ void MOBILE::receive_data_loop()
                                 cur_status.temp_m1 = motor_temp[1];
                                 cur_status.cur_m0 = motor_cur[0];  // already scaled by 10 in firmware
                                 cur_status.cur_m1 = motor_cur[1];
-                                
+
                                 cur_status.esti_temp_m0 = motor_temp_estimate[0];
                                 cur_status.esti_temp_m1 = motor_temp_estimate[1];
                                 cur_status.connection_m0 = motor_connection_status[0];
@@ -1033,7 +1017,7 @@ void MOBILE::receive_data_loop()
                                 cur_status.connection_m2 = motor_connection_status[2];
                                 cur_status.connection_m3 = motor_connection_status[3];
                             }
-                            
+
                             // if use tabos
                             if (bms_header == 0x0A)
                             {
@@ -1117,7 +1101,7 @@ void MOBILE::receive_data_loop()
 
                             stat_m0 = _buf[index];     index=index+dlc;
                             stat_m1 = _buf[index];     index=index+dlc;
-                            
+
                             if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 stat_m2 = _buf[index];     index=index+dlc;
@@ -1248,7 +1232,7 @@ void MOBILE::receive_data_loop()
                             float q0, q1, q2, q3;
                             float imu_gyr_x=0.0, imu_gyr_y=0.0, imu_gyr_z=0.0;
                             float imu_acc_x=0.0, imu_acc_y=0.0, imu_acc_z=0.0;
-                            
+
                             if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
                             {
                                 state = _buf[index];     index=index+dlc;
@@ -1493,7 +1477,7 @@ void MOBILE::receive_data_loop()
                             mobile_status.tabos_temperature = _tabos_temperature * 0.1f;
                             mobile_status.tabos_rc = _tabos_rc * 0.01f;
                             mobile_status.tabos_ae = _tabos_ae * 0.1f;
-                            
+
                             // imu
                             mobile_status.imu_gyr_x = imu_gyr_x * D2R;
                             mobile_status.imu_gyr_y = imu_gyr_y * D2R;
@@ -1558,7 +1542,7 @@ void MOBILE::receive_data_loop()
                                              "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
                                              "power:%.3f, total power:%.3f, c.c:%.3f, c.v:%.3f\n"
                                              "gyr:%.2f,%.2f,%.2f acc:%.3f,%.3f,%.3f\n"
-                                             "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n" 
+                                             "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n"
                                              "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
                                              "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
                                              "bumper:{%d,%d} lidar_field:%d)",
@@ -1740,7 +1724,7 @@ void MOBILE::receive_data_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    
+
     spdlog::info("[MOBILE] data receive loop stop");
 }
 
