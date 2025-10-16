@@ -937,6 +937,7 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
     catch(std::out_of_range)
     {
         //logger.write_log("pcl viewer not have camera ..", "Red", true, false);
+        spdlog::info("[]");
         center = Eigen::Vector3d(0,0,0);
         dir = Eigen::Vector3d(0,0,0);
         return;
@@ -1198,7 +1199,8 @@ void MainWindow::bt_MapSave()
     {
         // auto generation dir path
         QString _map_dir = "/data/maps/" + get_time_str();
-        printf("[MAIN] Creating map directory: %s\n", _map_dir.toLocal8Bit().data());
+        //printf("[MAIN] Creating map directory: %s\n", _map_dir.toLocal8Bit().data());
+        spdlog::info("[MAIN] Creating map directory:{}", map_dir.toLocal8Bit().data());
 
         QDir().mkpath(_map_dir);
 
@@ -1208,7 +1210,8 @@ void MainWindow::bt_MapSave()
     else
     {
         QString _map_dir = "/data/maps/" + map_dir;
-        printf("[MAIN] Using existing map directory: %s\n", _map_dir.toLocal8Bit().data());
+        //printf("[MAIN] Using existing map directory: %s\n", _map_dir.toLocal8Bit().data());
+        spdlog::info("[MAIN] Using existing map directory:{}",map_dir.toLocal8Bit().data());
         QDir().mkpath(_map_dir);
 
         UNIMAP::instance()->set_map_path(_map_dir);
@@ -1220,6 +1223,7 @@ void MainWindow::bt_MapSave()
     if(map_path.isEmpty())
     {
         LOGGER::instance()->write_log("[MAIN] no map_dir", "Red", true, false);
+        spdlog::warn("[no map_dir]");
         return;
     }
 
@@ -1229,7 +1233,8 @@ void MainWindow::bt_MapSave()
     // check kfrm
     if(MAPPING::instance()->get_kfrm_storage_size() == 0)
     {
-        printf("[MAIN] no keyframe\n");
+        //printf("[MAIN] no keyframe\n");
+        spdlog::warn("[MAIN] no keyframe");
         return;
     }
 
@@ -1302,6 +1307,7 @@ void MainWindow::bt_MapSave()
 
 void MainWindow::bt_MapLoad()
 {
+    spdlog::info("[MAIN] bt_MapLoad");
     //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
@@ -1319,34 +1325,42 @@ void MainWindow::bt_MapLoad()
 void MainWindow::bt_MapLastLc()
 {
     MAPPING::instance()->last_loop_closing();
+    spdlog::info("[MAIN] bt_MapLastLc");
 }
 
 void MainWindow::bt_MapPause()
 {
     MAPPING::instance()->is_pause.store(true);
-    printf("[MAIN] mapping pasue\n");
+    //printf("[MAIN] mapping pasue\n");
+    spdlog::info("[MAIN] mapping pasue");
 }
 
 void MainWindow::bt_MapResume()
 {
     MAPPING::instance()->is_pause.store(false);
-    printf("[MAIN] mapping resume\n");
+    //printf("[MAIN] mapping resume\n");
+    spdlog::info("[MAIN] mapping resume");
 }
 
 // localization
 void MainWindow::bt_LocInit()
 {
     LOCALIZATION::instance()->set_cur_tf(se2_to_TF(pick.r_pose));
+    spdlog::info("[MAIN] bt_LocInit");
 }
 
 void MainWindow::bt_LocStart()
 {
     LOCALIZATION::instance()->start();
+    spdlog::info("[MAIN] bt_LocStart");
+
 }
 
 void MainWindow::bt_LocStop()
 {
     LOCALIZATION::instance()->stop();
+    spdlog::info("[MAIN] bt_LocStop");
+
 }
 
 // for autocontrol
@@ -2014,7 +2028,7 @@ void MainWindow::bt_TaskPlay()
     TASK::instance()->accuracy_save_enabled = ui->ckb_AccuracySave->isChecked();
     TASK::instance()->is_start = true;
     TASK::instance()->use_looping = ui->ckb_Looping->isChecked();
-    //qDebug() << "[TASK] Use looping:" << TASK::instance()->use_looping;
+
     spdlog::debug("[TASK] Use looping:{}",TASK::instance()->use_looping.load());
 
 
@@ -2374,6 +2388,7 @@ void MainWindow::watch_loop()
 // for plot loop
 void MainWindow::plot_map()
 {
+    spdlog::debug("[MAIN] plot_map");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -2474,6 +2489,7 @@ void MainWindow::plot_map()
 
 void MainWindow::plot_node()
 {
+    spdlog::debug("[MAIN] plot_node");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -2749,6 +2765,7 @@ void MainWindow::plot_node()
 
 void MainWindow::plot_pick()
 {
+    spdlog::debug("[MAIN] plot_pick");
     // draw cursors
     if(is_pick_update)
     {
@@ -2812,6 +2829,7 @@ void MainWindow::plot_pick()
 
 void MainWindow::plot_info()
 {
+    spdlog::debug("[MAIN] plot_info");
     // plot mobile info
     {
         double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
@@ -2904,6 +2922,7 @@ void MainWindow::plot_info()
 
 void MainWindow::plot_safety()
 {
+    spdlog::debug("[MAIN] plot_safety");
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
@@ -3126,6 +3145,7 @@ void MainWindow::plot_safety()
 
 void MainWindow::plot_raw_2d()
 {
+    spdlog::debug("[MAIN] plot_raw_2d");
     if(LIDAR_2D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_2D" &&
             !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
     {
@@ -3208,6 +3228,8 @@ void MainWindow::plot_raw_2d()
 
 void MainWindow::plot_raw_3d()
 {
+    spdlog::debug("[MAIN] plot_raw_3d");
+
     // plot 3d lidar
     if(LIDAR_3D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_3D" &&
             !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
@@ -3276,6 +3298,7 @@ void MainWindow::plot_raw_3d()
 
 void MainWindow::plot_process_time()
 {
+    spdlog::debug("[MAIN] plot_process_time");
     QString ctrl_time_str;
     {
         if(AUTOCONTROL::instance())
@@ -3368,6 +3391,7 @@ void MainWindow::plot_process_time()
 
 void MainWindow::plot_mapping()
 {
+    spdlog::debug("[MAIN] plot_mapping");
     if(MAPPING::instance()->get_is_mapping())
     {
         // plot live cloud
@@ -3527,6 +3551,7 @@ void MainWindow::plot_mapping()
 
 void MainWindow::plot_loc()
 {
+    spdlog::debug("[MAIN] plot_loc");
     std::vector<Eigen::Vector3d> plot_cur_pts = LOCALIZATION::instance()->get_cur_global_scan();
     if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0 && LOCALIZATION::instance()->get_is_loc() && !MAPPING::instance()->get_is_mapping())
     {
@@ -3621,6 +3646,7 @@ void MainWindow::plot_loc()
 
 void MainWindow::plot_obs()
 {
+    spdlog::debug("[MAIN] plot_obs");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -3727,6 +3753,7 @@ void MainWindow::plot_obs()
 
 void MainWindow::plot_ctrl()
 {
+    spdlog::debug("[MAIN] plot_ctrl");
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
     double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
     double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
@@ -3932,6 +3959,7 @@ void MainWindow::plot_ctrl()
 
 void MainWindow::plot_cam()
 {
+    spdlog::debug("[MAIN] plot_cam");
     int cam_num = CONFIG::instance()->get_cam_num();
     for(int i = 0 ; i<cam_num;i++)
     {
@@ -3954,7 +3982,8 @@ void MainWindow::plot_cam()
                 }
                 else
                 {
-                    qDebug() << labelName << " not found!";
+                    //qDebug() << labelName << " not found!";
+                    spdlog::error("[MAIN] plot_cam, labelName not found");
                 }
             }
         }
@@ -4001,6 +4030,7 @@ void MainWindow::plot_cam()
 
 void MainWindow::plot_tractile()
 {
+    spdlog::debug("[MAIN] plot_tractile");
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
     double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
     double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
@@ -4085,6 +4115,7 @@ void MainWindow::plot_tractile()
 
 void MainWindow::plot_loop()
 {
+    spdlog::debug("[MAIN] plot_loop");
     plot_timer->stop();
     double st_time = get_time();
 
@@ -4115,14 +4146,16 @@ void MainWindow::plot_loop()
     {
         is_set_top_view = false;
         pcl_viewer->setCameraPosition(0, 0, 30, 0, 0, 0, 0, 1, 0);
-        printf("[MAIN] set top view camera\n");
+        //printf("[MAIN] set top view camera\n");
+        spdlog::info("[MAIN] set top view camera");
     }
 
     if(is_view_reset)
     {
         is_view_reset = false;
         pcl_viewer->resetCamera();
-        printf("[MAIN] reset view camera\n");
+        //printf("[MAIN] reset view camera\n");
+        spdlog::info("[MAIN] reset view camera");
     }
 
     // mapping view
@@ -4157,6 +4190,7 @@ void MainWindow::plot_loop()
     if(plot_dt > 0.1)
     {
         //printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
+        spdlog::warn("[MAIN] plot_loop, loop time drift");
     }
 
     plot_timer->start();
@@ -4164,6 +4198,7 @@ void MainWindow::plot_loop()
 
 void MainWindow::speaker_handler(int speaker_cnt)
 {
+    spdlog::debug("[MAIN] speaker_handler");
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
     int speak_code = 0;
@@ -4213,6 +4248,7 @@ void MainWindow::speaker_handler(int speaker_cnt)
 
 int MainWindow::led_handler()
 {
+    spdlog::debug("[MAIN] led_handler");
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
     int led_out = SAFETY_LED_OFF;
@@ -4294,6 +4330,7 @@ int MainWindow::led_handler()
 
 void MainWindow::getIPv4()
 {
+    spdlog::debug("[MAIN] getIPv4");
     QString chosen = "N/A";
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())

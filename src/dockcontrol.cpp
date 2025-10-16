@@ -251,7 +251,8 @@ void DOCKCONTROL::a_loop()
 
             else
             {
-                qDebug() << "y compensate error";
+                //qDebug() << "y compensate error";
+                spdlog::error("[DOCKING] y compensate error");
             }
         }
 
@@ -273,8 +274,10 @@ void DOCKCONTROL::a_loop()
 
                 if(std::abs(dtdr(1)) < config->get_docking_goal_th())
                 {
-                    qDebug() << "last dtdr(0)" << dtdr(0);
-                    qDebug() << "pointdoc_margin:" << config->get_docking_pointdock_margin();
+                    //qDebug() << "last dtdr(0)" << dtdr(0);
+                    //qDebug() << "pointdoc_margin:" << config->get_docking_pointdock_margin();
+                    spdlog::info("[DOCKING] last dtdr(0): {}, pointdoc_margin: {}", dtdr(0), config->get_docking_pointdock_margin());
+                    
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_DOCK;
                     path_flag = false;
@@ -356,7 +359,8 @@ void DOCKCONTROL::a_loop()
                     undock_flag = true;
                     undock_waiting_time = get_time();
                     mobile->move_linear_x(-1*config->get_robot_size_x_max() + 0.15, 0.05);
-                    qDebug() << "undock";
+                    //qDebug() << "undock";
+                    spdlog::info("[DOCKING] undock");
                 }
                 else
                 {
@@ -366,6 +370,7 @@ void DOCKCONTROL::a_loop()
 
                         dock = true; // undock done;
 //                        qDebug() << "no charge[charge_state,cur_m0,cur_m1]" << ms.charge_state << ms.cur_m0 << ms.cur_m1;
+                        spdlog::info("[DOCKING] not charge: {}, {}, {}",ms.charge_state, ms.cur_m0, ms.cur_m1 );
                         failed_reason = "NOT CONNECTED";
                         failed_flag =true;
 
@@ -386,7 +391,8 @@ void DOCKCONTROL::a_loop()
             if(get_time() - obs_wait_st_time > 1.0)
             {
                 fsm_state = DOCKING_FSM_OBS;
-                printf("[DOCKING] OBS_WAIT -> DRIVING\n");
+                //printf("[DOCKING] OBS_WAIT -> DRIVING\n");
+                spdlog::info("[DOCKING] OBS_WAIT -> DRIVING");
                 continue;
             }
         }
@@ -423,8 +429,9 @@ void DOCKCONTROL::a_loop()
         }
         else
         {
-            qDebug() << "[DOCKING] time dritf";
-            printf("[DOCKING] loop time drift, dt:%f\n", delta_loop_time);
+            //qDebug() << "[DOCKING] time dritf";
+            //printf("[DOCKING] loop time drift, dt:%f\n", delta_loop_time);
+            spdlog::warn("[DOCKING] loop time drift, dt: {}", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
@@ -773,11 +780,13 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
             dock_tf = calculate_translation_matrix(oneque_frm1_center, frm0_center0);
             err = vfrm_icp(cur_frm, oneque_vfrm, dock_tf);
 
-            qDebug() << " err" << err ;
+            //qDebug() << " err" << err ;
+            spdlog::info("[DOCKING] err: {}", err);
 
             if(err > 0.1)
             {
-                qDebug() << "findvmark {err}" << err;
+                //qDebug() << "findvmark {err}" << err;
+                spdlog::warn("[DOCKING] findvmark err: {}", err);
                 return out_;
             }
 
@@ -789,7 +798,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
             if(err > config->get_docking_icp_err_threshold())
             {
-                qDebug() << "findvmark {err}" << err;
+                //qDebug() << "findvmark {err}" << err;
+                spdlog::warn("[DOCKING] findvmark err: {}", err);
                 dock_check =3;
                 return out_;
             }
@@ -813,7 +823,8 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
             if(orein_err_th <=20.0 && head_err_th <=20.0)
             {
-                qDebug() << "dock_chekc:1";
+                // qDebug() << "dock_chekc:1";
+                spdlog::info("[DOCKING] dock_check: 1");
                 dock_check = 1; // ONEQUE DOCK CNT
             }
 
@@ -834,6 +845,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
                 if(dist < 0.2)
                 {
 //                    qDebug() << "dist far";
+                    spdlog::info("[DOCKING] dist far");
                     docking_station = dock_tf;
                     docking_station_o = se2_to_TF(mobile->get_pose().pose) * docking_station;
                     path_flag = true;
@@ -1352,7 +1364,9 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
     else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
     {
-        qDebug() << " ycompensat";
+        //qDebug() << " ycompensat";
+        spdlog::info("[DOCKING] ycompensate");
+        
         //use odom frame
         Eigen::Matrix4d target_tf_ycompen = cur_pose.inverse()*first_aline;
 

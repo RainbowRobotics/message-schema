@@ -54,7 +54,9 @@ void MAPPING::start()
 
     // set flag
     is_mapping = true;
-    printf("[MAPPING] start\n");
+    
+    //printf("[MAPPING] start\n");
+    spdlog::info("[MAPPING] start");
 }
 
 void MAPPING::stop()
@@ -75,7 +77,9 @@ void MAPPING::stop()
     loop_closing_thread.reset();
 
     is_mapping = false;
-    printf("[MAPPING] stop\n");
+
+    //printf("[MAPPING] stop\n");
+    spdlog::info("[MAPPING] stop");
 }
 
 void MAPPING::clear()
@@ -102,7 +106,8 @@ void MAPPING::clear()
     }
 
     loc->set_cur_tf(Eigen::Matrix4d::Identity());
-    printf("[MAPPING] clear\n");
+    //printf("[MAPPING] clear\n");
+    spdlog::info("[MAPPING] clear");
 }
 
 std::shared_ptr<std::vector<KFRAME>> MAPPING::get_kfrm_storage()
@@ -191,7 +196,8 @@ void MAPPING::kfrm_loop()
     // using new lidar frame
     lidar_2d->clear_merged_queue();
 
-    printf("[MAPPING] kfrm_loop start\n");
+    //printf("[MAPPING] kfrm_loop start\n");
+    spdlog::info("[MAPPING] kfrm_loop start");
     while(kfrm_flag)
     {
         FRAME frm;
@@ -474,7 +480,9 @@ void MAPPING::kfrm_loop()
                             kfrm.G = G;
                             kfrm.opt_G = G;
                             kfrm_que.push(kfrm);
-                            printf("[MAPPING] keyframe created, id:%d, pts: %zu\n", kfrm.id, kfrm.pts.size());
+                            
+                            //printf("[MAPPING] keyframe created, id:%d, pts: %zu\n", kfrm.id, kfrm.pts.size());
+                            spdlog::info("[MAPPING] keyframe created, id:{}, pts: {}", kfrm.id, kfrm.pts.size());
 
                             // inc keyframe id
                             kfrm_id++;
@@ -500,7 +508,9 @@ void MAPPING::kfrm_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    printf("[MAPPING] kfrm_loop stop\n");
+    
+    //printf("[MAPPING] kfrm_loop stop\n");
+    spdlog::info("[MAPPING] kfrm_loop stop");
 }
 
 void MAPPING::loop_closing_loop()
@@ -513,7 +523,8 @@ void MAPPING::loop_closing_loop()
         {
             double st_time = get_time();
 
-            printf("[MAPPING] kfrm:%d processing start\n", kfrm.id);
+            //printf("[MAPPING] kfrm:%d processing start\n", kfrm.id);
+            spdlog::info("[MAPPING] kfrm:{} processing start", kfrm.id);
 
             // keyframe pts transform global to kfrm local
             const int k0 = kfrm.id*config->get_mapping_kfrm_update_num();
@@ -616,18 +627,21 @@ void MAPPING::loop_closing_loop()
                         double overlap_ratio = calc_overlap_ratio(pts0, pts1);
                         if(overlap_ratio < config->get_mapping_kfrm_lc_try_overlap())
                         {
-                            printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
+                            //printf("[MAPPING] less overlap, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
+                            spdlog::info("[MAPPING] less overlap, id:{}-{}, d:{}, overlap:{}", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
                             continue;
                         }
 
-                        printf("[MAPPING] try loop closing, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
+                            //printf("[MAPPING] try loop closing, id:%d-%d, d:%f, overlap:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
+                            spdlog::info("[MAPPING] try loop closing, id:{}-{}, d:{}, overlap:{}", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, d, overlap_ratio);
 
                         Eigen::Matrix4d dG = (*kfrm_storage)[p0].opt_G.inverse()*(*kfrm_storage)[p1].opt_G;
                         double err = kfrm_icp((*kfrm_storage)[p0], (*kfrm_storage)[p1], dG);
                         if(err < config->get_mapping_icp_error_threshold())
                         {
                             pgo.add_lc((*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, dG, err);
-                            printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, err);
+                            //printf("[MAPPING] pose graph optimization, id:%d-%d, err:%f\n", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, err);
+                            spdlog::info("[MAPPING] pose graph optimization, id:{}-{}, err:{}", (*kfrm_storage)[p0].id, (*kfrm_storage)[p1].id, err);
 
                             // optimal pose update
                             std::vector<Eigen::Matrix4d> opt_poses = pgo.get_optimal_poses();
@@ -640,13 +654,15 @@ void MAPPING::loop_closing_loop()
                         }
                         else
                         {
-                            printf("[MAPPING] loop closing failed\n");
+                            //printf("[MAPPING] loop closing failed\n");
+                            spdlog::info("[MAPPING] loop closing failed");
                         }
                     }
                 }
             }
 
-            printf("[MAPPING] kfrm:%d processing complete\n", kfrm.id);
+            //printf("[MAPPING] kfrm:%d processing complete\n", kfrm.id);
+            spdlog::info("[MAPPING] kfrm:{} processing complete", kfrm.id);
 
             // update processing time
             proc_time_map_b = get_time() - st_time;
@@ -654,7 +670,8 @@ void MAPPING::loop_closing_loop()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    printf("[MAPPING] b_loop stop\n");
+    //printf("[MAPPING] b_loop stop\n");
+    spdlog::info("[MAPPING] b_loop stop");
 }
 
 // algorithms
@@ -831,7 +848,8 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[frm_icp] not enough correspondences, %d!!\n", num_correspondence);
+            //printf("[frm_icp] not enough correspondences, %d!!\n", num_correspondence);
+            spdlog::warn("[frm_icp] not enough correspondences, {}!!", num_correspondence);
             return 9999;
         }
 
@@ -940,8 +958,8 @@ double MAPPING::frm_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, Eigen
 
     if(last_err > first_err+0.01 || last_err > config->get_mapping_icp_error_threshold())
     {
-        printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,
-               first_err, last_err, convergence, get_time()-t_st);
+        //printf("[frm_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence,first_err, last_err, convergence, get_time()-t_st);
+        spdlog::warn("[frm_icp] diverged, i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);     
 
         return std::numeric_limits<double>::max();
     }
@@ -1113,7 +1131,9 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[frm_icp] not enough correspondences, %d!!\n", num_correspondence);
+            //printf("[frm_icp] not enough correspondences, %d!!\n", num_correspondence);
+            spdlog::warn("[frm_icp] not enough correspondences, {}!!", num_correspondence);
+
             return 9999;
         }
 
@@ -1221,7 +1241,9 @@ double MAPPING::kfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG)
     dG = _dG*dG;
 
     // check
-    printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    //printf("[kfrm_icp] id:%d-%d, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    spdlog::info("[kfrm_icp] id:{}-{}, i:{}, n:{}, e:{}->{}, c:{}, dt:{}", frm0.id, frm1.id, iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+
     //if(last_err > first_err+0.01 || last_err > config->SLAM_ICP_ERROR_THRESHOLD)
     if(last_err > first_err+0.01)
     {
