@@ -26,3 +26,6 @@ backend/docker-compose.preview.yml
 .buildx-cache
 .buildx-cache-amd64
 .buildx-cache-arm64
+
+.out-amd64
+.out-arm64
