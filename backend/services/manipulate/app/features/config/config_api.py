@@ -33,7 +33,7 @@ async def config_toollist(robot_model: str):
 
 @config_router.post("/{robot_model}/call_change_toollist", response_model=Response_ReturnValuePD)
 async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
-    res = config_service.change_toollist(robot_model, request=request)
+    res = config_service.call_change_toollist(robot_model, request=request)
     return JSONResponse(res)
 
 
