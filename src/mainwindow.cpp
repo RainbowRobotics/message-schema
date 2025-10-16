@@ -1960,6 +1960,8 @@ void MainWindow::bt_TaskDel()
 
 void MainWindow::bt_TaskSave()
 {
+
+    spdlog::info("[TASK] TaskSave. but not yet");
     //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
     //{
     //    QMessageBox::warning(this, "저장 실패", "맵이 로드되지 않았습니다.");
@@ -2025,7 +2027,7 @@ void MainWindow::bt_TaskPlay()
 void MainWindow::bt_TaskPause()
 {
     spdlog::info("[TASK] TaskPause. but not yet");
-    TASK::instance()->pause();
+    //TASK::instance()->pause();
 }
 
 void MainWindow::bt_TaskCancel()

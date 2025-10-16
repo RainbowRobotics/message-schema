@@ -1289,7 +1289,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1871,7 +1871,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TaskPause">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1962,7 +1962,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TaskLoad">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1978,7 +1978,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TaskResume">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="geometry">
                <rect>
@@ -1994,7 +1994,7 @@ start</string>
              </widget>
              <widget class="QPushButton" name="bt_TaskSave">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="geometry">
                <rect>
