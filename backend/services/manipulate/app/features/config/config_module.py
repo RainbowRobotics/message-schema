@@ -147,7 +147,7 @@ class ConfigService(BaseService):
         req.boxPara8 = request["box_para_8"]
 
         res = zenoh_client.query_one(
-            f"{robot_model}/save_tool_list_parameter",
+            f"{robot_model}/save_tool_parameter",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=160,
