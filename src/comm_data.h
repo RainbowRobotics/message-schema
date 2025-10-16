@@ -251,6 +251,8 @@ struct DATA_CONTROL
     static constexpr const char* PathOnOff = "pathOnOff";
     static constexpr const char* MotorOnOff = "motorOnOff";
     static constexpr const char* safetyIO = "safetyIO";
+    static constexpr const char* setDigitalIO = "setDigitalIO";
+    static constexpr const char* getDigitalIO = "getDigitalIO";
 
     double time;
     QString id;
@@ -977,6 +979,7 @@ struct DATA_SAFTYIO
     QString id = "";
     double time;
     QString command = "";
+    QString result = "";
 
     unsigned char mcu0_dio[8] ={0,};
     unsigned char mcu1_dio[8] ={0,};
@@ -989,6 +992,7 @@ struct DATA_SAFTYIO
         id = "";
         time = 0.0;
         command = "";
+        result = "";
 
         memset(mcu0_dio, 0, sizeof(mcu0_dio));
         memset(mcu1_dio, 0, sizeof(mcu1_dio));
@@ -1001,6 +1005,7 @@ struct DATA_SAFTYIO
         id = p.id;
         time = p.time;
         command = p.command;
+        result = p.result;
 
         memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
@@ -1013,6 +1018,7 @@ struct DATA_SAFTYIO
         id = p.id;
         time = p.time;
         command = p.command;
+        result = p.result;
 
         memcpy(mcu0_dio, p.mcu0_dio, sizeof(char)*8);
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);

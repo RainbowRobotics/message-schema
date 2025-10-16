@@ -208,7 +208,6 @@ private:
     void handle_mapping_cmd(const QJsonObject& data);
     void handle_localization_cmd(const QJsonObject& data);
     void handle_control_cmd(const QJsonObject& data);
-    void handle_safetyio_cmd(const QJsonObject& data);
 
     void handle_move_jog(const DATA_MOVE& msg);
     void handle_move_goal(DATA_MOVE& msg);
@@ -217,6 +216,7 @@ private:
     void handle_move_resume(DATA_MOVE& msg);
     void handle_move_target(DATA_MOVE& msg);
     void handle_mapping(DATA_MAPPING msg);
+    void handle_safetyio_cmd(const QJsonObject& data);
 
     void handle_localization_cmd(DATA_LOCALIZATION msg);
 
@@ -251,7 +251,11 @@ private:
     void handle_common_led(DATA_LED& msg);
 
     void handle_common_motor(DATA_MOTOR& msg);
+    void send_safetyio_response(const QJsonObject& data);
 
+    void handle_send_safetyIO(const QJsonObject& data);
+
+    void slot_safety_io(DATA_SAFTYIO msg);
     QJsonValue convertItem(sio::message::ptr item);
 
     std::atomic<double> end_time   = {0.0};
@@ -295,7 +299,7 @@ private Q_SLOTS:
     void send_mapping_cloud();
 
     void slot_localization(DATA_LOCALIZATION msg);
-    void slot_safety_io(DATA_SAFTYIO msg);
+//    void slot_safety_io(DATA_SAFTYIO msg);
 
     //MSA
     void send_move_response(DATA_MOVE msg);
@@ -303,6 +307,8 @@ private Q_SLOTS:
     void send_control_response(DATA_CONTROL msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_load_response(DATA_LOAD msg);
+//    void handle_safetyio_cmd(const QJsonObject& data);
+//    void handle_send_safetyIO(const QJsonObject& data);
 
 
 //    void send_localization_response(const DATA_LOCALIZATION& msg);

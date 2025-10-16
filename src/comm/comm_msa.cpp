@@ -931,10 +931,15 @@ void COMM_MSA::handle_control_cmd(const QJsonObject &data)
     {
         msg.onoff           = data["onoff"].toBool();
     }
-    else if(msg.command == DATA_CONTROL::safetyIO)
+    else if(msg.command == DATA_CONTROL::setDigitalIO)
     {
-
         handle_safetyio_cmd(data);
+        return;
+    }
+    else if(msg.command == DATA_CONTROL::getDigitalIO)
+    {
+        handle_send_safetyIO(data);
+        return;
     }
 
     {
@@ -1136,6 +1141,59 @@ void COMM_MSA::handle_common_cmd(QString cmd, const QJsonObject& data)
     }
 }
 
+void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
+{
+    DATA_SAFTYIO msg;
+    msg.id              = get_json(data, "id");
+    msg.time            = get_json_double(data, "time")/1000;
+    msg.command         = get_json(data, "command");
+
+    MOBILE_STATUS ms = mobile->get_status();
+    sio::object_message::ptr rootObj = sio::object_message::create();
+    rootObj->get_map()["id"] = sio::string_message::create(msg.id.toStdString());
+
+    auto toSioArray = [](unsigned char arr[8]) {
+        sio::array_message::ptr jsonArr = sio::array_message::create();
+        for (int i = 0; i < 8; ++i) {
+            jsonArr->get_vector().push_back(sio::int_message::create(arr[i]));
+        }
+        return jsonArr;
+    };
+
+    // mcuDio 배열 생성
+    sio::array_message::ptr mcuDioArr = sio::array_message::create();
+    mcuDioArr->get_vector().push_back(toSioArray(ms.mcu0_dio));
+    mcuDioArr->get_vector().push_back(toSioArray(ms.mcu1_dio));
+
+    // mcuDin 배열 생성
+    sio::array_message::ptr mcuDinArr = sio::array_message::create();
+    mcuDinArr->get_vector().push_back(toSioArray(ms.mcu0_din));
+    mcuDinArr->get_vector().push_back(toSioArray(ms.mcu1_din));
+
+    // rootObj에 직접 넣기
+    rootObj->get_map()["mcuDio"] = mcuDioArr;
+    rootObj->get_map()["mcuDin"] = mcuDinArr;
+
+    msg.result = "success";
+
+    // Adding the time object
+    const double time = get_time0();
+    rootObj->get_map()["time"] = sio::string_message::create(std::to_string(static_cast<long long>(time * 1000)));
+    rootObj->get_map()["result"] = sio::string_message::create(msg.result.toStdString());
+
+    SOCKET_MESSAGE socket_msg;
+    socket_msg.event = "controlResponse";
+    socket_msg.data = rootObj;  // 타입 그대로 전달
+
+    io->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
+
+//    {
+//        std::lock_guard<std::mutex> lock(mapping_mtx);
+//        mapping_queue.push(msg);
+//    }
+//    mapping_cv.notify_one();
+}
+
 void COMM_MSA::handle_safetyio_cmd(const QJsonObject& data)
 {
     DATA_SAFTYIO msg;
@@ -1143,8 +1201,7 @@ void COMM_MSA::handle_safetyio_cmd(const QJsonObject& data)
     msg.time            = get_json_double(data, "time")/1000;
     msg.command         = get_json(data, "command");
 
-
-    QJsonArray totalArr = data.value("mcu_dio").toArray();
+    QJsonArray totalArr = data.value("mcuDio").toArray();
 
     if (totalArr.size() < 2)
     {
@@ -1164,12 +1221,56 @@ void COMM_MSA::handle_safetyio_cmd(const QJsonObject& data)
     for(int i = 0; i < 8 && i < mcu1_arr.size(); i++)
     {
         //        msg.mcu1_dio[i] = static_cast<unsigned char>(mcu1_arr[i].toInt());
-        msg.mcu1_dio[i] = (mcu0_arr[i].toInt() != 0) ? 1 : 0;
+        msg.mcu1_dio[i] = (mcu1_arr[i].toInt() != 0) ? 1 : 0;
     }
 
     slot_safety_io(msg);
+    send_safetyio_response(data);
 
 }
+
+void COMM_MSA::send_safetyio_response(const QJsonObject& data)
+{
+    sio::object_message::ptr response = sio::object_message::create();
+
+    // command
+    QString command = data.value("command").toString();
+    response->get_map()["command"] = sio::string_message::create(command.toStdString());
+
+    // id
+    QString id = data.value("id").toString();
+    response->get_map()["id"] = sio::string_message::create(id.toStdString());
+
+    // mcuDio
+    QJsonArray totalArr = data.value("mcuDio").toArray();
+    sio::array_message::ptr mcuDioArr = sio::array_message::create();
+
+    auto toSioArray = [](const QJsonArray& arr) {
+        sio::array_message::ptr sub = sio::array_message::create();
+        for (int i = 0; i < arr.size(); ++i)
+        {
+            sub->get_vector().push_back(sio::int_message::create(arr[i].toInt()));
+        }
+        return sub;
+    };
+
+    for (int i = 0; i < totalArr.size(); ++i)
+    {
+        mcuDioArr->get_vector().push_back(toSioArray(totalArr[i].toArray()));
+    }
+    response->get_map()["mcuDio"] = mcuDioArr;
+
+    // time
+    QString time = data.value("time").toString();
+    response->get_map()["time"] = sio::string_message::create(time.toStdString());
+
+    // result
+    response->get_map()["result"] = sio::string_message::create("success");
+
+    io->socket("slamnav")->emit("controlResponse",response);
+
+}
+
 
 void COMM_MSA::move_loop()
 {
@@ -3975,6 +4076,7 @@ void COMM_MSA::slot_safety_io(DATA_SAFTYIO msg)
             bool value = dio_arr[n]; // 0 or 1
             if(value != dio_arr_old[offset+n])
             {
+//                qDebug()<<"value : "<<value;
                 mobile->set_IO_individual_output(offset + n, value);
                 dio_arr_old[offset + n] = value; //save change value
             }

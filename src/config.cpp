@@ -672,7 +672,7 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::SEC_CORE;
         }
-        else if(robot_type_str == "SEC_CORE_EE")
+        else if(robot_type_str == "SEC_EE")
         {
             ROBOT_TYPE = RobotType::SEC_EE;
         }
@@ -705,6 +705,10 @@ bool CONFIG::load_common(QString path)
             else if(robot_model_str == "MECANUM")
             {
                 ROBOT_MODEL = RobotModel::MECANUM;
+            }
+            else if(robot_model_str == "SEC")
+            {
+                ROBOT_MODEL = RobotModel::SEC;
             }
             else
             {
