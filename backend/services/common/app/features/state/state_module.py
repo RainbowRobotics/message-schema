@@ -66,15 +66,14 @@ class StateService:
                         f"{core_sw["sw_name"]}/state_core", flatbuffer_obj_t=State_CoreT, timeout=1
                     )
 
-                    if obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
-                        if obj["statusOutColl"] == 1:
-                            core_sw["connected"] = "OUT_COLLISION"
-                        elif obj["statusSelfColl"] == 1:
-                            core_sw["connected"] = "SELF_COLLISION"
-                        elif obj["statusSwitchEmg"] == 1:
-                            core_sw["connected"] = "EMERGENCY_STOP"
-                        else:
-                            core_sw["connected"] = "STABLE"
+                    if obj["statusOutColl"] == 1:
+                        core_sw["connected"] = "OUT_COLLISION"
+                    elif obj["statusSelfColl"] == 1:
+                        core_sw["connected"] = "SELF_COLLISION"
+                    elif obj["statusSwitchEmg"] == 1:
+                        core_sw["connected"] = "EMERGENCY_STOP"
+                    elif obj["statusPowerOut"] == 0:
+                        core_sw["connected"] = "POWER_OFF"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 1:
                         core_sw["connected"] = "POWER_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 2:
@@ -85,8 +84,8 @@ class StateService:
                         core_sw["connected"] = "JOINT_CHECKED"
                     elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 5:
                         core_sw["connected"] = "SYSTEM_CHECKED"
-                    elif obj["statusPowerOut"] == 0:
-                        core_sw["connected"] = "POWER_OFF"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
+                        core_sw["connected"] = "STABLE"
 
                 elif core_sw["be_service"] == "mobility":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
