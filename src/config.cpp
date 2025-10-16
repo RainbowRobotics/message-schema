@@ -355,7 +355,8 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
         // exception handling
         if( fields_array.size() != MONITORING_FIELD_COUNT)
         {
-            qDebug() << "[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()";
+            //qDebug() << "[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()";
+            spdlog::info("[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()");
             return;
         }
 
@@ -972,17 +973,20 @@ void CONFIG::set_mileage(const QString &mileage)
             int insertPos = bracePos + 1;
             QString insertText = QString("\n    \"MILEAGE\": \"%1\",").arg(mileage);
             data.insert(insertPos, insertText);
-            qDebug() << "삽입 후 내용:" << data;
+            //qDebug() << "삽입 후 내용:" << data;
+            spdlog::info("[CONFIG] 삽입 후 내용: {}", data.toStdString());
         }
         else
         {
-            qDebug() << "[config] 중괄호 { 를 찾을 수 없습니다.";
+            //qDebug() << "[config] 중괄호 { 를 찾을 수 없습니다.";
+            spdlog::error("[CONFIG] 중괄호 { 를 찾을 수 없습니다.");
         }
     }
 
     if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
     {
-        printf("[config] failed to open config file for writing.\n");
+        //printf("[config] failed to open config file for writing.\n");
+        spdlog::info("[CONFIG] failed to open config file for writing.");
         return;
     }
 

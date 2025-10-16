@@ -639,15 +639,15 @@ void ERROR_MANAGER::logError(ErrorCause cause, ErrorContext context, const QStri
     }
     else if(info.level == "error")
     {
-        spdlog::error("[COMM_RRS] {}", log_message.toStdString());
+        spdlog::error("[RRS] {}", log_message.toStdString());
     }
     else if(info.level == "warn")
     {
-        spdlog::warn("[COMM_RRS] {}", log_message.toStdString());
+        spdlog::warn("[RRS] {}", log_message.toStdString());
     }
     else
     {
-        spdlog::info("[COMM_RRS] {}", log_message.toStdString());
+        spdlog::info("[RRS] {}", log_message.toStdString());
     }
 }
 
@@ -955,26 +955,27 @@ void COMM_RRS::init()
 {
     if(!config)
     {
-        logger->write_log("[COMM_RRS] config module not set", "Orange");
-        spdlog::warn("[COMM_RRS] config module not set");
+        logger->write_log("[RRS] config module not set", "Orange");
+        spdlog::warn("[RRS] config module not set");
         return;
     }
 
     if(!config->get_use_rrs())
     {
-        spdlog::info("[COMM_RRS] use_rrs = false, skip connect");
+        spdlog::info("[RRS] use_rrs = false, skip connect");
         return;
     }
 
     if(config->get_use_rrs())
     {
-        logger->write_log("[COMM_RRS] try to connect RRS", "Green");
-        spdlog::info("[COMM_RRS] try to connect RRS");
+        logger->write_log("[RRS] try to connect RRS", "Green");
+        spdlog::info("[RRS] try to connect RRS");
 
         std::map<std::string, std::string> query;
         query["name"] = "slamnav";
 
         io->connect("ws://localhost:11337", query);
+        spdlog::debug("ws://localhost:11337");
 //        io->connect("ws://10.108.1.12:11337", query);
 //        qDebug()<<"ws://10.108.1.12:11337";
     }
@@ -991,9 +992,9 @@ void COMM_RRS::sio_connected()
 
     if(logger)
     {
-        logger->write_log("[COMM_RRS] connected", "Green");
+        logger->write_log("[RRS] connected", "Green");
     }
-    spdlog::info("[COMM_RRS] connected");
+    spdlog::info("[RRS] connected");
 }
 
 void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
@@ -1005,9 +1006,9 @@ void COMM_RRS::sio_disconnected(sio::client::close_reason const& reason)
     }
     if(logger)
     {
-        logger->write_log("[COMM_RRS] disconnected", "Green");
+        logger->write_log("[RRS] disconnected", "Green");
     }
-    spdlog::warn("[COMM_RRS] disconnected");
+    spdlog::warn("[RRS] disconnected");
 
 }
 
@@ -1015,9 +1016,9 @@ void COMM_RRS::sio_error()
 {
     if(logger)
     {
-        logger->write_log("[COMM_RRS] some error", "Red");
+        logger->write_log("[RRS] some error", "Red");
     }
-    spdlog::error("[COMM_RRS] some error");
+    spdlog::error("[RRS] some error");
 }
 
 // recv parser -> emit recv signals
@@ -1042,9 +1043,9 @@ void COMM_RRS::recv_move(std::string const& name, sio::message::ptr const& data,
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, move, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, move, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_move(msg);
     }
 }
@@ -1065,9 +1066,9 @@ void COMM_RRS::recv_localization(std::string const& name, sio::message::ptr cons
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, loc, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, loc, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_localization(msg);
     }
 }
@@ -1084,9 +1085,9 @@ void COMM_RRS::recv_load(std::string const& name, sio::message::ptr const& data,
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, load, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, load, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_load(msg);
     }
@@ -1103,9 +1104,9 @@ void COMM_RRS::recv_randomseq(std::string const& name, sio::message::ptr const& 
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, randomseq, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, randomseq, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_randomseq(msg);
     }
@@ -1122,9 +1123,9 @@ void COMM_RRS::recv_mapping(std::string const& name, sio::message::ptr const& da
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, mapping, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, mapping, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_mapping(msg);
     }
 }
@@ -1141,9 +1142,9 @@ void COMM_RRS::recv_dock(std::string const& name, sio::message::ptr const& data,
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, dock, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, dock, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_dock(msg);
     }
 }
@@ -1159,16 +1160,16 @@ void COMM_RRS::recv_safety_request(std::string const& name, sio::message::ptr co
         msg.set_field = get_json(data, "set_field").toInt();
 
         //qDebug() << "recv_field_set_field:" << msg.set_field;
-        spdlog::info("[COMM_RRS] recv, field set filed",msg.set_field);
+        spdlog::info("[RRS] recv, field set filed",msg.set_field);
 
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, field_set, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, field_set, command: {}, time: {}",msg.command.toStdString(),msg.time);
         Q_EMIT signal_safety_request(msg);
     }
 }
@@ -1191,7 +1192,7 @@ void COMM_RRS::recv_obs_box_request(std::string const& name, sio::message::ptr c
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv_obs_box_request, command: %1, min_z: %2, max_z: %3, map_range: %4, time: %5")
+            logger->write_log(QString("[RRS] recv_obs_box_request, command: %1, min_z: %2, max_z: %3, map_range: %4, time: %5")
                              .arg(msg.command).arg(msg.obs_box_min_z).arg(msg.obs_box_max_z).arg(msg.obs_box_map_range).arg(msg.time), "Green");
         }
         Q_EMIT signal_obs_box_setting(msg);
@@ -1323,8 +1324,9 @@ void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr co
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
+        spdlog::info("[RRS] recv, config_request, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_config_request(msg);
     }
@@ -1343,9 +1345,9 @@ void COMM_RRS::recv_view_lidar_on_off(std::string const& name, sio::message::ptr
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, lidar_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, lidar_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, lidar_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, lidar_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_view_lidar(msg);
     }
@@ -1364,9 +1366,9 @@ void COMM_RRS::recv_view_path_on_off(std::string const& name, sio::message::ptr 
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, path_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, path_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, path_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, path_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_view_path(msg);
     }
@@ -1385,9 +1387,9 @@ void COMM_RRS::recv_led(std::string const& name, sio::message::ptr const& data, 
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, led_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, led_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, led_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, led_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_led(msg);
     }
@@ -1405,9 +1407,9 @@ void COMM_RRS::recv_motor(std::string const& name, sio::message::ptr const& data
         // action
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, motor_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, motor_on_off, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS] recv, motor_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
+        spdlog::info("[RRS] recv, motor_on_off, command: {}, time: {}",msg.command.toStdString(),msg.time);
 
         Q_EMIT signal_motor(msg);
     }
@@ -1426,8 +1428,8 @@ void COMM_RRS::recv_path(std::string const& name, sio::message::ptr const& data,
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
-        //logger->write_log(QString("[COMM_RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
-        spdlog::info("[COMM_RRS] recv, path, command: {}, path: {}, time: {}",msg.command.toStdString(), msg.path.toStdString(), msg.time);
+        //logger->write_log(QString("[RRS] recv, command: %1, path: %2, time: %3").arg(msg.command).arg(msg.path). arg(msg.time), "Green");
+        spdlog::info("[RRS] recv, path, command: {}, path: {}, time: {}",msg.command.toStdString(), msg.path.toStdString(), msg.time);
 
         Q_EMIT signal_path(msg);
     }
@@ -1446,12 +1448,13 @@ void COMM_RRS::recv_vobs(std::string const& name, sio::message::ptr const& data,
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         // action
-        QString res = QString("[COMM_RRS] recv, command: %1, vobs_r: %2, vobs_c: %3, time: %4").arg(msg.command).arg(msg.vobs_robots).arg(msg.vobs_clousers).arg(msg.time);
-        printf("%s\n", res.toLocal8Bit().constData());
+        QString res = QString("[RRS] recv, command: %1, vobs_r: %2, vobs_c: %3, time: %4").arg(msg.command).arg(msg.vobs_robots).arg(msg.vobs_clousers).arg(msg.time);
+        //printf("%s\n", res.toLocal8Bit().constData());
+        spdlog::info(res.toLocal8Bit().constData());
 
-        //logger->write_log(QString("[COMM_RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time), "Green");
+        //logger->write_log(QString("[RRS] recv, command: %1, vobs: %2, time: %3").arg(msg.command).arg(msg.vobs).arg(msg.time), "Green");
 
-        spdlog::info("[COMM_RRS] recv, vobs, command: {}, vobs_r: {}, vobs_c: {}, time: {}",msg.command.toStdString(), msg.vobs_robots.toStdString(), msg.vobs_clousers.toStdString(), msg.time);
+        spdlog::info("[RRS] recv, vobs, command: {}, vobs_r: {}, vobs_c: {}, time: {}",msg.command.toStdString(), msg.vobs_robots.toStdString(), msg.vobs_clousers.toStdString(), msg.time);
         Q_EMIT signal_vobs(msg);
     }
 }
@@ -1471,20 +1474,20 @@ void COMM_RRS::recv_software_update(std::string const& name, sio::message::ptr c
 
 void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
 {
-    // printf("[COMM_RRS][DEBUG] recv_foot called\n");
+    // printf("[RRS][DEBUG] recv_foot called\n");
 
     if(data && data->get_flag() == sio::message::flag_object)
     {
         QString time_str = get_json(data, "time");
         double time_sec = get_json(data, "time").toDouble() / 1000;
 
-        // printf("[COMM_RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
+        // printf("[RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
 
         // get foot
         sio::message::ptr foot_msg = data->get_map()["foot"];
         if(!foot_msg || foot_msg->get_flag() != sio::message::flag_object)
         {
-            // printf("[COMM_RRS][DEBUG] 'foot' field missing or not object\n");
+            // printf("[RRS][DEBUG] 'foot' field missing or not object\n");
             return;
         }
 
@@ -1499,7 +1502,7 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         sio::message::ptr temperature_sensor = data->get_map()["temperature_sensor"];
         if(!temperature_sensor || temperature_sensor->get_flag() != sio::message::flag_object)
         {
-            // printf("[COMM_RRS][DEBUG] 'temperature_sensor' field missing or not object\n");
+            // printf("[RRS][DEBUG] 'temperature_sensor' field missing or not object\n");
             return;
         }
 
@@ -1516,13 +1519,13 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
         //        qDebug()<<"temprature_msg.temperature_value : "<<temprature_msg.temperature_value;
 
         // debug
-        // printf("[COMM_RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
+        // printf("[RRS][DEBUG] recv foot → conn: %d, pos: %d, down: %d, state: %d, time: %.3f\n",
         //        msg.connection, msg.position, msg.is_down, msg.state, msg.time);
 
         if(logger)
         {
             // logger->write_log(
-            //             QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+            //             QString("[RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
             //             .arg(msg.connection)
             //             .arg(msg.position)
             //             .arg(msg.is_down)
@@ -1538,10 +1541,10 @@ void COMM_RRS::recv_foot(const std::string& name, const sio::message::ptr& data,
 
 void COMM_RRS::recv_safety_io_set(const std::string& name, const sio::message::ptr& data, bool hasAck, sio::message::list& ack_resp)
 {
-     //printf("[COMM_RRS][DEBUG] recv_safety io called\n");
+     //printf("[RRS][DEBUG] recv_safety io called\n");
     if(config->set_debug_comm_rrs())
     {
-        spdlog::debug("[COMM_RRS] recv_safety io called");
+        spdlog::debug("[RRS] recv_safety io called");
     }
 
     if(data && data->get_flag() == sio::message::flag_object)
@@ -1550,20 +1553,20 @@ void COMM_RRS::recv_safety_io_set(const std::string& name, const sio::message::p
         double time_sec = get_json(data, "time").toDouble() / 1000;
 
 
-        // printf("[COMM_RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
+        // printf("[RRS][DEBUG] time: %s\n", time_str.toStdString().c_str());
         if(config->set_debug_comm_rrs())
         {
-            spdlog::debug("[COMM_RRS] time: {}",time_str.toStdString());
+            spdlog::debug("[RRS] time: {}",time_str.toStdString());
         }
 
         // get safety io msg
         sio::message::ptr safetyio_msg = data->get_map()["safetyio"];
         if(!safetyio_msg || safetyio_msg->get_flag() != sio::message::flag_object)
         {
-            // printf("[COMM_RRS][DEBUG] 'foot' field missing or not object\n");
+            // printf("[RRS][DEBUG] 'foot' field missing or not object\n");
             if(config->set_debug_comm_rrs())
             {
-                spdlog::debug("[COMM_RRS] 'foot' field missing or not object");
+                spdlog::debug("[RRS] 'foot' field missing or not object");
             }
             return;
         }
@@ -1602,7 +1605,7 @@ void COMM_RRS::recv_safety_io_set(const std::string& name, const sio::message::p
         if(logger)
         {
             // logger->write_log(
-            //             QString("[COMM_RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
+            //             QString("[RRS] recv footState - conn: %1, pos: %2, down: %3, state: %4, time: %5")
             //             .arg(msg.connection)
             //             .arg(msg.position)
             //             .arg(msg.is_down)
@@ -2117,6 +2120,7 @@ void COMM_RRS::send_lidar_3d()
 
 void COMM_RRS::send_mapping_cloud()
 {
+    spdlog::debug("[RRS]send_mapping_cloud called");
     if(!is_connected || !mapping || !config)
     {
         return;
@@ -2160,6 +2164,7 @@ void COMM_RRS::send_mapping_cloud()
 
 void COMM_RRS::slot_move(DATA_MOVE msg)
 {
+    spdlog::debug("[RRS]slot_move called");
     if(!mobile || !unimap || !obsmap || !ctrl || !loc)
     {
         return;
@@ -2258,6 +2263,7 @@ void COMM_RRS::slot_move(DATA_MOVE msg)
         }
         else
         {
+            spdlog::error("[RRS]system not suppoerted");
             msg.result = "reject";
             msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
             msg.bat_percent = bat_percent;
@@ -2552,6 +2558,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
         }
         else
         {
+            spdlog::error("[RRS] slot_mapping reject");
             msg.result = "reject";
             msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::MAPPING_START);
 
@@ -2603,6 +2610,7 @@ void COMM_RRS::slot_mapping(DATA_MAPPING msg)
 
                 ERROR_MANAGER::logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::MAPPING_SAVE);
                 send_mapping_response(msg);
+                spdlog::error("[RRS] slot_mapping save fail");
             }
         }
     }
@@ -2710,6 +2718,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
 
                 else
                 {
+                    spdlog::error("[RRS] slot_load topoload fail");
                     msg.result = "fail";
                     msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_TOPO);
 
@@ -2735,6 +2744,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
     }
     else if(command == "configload")
     {
+        spdlog::error("[RRS] slot_load configload reject");
         msg.result = "reject";
         msg.message = ERROR_MANAGER::getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOAD_CONFIG);
 
@@ -2805,7 +2815,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
         {
             logger->write_log("[AUTO_INIT] recv_loc, try semi-auto init", "Green", true, false);
         }
-        spdlog::info("[COMM_RRS][AUTO_INIT] recv_loc, try semi-auto init");
+        spdlog::info("[RRS][AUTO_INIT] recv_loc, try semi-auto init");
 
         if(loc)
         {
@@ -2819,7 +2829,7 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
             {
                 logger->write_log("[AUTO_INIT] recv_loc, thread already running.", "Orange", true, false);
             }
-            spdlog::info("[COMM_RRS][AUTO_INIT] recv_loc, thread already running");
+            spdlog::info("[RRS][AUTO_INIT] recv_loc, thread already running");
             if(semi_auto_init_thread->joinable())
             {
                 semi_auto_init_thread->join();
@@ -2882,9 +2892,9 @@ void COMM_RRS::slot_localization(DATA_LOCALIZATION msg)
 
         if(logger)
         {
-            logger->write_log(QString("[COMM_RRS] recv, command: %1, (x,y,test,th,th_test):%2,%3,%4,%5,%6 time: %7").arg(msg.command).arg(x).arg(y).arg(test).arg(rz).arg(rz * D2R).arg(msg.time), "Green");
+            logger->write_log(QString("[RRS] recv, command: %1, (x,y,test,th,th_test):%2,%3,%4,%5,%6 time: %7").arg(msg.command).arg(x).arg(y).arg(test).arg(rz).arg(rz * D2R).arg(msg.time), "Green");
         }
-        spdlog::info("[COMM_RRS][INIT] recv_loc, command: {}, (x,y,test,th,th_test):{:.3f},{:.3f},{:.3f},{:.3f},{:.6f} time: {:.6f})",msg.command.toStdString(),x,y,test,rz,rz*D2R, msg.command.toStdString());
+        spdlog::info("[RRS][INIT] recv_loc, command: {}, (x,y,test,th,th_test):{:.3f},{:.3f},{:.3f},{:.3f},{:.6f} time: {:.6f})",msg.command.toStdString(),x,y,test,rz,rz*D2R, msg.command.toStdString());
 
         const Eigen::Matrix4d tf = se2_to_TF(Eigen::Vector3d(x, y, rz * D2R));
         if(loc)
@@ -3020,12 +3030,12 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
         obsmap->set_obs_box_map_range(msg.obs_box_map_range);
         msg.result = "success";
         msg.message = QString("obs_box z values set: min_z=%1, max_z=%2, map_range=%3").arg(msg.obs_box_min_z).arg(msg.obs_box_max_z).arg(msg.obs_box_map_range);
-        printf("[COMM_RRS] slot_obs_box_setting : setObsBox - success\n");
-        printf("[COMM_RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
-        //printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+        printf("[RRS] slot_obs_box_setting : setObsBox - success\n");
+        printf("[RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
+        //printf("[RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
         if (obsmap)
         {
-            printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
+            printf("[RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
                    obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
         }
 
@@ -3037,17 +3047,18 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
         msg.obs_box_min_z = obsmap->get_obs_box_map_min_z() - config->get_obs_map_min_z();
         msg.obs_box_max_z = obsmap->get_obs_box_map_max_z() - config->get_obs_map_max_z();
         msg.obs_box_map_range = obsmap->get_obs_box_map_range() - config->get_obs_map_range();
-        printf("[COMM_RRS] slot_obs_box_setting : getObsBox - success\n");
-        printf("[COMM_RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
+        printf("[RRS] slot_obs_box_setting : getObsBox - success\n");
+        printf("[RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
         if (obsmap)
         {
-            printf("[COMM_RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
+            printf("[RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
                    obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
         }
 
     }
     else
     {
+        spdlog::error("[RRS] slot_obs_box_setting error");
         msg.result = "error";
         msg.message = "Invalid command or obsmap not available";
     }
@@ -3066,13 +3077,13 @@ void COMM_RRS::slot_safety_request(DATA_SAFETY msg)
     {
         msg.result = "success";
         //qDebug() << "slot msg.sef_field:" << msg.set_field;
-        spdlog::info("[COMM_RRS] set, slot msg.sef_filed: {}", msg.set_field);
+        spdlog::info("[RRS] set, slot msg.sef_filed: {}", msg.set_field);
 
         unsigned int set_field_ = msg.set_field;
         msg.message = "";
 
         //qDebug() << "parsing filed set:" << set_field_;
-        spdlog::info("[COMM_RRS] set, parsing filed set: {}", msg.set_field);
+        spdlog::info("[RRS] set, parsing filed set: {}", msg.set_field);
 
 
         if(mobile)
@@ -3092,7 +3103,7 @@ void COMM_RRS::slot_safety_request(DATA_SAFETY msg)
         {
             MOBILE_STATUS ms = MOBILE::instance()->get_status();
             //qDebug() << ms.lidar_field;
-            spdlog::info("[COMM_RRS] get, slot ms.lidar_field: {}", ms.lidar_field);
+            spdlog::info("[RRS] get, slot ms.lidar_field: {}", ms.lidar_field);
 
             msg.get_field = ms.lidar_field;
         }
@@ -3159,8 +3170,8 @@ void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
 
     if(command == "getDriveParam")
     {
-        qDebug() << "slot in : param_get";
-
+        //qDebug() << "slot in : param_get";
+        spdlog::info("[RRS] slot in : param_get");
         if(mobile)
         {
             MOBILE::instance()->robot_request();
@@ -3180,10 +3191,12 @@ void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
 
     else if(command == "setParam")
     {
-        qDebug() << "set_param";
+        //qDebug() << "set_param";
+        spdlog::info("[RRS] set_param");
 
         if(msg.param_list.size() > 1 || msg.param_list.size() == 0)
         {
+            spdlog::error("[RRS] slot_config_request setParam reject");
             msg.result = "reject";
             msg.message = "param_list size is greater than 1";
             send_config_request_response(msg);
@@ -3197,6 +3210,7 @@ void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
                 // type exception
                 if(msg.param_list[0].type != "boolean")
                 {
+                    
                     msg.result = "reject";
                     msg.message = "invalid type";
                     send_config_request_response(msg);
@@ -3234,7 +3248,8 @@ void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
             }
             else
             {
-                qDebug() << "invalid parameter name";
+                //qDebug() << "invalid parameter name";
+                spdlog::error("[RRS] slot_config_requeset, invalid parameter name ");
                 msg.result = "reject";
                 msg.message = "invalid parameter name";
 
@@ -3245,7 +3260,8 @@ void COMM_RRS::slot_config_request(DATA_PDU_UPDATE msg)
     }
     else
     {
-        qDebug() << "slot in : invalid command";
+        //qDebug() << "slot in : invalid command";
+        spdlog::info("[RRS] slot in : invalid command");
 
         msg.result = "reject";
         msg.message = "invalid command";
@@ -3417,6 +3433,7 @@ void COMM_RRS::slot_led(DATA_LED msg)
 
 void COMM_RRS::slot_motor(DATA_MOTOR msg)
 {
+    spdlog::debug("[RRS] slot_motor connected");
     const QString command = msg.command;
     if(command == "on")
     {
@@ -3442,6 +3459,7 @@ void COMM_RRS::slot_motor(DATA_MOTOR msg)
 
 void COMM_RRS::slot_path(DATA_PATH msg)
 {
+    spdlog::debug("[RRS] slot_path connected");
     const QString command = msg.command;
     if(command == "path")
     {
@@ -3454,6 +3472,7 @@ void COMM_RRS::slot_path(DATA_PATH msg)
 
 void COMM_RRS::slot_vobs(DATA_VOBS msg)
 {
+    spdlog::debug("[RRS] slot_vobs connected");
     const QString command = msg.command;
     if(command == "vobs" && obsmap && unimap)
     {
@@ -3511,6 +3530,7 @@ void COMM_RRS::slot_vobs(DATA_VOBS msg)
 
 void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
 {
+    spdlog::debug("[RRS] slot_software_update connected");
     if(!is_connected || !mobile)
     {
         return;
@@ -3598,16 +3618,17 @@ void COMM_RRS::slot_software_update(DATA_SOFTWARE msg)
 // for interlock
 void COMM_RRS::slot_foot(DATA_FOOT msg)
 {
+    spdlog::debug("[RRS] slot_foot connected");
     if(msg.state == FOOT_STATE_DONE && msg.is_down == true)
     {
         // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock true").arg(msg.state), "Green");
-        spdlog::info("[COMM_RRS][MOBILE] slot_foot state:{}, set inter lock true",static_cast<int>(msg.state));
+        spdlog::info("[RRS][MOBILE] slot_foot state:{}, set inter lock true",static_cast<int>(msg.state));
         mobile->set_is_inter_lock_foot(true);
     }
     else
     {
         // logger->write_log(QString("[MOBILE] slot_foot state:%1, set inter lock false").arg(msg.state), "Green");
-        spdlog::info("[COMM_RRS][MOBILE] slot_foot state:{}, set inter lock false",static_cast<int>(msg.state));
+        spdlog::info("[RRS][MOBILE] slot_foot state:{}, set inter lock false",static_cast<int>(msg.state));
         mobile->set_is_inter_lock_foot(false);
     }
 }
@@ -3615,11 +3636,13 @@ void COMM_RRS::slot_foot(DATA_FOOT msg)
 // for safetyio
 void COMM_RRS::slot_safety_io(DATA_SAFTYIO msg)
 {
+    spdlog::debug("[RRS] slot_safety_io connected");
     send_safetyio_response(msg);
 }
 
 void COMM_RRS::send_move_response(const DATA_MOVE& msg)
 {
+    spdlog::debug("[RRS] send_move_response connected");
     if(!is_connected)
     {
         return;
@@ -3675,6 +3698,7 @@ void COMM_RRS::send_move_response(const DATA_MOVE& msg)
 
 void COMM_RRS::send_localization_response(const DATA_LOCALIZATION& msg)
 {
+    spdlog::debug("[RRS] send_localization_response connected");
     if(!is_connected)
     {
         return;
@@ -3709,6 +3733,7 @@ void COMM_RRS::send_localization_response(const DATA_LOCALIZATION& msg)
 
 void COMM_RRS::send_load_response(const DATA_LOAD& msg)
 {
+    spdlog::debug("[RRS] send_load_response connected");
     if(!is_connected)
     {
         return;
@@ -3739,6 +3764,7 @@ void COMM_RRS::send_load_response(const DATA_LOAD& msg)
 
 void COMM_RRS::send_randomseq_response(const DATA_RANDOMSEQ& msg)
 {
+    spdlog::debug("[RRS] send_randomseq_response connected");
     if(!is_connected)
     {
         return;
@@ -3769,6 +3795,7 @@ void COMM_RRS::send_randomseq_response(const DATA_RANDOMSEQ& msg)
 
 void COMM_RRS::send_mapping_response(const DATA_MAPPING& msg)
 {
+    spdlog::debug("[RRS] send_mapping_response connected");
     if(!is_connected)
     {
         return;
@@ -3791,6 +3818,7 @@ void COMM_RRS::send_mapping_response(const DATA_MAPPING& msg)
     QJsonDocument doc(obj);
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("mappingResponse", res);
+    
 
     // for plot
     mtx.lock();
@@ -3800,6 +3828,7 @@ void COMM_RRS::send_mapping_response(const DATA_MAPPING& msg)
 
 void COMM_RRS::send_dock_response(const DATA_DOCK& msg)
 {
+    spdlog::debug("[RRS] send_dock_response connected");
     if(!is_connected)
     {
         return;
@@ -3829,6 +3858,7 @@ void COMM_RRS::send_dock_response(const DATA_DOCK& msg)
 
 void COMM_RRS::send_field_set_response(const DATA_SAFETY& msg)
 {
+    spdlog::debug("[RRS] send_field_set_response connected");
     if(!is_connected)
     {
         return;
@@ -3852,6 +3882,7 @@ void COMM_RRS::send_field_set_response(const DATA_SAFETY& msg)
 
 void COMM_RRS::send_field_get_response(const DATA_SAFETY& msg)
 {
+    spdlog::debug("[RRS] send_field_get_response connected");
     if(!is_connected)
     {
         return;
@@ -3881,6 +3912,7 @@ void COMM_RRS::send_field_get_response(const DATA_SAFETY& msg)
 
 void COMM_RRS::send_obs_box_setting_response(const DATA_OBS_BOX& msg)
 {
+    spdlog::debug("[RRS] send_obs_box_setting_response connected");
     if(!is_connected)
     {
         return;
@@ -3908,6 +3940,7 @@ void COMM_RRS::send_obs_box_setting_response(const DATA_OBS_BOX& msg)
 
 void COMM_RRS::send_config_request_response(const DATA_PDU_UPDATE& msg)
 {
+    spdlog::debug("[RRS] send_config_request_response connected");
     if(!is_connected)
     {
         return;
@@ -4062,6 +4095,7 @@ void COMM_RRS::send_config_request_response(const DATA_PDU_UPDATE& msg)
 
 void COMM_RRS::send_safety_reset_response(const DATA_SAFETY& msg)
 {
+    spdlog::debug("[RRS] send_safety_reset_response connected");
     if(!is_connected)
     {
         return;
@@ -4087,6 +4121,7 @@ void COMM_RRS::send_safety_reset_response(const DATA_SAFETY& msg)
 
 void COMM_RRS::send_path_response(const DATA_PATH& msg)
 {
+    spdlog::debug("[RRS] send_path_response connected");
     if(!is_connected)
     {
         return;
@@ -4692,6 +4727,7 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
 
 void COMM_RRS::send_software_update_response(const DATA_SOFTWARE& msg)
 {
+    spdlog::debug("[RRS] send_software_update_response connected");
     if(!is_connected)
     {
         return;
@@ -4760,6 +4796,7 @@ void COMM_RRS::send_safetyio_response(const DATA_SAFTYIO& msg)
 
 void COMM_RRS::set_config_module(CONFIG* _config)
 {
+    spdlog::debug("[RRS] set_config_module connected");
     if(_config)
     {
         config = _config;
@@ -4768,6 +4805,7 @@ void COMM_RRS::set_config_module(CONFIG* _config)
 
 void COMM_RRS::set_logger_module(LOGGER* _logger)
 {
+    spdlog::debug("[RRS] set_logger_module connected");
     if(_logger)
     {
         logger = _logger;
@@ -4776,6 +4814,8 @@ void COMM_RRS::set_logger_module(LOGGER* _logger)
 
 void COMM_RRS::set_mobile_module(MOBILE* _mobile)
 {
+    spdlog::debug("[RRS] set_mobile_module connected");
+
     if(_mobile)
     {
         mobile = _mobile;
@@ -4784,6 +4824,8 @@ void COMM_RRS::set_mobile_module(MOBILE* _mobile)
 
 void COMM_RRS::set_lidar_2d_module(LIDAR_2D* _lidar)
 {
+    spdlog::debug("[RRS] set_lidar_2d_module connected");
+
     if(_lidar)
     {
         lidar_2d = _lidar;
@@ -4792,6 +4834,8 @@ void COMM_RRS::set_lidar_2d_module(LIDAR_2D* _lidar)
 
 void COMM_RRS::set_cam_module(CAM* _cam)
 {
+    spdlog::debug("[RRS] set_cam_module connected");
+
     if(_cam)
     {
         cam = _cam;
@@ -4800,6 +4844,8 @@ void COMM_RRS::set_cam_module(CAM* _cam)
 
 void COMM_RRS::set_localization_module(LOCALIZATION* _loc)
 {
+    spdlog::debug("[RRS] set_localization_module connected");
+
     if(_loc)
     {
         loc = _loc;
@@ -4808,6 +4854,8 @@ void COMM_RRS::set_localization_module(LOCALIZATION* _loc)
 
 void COMM_RRS::set_mapping_module(MAPPING* _mapping)
 {
+    spdlog::debug("[RRS] set_mapping_module connected");
+
     if(_mapping)
     {
         mapping = _mapping;
@@ -4816,6 +4864,8 @@ void COMM_RRS::set_mapping_module(MAPPING* _mapping)
 
 void COMM_RRS::set_unimap_module(UNIMAP* _unimap)
 {
+    spdlog::debug("[RRS] set_unimap_module connected");
+
     if(_unimap)
     {
         unimap = _unimap;
@@ -4824,6 +4874,8 @@ void COMM_RRS::set_unimap_module(UNIMAP* _unimap)
 
 void COMM_RRS::set_obsmap_module(OBSMAP* _obsmap)
 {
+    spdlog::debug("[RRS] set_obsmap_module connected");
+
     if(_obsmap)
     {
         obsmap = _obsmap;
@@ -4832,6 +4884,8 @@ void COMM_RRS::set_obsmap_module(OBSMAP* _obsmap)
 
 void COMM_RRS::set_autocontrol_module(AUTOCONTROL* _ctrl)
 {
+    spdlog::debug("[RRS] set_autocontrol_module connected");
+
     if(_ctrl)
     {
         ctrl = _ctrl;
@@ -4840,6 +4894,8 @@ void COMM_RRS::set_autocontrol_module(AUTOCONTROL* _ctrl)
 
 void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
 {
+    spdlog::debug("[RRS] set_dockcontrol_module connected");
+
     if(_dctrl)
     {
         dctrl = _dctrl;
@@ -4848,11 +4904,15 @@ void COMM_RRS::set_dockcontrol_module(DOCKCONTROL* _dctrl)
 
 void COMM_RRS::set_global_path_update()
 {
+    spdlog::debug("[RRS] set_global_path_update connected");
+
     is_global_path_update2 = true;
 }
 
 void COMM_RRS::set_local_path_update()
 {
+    spdlog::debug("[RRS] set_local_path_update connected");
+
     is_local_path_update2 = true;
 }
 
@@ -4860,6 +4920,8 @@ void COMM_RRS::set_local_path_update()
 // working at 10[ms]
 void COMM_RRS::send_loop()
 {
+    spdlog::debug("[RRS] send_loop connected");
+
     if(!is_connected)
     {
         return;
