@@ -53,6 +53,7 @@ public:
      ***********************/
     QString get_robot_type_str();       // robot type_str
     QString get_robot_model_str();      // robot model_str
+    QString get_robot_wheel_type();  // robot wheel type
     QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
     RobotType get_robot_type();         // robot type  : S100-A-3D
     RobotModel get_robot_model();       // robot model : S100, D400, Mecanum, SEM ...
@@ -73,6 +74,8 @@ public:
     double get_robot_wheel_radius();    // robot wheel radius (mm)
     double get_robot_radius();          // robot radius (auto calc)
     bool get_robot_use_speaker();     // robot io-speaker use
+    double get_robot_lx();            // robot lx
+    double get_robot_ly();            // robot ly
 
     /***********************
      * sensor common
@@ -353,6 +356,7 @@ private:
     RobotType ROBOT_TYPE  = RobotType::NONE;
     QString PLATFORM_TYPE = "";
     QString MILEAGE = "";
+    QString ROBOT_WHEEL_TYPE = "UNKNOWN";
     double ROBOT_SIZE_X[2] = {-0.35, 0.35}; // min, max
     double ROBOT_SIZE_Y[2] = {-0.35, 0.35};
     double ROBOT_SIZE_Z[2] = {0.0, 0.22};
@@ -363,6 +367,8 @@ private:
     double ROBOT_WHEEL_RADIUS = 0.0635;
     double ROBOT_RADIUS = 0.5;
     bool USE_SPEAKER = false;
+    double ROBOT_LX = 0.5;
+    double ROBOT_LY = 0.23;
 
     // sensors
     bool USE_LIDAR_2D = false;

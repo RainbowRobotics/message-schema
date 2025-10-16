@@ -2946,6 +2946,23 @@ void MainWindow::plot_safety()
     ui->le_Setting_Limit_V_Monitor->setText(QString().sprintf("%.2f",cur_setting.v_limit_monitor/1000.0));
     ui->le_Setting_Limit_W_Monitor->setText(QString().sprintf("%.2f",cur_setting.w_limit_monitor));
 
+    if(cur_setting.robot_wheel_type == 0)
+    {
+        ui->le_Setting_Wheel_Type->setText("UNKNOWN");
+    }
+    else if(cur_setting.robot_wheel_type == 1)
+    {
+        ui->le_Setting_Wheel_Type->setText("DD");
+    }
+
+    else if(cur_setting.robot_wheel_type == 3)
+    {
+        ui->le_Setting_Wheel_Type->setText("MECANUM");
+    }
+    
+    ui->le_Setting_Lx->setText(QString().sprintf("%.2f", cur_setting.lx));
+    ui->le_Setting_Ly->setText(QString().sprintf("%.2f", cur_setting.ly));
+
     MOBILE_STATUS cur_status = MOBILE::instance()->get_status();
 
     QString state = "";

@@ -33,10 +33,11 @@
         "USE_EKF": true
     },
     "network": {
-        "USE_MULTI": true,
+        "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
         "USE_RRS": false,
+        "USE_MSA": true,
         "USE_FMS": false
     },
     "debug": {
@@ -194,7 +195,7 @@
     	"DOCKING_LINEAR_X_OFFSET": "-0.035"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250904_unicos_2d"
+        "MAP_PATH": "/data/maps/250509_unicos_update4_with_coop (copy)"
     }
 }
 

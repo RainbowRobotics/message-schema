@@ -128,6 +128,7 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
 
     check_and_set_string(obj_robot, "MILEAGE",        MILEAGE,      "robot");
     check_and_set_bool  (obj_robot, "SPEAKER",        USE_SPEAKER,  "robot");
+    check_and_set_string   (obj_robot, "ROBOT_WHEEL_TYPE", ROBOT_WHEEL_TYPE, "robot");
 
     check_and_set_double(obj_robot, "ROBOT_SIZE_MIN_X",     ROBOT_SIZE_X[0],    "robot");
     check_and_set_double(obj_robot, "ROBOT_SIZE_MAX_X",     ROBOT_SIZE_X[1],    "robot");
@@ -140,6 +141,9 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_double(obj_robot, "ROBOT_SIZE_ADD_Z",     ROBOT_SIZE_ADD_Z,   "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_RADIUS",   ROBOT_WHEEL_RADIUS, "robot");
     check_and_set_double(obj_robot, "ROBOT_WHEEL_BASE",     ROBOT_WHEEL_BASE,   "robot");
+
+    check_and_set_double(obj_robot, "ROBOT_LX", ROBOT_LX, "robot");
+    check_and_set_double(obj_robot, "ROBOT_LY", ROBOT_LY, "robot");
 
     double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
     double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
@@ -664,6 +668,14 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::SEM;
         }
+        else if(robot_type_str == "SEC_CORE")
+        {
+            ROBOT_TYPE = RobotType::SEC_CORE;
+        }
+        else if(robot_type_str == "SEC_CORE_EE")
+        {
+            ROBOT_TYPE = RobotType::SEC_EE;
+        }
         else if(robot_type_str == "SDC")
         {
             ROBOT_TYPE = RobotType::SDC;
@@ -995,6 +1007,12 @@ void CONFIG::set_mileage(const QString &mileage)
     config_file.close();
 }
 
+QString CONFIG::get_robot_wheel_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_WHEEL_TYPE;
+}
+
 QString CONFIG::get_robot_serial_number()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1061,6 +1079,14 @@ QString CONFIG::get_robot_type_str()
     {
         return "MECANUM-VALEO";
     }
+    else if(_robot_type == RobotType::SEC_CORE)
+    {
+        return "SEC_CORE";
+    }
+    else if(_robot_type == RobotType::SEC_EE)
+    {
+        return "SEC_EE";
+    }
     else
     {
         return "NONE";
@@ -1109,6 +1135,18 @@ double CONFIG::get_mileage()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MILEAGE.toDouble();
+}
+
+double CONFIG::get_robot_lx()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_LX;
+}
+
+double CONFIG::get_robot_ly()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_LY;
 }
 
 double CONFIG::get_robot_size_x_min()

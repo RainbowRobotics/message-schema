@@ -267,6 +267,7 @@ void MOBILE::recv_loop()
         }
 
         // 연결 성공 시 데이터 수신 루프
+        config_parameter_send();
         receive_data_loop();
 
         // 연결이 끊어진 경우 소켓 정리
@@ -697,7 +698,7 @@ void MOBILE::receive_data_loop()
                             }
 
                             QString mobile_status_str = "[MOBILE_STATUS]";
-
+                            
                             if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
                                 // connection 정보
@@ -795,33 +796,6 @@ void MOBILE::receive_data_loop()
                             mobile_status_str += "bumper:{" + QString::number(cur_status.safety_state_bumper_stop_1) + "," +
                             QString::number(cur_status.safety_state_bumper_stop_2) + "} " +
                             "lidar_field:" + QString::number(cur_status.lidar_field) + ")";
-
-                            // mobile_status_str.sprintf("[MOBILE_STATUS]\nconnection(m0,m1):%d,%d, status(m0,m1):%d,%d\n"
-                            //                 "temp(m0,m1): %d,%d,(%d,%d), cur(m0,m1):%.2f,%.2f\n"
-                            //                 "charge,om_state,emo,ri_state:%d,%d,%d,%d\n"
-                            //                 "BAT(in,out,cur,per):%.3f,%.3f,%.3f,%d %\n"
-                            //                 "power:%.3f, c.c:%.3f, c.v:%.3f\n"
-                            //                 "bms_v:%.2f, bms_a:%.2f, bms_ttf:%d, bms_tte:%d, bms_soc:%d \n"
-                            //                 "bms_soh:%d, bms_temp:%.2f, bms_rc:%.2f, bms_ae:%.2f, bms_sat:%d \n"
-                            //                 "SFTY(emo,refm,spd,obs,sfld,intlk,op):{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\n"
-                            //                 "bumper:{%d,%d} lidar_field:%d)",
-                            //                 cur_status.connection_m0, cur_status.connection_m1, cur_status.status_m0, cur_status.status_m1, cur_status.temp_m0, cur_status.temp_m1, cur_status.esti_temp_m0, cur_status.esti_temp_m1,
-                            //                 (double)cur_status.cur_m0/10.0, (double)cur_status.cur_m1/10.0,
-                            //                 cur_status.charge_state, cur_status.om_state, cur_status.motor_stop_state, cur_status.ri_state,
-                            //                 cur_status.bat_in, cur_status.bat_out, cur_status.bat_current,cur_status.bat_percent,
-                            //                 cur_status.power, cur_status.charge_current, cur_status.contact_voltage,
-                            //                 cur_status.tabos_voltage, cur_status.tabos_current, cur_status.tabos_ttf, cur_status.tabos_tte, cur_status.tabos_soc, cur_status.tabos_soh,
-                            //                 cur_status.tabos_temperature, cur_status.tabos_rc, cur_status.tabos_ae, cur_status.tabos_status,
-                            //                 cur_status.safety_state_emo_pressed_1,         cur_status.safety_state_emo_pressed_2,
-                            //                 cur_status.safety_state_ref_meas_mismatch_1,   cur_status.safety_state_ref_meas_mismatch_2,
-                            //                 cur_status.safety_state_over_speed_1,          cur_status.safety_state_over_speed_2,
-                            //                 cur_status.safety_state_obstacle_detected_1,   cur_status.safety_state_obstacle_detected_2,
-                            //                 cur_status.safety_state_speed_field_mismatch_1,cur_status.safety_state_speed_field_mismatch_2,
-                            //                 cur_status.safety_state_interlock_stop_1,      cur_status.safety_state_interlock_stop_2,
-                            //                 cur_status.operational_stop_state_flag_1,      cur_status.operational_stop_state_flag_2,
-                            //                 cur_status.safety_state_bumper_stop_1,         cur_status.safety_state_bumper_stop_2,
-                            //                 cur_status.lidar_field);
-
 
                             status_text = mobile_status_str;
 
@@ -1080,7 +1054,6 @@ void MOBILE::receive_data_loop()
                             memcpy(&y, &_buf[index], dlc_f);     index=index+dlc_f;
                             memcpy(&th, &_buf[index], dlc_f);    index=index+dlc_f;
 
-                            qDebug() << "x: " << x << ", y: " << y << ", th: " << th;
                             float local_v, local_w;
                             float local_vx, local_vy, local_wz;
 
@@ -1658,34 +1631,74 @@ void MOBILE::receive_data_loop()
                             float _dir;
                             memcpy(&_dir, &_buf[index], dlc_f);     index=index+dlc_f;
 
+                            float _lx;
+                            memcpy(&_lx, &_buf[index], dlc_f);     index=index+dlc_f;
+                            
+                            float _ly;
+                            memcpy(&_ly, &_buf[index], dlc_f);     index=index+dlc_f;
+
                             float _safety_v_limit;
                             memcpy(&_safety_v_limit, &_buf[index], dlc_f);      index=index+dlc_f;
+
                             float _safety_w_limit;
                             memcpy(&_safety_w_limit, &_buf[index], dlc_f);      index=index+dlc_f;
 
+                            uint8_t robot_wheel_type;
+                            memcpy(&robot_wheel_type, &_buf[index], dlc);     index=index+dlc;
 
-                            MOBILE_SETTING mobile_setting;
-                            mobile_setting.version = _version;
-                            mobile_setting.robot_type = _robot_type;
-                            mobile_setting.v_limit = _v_limit;
-                            mobile_setting.w_limit = _w_limit;
-                            mobile_setting.a_limit = _a_limit;
-                            mobile_setting.b_limit = _b_limit;
-                            mobile_setting.v_limit_jog = _v_limit_jog;
-                            mobile_setting.w_limit_jog = _w_limit_jog;
-                            mobile_setting.a_limit_jog = _a_limit_jog;
-                            mobile_setting.b_limit_jog = _b_limit_jog;
-                            mobile_setting.v_limit_monitor = _v_limit_monitor;
-                            mobile_setting.w_limit_monitor = _w_limit_monitor;
-                            mobile_setting.safety_v_limit = _safety_v_limit; //not used
-                            mobile_setting.safety_w_limit = _safety_w_limit; //not used
-                            mobile_setting.w_s = _w_s;
-                            mobile_setting.w_r = _w_r;
-                            mobile_setting.gear = _gear;
-                            mobile_setting.dir = _dir;
+                            uint8_t use_interlock_commnad_bypass;
+                            memcpy(&use_interlock_commnad_bypass, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_safety_obstacle_detection;
+                            memcpy(&use_safety_obstacle_detection, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_safety_bumper;
+                            memcpy(&use_safety_bumper, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_safety_interlock;
+                            memcpy(&use_safety_interlock, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_safety_cross_monitor;
+                            memcpy(&use_safety_cross_monitor, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_safety_speed_control;
+                            memcpy(&use_safety_speed_control, &_buf[index], dlc);     index=index+dlc;
+
+                            uint8_t use_sw_io;
+                            memcpy(&use_sw_io, &_buf[index], dlc);     index=index+dlc;
+
                             // storing
                             mtx.lock();
-                            cur_setting = mobile_setting;
+
+                            cur_setting.version = _version;
+                            cur_setting.robot_type = _robot_type;
+                            cur_setting.v_limit = _v_limit;
+                            cur_setting.w_limit = _w_limit;
+                            cur_setting.a_limit = _a_limit;
+                            cur_setting.b_limit = _b_limit;
+                            cur_setting.v_limit_jog = _v_limit_jog;
+                            cur_setting.w_limit_jog = _w_limit_jog;
+                            cur_setting.a_limit_jog = _a_limit_jog;
+                            cur_setting.b_limit_jog = _b_limit_jog;
+                            cur_setting.v_limit_monitor = _v_limit_monitor;
+                            cur_setting.w_limit_monitor = _w_limit_monitor;
+                            cur_setting.safety_v_limit = _safety_v_limit;
+                            cur_setting.safety_w_limit = _safety_w_limit;
+                            cur_setting.w_s = _w_s;
+                            cur_setting.w_r = _w_r;
+                            cur_setting.gear = _gear;
+                            cur_setting.dir = _dir;
+                            cur_setting.lx = _lx;
+                            cur_setting.ly = _ly;
+                            cur_setting.robot_wheel_type = robot_wheel_type;
+                            cur_setting.use_interlock_commnad_bypass = use_interlock_commnad_bypass;
+                            cur_setting.use_safety_obstacle_detection = use_safety_obstacle_detection;
+                            cur_setting.use_safety_bumper = use_safety_bumper;
+                            cur_setting.use_safety_interlock = use_safety_interlock;
+                            cur_setting.use_safety_cross_monitor = use_safety_cross_monitor;
+                            cur_setting.use_safety_speed_control = use_safety_speed_control;
+                            cur_setting.use_sw_io = use_sw_io;
+                            
                             mtx.unlock();
                         }
 
@@ -1725,7 +1738,178 @@ void MOBILE::receive_data_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    spdlog::info("[MOBILE] data receive loop stop");
+    spdlog::info("[MOBILE] data receive loop srp");
+}
+
+void MOBILE::config_parameter_send()
+{
+    // set wheel base, wheel radius , wheel dir, gear ratio
+    {
+        float wheel_base = config->get_robot_wheel_base();
+        float wheel_radius = config->get_robot_wheel_radius();
+
+        float wheel_dir = config->get_motor_direction();
+        float gear_ratio = config->get_motor_gear_ratio();
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 104; // cmd motor init
+
+        memcpy(&send_byte[8], &wheel_base, 4);
+        memcpy(&send_byte[12], &wheel_radius, 4);
+
+        memcpy(&send_byte[16], &wheel_dir, 4);
+        memcpy(&send_byte[20], &gear_ratio, 4);
+
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    // set limit vel
+    {
+        float limit_v = config->get_motor_limit_v();
+        float limit_a = config->get_motor_limit_v_acc();
+        float limit_w = config->get_motor_limit_w() * D2R;
+        float limit_w_acc = config->get_motor_limit_w_acc() * D2R;
+
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 108; // cmd motor limit velocity
+
+        memcpy(&send_byte[8], &limit_v, 4);
+        memcpy(&send_byte[12], &limit_a, 4);
+        memcpy(&send_byte[16], &limit_w, 4);
+        memcpy(&send_byte[20], &limit_w_acc,4);
+
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    // set safety limit
+    {
+
+        float safety_limit_v = config->get_motor_safety_limit_v();
+        float safety_limit_w = config->get_motor_safety_limit_w() * D2R;
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 211; // cmd motor init
+
+        memcpy(&send_byte[8], &safety_limit_v, 4); // m/s
+        memcpy(&send_byte[12], &safety_limit_w, 4); // rad/s
+
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    //set lx, ly
+    {
+        double lx = config->get_robot_lx();
+        double ly = config->get_robot_ly();
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+    
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+    
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00; // 0~1
+        send_byte[7] = 219; // cmd
+    
+        float lx_ = (float)lx;
+        float ly_ = (float)ly;
+    
+        memcpy(&send_byte[8], &lx_, 4);
+        memcpy(&send_byte[12], &ly_, 4);
+    
+        send_byte[24] = 0x25;
+    
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    // set wheel type 
+    {
+        QString robot_wheel_type = config->get_robot_wheel_type();
+
+        int wheel_param_ = 0 ;
+        if(robot_wheel_type == "DD")
+        {
+            wheel_param_ = 1;
+        }
+        else if(robot_wheel_type == "QD")
+        {
+            wheel_param_ = 2;
+        }
+        else if(robot_wheel_type == "MECHANUM")
+        {
+            wheel_param_ = 3;
+        }
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+        
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 215; // cmd motor init
+
+        memcpy(&send_byte[8], &wheel_param_, 4);
+        
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
 }
 
 // command func
@@ -1820,6 +2004,54 @@ void MOBILE::motor_on()
         memcpy(&send_byte[8], &safety_limit_v, 4); // m/s
         memcpy(&send_byte[12], &safety_limit_w, 4); // rad/s
 
+        send_byte[24] = 0x25;
+
+        if(is_connected && !config->get_use_sim())
+        {
+            msg_que.push(send_byte);
+        }
+    }
+
+    //set lx, ly
+    {
+        double lx = config->get_robot_lx();
+        double ly = config->get_robot_ly();
+
+        set_lx_ly(lx, ly);
+    }
+
+    // set wheel type 
+    {
+        QString robot_wheel_type = config->get_robot_wheel_type();
+
+        int wheel_param_ = 0 ;
+        if(robot_wheel_type == "DD")
+        {
+            wheel_param_ = 1;
+        }
+        else if(robot_wheel_type == "QD")
+        {
+            wheel_param_ = 2;
+        }
+        else if(robot_wheel_type == "MECHANUM")
+        {
+            wheel_param_ = 3;
+        }
+
+        std::vector<uchar> send_byte(25, 0);
+        send_byte[0] = 0x24;
+
+        uint16_t size = 6+8+8;
+        memcpy(&send_byte[1], &size, 2); // size
+        send_byte[3] = 0x00;
+        send_byte[4] = 0x00;
+        
+        send_byte[5] = 0xA0;
+        send_byte[6] = 0x00;
+        send_byte[7] = 215; // cmd motor init
+
+        memcpy(&send_byte[8], &wheel_param_, 4);
+        
         send_byte[24] = 0x25;
 
         if(is_connected && !config->get_use_sim())
@@ -2552,6 +2784,35 @@ void MOBILE::set_safety_v_acc_monitor(double v, double w)
 
     memcpy(&send_byte[8], &v_limit_moni, 4);
     memcpy(&send_byte[12], &w_limit_moni, 4);
+
+    send_byte[24] = 0x25;
+
+    if(is_connected && !config->get_use_sim())
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::set_lx_ly(double lx, double ly)
+{
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = 0x00; // 0~1
+    send_byte[7] = 219; // cmd
+
+    float lx_ = (float)lx;
+    float ly_ = (float)ly;
+
+    memcpy(&send_byte[8], &lx_, 4);
+    memcpy(&send_byte[12], &ly_, 4);
 
     send_byte[24] = 0x25;
 

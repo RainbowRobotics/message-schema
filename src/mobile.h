@@ -142,6 +142,7 @@ public:
     void set_limit_v_acc_jog(double v, double a, double w, double b);
     void set_safety_v_acc_monitor(double v, double w);
     void set_safety_v_acc(double v,double w);
+    void set_lx_ly(double lx, double ly);
     void set_opmode(double opmode);
     void set_wheel(double w_s, double w_r);
     void set_motor_onoff(double param);
@@ -151,7 +152,8 @@ public:
     void set_IO_individual_output(unsigned char target, unsigned int n);
     void lift_power_onoff(int param);
     void sem_io_speaker(unsigned int speak_num);
-
+    void config_parameter_send();
+    
 private:
     explicit MOBILE(QObject *parent = nullptr);
     ~MOBILE();
@@ -207,6 +209,7 @@ private:
     std::atomic<bool> is_synced = {false};
     std::atomic<double> sync_st_time = {0};
     std::atomic<double> offset_t = {0};
+    std::atomic<bool>  mobile_first_connected = {false};
 
     std::atomic<double> process_time_mobile = {0.0};
 
