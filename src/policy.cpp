@@ -31,12 +31,14 @@ void POLICY::init()
 
 void POLICY::open()
 {
-    // todo
-    // node_flag = true;
-    // node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
+    node_flag = true;
+    node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
 
     zone_flag = true;
     zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
+
+    policy_flag = true;
+    policy_thread = std::make_unique<std::thread>(&POLICY::policy_loop, this);
 
     printf("[POLICY] open\n");
 }
@@ -56,20 +58,29 @@ void POLICY::close()
         zone_thread->join();
     }
     zone_thread.reset();
+
+    policy_flag = false;
+    if(policy_thread && policy_thread->joinable())
+    {
+        policy_thread->join();
+    }
+    policy_thread.reset();
+
     printf("[POLICY] close\n");
 }
 
-QString POLICY::get_cur_info()
+QString POLICY::get_cur_node()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    QString res = cur_info;
+    QString res = cur_node;
     return res;
 }
 
-void POLICY::set_cur_info(QString str)
+QString POLICY::get_cur_link()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    cur_info = str;
+    QString res = cur_link;
+    return res;
 }
 
 QString POLICY::get_cur_zone()
@@ -79,10 +90,25 @@ QString POLICY::get_cur_zone()
     return res;
 }
 
-void POLICY::set_cur_zone(QString str)
+NODE_INFO POLICY::get_node_info()
 {
     std::lock_guard<std::mutex> lock(mtx);
-    cur_zone = str;
+    NODE_INFO res = node_info;
+    return res;
+}
+
+NODE_INFO POLICY::get_link_info()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    NODE_INFO res = link_info;
+    return res;
+}
+
+NODE_INFO POLICY::get_zone_info()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    NODE_INFO res = zone_info;
+    return res;
 }
 
 void POLICY::set_config_module(CONFIG* _config)
@@ -105,9 +131,47 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
     loc = _loc;
 }
 
+void POLICY::apply_slow(bool on)
+{
+    // prevent duplication
+    static bool prev = false;
+    if(on == prev)
+    {
+        return;
+    }
+
+
+
+    prev = on;
+
+    printf("[POLICY] SLOW %s\n", on ? "ON" : "OFF");
+}
+
+void POLICY::apply_fast(bool on)
+{
+    // prevent duplication
+    static bool prev = false;
+    if(on == prev)
+    {
+        return;
+    }
+
+    prev = on;
+
+    printf("[POLICY] FAST %s\n", on ? "ON" : "OFF");
+}
+
 void POLICY::node_loop()
 {
     printf("[POLICY] node_loop start\n");
+
+    // state for link dir
+    QString last_undir       = "";
+    QString last_oriented    = "";
+    double  last_t           = 0.0;
+    bool    has_last_t       = false;
+    int     outside_cnt      = 0;
+
     while(node_flag)
     {
         if(unimap->get_is_loaded() != MAP_LOADED)
@@ -117,10 +181,178 @@ void POLICY::node_loop()
         }
 
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
 
+        QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
+        if(!cur_node_id.isEmpty())
+        {
+            NODE* node = unimap->get_node_by_id(cur_node_id);
+            if(node != nullptr)
+            {
+                double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
+                double node_radius = config->get_robot_radius();
+                if(d <= node_radius)
+                {
+                    // link state reset
+                    last_undir.clear();
+                    last_oriented.clear();
+                    has_last_t = false;
+                    outside_cnt = 0;
+
+                    // update
+                    {
+                        std::lock_guard<std::mutex> lock(mtx);
+                        cur_node = cur_node_id;
+                        cur_link.clear();
+                        link_info = NODE_INFO();
+                    }
+
+                    // skip link decision
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
+            }
+        }
+
+        // link decision
+        QString inside_link = "";
+        NODE_INFO inside_info;
+
+        int inside_idx = -1;
+        double best_across = 1e9;
+        std::vector<LINK_INFO> links = unimap->get_special_links();
+        for(size_t i = 0; i < links.size(); i++)
+        {
+            LINK_INFO& link = links[i];
+
+            double L = link.length;
+            if(L <= 1e-9)
+            {
+                continue;
+            }
+
+            // link direction vector (u), robot-center vector (v)
+            double ux = link.ed.x() - link.st.x();
+            double uy = link.ed.y() - link.st.y();
+            double vx = pos.x()    - link.mid.x();
+            double vy = pos.y()    - link.mid.y();
+
+            // link axis/alonge, perpendicular/across components to the link
+            double along  = std::abs((vx*ux + vy*uy) / L);
+            double across = std::abs((vx*uy - vy*ux) / L);
+
+            if(along <= 0.5*L && across <= config->get_robot_size_y_max())
+            {
+                if(across < best_across)
+                {
+                    best_across = across;
+                    inside_idx = (int)i;
+                }
+            }
+        }
+
+        if(inside_idx >= 0)
+        {
+            LINK_INFO& link = links[(size_t)inside_idx];
+
+            // detect link changes with undirected keys (A|B)
+            QString cur_undir = (link.st_id < link.ed_id) ? (link.st_id + "|" + link.ed_id) : (link.ed_id + "|" + link.st_id);
+            if(last_undir != cur_undir)
+            {
+                last_undir = cur_undir;
+                has_last_t = false;
+                last_oriented.clear();
+            }
+
+            // estimation of the progress parameter t (projection distance based on st / L)
+            Eigen::Vector2d st(link.st.x(), link.st.y());
+            Eigen::Vector2d u(link.ed.x() - link.st.x(), link.ed.y() - link.st.y());
+            double L = u.norm();
+            double t = 0.0;
+            if(L > 1e-12)
+            {
+                Eigen::Vector2d w = pos - st;
+                t = w.dot(u) / L;
+            }
+
+            if(has_last_t)
+            {
+                if(t > last_t)
+                {
+                    last_oriented = link.st_id + "->" + link.ed_id;
+                }
+                else if(t < last_t)
+                {
+                    last_oriented = link.ed_id + "->" + link.st_id;
+                }
+                else
+                {
+                    last_oriented.clear();
+                }
+
+                // if(last_oriented.isEmpty())
+                // {
+                //     double ds = (pos - st).squaredNorm();
+                //     double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
+                //     last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
+                // }
+            }
+            else
+            {
+                // double ds = (pos - st).squaredNorm();
+                // double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
+                // last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
+
+                last_oriented.clear();
+                has_last_t = true;
+            }
+
+            last_t = t;
+            outside_cnt = 0;
+
+            inside_link = last_oriented;
+
+            // info parsing
+            NODE_INFO res;
+            if(parse_info(link.info, "", res))
+            {
+                inside_info = res;
+            }
+
+            // update
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_node.clear();
+                cur_link = inside_link;
+                link_info = inside_info;
+            }
+        }
+        else
+        {
+            outside_cnt++;
+            if(outside_cnt >= 3)
+            {
+                last_undir.clear();
+                last_oriented.clear();
+                has_last_t = false;
+
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link.clear();
+                link_info = NODE_INFO();
+                cur_node.clear();
+            }
+            else
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_node.clear();
+                cur_link = last_oriented;
+                link_info = NODE_INFO();
+            }
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
     printf("[POLICY] node_loop stop\n");
 }
 
@@ -155,7 +387,7 @@ void POLICY::zone_loop()
 
         // check zone
         QString zone = "";
-        QString info = "";
+        NODE_INFO info;
 
         std::vector<QString> zones = unimap->get_nodes("ZONE");
         for(size_t p = 0; p < zones.size(); p++)
@@ -164,7 +396,6 @@ void POLICY::zone_loop()
             if(node != NULL)
             {
                 QString name = node->name;
-                // QString info = node->info;
 
                 NODE_INFO res;
                 if(parse_info(node->info, "", res))
@@ -181,28 +412,7 @@ void POLICY::zone_loop()
                     {
                         // current zone
                         zone = name;
-
-                        QStringList parts;
-
-                        // speed
-                        if(res.speed == "SLOW")      parts << "SPEED_SLOW";
-                        else if(res.speed == "FAST") parts << "SPEED_FAST";
-
-                        // flags
-                        if(res.warning_beep)   parts << "WARNING_BEEP";
-                        if(res.ignore_2d)      parts << "IGNORE_2D";
-                        if(res.ignore_3d)      parts << "IGNORE_3D";
-                        if(res.ignore_cam)     parts << "IGNORE_CAM";
-                        if(res.ignore_obs_2d)  parts << "IGNORE_OBS_2D";
-                        if(res.ignore_obs_3d)  parts << "IGNORE_OBS_3D";
-                        if(res.ignore_obs_cam) parts << "IGNORE_OBS_CAM";
-
-                        info = parts.join(", ");
-
-                        // printf("[ZONE] active zone=%s, info=%s\n",
-                        //        zone.toStdString().c_str(),
-                        //        info.toStdString().c_str());
-
+                        info = res;
                         break;
                     }
                 }
@@ -210,10 +420,72 @@ void POLICY::zone_loop()
         }
 
         // update
-        set_cur_zone(zone);
-        set_cur_info(info);
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_zone = zone;
+            zone_info = info;
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[POLICY] zone_loop stop\n");
+}
+
+void POLICY::policy_loop()
+{
+    QString last_info = "";
+
+    printf("[POLICY] policy_loop start\n");
+
+    while(policy_flag)
+    {
+        NODE_INFO z = get_zone_info();
+        NODE_INFO l = get_link_info();
+        NODE_INFO n = get_node_info();
+
+        bool slow            = (z.slow           || l.slow           || n.slow);
+        bool fast            = (z.fast           || l.fast           || n.fast);
+        bool warning_beep    = (z.warning_beep   || l.warning_beep   || n.warning_beep);
+        bool ignore_2d       = (z.ignore_2d      || l.ignore_2d      || n.ignore_2d);
+        bool ignore_3d       = (z.ignore_3d      || l.ignore_3d      || n.ignore_3d);
+        bool ignore_cam      = (z.ignore_cam     || l.ignore_cam     || n.ignore_cam);
+        bool ignore_obs_2d   = (z.ignore_obs_2d  || l.ignore_obs_2d  || n.ignore_obs_2d);
+        bool ignore_obs_3d   = (z.ignore_obs_3d  || l.ignore_obs_3d  || n.ignore_obs_3d);
+        bool ignore_obs_cam  = (z.ignore_obs_cam || l.ignore_obs_cam || n.ignore_obs_cam);
+
+        if(slow && fast)
+        {
+            fast = false;
+        }
+
+        QString info = QString("S%1 F%2 W%3 I2%4 I3%5 IC%6 O2%7 O3%8 OC%9")
+                .arg(slow ? "1" : "0")
+                .arg(fast ? "1" : "0")
+                .arg(warning_beep ? "1" : "0")
+                .arg(ignore_2d    ? "1" : "0")
+                .arg(ignore_3d    ? "1" : "0")
+                .arg(ignore_cam   ? "1" : "0")
+                .arg(ignore_obs_2d? "1" : "0")
+                .arg(ignore_obs_3d? "1" : "0")
+                .arg(ignore_obs_cam? "1" : "0");
+
+        if(info != last_info)
+        {
+            apply_slow(slow);
+            apply_fast(fast);
+            // apply_warning_beep(warning_beep);
+            // apply_ignore_2d(ignore_2d);
+            // apply_ignore_3d(ignore_3d);
+            // apply_ignore_cam(ignore_cam);
+            // apply_ignore_odbs_2d(ignore_obs_2d);
+            // apply_ignore_obs_3d(ignore_obs_3d);
+            // apply_ignore_obs_cam(ignore_obs_cam);
+
+            last_info = info;
+            printf("[POLICY] applied flags: %s\n", info.toStdString().c_str());
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    printf("[POLICY] policy_loop stop\n");
 }

@@ -37,13 +37,37 @@ gstreamer1.0-plugins-bad \
 gstreamer1.0-plugins-ugly \
 -y
 
+- Cmake upgrade
+ 	$ wget https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5.tar.gz
+ 	$ tar -xvf cmake-3.30.5.tar.gz && cd cmake-3.30.5/
+ 	$ ./bootstrap --qt-gui
+ 	$ make -j$(nproc) && sudo make install
+ 	$ cmake --version
+ 	
+ - Install gtsam from source
+ 	$ cd ~/Libs && wget https://github.com/borglab/gtsam/archive/refs/tags/4.2.0.tar.gz
+ 	$ tar -xvf 4.2.0.tar.gz && cd gtsam-4.2.0 && mkdir build && cd build
+ 	$ cmake .. -DGTSAM_USE_SYSTEM_EIGEN=ON 
+ 	$ make -j$(nproc) && sudo make install
+ 	
+ - Install rplidar SDK
+ 	$ git clone https://github.com/Slamtec/rplidar_sdk.git
+ 	$ cd rplidar_sdk
+ 	$ make
+ 	
+ - Install Livox-SDK2
+ 	# @ https://github.com/Livox-SDK/Livox-SDK2/releases/tag/v1.2.5
+ 	$ cd ~/Libs && wget https://github.com/Livox-SDK/Livox-SDK2/archive/refs/tags/v1.2.5.tar.gz
+ 	$ tar -xvf v1.2.5.tar.gz && cd Livox-SDK2-1.2.5/ && mkdir build && cd build/ && cmake .. && make -j$(nproc)
+ 	$ sudo make install
+
  - Install linuxptp
         # @ https://sourceforge.net/projects/linuxptp/files/v3.1/
         $ wget https://sourceforge.net/projects/linuxptp/files/v3.1/linuxptp-3.1.1.tgz/download -O linuxptp-3.1.1.tgz
         $ tar -xvf linuxptp-3.1.1.tgz 
         $ cd linuxptp-3.1.1 && make && sudo make install
         
-        
+  
         
 # bashrc
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib

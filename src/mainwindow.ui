@@ -1163,6 +1163,24 @@ out</string>
 stop</string>
              </property>
             </widget>
+            <widget class="QLabel" name="lb_Policy">
+             <property name="geometry">
+              <rect>
+               <x>200</x>
+               <y>240</y>
+               <width>701</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Policy</string>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>
@@ -1224,7 +1242,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">

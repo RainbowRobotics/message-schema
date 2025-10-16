@@ -823,6 +823,9 @@ struct MOBILE_STATUS
     unsigned short tabos_tte = 0;   // time to empty-min
     unsigned char tabos_soc  = 0;   // state of charge-%
     unsigned char tabos_soh  = 0;   // state of health-%
+
+    uint8_t bms_type         = 0;
+
 };
 
 struct MOBILE_POSE
@@ -1591,11 +1594,12 @@ struct COPY_INFO
 
 struct NODE_INFO
 {
-    // size
+    QString info;
+
     Eigen::Vector3d sz;
 
-    QString speed;
-
+    bool slow;
+    bool fast;
     bool warning_beep;
     bool ignore_2d;
     bool ignore_3d;
@@ -1606,10 +1610,12 @@ struct NODE_INFO
 
     NODE_INFO()
     {
+        info = "";
+
         sz.setZero();
 
-        speed = "";
-
+        slow           = false;
+        fast           = false;
         warning_beep   = false;
         ignore_2d      = false;
         ignore_3d      = false;
@@ -1621,10 +1627,12 @@ struct NODE_INFO
 
     NODE_INFO(const NODE_INFO& p)
     {
+        info = p.info;
+
         sz = p.sz;
 
-        speed = p.speed;
-
+        slow           = p.slow;
+        fast           = p.fast;
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1636,10 +1644,12 @@ struct NODE_INFO
 
     NODE_INFO& operator=(const NODE_INFO& p)
     {
+        info = p.info;
+
         sz = p.sz;
 
-        speed = p.speed;
-
+        slow           = p.slow;
+        fast           = p.fast;
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1651,6 +1661,60 @@ struct NODE_INFO
         return *this;
     }
 };
+
+struct LINK_INFO
+{
+    QString st_id;
+    QString ed_id;
+
+    Eigen::Vector3d st;
+    Eigen::Vector3d ed;
+    Eigen::Vector3d mid;
+
+    double length = 0.0;
+
+    QString info;
+
+    LINK_INFO()
+    {
+        st.setZero();
+        ed.setZero();
+        mid.setZero();
+
+        length = 0.0;
+    }
+
+    LINK_INFO(const LINK_INFO& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        st = p.st;
+        ed = p.ed;
+        mid = p.mid;
+
+        length = p.length;
+
+        info = p.info;
+    }
+
+    LINK_INFO& operator=(const LINK_INFO& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        st = p.st;
+        ed = p.ed;
+        mid = p.mid;
+
+        length = p.length;
+
+        info = p.info;
+
+        return *this;
+    }
+};
+
 
 // tree typedef
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, XYZR_CLOUD>, XYZR_CLOUD, 3> KD_TREE_XYZR;

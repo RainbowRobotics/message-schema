@@ -9,6 +9,7 @@ CONFIG += resources_big
 QMAKE_CXXFLAGS_RELEASE += -O2
 QMAKE_CXXFLAGS += -Werror=return-type
 
+
 # OpenMP
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
