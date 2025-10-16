@@ -689,6 +689,18 @@ struct MOBILE_SETTING
     float gear = .0;
     float dir = .0;
 
+    float lx = .0;
+    float ly = .0;
+    
+    unsigned char robot_wheel_type = 0;
+    unsigned char use_interlock_commnad_bypass = 0;
+    unsigned char use_safety_obstacle_detection = 0;
+    unsigned char use_safety_bumper = 0;
+    unsigned char use_safety_interlock = 0;
+    unsigned char use_safety_cross_monitor = 0;
+    unsigned char use_safety_speed_control = 0;
+    unsigned char use_sw_io = 0;
+
     unsigned char d_out[16] = {0,};
 };
 
