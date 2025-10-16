@@ -630,9 +630,35 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
+        std::vector<PATH> policy_path = policy->slice_path(path);
+
+        std::vector<PATH> tmp_storage;
+        tmp_storage.reserve(policy_path.size());
+        for(size_t i = 0; i < policy_path.size(); i++)
+        {
+            const PATH& seg = policy_path[i];
+            PATH _seg = calc_global_path(seg.node, (i == 0));
+
+            _seg.drive_mode = seg.drive_mode;
+            _seg.is_final   = seg.is_final;
+            _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
+
+            tmp_storage.push_back(std::move(_seg));
+        }
+
         // enque global path
         global_path_que.clear();
-        global_path_que.push(path);
+        if(!tmp_storage.empty())
+        {
+            for(size_t i = 0; i < tmp_storage.size(); i++)
+            {
+                global_path_que.push(tmp_storage[i]);
+            }
+        }
+        else
+        {
+            global_path_que.push(path);
+        }
     }
 
     // explicitly change flag (racing issue: control_loop <-> obs_loop)
@@ -3115,6 +3141,9 @@ void AUTOCONTROL::control_loop()
         }
 
         Q_EMIT signal_global_path_updated();
+
+        back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+        logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
     }
 
     if(global_path.pose.size() == 0)
@@ -3222,7 +3251,7 @@ void AUTOCONTROL::control_loop()
     while(control_flag)
     {
         // get current status
-        Eigen::Matrix4d cur_tf     = loc->get_cur_tf();
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         if (fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
@@ -3501,7 +3530,6 @@ void AUTOCONTROL::control_loop()
                     double goal_err_d = calc_dist_2d(_goal_pos);
                     if(global_path.is_final)
                     {
-//                        qDebug()<<"ffffffffffffff";
                         fsm_state = AUTO_FSM_FINAL_ALIGN;
 
                         logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
@@ -3519,6 +3547,9 @@ void AUTOCONTROL::control_loop()
                             // update global path
                             global_path = _global_path;
                             logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
+
+                            back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+                            logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
 
                             // update global goal
                             goal_tf = global_path.ed_tf;
@@ -4498,4 +4529,9 @@ void AUTOCONTROL::set_obsmap_module(OBSMAP* _obsmap)
 void AUTOCONTROL::set_localization_module(LOCALIZATION *_loc)
 {
     loc = _loc;
+}
+
+void AUTOCONTROL::set_policy_module(POLICY* _policy)
+{
+    policy = _policy;
 }

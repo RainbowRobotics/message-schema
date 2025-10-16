@@ -400,6 +400,7 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
+        AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -476,7 +477,6 @@ void MainWindow::init_modules()
         POLICY::instance()->set_logger_module(LOGGER::instance());
         POLICY::instance()->set_unimap_module(UNIMAP::instance());
         POLICY::instance()->set_localization_module(LOCALIZATION::instance());
-        POLICY::instance()->set_autocontrol_module(AUTOCONTROL::instance());
         POLICY::instance()->init();
         POLICY::instance()->open();
     }

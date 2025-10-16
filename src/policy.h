@@ -10,7 +10,6 @@
 #include "logger.h"
 #include "unimap.h"
 #include "localization.h"
-#include "autocontrol.h"
 
 #include <QObject>
 
@@ -50,7 +49,9 @@ public:
     void set_logger_module(LOGGER* _logger);
     void set_unimap_module(UNIMAP* _unimap);
     void set_localization_module(LOCALIZATION* _localization);
-    void set_autocontrol_module(AUTOCONTROL* _ctrl);
+
+    std::vector<PATH> slice_path(PATH path);
+
 
 private:
     explicit POLICY(QObject *parent = nullptr);
@@ -64,7 +65,6 @@ private:
     LOGGER* logger;
     UNIMAP* unimap;
     LOCALIZATION *loc;
-    AUTOCONTROL *ctrl;
 
     // node loop
     std::atomic<bool> node_flag = {false};
@@ -88,7 +88,6 @@ private:
 
     void apply_slow(bool on);
     void apply_fast(bool on);
-    void apply_reverse(bool on);
     void apply_warning_beep(bool on);
     void apply_ignore_2d(bool on);
     void apply_ignore_3d(bool on);
@@ -106,6 +105,8 @@ private:
     NODE_INFO zone_info;
 
     std::vector<LINK_INFO> link_list;
+
+    PATH global_path;
 
 };
 

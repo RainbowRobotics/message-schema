@@ -141,25 +141,75 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
     loc = _loc;
 }
 
-void POLICY::set_autocontrol_module(AUTOCONTROL* _ctrl)
+std::vector<PATH> POLICY::slice_path(PATH path)
 {
-    ctrl = _ctrl;
-}
+    global_path = path;
 
-void POLICY::apply_reverse(bool on)
-{
-    // prevent duplication
-    static bool prev = false;
-    if(on == prev)
+    std::vector<PATH> res;
+    if(path.node.size() < 2)
     {
-        return;
+        return res;
     }
 
+    // determine mode for each edge
+    std::vector<LINK_INFO> links = unimap->get_special_links();
+    std::vector<DriveMode> modes;
+    modes.reserve(path.node.size() - 1);
+    for(size_t i = 0; i + 1 < path.node.size(); i++)
+    {
+        QString st_id = path.node[i];
+        QString ed_id = path.node[i + 1];
 
+        DriveMode drive_mode = DriveMode::FORWARD;
 
-    prev = on;
+        for(size_t j = 0; j < links.size(); j++)
+        {
+            const LINK_INFO& link = links[j];
+            if(link.st_id == st_id && link.ed_id == ed_id)
+            {
+                // convert INFO to uppercase
+                QString info = link.info.toUpper();
+                if(info.contains("REVERSE"))
+                {
+                    drive_mode = DriveMode::REVERSE;
+                }
+                break;
+            }
+        }
+        modes.push_back(drive_mode);
+    }
 
-    printf("[POLICY] REVERSE %s\n", on ? "ON" : "OFF");
+    // split the path at the point where the mode changes
+    size_t st_idx = 0;
+    for(size_t i = 1; i < modes.size(); i++)
+    {
+        if(modes[i] != modes[i - 1])
+        {
+            PATH seg;
+            seg.t = path.t;
+            seg.is_final = false;
+            seg.ed_tf = (path.pose.empty() ? path.ed_tf : path.pose[i]);
+            seg.node.assign(path.node.begin() + st_idx, path.node.begin() + (i + 1));
+            seg.drive_mode = modes[st_idx];
+
+            res.push_back(seg);
+            st_idx = i;
+        }
+    }
+
+    // add last section
+    {
+        PATH seg;
+        seg.t = path.t;
+        seg.is_final = true;
+        seg.ed_tf = path.ed_tf;
+        seg.node.assign(path.node.begin() + st_idx, path.node.end());
+        seg.drive_mode = modes[st_idx];
+
+        res.push_back(seg);
+    }
+
+    return res;
 }
 
 void POLICY::node_loop()
@@ -212,6 +262,7 @@ void POLICY::node_loop()
 void POLICY::link_loop()
 {
     QString last_link_str = "";
+    NODE_INFO last_link_info;
 
     printf("[POLICY] link_loop start\n");
     while(link_flag)
@@ -226,13 +277,12 @@ void POLICY::link_loop()
         Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
 
         QString cur_node_id = get_cur_node();
-        std::vector<QString> global_path = ctrl->get_cur_global_path().node;
 
         QString cur_link_str = "";
         NODE_INFO cur_link_info;
         bool info_updated = false;
 
-        if(global_path.size() < 2)
+        if(global_path.node.size() < 2)
         {
             {
                 std::lock_guard<std::mutex> lock(mtx);
@@ -250,7 +300,7 @@ void POLICY::link_loop()
             {
                 std::lock_guard<std::mutex> lock(mtx);
                 cur_link = last_link_str;
-                link_info = NODE_INFO();
+                link_info = last_link_info;
             }
             else
             {
@@ -264,9 +314,9 @@ void POLICY::link_loop()
 
         // find the idx of the cur_node in path
         int idx = -1;
-        for(size_t i = 0; i < global_path.size(); i++)
+        for(size_t i = 0; i < global_path.node.size(); i++)
         {
-            if(global_path[i] == cur_node_id)
+            if(global_path.node[i] == cur_node_id)
             {
                 idx = i;
                 break;
@@ -287,17 +337,19 @@ void POLICY::link_loop()
             continue;
         }
 
-        if(idx + 1 < (int)global_path.size())
+        if(idx + 1 < (int)global_path.node.size())
         {
             // if there is a next node -> activate link (st=cur_node, ed=next_node)
-            QString st_id = global_path[idx];
-            QString ed_id = global_path[idx + 1];
+            QString st_id = global_path.node[idx];
+            QString ed_id = global_path.node[idx + 1];
 
             cur_link_str = st_id + "->" + ed_id;
 
             if(cur_link_str != last_link_str)
             {
                 std::vector<LINK_INFO> link = unimap->get_special_links();
+                info_updated = false;
+                cur_link_info = NODE_INFO();
                 for(const auto& lk : link)
                 {
                     if(lk.st_id == st_id && lk.ed_id == ed_id)
@@ -311,6 +363,15 @@ void POLICY::link_loop()
                         break;
                     }
                 }
+                if(info_updated)
+                {
+                    last_link_info = cur_link_info;
+                }
+                else
+                {
+                    last_link_info = NODE_INFO();
+                }
+
                 last_link_str = cur_link_str;
             }
 
@@ -329,10 +390,13 @@ void POLICY::link_loop()
             // if there is no next node -> end of link
             {
                 std::lock_guard<std::mutex> lock(mtx);
-                cur_link = cur_link_str;
-                link_info = cur_link_info;
+                cur_link.clear();
+                link_info = NODE_INFO();
+                // cur_link = cur_link_str;
+                // link_info = cur_link_info;
             }
             last_link_str.clear();
+            last_link_info = NODE_INFO();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -460,7 +524,6 @@ void POLICY::policy_loop()
         {
             // apply_slow(slow);
             // apply_fast(fast);
-            apply_reverse(reverse);
             // apply_warning_beep(warning_beep);
             // apply_ignore_2d(ignore_2d);
             // apply_ignore_3d(ignore_3d);

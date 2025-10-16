@@ -457,6 +457,12 @@ enum class AttributeZone
     MASK
 };
 
+enum class DriveMode
+{
+    FORWARD,
+    REVERSE
+};
+
 // structure
 struct TIME_IMG
 {
@@ -1345,12 +1351,14 @@ struct PATH
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
+    DriveMode drive_mode;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
         is_final = false;
+        drive_mode = DriveMode::FORWARD;
     }
 
     PATH(const PATH& p)
@@ -1362,6 +1370,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
     }
 
     PATH& operator=(const PATH& p)
@@ -1373,6 +1382,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
         return *this;
     }
 
