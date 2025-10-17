@@ -4076,7 +4076,8 @@ void COMM_RRS::send_config_request_response(const DATA_PDU_UPDATE& msg)
             paramObj["type"] = param.type;
             parameters.append(paramObj);
         }
-        qDebug() << "set_param";
+        //qDebug() << "set_param";
+        spdlog::info("[RRS] set_param");
     }
 
     obj["param"] = parameters;

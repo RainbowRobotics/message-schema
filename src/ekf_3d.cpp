@@ -48,7 +48,9 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
 
     printf("[EKF_3D] init (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
            x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
+    spdlog::info("[EKF_3D] init ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
+                 
 
 void EKF_3D::reset()
 {
@@ -59,7 +61,8 @@ void EKF_3D::reset()
     has_pre_mo_tf.store(false);
     initialized.store(false);
 
-    printf("[EKF_3D] reset\n");
+    //printf("[EKF_3D] reset\n");
+    spdlog::info("[EKF_3D] reset");
 }
 
 Eigen::Matrix4d EKF_3D::get_cur_tf()
@@ -165,6 +168,7 @@ void EKF_3D::predict(const Eigen::Matrix4d& odom_tf)
 
     // printf("[EKF_3D] prediction: (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
     //        x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
+    spdlog::debug("[EKF_3D] prediction: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
 
 void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ieir*/)
@@ -229,6 +233,7 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ie
     if(d2 > 16.81)
     {
         std::printf("[EKF_3D] ICP rejected, mahalanobis=%.2f\n", d2);
+        spdlog::warn("[EKF_3D] ICP rejected, mahalanobis={:.2f}", d2);
         return;
     }
 
@@ -252,6 +257,11 @@ void EKF_3D::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& /*ie
     P_hat = 0.5 * (P_new + P_new.transpose());
 
     // debug
+    spdlog::debug("[EKF_3D] estimation: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}), innovation: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}), "
+           "K_k: ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f})",
+           x_hat(0), x_hat(1), x_hat(2), x_hat(3)*R2D, x_hat(4)*R2D, x_hat(5)*R2D,
+           y_k(0), y_k(1), y_k(2), y_k(3)*R2D, y_k(4)*R2D, y_k(5)*R2D,
+           K_k(0,0), K_k(1,1), K_k(2,2), K_k(3,3), K_k(4,4), K_k(5,5));
     // printf("[EKF_3D] estimation:(%.3f, %.3f, %.3f, %.2f, %.2f, %.2f), innovation:(%.3f, %.3f, %.3f, %.2f, %.2f, %.2f), "
     //        "K_k:(%.3f, %.3f, %.3f, %.3f, %.3f, %.3f)\n",
     //        x_hat(0), x_hat(1), x_hat(2), x_hat(3)*R2D, x_hat(4)*R2D, x_hat(5)*R2D,

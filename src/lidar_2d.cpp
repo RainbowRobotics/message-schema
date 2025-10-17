@@ -599,6 +599,7 @@ void LIDAR_2D::merge_loop()
                 //storage[use_idx].pop_back();
 
                 // printf("[LIDAR] single  t=%.6f, from=%d, pts=%zu (storage: %zu, %zu)\n", merge_frm.t, use_idx, merge_frm.pts.size(), storage[0].size(), storage[1].size());
+                spdlog::debug("[LIDAR] single  t={:.6f}, from={}, pts={} (storage: {}, {})",merge_frm.t,use_idx, merge_frm.pts.size(),storage[0].size(),storage[1].size());
             }
         }
 

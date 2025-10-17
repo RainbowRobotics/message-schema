@@ -384,9 +384,13 @@ void TASK::a_loop()
                         << error_distance << "," << error_angle_deg << ","<< cur_ie << "," << cur_ir << "\n";
 
                     file.close();
-                    printf("[TASK] LOG: %s, actual: (%.2f, %.2f, %.2f), target: (%s, %s, %s), planned: (%.2f, %.2f, %.2f), error: (%.2f, %.2f), cur_ie: %.3f, cur_ir: %.3f\n",
-                                       timeStr.toLocal8Bit().data(),
-                                       actual_x, actual_y, actual_theta_deg,target_id.toLocal8Bit().data(), target_name.toLocal8Bit().data(), target_type.toLocal8Bit().data(),
+                    //printf("[TASK] LOG: %s, actual: (%.2f, %.2f, %.2f), target: (%s, %s, %s), planned: (%.2f, %.2f, %.2f), error: (%.2f, %.2f), cur_ie: %.3f, cur_ir: %.3f\n",
+                    //                   timeStr.toLocal8Bit().data(),
+                    //                   actual_x, actual_y, actual_theta_deg,target_id.toLocal8Bit().data(), target_name.toLocal8Bit().data(), target_type.toLocal8Bit().data(),
+                    //                   planned_x, planned_y, planned_theta * R2D,error_distance, error_angle_deg,cur_ie, cur_ir);
+                    spdlog::info("[TASK] LOG: {}, actual: ({:.2f}, {:.2f}, {:.2f}), target: ({}, {}, {}), planned: ({:.2f}, {:.2f}, {:.2f}), error: ({:.2f}, {:.2f}), cur_ie: {:.3f}, cur_ir: {:.3f}",
+                                       timeStr.toStdString(),
+                                       actual_x, actual_y, actual_theta_deg,target_id.toStdString(), target_name.toStdString(), target_type.toStdString(),
                                        planned_x, planned_y, planned_theta * R2D,error_distance, error_angle_deg,cur_ie, cur_ir);
                 }
                 else

@@ -48,8 +48,15 @@ void SAFETY::init()
             logger->write_log("[SAFETY] safety_fields[" + QString::number(i) + "].max_x: " + QString::number(safety_fields[i].max_x), "Green");
             logger->write_log("[SAFETY] safety_fields[" + QString::number(i) + "].min_y: " + QString::number(safety_fields[i].min_y), "Green");
             logger->write_log("[SAFETY] safety_fields[" + QString::number(i) + "].max_y: " + QString::number(safety_fields[i].max_y), "Green");
+
+            spdlog::info("[SAFETY] safety_fields[{}].monitor_id: {}", i, safety_fields[i].monitor_id);
+            spdlog::info("[SAFETY] safety_fields[{}].min_x: {}", i, safety_fields[i].min_x);
+            spdlog::info("[SAFETY] safety_fields[{}].max_x: {}", i, safety_fields[i].max_x);
+            spdlog::info("[SAFETY] safety_fields[{}].min_y: {}", i, safety_fields[i].min_y);
+            spdlog::info("[SAFETY] safety_fields[{}].max_y: {}", i, safety_fields[i].max_y);
         }
         logger->write_log("[SAFETY] safety_fields size: " + QString::number(safety_fields.size()), "Green");
+        spdlog::info("[SAFETY] safety_fields size: {}", safety_fields.size());
 
     }
     else

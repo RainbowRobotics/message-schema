@@ -50,20 +50,23 @@ void CONFIG::load_cam_serial_number()
             for(int p = 0; p < cam_cnt; p++)
             {
                 CAM_SERIAL_NUMBER[p] = obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString();
-                printf("[CONFIG] CAM_SERIAL_NUMBER_%d, %s\n", p, obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString().toLocal8Bit().data());
+                //printf("[CONFIG] CAM_SERIAL_NUMBER_%d, %s\n", p, obj_cam[QString("CAM_SERIAL_NUMBER_%1").arg(p)].toString().toLocal8Bit().data());
+                spdlog::info("[CONFIG] CAM_SERIAL_NUMBER_{}: {}", p, qUtf8Printable(CAM_SERIAL_NUMBER[p]));
             }
         }
 
         QJsonObject obj_robot = obj["robot"].toObject();
         {
             ROBOT_SERIAL_NUMBER = obj_robot["ROBOT_SERIAL_NUMBER"].toString();
-            printf("[CONFIG] ROBOT_SERIAL_NUMBER, %s\n", obj_robot["ROBOT_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+            //printf("[CONFIG] ROBOT_SERIAL_NUMBER, %s\n", obj_robot["ROBOT_SERIAL_NUMBER"].toString().toLocal8Bit().data());
+            spdlog::info("[CONFIG] ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
         }
 
         // complete
         is_load = true;
         config_sn_file.close();
-        printf("[CONFIG] %s, load successed\n", path_cam_serial_number.toLocal8Bit().data());
+        //printf("[CONFIG] %s, load successed\n", path_cam_serial_number.toLocal8Bit().data());
+        spdlog::info("[CONFIG] {}, load succeeded", qUtf8Printable(path_cam_serial_number));
     }
 }
 
@@ -74,7 +77,8 @@ void CONFIG::load()
     QFile config_file(path_config);
     if(!config_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qWarning() << "[CONFIG] Failed to open config file:" << path_config;
+        //qWarning() << "[CONFIG] Failed to open config file:" << path_config;
+        spdlog::warn("[CONFIG] Failed to open config file: {}", qUtf8Printable(path_config));
         return;
     }
 
@@ -85,7 +89,8 @@ void CONFIG::load()
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        qWarning() << "[CONFIG] JSON parse error:" << parseError.errorString();
+        //qWarning() << "[CONFIG] JSON parse error:" << parseError.errorString();
+        spdlog::warn("[CONFIG] JSON parse error: {}", qUtf8Printable(parseError.errorString()));
         return;
     }
 
@@ -111,9 +116,10 @@ void CONFIG::load()
     load_safety_config(obj);
     
     is_load = true;
-    printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
+    //printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
+    spdlog::info("[CONFIG] {}, load succeeded", qUtf8Printable(path_config));
 
-    // spdlog 레벨 설정
+    // spdlog level setup
     setup_spdlog_level();
 
     if(has_missing_variables())
@@ -148,7 +154,8 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
     double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
     ROBOT_RADIUS = std::sqrt(lx * lx + ly * ly);
-    printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
+    //printf("[CONFIG] ROBOT_RADIUS(auto calc), %.3f\n", ROBOT_RADIUS);
+    spdlog::info("[CONFIG] ROBOT_RADIUS(auto calc): {:.3f}", ROBOT_RADIUS);
 }
 
 void CONFIG::load_sensors_config(const QJsonObject &obj)
@@ -420,7 +427,8 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             LIDAR_2D_IP[i] = obj_lidar_2d["IP"].toString();
             LIDAR_2D_TF[i] = obj_lidar_2d["TF"].toString();
             LIDAR_2D_DEV[i] = obj_lidar_2d["DEV"].toString();
-            printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
+            //printf("[CONFIG] LIDAR_2D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]));
+            spdlog::info("[CONFIG] LIDAR_2D[{}] IP: {}, TF: {}, DEV: {}", i, qUtf8Printable(LIDAR_2D_IP[i]), qUtf8Printable(LIDAR_2D_TF[i]), qUtf8Printable(LIDAR_2D_DEV[i]));
         }
     }
 
@@ -432,7 +440,8 @@ void CONFIG::load_lidar_configs(const QJsonObject &obj)
             QJsonObject obj_lidar_3d = lidar_arr[i].toObject();
             LIDAR_3D_IP[i] = obj_lidar_3d["IP"].toString();
             LIDAR_3D_TF[i] = obj_lidar_3d["TF"].toString();
-            printf("[CONFIG] LIDAR_3D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
+            //printf("[CONFIG] LIDAR_3D[%d] IP: %s, TF: %s\n", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
+            spdlog::info("[CONFIG] LIDAR_3D[{}] IP: {}, TF: {}", i, qUtf8Printable(LIDAR_3D_IP[i]), qUtf8Printable(LIDAR_3D_TF[i]));
         }
     }
 }
@@ -447,8 +456,9 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
             QJsonObject obj_cam = cam_arr[i].toObject();
             CAM_TF[i] = obj_cam["TF"].toString();
             CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
-            printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
-            printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
+            //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
+            //printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
+            spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}", i, qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]));
         }
     }
 }
@@ -499,7 +509,8 @@ void CONFIG::check_and_set_string(const QJsonObject& obj, const QString& key, QS
     if(obj.contains(key) && !obj[key].toString().isEmpty())
     {
         target = obj[key].toString();
-        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), qUtf8Printable(target));
+        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), qUtf8Printable(target));
+        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(target));
     }
     else
     {
@@ -512,7 +523,8 @@ void CONFIG::check_and_set_bool(const QJsonObject& obj, const QString& key, bool
     if(obj.contains(key))
     {
         target = obj[key].toBool();
-        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), target ? "true" : "false");
+        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), target ? "true" : "false");
+        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), target ? "true" : "false");
     }
     else
     {
@@ -525,7 +537,8 @@ void CONFIG::check_and_set_int(const QJsonObject& obj, const QString& key, int& 
     if(obj.contains(key))
     {
         target = obj[key].toString().toInt();
-        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
     }
     else
     {
@@ -538,7 +551,8 @@ void CONFIG::check_and_set_double(const QJsonObject& obj, const QString& key, do
     if(obj.contains(key))
     {
         target = obj[key].toString().toDouble();
-        printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+        //printf("[CONFIG] %s, %s\n", qUtf8Printable(key), obj[key].toString().toLocal8Bit().data());
+        spdlog::info("[CONFIG] {}, {}", qUtf8Printable(key), qUtf8Printable(obj[key].toString()));
     }
     else
     {
@@ -569,7 +583,8 @@ void CONFIG::show_missing_variables_dialog()
         message += "- " + var + "\n";
     }
 
-    printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
+    //printf("[CONFIG WARNING] %s\n", qUtf8Printable(message));
+    spdlog::warn("[CONFIG] {}", qUtf8Printable(message));
 }
 
 QStringList CONFIG::load_folder_list()
@@ -611,7 +626,8 @@ bool CONFIG::load_common(QString path)
     QFile common_file(path);
     if(!common_file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qWarning() << "[CONFIG] Failed to open common file:" << path;
+        //qWarning() << "[CONFIG] Failed to open common file:" << path;
+        spdlog::warn("[CONFIG] Failed to open common file: {}", qUtf8Printable(path));
         return false;
     }
 
@@ -624,7 +640,8 @@ bool CONFIG::load_common(QString path)
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if(parseError.error != QJsonParseError::NoError)
     {
-        qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
+        //qWarning() << "[CONFIG] common JSON parse error:" << parseError.errorString();
+        spdlog::warn("[CONFIG] common JSON parse error: {}", qUtf8Printable(parseError.errorString()));
         return false;
     }
 
@@ -711,7 +728,8 @@ bool CONFIG::load_common(QString path)
                 ROBOT_MODEL = RobotModel::NONE;
             }
         }
-        printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
+        //printf("[CONFIG] ROBOT_TYPE: %s, ROBOT_MODEL: %s\n", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
+        spdlog::info("[CONFIG] ROBOT_TYPE: {}, ROBOT_MODEL: {}", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
     }
 
     if(obj.contains("MILEAGE"))
@@ -737,7 +755,8 @@ void CONFIG::set_map_path(const QString &path)
 
     if(!config_file.open(QIODevice::ReadWrite))
     {
-        printf("[config] failed to open config file for reading and writing.\n");
+        //printf("[config] failed to open config file for reading and writing.\n");
+        spdlog::warn("[config] failed to open config file for reading and writing.");
         return;
     }
 
@@ -770,7 +789,8 @@ void CONFIG::set_map_path(const QString &path)
 
     if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
     {
-        printf("[config] failed to open config file for writing.\n");
+        //printf("[config] failed to open config file for writing.\n");
+        spdlog::warn("[config] failed to open config file for writing.");
         return;
     }
 
@@ -895,6 +915,7 @@ bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
 
     QFile file(path_config);
     //qDebug()<<"path_config : "<<path_config;
+    spdlog::warn("[CONFIG] path_config : {}", qUtf8Printable(path_config));
     if(!file.open(QIODevice::ReadOnly))
     {
         return false;

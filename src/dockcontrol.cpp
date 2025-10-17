@@ -457,7 +457,8 @@ void DOCKCONTROL::b_loop()
             {
                 dock = true; // undock done
 
-                printf("[DOCKING] UNDOCK SUCCESS\n");
+                //printf("[DOCKING] UNDOCK SUCCESS\n");
+                spdlog::info("[DOCKING] UNDOCK SUCCESS");
 
                 DATA_DOCK ddock;
                 ddock.command = "undock";
@@ -477,7 +478,8 @@ void DOCKCONTROL::b_loop()
         else
         {
             // never inter
-            printf("[DOCKING] UNDOCK FAILED\n");
+            //printf("[DOCKING] UNDOCK FAILED\n");
+            spdlog::info("[DOCKING] UNDOCK FAILED");
 
             DATA_DOCK ddock;
             ddock.command = "undock";
@@ -500,6 +502,7 @@ void DOCKCONTROL::b_loop()
         else
         {
             //printf("[AUTO] loop time drift, dt:%f\n", delta_loop_time);
+            spdlog::warn("[AUTO] loop time drift, dt: {}", delta_loop_time);
         }
     }
 }
@@ -812,6 +815,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
         {
 //            qDebug() << " find";
+            spdlog::info("[DOCKING] find");
             double x = dock_tf(0, 3);
             double y = dock_tf(1, 3);
             double head_th = std::atan2(y,x);
@@ -1221,24 +1225,28 @@ bool DOCKCONTROL::is_everything_fine()
     if(mobile_status.charge_state == 1)
     {
         logger->write_log("[DOCK] dock failed (charging)", "Red", true, false);
+        spdlog::info("[DOCK] dock failed (charging)");
         return false;
     }
 
     if(mobile_status.status_m0 > 1 || mobile_status.status_m1 > 1)
     {
         logger->write_log("[DOCK] dock failed (motor not connected)", "Red", true, false);
+        spdlog::info("[DOCK] dock failed (motor not connected)");
         return false;
     }
 
     if(mobile_status.connection_m0 != 1 || mobile_status.connection_m1 != 1)
     {
         logger->write_log("[DOCK] dock failed (emo pushed)", "Red", true, false);
+        spdlog::info("[DOCK] dock failed (emo pushed)");
         return false;
     }
 
     if(mobile_status.status_m0 == 0 || mobile_status.status_m1 == 0)
     {
         logger->write_log("[DOCK] dock failed (motor error)", "Red", true, false);
+        spdlog::info("[DOCK] dock failed (motor error)");
         return false;
     }
  
@@ -1513,7 +1521,8 @@ bool DOCKCONTROL::undock()
     if(is_good_everything == DRIVING_FAILED)
     {
         mobile->move(0, 0, 0);
-        printf("[DOCKING] something wrong (failed)\n");
+        //printf("[DOCKING] something wrong (failed)\n");
+        spdlog::error("[DOCKING] something wrong (failed)");
         return false;
     }
 

@@ -162,6 +162,7 @@ enum class RobotModel
     MECANUM,
     SEM,
     SDC,
+    SEC,
     NONE
 };
 

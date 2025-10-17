@@ -937,7 +937,7 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
     catch(std::out_of_range)
     {
         //logger.write_log("pcl viewer not have camera ..", "Red", true, false);
-        spdlog::info("[]");
+        spdlog::error("pcl viewer not have camera ..");
         center = Eigen::Vector3d(0,0,0);
         dir = Eigen::Vector3d(0,0,0);
         return;
@@ -1010,6 +1010,7 @@ void MainWindow::bt_SimInit()
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         LOGGER::instance()->write_log("[SIM] map load first", "Red", true, false);
+        spdlog::error("[SIM] map load first");
         return;
     }
 
@@ -1042,6 +1043,7 @@ void MainWindow::bt_SimInit()
 void MainWindow::bt_ConfigLoad()
 {
     CONFIG::instance()->load();
+    spdlog::info("[MAIN] config reloaded");
 }
 
 // for emergency stop
@@ -1172,6 +1174,7 @@ void MainWindow::bt_MapBuild()
     if(CONFIG::instance()->get_use_sim())
     {
         LOGGER::instance()->write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
+        spdlog::warn("[MAIN] map build not allowed SIM_MODE");
         return;
     }
 
@@ -1192,6 +1195,7 @@ void MainWindow::bt_MapSave()
     if(CONFIG::instance()->get_use_sim())
     {
         LOGGER::instance()->write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
+        spdlog::warn("[MAIN] map save not allowed SIM_MODE");
         return;
     }
 
@@ -1280,7 +1284,8 @@ void MainWindow::bt_MapSave()
             }
         }
 
-        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
+        //printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
+        spdlog::info("[MAIN] convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
     }
 
     // write file
@@ -1301,7 +1306,8 @@ void MainWindow::bt_MapSave()
         }
 
         cloud_csv_file.close();
-        printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
+        //printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
+        spdlog::info("[MAIN] {}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
     }
 }
 
@@ -1368,7 +1374,8 @@ void MainWindow::bt_AutoMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
 
@@ -1415,7 +1422,8 @@ void MainWindow::bt_AutoBackMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
     if(pick.cur_node != "")
@@ -1460,7 +1468,8 @@ void MainWindow::bt_AutoMove2()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
 
@@ -1506,7 +1515,8 @@ void MainWindow::bt_AutoMove3()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
 
@@ -1553,7 +1563,8 @@ void MainWindow::bt_AutoPath()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
 
@@ -1580,7 +1591,8 @@ void MainWindow::bt_AutoPathAppend()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        spdlog::warn("[MAIN] check map load");
         return;
     }
     if(pick.cur_node != "")
@@ -1598,21 +1610,25 @@ void MainWindow::bt_AutoPathAppend()
 void MainWindow::bt_AutoStop()
 {
     AUTOCONTROL::instance()->stop();
+    spdlog::info("[MAIN] bt_AutoStop");
 }
 
 void MainWindow::bt_AutoPause()
 {
     AUTOCONTROL::instance()->set_is_pause(true);
+    spdlog::info("[MAIN] bt_AutoPause");
 }
 
 void MainWindow::bt_AutoResume()
 {
     AUTOCONTROL::instance()->set_is_pause(false);
+    spdlog::info("[MAIN] bt_AutoResume");
 }
 
 //docking
 void MainWindow::bt_DockStart()
 {
+    spdlog::info("[DOCK] bt_DockStart");
     // no use OSSD
     MOBILE::instance()->set_detect_mode(0.0);
     AUTOCONTROL::instance()->set_is_moving(true);
@@ -1621,6 +1637,7 @@ void MainWindow::bt_DockStart()
 
 void MainWindow::bt_DockStop()
 {
+    spdlog::info("[DOCK] bt_DockStop");
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
 
@@ -1630,6 +1647,7 @@ void MainWindow::bt_DockStop()
 
 void MainWindow::bt_UnDockStart()
 {
+    spdlog::info("[DOCK] bt_UnDockStart");
     // no use OSSD
     MOBILE::instance()->set_detect_mode(0.0);
 
@@ -1650,74 +1668,89 @@ void MainWindow::bt_UnDockStart()
 //for safety
 void MainWindow::bt_ClearMismatch()
 {
+    spdlog::info("[MAIN] bt_ClearMismatch");
     MOBILE::instance()->clearmismatch();
 }
 
 void MainWindow::bt_ClearOverSpd()
 {
+    spdlog::info("[MAIN] bt_ClearOverSpd");
     MOBILE::instance()->clearoverspd();
 }
 
 void MainWindow::bt_ClearObs()
 {
+    spdlog::info("[MAIN] bt_ClearObs");
     MOBILE::instance()->clearobs();
 }
 
 void MainWindow::bt_ClearFieldMis()
 {
+    spdlog::info("[MAIN] bt_ClearFieldMis");
     MOBILE::instance()->clearfieldmis();
 }
 
 void MainWindow::bt_ClearInterlockStop()
 {
+    spdlog::info("[MAIN] bt_ClearInterlockStop");
     MOBILE::instance()->clearinterlockstop();
 }
 
 void MainWindow::bt_BumperStop()
 {
+    spdlog::info("[MAIN] bt_BumperStop");
     MOBILE::instance()->clearbumperstop();
 }
 
 void MainWindow::bt_Recover()
 {
+    spdlog::info("[MAIN] bt_Recover");
     MOBILE::instance()->recover();
 }
 
 void MainWindow::bt_SetDetectModeT()
 {
+    spdlog::info("[MAIN] bt_SetDetectModeT");
     MOBILE::instance()->set_detect_mode(1.0);
 }
 
 void MainWindow::bt_SetDetectModeF()
 {
+    spdlog::info("[MAIN] bt_SetDetectModeF");
     MOBILE::instance()->set_detect_mode(0.0);
 }
 
 void MainWindow::bt_Request()
 {
+    spdlog::info("[MAIN] bt_Request");
     MOBILE::instance()->robot_request();
 }
 
 void MainWindow::bt_LiftPowerOn()
 {
+    spdlog::info("[MAIN] bt_LiftPowerOn");
     MOBILE::instance()->lift_power_onoff(1);
 }
 
 void MainWindow::bt_LiftPowerOff()
 {
+    spdlog::info("[MAIN] bt_LiftPowerOff");
     MOBILE::instance()->lift_power_onoff(0);
 }
 
 void MainWindow::bt_SetLidarField()
 {
+    spdlog::info("[MAIN] bt_SetLidarField");
     unsigned int field = ui->le_Lidar_Field_Write->text().toUInt();
     MOBILE::instance()->setlidarfield(field);
 }
 
 void MainWindow::bt_TestLed()
 {
+    spdlog::info("[MAIN] bt_TestLed");
     MOBILE::instance()->led(0, ui->spb_Led->value());
-    printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+    //printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+    spdlog::info("[MAIN] led test:{}", ui->spb_Led->value());
 }
 
 void MainWindow::ckb_PlotKfrm()
@@ -1734,10 +1767,12 @@ void MainWindow::ckb_PlotKfrm()
 
 void MainWindow::bt_ReturnToCharging()
 {
+    spdlog::info("[RTC] bt_ReturnToCharging");
     QString robot_serial_number = CONFIG::instance()->get_robot_serial_number();
     if(robot_serial_number == "RB-M-")
     {
         LOGGER::instance()->write_log("[RTC] Robot serial number is not properly set.", "Red");
+        spdlog::error("[RTC] Robot serial number is not properly set.");
         return;
     }
 
@@ -1755,7 +1790,8 @@ void MainWindow::bt_ReturnToCharging()
 
     if(found_ids.size() == 0)
     {
-        LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
+    LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
+    spdlog::error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
         return;
     }
 
@@ -1764,6 +1800,7 @@ void MainWindow::bt_ReturnToCharging()
         LOGGER::instance()->write_log(QString("[RTC] Multiple charging nodes found for serial: %1 (count: %2)")
                                       .arg(robot_serial_number)
                                       .arg(found_ids.size()), "Red");
+        spdlog::error("[RTC] Multiple charging nodes found for serial: {} (count: {})", qUtf8Printable(robot_serial_number), found_ids.size());
         return;
     }
 
@@ -1773,10 +1810,12 @@ void MainWindow::bt_ReturnToCharging()
     if(node == nullptr)
     {
         LOGGER::instance()->write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
+        spdlog::error("[RTC] Failed to retrieve node with ID: {}", qUtf8Printable(found_id));
         return;
     }
 
     LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+    spdlog::info("[RTC] Found charging node: {}", qUtf8Printable(node->name));
 
     Eigen::Vector3d xi = TF_to_se2(node->tf);
     DATA_MOVE msg;
@@ -1797,19 +1836,22 @@ void MainWindow::bt_DelNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[Del_Node] check map load\n");
+        //printf("[Del_Node] check map load\n");
+        spdlog::warn("[Del_Node] check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[Del_Node] check localization\n");
+        //printf("[Del_Node] check localization\n");
+        spdlog::warn("[Del_Node] check localization");
         return;
     }
 
     if(pick.cur_node == "")
     {
-        printf("[Del_Node] check pick node\n");
+        //printf("[Del_Node] check pick node\n");
+        spdlog::warn("[Del_Node] check pick node");
         return;
     }
 
@@ -1821,13 +1863,15 @@ void MainWindow::bt_AnnotSave()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[Del_Node] check map load\n");
+        //printf("[Del_Node] check map load\n");
+        spdlog::warn("[Del_Node] check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[Del_Node] check localization\n");
+        //printf("[Del_Node] check localization\n");
+        spdlog::warn("[Del_Node] check localization");
         return;
     }
 
@@ -1838,13 +1882,15 @@ void MainWindow::bt_QuickAddNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[QA_Node] check map load\n");
+        //printf("[QA_Node] check map load\n");
+        spdlog::warn("[QA_Node] check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[QA_Node] check localization\n");
+        //printf("[QA_Node] check localization\n");
+        spdlog::warn("[QA_Node] check localization");
         return;
     }
 
@@ -1852,12 +1898,14 @@ void MainWindow::bt_QuickAddNode()
     UNIMAP::instance()->add_node(cur_tf, "GOAL");
 
     topo_update();
-    printf("[QA_Node] quick add node\n");
+    //printf("[QA_Node] quick add node\n");
+    spdlog::info("[QA_Node] quick add node");
 }
 
 
 void MainWindow::slot_local_path_updated()
 {
+    spdlog::info("[MAIN] slot_local_path_updated");
     COMM_RRS::instance()->set_local_path_update();
     COMM_MSA::instance()->set_local_path_update();
     is_local_path_update = true;
@@ -1865,6 +1913,7 @@ void MainWindow::slot_local_path_updated()
 
 void MainWindow::slot_global_path_updated()
 {
+    spdlog::info("[MAIN] slot_global_path_updated");
     COMM_RRS::instance()->set_global_path_update();
     COMM_MSA::instance()->set_global_path_update();
     is_global_path_update = true;
@@ -1873,6 +1922,7 @@ void MainWindow::slot_global_path_updated()
 // for obsmap
 void MainWindow::bt_ObsClear()
 {
+    spdlog::info("[OBS] bt_ObsClear");
     OBSMAP::instance()->clear();
     obs_update();
 }
@@ -1905,6 +1955,7 @@ void MainWindow::ui_tasks_update()
 
 void MainWindow::bt_TaskAdd()
 {
+    spdlog::info("[TASK] bt_TaskAdd");
     if(pick.cur_node.isEmpty())
     {
         spdlog::warn("[TASK] No selected node");
@@ -1936,6 +1987,7 @@ void MainWindow::bt_TaskAdd()
 
 void MainWindow::bt_TaskDel()
 {
+    spdlog::info("[TASK] bt_TaskDel");
     NODE* node_to_delete = nullptr;
 
     if (!ui->lw_TaskList->selectedItems().isEmpty())
@@ -2001,6 +2053,7 @@ void MainWindow::bt_TaskLoad()
 
 void MainWindow::bt_TaskPlay()
 {
+    spdlog::info("[TASK] TaskPlay");
 
     //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
     //{
@@ -2057,7 +2110,8 @@ void MainWindow::jog_loop()
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
 
-    printf("[JOG] loop start\n");
+    //printf("[JOG] loop start\n");
+    spdlog::info("[JOG] loop start");
     while(jog_flag)
     {
         // check autodrive
@@ -2084,7 +2138,8 @@ void MainWindow::jog_loop()
                     vx_target = 0.;
                     vy_target = 0.;
                     wz_target = 0.;
-                    printf("[JOG] no input, stop\n");
+                    //printf("[JOG] no input, stop\n");
+                    spdlog::info("[JOG] no input, stop");
                 }
             }
             MOBILE::instance()->move(vx, vy, wz);
@@ -2100,11 +2155,13 @@ void MainWindow::jog_loop()
         }
         else
         {
-            printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+            spdlog::warn("[JOG] loop time drift, dt:{}", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
-    printf("[JOG] loop stop\n");
+    //printf("[JOG] loop stop\n");
+    spdlog::info("[JOG] loop stop");
 }
 
 // watchdog
@@ -2118,7 +2175,8 @@ void MainWindow::watch_loop()
     bool is_first_emo_check = true;
     MOBILE_STATUS pre_ms = MOBILE::instance()->get_status();
 
-    printf("[WATCHDOG] loop start\n");
+    //printf("[WATCHDOG] loop start\n");
+    spdlog::info("[WATCHDOG] loop start");
     while(watch_flag)
     {
         cnt++;
@@ -2206,6 +2264,7 @@ void MainWindow::watch_loop()
                     MOBILE::instance()->sync();
                     last_sync_time = get_time();
                     LOGGER::instance()->write_log("[WATCH] try time sync, pc and mobile");
+                    spdlog::info("[WATCH] try time sync, pc and mobile");
                 }
 
                 MOBILE_STATUS ms = MOBILE::instance()->get_status();
@@ -2238,7 +2297,8 @@ void MainWindow::watch_loop()
                 {
                     LIDAR_3D::instance()->set_is_sync(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_3d_type());
-                    printf("%s\n", str.toLocal8Bit().data());
+                    //printf("%s\n", str.toLocal8Bit().data());
+                    spdlog::info("{}", qUtf8Printable(str));
                 }
             }
 
@@ -2250,6 +2310,7 @@ void MainWindow::watch_loop()
                     LIDAR_2D::instance()->set_sync_flag(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_2d_type());
                     printf("%s\n", str.toLocal8Bit().data());
+                    spdlog::info("{}", qUtf8Printable(str));
                 }
             }
 
@@ -2258,6 +2319,7 @@ void MainWindow::watch_loop()
             {
                 // printf("[WATCH] resync all\n");
                 LOGGER::instance()->write_log("[WATCH] resync all");
+                spdlog::info("[WATCH] resync all");
 
                 if(MOBILE::instance()->get_is_connected())
                 {
@@ -2382,7 +2444,8 @@ void MainWindow::watch_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    printf("[WATCHDOG] loop stop\n");
+    //printf("[WATCHDOG] loop stop\n");
+    spdlog::info("[WATCHDOG] loop stop");
 }
 
 // for plot loop
@@ -2549,7 +2612,9 @@ void MainWindow::plot_node()
                     QString id = node.id;
                     if(pcl_viewer->contains(id.toStdString()))
                     {
-                        printf("duplicate: %s\n", id.toStdString().data());
+                        //printf("duplicate: %s\n", id.toStdString().data());
+                        spdlog::warn("duplicate: {}", qUtf8Printable(id));
+                        //continue; // check
                     }
 
                     Eigen::Matrix4d tf = node.tf;
@@ -3983,7 +4048,7 @@ void MainWindow::plot_cam()
                 else
                 {
                     //qDebug() << labelName << " not found!";
-                    spdlog::error("[MAIN] plot_cam, labelName not found");
+                    spdlog::error("[MAIN] plot_cam,{}not found", labelName.toStdString());
                 }
             }
         }
