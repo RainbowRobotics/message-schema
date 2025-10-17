@@ -844,6 +844,73 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
     }
 }
 
+std::vector<QString> UNIMAP::get_edge_nodes(const Eigen::Vector3d& pos)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+
+    std::vector<QString> edge_nodes;
+
+    if(!nodes || nodes->empty() || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
+    {
+        return edge_nodes;
+    }
+
+    std::vector<unsigned int> near_idxs(knn_search_num, 0);
+    std::vector<double> near_sq_dists(knn_search_num, 0.0);
+
+    double query_pt[3] = { pos[0], pos[1], pos[2] };
+    kdtree_node_index->knnSearch(query_pt, knn_search_num, near_idxs.data(), near_sq_dists.data());
+
+    double min_dist = std::numeric_limits<double>::max();
+    QString best_id0, best_id1;
+
+    for(int i = 0; i < knn_search_num; i++)
+    {
+        unsigned int idx = near_idxs[i];
+        if(idx >= kdtree_node.id.size() || idx >= kdtree_node.pos.size())
+        {
+            continue;
+        }
+
+        QString id0 = kdtree_node.id[idx];
+        NODE* node0 = get_node_by_id(id0);
+        if(!node0)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d pos0 = kdtree_node.pos[idx];
+        for(const QString& id1 : node0->linked)
+        {
+            NODE* node1 = get_node_by_id(id1);
+            if(!node1)
+            {
+                continue;
+            }
+
+            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION")
+            {
+                Eigen::Vector3d pos1 = node1->tf.block(0,3,3,1);
+                double dist = calc_seg_dist(pos0, pos1, pos);
+                if(dist < min_dist)
+                {
+                    min_dist = dist;
+                    best_id0 = id0;
+                    best_id1 = id1;
+                }
+            }
+        }
+    }
+
+    if(!best_id0.isEmpty() && !best_id1.isEmpty())
+    {
+        edge_nodes.push_back(best_id0);
+        edge_nodes.push_back(best_id1);
+    }
+
+    return edge_nodes;
+}
+
 QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
 {
     if(!nodes || nodes->empty())

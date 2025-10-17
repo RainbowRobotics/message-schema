@@ -45,6 +45,7 @@ public:
     QString get_goal_id(Eigen::Vector3d pos);                               // get goal node(goal,init,station) id nearest input pos(x,y,th)
     QString get_cur_zone(Eigen::Matrix4d tf);                               // the zone your current location belongs to
     QString get_node_id_edge(Eigen::Vector3d pos);                          // get node id nearest input pos(x,y,th) with edge(link)
+    std::vector<QString> get_edge_nodes(const Eigen::Vector3d& pos);        // get the ids of edge nodes
     Eigen::Vector3d get_pts_3d(int idx);                                    // get 3d map point
     Eigen::Vector3d get_normal_3d(int idx);                                 // get 3d map normal vector
     std::vector<int> get_init_candidates(std::vector<QString> prefix_list); // get init candidates for semiauto-init

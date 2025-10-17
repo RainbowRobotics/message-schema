@@ -413,6 +413,7 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
+        AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -483,7 +484,7 @@ void MainWindow::init_modules()
         DOCKCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
     }
 
-    // zone module init
+    // policy module init
     {
         POLICY::instance()->set_config_module(CONFIG::instance());
         POLICY::instance()->set_logger_module(LOGGER::instance());

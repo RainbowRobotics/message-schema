@@ -461,6 +461,12 @@ enum class AttributeZone
     MASK
 };
 
+enum class DriveMode
+{
+    FORWARD,
+    REVERSE
+};
+
 // structure
 struct TIME_IMG
 {
@@ -1364,12 +1370,14 @@ struct PATH
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
+    DriveMode drive_mode;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
         is_final = false;
+        drive_mode = DriveMode::FORWARD;
     }
 
     PATH(const PATH& p)
@@ -1381,6 +1389,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
     }
 
     PATH& operator=(const PATH& p)
@@ -1392,6 +1401,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
         return *this;
     }
 
@@ -1615,6 +1625,8 @@ struct NODE_INFO
 
     bool slow;
     bool fast;
+    bool reverse;
+
     bool warning_beep;
     bool ignore_2d;
     bool ignore_3d;
@@ -1631,6 +1643,8 @@ struct NODE_INFO
 
         slow           = false;
         fast           = false;
+        reverse        = false;
+
         warning_beep   = false;
         ignore_2d      = false;
         ignore_3d      = false;
@@ -1648,6 +1662,8 @@ struct NODE_INFO
 
         slow           = p.slow;
         fast           = p.fast;
+        reverse        = p.reverse;
+
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1665,6 +1681,8 @@ struct NODE_INFO
 
         slow           = p.slow;
         fast           = p.fast;
+        reverse        = p.reverse;
+
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;

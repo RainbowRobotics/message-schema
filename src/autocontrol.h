@@ -13,6 +13,7 @@
 #include "localization.h"
 #include "unimap.h"
 #include "obsmap.h"
+#include "policy.h"
 
 // qt
 #include <QObject>
@@ -146,6 +147,7 @@ public:
     void set_unimap_module(UNIMAP* _unimap);
     void set_obsmap_module(OBSMAP* _obsmap);
     void set_localization_module(LOCALIZATION* _localization);
+    void set_policy_module(POLICY* _policy);
 
 public Q_SLOTS:
     // slot func move(receive goal) (start control loop)
@@ -172,6 +174,7 @@ private:
     UNIMAP* unimap;
     OBSMAP* obsmap;
     LOCALIZATION* loc;
+    POLICY* policy;
 
     // control params
     CTRL_PARAM params;
