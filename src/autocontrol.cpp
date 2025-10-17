@@ -1631,6 +1631,50 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         return PATH();
     }
 
+    // if the robot is on an edge, ensure both edge endpoints are included
+    {
+        std::vector<QString> edge_nodes = unimap->get_edge_nodes(cur_pos);
+        if(edge_nodes.size() == 2 && node_path.size() > 0)
+        {
+            bool has0 = false;
+            bool has1 = false;
+            for(size_t i = 0; i < node_path.size(); i++)
+            {
+                if(node_path[i] == edge_nodes[0])
+                {
+                    has0 = true;
+                }
+                if(node_path[i] == edge_nodes[1])
+                {
+                    has1 = true;
+                }
+            }
+
+            if(!(has0 && has1))
+            {
+                QString alt_st = "";
+                if(node_path.front() == edge_nodes[0] && !has1)
+                {
+                    alt_st = edge_nodes[1];
+                }
+                else if(node_path.front() == edge_nodes[1] && !has0)
+                {
+                    alt_st = edge_nodes[0];
+                }
+
+                if(!alt_st.isEmpty() && alt_st != st_node_id)
+                {
+                    std::vector<QString> _node_path = calc_node_path(alt_st, ed_node_id);
+                    if(_node_path.size() > 0)
+                    {
+                        node_path.swap(_node_path);
+                        st_node_id = alt_st;
+                    }
+                }
+            }
+        }
+    }
+
     // convert metric path
     std::vector<Eigen::Matrix4d> node_pose;
     for(size_t p = 0; p < node_path.size(); p++)
