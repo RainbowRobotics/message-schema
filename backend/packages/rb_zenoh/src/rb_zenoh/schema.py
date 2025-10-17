@@ -29,8 +29,8 @@ class SubscribeOptions:
 
     maxsize: int | None = None  # 0/None → 자동용량(EMA+메모리 예산)
     mem_budget_mb: float = 32.0
-    ema_alpha: float = 0.25
-    safety: float = 0.85
+    ema_alpha: float = 0.25  # exponential moving average alpha(0.0 ~ 1.0)
+    safety: float = 0.85  # safety factor(0.0 ~ 1.0)
     overflow: OverflowPolicy = OverflowPolicy.DROP_OLDEST
     batch_opts: _BatchOptions = field(default_factory=_BatchOptions)
     # 예상 평균 바이트(EMA 초기 힌트). 없으면 첫 메시지 크기에서 시작

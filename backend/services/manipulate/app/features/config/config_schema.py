@@ -1,8 +1,15 @@
 from pydantic import BaseModel
+from rb_schemas.base import Vec3fPD
 
 
 class ST_Box_ParaPD(BaseModel):
     f: list[float]
+
+
+class ST_Config_UserFramePD(BaseModel):
+    userfName: str
+    userfOffset: Vec3fPD
+    userfEuler: Vec3fPD
 
 
 class ST_Tool_ParaPD(BaseModel):
@@ -53,6 +60,14 @@ class Response_CallConfigControlBoxPD(BaseModel):
     areaConfigs5: ST_Config_AreaPD
     areaConfigs6: ST_Config_AreaPD
     areaConfigs7: ST_Config_AreaPD
+    userFrame0: ST_Config_UserFramePD
+    userFrame1: ST_Config_UserFramePD
+    userFrame2: ST_Config_UserFramePD
+    userFrame3: ST_Config_UserFramePD
+    userFrame4: ST_Config_UserFramePD
+    userFrame5: ST_Config_UserFramePD
+    userFrame6: ST_Config_UserFramePD
+    userFrame7: ST_Config_UserFramePD
 
 
 class Request_Save_Area_ParameterPD(BaseModel):
@@ -128,3 +143,18 @@ class Request_Save_SelfColl_ParameterPD(BaseModel):
 
 class Request_Set_Tool_ListPD(BaseModel):
     target_tool_num: int
+
+
+class Request_Save_User_FramePD(BaseModel):
+    userf_no: int
+    userf_name: str
+    userf_x: float
+    userf_y: float
+    userf_z: float
+    userf_rx: float
+    userf_ry: float
+    userf_rz: float
+
+
+class Response_UserFrameParameterPD(BaseModel):
+    user_frames: list[ST_Config_UserFramePD]

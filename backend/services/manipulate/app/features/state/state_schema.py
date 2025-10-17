@@ -1,5 +1,13 @@
 from pydantic import BaseModel
-from rb_schemas.base import Response_ReturnValuePD
+from rb_schemas.base import (
+    NAinPfPD,
+    NAOutfPD,
+    NCarrefPD,
+    NDInuPD,
+    NDOutuPD,
+    NJointfPD,
+    Response_ReturnValuePD,
+)
 
 
 class PowerControlRequestPD(BaseModel):
@@ -17,30 +25,58 @@ class ReferenceControlRequestPD(BaseModel):
 
 
 class StateRequestPD(BaseModel):
-    joint_q_ref: list[float]
-    joint_q_enc: list[float]
-    joint_t_esti: list[float]
-    joint_t_meas: list[float]
-    joint_temper: list[float]
+    jointQRef: NJointfPD
+    jointQEnc: NJointfPD
+    jointTEsti: NJointfPD
+    jointTMeas: NJointfPD
+    jointTemper: NJointfPD
 
-    carte_x_ref: list[float]
-    carte_x_enc: list[float]
+    carteXRef: NCarrefPD
+    carteXEnc: NCarrefPD
 
-    cbox_digital_input: list[int]
-    cbox_digital_output: list[int]
+    userfSelectionNo: int
+    userfXRef: NCarrefPD
 
-    motion_mode: int
-    motion_speed_bar: float
-    motion_is_pause: int
+    toolSelectionNo: int
+    toolName: str
+    toolTcpX: float
+    toolTcpY: float
+    toolTcpZ: float
+    toolTcpRx: float
+    toolTcpRy: float
+    toolTcpRz: float
+    toolComM: float
+    toolComX: float
+    toolComY: float
+    toolComZ: float
 
-    status_lan2can: int
-    status_switch_emg: int
-    status_power_out: int
-    status_servo_num: int
-    status_is_refon: int
-    status_out_coll: int
-    status_self_coll: int
-    status_dt_mode: int
+    cboxDigitalInput: NDInuPD
+    cboxDigitalOutput: NDOutuPD
+    cboxAnalogInput: NAinPfPD
+    cboxAnalogOutput: NAOutfPD
+
+    exDigitalInput: NDInuPD
+    exDigitalOutput: NDOutuPD
+    exAnalogInput: NAinPfPD
+    exAnalogOutput: NAOutfPD
+
+    toolDigitalInput: NDInuPD
+    toolDigitalOutput: NDOutuPD
+    toolAnalogInput: NAinPfPD
+    toolAnalogOutput: NAOutfPD
+
+    motionMode: int
+    motionSpeedBar: float
+    motionIsPause: int
+
+    statusLan2can: int
+    statusSwitchEmg: int
+    statusPowerOut: int
+    statusServoNum: int
+    statusIsRefon: int
+    statusOutColl: int
+    statusSelfColl: int
+    statusDtMode: int
 
 
 class PowerControlResponsePD(Response_ReturnValuePD):

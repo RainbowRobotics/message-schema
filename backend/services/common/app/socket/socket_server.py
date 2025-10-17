@@ -171,6 +171,7 @@ class RelayNS(socketio.AsyncNamespace):
 sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins="*",
+    async_handlers=True,
     ping_interval=20,
     ping_timeout=45,  # 일단 30~45로 시작
     # logger=True,

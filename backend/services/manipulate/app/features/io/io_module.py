@@ -22,7 +22,7 @@ class IoService:
             flatbuffer_buf_size=8,
         )
 
-        return res
+        return res["dict_payload"]
 
     def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
         req = Request_SideAout_GeneralT()
@@ -36,4 +36,4 @@ class IoService:
             flatbuffer_buf_size=8,
         )
 
-        return res
+        return res["dict_payload"]

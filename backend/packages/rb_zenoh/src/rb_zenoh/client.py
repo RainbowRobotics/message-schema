@@ -602,14 +602,16 @@ class ZenohClient:
             if getattr(self, "_closing", False):
                 return
 
+            # now = time.monotonic()
+            # print(f"on_sample {now}", flush=True)
+
             att = sample.attachment
             origin_topic = str(sample.key_expr)
 
-            mv = (
-                memoryview(bytes(sample.payload))
-                if isinstance(sample.payload, ZBytes)
-                else memoryview(sample.payload)
-            )
+            try:
+                mv = memoryview(sample.payload)
+            except TypeError:
+                mv = memoryview(bytes(sample.payload))
 
             if hasattr(att, "to_bytes"):
                 att = att.to_bytes().decode("utf-8", "ignore")
@@ -691,11 +693,6 @@ class ZenohClient:
             for e in entries:
                 opts = e.opts
                 m = e.metrics
-
-                print(
-                    f"🔎 _spawn_all: {opts.allowed_same_sender} {attachment['sender_id']} {self.sender_id}",
-                    flush=True,
-                )
 
                 if not opts.allowed_same_sender and attachment["sender_id"] == self.sender_id:
                     continue
@@ -836,9 +833,9 @@ class ZenohClient:
     async def _worker(self, e: CallbackEntry):
         q = e.q
         opts = e.opts
-        rate_window = 1.0
-        rate_count = 0
-        rate_start = time.time()
+
+        next_ts = 0.0
+        period = (1.0 / float(opts.rate_limit_per_sec)) if opts.rate_limit_per_sec else 0.0
 
         batch_buf: list[tuple[str, memoryview, dict | None, dict]] = []
 
@@ -855,14 +852,11 @@ class ZenohClient:
                         if (m["_sample_i"] % opts.sample_every) != 0:
                             continue
                     # 레이트리밋
-                    if opts.rate_limit_per_sec:
-                        now = time.time()
-                        if now - rate_start >= rate_window:
-                            rate_start = now
-                            rate_count = 0
-                        if rate_count >= opts.rate_limit_per_sec:
+                    if period > 0.0:
+                        now = time.monotonic()
+                        if now < next_ts:
                             continue
-                        rate_count += 1
+                        next_ts = time.monotonic() + period
 
                     kwargs = self._select_callback_kwargs(
                         e.callback,
@@ -898,15 +892,11 @@ class ZenohClient:
                 # 샘플링/레이트리밋(배치 수준)
                 if opts.sample_every > 1:
                     batch_buf = batch_buf[:: opts.sample_every]
-                if opts.rate_limit_per_sec:
-                    now = time.time()
-                    if now - rate_start >= rate_window:
-                        rate_start = now
-                        rate_count = 0
-                    if rate_count >= opts.rate_limit_per_sec:
-                        batch_buf.clear()
+                if period > 0.0:
+                    now = time.monotonic()
+                    if now < next_ts:
                         continue
-                    rate_count += 1
+                    next_ts = time.monotonic() + period
 
                 for it in batch_buf:
                     kwargs = self._select_callback_kwargs(

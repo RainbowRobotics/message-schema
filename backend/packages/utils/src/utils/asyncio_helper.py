@@ -1,5 +1,7 @@
 import asyncio
 
+from rb_modules.log import rb_log
+
 _running: set[asyncio.Task] = set()
 
 
@@ -13,7 +15,7 @@ def spawn(coro, *, name=None, log_ex=True):
             try:
                 task.result()
             except Exception as e:
-                print(f"[task:{task.get_name() or id(task)}] error: {e}")
+                rb_log.error(f"[task:{task.get_name() or id(task)}] error: {e}")
 
     t.add_done_callback(_done)
     return t
@@ -30,9 +32,9 @@ def fire_and_log(coro, *, name=None):
 
     def _done(t: asyncio.Task):
         try:
-            t.result()  # 결과를 꺼내면 GC가 안전하게 정리
+            _ = t.result()
         except Exception as e:
-            print(f"[task:{t.get_name() or id(t)}] error: {e}", flush=True)
+            rb_log.error(f"[task:{t.get_name() or id(t)}] error: {e}")
 
     task.add_done_callback(_done)
     return task

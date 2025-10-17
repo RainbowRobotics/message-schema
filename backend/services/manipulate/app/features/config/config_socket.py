@@ -95,3 +95,17 @@ def on_save_selfcoll_parameter(data, robot_model: str):
 
     res = config_service.save_selfcoll_parameter(robot_model, request=dict_data)
     return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/save_user_frame_parameter")
+def on_save_user_frame_parameter(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = config_service.save_user_frame_parameter(robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/rb_api/user_frames")
+def on_rb_api_user_frames(data, robot_model: str):
+    res = config_service.get_user_frames(robot_model)
+    return to_json(res)

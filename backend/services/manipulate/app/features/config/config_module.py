@@ -1,3 +1,4 @@
+from app.socket.socket_client import socket_client
 from flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
 from flat_buffers.IPC.Request_CallConfigControlBox import Request_CallConfigControlBoxT
 from flat_buffers.IPC.Request_CallConfigRobotArm import Request_CallConfigRobotArmT
@@ -12,6 +13,7 @@ from flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideD
 from flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
 from flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFuncT
 from flat_buffers.IPC.Request_Save_Tool_List_Para import Request_Save_Tool_List_ParaT
+from flat_buffers.IPC.Request_Save_User_Frame import Request_Save_User_FrameT
 from flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
 from flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigControlBoxT
 from flat_buffers.IPC.Response_CallConfigRobotArm import Response_CallConfigRobotArmT
@@ -19,7 +21,8 @@ from flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigTool
 from flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_zenoh.client import ZenohClient
-from utils.parser import t_to_dict
+from utils.asyncio_helper import fire_and_log
+from utils.parser import t_to_dict, to_json
 
 from .config_schema import (
     Request_Save_Area_ParameterPD,
@@ -30,7 +33,9 @@ from .config_schema import (
     Request_Save_SideDin_FunctionPD,
     Request_Save_SideDout_FunctionPD,
     Request_Save_Tool_List_ParameterPD,
+    Request_Save_User_FramePD,
     Request_Set_Tool_ListPD,
+    Response_CallConfigControlBoxPD,
 )
 
 zenoh_client = ZenohClient()
@@ -52,6 +57,13 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
+    def socket_emit_config_toollist(self, robot_model: str):
+        config_toollist_res = self.config_tool_list(robot_model)
+
+        fire_and_log(
+            socket_client.emit(f"{robot_model}/call_config_toollist", to_json(config_toollist_res))
+        )
+
     def config_robot_arm(self, robot_model: str):
         req = Request_CallConfigRobotArmT()
 
@@ -63,6 +75,13 @@ class ConfigService(BaseService):
         )
 
         return res["dict_payload"]
+
+    def socket_emit_config_robot_arm(self, robot_model: str):
+        config_robot_arm_res = self.config_robot_arm(robot_model)
+
+        fire_and_log(
+            socket_client.emit(f"{robot_model}/call_config_robotarm", to_json(config_robot_arm_res))
+        )
 
     def call_change_toollist(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
         request = t_to_dict(request)
@@ -79,7 +98,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def config_control_box(self, robot_model: str):
+    def config_control_box(self, robot_model: str) -> Response_CallConfigControlBoxPD:
         req = Request_CallConfigControlBoxT()
 
         res = zenoh_client.query_one(
@@ -90,6 +109,36 @@ class ConfigService(BaseService):
         )
 
         return res["dict_payload"]
+
+    def parse_get_user_frames(self, config_control_box_res: Response_CallConfigControlBoxPD):
+        return {
+            "user_frames": [
+                config_control_box_res["userFrame0"],
+                config_control_box_res["userFrame1"],
+                config_control_box_res["userFrame2"],
+                config_control_box_res["userFrame3"],
+                config_control_box_res["userFrame4"],
+                config_control_box_res["userFrame5"],
+                config_control_box_res["userFrame6"],
+                config_control_box_res["userFrame7"],
+            ]
+        }
+
+    def socket_emit_config_control_box(self, robot_model: str, *, emit_user_frames: bool = False):
+        config_control_box_res = self.config_control_box(robot_model)
+
+        fire_and_log(
+            socket_client.emit(
+                f"{robot_model}/call_config_controlbox", to_json(config_control_box_res)
+            )
+        )
+
+        if emit_user_frames:
+            user_frames_res = self.parse_get_user_frames(config_control_box_res)
+
+            fire_and_log(
+                socket_client.emit(f"{robot_model}/rb_api/user_frames", to_json(user_frames_res))
+            )
 
     def save_area_parameter(self, robot_model: str, *, request: Request_Save_Area_ParameterPD):
         request = t_to_dict(request)
@@ -114,6 +163,8 @@ class ConfigService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=100,
         )
+
+        self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
@@ -153,6 +204,8 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=160,
         )
 
+        self.socket_emit_config_toollist(robot_model)
+
         return res["dict_payload"]
 
     def save_direct_teach_sensitivity(
@@ -188,6 +241,8 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
+        self.socket_emit_config_control_box(robot_model)
+
         return res["dict_payload"]
 
     def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_FunctionPD):
@@ -203,6 +258,8 @@ class ConfigService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
+
+        self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
@@ -221,6 +278,8 @@ class ConfigService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
         )
+
+        self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
@@ -259,5 +318,35 @@ class ConfigService(BaseService):
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=32,
         )
+
+        return res["dict_payload"]
+
+    def get_user_frames(self, robot_model: str):
+        res = self.config_control_box(robot_model)
+
+        user_frames_res = self.parse_get_user_frames(res)
+
+        return user_frames_res
+
+    def save_user_frame_parameter(self, robot_model: str, *, request: Request_Save_User_FramePD):
+        request = t_to_dict(request)
+
+        req = Request_Save_User_FrameT()
+        req.userfNo = request["userf_no"]
+        req.userfName = request["userf_name"]
+        req.userfX = request["userf_x"]
+        req.userfY = request["userf_y"]
+        req.userfZ = request["userf_z"]
+        req.userfRX = request["userf_rx"]
+        req.userfRY = request["userf_ry"]
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_user_frame_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
+        )
+
+        self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
 
         return res["dict_payload"]

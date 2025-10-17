@@ -82,7 +82,7 @@ class StateService:
                         core_sw["connected"] = "PARAM_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 4:
                         core_sw["connected"] = "JOINT_CHECKED"
-                    elif obj["statusPowerOut"] == 1 or obj["statusServoNum"] == 5:
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 5:
                         core_sw["connected"] = "SYSTEM_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 6:
                         core_sw["connected"] = "STABLE"
