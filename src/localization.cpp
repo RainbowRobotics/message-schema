@@ -1,4 +1,8 @@
 #include "localization.h"
+namespace 
+{
+    const char* MODULE_NAME = "LOC";
+}
 
 LOCALIZATION* LOCALIZATION::instance(QObject* parent)
 {
@@ -278,12 +282,14 @@ void LOCALIZATION::start_semiauto_init()
     if(loc_mode != "2D" && loc_mode != "3D")
     {
         is_busy = false;
+        spdlog::error("[SEMIAUTO INIT] unknown LOC_MODE: {}", loc_mode.toStdString().c_str());
         return;
     }
 
     if(!unimap || unimap->get_is_loaded() != MAP_LOADED)
     {
         is_busy = false;
+        spdlog::error("[SEMIAUTO INIT] map not loaded");
         return;
     }
 
@@ -297,6 +303,7 @@ void LOCALIZATION::start_semiauto_init()
         if(!kdtree_cloud || !kdtree_index || kdtree_cloud->pts.empty())
         {
             is_busy = false;
+            spdlog::error("[SEMIAUTO INIT] map kdtree not ready");
             return;
         }
 
@@ -310,6 +317,7 @@ void LOCALIZATION::start_semiauto_init()
         if(frm.pts.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no frame data");
             return;
         }
 
@@ -318,6 +326,7 @@ void LOCALIZATION::start_semiauto_init()
         if(idxs.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no init candidates");
             return;
         }
 
@@ -370,6 +379,7 @@ void LOCALIZATION::start_semiauto_init()
         if(cur_frm.pts.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no frame data");
             return;
         }
 
@@ -378,6 +388,7 @@ void LOCALIZATION::start_semiauto_init()
         if(idxs.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no init candidates");
             return;
         }
 
@@ -413,6 +424,7 @@ void LOCALIZATION::start_semiauto_init()
     }
 
     is_busy = false;
+    spdlog::info("[SEMIAUTO INIT] finished");
 }
 
 Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G)

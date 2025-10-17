@@ -1,4 +1,8 @@
 #include "ekf.h"
+namespace 
+{
+    const char* MODULE_NAME = "EKF";
+}
 
 EKF::EKF(QObject *parent) : QObject{parent}
 {

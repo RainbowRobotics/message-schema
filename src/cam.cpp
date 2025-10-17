@@ -1,4 +1,9 @@
 #include "cam.h"
+namespace 
+{
+    const char* MODULE_NAME = "CAM";
+}
+
 
 CAM* CAM::instance(QObject* parent)
 {

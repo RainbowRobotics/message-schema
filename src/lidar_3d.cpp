@@ -1,5 +1,8 @@
 #include "lidar_3d.h"
-
+namespace 
+{
+    const char* MODULE_NAME = "LIDAR_3D";
+}
 LIDAR_3D* LIDAR_3D::instance(QObject* parent)
 {
     static LIDAR_3D* inst = nullptr;

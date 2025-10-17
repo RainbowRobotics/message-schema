@@ -1,6 +1,9 @@
 #include "comm_rrs.h"
-
 #include "mainwindow.h"
+namespace 
+{
+    const char* MODULE_NAME = "RRS";
+}
 
 ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorContext context)
 {

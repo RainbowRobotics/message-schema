@@ -386,7 +386,7 @@ void COMM_MSA::reconnect_loop()
             logger->write_log("[COMM_MSA] Invalid server ip");
             return;
         }
-        io->connect("ws://localhost:15001");
+        //io->connect("ws://localhost:15001");
        // io->connect("ws://10.108.1.10:15001");
         io->socket("slamnav");
     }

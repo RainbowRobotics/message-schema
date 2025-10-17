@@ -1,5 +1,10 @@
 #include "autocontrol.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "AUTO";
+}
+
 AUTOCONTROL* AUTOCONTROL::instance(QObject* parent)
 {
     static AUTOCONTROL* inst = nullptr;
@@ -529,6 +534,7 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     else if(msg.command == "change_goal")
     {
         logger->write_log("[AUTO] just change goal");
+        spdlog::info("[AUTO] just change goal");
     }
 }
 
@@ -567,6 +573,7 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
     else if(msg.command == "change_goal")
     {
         logger->write_log("[AUTO] just change goal");
+        spdlog::info("[AUTO] just change goal");
     }
 }
 
@@ -680,6 +687,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
     if(path_list2.size() == 0)
     {
         logger->write_log("[AUTO] move_pp, path_list2 empty");
+        spdlog::info("[AUTO] move_pp, path_list2 empty");
         stop();
         return;
     }
@@ -688,12 +696,15 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
 
     logger->write_log("[AUTO] move_pp, recv path check");
+    spdlog::info("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
         logger->write_log(QString("[AUTO] path_%1").arg(p));
+        spdlog::info("[AUTO] path_{}", p);
         for(size_t q = 0; q < path_list2[p].size(); q++)
         {
             logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+            spdlog::info("[AUTO] {}", path_list2[p][q].toUtf8().constData());
         }
     }
 
@@ -707,6 +718,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         final_goal_node_name = cur_move_info.goal_node_name;
 
         logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
+        spdlog::info("[AUTO] final_goal: {}, {}", final_goal_node_id.toUtf8().constData(), final_goal_node_name.toUtf8().constData());
     }
 
     // set path
@@ -740,26 +752,31 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
+                spdlog::info("[AUTO] move_pp, waiting, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
+                spdlog::info("[AUTO] move_pp, charging, path set final");
             }
             else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
+                spdlog::info("[AUTO] move_pp, packing, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
+                spdlog::info("[AUTO] move_pp, container, path set final");
             }
             else if(final_goal_node_id == node->id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
+                spdlog::info("[AUTO] move_pp, path set final");
             }
         }
 
@@ -802,10 +819,12 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         {
             mobile->move(0,0,0);
             logger->write_log("[AUTO] move_pp, curve detected, stop");
+            spdlog::info("[AUTO] move_pp, curve detected, stop");
         }
         else
         {
             logger->write_log("[AUTO] move_pp, no curve, just change path");
+            spdlog::info("[AUTO] move_pp, no curve, just change path");
         }
     }
 
@@ -848,6 +867,7 @@ void AUTOCONTROL::move()
     if(global_node_path.size() == 0 || global_preset < 0)
     {
         logger->write_log("[AUTO] node_path.size() == 0 || preset < 0");
+        spdlog::info("[AUTO] node_path.size() == 0 || preset < 0");
         return;
     }
 
@@ -873,6 +893,7 @@ void AUTOCONTROL::move()
     if(path_list2.size() == 0)
     {
         logger->write_log("[AUTO] move_pp, path_list2 empty");
+        spdlog::info("[AUTO] move_pp, path_list2 empty");
         stop();
         return;
     }
@@ -881,12 +902,15 @@ void AUTOCONTROL::move()
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
 
     logger->write_log("[AUTO] move_pp, recv path check");
+    spdlog::info("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
         logger->write_log(QString("[AUTO] path_%1").arg(p));
+        spdlog::info("[AUTO] path_{}", p);
         for(size_t q = 0; q < path_list2[p].size(); q++)
         {
             logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+            spdlog::info("[AUTO] {}", path_list2[p][q].toUtf8().constData());
         }
     }
 
@@ -898,6 +922,7 @@ void AUTOCONTROL::move()
         final_goal_node_id   = cur_move_info.goal_node_id;
         final_goal_node_name = cur_move_info.goal_node_name;
         logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
+        spdlog::info("[AUTO] final_goal: {}, {}", final_goal_node_id.toUtf8().constData(), final_goal_node_name.toUtf8().constData());
     }
 
     // set path
@@ -914,6 +939,7 @@ void AUTOCONTROL::move()
             if(node == nullptr)
             {
                 logger->write_log("[AUTO] move_pp, path invalid");
+                spdlog::info("[AUTO] move_pp, path invalid");
                 stop();
                 return;
             }
@@ -922,26 +948,31 @@ void AUTOCONTROL::move()
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
+                spdlog::info("[AUTO] move_pp, waiting, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
+                spdlog::info("[AUTO] move_pp, charging, path set final");
             }
             else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
+                spdlog::info("[AUTO] move_pp, packing, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
+                spdlog::info("[AUTO] move_pp, container, path set final");
             }
             else if(final_goal_node_id == node->id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
+                spdlog::info("[AUTO] move_pp, path set final");
             }
         }
 
@@ -984,10 +1015,12 @@ void AUTOCONTROL::move()
         {
             mobile->move(0,0,0);
             logger->write_log("[AUTO] move_pp, curve detected, stop");
+            spdlog::info("[AUTO] move_pp, curve detected, stop");
         }
         else
         {
             logger->write_log("[AUTO] move_pp, no curve, just change path");
+            spdlog::info("[AUTO] move_pp, no curve, just change path");
         }
     }
 
@@ -1166,6 +1199,7 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
     if(path_list2.size() == 0)
     {
         logger->write_log("[AUTO] move_pp, path_list2 empty");
+        spdlog::info("[AUTO] move_pp, path_list2 empty");
         stop();
         return;
     }
@@ -1174,12 +1208,15 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
 
     logger->write_log("[AUTO] move_pp, recv path check");
+    spdlog::info("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
         logger->write_log(QString("[AUTO] path_%1").arg(p));
+        spdlog::info("[AUTO] path_{}", p);
         for(size_t q = 0; q < path_list2[p].size(); q++)
         {
             logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+            spdlog::info("[AUTO] {}", path_list2[p][q].toUtf8().constData());
         }
     }
 
@@ -1192,6 +1229,7 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
         final_goal_node_id = cur_move_info.goal_node_id;
         final_goal_node_name = cur_move_info.goal_node_name;
         logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
+        spdlog::info("[AUTO] final_goal: {}, {}", final_goal_node_id.toUtf8().constData(), final_goal_node_name.toUtf8().constData());
     }
 
     // set path
@@ -1208,6 +1246,7 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
             if(node == NULL)
             {
                 logger->write_log("[AUTO] move_pp, path invalid");
+                spdlog::info("[AUTO] move_pp, path invalid");
                 //qDebug() << "[AUTO] node null";
                 stop();
                 return;
@@ -1219,26 +1258,31 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
+                spdlog::info("[AUTO] move_pp, waiting, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
+                spdlog::info("[AUTO] move_pp, charging, path set final");
             }
             else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
+                spdlog::info("[AUTO] move_pp, packing, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
+                spdlog::info("[AUTO] move_pp, container, path set final");
             }
             else if(final_goal_node_id == node->id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
+                spdlog::info("[AUTO] move_pp, path set final");
             }
         }
 
@@ -1283,10 +1327,12 @@ void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
         {
             mobile->move(0,0,0);
             logger->write_log("[AUTO] move_pp, curve detected, stop");
+            spdlog::info("[AUTO] move_pp, curve detected, stop");
         }
         else
         {
             logger->write_log("[AUTO] move_pp, no curve, just change path");
+            spdlog::info("[AUTO] move_pp, no curve, just change path");
         }
     }
 
@@ -1331,6 +1377,8 @@ void AUTOCONTROL::backwardmove()
     if(global_node_path.size() == 0 || global_preset < 0)
     {
         logger->write_log("[AUTO] node_path.size() == 0 || preset < 0");
+        spdlog::info("[AUTO] node_path.size() == 0 || preset < 0");
+        
         return;
     }
 
@@ -1356,6 +1404,7 @@ void AUTOCONTROL::backwardmove()
     if(path_list2.size() == 0)
     {
         logger->write_log("[AUTO] move_pp, path_list2 empty");
+        spdlog::info("[AUTO] move_pp, path_list2 empty");
         stop();
         return;
     }
@@ -1364,12 +1413,15 @@ void AUTOCONTROL::backwardmove()
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::NO_CHANGE);
 
     logger->write_log("[AUTO] move_pp, recv path check");
+    spdlog::info("[AUTO] move_pp, recv path check");
     for(size_t p = 0; p < path_list2.size(); p++)
     {
         logger->write_log(QString("[AUTO] path_%1").arg(p));
+        spdlog::info("[AUTO] path_{}", p);
         for(size_t q = 0; q < path_list2[p].size(); q++)
         {
             logger->write_log(QString("[AUTO] %1").arg(path_list2[p][q]));
+            spdlog::info("[AUTO] {}", path_list2[p][q].toUtf8().constData());
         }
     }
 
@@ -1381,6 +1433,7 @@ void AUTOCONTROL::backwardmove()
         final_goal_node_id   = cur_move_info.goal_node_id;
         final_goal_node_name = cur_move_info.goal_node_name;
         logger->write_log(QString("[AUTO] final_goal: %1, %2").arg(final_goal_node_id).arg(final_goal_node_name));
+        spdlog::info("[AUTO] final_goal: {}, {}", final_goal_node_id.toUtf8().constData(), final_goal_node_name.toUtf8().constData());
     }
 
     // set path
@@ -1397,6 +1450,7 @@ void AUTOCONTROL::backwardmove()
             if(node == nullptr)
             {
                 logger->write_log("[AUTO] move_pp, path invalid");
+                spdlog::info("[AUTO] move_pp, path invalid");
                 stop();
                 return;
             }
@@ -1405,26 +1459,34 @@ void AUTOCONTROL::backwardmove()
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, waiting, path set final");
+                spdlog::info("[AUTO] move_pp, waiting, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CHARGING-01") && node->name.contains("AMR-CHARGING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, charging, path set final");
+                spdlog::info("[AUTO] move_pp, charging, path set final");
+
+                
             }
             else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, packing, path set final");
+                spdlog::info("[AUTO] move_pp, packing, path set final");
             }
             else if(final_goal_node_name.contains("AMR-CONTAINER-01") && node->name.contains("AMR-CONTAINER-01"))
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, container, path set final");
+                spdlog::info("[AUTO] move_pp, container, path set final");
+
             }
             else if(final_goal_node_id == node->id)
             {
                 path.is_final = true;
                 logger->write_log("[AUTO] move_pp, path set final");
+                spdlog::info("[AUTO] move_pp, path set final");
             }
         }
 
@@ -3141,11 +3203,13 @@ void AUTOCONTROL::control_loop()
     fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
     if(cmd_method == CommandMethod::METHOD_HPP)
     {
-        std::cout << "CommandMethod:HPP ----- FSM_STATE : " << fsm_state << std::endl;
+        //std::cout << "CommandMethod:HPP ----- FSM_STATE : " << fsm_state << std::endl;
+        spdlog::info("CommandMethod:HPP ----- FSM_STATE : {}", fsm_state.load());
     }
     else if(cmd_method == CommandMethod::METHOD_PP)
     {
-        std::cout << "CommandMethod:PP ----- FSM_STATE : " << fsm_state << std::endl;
+        //std::cout << "CommandMethod:PP ----- FSM_STATE : " << fsm_state << std::endl;
+        spdlog::info("CommandMethod:PP ----- FSM_STATE : {}", fsm_state.load());
     }
 
     // check already goal
@@ -3626,6 +3690,7 @@ void AUTOCONTROL::control_loop()
                     set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
 
                     logger->write_log(QString("[AUTO] DRIVING -> OBS, cur_obs_val:%1, fsm_state:%2").arg(obs_value).arg((int)fsm_state));
+                    spdlog::info("[AUTO] DRIVING -> OBS, cur_obs_val:{}, fsm_state:{}", obs_value, (int)fsm_state.load());
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
                 }
@@ -4221,6 +4286,7 @@ void AUTOCONTROL::current_node_loop()
     QString pre_node_id = "";
 
     logger->write_log("[AUTO] a loop start");
+    spdlog::info("[AUTO] a loop start");
     while(a_flag)
     {
         if(unimap->get_is_loaded() == MAP_LOADED)
@@ -4430,7 +4496,8 @@ void AUTOCONTROL::node_loop()
     double pre_loop_time = get_time();
     QString pre_node_id = "";
 
-    logger->write_log("[NODE] start node loop");
+    //logger->write_log("[NODE] start node loop");
+    spdlog::info("[NODE] start node loop");
     while(node_flag)
     {
         if(unimap->get_is_loaded() == MAP_LOADED)

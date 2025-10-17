@@ -1,5 +1,10 @@
 #include "obsmap.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "OBSMAP";
+}
+
 OBSMAP* OBSMAP::instance(QObject* parent)
 {
     static OBSMAP* inst = nullptr;
@@ -35,6 +40,8 @@ OBSMAP::~OBSMAP()
         octree.reset();
     }
 }
+
+
 
 void OBSMAP::init()
 {

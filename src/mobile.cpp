@@ -1,4 +1,8 @@
 #include "mobile.h"
+namespace 
+{
+    const char* MODULE_NAME = "MOBILE";
+}
 
 MOBILE* MOBILE::instance(QObject* parent)
 {
@@ -470,7 +474,7 @@ void MOBILE::receive_data_loop()
                         else
                         {
                             //std::cout << "wrong robot_type: " << static_cast<int>(robot_type) << ", data_size: " << data_size << std::endl;
-                            spdlog::warn("wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
+                            spdlog::warn("[MOBILE]wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
                         }
 
                         if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)

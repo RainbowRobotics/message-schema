@@ -1,4 +1,8 @@
 #include "livox.h"
+namespace 
+{
+    const char* MODULE_NAME = "LIVOX";
+}
 
 LIVOX* LIVOX::instance(QObject* parent)
 {
@@ -28,7 +32,8 @@ LIVOX::~LIVOX()
 
 void LIVOX::open()
 {
-    printf("[LIVOX] open\n");
+    //printf("[LIVOX] open\n");
+    spdlog::info("[LIVOX] open");
 
     // stop first
     close();
@@ -45,7 +50,8 @@ void LIVOX::open()
         imu_t[i] = imu_tf[i].block(0,3,3,1);
     }
 
-    printf("[LIVOX] init\n");
+    //printf("[LIVOX] init\n");
+    spdlog::info("[LIVOX] init");
 
     // loop start
     grab_flag = true;
@@ -155,28 +161,34 @@ void LIVOX::grab_loop()
     // Disable logger
     DisableLivoxSdkConsoleLogger();
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    printf("[LIVOX] Disable debug message\n");
+
+    //printf("[LIVOX] Disable debug message\n");
+    spdlog::info("[LIVOX] Disable debug message");
 
     // Init Livox SDK2
     QString path = QCoreApplication::applicationDirPath() + "/config/" + config->get_robot_type_str() + "/mid360_config.json";
-    printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
+    //printf("[LIVOX] load, %s\n", path.toLocal8Bit().data());
+    spdlog::info("[LIVOX] load, {}", path.toStdString());
 
     FILE* fp = fopen(path.toLocal8Bit().data(), "r");
     if(fp == nullptr)
     {
-        printf("[LIVOX] config file not found or unreadable: %s\n", path.toLocal8Bit().data());
+        //printf("[LIVOX] config file not found or unreadable: %s\n", path.toLocal8Bit().data());
+        spdlog::error("[LIVOX] config file not found or unreadable: {}", path.toStdString());
         return;
     }
     fclose(fp);
 
     if(!LivoxLidarSdkInit(path.toLocal8Bit().data()))
     {
-        printf("[LIVOX] livox Init Failed\n");
+        //printf("[LIVOX] livox Init Failed\n");
+        spdlog::error("[LIVOX] livox Init Failed");
         LivoxLidarSdkUninit();
         return;
     }
 
-    printf("[LIVOX] livox initialized\n");
+    //printf("[LIVOX] livox initialized\n");
+    spdlog::info("[LIVOX] livox initialized");
 
     // Register handle callback
     SetLivoxLidarInfoChangeCallback([](const uint32_t handle, const LivoxLidarInfo* info, void* client_data)
@@ -199,14 +211,16 @@ void LIVOX::grab_loop()
             if(idx >= 0)
             {
                 livox->livox_handles[idx] = handle;
-                printf("[LIVOX] handle registered [%d]: %u, ip: %s, sn: %s\n", idx, handle, info->lidar_ip, info->sn);
+                //printf("[LIVOX] handle registered [%d]: %u, ip: %s, sn: %s\n", idx, handle, info->lidar_ip, info->sn);
+                spdlog::info("[LIVOX] handle registered [{}]: {}, ip: {}, sn: {}", idx, handle, info->lidar_ip, info->sn);
 
                 SetLivoxLidarWorkMode(handle, kLivoxLidarNormal, nullptr, nullptr);
                 livox->is_connected = true;
             }
             else
             {
-                printf("[LIVOX] unknown IP: %s (sn: %s)\n", info->lidar_ip, info->sn);
+                //printf("[LIVOX] unknown IP: %s (sn: %s)\n", info->lidar_ip, info->sn);
+                spdlog::warn("[LIVOX] unknown IP: {} (sn: {})", info->lidar_ip, info->sn);
             }
         }
     }, this);
@@ -439,9 +453,11 @@ void LIVOX::grab_loop()
     // Register callbacks
     SetLivoxLidarPointCloudCallBack(point_cloud_callback, this); // client_data is unused
     SetLivoxLidarImuDataCallback(imu_data_callback, this); // client_data is unused
-    printf("[LIVOX] callback registered\n");
+    //printf("[LIVOX] callback registered\n");
+    spdlog::info("[LIVOX] callback registered");
 
-    printf("[LIVOX] grab_loop start\n");
+    //printf("[LIVOX] grab_loop start\n");
+    spdlog::info("[LIVOX] grab_loop start");
     while(grab_flag)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(90));
@@ -450,7 +466,8 @@ void LIVOX::grab_loop()
     // uninit
     LivoxLidarSdkUninit();
 
-    printf("[LIVOX] grab_loop stop\n");
+    //printf("[LIVOX] grab_loop stop\n");
+    spdlog::info("[LIVOX] grab_loop stop");
 }
 
 void LIVOX::set_config_module(CONFIG* _config)

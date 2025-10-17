@@ -1,5 +1,10 @@
 #include "logger.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "LOGGER";
+}
+
 LOGGER* LOGGER::instance(QObject* parent)
 {
     static LOGGER* inst = nullptr;
@@ -131,12 +136,25 @@ void LOGGER::init()
             //spd_logger = spdlog::basic_logger_mt("logger", log_name.toStdString());
             //spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
             
-             // create file sink and console sink, then make one logger containing both
+            // create file sink and console sink, then make one logger containing both
             auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_name.toStdString(), true);
             auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        
+            // ensure sinks will emit all levels you want displayed on terminal
+            console_sink->set_level(spdlog::level::trace);
+            file_sink->set_level(spdlog::level::trace);
+        
+            // color tokens %^ (start) and %$ (end) ensure levels are colored on console
+
+            // use slightly different patterns for console/file if desired
+            console_sink->set_pattern("%^[%Y-%m-%d_%H:%M:%S.%e] [%l] %$ %v");
+            //console_sink->set_pattern("[%Y-%m-%d_%H:%M:%S.%e] [%l] [%n] %v");
+
+            //file_sink->set_pattern("[%Y-%m-%d_%H:%M:%S.%e] [%l] [%n] %v");
+            file_sink->set_pattern("[%Y-%m-%d_%H:%M:%S.%e] [%l] %v");
+        
             std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
             spd_logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
-            spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
 
             spdlog::set_default_logger(spd_logger);
 
@@ -290,4 +308,6 @@ void LOGGER::write_temperature_log_to_txt(const QString& msg)
         spd_temperature_logger->info(msg.toStdString());
     }
 }
+
+
 

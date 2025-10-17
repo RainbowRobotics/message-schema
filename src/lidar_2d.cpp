@@ -1,4 +1,8 @@
 #include "lidar_2d.h"
+namespace 
+{
+    const char* MODULE_NAME = "LIDAR_2D";
+}
 
 LIDAR_2D* LIDAR_2D::instance(QObject* parent)
 {

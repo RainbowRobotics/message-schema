@@ -1,4 +1,8 @@
 #include "task.h"
+namespace 
+{
+    const char* MODULE_NAME = "TASK";
+}
 
 TASK* TASK::instance(QObject* parent)
 {
@@ -27,8 +31,12 @@ TASK::~TASK()
 
 void TASK::init()
 {
-    spdlog::info("[TASK] task init");
+    log_info("task init");
 
+    //static auto mod_logger = LOGGER::instance()->get_module_logger("TASK");
+    //mod_logger->info("task init");
+    //mod_logger->info("Pause command received. but not yet");
+    //mod_logger->info("Cancel command received.");
     config = CONFIG::instance();
     unimap = UNIMAP::instance();
     obsmap = OBSMAP::instance();
@@ -39,6 +47,7 @@ void TASK::init()
     if (ctrl == nullptr || unimap == nullptr || loc == nullptr)
     {
         spdlog::critical("[TASK] Failed to initialize required modules!");
+
     }
     else
     {

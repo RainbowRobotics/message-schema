@@ -1,4 +1,8 @@
 #include "mapping.h"
+namespace 
+{
+    const char* MODULE_NAME = "MAPPING";
+}
 
 MAPPING* MAPPING::instance(QObject* parent)
 {

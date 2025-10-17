@@ -1,4 +1,8 @@
 #include "ekf_3d.h"
+namespace 
+{
+    const char* MODULE_NAME = "EKF_3D";
+}
 
 EKF_3D::EKF_3D(QObject *parent) : QObject{parent}
 {
@@ -12,6 +16,7 @@ EKF_3D::~EKF_3D()
 {
 
 }
+
 
 void EKF_3D::init(const Eigen::Matrix4d& tf)
 {
@@ -46,8 +51,8 @@ void EKF_3D::init(const Eigen::Matrix4d& tf)
 
     initialized = true;
 
-    printf("[EKF_3D] init (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
-           x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
+    //printf("[EKF_3D] init (%.3f, %.3f, %.3f, %.3f, %.3f, %.3f )\n",
+    //       x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
     spdlog::info("[EKF_3D] init ({:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2], x_hat[3]*R2D, x_hat[4]*R2D, x_hat[5]*R2D);
 }
                  

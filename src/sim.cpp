@@ -1,5 +1,8 @@
 #include "sim.h"
-
+namespace 
+{
+    const char* MODULE_NAME = "SIM";
+}
 SIM* SIM::instance(QObject* parent)
 {
     static SIM* inst = nullptr;

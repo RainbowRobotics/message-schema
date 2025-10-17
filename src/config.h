@@ -407,17 +407,17 @@ private:
     QString SERVER_PW = "rainbow";
 
     // logging
-    QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
-    bool DEBUG_LIDAR_2D = false;        // enable/disable LIDAR debug logs
+    QString LOG_LEVEL = "info";                 // spdlog level: trace, debug, info, warn, error, critical, off
+    bool DEBUG_LIDAR_2D = false;                // enable/disable LIDAR debug logs
     bool DEBUG_LIDAR_3D = false;
-    bool DEBUG_MOBILE =  false;         // enable/disable MOBILE debug logs
-    bool DEBUG_COMM_RRS = false;        // enable/disable COMM RRS debug logs
+    bool DEBUG_MOBILE =  false;                 // enable/disable MOBILE debug logs
+    bool DEBUG_COMM_RRS = false;                // enable/disable COMM RRS debug logs
     bool DEBUG_AUTOCONTROL = false;
     bool DEBUG_LOCALIZATION = false;
     bool DEBUG_OBSMAP = false;
 
-    bool LOG_ENABLE_FILE_OUTPUT = false; // enable/disable file output
-    QString LOG_FILE_PATH = "logs/app.log"; // log file path
+    bool LOG_ENABLE_FILE_OUTPUT = false;        // enable/disable file output
+    QString LOG_FILE_PATH = "logs/app.log";     // log file path
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;

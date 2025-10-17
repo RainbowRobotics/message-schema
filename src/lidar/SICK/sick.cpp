@@ -1,5 +1,10 @@
 #include "sick.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "SICK";
+}
+
 SICK* SICK::instance(QObject* parent)
 {
     static SICK* inst = nullptr;

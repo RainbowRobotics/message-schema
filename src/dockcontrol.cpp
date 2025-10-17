@@ -1,5 +1,10 @@
 #include "dockcontrol.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "DOCK";
+}
+
 DOCKCONTROL* DOCKCONTROL::instance(QObject *parent)
 {
     static DOCKCONTROL* inst = nullptr;

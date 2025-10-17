@@ -1,5 +1,8 @@
 #include "safety.h"
-
+namespace 
+{
+    const char* MODULE_NAME = "SAFETY";
+}
 
 SAFETY* SAFETY::instance(QObject* parent)
 {

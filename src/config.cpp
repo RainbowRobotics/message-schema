@@ -1,5 +1,10 @@
 #include "config.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "CONFIG";
+}
+
 CONFIG* CONFIG::instance(QObject* parent)
 {
     static CONFIG* _instance = nullptr;
@@ -19,6 +24,7 @@ CONFIG::~CONFIG()
 {
 
 }
+
 
 void CONFIG::load_version()
 {
@@ -975,7 +981,8 @@ void CONFIG::set_mileage(const QString &mileage)
 
     if(!config_file.open(QIODevice::ReadWrite))
     {
-        printf("[config] failed to open config file for reading and writing.\n");
+        //printf("[config] failed to open config file for reading and writing.\n");
+        spdlog::info("[CONFIG] failed to open config file for reading and writing.");
         return;
     }
 

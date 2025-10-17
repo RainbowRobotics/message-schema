@@ -1,5 +1,10 @@
  #include "rp_lidar.h"
 
+ namespace 
+{
+    const char* MODULE_NAME = "RP_LIDAR";
+}
+
 RP_LIDAR* RP_LIDAR::instance(QObject* parent)
 {
     static RP_LIDAR* inst = nullptr;

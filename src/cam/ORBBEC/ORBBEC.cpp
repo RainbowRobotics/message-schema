@@ -1,4 +1,8 @@
 #include "ORBBEC.h"
+namespace 
+{
+    const char* MODULE_NAME = "ORBBEC";
+}
 
 ORBBEC* ORBBEC::instance(QObject* parent)
 {

@@ -1,4 +1,8 @@
 #include "unimap.h"
+namespace 
+{
+    const char* MODULE_NAME = "UNIMAP";
+}
 
 UNIMAP* UNIMAP::instance(QObject* parent)
 {
@@ -198,13 +202,13 @@ bool UNIMAP::load_2d()
                     }
                 }
 
-                printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud_2d->pts.size());
+                //printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud_2d->pts.size());
                 spdlog::info("[UNIMAP(2D)] {} loaded, map_pts:{}", cloud_csv_path.toStdString(), (int)kdtree_cloud_2d->pts.size());
             }
         }
         else
         {
-            printf("[UNIMAP(2D)] load failed\n");
+            //printf("[UNIMAP(2D)] load failed\n");
             spdlog::error("[UNIMAP(2D)] load failed");
             return false;
         }
@@ -567,7 +571,7 @@ void UNIMAP::save_node()
         topo_file.write(doc.toJson());
         topo_file.close();
 
-        printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+        //printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
         spdlog::info("[UNIMAP] {} saved", topo_path.toStdString());
     }
 }
@@ -591,7 +595,7 @@ void UNIMAP::clear_nodes()
         kdtree_node_index.reset();
     }
 
-    printf("[UNIMAP] topology cleared\n");
+    //printf("[UNIMAP] topology cleared\n");
     spdlog::info("[UNIMAP] topology cleared");
 }
 
