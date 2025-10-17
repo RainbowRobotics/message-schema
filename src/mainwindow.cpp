@@ -81,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_LocInit,           SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
     connect(ui->bt_LocStart,          SIGNAL(clicked()),  this, SLOT(bt_LocStart()));                    // localization start
     connect(ui->bt_LocStop,           SIGNAL(clicked()),  this, SLOT(bt_LocStop()));                     // localization stop
+    connect(ui->bt_LocInitSemiAuto,   SIGNAL(clicked()),  this, SLOT(bt_LocInitSemiAuto()));             // semi-auto localization initialization
 
     // obsmap
     connect(ui->bt_ObsClear,          SIGNAL(clicked()),     this, SLOT(bt_ObsClear()));                         // manual obstacle map clear
@@ -220,6 +221,7 @@ void MainWindow::set_opacity(QWidget* w, double opacity)
     effect->setOpacity(opacity);
     w->setGraphicsEffect(effect);
 }
+
 
 void MainWindow::init_ui_effect()
 {
@@ -1007,6 +1009,7 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
+    spdlog::info("[SIM] simulation init");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         LOGGER::instance()->write_log("[SIM] map load first", "Red", true, false);
@@ -1357,18 +1360,36 @@ void MainWindow::bt_LocInit()
 
 void MainWindow::bt_LocStart()
 {
+    printf("[MAIN] bt_LocStart1\n");
+
     LOCALIZATION::instance()->start();
     spdlog::info("[MAIN] bt_LocStart");
+    printf("[MAIN] bt_LocStart2\n");
 
 }
 
 void MainWindow::bt_LocStop()
 {
+    printf("[MAIN] bt_LocStop1\n");
+
     LOCALIZATION::instance()->stop();
     spdlog::info("[MAIN] bt_LocStop");
+    printf("[MAIN] bt_LocStop2\n");
+
 
 }
 
+void MainWindow::bt_LocInitSemiAuto()
+{
+    if  (UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        spdlog::warn("[MAIN] check map load");
+        return;
+    }
+
+    LOCALIZATION::instance()->start_semiauto_init();
+    spdlog::info("[MAIN] bt_LocSemiAuto");
+}
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {

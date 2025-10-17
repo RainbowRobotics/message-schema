@@ -218,6 +218,7 @@ public Q_SLOTS:
     void bt_LocInit();
     void bt_LocStart();
     void bt_LocStop();
+    void bt_LocInitSemiAuto();
 
     // for obsmap
     void bt_ObsClear();

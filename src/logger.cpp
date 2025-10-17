@@ -128,7 +128,14 @@ void LOGGER::init()
                     file.close();
                 }
             }
-            spd_logger = spdlog::basic_logger_mt("logger", log_name.toStdString());
+            //spd_logger = spdlog::basic_logger_mt("logger", log_name.toStdString());
+            //spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
+            
+             // create file sink and console sink, then make one logger containing both
+            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_name.toStdString(), true);
+            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
+            spd_logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
             spd_logger->set_pattern("%Y-%m-%d_%H:%M:%S.%e [%l] %v");
 
             spdlog::set_default_logger(spd_logger);

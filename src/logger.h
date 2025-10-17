@@ -12,6 +12,10 @@
 #include <QTime>
 #include <QTextEdit>
 
+#include <spdlog/sinks/basic_file_sink-inl.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+
 class LOGGER: public QObject
 {
     Q_OBJECT
