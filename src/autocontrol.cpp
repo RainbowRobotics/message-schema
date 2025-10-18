@@ -4135,7 +4135,8 @@ void AUTOCONTROL::control_loop()
             {
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
-                    extend_dt = 0;
+                    /*
+                    extented_dt = 0;
                     pre_err_th = 0;
 
                     obs_state = AUTO_OBS_CHECK;
@@ -4148,10 +4149,62 @@ void AUTOCONTROL::control_loop()
                     logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
+                    */
+
+                    // test 10.18.25
+                    bool path_clear = true;
+                    if(local_path.pos.size() > 0)
+                    {
+                        int cur_idx = get_nn_idx(local_path.pos, cur_pos);
+                        double hold_deadzone = std::max(cur_deadzone.load(), config->get_obs_deadzone());
+                        int chk_idx = cur_idx + static_cast<int>(std::ceil(hold_deadzone / AUTOCONTROL_INFO::local_path_step));
+                        if(chk_idx > static_cast<int>(local_path.pos.size()) - 1)
+                        {
+                            chk_idx = static_cast<int>(local_path.pos.size()) - 1;
+                        }
+
+                        std::vector<Eigen::Matrix4d> traj;
+                        traj.reserve(std::max(0, chk_idx - cur_idx + 1));
+                        for(int p = cur_idx; p <= chk_idx; ++p)
+                        {
+                            traj.push_back(local_path.pose[p]);
+                        }
+
+                        if(traj.size() > 0)
+                        {
+                            int val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+                            path_clear = (val == OBS_NONE);
+                        }
+                    }
+
+                    if(path_clear)
+                    {
+                        extend_dt = 0;
+                        pre_err_th = 0;
+
+                        obs_state = AUTO_OBS_CHECK;
+
+                        fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+
+                        set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+                        obs_value = OBS_NONE;
+
+                        logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN (path cleared)");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
+                    else
+                    {
+                        obs_wait_st_time = get_time();
+                        logger->write_log("[AUTO] OBS_WAIT hold (obstacle still detected)");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
                 }
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
+                /*
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
                     extend_dt = 0;
@@ -4163,6 +4216,33 @@ void AUTOCONTROL::control_loop()
                     logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN");
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     continue;
+                }
+                */
+
+                // test 10.18.25
+                if(get_time() - obs_wait_st_time > 2.5)
+                {
+                    std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
+                    int val = obsmap->is_path_collision(traj, true);
+                    if(val == OBS_NONE)
+                    {
+                        extend_dt = 0;
+                        pre_err_th = 0;
+
+                        fsm_state = AUTO_FSM_FINAL_ALIGN;
+                        set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+
+                        logger->write_log("[AUTO] OBS_WAIT -> FINAL_ALIGN (path cleared)");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
+                    else
+                    {
+                        obs_wait_st_time = get_time();
+                        logger->write_log("[AUTO] OBS_WAIT2 hold (obstacle still detected)");
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        continue;
+                    }
                 }
             }
             else if(obs_state == AUTO_OBS_VIR)
@@ -4406,6 +4486,13 @@ void AUTOCONTROL::obs_loop()
 
                 obs_decel_v = vv;
             }
+
+            // test 10.18.25
+            if(obs_value != OBS_NONE)
+            {
+                obs_decel_v = 0.0;
+            }
+            
             //            std::cout<<"obs loop obs_decel_v : "<<obs_decel_v<<std::endl;
             obs_v_debug = obs_decel_v;
 
@@ -4457,10 +4544,31 @@ void AUTOCONTROL::obs_loop()
             if(found_forward_obs)
             {
                 obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
+
+                // test 10.18.25
+                if(obs_dist <= config->get_obs_deadzone())
+                {
+                    obs_condition = "near";
+                    obs_decel_v = 0.0;
+                    if(obs_value == OBS_NONE)
+                    {
+                        obs_value = OBS_DYN;
+                    }
+                }
+                else if(obs_condition == "none")
+                {
+                    obs_condition = "far";
+                }
             }
             else
             {
                 obs_dist = std::numeric_limits<double>::max();
+            }
+
+            // test 10.18.25
+            if(obs_condition != "none" && obs_decel_v > 0.0)
+            {
+                obs_decel_v = 0.0;
             }
 
             // final update(conclusion)
