@@ -574,6 +574,8 @@ void MOBILE::receive_data_loop()
                             imu.ry = r[1];
                             imu.rz = r[2];
 
+                            cur_status.t = mobile_t + offset_t;
+                            
                             cur_status.imu_acc_x = imu_acc_x;
                             cur_status.imu_acc_y = imu_acc_y;
                             cur_status.imu_acc_z = imu_acc_z;
@@ -659,8 +661,6 @@ void MOBILE::receive_data_loop()
 
                             // Update status
                             mtx.lock();
-
-                            
                             cur_status.om_state = om_state;
                             cur_status.ri_state = ri_state;
                             cur_status.charge_state = charge_state;
@@ -2280,7 +2280,8 @@ void MOBILE::move_linear_y(double d, double v)
 {
     QString robot_wheel_type = config->get_robot_wheel_type();
 
-    if(robot_wheel_type != "MECHANUM")
+    qDebug() << robot_wheel_type;
+    if(robot_wheel_type != "MECANUM")
     {
         qDebug() << " return";
         //Todo -- Spdlog 추가

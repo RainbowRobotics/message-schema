@@ -232,7 +232,7 @@ void SICK::grab_loop(int idx)
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
             {
                 // drop
-                printf("[SICK] lidar: %d, invalid mobile poses\n", idx);
+                //printf("[SICK] lidar: %d, invalid mobile poses\n", idx);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
