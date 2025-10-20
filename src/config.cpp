@@ -206,6 +206,9 @@ void CONFIG::load_localization_2d_config(const QJsonObject &obj)
     check_and_set_double(obj_loc, "LOC_ICP_ERROR_THRESHOLD",    LOC_2D_ICP_ERROR_THRESHOLD,    "loc_2d");
     check_and_set_double(obj_loc, "LOC_ICP_ODO_FUSION_RATIO",   LOC_2D_ICP_ODO_FUSION_RATIO,   "loc_2d");
     check_and_set_double(obj_loc, "LOC_SURFEL_RANGE",           LOC_2D_SURFEL_RANGE,           "loc_2d");
+    check_and_set_bool(obj_loc,   "LOC_ROTATION_FALLBACK_USE",   LOC_2D_USE_ROTATION_FALLBACK,   "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ROTATION_FALLBACK_STEP",  LOC_2D_ROTATION_FALLBACK_STEP,  "loc_2d");
+    check_and_set_double(obj_loc, "LOC_ROTATION_FALLBACK_RANGE", LOC_2D_ROTATION_FALLBACK_RANGE, "loc_2d");
 }
 
 void CONFIG::load_localization_3d_config(const QJsonObject &obj)
@@ -1417,6 +1420,24 @@ double CONFIG::get_loc_2d_check_inlier_error()
     return LOC_2D_CHECK_IE;
 }
 
+bool CONFIG::get_loc_2d_use_rotation_fallback()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_USE_ROTATION_FALLBACK;
+}
+
+double CONFIG::get_loc_2d_rotation_fallback_step()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ROTATION_FALLBACK_STEP;
+}
+
+double CONFIG::get_loc_2d_rotation_fallback_range()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return LOC_2D_ROTATION_FALLBACK_RANGE;
+}
+
 int CONFIG::get_loc_3d_icp_max_feature_num()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -2102,5 +2123,3 @@ QString CONFIG::get_map_path()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAP_PATH;
 } 
-
-

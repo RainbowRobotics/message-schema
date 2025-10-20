@@ -208,6 +208,9 @@ public:
     double get_loc_2d_check_dist();                     // ICP possible distance
     double get_loc_2d_check_inlier_ratio();             // ICP inlier ratio
     double get_loc_2d_check_inlier_error();             // ICP inlier error
+    bool get_loc_2d_use_rotation_fallback();            // enable rotation fallback search
+    double get_loc_2d_rotation_fallback_step();         // rotation fallback step(deg)
+    double get_loc_2d_rotation_fallback_range();        // rotation fallback range(deg)
 
     /***********************
      * localization 3d
@@ -479,6 +482,9 @@ private:
     double LOC_2D_CHECK_DIST = 0.3;
     double LOC_2D_CHECK_IE = 0.2;
     double LOC_2D_CHECK_IR = 0.3;
+    bool LOC_2D_USE_ROTATION_FALLBACK = false;
+    double LOC_2D_ROTATION_FALLBACK_STEP = 10.0;
+    double LOC_2D_ROTATION_FALLBACK_RANGE = 180.0;
 
     // localization 3d
     int LOC_MAX_FEATURE_NUM = 500;
