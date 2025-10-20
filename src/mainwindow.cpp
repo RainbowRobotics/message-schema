@@ -1037,14 +1037,16 @@ void MainWindow::bt_SimInit()
     MOBILE::instance()->set_is_connected(true);
     MOBILE::instance()->set_is_synced(true);
 
-    LIDAR_2D::instance()->set_is_connected(true);
-    LIDAR_2D::instance()->set_sync_flag(true);
+    if(CONFIG::instance()->get_use_lidar_2d())
+    {
+        LIDAR_2D::instance()->set_is_connected(true);
+        LIDAR_2D::instance()->set_sync_flag(true);
+    }
 
     // loc start
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     LOCALIZATION::instance()->start();
 }
-
 void MainWindow::bt_ConfigLoad()
 {
     CONFIG::instance()->load();

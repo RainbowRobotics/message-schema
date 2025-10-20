@@ -1,19 +1,20 @@
 {
     "robot": {
-        "PLATFORM_NAME": "MECANUM",
-        "PLATFORM_TYPE": "Q150",
+        "PLATFORM_TYPE": "DD-SEC_EE",
+        "ROBOT_WHEEL_TYPE": "DD",
+        "SPEAKER": true,
         
-        "ROBOT_SIZE_MAX_X": "0.34",
-        "ROBOT_SIZE_MAX_Y": "0.30",
-        "ROBOT_SIZE_MAX_Z": "0.22",
-        "ROBOT_SIZE_MIN_X": "-0.34",
-        "ROBOT_SIZE_MIN_Y": "-0.30",
+        "ROBOT_SIZE_MAX_X": "0.6",
+        "ROBOT_SIZE_MAX_Y": "0.5",
+        "ROBOT_SIZE_MAX_Z": "1.5",
+        "ROBOT_SIZE_MIN_X": "-0.6",
+        "ROBOT_SIZE_MIN_Y": "-0.5",
         "ROBOT_SIZE_MIN_Z": "0",
-        "ROBOT_WHEEL_BASE": "0.400",
-        "ROBOT_WHEEL_RADIUS": "0.075"
+        "ROBOT_WHEEL_BASE": "0.522",
+        "ROBOT_WHEEL_RADIUS": "0.09"
     },
     "sensors": {
-        "USE_LIDAR_2D": false,
+        "USE_LIDAR_2D": true,
         "LIDAR_2D_TYPE": "SICK",
         "LIDAR_2D_NUM": "2",
         
@@ -37,28 +38,29 @@
         "USE_MULTI": false,
         "USE_COOP": false,
         "USE_RTSP": false,
-        "USE_RRS": true,
-        "USE_FMS": false
+        "USE_FMS": false,
+        "USE_RRS": false,
+        "USE_MSA": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
-        "USE_BEEP": true
+        "USE_BEEP": false
     },
     "lidar_2d_config": [
         {
             "IP": "192.168.2.10",
-            "TF": "0.360, -0.2228, 0.0, 180.0, 0.0, 45.0"
+            "TF": "0.360, -0.2228, 0.3, 180.0, 0.0, 45.0"
         },
         {
             "IP": "192.168.2.11",
-            "TF": "-0.360, 0.2228, 0.0, 180.0, 0.0, -135.0"
+            "TF": "-0.360, 0.2228, 0.3, 180.0, 0.0, -135.0"
         }
     ],
     "lidar_3d_config": [
         {
-            "IP": "192.168.1.129",
-            "TF": "0.300, 0.0, 0.240, 0.0, 0.0, 0.0"
+            "IP": "192.168.1.100",
+            "TF": "-0.412, 0.0, 1.785, 0.0, 0.0, 0.0"
         },
         {
             "IP": "192.168.1.101",
@@ -68,11 +70,11 @@
     "cam_config": [
         {
             "SERIAL_NUMBER": "",
-            "TF": "0.4,0,0,-90,0,-90"
+            "TF": "0.4,0,0,0,0,0"
         },
         {
             "SERIAL_NUMBER": "",
-            "TF": "0,0,0,0,0,0"
+            "TF": "-0.4,0,0,0,0,0"
         }
     ],
     "SICK": {
@@ -103,10 +105,10 @@
         "MOTOR_GEAR_RATIO": "12",
         "MOTOR_ID_L": "1",
         "MOTOR_ID_R": "0",
-        "MOTOR_LIMIT_V": "2.0",
-        "MOTOR_LIMIT_V_ACC": "2.0",
-        "MOTOR_LIMIT_W": "180",
-        "MOTOR_LIMIT_W_ACC": "360"
+        "MOTOR_LIMIT_V": "1.0",
+        "MOTOR_LIMIT_V_ACC": "1.0",
+        "MOTOR_LIMIT_W": "90",
+        "MOTOR_LIMIT_W_ACC": "90"
     },
     "annotation": {
         "ANNOT_QA_STEP": "0.3"
@@ -160,7 +162,7 @@
         "OBS_MAP_RANGE": "5.0",
         "OBS_PATH_MARGIN_X": "0.05",
         "OBS_PATH_MARGIN_Y": "0.0",
-        "OBS_PREDICT_TIME": "3.0",
+        "OBS_PREDICT_TIME": "5.0",
         "OBS_SAFE_MARGIN_X": "0.1",
         "OBS_SAFE_MARGIN_Y": "0.1"
     },
@@ -186,7 +188,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/home/rainbow/maps/250429_unicos_test"
+        "MAP_PATH": "/home/juyeon/maps/250414_unicos_test"
     }
 }
 
