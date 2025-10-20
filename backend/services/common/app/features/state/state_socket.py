@@ -1,12 +1,13 @@
-from app.socket.socket_client import socket_client
+from rb_socketio import RbSocketIORouter
 from utils.parser import to_json
 
 from .state_module import StateService
 
 state_service = StateService()
+state_socket_router = RbSocketIORouter()
 
 
-@socket_client.on("call_powercontrol")
+@state_socket_router.on("call_powercontrol")
 async def on_call_powercontrol(data):
     res = await state_service.power_control(
         power_option=data["power_option"], sync_servo=data["sync_servo"]
@@ -15,7 +16,7 @@ async def on_call_powercontrol(data):
     return to_json(res)
 
 
-@socket_client.on("call_servocontrol")
+@state_socket_router.on("call_servocontrol")
 async def on_call_servocontrol(data):
     res = await state_service.servo_control(servo_option=data["servo_option"])
 
