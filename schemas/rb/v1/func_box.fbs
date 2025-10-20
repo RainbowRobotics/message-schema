@@ -31,3 +31,7 @@ table Request_Save_User_Frame {
     userf_ry: float;
     userf_rz: float;
 }
+
+table Request_Set_User_Frame {
+  user_frame_num: int;
+}
