@@ -30,6 +30,7 @@ class LogService:
             4: "debug",
             5: "general",
         }
+        self._name_to_level = {v: k for k, v in self._level_to_name.items()}
 
     async def get_log_list(
         self,
@@ -109,7 +110,7 @@ class LogService:
         cutoff_iso = (now_utc - timedelta(hours=24)).isoformat()
 
         cnt = await db["state_logs"].count_documents(
-            {"level": {"$in": [3, self._level_to_name[3]]}, "createdAt": {"$gte": cutoff_iso}}
+            {"level": {"$in": [2, self._level_to_name[2]]}, "createdAt": {"$gte": cutoff_iso}}
         )
 
         res = {"count": cnt}
@@ -169,9 +170,9 @@ class LogService:
                 {"level": {"$in": [int_level, level]}, "createdAt": {"$gte": cutoff_iso}}
             )
 
-            if int_level == 3 or level == "Error":
+            if int_level == 2 or level == "Error":
                 await socket_client.emit("error_log_count_for_24h", {"count": cnt})
-            elif int_level == 2 or level == "Warning":
+            elif int_level == 1 or level == "Warning":
                 await socket_client.emit("warning_log_count_for_24h", {"count": cnt})
 
         except Exception as e:
