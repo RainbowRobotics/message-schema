@@ -463,10 +463,10 @@ bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double th
 double sgn(double val)
 {
     // test 10.18.25
-    if(std::abs(val) < 1.0e-6)
-    {
-        return 0.0;
-    }
+    //if(std::abs(val) < 1.0e-6)
+    //{
+    //    return 0.0;
+    //}
 
     if (val > 0.0)
     {
