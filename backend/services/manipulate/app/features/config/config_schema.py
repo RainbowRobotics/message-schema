@@ -158,3 +158,7 @@ class Request_Save_User_FramePD(BaseModel):
 
 class Response_UserFrameParameterPD(BaseModel):
     user_frames: list[ST_Config_UserFramePD]
+
+
+class Request_Set_User_FramePD(BaseModel):
+    user_frame_num: int

@@ -14,6 +14,7 @@ from .config_schema import (
     Request_Save_Tool_List_ParameterPD,
     Request_Save_User_FramePD,
     Request_Set_Tool_ListPD,
+    Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
     Response_CallConfigRobotArmPD,
     Response_CallConfigToolListPD,
@@ -128,4 +129,10 @@ async def save_user_frame_parameter(robot_model: str, *, request: Request_Save_U
 async def get_user_frames(robot_model: str):
     res = config_service.get_user_frames(robot_model)
 
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/call_change_userframe", response_model=Response_ReturnValuePD)
+async def call_change_userframe(robot_model: str, *, request: Request_Set_User_FramePD):
+    res = config_service.call_change_userframe(robot_model, request=request)
     return JSONResponse(res)

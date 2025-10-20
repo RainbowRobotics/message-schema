@@ -109,3 +109,11 @@ def on_save_user_frame_parameter(data, robot_model: str):
 def on_rb_api_user_frames(data, robot_model: str):
     res = config_service.get_user_frames(robot_model)
     return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/call_change_userframe")
+def on_call_change_userframe(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = config_service.call_change_userframe(robot_model, request=dict_data)
+    return to_json(res)

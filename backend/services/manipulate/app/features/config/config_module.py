@@ -15,6 +15,7 @@ from flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_Side
 from flat_buffers.IPC.Request_Save_Tool_List_Para import Request_Save_Tool_List_ParaT
 from flat_buffers.IPC.Request_Save_User_Frame import Request_Save_User_FrameT
 from flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
+from flat_buffers.IPC.Request_Set_User_Frame import Request_Set_User_FrameT
 from flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigControlBoxT
 from flat_buffers.IPC.Response_CallConfigRobotArm import Response_CallConfigRobotArmT
 from flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigToolListT
@@ -35,6 +36,7 @@ from .config_schema import (
     Request_Save_Tool_List_ParameterPD,
     Request_Save_User_FramePD,
     Request_Set_Tool_ListPD,
+    Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
 )
 
@@ -345,6 +347,23 @@ class ConfigService(BaseService):
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=32,
+        )
+
+        self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
+
+        return res["dict_payload"]
+
+    def call_change_userframe(self, robot_model: str, *, request: Request_Set_User_FramePD):
+        request = t_to_dict(request)
+
+        req = Request_Set_User_FrameT()
+        req.userFrameNum = request["user_frame_num"]
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_change_userframe",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
         )
 
         self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
