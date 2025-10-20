@@ -668,11 +668,11 @@ bool CONFIG::load_common(QString path)
         {
             ROBOT_TYPE = RobotType::SEM;
         }
-        else if(robot_type_str == "SEC_CORE")
+        else if(robot_type_str == "MECANUM-SEC_CORE")
         {
             ROBOT_TYPE = RobotType::SEC_CORE;
         }
-        else if(robot_type_str == "SEC_EE")
+        else if(robot_type_str == "DD-SEC_EE")
         {
             ROBOT_TYPE = RobotType::SEC_EE;
         }
@@ -706,9 +706,9 @@ bool CONFIG::load_common(QString path)
             {
                 ROBOT_MODEL = RobotModel::MECANUM;
             }
-            else if(robot_model_str == "SEC")
+            else if(robot_model_str == "DD")
             {
-                ROBOT_MODEL = RobotModel::SEC;
+                ROBOT_MODEL = RobotModel::DD;
             }
             else
             {
@@ -1085,11 +1085,11 @@ QString CONFIG::get_robot_type_str()
     }
     else if(_robot_type == RobotType::SEC_CORE)
     {
-        return "SEC_CORE";
+        return "MECANUM-SEC_CORE";
     }
     else if(_robot_type == RobotType::SEC_EE)
     {
-        return "SEC_EE";
+        return "DD-SEC_EE";
     }
     else
     {

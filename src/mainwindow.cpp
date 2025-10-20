@@ -271,6 +271,7 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
         QString robot_type_str = CONFIG::instance()->get_robot_type_str();
+//        qDebug()<<"robot_type_str : "<<robot_type_str;
         ui->lb_RobotType->setText(robot_type_str);
 
         mileage = CONFIG::instance()->get_mileage();
@@ -309,6 +310,10 @@ void MainWindow::init_modules()
         this->setPalette(palette);
 
         ui->bt_SimInit->setEnabled(true);
+    }
+    else
+    {
+         ui->bt_SimInit->setEnabled(false);
     }
 
     // view mode

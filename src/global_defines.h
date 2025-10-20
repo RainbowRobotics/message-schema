@@ -160,6 +160,7 @@ enum class RobotModel
     D400,
     QD,
     MECANUM,
+    DD,
     SEM,
     SDC,
     SEC,
