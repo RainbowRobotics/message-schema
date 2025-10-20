@@ -69,6 +69,7 @@ class ProgramService(BaseService):
             while True:
                 if col is None:
                     await asyncio.sleep(0.5)
+                    next_ts = time.monotonic() + 1.0
                     continue
 
                 doc = await col.find_one({}, {"_id": 0, "components": 1}) or {}
@@ -80,8 +81,9 @@ class ProgramService(BaseService):
                 else:
                     rb_log.error(f"repeat_get_all_speedbar res: {res}")
 
-                next_ts += 1
-                await asyncio.sleep(max(0, next_ts - time.monotonic()))
+                now = time.monotonic()
+                next_ts = max(next_ts + 1.0, now + 1.0)
+                await asyncio.sleep(max(0.0, next_ts - now))
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
