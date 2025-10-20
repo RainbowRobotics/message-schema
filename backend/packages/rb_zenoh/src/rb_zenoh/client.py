@@ -200,7 +200,6 @@ class ZenohClient:
             )
             self._subs[topic] = sub
             self._cb_entries.setdefault(topic, [])
-            print(f"📥 zenoh subscribed: {topic}")
 
         entry = CallbackEntry(topic=topic, callback=callback, opts=opts)
         self._cb_entries[topic].append(entry)
@@ -242,33 +241,56 @@ class ZenohClient:
                 if hasattr(sample.payload, "__bytes__")
                 else memoryview(sample.payload)
             )
+
             att = sample.attachment
+
             if hasattr(att, "to_bytes"):
-                att = att.to_bytes().decode("utf-8", "ignore")
+                att_b = att.to_bytes()
             elif isinstance(att, bytes | bytearray):
-                att = att.decode("utf-8", "ignore")
+                att_b = bytes(att)
+            else:
+                att_b = str(att).encode("utf-8", "ignore")
 
-            parts = dict(seg.split("=", 1) for seg in (att or "").split(";") if "=" in seg)
-            sender_id = parts.get("sender_id")
+            sid = None
+            try:
+                s = att_b.decode("utf-8", "ignore")
+                for seg in s.split(";"):
+                    if seg.startswith("sender_id="):
+                        sid = seg.split("=", 1)[1]
+                        break
+            except Exception:
+                pass
 
-            if not allow_self and sender_id == self.sender_id:
+            if not allow_self and sid == self.sender_id:
                 return
 
-            obj = None
-            if flatbuffer_obj_t is not None:
-                obj = t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
-            if parse_obj:
-                parser = self._schema.get(topic)
-                if parser:
-                    try:
-                        obj = parser(topic, mv)
-                    except Exception:
-                        obj = None
+            async def _handle():
+                parts = dict(
+                    seg.split("=", 1)
+                    for seg in (s if "s" in locals() else att_b.decode("utf-8", "ignore")).split(
+                        ";"
+                    )
+                    if "=" in seg
+                )
+                obj = None
+                try:
+                    if flatbuffer_obj_t is not None:
+                        obj = await asyncio.to_thread(
+                            lambda: t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
+                        )
+                except Exception:
+                    obj = None
 
-            loop.call_soon_threadsafe(
-                _complete,
-                (topic, mv, obj, {"sender": parts.get("sender"), "sender_id": sender_id}),
-            )
+                _complete(
+                    (
+                        topic,
+                        mv,
+                        obj,
+                        {"sender": parts.get("sender"), "sender_id": parts.get("sender_id")},
+                    )
+                )
+
+            loop.call_soon_threadsafe(lambda: asyncio.create_task(_handle()))
 
         sub = self.session.declare_subscriber(topic, _raw_cb)
 
