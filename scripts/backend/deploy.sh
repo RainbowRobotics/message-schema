@@ -402,7 +402,7 @@ for i in "${!app_names[@]}"; do
         git tag -d $tag_version
         git push origin --delete $tag_version
     else
-        new_versions+=("$app_name: v$new_version")
+        new_versions+=("${app_name}: v ${new_version}")
     fi
 done
 
