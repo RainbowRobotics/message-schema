@@ -48,3 +48,21 @@ class InfoService:
         except Exception:
             await asyncio.sleep(1)
             asyncio.create_task(self.watch_robot_info(col))
+
+    async def get_robot_urdf_link_map(self, robot_model: str):
+        robot_models = read_json_file("data", "robot_models.json")
+        urdf_link_map = read_json_file("data", "urdf_link_map.json").get(robot_model)
+
+        if not urdf_link_map:
+            return None
+
+        components = urdf_link_map.get("components") or {}
+        new_components = {}
+
+        for name, comp in components.items():
+            be_service = robot_models.get(name).get("be_service")
+            comp["beService"] = be_service
+
+            new_components[name] = comp
+
+        return {**urdf_link_map, "components": new_components}
