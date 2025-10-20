@@ -660,6 +660,7 @@ void MOBILE::receive_data_loop()
                             // Update status
                             mtx.lock();
 
+                            
                             cur_status.om_state = om_state;
                             cur_status.ri_state = ri_state;
                             cur_status.charge_state = charge_state;
@@ -688,6 +689,7 @@ void MOBILE::receive_data_loop()
                             cur_status.safety_state_ref_meas_mismatch_2 = (safety_state_2 >> 6) & 0x01;
                             cur_status.safety_state_emo_pressed_2 = (safety_state_2 >> 7) & 0x01;
 
+                            cur_status.motor_stop_state = !(cur_status.safety_state_emo_pressed_1||cur_status.safety_state_emo_pressed_2);
                             // DIO/DIN
                             for(int i=0; i<8; i++)
                             {
@@ -800,7 +802,6 @@ void MOBILE::receive_data_loop()
                             status_text = mobile_status_str;
 
                             mtx.unlock();
-
                         }
 
                         if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
@@ -2277,12 +2278,15 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model != RobotModel::MECANUM)
+    QString robot_wheel_type = config->get_robot_wheel_type();
+
+    if(robot_wheel_type != "MECHANUM")
     {
+        qDebug() << " return";
+        //Todo -- Spdlog 추가
+        // spdlog::info("[MOBILE] move linear y is not supported for this robot wheel type");
         return;
     }
-
     // set last v,w
     vx0 = 0;
     vy0 = 0;
@@ -2302,7 +2306,7 @@ void MOBILE::move_linear_y(double d, double v)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    send_byte[7] = 118; // cmd move linear y
+    send_byte[7] = 121; // cmd move linear y
 
     memcpy(&send_byte[8], &_d, 4); // param1 dist
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
