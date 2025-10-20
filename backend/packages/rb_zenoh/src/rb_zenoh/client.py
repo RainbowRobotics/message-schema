@@ -602,16 +602,14 @@ class ZenohClient:
             if getattr(self, "_closing", False):
                 return
 
-            # now = time.monotonic()
-            # print(f"on_sample {now}", flush=True)
-
             att = sample.attachment
             origin_topic = str(sample.key_expr)
 
-            try:
-                mv = memoryview(sample.payload)
-            except TypeError:
-                mv = memoryview(bytes(sample.payload))
+            mv = (
+                memoryview(bytes(sample.payload))
+                if isinstance(sample.payload, ZBytes)
+                else memoryview(sample.payload)
+            )
 
             if hasattr(att, "to_bytes"):
                 att = att.to_bytes().decode("utf-8", "ignore")
@@ -919,11 +917,17 @@ class ZenohClient:
             pass
 
     def _ensure_loop(self) -> asyncio.AbstractEventLoop:
-        if self._loop and self._loop.is_running():
-            return self._loop
-        raise RuntimeError(
-            "No running asyncio loop; make sure ZenohClient.set_loop(loop) was called from lifespan"
-        )
+        loop = self._loop
+
+        if loop and loop.is_running():
+            return loop
+
+        try:
+            loop = asyncio.get_running_loop()
+            self._loop = loop
+            return loop
+        except RuntimeError as e:
+            raise RuntimeError(f"No running asyncio loop: {e}") from e
 
     def is_shm_active(self, topic="diag/shmcheck", seconds=1.0, mb=8):
         if self.session is None:
