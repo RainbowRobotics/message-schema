@@ -1,0 +1,11 @@
+{
+  "C500920": {
+    "urdfFileName": "rb5_850e.urdf",
+    "components": {
+      "C500920": {
+        "type": "array",
+        "mapper": ["base", "shoulder", "arm_angle", "elbow", "wrist1", "wrist2", "wrist3"]
+      }
+    }
+  }
+}
