@@ -16,6 +16,13 @@ state_service = StateService()
 state_router = APIRouter(tags=["State"])
 
 
+@state_router.get("/{robot_model}/state_core")
+async def get_state_core(robot_model: str):
+    res = await state_service.get_api_state_core(robot_model)
+
+    return JSONResponse(res)
+
+
 @state_router.get("/system_state", response_model=AllSwConnectStateResponsePD)
 async def system_state(
     namespaces: Annotated[list[str], Query(alias="namespaces[]")],

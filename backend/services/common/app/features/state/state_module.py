@@ -35,6 +35,40 @@ class StateService:
         self._all_connect_state_period = 1
         self._prev_all_connected_status = None
         self._robot_models = read_json_file("data", "robot_models.json")
+        self._state_core = {}
+
+    def get_zenoh_state_core(self, *, topic, obj):
+        robot_model = topic.split("/")[0]
+
+        self._state_core[robot_model] = obj
+
+        be_service = self._robot_models[robot_model].get("be_service")
+
+        if be_service == "manipulate":
+            fire_and_log(socket_client.emit("state_core", self._state_core))
+
+    async def get_api_state_core(self, robot_model: str):
+        components = self._robot_models[robot_model].get("components")
+
+        for component in components:
+            be_service = self._robot_models[component].get("be_service")
+
+            if be_service == "manipulate":
+                topic, mv, obj, attachment = await zenoh_client.receive_one(
+                    f"{component}/state_core", flatbuffer_obj_t=State_CoreT, timeout=0.2
+                )
+            elif be_service == "mobility":
+                topic, mv, obj, attachment = await zenoh_client.receive_one(
+                    f"{component}/state", timeout=0.2
+                )
+            elif be_service == "sensor":
+                topic, mv, obj, attachment = await zenoh_client.receive_one(
+                    f"{component}/state_core", timeout=0.2
+                )
+
+            self._state_core[component] = obj
+
+        return self._state_core
 
     async def get_system_state(self, namespaces: list[str]):
         ip = await get_current_ip()
@@ -122,25 +156,36 @@ class StateService:
         try:
             await mongo_db.wait_db_ready()
 
+            period = float(self._all_connect_state_period)
+
             next_ts = time.monotonic()
 
             col = mongo_db.db["robot_info"]
 
             while True:
-                doc = await col.find_one({}, {"_id": 0, "components": 1}) or {}
+                try:
+                    doc = await col.find_one({}, {"_id": 0, "components": 1}) or {}
 
-                raw_components = doc.get("components")
-                namespaces = list(raw_components or [])
+                    raw_components = doc.get("components")
+                    namespaces = list(raw_components or [])
 
-                if not namespaces:
-                    continue
+                    if not namespaces:
+                        await asyncio.sleep(min(0.5, period))
+                        next_ts = time.monotonic() + period
+                        continue
 
-                res = await self.get_system_state(namespaces=namespaces)
+                    res = await self.get_system_state(namespaces=namespaces)
 
-                fire_and_log(socket_client.emit("system_state", res))
+                    fire_and_log(socket_client.emit("system_state", res), name="emit:system_state")
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    rb_log.exception(f"repeat_get_system_state iteration crashed: {e}")
 
-                next_ts += self._all_connect_state_period
-                await asyncio.sleep(max(0, next_ts - time.monotonic()))
+                now = time.monotonic()
+                next_ts = max(next_ts + period, now + period)
+                await asyncio.sleep(max(0.0, next_ts - now))
+
         except Exception as e:
             rb_log.error(f"repeat_get_system_state {e}")
 
@@ -171,7 +216,7 @@ class StateService:
         sw_name = topic.split("/")[0]
 
         message["swName"] = sw_name
-        await socket_client.emit("state_message", message)
+        fire_and_log(socket_client.emit("state_message", message))
 
     async def power_control(
         self, *, power_option: int, sync_servo: bool, stoptime: int | None = 0.5
