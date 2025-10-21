@@ -84,7 +84,7 @@ jobs:
             if ! curl -fsSL "$app_ver_json_url" -o "$tmp_json"; then
               echo "⚠️  ${app_name}: version.json 없음 → 스킵 (${app_ver_json_url})"
               rm -f "$tmp_json"
-              exit 1
+              continue
             fi
 
             app_version="$(jq -er '.new_version' "$tmp_json")"
