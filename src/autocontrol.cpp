@@ -534,8 +534,6 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
 
 void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
 {
-    // click event!!
-    // fill goal node name
     back_mode = true;
 
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
@@ -557,12 +555,12 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
         if(is_rrs && config->get_use_multi())
         {
             set_multi_infomation(StateMultiReq::REQ_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+            return;
         }
-        else
-        {
-            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            backwardmove(tf, msg.preset);
-        }
+
+        Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
+        backwardmove(tf, msg.preset);
+
     }
     else if(msg.command == "change_goal")
     {
@@ -1129,7 +1127,6 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
 
 void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
 {
-    //qDebug()<<"click hear!!!!";
     // stop first
     stop();
 
@@ -1140,6 +1137,8 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
+        path.drive_mode = DriveMode::REVERSE;
+
         // enque global path
         global_path_que.clear();
         global_path_que.push(path);
@@ -1161,7 +1160,6 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
         obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
     }
 }
-
 
 void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
 {

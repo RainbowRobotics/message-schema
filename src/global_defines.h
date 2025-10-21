@@ -848,6 +848,60 @@ struct MOBILE_STATUS
 
     uint8_t bms_type         = 0;
 
+    float res_linear_dist = 0.0;
+    float res_linear_remain_dist = 0.0;
+
+};
+
+
+struct MOBILE_RESPONSE
+{
+    float linear_x_meassured_dist = 0.0;
+    float linear_x_remain_dist = 0.0;
+
+    float linear_w_meassured_dist = 0.0;
+    float linear_w_remain_dist = 0.0;
+
+    float circular_w_meassured_dist = 0.0;
+    float circular_w_remain_dist = 0.0;
+
+    MOBILE_RESPONSE()
+    {
+        linear_x_remain_dist = 0.0;
+        linear_x_meassured_dist = 0.0;
+
+        linear_w_remain_dist = 0.0;
+        linear_w_meassured_dist = 0.0;
+
+        circular_w_remain_dist = 0.0;
+        circular_w_meassured_dist = 0.0;
+    }
+
+    MOBILE_RESPONSE(const MOBILE_RESPONSE& p)
+    {
+        linear_x_remain_dist = p.linear_x_remain_dist;
+        linear_x_meassured_dist = p.linear_x_meassured_dist;
+
+        linear_w_remain_dist = p.linear_w_remain_dist;
+        linear_w_meassured_dist = p.linear_w_meassured_dist;
+
+        circular_w_remain_dist = p.circular_w_remain_dist;
+        circular_w_meassured_dist = p.circular_w_meassured_dist;
+    }
+
+    MOBILE_RESPONSE& operator=(const MOBILE_RESPONSE& p)
+    {
+        linear_x_remain_dist = p.linear_x_remain_dist;
+        linear_x_meassured_dist = p.linear_x_meassured_dist;
+
+        linear_w_remain_dist = p.linear_w_remain_dist;
+        linear_w_meassured_dist = p.linear_w_meassured_dist;
+
+        circular_w_remain_dist = p.circular_w_remain_dist;
+        circular_w_meassured_dist = p.circular_w_meassured_dist;
+
+        return *this;
+    }
 };
 
 struct MOBILE_POSE

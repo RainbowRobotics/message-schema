@@ -306,6 +306,7 @@ public Q_SLOTS:
 
     void recv_safety_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_config_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
+    void recv_profile_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
 
     void recv_path(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
     void recv_vobs(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp);
@@ -329,6 +330,7 @@ public Q_SLOTS:
     void slot_software_update(DATA_SOFTWARE msg);
     void slot_safety_io(DATA_SAFTYIO msg);
     void slot_safety_request(DATA_SAFETY msg);
+    void slot_profile_move(DATA_PROFILE_MOVE msg);
     void slot_config_request(DATA_PDU_UPDATE msg);
     void slot_obs_box_setting(DATA_OBS_BOX msg);
 
@@ -346,6 +348,7 @@ public Q_SLOTS:
     void send_field_set_response(const DATA_SAFETY& msg);
     void send_field_get_response(const DATA_SAFETY& msg);
     void send_safety_reset_response(const DATA_SAFETY& msg);
+    void send_profile_move_response(const DATA_PROFILE_MOVE& msg);
     void send_config_request_response(const DATA_PDU_UPDATE& msg);
     void send_obs_box_setting_response(const DATA_OBS_BOX& msg);
 
@@ -372,6 +375,7 @@ Q_SIGNALS:
     void signal_software_update(DATA_SOFTWARE msg);
     void signal_safety_io(DATA_SAFTYIO msg);
     void signal_safety_request(DATA_SAFETY msg);
+    void signal_profile_move(DATA_PROFILE_MOVE msg);
     void signal_config_request(DATA_PDU_UPDATE msg);
     void signal_obs_box_setting(DATA_OBS_BOX msg);
 

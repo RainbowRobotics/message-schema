@@ -401,6 +401,75 @@ struct DATA_DOCK
     }
 };
 
+struct DATA_PROFILE_MOVE
+{
+    double time;
+    QString command; // "lienarMove", "rotateMove", "circularMove", "stop"
+
+    double target; // m , deg
+    double speed; // m/s, deg/s
+
+    double remain_dist; // m, deg
+    double meassured_dist; // m, deg
+
+    QString dir;
+
+    QString result;
+    QString message;
+
+    DATA_PROFILE_MOVE()
+    {
+        time = 0.0;
+        command = "";
+
+        target = 0.0;
+        speed = 0.0;
+
+        remain_dist = 0.0;
+        meassured_dist = 0.0;
+
+        dir = "";
+
+        result = "";
+        message = "";
+    }
+
+    DATA_PROFILE_MOVE(const DATA_PROFILE_MOVE& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        target = p.target;
+        speed = p.speed;
+
+        remain_dist = p.remain_dist;
+        meassured_dist = p.meassured_dist;
+
+        dir = p.dir;
+
+        result = p.result;
+        message = p.message;
+    }
+
+    DATA_PROFILE_MOVE& operator=(const DATA_PROFILE_MOVE& p)
+    {
+        time = p.time;
+        command = p.command;
+
+        target = p.target;
+        speed = p.speed;
+
+        remain_dist = p.remain_dist;
+        meassured_dist = p.meassured_dist;
+
+        dir = p.dir;
+
+        result = p.result;
+        message = p.message;
+        return *this;
+    }
+};
+
 struct DATA_PDU_UPDATE
 {
     double time;
@@ -1200,6 +1269,7 @@ Q_DECLARE_METATYPE(DATA_SAFTYIO)
 Q_DECLARE_METATYPE(DATA_SAFETY)
 Q_DECLARE_METATYPE(DATA_PDU_UPDATE)
 Q_DECLARE_METATYPE(DATA_CONTROL)
+Q_DECLARE_METATYPE(DATA_PROFILE_MOVE)
 
 
 #endif // COMM_DATA_H
