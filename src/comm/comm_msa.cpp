@@ -502,17 +502,6 @@ void COMM_MSA::send_move_status()
     velObj->get_map()["wz"] = sio::double_message::create(mo.vel[2] * R2D);
     rootObj->get_map()["vel"] = velObj;
 
-    // Adding the cur_node object
-    //    QString cur_node_name = "";
-    //    if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
-    //    {
-    //        NODE* node = unimap->get_node_by_id(cur_node_id);
-    //        if(node != nullptr)
-    //        {
-    //            cur_node_name = node->name;
-    //        }
-    //    }
-
     QString cur_node_name = "";
     if(unimap->get_is_loaded() == MAP_LOADED && !cur_node_id.isEmpty())
     {
@@ -894,7 +883,6 @@ void COMM_MSA::handle_control_cmd(const QJsonObject &data)
     msg.time            = get_json_double(data, "time")/1000;
     msg.command         = get_json(data, "command");
 
-    qDebug()<<"cont : "<<msg.command ;
     if(msg.command == DATA_CONTROL::SetSafetyField)
     {
         msg.safetyField     = data["safetyField"].toString();
@@ -1225,7 +1213,7 @@ void COMM_MSA::handle_safetyio_cmd(const QJsonObject& data)
     }
 
     slot_safety_io(msg);
-    send_safetyio_response(data);
+//    send_safetyio_response(data);
 
 }
 
@@ -4060,7 +4048,6 @@ void COMM_MSA::slot_safety_io(DATA_SAFTYIO msg)
 {
     send_safetyio_response(msg);
 
-//    qDebug()<<"safety io!!!! input!!!!!!!!";
     // packet
     for (int i = 0; i < 2; i++) // 0:mcu0, 1:mcu1
     {
@@ -4076,7 +4063,6 @@ void COMM_MSA::slot_safety_io(DATA_SAFTYIO msg)
             bool value = dio_arr[n]; // 0 or 1
             if(value != dio_arr_old[offset+n])
             {
-//                qDebug()<<"value : "<<value;
                 mobile->set_IO_individual_output(offset + n, value);
                 dio_arr_old[offset + n] = value; //save change value
             }

@@ -41,7 +41,7 @@
         "USE_FMS": false
     },
     "debug": {
-        "USE_SIM": false,
+        "USE_SIM": true,
         "USE_QTUI": false,
         "USE_BEEP": true
     },
@@ -186,7 +186,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/home/rainbow/maps/250429_unicos_test"
+        "MAP_PATH": "/data/maps/250513_unicos_multi_test"
     }
 }
 

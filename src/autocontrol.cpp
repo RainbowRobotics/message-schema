@@ -3090,44 +3090,39 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
+    // for multiple error detect!
     if(ms.status_m0 > 1 || ms.status_m1 > 1)
     {
+        int motor_err_code = (ms.status_m0 > 1) ? ms.status_m0 : ms.status_m1;
+        QStringList err_list;
         QString err_str = "";
-        int motor_err_code = ms.status_m0 > 1 ? ms.status_m0 : ms.status_m1;
-        if(motor_err_code == MOTOR_ERR_MOD)
+
+        //
+        const char* err_names[8] = {"BIT0", "MOD", "JAM", "CUR", "BIG", "IN", "PSI", "NON"};
+
+        for (int bit = 0; bit < 8; bit++)
         {
-            err_str = "MOD";
-            logger->write_log("[AUTO] failed (motor error MOD, 2)", "Red", true, false);
+            if ((motor_err_code >> bit) & 0x01)
+            {
+                QString name = err_names[bit];
+                err_list << name;
+                logger->write_log(QString("[AUTO] failed (motor error %1, %2)").arg(name).arg(1 << bit),"Red", true, false);
+            }
         }
-        else if(motor_err_code == MOTOR_ERR_JAM)
+
+        if (!err_list.isEmpty())
         {
-            err_str = "JAM";
-            logger->write_log("[AUTO] failed (motor error JAM, 4)", "Red", true, false);
-        }
-        else if(motor_err_code == MOTOR_ERR_CUR)
-        {
-            err_str = "CUR";
-            logger->write_log("[AUTO] failed (motor error CUR, 8)", "Red", true, false);
-        }
-        else if(motor_err_code == MOTOR_ERR_BIG)
-        {
-            err_str = "BIG";
-            logger->write_log("[AUTO] failed (motor error BIG, 16)", "Red", true, false);
-        }
-        else if(motor_err_code == MOTOR_ERR_IN)
-        {
-            err_str = "IN";
-            logger->write_log("[AUTO] failed (motor error IN, 32)", "Red", true, false);
-        }
-        else if(motor_err_code == MOTOR_ERR_PSI)
-        {
-            err_str = "PSI";
-            logger->write_log("[AUTO] failed (motor error:PS1|2, 64)", "Red", true, false);
-        }
-        else if(motor_err_code == MOTOR_ERR_NON)
-        {
-            err_str = "NON";
-            logger->write_log("[AUTO] failed (motor error NON, 128)", "Red", true, false);
+            err_str = err_list.join(" ");
+
+            if (err_list.size() > 2)
+            {
+                logger->write_log(QString("[AUTO] multiple motor errors detected (%1 errors): %2")
+                                  .arg(err_list.size()).arg(err_str),"Red", true, false);
+            }
+            else
+            {
+                logger->write_log(QString("[AUTO] failed (multi motor error: %1)").arg(err_str),"Red", true, false);
+            }
         }
 
         std::lock_guard<std::recursive_mutex> lock(mtx);
