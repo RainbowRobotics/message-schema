@@ -46,7 +46,7 @@ prune_local_cache_by_size() {
   echo "➡️  캐시 크기 확인 (${arch}): 현재 ${current_size_gb} GB / 최대 ${MAX_CACHE_SIZE_GB} GB"
 
   if (( current_bytes < max_bytes )); then
-    echo "✅ 캐시 크기가 허용 범위 내에 있습니다. 정리하지 않습니다."
+    echo "✅ 캐시 크기가 허용 범위 내에 있습니다"
     return 0
   fi
 
