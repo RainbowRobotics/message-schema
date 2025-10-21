@@ -124,7 +124,8 @@ bool SICK::try_pop_raw_que(int idx, RAW_FRAME& frm)
 void SICK::sync(int idx)
 {
     is_sync[idx] = true;
-    printf("[SICK] front time sync\n");
+    //printf("[SICK] front time sync\n");
+    log_info("front time sync");
 }
 
 void SICK::grab_loop(int idx)
@@ -184,7 +185,8 @@ void SICK::grab_loop(int idx)
 
                 is_synced[idx] = true;
                 QString str = QString("[SICK] sync. lidar :%1, lidar_t_f: %2, offset_t_f: %3").arg(idx).arg(lidar_t).arg((double)offset_t[idx]);
-                printf("%s\n", str.toLocal8Bit().data());
+                //printf("%s\n", str.toLocal8Bit().data());
+                log_info("sync. lidar :{}, lidar_t_f: {}, offset_t_f: {}", idx, lidar_t, (double)offset_t[idx]);
             }
 
             // check lidar, mobile sync

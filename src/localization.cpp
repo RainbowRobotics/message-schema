@@ -1,6 +1,4 @@
 #include "localization.h"
-
-#include <algorithm>
 namespace 
 {
     const char* MODULE_NAME = "LOC";
@@ -335,10 +333,6 @@ void LOCALIZATION::start_semiauto_init()
         Eigen::Matrix4d min_tf = Eigen::Matrix4d::Identity();
         double min_cost = std::numeric_limits<double>::max();
         Eigen::Vector2d min_ieir(1.0, 0.0);
-        double min_err_valid = std::numeric_limits<double>::max();
-        Eigen::Matrix4d best_candidate_tf = Eigen::Matrix4d::Identity();
-        Eigen::Vector2d best_candidate_ieir(1.0, 0.0);
-        double best_candidate_err = std::numeric_limits<double>::max();
 
         auto nodes = unimap->get_nodes_origin();
         for(int i : idxs)
@@ -348,24 +342,15 @@ void LOCALIZATION::start_semiauto_init()
             {
                 Eigen::Matrix4d _tf = tf * se2_to_TF({0, 0, th*D2R});
                 double err = map_icp(*kdtree_index, *kdtree_cloud, frm, _tf);
-                Eigen::Vector2d ieir = calc_ieir(*kdtree_index, frm, _tf);
-
-                if(err < best_candidate_err)
-                {
-                    best_candidate_err = err;
-                    best_candidate_tf = _tf;
-                    best_candidate_ieir = ieir;
-                }
-
                 if(err < config->get_loc_2d_icp_error_threshold())
                 {
+                    Eigen::Vector2d ieir = calc_ieir(*kdtree_index, frm, _tf);
                     double cost = (ieir[0]/config->get_loc_2d_icp_error_threshold()) + (1.0 - ieir[1]);
                     if(cost < min_cost)
                     {
                         min_cost = cost;
                         min_ieir = ieir;
                         min_tf = _tf;
-                        min_err_valid = err;
                         auto pose = TF_to_se2(min_tf);
                         //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", pose[0], pose[1], pose[2]*R2D, cost);
                         spdlog::info("[AUTOINIT] x:{}, y:{}, th:{}, cost:{}", pose[0], pose[1], pose[2]*R2D, cost);
@@ -374,147 +359,13 @@ void LOCALIZATION::start_semiauto_init()
             }
         }
 
-        if(min_cost == std::numeric_limits<double>::max())
+        auto ieir = calc_ieir(frm.pts, min_tf);
+        if(ieir[0] < config->get_loc_2d_check_inlier_error() && ieir[1] > config->get_loc_2d_check_inlier_ratio())
         {
-            min_tf = best_candidate_tf;
-            min_ieir = best_candidate_ieir;
-            min_err_valid = best_candidate_err;
-        }
-
-        const double check_ie = config->get_loc_2d_check_inlier_error();
-        const double check_ir = config->get_loc_2d_check_inlier_ratio();
-        const bool enable_rotation_fallback = config->get_loc_2d_use_rotation_fallback();
-
-        auto run_rotation_fallback = [&](const Eigen::Matrix4d& base_tf,
-                                         Eigen::Matrix4d& out_tf,
-                                         Eigen::Vector2d& out_ieir,
-                                         double& out_err)->bool
-        {
-            double step_deg = config->get_loc_2d_rotation_fallback_step();
-            if(step_deg <= 0.0)
-            {
-                step_deg = 10.0;
-            }
-            double range_deg = config->get_loc_2d_rotation_fallback_range();
-            if(range_deg <= 0.0)
-            {
-                range_deg = 180.0;
-            }
-            range_deg = std::min(range_deg, 180.0);
-
-            const double err_threshold = config->get_loc_2d_icp_error_threshold();
-
-            bool found = false;
-            double best_cost = std::numeric_limits<double>::max();
-            Eigen::Vector3d base_xi = TF_to_se2(base_tf);
-
-            for(double deg = -range_deg; deg <= range_deg; deg += step_deg)
-            {
-                Eigen::Vector3d xi = base_xi;
-                double yaw = xi[2] + deg * D2R;
-                yaw = deltaRad(yaw, 0.0);
-                xi[2] = yaw;
-                Eigen::Matrix4d candidate_tf = se2_to_TF(xi);
-
-                double err = map_icp(*kdtree_index, *kdtree_cloud, frm, candidate_tf);
-                if(err >= err_threshold)
-                {
-                    continue;
-                }
-
-                Eigen::Vector2d ieir_val = calc_ieir(*kdtree_index, frm, candidate_tf);
-                if(ieir_val[0] >= check_ie || ieir_val[1] <= check_ir)
-                {
-                    continue;
-                }
-
-                double cost = (ieir_val[0]/err_threshold) + (1.0 - ieir_val[1]);
-                if(cost < best_cost)
-                {
-                    best_cost = cost;
-                    out_tf = candidate_tf;
-                    out_ieir = ieir_val;
-                    out_err = err;
-                    found = true;
-                }
-            }
-            return found;
-        };
-
-        bool success = false;
-        Eigen::Matrix4d selected_tf = min_tf;
-        Eigen::Vector2d selected_ieir = calc_ieir(frm.pts, min_tf);
-        double selected_err = min_err_valid;
-
-        if(min_cost < std::numeric_limits<double>::max())
-        {
-            if(selected_ieir[0] < check_ie && selected_ieir[1] > check_ir)
-            {
-                success = true;
-            }
-        }
-        else
-        {
-            selected_ieir = best_candidate_ieir;
-            selected_err = best_candidate_err;
-        }
-
-        if(!success && enable_rotation_fallback)
-        {
-            Eigen::Matrix4d fallback_tf;
-            Eigen::Vector2d fallback_ieir(1.0, 0.0);
-            double fallback_err = std::numeric_limits<double>::max();
-
-            auto attempt_rotation = [&](const Eigen::Matrix4d& base_tf)->bool
-            {
-                Eigen::Matrix4d tmp_tf;
-                Eigen::Vector2d tmp_ieir(1.0, 0.0);
-                double tmp_err = std::numeric_limits<double>::max();
-                bool ok = run_rotation_fallback(base_tf, tmp_tf, tmp_ieir, tmp_err);
-                if(ok)
-                {
-                    fallback_tf = tmp_tf;
-                    fallback_ieir = tmp_ieir;
-                    fallback_err = tmp_err;
-                }
-                return ok;
-            };
-
-            Eigen::Matrix4d base_tf = (min_cost < std::numeric_limits<double>::max()) ? min_tf : best_candidate_tf;
-            bool fallback_found = attempt_rotation(base_tf);
-
-            if(!fallback_found)
-            {
-                for(int idx : idxs)
-                {
-                    if(attempt_rotation((*nodes)[idx].tf))
-                    {
-                        fallback_found = true;
-                        break;
-                    }
-                }
-            }
-
-            if(fallback_found)
-            {
-                selected_tf = fallback_tf;
-                selected_ieir = calc_ieir(frm.pts, fallback_tf);
-                selected_err = fallback_err;
-                success = true;
-                spdlog::info("[AUTOINIT] rotation fallback selected. err:{}, ie:{}, ir:{}",
-                             selected_err, fallback_ieir[0], fallback_ieir[1]);
-            }
-            else
-            {
-                spdlog::warn("[SEMIAUTO INIT] rotation fallback could not find valid pose");
-            }
-        }
-
-        if(success)
-        {
-            set_cur_tf(selected_tf);
+            set_cur_tf(min_tf);
             start();
-            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", selected_ieir[0], selected_ieir[1]);
+            //printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", ieir[0], ieir[1]);
         }
     }
     else // "3D"

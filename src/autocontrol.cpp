@@ -3758,40 +3758,46 @@ void AUTOCONTROL::control_loop()
             {
                 double cur_velocity      = mobile->get_control_input()[0];
                 double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
-                //double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
-//
-                //dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
-                //cur_deadzone = dynamic_deadzone;
-//
-                //int chk_idx = cur_idx + dynamic_deadzone/AUTOCONTROL_INFO::local_path_step;
+                double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
+                if(config->get_use_multi())
+                {
+                    dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                    cur_deadzone = dynamic_deadzone;
+                }
+                else
+                {
+                    dynamic_deadzone = config->get_obs_deadzone();
+                }
+
+                int chk_idx = cur_idx + dynamic_deadzone/AUTOCONTROL_INFO::local_path_step;
                 //int chk_idx = cu_idx + config->get_obs_deadzone()/AUTOCONTROL_INFO::local_path_step;
 
-                double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
+                //double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
+                //double target_deadzone   = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                //double prev_deadzone     = cur_deadzone.load();
+                //double effective_deadzone = target_deadzone;
 
-                double target_deadzone   = std::max(dynamic_deadzone, config->get_obs_deadzone());
-                double prev_deadzone     = cur_deadzone.load();
-                double effective_deadzone = target_deadzone;
-                if(prev_deadzone > 0.0)
-                {
-                    if(target_deadzone < prev_deadzone)
-                    {
-                        effective_deadzone = std::max(target_deadzone,
-                                                      prev_deadzone - AUTOCONTROL_INFO::dynamic_deadzone_release_rate);
-                    }
-                    else
-                    {
-                        effective_deadzone = std::max(target_deadzone, prev_deadzone);
-                    }
-                }
-                cur_deadzone = effective_deadzone;
 
-                int chk_idx = cur_idx + static_cast<int>(std::ceil(effective_deadzone / AUTOCONTROL_INFO::local_path_step));
+                //if(prev_deadzone > 0.0)
+                //{
+                //    if(target_deadzone < prev_deadzone)
+                //    {
+                //        effective_deadzone = std::max(target_deadzone,prev_deadzone - AUTOCONTROL_INFO::dynamic_deadzone_release_rate); // dynamic_deadzone_release_rate: default = 
+                //        //log_info("tartet_deadzone < prev_deadzone, effective_deadzone: {}", effective_deadzone);
+                //    }
+                //    else
+                //    {
+                //        effective_deadzone = std::max(target_deadzone, prev_deadzone);
+                //        //log_info("tartet_deadzone >= prev_deadzone, effective_deadzone: {}", effective_deadzone);
+                //    }
+                //}
+                //cur_deadzone = effective_deadzone;
 
-                              
+                //int chk_idx = cur_idx + static_cast<int>(std::ceil(effective_deadzone / AUTOCONTROL_INFO::local_path_step));
 
+                // Dzon = deadzone, efct = effective
                 //log_info("DRIVING obs check, cur_velocity: {}, stopping_distance: {}, dynamic_deadzone: {}, chk_idx: {}", cur_velocity, stopping_distance, dynamic_deadzone, chk_idx);
-
-                log_info("DRIVING obs check, cur_velocity: {}, stopping_distance: {}, dynamic_deadzone: {}, effective_deadzone: {}, chk_idx: {}",cur_velocity, stopping_distance, dynamic_deadzone, effective_deadzone, chk_idx);
+                log_info("cont_loop: obs check, obs_vel:{}, cur_vel:{},  stop_dist:{}, dyn_Dzon:{}", obs_decel_v, cur_velocity, stopping_distance, dynamic_deadzone);
          
                 if(chk_idx > (int)local_path.pos.size()-1)
                 {
@@ -3805,6 +3811,7 @@ void AUTOCONTROL::control_loop()
                 }
 
                 obs_value = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+
                 if(obs_value != OBS_NONE)
                 {
                     mobile->move(0, 0, 0);
@@ -4654,7 +4661,7 @@ void AUTOCONTROL::obs_loop()
             if(obs_value != OBS_NONE)
             {
                 //obs_decel_v = 0.0;
-                log_info("obs_loop obs detected, obs_value: {}, obs_decel_v:{}", obs_value, obs_decel_v);
+                //log_info("obs_loop obs detected, obs_value: {}, obs_decel_v:{}", obs_value, obs_decel_v);
                 
             }
             
@@ -4705,7 +4712,8 @@ void AUTOCONTROL::obs_loop()
             }
 
             Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
-            double effective_deadzone = std::max(cur_deadzone.load(), config->get_obs_deadzone());
+            //double effective_deadzone = std::max(cur_deadzone.load(), config->get_obs_deadzone());
+            double buf_deadzone = config->get_obs_deadzone();
 
             double obs_dist;
             if(found_forward_obs)
@@ -4713,29 +4721,45 @@ void AUTOCONTROL::obs_loop()
                 obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
 
                 // test 10.18.25 /////////////////
-                //if(obs_dist <= config->get_obs_deadzone())
-                if(obs_dist <= effective_deadzone)
+                if(obs_condition == "none")
+                {
+                    obs_value = OBS_NONE;
+                    //obs_condition = "far";
+                    
+                    //double cur_vel = mobile->get_control_input()[0];
+                    
+
+                    //obs_value = OBS_DYN; 
+                    //obs_value = AUTO_OBS_CHECK;
+                    
+                    log_info("obs_loop: obs_condition = Non, obs_dist: {}", obs_dist);
+                    //log_info("obs_loop dyn pts [far] obs detected, obs_dist: {}", obs_dist);
+
+                }
+                else if (obs_condition == "far") 
+                {
+                    //if(obs_dist >= but_deadzone)
+                    //{
+                    //    fsm_state = AUTO_FSM_FIRST_ALIGN;
+                    //    obs_state = AUTO_OBS_CHECK;
+                    //}
+                    obs_decel_v = std::min(obs_decel_v, config->get_obs_map_min_v());
+                    log_info("obs_loop: obs_condition = far, obs_dist: {}", obs_dist);
+                }
+                else if(obs_dist <= buf_deadzone)
                 {
                     obs_condition = "near";
                     obs_decel_v = 0.0;
                     //log_info("obs_loop dyn pts near obs detected, obs_dist: {}", obs_dist);
-                    log_info("obs_loop dyn pts near obs detected, obs_dist: {}", obs_dist);
-                    obs_decel_v = std::min(obs_decel_v, config->get_obs_map_min_v());
-                    log_info("obs_loop dyn pts near obs detected, obs_dist: {}, eff_deadzone: {}", obs_dist, effective_deadzone);
-                    log_info("get obs_deadzone(): {}", config->get_obs_deadzone());
+                    //log_info("obs_loop near obs, obs_dist: {}, obs_Dzon:{}, , efct_Dzon: {}", obs_dist, config->get_obs_deadzone(),effective_deadzone);
+                    log_info("obs_loop: obs_condition = near, obs_dist: {}", obs_dist);
 
                     if(obs_value == OBS_NONE)
                     {
                         obs_value = OBS_DYN;
-                        log_info("obs_loop obs_value set to OBS_DYN due to dyn pts:{}", obs_value);
+                        //log_info("obs_loop obs_value set to OBS_DYN due to dyn pts:{}", obs_value);
+                        log_info("obs_loop: obs value = OBS_DYN");
                     }
-                }
-                else if(obs_condition == "none")
-                {
-                    obs_condition = "far";
-                    //obs_decel_v = std::min(obs_decel_v, some_reduced_speed);
-                    obs_value = OBS_DYN; 
-                    log_info("obs_loop dyn pts far obs detected, obs_dist: {}", obs_dist);
                 }
                 /////////////////
 
@@ -4744,38 +4768,31 @@ void AUTOCONTROL::obs_loop()
             else
             {
                 obs_dist = std::numeric_limits<double>::max();
-                log_info("obs_loop no forward dyn pts detected");
+                //log_info("obs_loop no forward dyn pts detected");
             }
 
             // test 10.18.25
-            if(obs_condition != "none" && obs_decel_v > 0.0)
-            {
-                //obs_decel_v = 0.0;
-                log_info("obs_loop obs detected by dyn pts, obs_condition: {}, obs_decel_v set to {}", obs_condition.toUtf8().constData(), obs_decel_v);
-            
-            }
+            //if(obs_condition != "none" && obs_decel_v > 0.0)
+            //{
+            //    //obs_decel_v = 0.0;
+            //    log_info("obs_loop dyn pts, obs_condition: {}, obs_decel_v:{}", obs_condition.toUtf8().constData(),obs_decel_v);
+            //}
 
             // final update(conclusion)
             {
                 std::lock_guard<std::recursive_mutex> lock(mtx);
+
+                // test 10.21.25 - smooth decel
+                //double prev_decel = cur_obs_decel_v;
+                //double limited_decel = std::max(0.0, obs_decel_v);
+                //if(limited_decel > prev_decel)
+                //{
+                //    limited_decel = std::min(limited_decel,prev_decel + AUTOCONTROL_INFO::obs_decel_recover_rate);
+                //}
+
                 cur_obs_dist      = obs_dist;
                 cur_obs_value     = obs_value;
                 cur_obs_decel_v   = obs_decel_v;
-                cur_obs_condition = obs_condition;
-            }
-            
-            {
-                std::lock_guard<std::recursive_mutex> lock(mtx);
-                double prev_decel = cur_obs_decel_v;
-                double limited_decel = std::max(0.0, obs_decel_v);
-                if(limited_decel > prev_decel)
-                {
-                    limited_decel = std::min(limited_decel,
-                                             prev_decel + AUTOCONTROL_INFO::obs_decel_recover_rate);
-                }
-                cur_obs_dist      = obs_dist;
-                cur_obs_value     = obs_value;
-                cur_obs_decel_v   = limited_decel;
                 cur_obs_condition = obs_condition;
             }
         }
