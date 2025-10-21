@@ -108,6 +108,8 @@ class StateService:
                         core_sw["connected"] = "EMERGENCY_STOP"
                     elif obj["statusPowerOut"] == 0:
                         core_sw["connected"] = "POWER_OFF"
+                    elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 0:
+                        core_sw["connected"] = "SERVO_OFF"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 1:
                         core_sw["connected"] = "POWER_CHECKED"
                     elif obj["statusPowerOut"] == 1 and obj["statusServoNum"] == 2:
