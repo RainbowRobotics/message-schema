@@ -13,7 +13,7 @@ py_library(
          requirement("pyinstaller"),
         "//backend/packages/utils:utils",
         "//backend/packages/rb_zenoh:rb_zenoh",
-        "//backend/packages/flat_buffers:flat_buffers",
+        "//backend/packages/rb_flat_buffers:rb_flat_buffers",
         "//schemas/rb/v1:rb_v1_py",
     ],
     visibility = ["//visibility:public"],

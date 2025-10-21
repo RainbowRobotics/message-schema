@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from flat_buffers.IPC.State_Log import State_LogT
+from rb_flat_buffers.IPC.State_Log import State_LogT
 from rb_zenoh.client import ZenohClient
 
 zenoh_client = ZenohClient()

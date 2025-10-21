@@ -7,14 +7,14 @@ from app.features.info.info_module import InfoService
 from app.features.program.program_module import ProgramService
 from app.socket.socket_client import socket_client
 from fastapi import HTTPException
-from flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
-from flat_buffers.IPC.Request_PowerControl import (
+from rb_flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
+from rb_flat_buffers.IPC.Request_PowerControl import (
     Request_PowerControlT,
 )
-from flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
-from flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
-from flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from flat_buffers.IPC.State_Core import State_CoreT
+from rb_flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
+from rb_flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
+from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
+from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_modules.log import rb_log
 from rb_resources.file import read_json_file
 from rb_zenoh.client import ZenohClient

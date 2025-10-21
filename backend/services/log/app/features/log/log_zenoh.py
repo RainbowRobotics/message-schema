@@ -1,6 +1,6 @@
 import rb_database.mongo_db as mongo_db
 from app.features.log.log_module import LogService
-from flat_buffers.IPC.State_Log import State_LogT
+from rb_flat_buffers.IPC.State_Log import State_LogT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
 

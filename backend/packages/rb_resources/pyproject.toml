@@ -15,4 +15,7 @@ authors = [
 include-package-data = true
 
 [tool.setuptools.package-data]
-rb_resources = ["data/**/*"]
+rb_resources = [
+  "data/**/*",
+  "swagger-ui/**",           # 하위폴더 재귀 포함
+]

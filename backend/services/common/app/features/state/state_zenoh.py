@@ -1,5 +1,5 @@
-from flat_buffers.IPC.State_Core import State_CoreT
-from flat_buffers.IPC.State_Message import State_MessageT
+from rb_flat_buffers.IPC.State_Core import State_CoreT
+from rb_flat_buffers.IPC.State_Message import State_MessageT
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import OverflowPolicy, SubscribeOptions
 

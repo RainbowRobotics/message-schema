@@ -1,6 +1,6 @@
-from flat_buffers.IPC.Request_SideAout_General import Request_SideAout_GeneralT
-from flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
-from flat_buffers.IPC.Response_Functions import Response_FunctionsT
+from rb_flat_buffers.IPC.Request_SideAout_General import Request_SideAout_GeneralT
+from rb_flat_buffers.IPC.Request_SideDout_General import Request_SideDout_GeneralT
+from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_zenoh.client import ZenohClient
 
 zenoh_client = ZenohClient()

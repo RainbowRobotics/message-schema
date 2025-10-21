@@ -21,7 +21,7 @@ COPY --from=docker.io/dfd1123/zenoh-python-builder:py312-zenoh1.5.0-shm /wheels 
 
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
-    uv pip install -e ./packages/flat_buffers -e ./packages/rb_modules -e ./packages/rb_database -e ./packages/rb_zenoh -e ./packages/utils
+    uv pip install -e ./packages/rb_flat_buffers -e ./packages/rb_modules -e ./packages/rb_database -e ./packages/rb_zenoh -e ./packages/utils
 
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     --mount=type=cache,target=/root/.cache/pip,id=pip-cache \
@@ -36,14 +36,14 @@ RUN --mount=type=cache,target=/root/.cache/pyinstaller,id=pyi-cache \
     uv run pyinstaller --onefile --clean \
     --distpath=/app/dist \
     --name=run.bin \
-    --paths ./packages/flat_buffers/src \
+    --paths ./packages/rb_flat_buffers/src \
     --paths ./packages/rb_modules/src \
     --paths ./packages/rb_database/src \
     --paths ./packages/rb_socketio/src \
     --paths ./packages/rb_schemas/src \
     --paths ./packages/rb_resources/src \
     --paths ./packages/utils/src \
-    --collect-submodules flat_buffers \
+    --collect-submodules rb_flat_buffers \
     --collect-submodules rb_modules \
     --collect-submodules rb_database \
     --collect-submodules rb_socketio \

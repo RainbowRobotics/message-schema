@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from flat_buffers.IPC.State_Core import State_CoreT
+from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.base import Response_ReturnValuePD
 from rb_zenoh.client import ZenohClient
 from utils.parser import t_to_dict

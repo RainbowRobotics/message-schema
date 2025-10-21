@@ -11,7 +11,7 @@ readme = "README.md"
 dependencies = [
   "utils",
   "rb_zenoh",
-  "flat_buffers",
+  "rb_flat_buffers",
   "rb_modules",
   "rb_schemas",
   "rb_resources",
@@ -27,7 +27,7 @@ dependencies = [
 [tool.uv.sources]
 utils = { workspace = true }
 rb_zenoh = { workspace = true }
-flat_buffers = { workspace = true }
+rb_flat_buffers = { workspace = true }
 rb_modules = { workspace = true }
 rb_schemas = { workspace = true }
 rb_resources = { workspace = true }

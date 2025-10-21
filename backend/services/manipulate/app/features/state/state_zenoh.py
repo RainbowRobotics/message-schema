@@ -1,5 +1,5 @@
 from app.socket.socket_client import socket_client
-from flat_buffers.IPC.State_Core import State_CoreT
+from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_zenoh.router import ZenohRouter
 from utils.asyncio_helper import fire_and_log
 

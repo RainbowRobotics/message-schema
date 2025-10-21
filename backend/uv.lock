@@ -6,11 +6,12 @@ requires-python = "==3.12.*"
 members = [
     "common",
     "deploy",
-    "flat-buffers",
     "log",
     "manipulate",
     "rb-backend-server",
     "rb-database",
+    "rb-flat-buffers",
+    "rb-flow-manager",
     "rb-modules",
     "rb-resources",
     "rb-schemas",
@@ -172,11 +173,11 @@ version = "0.1.0"
 source = { virtual = "services/common" }
 dependencies = [
     { name = "fastapi" },
-    { name = "flat-buffers" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "python-socketio" },
     { name = "rb-database" },
+    { name = "rb-flat-buffers" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -189,11 +190,11 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
-    { name = "flat-buffers", editable = "packages/flat_buffers" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "python-socketio", specifier = ">=5.13.0" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -209,11 +210,11 @@ version = "0.1.0"
 source = { virtual = "services/deploy" }
 dependencies = [
     { name = "fastapi" },
-    { name = "flat-buffers" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "rb-database" },
+    { name = "rb-flat-buffers" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -226,11 +227,11 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
-    { name = "flat-buffers", editable = "packages/flat_buffers" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -277,21 +278,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/01/64/1296f46d6b9e3b23fb22e5d01af3f104ef411425531376212f1eefa2794d/fastapi-0.116.2.tar.gz", hash = "sha256:231a6af2fe21cfa2c32730170ad8514985fc250bec16c9b242d3b94c835ef529", size = 298595, upload-time = "2025-09-16T18:29:23.058Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/e4/c543271a8018874b7f682bf6156863c416e1334b8ed3e51a69495c5d4360/fastapi-0.116.2-py3-none-any.whl", hash = "sha256:c3a7a8fb830b05f7e087d920e0d786ca1fc9892eb4e9a84b227be4c1bc7569db", size = 95670, upload-time = "2025-09-16T18:29:21.329Z" },
-]
-
-[[package]]
-name = "flat-buffers"
-version = "0.1.0"
-source = { editable = "packages/flat_buffers" }
-dependencies = [
-    { name = "flatbuffers" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
-    { name = "numpy", specifier = ">=2.3.3" },
 ]
 
 [[package]]
@@ -397,10 +383,10 @@ version = "0.1.0"
 source = { virtual = "services/log" }
 dependencies = [
     { name = "fastapi" },
-    { name = "flat-buffers" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-database" },
+    { name = "rb-flat-buffers" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -413,10 +399,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
-    { name = "flat-buffers", editable = "packages/flat_buffers" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -444,10 +430,10 @@ version = "0.1.0"
 source = { virtual = "services/manipulate" }
 dependencies = [
     { name = "fastapi" },
-    { name = "flat-buffers" },
     { name = "pyinstaller" },
     { name = "python-dotenv" },
     { name = "rb-database" },
+    { name = "rb-flat-buffers" },
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
@@ -460,10 +446,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<0.117.0" },
-    { name = "flat-buffers", editable = "packages/flat_buffers" },
     { name = "pyinstaller", specifier = ">=6.15.0" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
@@ -907,16 +893,48 @@ requires-dist = [
 ]
 
 [[package]]
+name = "rb-flat-buffers"
+version = "0.1.0"
+source = { editable = "packages/rb_flat_buffers" }
+dependencies = [
+    { name = "flatbuffers" },
+    { name = "numpy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
+    { name = "numpy", specifier = ">=2.3.3" },
+]
+
+[[package]]
+name = "rb-flow-manager"
+version = "0.1.0"
+source = { editable = "packages/rb_flow_manager" }
+dependencies = [
+    { name = "rb-flat-buffers" },
+    { name = "rb-zenoh" },
+    { name = "utils" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-zenoh", editable = "packages/rb_zenoh" },
+    { name = "utils", editable = "packages/utils" },
+]
+
+[[package]]
 name = "rb-modules"
 version = "0.1.0"
 source = { editable = "packages/rb_modules" }
 dependencies = [
     { name = "fastapi" },
-    { name = "flat-buffers" },
     { name = "flatbuffers" },
     { name = "psutil" },
     { name = "pydantic-settings" },
     { name = "rb-database" },
+    { name = "rb-flat-buffers" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
@@ -927,11 +945,11 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
-    { name = "flat-buffers", editable = "packages/flat_buffers" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "rb-database", editable = "packages/rb_database" },
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },

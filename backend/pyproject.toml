@@ -43,7 +43,7 @@ exclude = [
     "**/build/",
     "**/dist/",
     "**/*.egg-info/",
-    "packages/flat_buffers/"
+    "packages/rb_flat_buffers/"
 ]
 
 [tool.ruff.lint]

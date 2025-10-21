@@ -2,7 +2,7 @@
 load("@rules_python//python/uv:lock.bzl", "lock")
 
 _SERVICES = ["manipulate"]
-_PACKAGES = ["utils", "rb_zenoh", "flat_buffers"]
+_PACKAGES = ["utils", "rb_zenoh", "rb_flat_buffers"]
 
 ALL_PYPROJECTS = (
     ["//backend:pyproject.toml"] +

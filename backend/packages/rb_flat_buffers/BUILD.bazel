@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("@backend_deps//:requirements.bzl", "requirement")
+
+py_library(
+    name = "rb_flat_buffers",
+    srcs = glob(["src/rb_flat_buffers/**/*.py", "src/rb_flat_buffers/*.py"]),
+    imports = ["src"],
+    deps = [
+        requirement("flatbuffers"),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["pyproject.toml"])
