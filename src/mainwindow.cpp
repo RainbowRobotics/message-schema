@@ -473,6 +473,7 @@ void MainWindow::init_modules()
         COMM_MSA::instance()->set_unimap_module(UNIMAP::instance());
         COMM_MSA::instance()->set_obsmap_module(OBSMAP::instance());
         COMM_MSA::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        COMM_MSA::instance()->set_lidar_3d_module(LIDAR_3D::instance());
         COMM_MSA::instance()->set_autocontrol_module(AUTOCONTROL::instance());
         COMM_MSA::instance()->set_localization_module(LOCALIZATION::instance());
         COMM_MSA::instance()->set_mapping_module(MAPPING::instance());
@@ -2342,52 +2343,6 @@ void MainWindow::watch_loop()
             }
         }
 
-
-        // Samsung's request
-        //        // for 500ms loop
-        //        // obs logging
-        //        if(cnt % 5 == 0)
-        //        {
-        //            if(AUTOCONTROL::instance()->get_is_moving())
-        //            {
-        //                double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-
-        //                if(obs_d < 2.0 + 1e-6)
-        //                {
-        //                    // zone, obs dist
-        ////                    QString log = QString("\t%1\t%2")
-        ////                            .arg(int(obs_d))
-        ////                            .arg(obs_d, 0, 'f', 6);
-        //                    QString log = QString().sprintf("\t%d\t%.3f", int(obs_d), obs_d);
-        ////                    qDebug()<<log;
-
-        //                    LOGGER::instance()->write_log_to_txt(log);
-        //                }
-        //            }
-        //        }
-        //        // for 1 min loop
-        //        // temperature logging
-        //        if(cnt % 600 == 0)
-        //        {
-        //            //for temperature status
-        //            {
-        //                MOBILE_STATUS mobile_log = MOBILE::instance()-> get_status();
-
-        //                //            //m1 m2 battery usb sensor
-        //                QString log = QString("\t%1\t%2\t%3\t%4\t%5")
-        //                        .arg(mobile_log.temp_m0)
-        //                        .arg(mobile_log.temp_m1)
-        //                        .arg(mobile_log.tabos_temperature)
-        //                        .arg(QString::number(temperature_value))
-        //                        .arg(mobile_log.tabos_soc, 0, 'f', 3);
-
-        //                //            qDebug()<<"QString::number(temperature_value) : "<<QString::number(temperature_value);
-        //                //            qDebug()<<temperature_value.load();
-
-        //                LOGGER::instance()->write_temperature_log_to_txt(log);
-        //            }
-        //        }
-
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     printf("[WATCHDOG] loop stop\n");
@@ -2925,7 +2880,13 @@ void MainWindow::plot_info()
             ui->lb_MapName->setText("Map: " + map_name);
         }
     }
-
+    if(CONFIG::instance()->get_use_msa())
+    {
+        if(COMM_MSA::instance()->get_msa_connect_check())
+        {
+            ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
+        }
+    }
 }
 
 void MainWindow::plot_safety()

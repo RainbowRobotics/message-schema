@@ -211,6 +211,8 @@ void SICK::grab_loop(int idx)
             int idx0 = -1;
             for(int p = (int)pose_storage.size()-1; p >= 0; p--)
             {
+//                qDebug()<<"pose_storage[p].t : "<<pose_storage[p].t;
+//                qDebug()<<"t0 : "<<t0;
                 if(pose_storage[p].t < t0)
                 {
                     idx0 = p;
@@ -221,12 +223,15 @@ void SICK::grab_loop(int idx)
             int idx1 = -1;
             for(int p = 0; p < (int)pose_storage.size(); p++)
             {
+//                qDebug()<<"pose_storage[p].t : "<<pose_storage[p].t;
+//                qDebug()<<"t1 : "<<t1;
                 if(pose_storage[p].t > t1)
                 {
                     idx1 = p;
                     break;
                 }
             }
+//            qDebug()<<"idx0 : "<<idx0<<", idx1 :"<<idx1;
 
             // check
             if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
@@ -301,7 +306,7 @@ void SICK::grab_loop(int idx)
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
-            //printf("[LIDAR] front lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+//            printf("[LIDAR] front lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
