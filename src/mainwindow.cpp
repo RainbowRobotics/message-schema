@@ -2364,6 +2364,7 @@ void MainWindow::watch_loop()
         // for 500ms loop
         if(cnt % 5 == 0)
         {
+            plot_safety();
             //For sem docking retry logic
             bool retry_flag = DOCKCONTROL::instance()->get_dock_retry_flag();
 
@@ -4318,7 +4319,7 @@ void MainWindow::plot_loop()
     plot_node();
     plot_pick();
     plot_info();
-    plot_safety();
+//    plot_safety();
     plot_raw_2d();
     plot_raw_3d();
     plot_mapping();

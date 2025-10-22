@@ -574,7 +574,8 @@ void MOBILE::receive_data_loop()
                             MOBILE_POSE mobile_pose;
                             mobile_pose.t = mobile_t + offset_t;
                             mobile_pose.pose = Eigen::Vector3d(x, y, toWrap(th));
-                            mobile_pose.vel = Eigen::Vector3d(local_vx, 0, local_wz);
+//                            mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
+                            mobile_pose.vel = Eigen::Vector3d(local_vx, local_vy, local_wz);
 
                             // imu processing
                             Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
@@ -736,7 +737,7 @@ void MOBILE::receive_data_loop()
                                 "cur(m0,m1):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," +
                                 QString::number((double)cur_status.cur_m1/10.0, 'f', 2) + "\n";
                             }
-                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECHANUM)
+                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM)
                             {
                                 // connection 정보
                                 mobile_status_str += "connection(m0,m1,m2,m3):" + QString::number(cur_status.connection_m0) + "," +
@@ -868,7 +869,7 @@ void MOBILE::receive_data_loop()
                             }
                             else if(motor_robot_type == 0x03)
                             {
-                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_MECHANUM;
+                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM;
                             }
                             else
                             {
@@ -988,7 +989,7 @@ void MOBILE::receive_data_loop()
                                 cur_status.connection_m0 = motor_connection_status[0];
                                 cur_status.connection_m1 = motor_connection_status[1];
                             }
-                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECHANUM)
+                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM)
                             {
                                 cur_status.status_m0 = motor_stat[0];
                                 cur_status.status_m1 = motor_stat[1];
@@ -1903,7 +1904,7 @@ void MOBILE::config_parameter_send()
         {
             wheel_param_ = 2;
         }
-        else if(robot_wheel_type == "MECHANUM")
+        else if(robot_wheel_type == "MECANUM")
         {
             wheel_param_ = 3;
         }
@@ -2072,7 +2073,7 @@ void MOBILE::motor_on()
         {
             wheel_param_ = 2;
         }
-        else if(robot_wheel_type == "MECHANUM")
+        else if(robot_wheel_type == "MECANUM")
         {
             wheel_param_ = 3;
         }
