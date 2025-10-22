@@ -1,4 +1,8 @@
 #include "ekf.h"
+namespace 
+{
+    const char* MODULE_NAME = "EKF";
+}
 
 EKF::EKF(QObject *parent) : QObject{parent}
 {
@@ -44,7 +48,9 @@ void EKF::init(const Eigen::Matrix4d& tf)
 
     initialized = true;
 
-    printf("[EKF] init (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
+    //printf("[EKF] init (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
+    spdlog::info("[EKF] init ({:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2]*R2D);
+    //log_info("initialized");
 }
 
 void EKF::reset()
@@ -121,6 +127,7 @@ void EKF::predict(const Eigen::Matrix4d& odom_tf)
     pre_mo_tf = odom_tf;
 
     // printf("[EKF] prediction: (%f, %f, %f)\n", x_hat[0], x_hat[1], x_hat[2]*R2D);
+    spdlog::debug("[EKF] prediction: ({:.3f}, {:.3f}, {:.3f} )",x_hat[0], x_hat[1], x_hat[2]*R2D);
 }
 
 void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
@@ -156,11 +163,13 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     if(y_norm_xy > 0.5)
     {
         printf("[EKF] ICP rejected by xy-norm: %.3f m\n", y_norm_xy);
+        spdlog::warn("[EKF] ICP rejected by xy-norm: {:.3f} m", y_norm_xy);
         return;
     }
     if(y_th_deg > 10.0)
     {
         printf("[EKF] ICP rejected by theta: %.2f deg\n", y_th_deg);
+        spdlog::warn("[EKF] ICP rejected by theta: {:.2f} deg", y_th_deg);
         return;
     }
 
@@ -169,6 +178,7 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     if(d2 > 11.34)
     {
         printf("[EKF] ICP rejected, mahalanobis=%.2f\n", d2);
+        spdlog::warn("[EKF] ICP rejected, mahalanobis={:.2f}", d2);
         return;
     }
 
@@ -193,4 +203,6 @@ void EKF::estimate(const Eigen::Matrix4d& icp_tf, const Eigen::Vector2d& ieir)
     // debug
     // printf("[EKF] estimation:(%.3f, %.3f, %.3f), innovation:(%.3f, %.3f, %.3f), K_k:(%.3f, %.3f, %.3f)\n",
     //        x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
+    spdlog::debug("[EKF] estimation: ({:.3f}, {:.3f}, {:.3f}), innovation: ({:.3f}, {:.3f}, {:.3f}), K_k: ({:.3f}, {:.3f}, {:.3f})",
+           x_hat[0], x_hat[1], x_hat[2]*R2D, y_k[0], y_k[1], y_k[2]*R2D, K_k(0,0), K_k(1,1), K_k(2,2));
 }

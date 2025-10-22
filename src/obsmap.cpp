@@ -1,5 +1,10 @@
 #include "obsmap.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "OBSMAP";
+}
+
 OBSMAP* OBSMAP::instance(QObject* parent)
 {
     static OBSMAP* inst = nullptr;
@@ -36,6 +41,8 @@ OBSMAP::~OBSMAP()
     }
 }
 
+
+
 void OBSMAP::init()
 {
     // init
@@ -44,7 +51,8 @@ void OBSMAP::init()
     double obsmap_grid_size = config->get_obs_map_grid_size();
     if(obsmap_grid_size == 0)
     {
-        printf("[OBSMAP] Critical error occured...\n");
+        //printf("[OBSMAP] Critical error occured...\n");
+        spdlog::error("[OBSMAP] Critical error occured...");
         return;
     }
 
@@ -1408,7 +1416,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
                     res.push_back(obs_tf*traj_goal[p]);
                 }
 
-                printf("[OBSMAP] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
+                //printf("[OBSMAP] path_finding complete, num:%d, iter:%d\n", (int)res.size(), iter);
+                spdlog::info("[OBSMAP] path_finding complete, num:{}, iter:{}", (int)res.size(), iter);
                 return res;
             }
         }
@@ -1547,7 +1556,8 @@ std::vector<Eigen::Matrix4d> OBSMAP::calc_path(Eigen::Matrix4d st_tf, Eigen::Mat
         double timeout = get_time() - st_time;
         if(timeout > 1.5)
         {
-            printf("[OBSMAP] timeout, iter:%d\n", iter);
+            //printf("[OBSMAP] timeout, iter:%d\n", iter);
+            spdlog::warn("[OBSMAP] timeout, iter:{}", iter);
             break;
         }
 

@@ -1,5 +1,8 @@
 #include "lidar_3d.h"
-
+namespace 
+{
+    const char* MODULE_NAME = "LIDAR_3D";
+}
 LIDAR_3D* LIDAR_3D::instance(QObject* parent)
 {
     static LIDAR_3D* inst = nullptr;
@@ -511,6 +514,7 @@ void LIDAR_3D::merge_loop()
             storage[0].erase(storage[0].begin(), storage[0].begin() + ref_i + 1);
             storage[1].erase(storage[1].begin(), storage[1].begin() + best_j + 1);
             // printf("[LIDAR] paired t=%.6f, idx: (%zu, %zu), pts0_t=%.6f, pts1_t=%.6f, total=%zu (storage: %zu, %zu))\n", merge_frm.t, ref_i, best_j, best0.t, best1.t, merge_frm.pts.size(), storage[0].size(), storage[1].size());
+            spdlog::debug("[LIDAR] paired t={:.6f}, idx: ({}, {}), pts0_t={:.6f}, pts1_t={:.6f}, total={} (storage: {}, {}))", merge_frm.t, ref_i, best_j, best0.t, best1.t, merge_frm.pts.size(), storage[0].size(), storage[1].size());
         }
         else
         {

@@ -136,6 +136,8 @@ constexpr double R2D  = 180.0/M_PI;
 #define S100_BAT_MAX_VOLTAGE 53.5
 #define S100_BAT_MIN_VOLTAGE 42.0
 
+#define LOG_MODULE_NAME(name) namespace { const char* MODULE_NAME = name; }
+
 // enumulator
 enum class RobotType
 {

@@ -1,6 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "MAIN";
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   , ui(new Ui::MainWindow)
 {
@@ -81,6 +86,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_LocInit,           SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
     connect(ui->bt_LocStart,          SIGNAL(clicked()),  this, SLOT(bt_LocStart()));                    // localization start
     connect(ui->bt_LocStop,           SIGNAL(clicked()),  this, SLOT(bt_LocStop()));                     // localization stop
+    connect(ui->bt_LocInitSemiAuto,   SIGNAL(clicked()),  this, SLOT(bt_LocInitSemiAuto()));             // semi-auto localization initialization
 
     // obsmap
     connect(ui->bt_ObsClear,          SIGNAL(clicked()),     this, SLOT(bt_ObsClear()));                         // manual obstacle map clear
@@ -221,6 +227,7 @@ void MainWindow::set_opacity(QWidget* w, double opacity)
     w->setGraphicsEffect(effect);
 }
 
+
 void MainWindow::init_ui_effect()
 {
     set_opacity(ui->lb_Screen1,     MAINWINDOW_INFO::opacity_val);
@@ -351,7 +358,7 @@ void MainWindow::init_modules()
 
     // cam module init
     {
-        if(CONFIG::instance()->get_use_cam())
+        if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
             CAM::instance()->set_logger_module(LOGGER::instance());
@@ -944,7 +951,9 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
     catch(std::out_of_range)
     {
         //logger.write_log("pcl viewer not have camera ..", "Red", true, false);
-        spdlog::info("[]");
+
+        //spdlog::error("pcl viewer not have camera ..");
+        log_error("pcl viewer not have camera ..");
         center = Eigen::Vector3d(0,0,0);
         dir = Eigen::Vector3d(0,0,0);
         return;
@@ -1014,9 +1023,13 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
+    //spdlog::info("[SIM] simulation init");
+    log_info("[SIM] simulation init");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         LOGGER::instance()->write_log("[SIM] map load first", "Red", true, false);
+        //spdlog::error("[SIM] map load first");
+        log_error("[SIM] map load first");
         return;
     }
 
@@ -1051,6 +1064,8 @@ void MainWindow::bt_SimInit()
 void MainWindow::bt_ConfigLoad()
 {
     CONFIG::instance()->load();
+    //spdlog::info("[MAIN] config reloaded");
+    log_info("config reloaded");
 }
 
 // for emergency stop
@@ -1181,6 +1196,9 @@ void MainWindow::bt_MapBuild()
     if(CONFIG::instance()->get_use_sim())
     {
         LOGGER::instance()->write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
+        //spdlog::warn("[MAIN] map build not allowed SIM_MODE");
+        log_warn("map build not allowed SIM_MODE");
+
         return;
     }
 
@@ -1201,6 +1219,9 @@ void MainWindow::bt_MapSave()
     if(CONFIG::instance()->get_use_sim())
     {
         LOGGER::instance()->write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
+        //spdlog::warn("[MAIN] map save not allowed SIM_MODE");
+        log_warn("map save not allowed SIM_MODE");
+
         return;
     }
 
@@ -1209,7 +1230,8 @@ void MainWindow::bt_MapSave()
         // auto generation dir path
         QString _map_dir = "/data/maps/" + get_time_str();
         //printf("[MAIN] Creating map directory: %s\n", _map_dir.toLocal8Bit().data());
-        spdlog::info("[MAIN] Creating map directory:{}", map_dir.toLocal8Bit().data());
+        //spdlog::info("[MAIN] Creating map directory:{}", map_dir.toLocal8Bit().data());
+        log_info("Creating map directory:{}", _map_dir.toLocal8Bit().data());
 
         QDir().mkpath(_map_dir);
 
@@ -1220,7 +1242,9 @@ void MainWindow::bt_MapSave()
     {
         QString _map_dir = "/data/maps/" + map_dir;
         //printf("[MAIN] Using existing map directory: %s\n", _map_dir.toLocal8Bit().data());
-        spdlog::info("[MAIN] Using existing map directory:{}",map_dir.toLocal8Bit().data());
+        //spdlog::info("[MAIN] Using existing map directory:{}",map_dir.toLocal8Bit().data());
+        log_info("Using existing map directory:{}",map_dir.toLocal8Bit().data());
+
         QDir().mkpath(_map_dir);
 
         UNIMAP::instance()->set_map_path(_map_dir);
@@ -1232,7 +1256,9 @@ void MainWindow::bt_MapSave()
     if(map_path.isEmpty())
     {
         LOGGER::instance()->write_log("[MAIN] no map_dir", "Red", true, false);
-        spdlog::warn("[no map_dir]");
+        //spdlog::warn("[no map_dir]");
+        log_warn("no map_dir");
+
         return;
     }
 
@@ -1243,7 +1269,9 @@ void MainWindow::bt_MapSave()
     if(MAPPING::instance()->get_kfrm_storage_size() == 0)
     {
         //printf("[MAIN] no keyframe\n");
-        spdlog::warn("[MAIN] no keyframe");
+        //spdlog::warn("[MAIN] no keyframe");
+        log_warn("no keyframe");
+
         return;
     }
 
@@ -1289,7 +1317,9 @@ void MainWindow::bt_MapSave()
             }
         }
 
-        printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
+        //printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
+        //spdlog::info("[MAIN] convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
+        log_info("convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
     }
 
     // write file
@@ -1310,13 +1340,17 @@ void MainWindow::bt_MapSave()
         }
 
         cloud_csv_file.close();
-        printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
+        //printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
+        //spdlog::info("[MAIN] {}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
+        log_info("{}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
     }
 }
 
 void MainWindow::bt_MapLoad()
 {
-    spdlog::info("[MAIN] bt_MapLoad");
+    //spdlog::info("[MAIN] bt_MapLoad");
+    log_info("bt_MapLoad");
+    
     //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
@@ -1334,50 +1368,69 @@ void MainWindow::bt_MapLoad()
 void MainWindow::bt_MapLastLc()
 {
     MAPPING::instance()->last_loop_closing();
-    spdlog::info("[MAIN] bt_MapLastLc");
+    //spdlog::info("[MAIN] bt_MapLastLc");
+    log_info("bt_MapLastLc");
 }
 
 void MainWindow::bt_MapPause()
 {
     MAPPING::instance()->is_pause.store(true);
     //printf("[MAIN] mapping pasue\n");
-    spdlog::info("[MAIN] mapping pasue");
+    //spdlog::info("[MAIN] mapping pasue");
+    log_info("mapping pause");
 }
 
 void MainWindow::bt_MapResume()
 {
     MAPPING::instance()->is_pause.store(false);
     //printf("[MAIN] mapping resume\n");
-    spdlog::info("[MAIN] mapping resume");
+    //spdlog::info("[MAIN] mapping resume");
+    spdlog::info("mapping resume");
 }
 
 // localization
 void MainWindow::bt_LocInit()
 {
     LOCALIZATION::instance()->set_cur_tf(se2_to_TF(pick.r_pose));
-    spdlog::info("[MAIN] bt_LocInit");
+    //spdlog::info("[MAIN] bt_LocInit");
+    log_info("bt_LocInit");
 }
 
 void MainWindow::bt_LocStart()
 {
     LOCALIZATION::instance()->start();
-    spdlog::info("[MAIN] bt_LocStart");
-
+    //spdlog::info("[MAIN] bt_LocStart");
+    log_info("bt_LocStart");
 }
 
 void MainWindow::bt_LocStop()
 {
     LOCALIZATION::instance()->stop();
-    spdlog::info("[MAIN] bt_LocStop");
-
+    //spdlog::info("[MAIN] bt_LocStop");
+    log_info("bt_LocStop");
 }
 
+void MainWindow::bt_LocInitSemiAuto()
+{
+    if  (UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
+        return;
+    }
+
+    LOCALIZATION::instance()->start_semiauto_init();
+    //spdlog::info("[MAIN] bt_LocSemiAuto");
+    log_info("bt_LocSemiAuto");
+}
 // for autocontrol
 void MainWindow::bt_AutoMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
         return;
     }
 
@@ -1424,7 +1477,9 @@ void MainWindow::bt_AutoBackMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
         return;
     }
     if(pick.cur_node != "")
@@ -1469,7 +1524,9 @@ void MainWindow::bt_AutoMove2()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
         return;
     }
 
@@ -1515,7 +1572,9 @@ void MainWindow::bt_AutoMove3()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
         return;
     }
 
@@ -1562,7 +1621,10 @@ void MainWindow::bt_AutoPath()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
+
         return;
     }
 
@@ -1589,7 +1651,10 @@ void MainWindow::bt_AutoPathAppend()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[MAIN] check map load\n");
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
+
         return;
     }
     if(pick.cur_node != "")
@@ -1607,21 +1672,30 @@ void MainWindow::bt_AutoPathAppend()
 void MainWindow::bt_AutoStop()
 {
     AUTOCONTROL::instance()->stop();
+    //spdlog::info("[MAIN] bt_AutoStop");
+    log_info("bt_AutoStop");
 }
 
 void MainWindow::bt_AutoPause()
 {
     AUTOCONTROL::instance()->set_is_pause(true);
+    //spdlog::info("[MAIN] bt_AutoPause");
+    log_info("bt_AutoPause");
 }
 
 void MainWindow::bt_AutoResume()
 {
     AUTOCONTROL::instance()->set_is_pause(false);
+    //spdlog::info("[MAIN] bt_AutoResume");
+    log_info("bt_AutoResume");
 }
 
 //docking
 void MainWindow::bt_DockStart()
 {
+    //spdlog::info("[DOCK] bt_DockStart");
+    log_info("[DOCK] bt_DockStart");
+
     // no use OSSD
     MOBILE::instance()->set_detect_mode(0.0);
     AUTOCONTROL::instance()->set_is_moving(true);
@@ -1630,6 +1704,9 @@ void MainWindow::bt_DockStart()
 
 void MainWindow::bt_DockStop()
 {
+    //spdlog::info("[DOCK] bt_DockStop");
+    log_info("[DOCK] bt_DockStop");
+
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
 
@@ -1639,6 +1716,9 @@ void MainWindow::bt_DockStop()
 
 void MainWindow::bt_UnDockStart()
 {
+    //spdlog::info("[DOCK] bt_UnDockStart");
+    log_info("[DOCK] bt_UnDockStart");
+
     // no use OSSD
     MOBILE::instance()->set_detect_mode(0.0);
 
@@ -1659,66 +1739,98 @@ void MainWindow::bt_UnDockStart()
 //for safety
 void MainWindow::bt_ClearMismatch()
 {
+    //spdlog::info("[MAIN] bt_ClearMismatch");
+    log_info("bt_ClearMismatch");
+
     MOBILE::instance()->clearmismatch();
 }
 
 void MainWindow::bt_ClearOverSpd()
 {
+    //spdlog::info("[MAIN] bt_ClearOverSpd");
+    log_info("bt_ClearOverSpd");
+
     MOBILE::instance()->clearoverspd();
 }
 
 void MainWindow::bt_ClearObs()
 {
+    //spdlog::info("[MAIN] bt_ClearObs");
+    log_info("bt_ClearObs");
+
     MOBILE::instance()->clearobs();
 }
 
 void MainWindow::bt_ClearFieldMis()
 {
+    //spdlog::info("[MAIN] bt_ClearFieldMis");
+    log_info("bt_ClearFieldMis");
+
     MOBILE::instance()->clearfieldmis();
 }
 
 void MainWindow::bt_ClearInterlockStop()
 {
+    //spdlog::info("[MAIN] bt_ClearInterlockStop");
+    log_info("bt_ClearInterlockStop");
+
     MOBILE::instance()->clearinterlockstop();
 }
 
 void MainWindow::bt_BumperStop()
 {
+    //spdlog::info("[MAIN] bt_BumperStop");
+    log_info("bt_BumperStop");
+
     MOBILE::instance()->clearbumperstop();
 }
 
 void MainWindow::bt_Recover()
 {
+    //spdlog::info("[MAIN] bt_Recover");
+    log_info("bt_Recover");
     MOBILE::instance()->recover();
 }
 
 void MainWindow::bt_SetDetectModeT()
 {
+    //spdlog::info("[MAIN] bt_SetDetectModeT");
+    log_info("bt_SetDetectModeT");
     MOBILE::instance()->set_detect_mode(1.0);
 }
 
 void MainWindow::bt_SetDetectModeF()
 {
+    //spdlog::info("[MAIN] bt_SetDetectModeF");
+    log_info("bt_SetDetectModeF");
     MOBILE::instance()->set_detect_mode(0.0);
 }
 
 void MainWindow::bt_Request()
 {
+    //spdlog::info("[MAIN] bt_Request");
+    log_info("bt_Request");
     MOBILE::instance()->robot_request();
 }
 
 void MainWindow::bt_LiftPowerOn()
 {
+    //spdlog::info("[MAIN] bt_LiftPowerOn");
+    log_info("bt_LiftPowerOn");
     MOBILE::instance()->lift_power_onoff(1);
 }
 
 void MainWindow::bt_LiftPowerOff()
 {
+    //spdlog::info("[MAIN] bt_LiftPowerOff");
+    log_info("bt_LiftPowerOff");
     MOBILE::instance()->lift_power_onoff(0);
 }
 
 void MainWindow::bt_SetLidarField()
 {
+    //spdlog::info("[MAIN] bt_SetLidarField");
+    log_info("bt_SetLidarField");
     unsigned int field = ui->le_Lidar_Field_Write->text().toUInt();
     MOBILE::instance()->setlidarfield(field);
 }
@@ -1726,7 +1838,9 @@ void MainWindow::bt_SetLidarField()
 void MainWindow::bt_TestLed()
 {
     MOBILE::instance()->led(0, ui->spb_Led->value());
-    printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+    //printf("[MAIN] led test:%d\n", ui->spb_Led->value());
+    //spdlog::info("[MAIN] led test:{}", ui->spb_Led->value());
+    log_info("led test:{}", ui->spb_Led->value());
 }
 
 void MainWindow::ckb_PlotKfrm()
@@ -1743,10 +1857,14 @@ void MainWindow::ckb_PlotKfrm()
 
 void MainWindow::bt_ReturnToCharging()
 {
+    //spdlog::info("[RTC] bt_ReturnToCharging");
+    log_info("[RTC] bt_ReturnToCharging");
     QString robot_serial_number = CONFIG::instance()->get_robot_serial_number();
     if(robot_serial_number == "RB-M-")
     {
         LOGGER::instance()->write_log("[RTC] Robot serial number is not properly set.", "Red");
+        //spdlog::error("[RTC] Robot serial number is not properly set.");
+        log_error("[RTC] Robot serial number is not properly set.");
         return;
     }
 
@@ -1764,7 +1882,9 @@ void MainWindow::bt_ReturnToCharging()
 
     if(found_ids.size() == 0)
     {
-        LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
+    LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
+    //spdlog::error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
+    log_error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
         return;
     }
 
@@ -1773,6 +1893,8 @@ void MainWindow::bt_ReturnToCharging()
         LOGGER::instance()->write_log(QString("[RTC] Multiple charging nodes found for serial: %1 (count: %2)")
                                       .arg(robot_serial_number)
                                       .arg(found_ids.size()), "Red");
+        //spdlog::error("[RTC] Multiple charging nodes found for serial: {} (count: {})", qUtf8Printable(robot_serial_number), found_ids.size());
+        log_error("[RTC] Multiple charging nodes found for serial: {} (count: {})", qUtf8Printable(robot_serial_number), found_ids.size());
         return;
     }
 
@@ -1782,10 +1904,14 @@ void MainWindow::bt_ReturnToCharging()
     if(node == nullptr)
     {
         LOGGER::instance()->write_log(QString("[RTC] Failed to retrieve node with ID: %1").arg(found_id), "Red");
+        //spdlog::error("[RTC] Failed to retrieve node with ID: {}", qUtf8Printable(found_id));
+        log_error("[RTC] Failed to retrieve node with ID: {}", qUtf8Printable(found_id));
         return;
     }
 
     LOGGER::instance()->write_log(QString("[RTC] Found charging node: %1").arg(node->name), "Green");
+    //spdlog::info("[RTC] Found charging node: {}", qUtf8Printable(node->name));
+    log_info("[RTC] Found charging node: {}", qUtf8Printable(node->name));
 
     Eigen::Vector3d xi = TF_to_se2(node->tf);
     DATA_MOVE msg;
@@ -1806,19 +1932,25 @@ void MainWindow::bt_DelNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[Del_Node] check map load\n");
+        //printf("[Del_Node] check map load\n");
+        //spdlog::warn("[Del_Node] check map load");
+        log_warn("check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[Del_Node] check localization\n");
+        //printf("[Del_Node] check localization\n");
+        //spdlog::warn("[Del_Node] check localization");
+        log_warn("check localization");
         return;
     }
 
     if(pick.cur_node == "")
     {
-        printf("[Del_Node] check pick node\n");
+        //printf("[Del_Node] check pick node\n");
+        //spdlog::warn("[Del_Node] check pick node");
+        log_warn("check pick node");
         return;
     }
 
@@ -1830,13 +1962,17 @@ void MainWindow::bt_AnnotSave()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[Del_Node] check map load\n");
+        //printf("[Del_Node] check map load\n");
+        //spdlog::warn("[Del_Node] check map load");
+        log_warn("check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[Del_Node] check localization\n");
+        //printf("[Del_Node] check localization\n");
+        //spdlog::warn("[Del_Node] check localization");
+        log_warn("check localization");
         return;
     }
 
@@ -1847,13 +1983,17 @@ void MainWindow::bt_QuickAddNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        printf("[QA_Node] check map load\n");
+        //printf("[QA_Node] check map load\n");
+        //spdlog::warn("[QA_Node] check map load");
+        log_warn("check map load");
         return;
     }
 
     if(LOCALIZATION::instance()->get_is_loc() == false)
     {
-        printf("[QA_Node] check localization\n");
+        //printf("[QA_Node] check localization\n");
+        //spdlog::warn("[QA_Node] check localization");
+        log_warn("check localization");
         return;
     }
 
@@ -1861,7 +2001,9 @@ void MainWindow::bt_QuickAddNode()
     UNIMAP::instance()->add_node(cur_tf, "GOAL");
 
     topo_update();
-    printf("[QA_Node] quick add node\n");
+    //printf("[QA_Node] quick add node\n");
+    //spdlog::info("[QA_Node] quick add node");
+    log_info("quick add node");
 }
 
 
@@ -1882,6 +2024,8 @@ void MainWindow::slot_global_path_updated()
 // for obsmap
 void MainWindow::bt_ObsClear()
 {
+    //spdlog::info("[OBS] bt_ObsClear");
+    log_info("[OBS] bt_ObsClear");
     OBSMAP::instance()->clear();
     obs_update();
 }
@@ -1914,16 +2058,20 @@ void MainWindow::ui_tasks_update()
 
 void MainWindow::bt_TaskAdd()
 {
+    //spdlog::info("[TASK] bt_TaskAdd");
+    log_info("[TASK] bt_TaskAdd");
     if(pick.cur_node.isEmpty())
     {
-        spdlog::warn("[TASK] No selected node");
+        //spdlog::warn("[TASK] No selected node");
+        log_warn("No selected node");
         return;
     }
 
     const NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
     if(node == nullptr)
     {
-        spdlog::error("[TASK] Node nullptr");
+        //spdlog::error("[TASK] Node nullptr");
+        log_error("Node nullptr");
         return;
     }
 
@@ -1935,7 +2083,8 @@ void MainWindow::bt_TaskAdd()
     else
     {
         //printf("[TASK] Unselectable node\n");
-        spdlog::error("[TASK] Unselectable node");
+        //spdlog::error("[TASK] Unselectable node");
+        log_error("Unselectable node");
         return;
     }
 
@@ -1945,6 +2094,8 @@ void MainWindow::bt_TaskAdd()
 
 void MainWindow::bt_TaskDel()
 {
+    //spdlog::info("[TASK] bt_TaskDel");
+    log_info("[TASK] bt_TaskDel");
     NODE* node_to_delete = nullptr;
 
     if (!ui->lw_TaskList->selectedItems().isEmpty())
@@ -1959,7 +2110,8 @@ void MainWindow::bt_TaskDel()
     else
     {
         //QMessageBox::warning(this, "작업 삭제 실패", "삭제할 노드를 목록 또는 맵에서 선택해주세요.");
-        spdlog::warn("[TASK] fail, Can not find Task");
+        //spdlog::warn("[TASK] fail, Can not find Task");
+        log_warn("fail, Can not find Task");
         return;
     }
 
@@ -1967,14 +2119,16 @@ void MainWindow::bt_TaskDel()
     {
         TASK::instance()->del_task(node_to_delete);
         //qInfo() << "[TASK] Node" << node_to_delete->id << "deleted from the task list.";
-        spdlog::info("[TASK] Deleted from the task list Node:{}", node_to_delete->id.toStdString());
+        //spdlog::info("[TASK] Deleted from the task list Node:{}", node_to_delete->id.toStdString());
+        log_info("Deleted from the task list Node:{}", node_to_delete->id.toStdString());
 
     }
     else
     {
         //QMessageBox::critical(this, "오류", "선택된 노드 정보를 찾을 수 없습니다.");
         //qCritical() << "[TASK] Delete failed: Selected node returned nullptr.";
-        spdlog::error("[TASK] Delete failed: Selected node returned nullptr.");
+        //spdlog::error("[TASK] Delete failed: Selected node returned nullptr.");
+        log_error("Delete failed: Selected node returned nullptr.");
     }
 
     ui_tasks_update();
@@ -1984,7 +2138,9 @@ void MainWindow::bt_TaskDel()
 void MainWindow::bt_TaskSave()
 {
 
-    spdlog::info("[TASK] TaskSave. but not yet");
+    //spdlog::info("[TASK] TaskSave. but not yet");
+    log_info("[TASK] TaskSave. but not yet");
+
     //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
     //{
     //    QMessageBox::warning(this, "저장 실패", "맵이 로드되지 않았습니다.");
@@ -2005,11 +2161,14 @@ void MainWindow::bt_TaskSave()
 
 void MainWindow::bt_TaskLoad()
 {
-    spdlog::info("[TASK] TaskLoad. but not yet");
+    //spdlog::info("[TASK] TaskLoad. but not yet");
+    log_info("[TASK] TaskLoad. but not yet");
 }
 
 void MainWindow::bt_TaskPlay()
 {
+    //spdlog::info("[TASK] TaskPlay");
+    log_info("[TASK] TaskPlay");
 
     //if (UNIMAP::instance()->is_loaded != MAP_LOADED)
     //{
@@ -2024,13 +2183,17 @@ void MainWindow::bt_TaskPlay()
     if (TASK::instance()->task_node_list.empty())
     {
         //QMessageBox::warning(this, "실행 실패", "실행할 작업 목록이 비어있습니다.");
-        spdlog::warn("[TASK] Empty task list");
+        //spdlog::warn("[TASK] Empty task list");
+        log_warn("Empty task list");
+
         return;
     }
     if (TASK::instance()->is_tasking)
     {
         //QMessageBox::information(this, "알림", "이미 다른 작업이 실행 중입니다.");
-        spdlog::info("[TASK] Alreay working");
+        //spdlog::info("[TASK] Alreay working");
+        log_info("Alreay working");
+
         return;
     }
 
@@ -2038,7 +2201,8 @@ void MainWindow::bt_TaskPlay()
     TASK::instance()->is_start = true;
     TASK::instance()->use_looping = ui->ckb_Looping->isChecked();
 
-    spdlog::debug("[TASK] Use looping:{}",TASK::instance()->use_looping.load());
+    //spdlog::debug("[TASK] Use looping:{}",TASK::instance()->use_looping.load());
+    log_debug("Use looping:{}",TASK::instance()->use_looping.load());
 
 
     QString mode = ui->cb_TaskDrivingMode->currentText();
@@ -2049,13 +2213,15 @@ void MainWindow::bt_TaskPlay()
 
 void MainWindow::bt_TaskPause()
 {
-    spdlog::info("[TASK] TaskPause. but not yet");
+    //spdlog::info("[TASK] TaskPause. but not yet");
+    log_info("[TASK] TaskPause. but not yet");
     //TASK::instance()->pause();
 }
 
 void MainWindow::bt_TaskCancel()
 {
-    spdlog::info("[TASK] TaskCancel");
+    //spdlog::info("[TASK] TaskCancel");
+    log_info("[TASK] TaskCancel");
     TASK::instance()->cancel();
 }
 
@@ -2066,7 +2232,9 @@ void MainWindow::jog_loop()
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
 
-    printf("[JOG] loop start\n");
+    //printf("[JOG] loop start\n");
+    //spdlog::info("[JOG] loop start");
+    log_info("[JOG] loop start");
     while(jog_flag)
     {
         // check autodrive
@@ -2093,7 +2261,10 @@ void MainWindow::jog_loop()
                     vx_target = 0.;
                     vy_target = 0.;
                     wz_target = 0.;
-                    printf("[JOG] no input, stop\n");
+                    //printf("[JOG] no input, stop\n");
+                    //spdlog::info("[JOG] no input, stop");
+                    log_info("[JOG] no input, stop");
+
                 }
             }
             MOBILE::instance()->move(vx, vy, wz);
@@ -2109,11 +2280,15 @@ void MainWindow::jog_loop()
         }
         else
         {
-            printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+            //printf("[JOG] loop time drift, dt:%f\n", delta_loop_time);
+            //spdlog::warn("[JOG] loop time drift, dt:{}", delta_loop_time);
+            log_warn("loop time drift, dt:{}", delta_loop_time);
         }
         pre_loop_time = get_time();
     }
-    printf("[JOG] loop stop\n");
+    //printf("[JOG] loop stop\n");
+    //spdlog::info("[JOG] loop stop");
+    log_info("[JOG] loop stop");
 }
 
 // watchdog
@@ -2127,7 +2302,10 @@ void MainWindow::watch_loop()
     bool is_first_emo_check = true;
     MOBILE_STATUS pre_ms = MOBILE::instance()->get_status();
 
-    printf("[WATCHDOG] loop start\n");
+    //printf("[WATCHDOG] loop start\n");
+    //spdlog::info("[WATCHDOG] loop start");
+    log_info("[WATCHDOG] loop start");
+
     while(watch_flag)
     {
         cnt++;
@@ -2215,6 +2393,8 @@ void MainWindow::watch_loop()
                     MOBILE::instance()->sync();
                     last_sync_time = get_time();
                     LOGGER::instance()->write_log("[WATCH] try time sync, pc and mobile");
+                    //spdlog::info("[WATCH] try time sync, pc and mobile");
+                    log_info("[WATCH] try time sync, pc and mobile");
                 }
 
                 MOBILE_STATUS ms = MOBILE::instance()->get_status();
@@ -2247,7 +2427,9 @@ void MainWindow::watch_loop()
                 {
                     LIDAR_3D::instance()->set_is_sync(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_3d_type());
-                    printf("%s\n", str.toLocal8Bit().data());
+                    //printf("%s\n", str.toLocal8Bit().data());
+                    //spdlog::info("{}", qUtf8Printable(str));
+                    log_info("{}", qUtf8Printable(str));
                 }
             }
 
@@ -2258,7 +2440,10 @@ void MainWindow::watch_loop()
                 {
                     LIDAR_2D::instance()->set_sync_flag(true);
                     QString str = QString("[WATCH] try time sync, pc and lidar, type: %1").arg(CONFIG::instance()->get_lidar_2d_type());
-                    printf("%s\n", str.toLocal8Bit().data());
+                    //printf("%s\n", str.toLocal8Bit().data());
+                    //spdlog::info("{}", qUtf8Printable(str));
+                    log_info("{}", qUtf8Printable(str));
+
                 }
             }
 
@@ -2267,6 +2452,8 @@ void MainWindow::watch_loop()
             {
                 // printf("[WATCH] resync all\n");
                 LOGGER::instance()->write_log("[WATCH] resync all");
+                //spdlog::info("[WATCH] resync all");
+                log_info("[WATCH] resync all");
 
                 if(MOBILE::instance()->get_is_connected())
                 {
@@ -2345,13 +2532,16 @@ void MainWindow::watch_loop()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    printf("[WATCHDOG] loop stop\n");
+    //printf("[WATCHDOG] loop stop\n");
+    //spdlog::info("[WATCHDOG] loop stop");
+    log_info("[WATCHDOG] loop stop");
 }
 
 // for plot loop
 void MainWindow::plot_map()
 {
-    spdlog::debug("[MAIN] plot_map");
+    //spdlog::debug("[MAIN] plot_map");
+    log_debug("plot_map");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -2452,7 +2642,9 @@ void MainWindow::plot_map()
 
 void MainWindow::plot_node()
 {
-    spdlog::debug("[MAIN] plot_node");
+    //spdlog::debug("[MAIN] plot_node");
+    log_debug("plot_node");
+
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -2512,7 +2704,11 @@ void MainWindow::plot_node()
                     QString id = node.id;
                     if(pcl_viewer->contains(id.toStdString()))
                     {
-                        printf("duplicate: %s\n", id.toStdString().data());
+                        //printf("duplicate: %s\n", id.toStdString().data());
+                        //spdlog::warn("duplicate: {}", qUtf8Printable(id));
+                        log_warn("duplicate: {}", qUtf8Printable(id));
+
+                        //continue; // check
                     }
 
                     Eigen::Matrix4d tf = node.tf;
@@ -2728,7 +2924,8 @@ void MainWindow::plot_node()
 
 void MainWindow::plot_pick()
 {
-    spdlog::debug("[MAIN] plot_pick");
+    //spdlog::debug("[MAIN] plot_pick");
+    log_debug("plot_pick");
     // draw cursors
     if(is_pick_update)
     {
@@ -2792,7 +2989,9 @@ void MainWindow::plot_pick()
 
 void MainWindow::plot_info()
 {
-    spdlog::debug("[MAIN] plot_info");
+    //spdlog::debug("[MAIN] plot_info");
+    log_debug("plot_info");
+
     // plot mobile info
     {
         double tabos_battery_soc = MOBILE::instance()->get_battery_soc();
@@ -2891,7 +3090,9 @@ void MainWindow::plot_info()
 
 void MainWindow::plot_safety()
 {
-    spdlog::debug("[MAIN] plot_safety");
+    //spdlog::debug("[MAIN] plot_safety");
+    log_debug("plot_safety");
+
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
@@ -3114,7 +3315,9 @@ void MainWindow::plot_safety()
 
 void MainWindow::plot_raw_2d()
 {
-    spdlog::debug("[MAIN] plot_raw_2d");
+    //spdlog::debug("[MAIN] plot_raw_2d");
+    log_debug("plot_raw_2d");
+
     if(LIDAR_2D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_2D" &&
             !MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
     {
@@ -3197,7 +3400,8 @@ void MainWindow::plot_raw_2d()
 
 void MainWindow::plot_raw_3d()
 {
-    spdlog::debug("[MAIN] plot_raw_3d");
+    //spdlog::debug("[MAIN] plot_raw_3d");
+    log_debug("plot_raw_3d");
 
     // plot 3d lidar
     if(LIDAR_3D::instance()->get_is_connected() && ui->cb_ViewType->currentText() == "VIEW_3D" &&
@@ -3267,7 +3471,9 @@ void MainWindow::plot_raw_3d()
 
 void MainWindow::plot_process_time()
 {
-    spdlog::debug("[MAIN] plot_process_time");
+    //spdlog::debug("[MAIN] plot_process_time");
+    log_debug("plot_process_time");
+
     QString ctrl_time_str;
     {
         if(AUTOCONTROL::instance())
@@ -3360,7 +3566,9 @@ void MainWindow::plot_process_time()
 
 void MainWindow::plot_mapping()
 {
-    spdlog::debug("[MAIN] plot_mapping");
+    //spdlog::debug("[MAIN] plot_mapping");
+    log_debug("plot_mapping");
+
     if(MAPPING::instance()->get_is_mapping())
     {
         // plot live cloud
@@ -3520,7 +3728,9 @@ void MainWindow::plot_mapping()
 
 void MainWindow::plot_loc()
 {
-    spdlog::debug("[MAIN] plot_loc");
+    //spdlog::debug("[MAIN] plot_loc");
+    log_debug("plot_loc");
+
     std::vector<Eigen::Vector3d> plot_cur_pts = LOCALIZATION::instance()->get_cur_global_scan();
     if(ui->cb_ViewType->currentText() == "VIEW_3D" && plot_cur_pts.size() > 0 && LOCALIZATION::instance()->get_is_loc() && !MAPPING::instance()->get_is_mapping())
     {
@@ -3615,7 +3825,9 @@ void MainWindow::plot_loc()
 
 void MainWindow::plot_obs()
 {
-    spdlog::debug("[MAIN] plot_obs");
+    //spdlog::debug("[MAIN] plot_obs");
+    log_debug("plot_obs");
+
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         return;
@@ -3722,7 +3934,8 @@ void MainWindow::plot_obs()
 
 void MainWindow::plot_ctrl()
 {
-    spdlog::debug("[MAIN] plot_ctrl");
+    //spdlog::debug("[MAIN] plot_ctrl");
+    log_debug("plot_ctrl");
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
     double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
     double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
@@ -3928,7 +4141,9 @@ void MainWindow::plot_ctrl()
 
 void MainWindow::plot_cam()
 {
-    spdlog::debug("[MAIN] plot_cam");
+    //spdlog::debug("[MAIN] plot_cam");
+    log_debug("plot_cam");
+
     int cam_num = CONFIG::instance()->get_cam_num();
     for(int i = 0 ; i<cam_num;i++)
     {
@@ -3952,7 +4167,8 @@ void MainWindow::plot_cam()
                 else
                 {
                     //qDebug() << labelName << " not found!";
-                    spdlog::error("[MAIN] plot_cam, labelName not found");
+                    spdlog::error("[MAIN] plot_cam,{}not found", labelName.toStdString());
+                    log_error("plot_cam,{}not found", labelName.toStdString());
                 }
             }
         }
@@ -3999,7 +4215,8 @@ void MainWindow::plot_cam()
 
 void MainWindow::plot_tractile()
 {
-    spdlog::debug("[MAIN] plot_tractile");
+    //spdlog::debug("[MAIN] plot_tractile");
+    log_debug("plot_tractile");
     double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
     double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
     double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
@@ -4084,7 +4301,9 @@ void MainWindow::plot_tractile()
 
 void MainWindow::plot_loop()
 {
-    spdlog::debug("[MAIN] plot_loop");
+    //spdlog::debug("[MAIN] plot_loop");
+    log_debug("plot_loop");
+
     plot_timer->stop();
     double st_time = get_time();
 
@@ -4116,7 +4335,8 @@ void MainWindow::plot_loop()
         is_set_top_view = false;
         pcl_viewer->setCameraPosition(0, 0, 30, 0, 0, 0, 0, 1, 0);
         //printf("[MAIN] set top view camera\n");
-        spdlog::info("[MAIN] set top view camera");
+        //spdlog::info("[MAIN] set top view camera");
+        log_info("set top view camera");
     }
 
     if(is_view_reset)
@@ -4124,7 +4344,9 @@ void MainWindow::plot_loop()
         is_view_reset = false;
         pcl_viewer->resetCamera();
         //printf("[MAIN] reset view camera\n");
-        spdlog::info("[MAIN] reset view camera");
+        //spdlog::info("[MAIN] reset view camera");
+        log_info("reset view camera");
+
     }
 
     // mapping view
@@ -4159,7 +4381,9 @@ void MainWindow::plot_loop()
     if(plot_dt > 0.1)
     {
         //printf("[MAIN] plot_loop, loop time drift: %f\n", (double)plot_proc_t);
-        spdlog::warn("[MAIN] plot_loop, loop time drift");
+        //spdlog::warn("[MAIN] plot_loop, loop time drift");
+        log_warn("plot_loop, loop time drift: {}", (double)plot_dt);
+
     }
 
     plot_timer->start();
@@ -4167,7 +4391,9 @@ void MainWindow::plot_loop()
 
 void MainWindow::speaker_handler(int speaker_cnt)
 {
-    spdlog::debug("[MAIN] speaker_handler");
+    //spdlog::debug("[MAIN] speaker_handler");
+    log_debug("speaker_handler");
+
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
     int speak_code = 0;
@@ -4217,7 +4443,9 @@ void MainWindow::speaker_handler(int speaker_cnt)
 
 int MainWindow::led_handler()
 {
-    spdlog::debug("[MAIN] led_handler");
+    //spdlog::debug("[MAIN] led_handler");
+    log_debug("led_handler");
+
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
 
     int led_out = SAFETY_LED_OFF;
@@ -4299,7 +4527,9 @@ int MainWindow::led_handler()
 
 void MainWindow::getIPv4()
 {
-    spdlog::debug("[MAIN] getIPv4");
+    //spdlog::debug("[MAIN] getIPv4");
+    log_debug("getIPv4");
+
     QString chosen = "N/A";
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())

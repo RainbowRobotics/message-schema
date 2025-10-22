@@ -3,6 +3,8 @@
 
 #include "my_utils.h"
 
+#include <cmath>
+
 cv::Vec3b colors[10] =
 {
     cv::Vec3b(0, 0, 255),     // 밝은 빨간색 (BGR: Blue, Green, Red)
@@ -460,7 +462,13 @@ bool compare_view_vector(Eigen::Vector3d V0, const Eigen::Vector3d V1, double th
 
 double sgn(double val)
 {
-    if(val >= 0.0)
+    // test 10.18.25
+    //if(std::abs(val) < 1.0e-6)
+    //{
+    //    return 0.0;
+    //}
+
+    if (val > 0.0)
     {
         return 1.0;
     }

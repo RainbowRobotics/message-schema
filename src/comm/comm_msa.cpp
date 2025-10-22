@@ -2950,7 +2950,7 @@ void COMM_MSA::send_status_loop()
         //         to give information video streaming data
         // core -> 4cam
         // Electrode -> 2 cam
-        if(config->get_use_rtsp() && config->get_use_cam())
+        if(config->get_use_rtsp() && config->get_use_cam() || config->get_use_cam_rgb() || config->get_use_cam_depth())
         {
             if(send_cnt % 100 == 0)
             {

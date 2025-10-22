@@ -1,4 +1,8 @@
 #include "localization.h"
+namespace 
+{
+    const char* MODULE_NAME = "LOC";
+}
 
 LOCALIZATION* LOCALIZATION::instance(QObject* parent)
 {
@@ -36,7 +40,8 @@ void LOCALIZATION::start()
 {
     if(is_loc)
     {
-        printf("[LOCALIZATION] already running\n");
+        //printf("[LOCALIZATION] already running\n");
+        spdlog::warn("[LOCALIZATION] already running");
         return;
     }
 
@@ -72,7 +77,8 @@ void LOCALIZATION::start()
         }
         else
         {
-            printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
+            //printf("[LOCALIZATION] unknown LOC_MODE: %s\n", loc_mode.toStdString().c_str());
+            spdlog::error("[LOCALIZATION] unknown LOC_MODE: {}", loc_mode.toStdString().c_str());
             is_loc = false;
         }
 
@@ -83,7 +89,8 @@ void LOCALIZATION::start()
     obs_flag = true;
     obs_thread = std::make_unique<std::thread>(&LOCALIZATION::obs_loop, this);
 
-    printf("[LOCALIZATION(%s)] start\n", loc_mode.toStdString().c_str());
+    //printf("[LOCALIZATION(%s)] start\n", loc_mode.toStdString().c_str());
+    spdlog::info("[LOCALIZATION({})] start", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::stop()
@@ -122,7 +129,8 @@ void LOCALIZATION::stop()
     ekf_3d.reset();
 
     QString loc_mode = config->get_loc_mode();
-    printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
+    //printf("[LOCALIZATION(%s)] stop\n", loc_mode.toStdString().c_str());
+    spdlog::info("[LOCALIZATION({})] stop", loc_mode.toStdString().c_str());
 }
 
 void LOCALIZATION::set_cur_tf(Eigen::Matrix4d tf)
@@ -262,18 +270,26 @@ double LOCALIZATION::get_process_time_obs()
 
 void LOCALIZATION::start_semiauto_init()
 {
+    if(is_busy)
+    {
+        spdlog::warn("[SEMIAUTO INIT] busy");
+        return;
+    }
+
     is_busy = true;
 
     QString loc_mode = config->get_loc_mode();
     if(loc_mode != "2D" && loc_mode != "3D")
     {
         is_busy = false;
+        spdlog::error("[SEMIAUTO INIT] unknown LOC_MODE: {}", loc_mode.toStdString().c_str());
         return;
     }
 
     if(!unimap || unimap->get_is_loaded() != MAP_LOADED)
     {
         is_busy = false;
+        spdlog::error("[SEMIAUTO INIT] map not loaded");
         return;
     }
 
@@ -287,6 +303,7 @@ void LOCALIZATION::start_semiauto_init()
         if(!kdtree_cloud || !kdtree_index || kdtree_cloud->pts.empty())
         {
             is_busy = false;
+            spdlog::error("[SEMIAUTO INIT] map kdtree not ready");
             return;
         }
 
@@ -300,6 +317,7 @@ void LOCALIZATION::start_semiauto_init()
         if(frm.pts.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no frame data");
             return;
         }
 
@@ -308,6 +326,7 @@ void LOCALIZATION::start_semiauto_init()
         if(idxs.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no init candidates");
             return;
         }
 
@@ -333,7 +352,8 @@ void LOCALIZATION::start_semiauto_init()
                         min_ieir = ieir;
                         min_tf = _tf;
                         auto pose = TF_to_se2(min_tf);
-                        printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", pose[0], pose[1], pose[2]*R2D, cost);
+                        //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", pose[0], pose[1], pose[2]*R2D, cost);
+                        spdlog::info("[AUTOINIT] x:{}, y:{}, th:{}, cost:{}", pose[0], pose[1], pose[2]*R2D, cost);
                     }
                 }
             }
@@ -344,7 +364,8 @@ void LOCALIZATION::start_semiauto_init()
         {
             set_cur_tf(min_tf);
             start();
-            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            //printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", ieir[0], ieir[1]);
         }
     }
     else // "3D"
@@ -358,6 +379,7 @@ void LOCALIZATION::start_semiauto_init()
         if(cur_frm.pts.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no frame data");
             return;
         }
 
@@ -366,6 +388,7 @@ void LOCALIZATION::start_semiauto_init()
         if(idxs.empty())
         {
             is_busy = false;
+            spdlog::warn("[SEMIAUTO INIT] no init candidates");
             return;
         }
 
@@ -384,7 +407,8 @@ void LOCALIZATION::start_semiauto_init()
                     min_err = err;
                     min_tf = _tf;
                     auto xi = TF_to_se2(min_tf);
-                    printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", xi[0], xi[1], xi[2]*R2D, err);
+                    //printf("[AUTOINIT] x:%f, y:%f, th:%f, cost:%f\n", xi[0], xi[1], xi[2]*R2D, err);
+                    spdlog::info("[AUTOINIT] x:{}, y:{}, th:{}, cost:{}", xi[0], xi[1], xi[2]*R2D, err);
                 }
             }
         }
@@ -394,11 +418,13 @@ void LOCALIZATION::start_semiauto_init()
         {
             set_cur_tf(min_tf);
             start();
-            printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            //printf("[AUTOINIT] success auto init. ieir: %f, %f\n", ieir[0], ieir[1]);
+            spdlog::info("[AUTOINIT] success auto init. ieir: {}, {}", ieir[0], ieir[1]);
         }
     }
 
     is_busy = false;
+    spdlog::info("[SEMIAUTO INIT] finished");
 }
 
 Eigen::Vector2d LOCALIZATION::calc_ieir(const std::vector<Eigen::Vector3d>& pts, const Eigen::Matrix4d& G)
@@ -500,7 +526,8 @@ void LOCALIZATION::localization_loop_2d()
 {
     lidar_2d->clear_merged_queue();
 
-    printf("[LOCALIZATION(2D)] a_loop start\n");
+    //printf("[LOCALIZATION(2D)] a_loop start\n");
+    spdlog::info("[LOCALIZATION(2D)] a_loop start");
     while(localization_flag)
     {
         FRAME frm;
@@ -572,7 +599,8 @@ void LOCALIZATION::localization_loop_2d()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LOCALIZATION(2D)] a_loop stop\n");
+    //printf("[LOCALIZATION(2D)] a_loop stop\n");
+    spdlog::info("[LOCALIZATION(2D)] a_loop stop");
 }
 
 void LOCALIZATION::localization_loop_3d()
@@ -586,7 +614,8 @@ void LOCALIZATION::localization_loop_3d()
     // lidar localization (10hz)
     lidar_3d->clear_merged_queue();
 
-    printf("[LOCALIZATION(3D)] a_loop start\n");
+    //printf("[LOCALIZATION(3D)] a_loop start\n");
+    spdlog::info("[LOCALIZATION(3D)] a_loop start");
     while(localization_flag)
     {
         TIME_PTS frm;
@@ -671,7 +700,8 @@ void LOCALIZATION::localization_loop_3d()
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    printf("[LOCALIZATION(3D)] a_loop stop\n");
+    //printf("[LOCALIZATION(3D)] a_loop stop\n");
+    spdlog::info("[LOCALIZATION(3D)] a_loop stop");
 }
 
 void LOCALIZATION::odometry_loop()
@@ -690,8 +720,11 @@ void LOCALIZATION::odometry_loop()
     MOBILE_POSE pre_mo = mobile->get_pose();
 
 
-    printf("[LOCALIZATION] odometry loop start\n");
-    qDebug()<<"odometry_flag : "<<odometry_flag;
+    //printf("[LOCALIZATION] odometry loop start\n");
+    //qDebug()<<"odometry_flag : "<<odometry_flag;
+
+    spdlog::info("[LOCALTIZATION] odometry loop start, odometryty_flag: {}", odometry_flag.load());
+
     while(odometry_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
@@ -726,7 +759,8 @@ void LOCALIZATION::odometry_loop()
                 if(std::abs(dtdr[1]) > 10.0*D2R)
                 {
                     alpha = 0;
-                    printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
+                    //printf("[LOCALIZATION] slip detection, alpha set 0, dth: %f\n", dtdr[1]*R2D);
+                    spdlog::warn("[LOCALIZATION] slip detection, alpha set 0, dth: {}", dtdr[1]*R2D);
                 }
 
                 // interpolation
@@ -818,7 +852,8 @@ void LOCALIZATION::odometry_loop()
         process_time_odometry = delta_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    printf("[LOCALIZATION] odometry loop stop\n");
+    //printf("[LOCALIZATION] odometry loop stop\n");
+    spdlog::info("[LOCALIZATION] odometry loop stop");
 }
 
 void LOCALIZATION::ekf_loop()
@@ -829,7 +864,8 @@ void LOCALIZATION::ekf_loop()
 
     lidar_2d->clear_merged_queue();
 
-    printf("[LOCALIZATION] ekf_loop start\n");
+    //printf("[LOCALIZATION] ekf_loop start\n");
+    spdlog::info("[LOCALIZATION] ekf_loop start");
     while(ekf_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
@@ -920,7 +956,8 @@ void LOCALIZATION::ekf_loop()
         process_time_localization = cur_loop_time - pre_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    printf("[LOCALIZATION] ekf loop stop\n");
+    //printf("[LOCALIZATION] ekf loop stop\n");
+    spdlog::info("[LOCALIZATION] ekf loop stop");
 }
 
 void LOCALIZATION::ekf_loop_3d()
@@ -931,7 +968,8 @@ void LOCALIZATION::ekf_loop_3d()
     const double dt = 0.02; // 50hz
     double pre_loop_time = get_time();
 
-    printf("[LOCALIZATION] ekf_loop_3d start\n");
+    //printf("[LOCALIZATION] ekf_loop_3d start\n");
+    spdlog::info("[LOCALIZATION] ekf_loop_3d start");
     while(ekf_flag)
     {
         MOBILE_POSE cur_mo = mobile->get_pose();
@@ -1019,19 +1057,23 @@ void LOCALIZATION::ekf_loop_3d()
         process_time_localization = cur_loop_time - pre_loop_time;
         pre_loop_time = cur_loop_time;
     }
-    printf("[LOCALIZATION] ekf_loop_3d stop\n");
+    //printf("[LOCALIZATION] ekf_loop_3d stop\n");
+    spdlog::info("[LOCALIZATION] ekf_loop_3d stop");
 }
 
 void LOCALIZATION::obs_loop()
 {
-    printf("[LOCALIZATION] obs_loop start\n");
+    //printf("[LOCALIZATION] obs_loop start\n");
+    spdlog::info("[LOCALIZATION] obs_loop start");
     double pre_loop_time = get_time();
 
-    printf("[LOCALIZATION] get_obs_map_max_z: %.3f, get_obs_map_min_z: %.3f, get_obs_map_range: %.3f\n", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
+    //printf("[LOCALIZATION] get_obs_map_max_z: %.3f, get_obs_map_min_z: %.3f, get_obs_map_range: %.3f\n", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
+    spdlog::info("[LOCALIZATION] get_obs_map_max_z: {}, get_obs_map_min_z: {}, get_obs_map_range: {}", config->get_obs_map_max_z(),config->get_obs_map_min_z(),config->get_obs_map_range());
 
     if(obsmap)
     {
-        printf("[LOCALIZATION] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+        //printf("[LOCALIZATION] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+        spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
     }
 
     std::vector<Eigen::Vector3d> temp_pts;
@@ -1130,7 +1172,8 @@ void LOCALIZATION::obs_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    printf("[LOCALIZATION] obs_loop stop\n");
+    //printf("[LOCALIZATION] obs_loop stop\n");
+    spdlog::info("[LOCALIZATION] obs_loop stop");
 }
 
 // 2D
@@ -1279,7 +1322,8 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[map_icp(2D)] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
+            //printf("[map_icp(2D)] not enough correspondences, iter: %d, num: %d->%d!!\n", iter, (int)frm.pts.size(), num_correspondence);
+            spdlog::warn("[map_icp(2D)] not enough correspondences, iter: {}, num: {}->{}!!", iter, (int)frm.pts.size(), num_correspondence);
             return std::numeric_limits<double>::max();
         }
 
@@ -1387,7 +1431,9 @@ double LOCALIZATION::map_icp(KD_TREE_XYZR& tree, XYZR_CLOUD& cloud, FRAME& frm, 
 
     if(last_err > first_err+0.01 || last_err > config->get_loc_2d_icp_error_threshold())
     {
-        printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+        //printf("[map_icp] i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+        spdlog::warn("[map_icp] i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+
         //return 9999;
     }
 
@@ -1539,7 +1585,8 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
         num_correspondence = cj_set.size();
         if(num_correspondence < 100)
         {
-            printf("[map_icp(3D)] not enough correspondences, iter: %d, num: %d!!\n", iter, num_correspondence);
+            //printf("[map_icp(3D)] not enough correspondences, iter: %d, num: %d!!\n", iter, num_correspondence);
+            spdlog::warn("[map_icp(3D)] not enough correspondences, iter: {}, num: {}!!", iter, num_correspondence);
             return 9999;
         }
 
@@ -1648,6 +1695,7 @@ double LOCALIZATION::map_icp(std::vector<Eigen::Vector3d>& pts, Eigen::Matrix4d&
 
     // for debug
     //printf("[map_icp(3D)] map_icp, i:%d, n:%d, e:%f->%f, c:%e, dt:%.3f\n", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
+    spdlog::debug("[map_icp(3D)] map_icp, i:{}, n:{}, e:{}->{}, c:{}, dt:{}", iter, num_correspondence, first_err, last_err, convergence, get_time()-t_st);
 
     return last_err;
 }

@@ -88,6 +88,8 @@ public:
     QString get_lidar_3d_type();        // check 3d lidar type
     int get_lidar_3d_num();             // check 3d lidar number
     bool get_use_cam();                 // check if the robot uses cam
+    bool get_use_cam_rgb();             // check if the robot uses cam rgb
+    bool get_use_cam_depth();           // check if the robot uses cam depth
     QString get_cam_type();             // check cam type
     int get_cam_num();                  // check cam number
     bool get_use_bqr();                 // check if the robot uses bottom QR sensor
@@ -208,6 +210,9 @@ public:
     double get_loc_2d_check_dist();                     // ICP possible distance
     double get_loc_2d_check_inlier_ratio();             // ICP inlier ratio
     double get_loc_2d_check_inlier_error();             // ICP inlier error
+    bool get_loc_2d_use_rotation_fallback();            // enable rotation fallback search
+    double get_loc_2d_rotation_fallback_step();         // rotation fallback step(deg)
+    double get_loc_2d_rotation_fallback_range();        // rotation fallback range(deg)
 
     /***********************
      * localization 3d
@@ -384,6 +389,8 @@ private:
     int LIDAR_3D_NUM = 1;
 
     bool USE_CAM = false;
+    bool USE_CAM_RGB = false;
+    bool USE_CAM_DEPTH = false;
     QString CAM_TYPE = "";
     int CAM_NUM = 2;
 
@@ -411,17 +418,17 @@ private:
     QString SERVER_PW = "rainbow";
 
     // logging
-    QString LOG_LEVEL = "info";          // spdlog level: trace, debug, info, warn, error, critical, off
-    bool DEBUG_LIDAR_2D = false;        // enable/disable LIDAR debug logs
+    QString LOG_LEVEL = "info";                 // spdlog level: trace, debug, info, warn, error, critical, off
+    bool DEBUG_LIDAR_2D = false;                // enable/disable LIDAR debug logs
     bool DEBUG_LIDAR_3D = false;
-    bool DEBUG_MOBILE =  false;         // enable/disable MOBILE debug logs
-    bool DEBUG_COMM_RRS = false;        // enable/disable COMM RRS debug logs
+    bool DEBUG_MOBILE =  false;                 // enable/disable MOBILE debug logs
+    bool DEBUG_COMM_RRS = false;                // enable/disable COMM RRS debug logs
     bool DEBUG_AUTOCONTROL = false;
     bool DEBUG_LOCALIZATION = false;
     bool DEBUG_OBSMAP = false;
 
-    bool LOG_ENABLE_FILE_OUTPUT = false; // enable/disable file output
-    QString LOG_FILE_PATH = "logs/app.log"; // log file path
+    bool LOG_ENABLE_FILE_OUTPUT = false;        // enable/disable file output
+    QString LOG_FILE_PATH = "logs/app.log";     // log file path
 
     // lidar 2d
     double LIDAR_2D_MIN_RANGE = 1.0;
@@ -483,6 +490,9 @@ private:
     double LOC_2D_CHECK_DIST = 0.3;
     double LOC_2D_CHECK_IE = 0.2;
     double LOC_2D_CHECK_IR = 0.3;
+    bool LOC_2D_USE_ROTATION_FALLBACK = false;
+    double LOC_2D_ROTATION_FALLBACK_STEP = 10.0;
+    double LOC_2D_ROTATION_FALLBACK_RANGE = 180.0;
 
     // localization 3d
     int LOC_MAX_FEATURE_NUM = 500;

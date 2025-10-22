@@ -1,4 +1,8 @@
 #include "unimap.h"
+namespace 
+{
+    const char* MODULE_NAME = "UNIMAP";
+}
 
 UNIMAP* UNIMAP::instance(QObject* parent)
 {
@@ -168,6 +172,7 @@ bool UNIMAP::load_2d()
                         if(logger)
                         {
                             logger->write_log("[UNIAMP] critical error loading 2d map.", "Red");
+                            spdlog::error("[UNIMAP(2D)] critical error loading 2d map.");
                         }
                         return false;
                     }
@@ -197,12 +202,14 @@ bool UNIMAP::load_2d()
                     }
                 }
 
-                printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud_2d->pts.size());
+                //printf("[UNIMAP(2D)] %s loaded, map_pts:%d\n", cloud_csv_path.toLocal8Bit().data(), (int)kdtree_cloud_2d->pts.size());
+                spdlog::info("[UNIMAP(2D)] {} loaded, map_pts:{}", cloud_csv_path.toStdString(), (int)kdtree_cloud_2d->pts.size());
             }
         }
         else
         {
-            printf("[UNIMAP(2D)] load failed\n");
+            //printf("[UNIMAP(2D)] load failed\n");
+            spdlog::error("[UNIMAP(2D)] load failed");
             return false;
         }
     }
@@ -248,9 +255,12 @@ bool UNIMAP::load_2d()
                 map_max_z += 0.5;
             }
 
-            printf("[UNIMAP(2D)] build kdtree for map icp\n");
-            printf("[UNIMAP(2D)] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
-                   map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
+            //printf("[UNIMAP(2D)] build kdtree for map icp\n");
+            //printf("[UNIMAP(2D)] boundary x:(%.2f, %.2f), y:(%.2f, %.2f), z:(%.2f, %.2f)\n",
+            //       map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z);
+            spdlog::info("[UNIMAP(2D)] build kdtree for map icp");
+            spdlog::info("[UNIMAP(2D)] boundary x:({:.2f}, {:.2f}), y:({:.2f}, {:.2f}), z:({:.2f}, {:.2f})",
+                         map_min_x, map_max_x, map_min_y, map_max_y, map_min_z, map_max_z); 
         }
     }
 
@@ -267,7 +277,8 @@ bool UNIMAP::load_3d()
 
     if(path.isEmpty())
     {
-        printf("[UNIMAP(3D)] map_dir is empty!\n");
+        //printf("[UNIMAP(3D)] map_dir is empty!\n");
+        spdlog::error("[UNIMAP(3D)] map_dir is empty!");
         return false;
     }
 
@@ -281,7 +292,8 @@ bool UNIMAP::load_3d()
     pdal::Stage *reader = factory.createStage("readers.las");
     if(reader == nullptr)
     {
-        printf("[UNIMAP(3D)] map read failed\n");
+        //printf("[UNIMAP(3D)] map read failed\n");
+        spdlog::error("[UNIMAP(3D)] map read failed");
         return false;
     }
 
@@ -345,6 +357,7 @@ bool UNIMAP::load_3d()
     }
 
     std::cout << "[UNIMAP(3D)] Loaded " << pts.size() << " points from " << file_path.toStdString() << std::endl;
+    spdlog::info("[UNIMAP(3D)] Loaded {} points from {}", pts.size(), file_path.toStdString());
     return true;
 }
 
@@ -528,6 +541,7 @@ bool UNIMAP::load_topo()
         }
         
         logger->write_log(QString("[UNIMAP] %1 loaded").arg(node_path), "Green", true, false);
+        spdlog::info("[UNIMAP] {} loaded", node_path.toStdString());
     }
     return true;
 }
@@ -780,7 +794,8 @@ void UNIMAP::save_node()
         topo_file.write(doc.toJson());
         topo_file.close();
 
-        printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+        //printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+        spdlog::info("[UNIMAP] {} saved", topo_path.toStdString());
     }
 }
 
@@ -803,7 +818,8 @@ void UNIMAP::clear_nodes()
         kdtree_node_index.reset();
     }
 
-    printf("[UNIMAP] topology cleared\n");
+    //printf("[UNIMAP] topology cleared\n");
+    spdlog::info("[UNIMAP] topology cleared");
 }
 
 std::vector<QString> UNIMAP::get_nodes(QString type)
@@ -1147,12 +1163,14 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
     if(!nodes || nodes->empty())
     {
         std::cout << "node empty" << std::endl;
+        spdlog::warn("[UNIMAP] node empty");
         return "";
     }
 
     if(!kdtree_node_index || kdtree_node.pos.empty())
     {
         std::cout << "kdtree empty" << std::endl;
+        spdlog::warn("[UNIMAP] kdtree empty");
         return "";
     }
 
@@ -1170,6 +1188,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
     if(found_count == 0)
     {
         std::cout << "found count 0" << std::endl;
+        spdlog::warn("[UNIMAP] found count 0");
         return "";
     }
 
@@ -1235,6 +1254,7 @@ QString UNIMAP::get_goal_id(Eigen::Vector3d pos)
         logger->write_log(QString("[UNIMAP] Found nearest goal node (KD-tree): %1 (distance: %2)")
                          .arg(nearest_node->id)
                          .arg(actual_distance), "Green");
+        spdlog::info("[UNIMAP] Found nearest goal node (KD-tree): {} (distance: {})", nearest_node->id.toStdString(), actual_distance);
     }
 
     return nearest_node? nearest_node->id : "";
@@ -1466,6 +1486,7 @@ bool UNIMAP::add_node(const NODE& node)
         {
             logger->write_log("[UNIMAP] Cannot add node with empty ID", "Red");
         }
+        spdlog::warn("[UNIMAP] Cannot add node with empty ID");
         return false;
     }
     
@@ -1478,6 +1499,7 @@ bool UNIMAP::add_node(const NODE& node)
         {
             logger->write_log(QString("[UNIMAP] Node with ID '%1' already exists").arg(node.id), "Red");
         }
+        spdlog::warn("[UNIMAP] Node with ID '{}' already exists", node.id.toStdString());
         return false;
     }
     
@@ -1487,6 +1509,7 @@ bool UNIMAP::add_node(const NODE& node)
         {
             logger->write_log(QString("[UNIMAP] Node with name '%1' already exists").arg(node.name), "Red");
         }
+        spdlog::warn("[UNIMAP] Node with name '{}' already exists", node.name.toStdString());
         return false;
     }
     
@@ -1521,6 +1544,7 @@ bool UNIMAP::add_node(const NODE& node)
     {
         logger->write_log(QString("[UNIMAP] Added node: %1").arg(node.id), "Green");
     }
+    spdlog::info("[UNIMAP] Added node: {}", node.id.toStdString());
     
     return true;
 }
@@ -1551,6 +1575,7 @@ bool UNIMAP::remove_node(const QString& id)
         {
             logger->write_log(QString("[UNIMAP] Node with ID '%1' not found").arg(id), "Red");
         }
+        spdlog::warn("[UNIMAP] Node with ID '{}' not found", id.toStdString());
         return false;
     }
     
@@ -1607,6 +1632,7 @@ bool UNIMAP::remove_node(const QString& id)
     {
         logger->write_log(QString("[UNIMAP] Removed node: %1").arg(id), "Green");
     }
+    spdlog::info("[UNIMAP] Removed node: {}", id.toStdString());
     
     return true;
 }
@@ -1627,6 +1653,7 @@ bool UNIMAP::update_node(const QString& id, const NODE& new_node)
         {
             logger->write_log(QString("[UNIMAP] Node with ID '%1' not found for update").arg(id), "Red");
         }
+        spdlog::warn("[UNIMAP] Node with ID '{}' not found for update", id.toStdString());
         return false;
     }
     
@@ -1648,6 +1675,7 @@ bool UNIMAP::update_node(const QString& id, const NODE& new_node)
             {
                 logger->write_log(QString("[UNIMAP] Node with name '%1' already exists").arg(new_node.name), "Red");
             }
+            spdlog::warn("[UNIMAP] Node with name '{}' already exists", new_node.name.toStdString());
             return false;
         }
     }
@@ -1690,6 +1718,7 @@ bool UNIMAP::update_node(const QString& id, const NODE& new_node)
     {
         logger->write_log(QString("[UNIMAP] Updated node: %1").arg(id), "Green");
     }
+    spdlog::info("[UNIMAP] Updated node: {}", id.toStdString());
     
     return true;
 }

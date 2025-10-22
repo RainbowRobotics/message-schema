@@ -1310,7 +1310,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1674,7 +1674,7 @@ LC</string>
                 <x>60</x>
                 <y>50</y>
                 <width>51</width>
-                <height>31</height>
+                <height>41</height>
                </rect>
               </property>
               <property name="text">

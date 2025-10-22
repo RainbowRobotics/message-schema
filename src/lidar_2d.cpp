@@ -1,4 +1,8 @@
 #include "lidar_2d.h"
+namespace 
+{
+    const char* MODULE_NAME = "LIDAR_2D";
+}
 
 LIDAR_2D* LIDAR_2D::instance(QObject* parent)
 {
@@ -229,7 +233,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
         {
             sick->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
-            spdlog::info("[LIDAR_2D] set sick->is_sync = %d", flag);
+            log_info("[LIDAR_2D] set sick->is_sync = {}", flag);
         }
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
@@ -598,6 +602,7 @@ void LIDAR_2D::merge_loop()
                 //storage[use_idx].pop_back();
 
                 // printf("[LIDAR] single  t=%.6f, from=%d, pts=%zu (storage: %zu, %zu)\n", merge_frm.t, use_idx, merge_frm.pts.size(), storage[0].size(), storage[1].size());
+                spdlog::debug("[LIDAR] single  t={:.6f}, from={}, pts={} (storage: {}, {})",merge_frm.t,use_idx, merge_frm.pts.size(),storage[0].size(),storage[1].size());
             }
         }
 

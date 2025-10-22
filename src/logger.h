@@ -12,6 +12,18 @@
 #include <QTime>
 #include <QTextEdit>
 
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// Module logging macros
+//#define LOG_MODULE_NAME(name) static const char* MODULE_NAME = name
+
+#define log_info(...)       spdlog::info("[{}] {}",     MODULE_NAME, fmt::format(__VA_ARGS__))
+#define log_warn(...)       spdlog::warn("[{}] {}",     MODULE_NAME, fmt::format(__VA_ARGS__))
+#define log_error(...)      spdlog::error("[{}] {}",    MODULE_NAME, fmt::format(__VA_ARGS__))
+#define log_debug(...)      spdlog::debug("[{}] {}",    MODULE_NAME, fmt::format(__VA_ARGS__))
+#define log_critical(...)   spdlog::critical("[{}] {}", MODULE_NAME, fmt::format(__VA_ARGS__))
+
 class LOGGER: public QObject
 {
     Q_OBJECT

@@ -1,5 +1,10 @@
 #include "sick.h"
 
+namespace 
+{
+    const char* MODULE_NAME = "SICK";
+}
+
 SICK* SICK::instance(QObject* parent)
 {
     static SICK* inst = nullptr;
@@ -32,12 +37,14 @@ void SICK::open()
 {
     if (!config || !config->get_use_lidar_2d())
     {
-        printf("[SICK] disabled -> skip open\n");
+        //printf("[SICK] disabled -> skip open\n");
+        log_warn("disabled -> skip open");
         return;
     }
 
     //printf("[SICK] open\n");
-    spdlog::info("[SICK] open");
+    //spdlog::info("[SICK] open");
+    log_info("open");
 
     // stop first
     close();
@@ -48,7 +55,9 @@ void SICK::open()
     }
 
     //printf("[LIVOX] init\n");
-    spdlog::info("[SICK] init");
+    //spdlog::info("[SICK] init");
+    log_info("init");
+    
 
     // loop start
     for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
@@ -63,6 +72,7 @@ void SICK::open()
 
 void SICK::close()
 {
+    log_info("close");
     for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
     {
         is_connected[idx] = false;
@@ -119,7 +129,8 @@ bool SICK::try_pop_raw_que(int idx, RAW_FRAME& frm)
 void SICK::sync(int idx)
 {
     is_sync[idx] = true;
-    printf("[SICK] front time sync\n");
+    //printf("[SICK] front time sync\n");
+    log_info("front time sync");
 }
 
 void SICK::grab_loop(int idx)
@@ -145,7 +156,8 @@ void SICK::grab_loop(int idx)
     catch(...)
     {
         is_connected[idx] = false;
-        printf("[SICK] failed to connect lidar %d\n", idx);
+        //printf("[SICK] failed to connect lidar %d\n", idx);
+        log_error("failed to connect lidar {}", idx);
         return;
     }
 
@@ -153,7 +165,8 @@ void SICK::grab_loop(int idx)
     Eigen::Vector3d t_ = pts_tf[idx].block(0,3,3,1);
 
     is_connected[idx] = true;
-    printf("[SICK] start grab loop, %d\n", idx);
+    //printf("[SICK] start grab loop, %d\n", idx);
+    log_info("start grab loop, {}", idx);
     while(grab_flag[idx])
     {
         if(safety_scanner->isDataAvailable())
@@ -171,6 +184,7 @@ void SICK::grab_loop(int idx)
             // time sync
             double pc_t = get_time();
             double lidar_t = data.getDataHeaderPtr()->getTimestampTime()*M2S;
+            log_debug("lidar: {}, pc_t: {}, lidar_t: {}", idx, pc_t, lidar_t);
 
             if(is_sync[idx])
             {
@@ -179,7 +193,8 @@ void SICK::grab_loop(int idx)
 
                 is_synced[idx] = true;
                 QString str = QString("[SICK] sync. lidar :%1, lidar_t_f: %2, offset_t_f: %3").arg(idx).arg(lidar_t).arg((double)offset_t[idx]);
-                printf("%s\n", str.toLocal8Bit().data());
+                //printf("%s\n", str.toLocal8Bit().data());
+                log_info("sync. lidar :{}, lidar_t_f: {}, offset_t_f: {}", idx, lidar_t, (double)offset_t[idx]);
             }
 
             // check lidar, mobile sync
@@ -238,6 +253,16 @@ void SICK::grab_loop(int idx)
             {
                 // drop
                 //printf("[SICK] lidar: %d, invalid mobile poses\n", idx);
+                log_warn("lidar: {}, invalid mobile poses, pose_storage.size(): {}", idx, pose_storage.size());
+                if (!pose_storage.empty()) 
+                {
+                    log_warn("  pose_storage time range: [{}, {}]", pose_storage.front().t, pose_storage.back().t);
+                } 
+                else 
+                {
+                    log_warn("  pose_storage is empty");
+                }
+                log_warn("  t0: {}, t1: {}, idx0: {}, idx1: {}", t0, t1, idx0, idx1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 continue;
             }
@@ -306,7 +331,8 @@ void SICK::grab_loop(int idx)
             MOBILE_POSE mo;
             mo.t = t0;
             mo.pose = pose_storage[idx0].pose;
-//            printf("[LIDAR] front lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            //printf("[LIDAR] front lidar t:%f, pose:%.3f, %.3f, %.3f\n", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
+            log_debug("front lidar t:{}, pose:{:.3f}, {:.3f}, {:.3f}", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
             RAW_FRAME frm;
             frm.t0 = t0;
@@ -335,7 +361,8 @@ void SICK::grab_loop(int idx)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    printf("[SICK] stop grab loop: %d\n", idx);
+    //printf("[SICK] stop grab loop: %d\n", idx);
+    log_info("stop grab loop: {}", idx);
 }
 
 void SICK::set_config_module(CONFIG* _config)
