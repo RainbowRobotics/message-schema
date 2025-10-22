@@ -1254,7 +1254,12 @@ struct NODE
     QString type;                   // ROUTE, GOAL, OBS, ZONE
     QString info;                   // additional info
     Eigen::Matrix4d tf;             // node tf
-    std::vector<QString> linked;
+    std::vector<QString> linked;    // neightbor node ids
+
+    QString subtype_name;
+    QString subtype_index;
+
+    Eigen::Vector3d size;
 
     NODE()
     {
@@ -1263,7 +1268,12 @@ struct NODE
         type = "";
         info = "";
         tf.setIdentity();
-        linked.clear();        
+        linked.clear();
+
+        subtype_name = "";
+        subtype_index = "";
+
+        size.setZero();
     }
 
     NODE(const NODE& p)
@@ -1273,7 +1283,12 @@ struct NODE
         type = p.type;
         info = p.info;
         tf = p.tf;
-        linked = p.linked;        
+        linked = p.linked;
+
+        subtype_name = p.subtype_name;
+        subtype_index = p.subtype_index;
+
+        size = p.size;
     }
 
     NODE& operator=(const NODE& p)
@@ -1284,6 +1299,12 @@ struct NODE
         info = p.info;
         tf = p.tf;
         linked = p.linked;
+
+        subtype_name = p.subtype_name;
+        subtype_index = p.subtype_index;
+
+        size = p.size;
+
         return *this;
     }
 
@@ -1763,6 +1784,8 @@ struct LINK_INFO
 
     QString info;
 
+    double speed = 0.0;
+
     LINK_INFO()
     {
         st.setZero();
@@ -1770,6 +1793,7 @@ struct LINK_INFO
         mid.setZero();
 
         length = 0.0;
+        speed  = 0.0;
     }
 
     LINK_INFO(const LINK_INFO& p)
@@ -1784,6 +1808,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
+
+        speed = p.speed;
     }
 
     LINK_INFO& operator=(const LINK_INFO& p)
@@ -1798,6 +1824,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
+
+        speed = p.speed;
 
         return *this;
     }

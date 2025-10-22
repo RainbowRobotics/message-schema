@@ -212,6 +212,127 @@ std::vector<PATH> POLICY::slice_path(PATH path)
     return res;
 }
 
+void POLICY::link_speed(const PATH& path, std::vector<double>& ref_v)
+{
+    if(path.node.size() < 2 || path.pose.size() == 0 || ref_v.size() != path.pose.size())
+    {
+        return;
+    }
+
+    std::vector<int> node_idx(path.node.size(), 0);
+    for(size_t i = 0; i < path.node.size(); i++)
+    {
+        NODE* node = unimap->get_node_by_id(path.node[i]);
+        if(node == NULL)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d npos = node->tf.block(0,3,3,1);
+
+        double best_d2 = 1e100;
+        int best_k = 0;
+
+        for(size_t k = 0; k < path.pose.size(); k++)
+        {
+            double dx = path.pose[k](0,3) - npos.x();
+            double dy = path.pose[k](1,3) - npos.y();
+            double dz = path.pose[k](2,3) - npos.z();
+            double d2 = dx*dx + dy*dy + dz*dz;
+
+            if(d2 < best_d2)
+            {
+                best_d2 = d2;
+                best_k = (int)k;
+            }
+        }
+
+        node_idx[i] = best_k;
+    }
+
+    for(size_t i = 1; i < node_idx.size(); i++)
+    {
+        if(node_idx[i] <= node_idx[i-1])
+        {
+            node_idx[i] = node_idx[i-1] + 1;
+            if(node_idx[i] >= (int)path.pose.size())
+            {
+                node_idx[i] = (int)path.pose.size() - 1;
+            }
+        }
+    }
+
+    std::unordered_map<std::string, double> speed_map;
+    {
+        std::vector<LINK_INFO> links = unimap->get_special_links();
+        for(size_t j = 0; j < links.size(); j++)
+        {
+            if(links[j].speed <= 0.0)
+            {
+                continue;
+            }
+
+            QString a = links[j].st_id;
+            QString b = links[j].ed_id;
+            QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
+            std::string key = key_q.toStdString();
+
+            if(speed_map.find(key) == speed_map.end())
+            {
+                speed_map[key] = links[j].speed;
+            }
+            else
+            {
+                if(links[j].speed < speed_map[key])
+                {
+                    speed_map[key] = links[j].speed;
+                }
+            }
+        }
+    }
+
+    for(size_t i = 0; i + 1 < path.node.size(); i++)
+    {
+        QString a = path.node[i];
+        QString b = path.node[i+1];
+        QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
+        std::string key = key_q.toStdString();
+
+        auto it = speed_map.find(key);
+        if(it == speed_map.end())
+        {
+            continue;
+        }
+
+        double link_v = it->second;
+        int s = node_idx[i];
+        int e = node_idx[i+1];
+        if(s > e)
+        {
+            int tmp = s; s = e; e = tmp;
+        }
+
+        if(s < 0) s = 0;
+        if(e >= (int)ref_v.size()) e = (int)ref_v.size() - 1;
+
+        for(int k = s; k <= e; k++)
+        {
+            if(ref_v[k] > link_v)
+            {
+                ref_v[k] = link_v;
+            }
+        }
+    }
+
+    // debug
+    printf("[POLICY] ----- ref_v after applying link speed -----\n");
+    for(size_t i = 0; i < ref_v.size(); i++)
+    {
+        printf("idx=%3zu  ref_v=%.3f\n", i, ref_v[i]);
+    }
+    printf("[POLICY] ------------------------------------------\n");
+}
+
 void POLICY::node_loop()
 {
     printf("[POLICY] node_loop start\n");

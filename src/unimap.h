@@ -24,7 +24,8 @@ public:
 
     // load map from path
     void load_map(QString path);
-    bool load_node(); // load topo.json
+    bool load_topo(); // load topo.json
+    bool load_node(); // load node.json
 
     void save_node();
 
