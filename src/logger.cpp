@@ -166,7 +166,8 @@ void LOGGER::init()
         catch(const spdlog::spdlog_ex& ex)
         {
             //printf("[LOGGER] SPDLOG init failed: %s\n", ex.what());
-            spdlog::error("[LOGGER] SPDLOG init failed: {}", ex.what());
+            //spdlog::error("[LOGGER] SPDLOG init failed: {}", ex.what());
+            log_error("SPDLOG init failed: {}", ex.what());
         }
 
     }

@@ -353,7 +353,7 @@ void MainWindow::init_modules()
 
     // cam module init
     {
-        if(CONFIG::instance()->get_use_cam())
+        if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
             CAM::instance()->set_logger_module(LOGGER::instance());

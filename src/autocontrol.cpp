@@ -99,59 +99,77 @@ CTRL_PARAM AUTOCONTROL::load_preset(int preset)
             QJsonObject obj = doc.object();
 
             // param load
-            printf("[PRESET] %s load\n", preset_path.toLocal8Bit().data());
+            //printf("[PRESET] %s load\n", preset_path.toLocal8Bit().data());
+            log_info("{} load", preset_path.toStdString());
 
             res.LIMIT_V = obj["LIMIT_V"].toString().toDouble();
-            printf("[PRESET] LIMIT_V :%f\n", res.LIMIT_V);
+            //printf("[PRESET] LIMIT_V :%f\n", res.LIMIT_V);
+            log_info("LIMIT_V :{}", res.LIMIT_V);
 
             res.LIMIT_W = obj["LIMIT_W"].toString().toDouble();
-            printf("[PRESET] LIMIT_W :%f\n", res.LIMIT_W);
+            //printf("[PRESET] LIMIT_W :%f\n", res.LIMIT_W);
+            log_info("LIMIT_W :{}", res.LIMIT_W);
 
             res.LIMIT_V_ACC = obj["LIMIT_V_ACC"].toString().toDouble();
-            printf("[PRESET] LIMIT_V_ACC :%f\n", res.LIMIT_V_ACC);
+            //printf("[PRESET] LIMIT_V_ACC :%f\n", res.LIMIT_V_ACC);
+            log_info("LIMIT_V_ACC :{}", res.LIMIT_V_ACC);
 
             res.LIMIT_V_DCC = obj["LIMIT_V_DCC"].toString().toDouble();
-            printf("[PRESET] LIMIT_V_DCC :%f\n", res.LIMIT_V_DCC);
+            //printf("[PRESET] LIMIT_V_DCC :%f\n", res.LIMIT_V_DCC);
+            log_info("LIMIT_V_DCC :{}", res.LIMIT_V_DCC);
 
             res.LIMIT_W_ACC = obj["LIMIT_W_ACC"].toString().toDouble();
-            printf("[PRESET] LIMIT_W_ACC :%f\n", res.LIMIT_W_ACC);
+            //printf("[PRESET] LIMIT_W_ACC :%f\n", res.LIMIT_W_ACC);
+            log_info("LIMIT_W_ACC :{}", res.LIMIT_W_ACC);
 
             res.LIMIT_PIVOT_W = obj["LIMIT_PIVOT_W"].toString().toDouble();
-            printf("[PRESET] LIMIT_PIVOT_W :%f\n", res.LIMIT_PIVOT_W);
+            //printf("[PRESET] LIMIT_PIVOT_W :%f\n", res.LIMIT_PIVOT_W);
+            log_info("LIMIT_PIVOT_W :{}", res.LIMIT_PIVOT_W);
 
             res.ST_V = obj["ST_V"].toString().toDouble();
-            printf("[PRESET] ST_V :%f\n", res.ST_V);
+            //printf("[PRESET] ST_V :%f\n", res.ST_V);
+            log_info("ST_V :{}", res.ST_V);
 
             res.ED_V = obj["ED_V"].toString().toDouble();
-            printf("[PRESET] ED_V :%f\n", res.ED_V);
+            //printf("[PRESET] ED_V :%f\n", res.ED_V);
+            log_info("ED_V :{}", res.ED_V);
 
             res.DRIVE_T = obj["DRIVE_T"].toString().toDouble();
-            printf("[PRESET] DRIVE_T :%f\n", res.DRIVE_T);
+            //printf("[PRESET] DRIVE_T :%f\n", res.DRIVE_T);
+            log_info("DRIVE_T :{}", res.DRIVE_T);
 
             res.DRIVE_H = obj["DRIVE_H"].toString().toDouble();
-            printf("[PRESET] DRIVE_H :%f\n", res.DRIVE_H);
+            //printf("[PRESET] DRIVE_H :%f\n", res.DRIVE_H);
+            log_info("DRIVE_H :{}", res.DRIVE_H);
 
             res.DRIVE_A = obj["DRIVE_A"].toString().toDouble();
-            printf("[PRESET] DRIVE_A :%f\n", res.DRIVE_A);
+            //printf("[PRESET] DRIVE_A :%f\n", res.DRIVE_A);
+            log_info("DRIVE_A :{}", res.DRIVE_A);
 
             res.DRIVE_B = obj["DRIVE_B"].toString().toDouble();
-            printf("[PRESET] DRIVE_B :%f\n", res.DRIVE_B);
+            //printf("[PRESET] DRIVE_B :%f\n", res.DRIVE_B);
+            log_info("DRIVE_B :{}", res.DRIVE_B);
 
             res.DRIVE_L = obj["DRIVE_L"].toString().toDouble();
-            printf("[PRESET] DRIVE_L :%f\n", res.DRIVE_L);
+            //printf("[PRESET] DRIVE_L :%f\n", res.DRIVE_L);
+            log_info("DRIVE_L :{}", res.DRIVE_L);
 
             res.DRIVE_K = obj["DRIVE_K"].toString().toDouble();
-            printf("[PRESET] DRIVE_K :%f\n", res.DRIVE_K);
+            //printf("[PRESET] DRIVE_K :%f\n", res.DRIVE_K);
+            log_info("DRIVE_K :{}", res.DRIVE_K);
 
             res.DRIVE_EPS = obj["DRIVE_EPS"].toString().toDouble();
-            printf("[PRESET] DRIVE_EPS :%f\n", res.DRIVE_EPS);
+            //printf("[PRESET] DRIVE_EPS :%f\n", res.DRIVE_EPS);
+            log_info("DRIVE_EPS :{}", res.DRIVE_EPS);
 
             file.close();
         }
     }
     else
     {
-        printf("[AUTO] invalid preset path\n");
+        //printf("[AUTO] invalid preset path\n");
+        log_warn("invalid preset path");
+
     }
 
     return res;
@@ -515,17 +533,20 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
             if(msg.method == "hpp")
             {
                 cmd_method = CommandMethod::METHOD_HPP;
-                std::cout << "cmd_method: HPP" << std::endl;
+                //std::cout << "cmd_method: HPP" << std::endl;
+                log_info("cmd_method: HPP");
             }
             else if(msg.method == "side")
             {
                 cmd_method = CommandMethod::METHOD_SIDE;
-                std::cout << "cmd_method: SIDE" << std::endl;
+                //std::cout << "cmd_method: SIDE" << std::endl;
+                log_info("cmd_method: SIDE");
             }
             else
             {
                 cmd_method = CommandMethod::METHOD_PP;
-                std::cout << "cmd_method: PP" << std::endl;
+                //std::cout << "cmd_method: PP" << std::endl;
+                log_info("cmd_method: PP");
             }
             Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
             move(tf, msg.preset);
@@ -534,7 +555,8 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
     else if(msg.command == "change_goal")
     {
         logger->write_log("[AUTO] just change goal");
-        spdlog::info("[AUTO] just change goal");
+        //spdlog::info("[AUTO] just change goal");
+        log_info("just change goal");
     }
 }
 
@@ -573,7 +595,8 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
     else if(msg.command == "change_goal")
     {
         logger->write_log("[AUTO] just change goal");
-        spdlog::info("[AUTO] just change goal");
+        //spdlog::info("[AUTO] just change goal");
+        log_info("just change goal");
     }
 }
 
@@ -592,7 +615,8 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
     const int preset = msg.preset;
 
     //qDebug()<<"msg.direction : "<<msg.direction;
-    spdlog::info("msg direction:{} ",msg.direction.toUtf8().constData());
+    //spdlog::info("msg direction:{} ",msg.direction.toUtf8().constData());
+    log_info("msg direction: {}", qUtf8Printable(msg.direction));
 
     if(msg.direction == "forward")
     {
@@ -624,7 +648,7 @@ void AUTOCONTROL::slot_path(QString direction)
     else
     {
         //qDebug()<<"방향이 설정되지 않아 이동할 수 없습니다.";
-        spdlog::error("방향이 설정되지 않아 이동할 수 없습니다.");
+        log_error("방향이 설정되지 않아 이동할 수 없습니다.");
     }
 }
 
@@ -753,10 +777,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             //spdlog::info("[AUTO] final_goal_node_id:{}", final_goal_node_id.toUtf8().constData());
             //spdlog::info("[AUTO] node->id: {}", node->id.toUtf8().constData());
 
-            log_info("final_goal_node_id: {}", qUtf8Printable(final_goal_node_id));
-            log_info("node->id: {}", qUtf8Printable(node->id));
-
-
+            log_info("final_goal_node_id: {}, node->id: {}", qUtf8Printable(final_goal_node_id), qUtf8Printable(node->id));
 
             if(final_goal_node_name.contains("AMR-WAITING-01") && node->name.contains("AMR-WAITING-01"))
             {
@@ -4013,7 +4034,8 @@ void AUTOCONTROL::control_loop()
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
 //            qDebug()<<"err_th : "<<err_th;
 
-            spdlog::debug("err_th: {}", err_th);
+            //spdlog::debug("err_th: {}", err_th);
+            log_debug("FINAL ALIGN err_th: {}", err_th);
             if(pre_err_th == 0)
             {
                 pre_err_th = err_th;
@@ -4481,7 +4503,8 @@ void AUTOCONTROL::control_loop()
         {
             //logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
             //log_info("loop time drift in driving loop time: {}", delta_loop_time);
-            spdlog::warn("drift in driving loop time: {}", delta_loop_time);
+            //spdlog::warn("drift in driving loop time: {}", delta_loop_time);
+            log_warn("drift in driving loop time: {}", delta_loop_time);
         }
         process_time_control = delta_loop_time;
         pre_loop_time = get_time();
@@ -4576,7 +4599,7 @@ void AUTOCONTROL::current_node_loop()
         }
         else
         {
-            printf("[AUTO] loop time drift:a_loop, dt:%f\n", delta_loop_time);
+            //printf("[AUTO] loop time drift:a_loop, dt:%f\n", delta_loop_time);
             log_info("loop time drift:a_loop, dt:{}", delta_loop_time);
         }
         pre_loop_time = get_time();
@@ -4599,7 +4622,6 @@ void AUTOCONTROL::obs_loop()
         if(!is_moving)
         {
             //std::cout<<"not moving!!";
-            spdlog::info("[AUTO] not moving: obs_loop");
             log_info("not moving: obs_loop");
             break;
         }

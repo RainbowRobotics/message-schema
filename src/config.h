@@ -88,6 +88,8 @@ public:
     QString get_lidar_3d_type();        // check 3d lidar type
     int get_lidar_3d_num();             // check 3d lidar number
     bool get_use_cam();                 // check if the robot uses cam
+    bool get_use_cam_rgb();             // check if the robot uses cam rgb
+    bool get_use_cam_depth();           // check if the robot uses cam depth
     QString get_cam_type();             // check cam type
     int get_cam_num();                  // check cam number
     bool get_use_bqr();                 // check if the robot uses bottom QR sensor
@@ -383,6 +385,8 @@ private:
     int LIDAR_3D_NUM = 1;
 
     bool USE_CAM = false;
+    bool USE_CAM_RGB = false;
+    bool USE_CAM_DEPTH = false;
     QString CAM_TYPE = "";
     int CAM_NUM = 2;
 

@@ -5019,7 +5019,7 @@ void COMM_RRS::send_loop()
     }
 
     // to give information video streaming data
-    //if(config->get_use_rtsp() && config->get_use_cam())
+    //if(config->get_use_rtsp() && config->get_use_cam() || config->get_use_cam_rgb || config->get_use_cam_depth)
     //{
     //    if(send_cnt % 100 == 0)
     //    {

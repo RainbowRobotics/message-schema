@@ -171,6 +171,8 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_LIDAR_2D",   USE_LIDAR_2D,  "sensors");
     check_and_set_bool(obj_sensors,   "USE_LIDAR_3D",   USE_LIDAR_3D,  "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_RGB",    USE_CAM_RGB,   "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_DEPTH",  USE_CAM_DEPTH, "sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
@@ -468,6 +470,19 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
             //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
             //printf("[CONFIG] CAM[%d] SERIAL_NUMBER: %s\n", i, CAM_SERIAL_NUMBER[i].toLocal8Bit().data());
             spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}", i, qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]));
+        }
+    }
+    if(USE_CAM_RGB || USE_CAM_DEPTH)
+    {
+        QJsonArray cam_arr = obj["cam_config"].toArray();
+        for(int i = 0; i < cam_arr.size(); i++)
+        {
+            QJsonObject obj_cam = cam_arr[i].toObject();
+            CAM_TF[i] = obj_cam["TF"].toString();
+            CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
+            //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
+            spdlog::info("[CONFIG] CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
+            //log_info("CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
         }
     }
 }
@@ -1304,6 +1319,18 @@ bool CONFIG::get_use_cam()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return USE_CAM;
+}
+
+bool CONFIG::get_use_cam_rgb()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CAM_RGB;
+}
+
+bool CONFIG::get_use_cam_depth()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CAM_DEPTH;
 }
 
 QString CONFIG::get_cam_type()

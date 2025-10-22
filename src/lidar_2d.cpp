@@ -233,7 +233,7 @@ void LIDAR_2D::set_sync_flag(bool flag)
         {
             sick->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
-            spdlog::info("[LIDAR_2D] set sick->is_sync = %d", flag);
+            log_info("[LIDAR_2D] set sick->is_sync = {}", flag);
         }
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)

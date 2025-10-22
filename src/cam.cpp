@@ -36,6 +36,7 @@ CAM::CAM(QObject *parent) : QObject{parent},
 
 void CAM::close()
 {
+    log_info("close");
     int cam_num = config->get_cam_num();
     for(int p = 0; p < cam_num; p++)
     {
@@ -81,6 +82,7 @@ void CAM::init()
     {
         //printf("[CAM] simulation mode\n");
         spdlog::info("[CAM] simulation mode\n");
+        log_info("simulation mode");
         return;
     }
 
@@ -88,6 +90,7 @@ void CAM::init()
     {
         if(!orbbec)
         {
+            
             orbbec = ORBBEC::instance(this);
             orbbec->set_config_module(this->config);
             orbbec->set_logger_module(this->logger);
@@ -116,6 +119,17 @@ void CAM::open()
         rtsp_flag = true;
         rtsp_thread = std::make_unique<std::thread>(&CAM::rtsp_loop, this);
     }
+
+    //if(!config->get_use_cam() || !config->get_use_cam_depth() || !config->get_use_cam_rgb())
+    if(!config->get_use_cam() && !config->get_use_cam_depth() && !config->get_use_cam_rgb())
+    {
+        log_info("CAM disabled (all flags false) -> skip open");
+        return;
+    }
+    log_info("CAM enabled: USE_CAM={}, USE_CAM_DEPTH={}, USE_CAM_RGB={}",
+             config->get_use_cam(),
+             config->get_use_cam_depth(),
+             config->get_use_cam_rgb());
 }
 
 bool CAM::get_connection(int idx)
@@ -207,44 +221,59 @@ void CAM::post_process_loop(int idx)
         {
             try
             {
-                TIME_PTS tp;
-                if(orbbec->try_pop_depth_que(idx, tp))
+                // use depth only
+                //if(config->get_use_cam_depth() == true && config->get_use_cam_rgb() == false || config->get_use_cam() == true)
+                if(config->get_use_cam_depth() || config->get_use_cam())
                 {
-                    if(is_connected[idx] == false)
+                   // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                   TIME_PTS tp;
+                    if(orbbec->try_pop_depth_que(idx, tp))
                     {
-                        is_connected[idx] = true;
-                    }
+                        if(is_connected[idx] == false)
+                        {
+                            is_connected[idx] = true;
+                        }
 
                     std::lock_guard<std::mutex> lock(mtx);
                     cur_scan[idx] = tp;
+                    }
                 }
-
-                TIME_IMG ti;
-                if(orbbec->try_pop_img_que(idx, ti))
+                
+                // use rgb only
+                if(config->get_use_cam_rgb() || config->get_use_cam())
                 {
-                    if(is_connected[idx] == false)
+                    TIME_IMG ti;
+                    if(orbbec->try_pop_img_que(idx, ti))
                     {
-                        is_connected[idx] = true;
-                    }
-
-                    RobotModel robot_model = config->get_robot_model();
-                    if(robot_model == RobotModel::S100)
-                    {
-                        // right camera
-                        if(idx == 1)
+                        if(is_connected[idx] == false)
                         {
-                            cv::flip(ti.img, ti.img, -1);
+                            is_connected[idx] = true;
                         }
+
+                        RobotModel robot_model = config->get_robot_model();
+                        if(robot_model == RobotModel::S100)
+                        {
+                            log_info("S100 image flip processing");
+                            // right camera
+                            if(idx == 1)
+                            {
+                                cv::flip(ti.img, ti.img, -1);
+                            }
+                        }
+
+                        std::lock_guard<std::mutex> lock(mtx);
+                        cur_time_img[idx] = ti;
                     }
 
-                    std::lock_guard<std::mutex> lock(mtx);
-                    cur_time_img[idx] = ti;
                 }
+
+                
             }
             catch(const ob::Error &e)
             {
                 // If an SDK exception occurs, log it and set the connection status to false
                 logger->write_log(QString("[ORBBEC] Camera %1 error: %2").arg(idx).arg(e.getMessage()));
+                log_error("Camera {} error: {}", idx, e.getMessage());
                 is_connected[idx] = false;
             }
         }
@@ -263,6 +292,7 @@ void CAM::post_process_loop(int idx)
         else
         {
             logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+            log_warn("loop time drift, dt:{}", delta_loop_time);
         }
 
         process_time_post[idx] = delta_loop_time;
@@ -301,12 +331,14 @@ void CAM::rtsp_loop()
         if(!writer[p].isOpened())
         {
             is_try_open = writer[p].open(pipeline[p], cv::CAP_GSTREAMER, 10.0, cv::Size(send_w, send_h), true);
+            log_info("RTSP cam{} writer open, pipeline: {}", p, pipeline[p]);
 
         }
 
         if(!is_try_open)
         {
             logger->write_log(QString("[RTSP] cam%1 rtsp writer open failed").arg(p));
+            log_error("[RTSP] cam{} rtsp writer open failed", p);
             rtsp_cam_status[p] = false;
         }
         else
