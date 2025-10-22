@@ -51,6 +51,8 @@ public:
     void set_localization_module(LOCALIZATION* _localization);
 
     std::vector<PATH> slice_path(PATH path);
+    void link_speed(const PATH& path, std::vector<double>& ref_v);
+
 
 
 private:

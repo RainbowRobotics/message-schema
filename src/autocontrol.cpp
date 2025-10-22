@@ -638,7 +638,7 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
         for(size_t i = 0; i < policy_path.size(); i++)
         {
             const PATH& seg = policy_path[i];
-            PATH _seg = calc_global_path(seg.node, (i == 0));
+            PATH _seg = calc_global_path(seg.node, i == 0);
 
             _seg.drive_mode = seg.drive_mode;
             _seg.is_final   = seg.is_final;
@@ -787,7 +787,39 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             }
         }
 
-        tmp_storage.push_back(path);
+        // policy path
+        std::vector<PATH> policy_path = policy->slice_path(path);
+        bool first_seg = true;
+        if(!policy_path.empty())
+        {
+            for(size_t i = 0; i < policy_path.size(); i++)
+            {
+                const PATH& seg = policy_path[i];
+
+                PATH _seg = calc_global_path(seg.node, first_seg);
+                first_seg = false;
+
+                _seg.drive_mode = seg.drive_mode;
+                _seg.is_final = seg.is_final;
+                if(_seg.pose.empty())
+                {
+                    _seg.ed_tf = _seg.is_final ? path.ed_tf : seg.ed_tf;
+                }
+                else
+                {
+                    _seg.ed_tf = _seg.is_final ? path.ed_tf : _seg.pose.back();
+                }
+
+                tmp_storage.push_back(std::move(_seg));
+            }
+        }
+        else
+        {
+            tmp_storage.push_back(path);
+            first_seg = false;
+        }
+
+        // tmp_storage.push_back(path);
     }
 
     // control loop shutdown but robot still moving
@@ -2653,6 +2685,13 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         // calc ref_v
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
+
+        // test
+        PATH tmp;
+        tmp.pose = path_pose;
+        tmp.pos = path_pos;
+        tmp.node = global_path.node;
+        policy->link_speed(tmp, ref_v);
 
         //        std::cout << "Original ref_v ------------------------------------" << std::endl;
         //        for(int i=0; i<ref_v.size(); i++){

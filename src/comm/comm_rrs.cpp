@@ -2737,7 +2737,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 {
                     if(unimap)
                     {
-                        unimap->load_node();
+                        unimap->load_topo();
                     }
                     _main->all_update();
                 }
