@@ -53,6 +53,8 @@ public:
     QString get_json(const QJsonObject& json, QString key);
     int get_json_int(const QJsonObject& json, QString key);
     double get_json_double(const QJsonObject& json, QString key);
+    QString get_msa_text();
+
     QString get_multi_state();
 
     double get_process_time_path();
@@ -60,6 +62,8 @@ public:
 
     double get_max_process_time_path();
     double get_max_process_time_vobs();
+
+    bool get_msa_connect_check();
 
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
@@ -191,6 +195,10 @@ private:
     std::unique_ptr<std::thread> response_thread;
     std::unique_ptr<std::thread> status_thread;
 
+    QString receive_msg;
+
+    mutable std::shared_mutex msg_mtx;
+
     void move_loop();
     void control_loop();
     void localization_loop();
@@ -279,6 +287,8 @@ private:
 
     QString fms_cmd_direction = "";
 
+    Eigen::Vector4d last_tgt_pose_vec = Eigen::Vector4d::Zero();
+
 private Q_SLOTS:
     void send_loop();
 
@@ -299,7 +309,7 @@ private Q_SLOTS:
     void send_mapping_cloud();
 
     void slot_localization(DATA_LOCALIZATION msg);
-//    void slot_safety_io(DATA_SAFTYIO msg);
+    //    void slot_safety_io(DATA_SAFTYIO msg);
 
     //MSA
     void send_move_response(DATA_MOVE msg);
@@ -307,11 +317,11 @@ private Q_SLOTS:
     void send_control_response(DATA_CONTROL msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_load_response(DATA_LOAD msg);
-//    void handle_safetyio_cmd(const QJsonObject& data);
-//    void handle_send_safetyIO(const QJsonObject& data);
+    //    void handle_safetyio_cmd(const QJsonObject& data);
+    //    void handle_send_safetyIO(const QJsonObject& data);
 
 
-//    void send_localization_response(const DATA_LOCALIZATION& msg);
+    //    void send_localization_response(const DATA_LOCALIZATION& msg);
 
     //    void send_move_response(DATA_MOVE msg);
     void send_path_response(DATA_PATH msg);
