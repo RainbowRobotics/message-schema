@@ -562,8 +562,6 @@ void AUTOCONTROL::slot_move(DATA_MOVE msg)
 
 void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
 {
-    // click event!!
-    // fill goal node name
     back_mode = true;
 
     if(msg.goal_node_id != "" && msg.goal_node_name == "")
@@ -585,12 +583,12 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
         if(is_rrs && config->get_use_multi())
         {
             set_multi_infomation(StateMultiReq::REQ_PATH, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+            return;
         }
-        else
-        {
-            Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
-            backwardmove(tf, msg.preset);
-        }
+
+        Eigen::Matrix4d tf = ZYX_to_TF(msg.tgt_pose_vec[0], msg.tgt_pose_vec[1], msg.tgt_pose_vec[2], 0, 0, msg.tgt_pose_vec[3]);
+        backwardmove(tf, msg.preset);
+
     }
     else if(msg.command == "change_goal")
     {
@@ -664,9 +662,35 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
+        std::vector<PATH> policy_path = policy->slice_path(path);
+
+        std::vector<PATH> tmp_storage;
+        tmp_storage.reserve(policy_path.size());
+        for(size_t i = 0; i < policy_path.size(); i++)
+        {
+            const PATH& seg = policy_path[i];
+            PATH _seg = calc_global_path(seg.node, i == 0);
+
+            _seg.drive_mode = seg.drive_mode;
+            _seg.is_final   = seg.is_final;
+            _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
+
+            tmp_storage.push_back(std::move(_seg));
+        }
+
         // enque global path
         global_path_que.clear();
-        global_path_que.push(path);
+        if(!tmp_storage.empty())
+        {
+            for(size_t i = 0; i < tmp_storage.size(); i++)
+            {
+                global_path_que.push(tmp_storage[i]);
+            }
+        }
+        else
+        {
+            global_path_que.push(path);
+        }
     }
 
     // explicitly change flag (racing issue: control_loop <-> obs_loop)
@@ -816,7 +840,39 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             }
         }
 
-        tmp_storage.push_back(path);
+        // policy path
+        std::vector<PATH> policy_path = policy->slice_path(path);
+        bool first_seg = true;
+        if(!policy_path.empty())
+        {
+            for(size_t i = 0; i < policy_path.size(); i++)
+            {
+                const PATH& seg = policy_path[i];
+
+                PATH _seg = calc_global_path(seg.node, first_seg);
+                first_seg = false;
+
+                _seg.drive_mode = seg.drive_mode;
+                _seg.is_final = seg.is_final;
+                if(_seg.pose.empty())
+                {
+                    _seg.ed_tf = _seg.is_final ? path.ed_tf : seg.ed_tf;
+                }
+                else
+                {
+                    _seg.ed_tf = _seg.is_final ? path.ed_tf : _seg.pose.back();
+                }
+
+                tmp_storage.push_back(std::move(_seg));
+            }
+        }
+        else
+        {
+            tmp_storage.push_back(path);
+            first_seg = false;
+        }
+
+        // tmp_storage.push_back(path);
     }
 
     // control loop shutdown but robot still moving
@@ -1188,7 +1244,6 @@ std::vector<std::vector<QString>> AUTOCONTROL::symmetric_cut(std::vector<QString
 
 void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
 {
-    //qDebug()<<"click hear!!!!";
     // stop first
     stop();
 
@@ -1199,6 +1254,8 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
+        path.drive_mode = DriveMode::REVERSE;
+
         // enque global path
         global_path_que.clear();
         global_path_que.push(path);
@@ -1220,7 +1277,6 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
         obs_thread = std::make_unique<std::thread>(&AUTOCONTROL::obs_loop, this);
     }
 }
-
 
 void AUTOCONTROL::backwardmove(std::vector<QString> node_path, int preset)
 {
@@ -1754,6 +1810,50 @@ PATH AUTOCONTROL::calc_global_path(Eigen::Matrix4d goal_tf)
         logger->write_log("[AUTO] node_path empty");
         log_info("node_path empty");
         return PATH();
+    }
+
+    // if the robot is on an edge, ensure both edge endpoints are included
+    {
+        std::vector<QString> edge_nodes = unimap->get_edge_nodes(cur_pos);
+        if(edge_nodes.size() == 2 && node_path.size() > 0)
+        {
+            bool has0 = false;
+            bool has1 = false;
+            for(size_t i = 0; i < node_path.size(); i++)
+            {
+                if(node_path[i] == edge_nodes[0])
+                {
+                    has0 = true;
+                }
+                if(node_path[i] == edge_nodes[1])
+                {
+                    has1 = true;
+                }
+            }
+
+            if(!(has0 && has1))
+            {
+                QString alt_st = "";
+                if(node_path.front() == edge_nodes[0] && !has1)
+                {
+                    alt_st = edge_nodes[1];
+                }
+                else if(node_path.front() == edge_nodes[1] && !has0)
+                {
+                    alt_st = edge_nodes[0];
+                }
+
+                if(!alt_st.isEmpty() && alt_st != st_node_id)
+                {
+                    std::vector<QString> _node_path = calc_node_path(alt_st, ed_node_id);
+                    if(_node_path.size() > 0)
+                    {
+                        node_path.swap(_node_path);
+                        st_node_id = alt_st;
+                    }
+                }
+            }
+        }
     }
 
     // convert metric path
@@ -2737,6 +2837,13 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         std::vector<double> ref_v;
         calc_ref_v(path_pose, ref_v, st_v, AUTOCONTROL_INFO::local_path_step);
 
+        // test
+        PATH tmp;
+        tmp.pose = path_pose;
+        tmp.pos = path_pos;
+        tmp.node = global_path.node;
+        policy->link_speed(tmp, ref_v);
+
         //        std::cout << "Original ref_v ------------------------------------" << std::endl;
         //        for(int i=0; i<ref_v.size(); i++){
         //            std::cout << ref_v[i] << ", ";
@@ -3175,51 +3282,39 @@ int AUTOCONTROL::is_everything_fine()
         return DRIVING_FAILED;
     }
 
+    // for multiple error detect!
     if(ms.status_m0 > 1 || ms.status_m1 > 1)
     {
+        int motor_err_code = (ms.status_m0 > 1) ? ms.status_m0 : ms.status_m1;
+        QStringList err_list;
         QString err_str = "";
-        int motor_err_code = ms.status_m0 > 1 ? ms.status_m0 : ms.status_m1;
-        if(motor_err_code == MOTOR_ERR_MOD)
+
+        //
+        const char* err_names[8] = {"BIT0", "MOD", "JAM", "CUR", "BIG", "IN", "PSI", "NON"};
+
+        for (int bit = 0; bit < 8; bit++)
         {
-            err_str = "MOD";
-            logger->write_log("[AUTO] failed (motor error MOD, 2)", "Red", true, false);
-            log_error("failed (motor error MOD, 2)");
+            if ((motor_err_code >> bit) & 0x01)
+            {
+                QString name = err_names[bit];
+                err_list << name;
+                logger->write_log(QString("[AUTO] failed (motor error %1, %2)").arg(name).arg(1 << bit),"Red", true, false);
+            }
         }
-        else if(motor_err_code == MOTOR_ERR_JAM)
+
+        if (!err_list.isEmpty())
         {
-            err_str = "JAM";
-            logger->write_log("[AUTO] failed (motor error JAM, 4)", "Red", true, false);
-            log_error("failed (motor error JAM, 4)");
-        }
-        else if(motor_err_code == MOTOR_ERR_CUR)
-        {
-            err_str = "CUR";
-            logger->write_log("[AUTO] failed (motor error CUR, 8)", "Red", true, false);
-            log_error("failed (motor error CUR, 8)");
-        }
-        else if(motor_err_code == MOTOR_ERR_BIG)
-        {
-            err_str = "BIG";
-            logger->write_log("[AUTO] failed (motor error BIG, 16)", "Red", true, false);
-            log_error("failed (motor error BIG, 16)");
-        }
-        else if(motor_err_code == MOTOR_ERR_IN)
-        {
-            err_str = "IN";
-            logger->write_log("[AUTO] failed (motor error IN, 32)", "Red", true, false);
-            log_error("failed (motor error IN, 32)");
-        }
-        else if(motor_err_code == MOTOR_ERR_PSI)
-        {
-            err_str = "PSI";
-            logger->write_log("[AUTO] failed (motor error:PS1|2, 64)", "Red", true, false);
-            log_error("failed (motor error PSI, 64)");
-        }
-        else if(motor_err_code == MOTOR_ERR_NON)
-        {
-            err_str = "NON";
-            logger->write_log("[AUTO] failed (motor error NON, 128)", "Red", true, false);
-            log_error("failed (motor error NON, 128)");
+            err_str = err_list.join(" ");
+
+            if (err_list.size() > 2)
+            {
+                logger->write_log(QString("[AUTO] multiple motor errors detected (%1 errors): %2")
+                                  .arg(err_list.size()).arg(err_str),"Red", true, false);
+            }
+            else
+            {
+                logger->write_log(QString("[AUTO] failed (multi motor error: %1)").arg(err_str),"Red", true, false);
+            }
         }
 
         std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -3288,6 +3383,9 @@ void AUTOCONTROL::control_loop()
         }
 
         Q_EMIT signal_global_path_updated();
+
+        back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+        logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
     }
 
     if(global_path.pose.size() == 0)
@@ -3405,7 +3503,7 @@ void AUTOCONTROL::control_loop()
     while(control_flag)
     {
         // get current status
-        Eigen::Matrix4d cur_tf     = loc->get_cur_tf();
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         if (fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
@@ -3690,7 +3788,6 @@ void AUTOCONTROL::control_loop()
                     double goal_err_d = calc_dist_2d(_goal_pos);
                     if(global_path.is_final)
                     {
-//                        qDebug()<<"ffffffffffffff";
                         fsm_state = AUTO_FSM_FINAL_ALIGN;
 
                         logger->write_log(QString("[AUTO] DRIVING -> FINAL_ALIGN, err_d:%1").arg(goal_err_d));
@@ -3710,6 +3807,9 @@ void AUTOCONTROL::control_loop()
                             global_path = _global_path;
                             logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
                             log_info("next global path, deque global path, size: {}", global_path.pos.size());
+
+                            back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+                            logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
 
                             // update global goal
                             goal_tf = global_path.ed_tf;
@@ -4933,4 +5033,9 @@ void AUTOCONTROL::set_obsmap_module(OBSMAP* _obsmap)
 void AUTOCONTROL::set_localization_module(LOCALIZATION *_loc)
 {
     loc = _loc;
+}
+
+void AUTOCONTROL::set_policy_module(POLICY* _policy)
+{
+    policy = _policy;
 }

@@ -839,6 +839,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     BIND_EVENT(sock, "footStatus",      std::bind(&COMM_RRS::recv_foot,              this, _1, _2, _3, _4));
     BIND_EVENT(sock, "safetyioRequest", std::bind(&COMM_RRS::recv_safety_io_set,     this, _1, _2, _3, _4));
 
+    BIND_EVENT(sock, "profileMove",     std::bind(&COMM_RRS::recv_profile_move,        this, _1, _2, _3, _4));
     BIND_EVENT(sock, "safetyRequest",   std::bind(&COMM_RRS::recv_safety_request,    this, _1, _2, _3, _4));
     BIND_EVENT(sock, "settingRequest",  std::bind(&COMM_RRS::recv_config_request,    this, _1, _2, _3, _4));
 
@@ -863,6 +864,7 @@ COMM_RRS::COMM_RRS(QObject *parent) : QObject(parent)
     connect(this, &COMM_RRS::signal_safety_io,       this, &COMM_RRS::slot_safety_io);
     connect(this, &COMM_RRS::signal_config_request,  this, &COMM_RRS::slot_config_request);
     connect(this, &COMM_RRS::signal_safety_request,  this, &COMM_RRS::slot_safety_request);
+    connect(this, &COMM_RRS::signal_profile_move,    this, &COMM_RRS::slot_profile_move);
     connect(this, &COMM_RRS::signal_obs_box_setting, this, &COMM_RRS::slot_obs_box_setting);
 
 
@@ -1225,6 +1227,30 @@ void COMM_RRS::recv_obs_box_request(std::string const& name, sio::message::ptr c
         Q_EMIT signal_obs_box_setting(msg);
     }
 }
+
+
+void COMM_RRS::recv_profile_move(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
+{
+    if(data && data->get_flag() == sio::message::flag_object)
+    {
+        // parsing
+        DATA_PROFILE_MOVE msg;
+        msg.command = get_json(data, "command"); // "linearXMove", "circularMove" , "ratateMove", "linearStop"
+        msg.time = get_json(data, "time").toDouble() / 1000;
+
+        msg.target = get_json(data, "target").toDouble(); // m or deg
+        msg.speed = get_json(data, "speed").toDouble(); // m/s or deg/s
+        msg.dir = get_json(data, "direction"); // "right", "left"
+
+        // action
+        if(logger)
+        {
+            logger->write_log(QString("[COMM_RRS] recv, command: %1, time: %2").arg(msg.command).arg(msg.time), "Green");
+        }
+        Q_EMIT signal_profile_move(msg);
+    }
+}
+
 
 void COMM_RRS::recv_config_request(std::string const& name, sio::message::ptr const& data, bool hasAck, sio::message::list &ack_resp)
 {
@@ -2756,7 +2782,7 @@ void COMM_RRS::slot_load(DATA_LOAD msg)
                 {
                     if(unimap)
                     {
-                        unimap->load_node();
+                        unimap->load_topo();
                     }
                     _main->all_update();
                 }
@@ -3110,6 +3136,197 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
 
     // Send response back
     send_obs_box_setting_response(msg);
+}
+
+void COMM_RRS::slot_profile_move(DATA_PROFILE_MOVE msg)
+{
+    const QString command = msg.command;
+
+    float target_linear_ = 0.0; // m or deg
+    float target_speed_ = 0.0; // m or deg
+    int direction_ = -1 ; // 0 : right, 1 : left
+
+    if(command == "linearXMove")
+    {
+        //        qDebug() << "slot in : linearXMove";
+        // setting target and speed unit
+        target_linear_ = static_cast<float>(msg.target);
+        target_speed_ = static_cast<float>(msg.speed);
+
+        //        qDebug() << "target_linear_ : " << target_linear_;
+        //        qDebug() << "target_speed_ : " << target_speed_;
+
+
+        if(fabs(target_linear_) > 10.0 || fabs(target_speed_) > 1.5)
+        {
+            //qDebug() << "invalid target or speed";
+            //exception
+            msg.result = "reject";
+            msg.message = "invalid target or speed";
+
+            send_profile_move_response(msg);
+            return;
+        }
+
+        else
+        {
+            // first accept response----------
+            //qDebug() << "first accept response";
+            msg.result = "accept";
+            msg.message = "";
+            send_profile_move_response(msg);
+
+
+            //--------------------------------
+
+            AUTOCONTROL::instance()->set_is_moving(true);
+
+            MOBILE::instance()->move_linear_x(target_linear_, target_speed_);
+            double t = std::abs(target_linear_/target_speed_) + 0.5;
+
+            QTimer::singleShot(t*1000, [this, msg]() mutable
+            {
+                if (!this) return; // rrs thread is not alive
+
+                AUTOCONTROL::instance()->set_is_moving(false);
+                
+                float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
+                float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
+
+                msg.result = "success";
+                msg.message = "";
+                msg.remain_dist = res_linear_remain_dist;
+                msg.meassured_dist = res_linear_dist;
+                send_profile_move_response(msg);
+                //qDebug() << "send_profile_move_response";
+                return;
+            });
+
+        }
+    }
+    else if(command == "circularMove")
+    {
+        // setting target and speed unit
+        target_linear_ = static_cast<float>(msg.target * D2R);
+        target_speed_ = static_cast<float>(msg.speed * D2R);
+
+        // setting direction
+        if(msg.dir == "right")
+        {
+            direction_ = 0;
+        }
+        else if(msg.dir == "left")
+        {
+            direction_ = 1;
+        }
+
+        if(fabs(target_linear_) > 360.0 || fabs(target_speed_) > 60.0)
+        {
+            //exception
+            msg.result = "reject";
+            msg.message = "invalid target or speed";
+
+            send_profile_move_response(msg);
+            return;
+        }
+        else
+        {
+            // first accept response----------
+            msg.result = "accept";
+            msg.message = "";
+            send_profile_move_response(msg);
+
+
+            //--------------------------------
+            
+            AUTOCONTROL::instance()->set_is_moving(true);
+
+            MOBILE::instance()->move_circular(target_linear_, target_speed_, direction_);
+            double t = std::abs(target_linear_/target_speed_) +1.0;
+
+            QTimer::singleShot(t*1000, [this, msg]() mutable
+            {
+                if (!this) return; 
+
+                AUTOCONTROL::instance()->set_is_moving(false);
+
+                float res_circular_dist = MOBILE::instance()->get_res_linear_dist();
+                float res_circular_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
+
+                // qDebug() << "res_circular_dist : " << res_circular_dist << " res_circular_remain_dist : " << res_circular_remain_dist;
+                msg.result = "success";
+                msg.message = "";
+                msg.remain_dist = res_circular_remain_dist;
+                msg.meassured_dist = res_circular_dist;
+
+                send_profile_move_response(msg);
+                return;
+            });
+
+        }
+    }
+    else if(command == "rotateMove")
+    {
+        // setting target and speed unit 
+        target_linear_ = static_cast<float>(msg.target * D2R);
+        target_speed_ = static_cast<float>(msg.speed * D2R);
+
+        // speed excption
+        if(fabs(target_linear_) > 360.0 || fabs(target_speed_) > 60.0)
+        {
+            msg.result = "reject";
+            msg.message = "invalid target or speed";
+
+            send_profile_move_response(msg);
+            return;
+        }
+        else
+        {
+
+            // first accept response----------
+            msg.result = "accept";
+            msg.message = "";
+            send_profile_move_response(msg);
+            //--------------------------------
+
+            AUTOCONTROL::instance()->set_is_moving(true);
+
+            MOBILE::instance()->move_rotate(target_linear_, target_speed_);
+            double t = std::abs(target_linear_/target_speed_) + 0.5;
+
+            QTimer::singleShot(t*1000, [this, msg]() mutable
+            {
+                if (!this) return; 
+
+                AUTOCONTROL::instance()->set_is_moving(false);
+
+                float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
+                float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
+
+
+                msg.result = "success";
+                msg.message = "";
+                msg.remain_dist = res_linear_remain_dist;
+                msg.meassured_dist = res_linear_dist;
+                send_profile_move_response(msg);
+                return;
+            });
+        }
+    }
+    else if(command == "linearStop")
+    {
+        msg.result = "success";
+        msg.message = "";
+
+        MainWindow* _main = qobject_cast<MainWindow*>(main);
+
+        if(_main)
+        {
+            _main->bt_MoveStop();
+        }
+
+        send_profile_move_response(msg);
+    }
 }
 
 void COMM_RRS::slot_safety_request(DATA_SAFETY msg)
@@ -4132,6 +4349,31 @@ void COMM_RRS::send_config_request_response(const DATA_PDU_UPDATE& msg)
 
     sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("settingResponse", res);
+
+    // for plot
+    mtx.lock();
+    lastest_msg_str = doc.toJson(QJsonDocument::Indented);
+    mtx.unlock();
+}
+
+void COMM_RRS::send_profile_move_response(const DATA_PROFILE_MOVE& msg)
+{
+    if(!is_connected)
+    {
+        return;
+    }
+
+    QJsonObject obj;
+    obj["command"] = msg.command;
+    obj["result"] = msg.result;
+    obj["message"] = msg.message;
+    obj["remain_dist"] = QString::number(msg.remain_dist, 'f', 3);
+    obj["meassured_dist"] = QString::number(msg.meassured_dist, 'f', 3);
+    obj["time"] = QString::number((long long)(msg.time*1000), 10);
+
+    QJsonDocument doc(obj);
+    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
+    io->socket()->emit("profileMoveResponse", res);
 
     // for plot
     mtx.lock();

@@ -162,6 +162,7 @@ enum class RobotModel
     D400,
     QD,
     MECANUM,
+    DD,
     SEM,
     SDC,
     SEC,
@@ -461,6 +462,12 @@ enum class AttributeZone
     IGNORE_LIDAR2,
     OFFSET,
     MASK
+};
+
+enum class DriveMode
+{
+    FORWARD,
+    REVERSE
 };
 
 // structure
@@ -843,6 +850,60 @@ struct MOBILE_STATUS
 
     uint8_t bms_type         = 0;
 
+    float res_linear_dist = 0.0;
+    float res_linear_remain_dist = 0.0;
+
+};
+
+
+struct MOBILE_RESPONSE
+{
+    float linear_x_meassured_dist = 0.0;
+    float linear_x_remain_dist = 0.0;
+
+    float linear_w_meassured_dist = 0.0;
+    float linear_w_remain_dist = 0.0;
+
+    float circular_w_meassured_dist = 0.0;
+    float circular_w_remain_dist = 0.0;
+
+    MOBILE_RESPONSE()
+    {
+        linear_x_remain_dist = 0.0;
+        linear_x_meassured_dist = 0.0;
+
+        linear_w_remain_dist = 0.0;
+        linear_w_meassured_dist = 0.0;
+
+        circular_w_remain_dist = 0.0;
+        circular_w_meassured_dist = 0.0;
+    }
+
+    MOBILE_RESPONSE(const MOBILE_RESPONSE& p)
+    {
+        linear_x_remain_dist = p.linear_x_remain_dist;
+        linear_x_meassured_dist = p.linear_x_meassured_dist;
+
+        linear_w_remain_dist = p.linear_w_remain_dist;
+        linear_w_meassured_dist = p.linear_w_meassured_dist;
+
+        circular_w_remain_dist = p.circular_w_remain_dist;
+        circular_w_meassured_dist = p.circular_w_meassured_dist;
+    }
+
+    MOBILE_RESPONSE& operator=(const MOBILE_RESPONSE& p)
+    {
+        linear_x_remain_dist = p.linear_x_remain_dist;
+        linear_x_meassured_dist = p.linear_x_meassured_dist;
+
+        linear_w_remain_dist = p.linear_w_remain_dist;
+        linear_w_meassured_dist = p.linear_w_meassured_dist;
+
+        circular_w_remain_dist = p.circular_w_remain_dist;
+        circular_w_meassured_dist = p.circular_w_meassured_dist;
+
+        return *this;
+    }
 };
 
 struct MOBILE_POSE
@@ -1195,7 +1256,12 @@ struct NODE
     QString type;                   // ROUTE, GOAL, OBS, ZONE
     QString info;                   // additional info
     Eigen::Matrix4d tf;             // node tf
-    std::vector<QString> linked;
+    std::vector<QString> linked;    // neightbor node ids
+
+    QString subtype_name;
+    QString subtype_index;
+
+    Eigen::Vector3d size;
 
     NODE()
     {
@@ -1204,7 +1270,12 @@ struct NODE
         type = "";
         info = "";
         tf.setIdentity();
-        linked.clear();        
+        linked.clear();
+
+        subtype_name = "";
+        subtype_index = "";
+
+        size.setZero();
     }
 
     NODE(const NODE& p)
@@ -1214,7 +1285,12 @@ struct NODE
         type = p.type;
         info = p.info;
         tf = p.tf;
-        linked = p.linked;        
+        linked = p.linked;
+
+        subtype_name = p.subtype_name;
+        subtype_index = p.subtype_index;
+
+        size = p.size;
     }
 
     NODE& operator=(const NODE& p)
@@ -1225,6 +1301,12 @@ struct NODE
         info = p.info;
         tf = p.tf;
         linked = p.linked;
+
+        subtype_name = p.subtype_name;
+        subtype_index = p.subtype_index;
+
+        size = p.size;
+
         return *this;
     }
 
@@ -1366,12 +1448,14 @@ struct PATH
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
+    DriveMode drive_mode;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
         is_final = false;
+        drive_mode = DriveMode::FORWARD;
     }
 
     PATH(const PATH& p)
@@ -1383,6 +1467,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
     }
 
     PATH& operator=(const PATH& p)
@@ -1394,6 +1479,7 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
+        drive_mode = p.drive_mode;
         return *this;
     }
 
@@ -1617,6 +1703,8 @@ struct NODE_INFO
 
     bool slow;
     bool fast;
+    bool reverse;
+
     bool warning_beep;
     bool ignore_2d;
     bool ignore_3d;
@@ -1633,6 +1721,8 @@ struct NODE_INFO
 
         slow           = false;
         fast           = false;
+        reverse        = false;
+
         warning_beep   = false;
         ignore_2d      = false;
         ignore_3d      = false;
@@ -1650,6 +1740,8 @@ struct NODE_INFO
 
         slow           = p.slow;
         fast           = p.fast;
+        reverse        = p.reverse;
+
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1667,6 +1759,8 @@ struct NODE_INFO
 
         slow           = p.slow;
         fast           = p.fast;
+        reverse        = p.reverse;
+
         warning_beep   = p.warning_beep;
         ignore_2d      = p.ignore_2d;
         ignore_3d      = p.ignore_3d;
@@ -1692,6 +1786,8 @@ struct LINK_INFO
 
     QString info;
 
+    double speed = 0.0;
+
     LINK_INFO()
     {
         st.setZero();
@@ -1699,6 +1795,7 @@ struct LINK_INFO
         mid.setZero();
 
         length = 0.0;
+        speed  = 0.0;
     }
 
     LINK_INFO(const LINK_INFO& p)
@@ -1713,6 +1810,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
+
+        speed = p.speed;
     }
 
     LINK_INFO& operator=(const LINK_INFO& p)
@@ -1727,6 +1826,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
+
+        speed = p.speed;
 
         return *this;
     }

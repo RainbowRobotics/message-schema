@@ -112,7 +112,7 @@ void UNIMAP::load_map(QString path)
     });
     bool loaded_3d = future.get();
 
-    load_node();
+    load_topo();
 
     QString loc_mode = config->get_loc_mode();
     if(loc_mode == "2D" && loaded_2d)
@@ -361,7 +361,7 @@ bool UNIMAP::load_3d()
     return true;
 }
 
-bool UNIMAP::load_node()
+bool UNIMAP::load_topo()
 {
     // first clear node
     {
@@ -427,6 +427,13 @@ bool UNIMAP::load_node()
                                 link.st_id = node.id;
                                 link.ed_id = ed;
                                 link.info  = lo["info"].toString();
+
+                                // speed parsing
+                                if(lo.contains("speed"))
+                                {
+                                    link.speed  = lo["speed"].toDouble();
+                                }
+
                                 link.st.setZero();
                                 link.ed.setZero();
                                 link.mid.setZero();
@@ -489,31 +496,27 @@ bool UNIMAP::load_node()
 
                 // debug
                 {
-                    //printf("[UNIMAP] special_links size = %zu\n", special_links.size());
-                    spdlog::info("[UNIMAP] special_links size = {}", special_links.size());
-                    
                     for(size_t i = 0; i < special_links.size(); i++)
                     {
                         const LINK_INFO &s = special_links[i];
-                        //printf("[UNIMAP][SPECIAL_LINK][%zu]\n", i);
-                        //printf("  st_id = %s, ed_id = %s, info = %s\n",
-                        //       s.st_id.toStdString().c_str(),
-                        //       s.ed_id.toStdString().c_str(),
-                        //       s.info.toStdString().c_str());
-                        //printf("  length = %.3f\n", s.length);
-                        //printf("  st  = (%.3f, %.3f, %.3f)\n", s.st.x(), s.st.y(), s.st.z());
-                        //printf("  ed  = (%.3f, %.3f, %.3f)\n", s.ed.x(), s.ed.y(), s.ed.z());
-                        //printf("  mid = (%.3f, %.3f, %.3f)\n", s.mid.x(), s.mid.y(), s.mid.z());
-                        spdlog::info("[UNIMAP][SPECIAL_LINK][{}]", i);
-                        spdlog::info("  st_id = {}, ed_id = {}, info = {}", s.st_id.toStdString(), s.ed_id.toStdString(), s.info.toStdString());
-                        spdlog::info("  length = {:.3f}", s.length);
-                        spdlog::info("  st  = ({:.3f}, {:.3f}, {:.3f})", s.st.x(), s.st.y(), s.st.z());
-                        spdlog::info("  ed  = ({:.3f}, {:.3f}, {:.3f})", s.ed.x(), s.ed.y(), s.ed.z());
-                        spdlog::info("  mid = ({:.3f}, {:.3f}, {:.3f})", s.mid.x(), s.mid.y(), s.mid.z());
+                        printf("[UNIMAP][SPECIAL_LINK][%zu]\n", i);
+                        printf("  st_id = %s, ed_id = %s, info = %s\n",
+                               s.st_id.toStdString().c_str(),
+                               s.ed_id.toStdString().c_str(),
+                               s.info.toStdString().c_str());
+                        if(s.speed > 0.0)
+                        {
+                            printf(", speed = %f", s.speed);
+                        }
+                        printf("\n");
+                        printf("  length = %.3f\n", s.length);
+                        printf("  st  = (%.3f, %.3f, %.3f)\n", s.st.x(), s.st.y(), s.st.z());
+                        printf("  ed  = (%.3f, %.3f, %.3f)\n", s.ed.x(), s.ed.y(), s.ed.z());
+                        printf("  mid = (%.3f, %.3f, %.3f)\n", s.mid.x(), s.mid.y(), s.mid.z());
                     }
                 }
             }
-            
+
             // build KD-tree for nodes
             std::vector<Eigen::Vector3d> node_pos; 
             std::vector<QString> node_id; 
@@ -541,6 +544,226 @@ bool UNIMAP::load_node()
         spdlog::info("[UNIMAP] {} loaded", node_path.toStdString());
     }
     return true;
+}
+
+bool UNIMAP::load_node()
+{
+    // first clear node
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        if(nodes)
+        {
+            nodes->clear();
+        }
+    }
+
+    QString node_path = map_path + "/node.json";
+    QFileInfo node_info(node_path);
+    if(!node_info.exists() || !node_info.isFile())
+    {
+        return false;
+    }
+
+    QFile node_file(node_path);
+    if(!node_file.open(QIODevice::ReadOnly))
+    {
+        return false;
+    }
+
+    QByteArray data = node_file.readAll();
+    node_file.close();
+
+    QJsonParseError perr;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &perr);
+    if(perr.error != QJsonParseError::NoError || !doc.isArray())
+    {
+        return false;
+    }
+
+    QJsonArray arr = doc.array();
+
+    // parse nodes
+    std::vector<NODE> temp_nodes;
+    for(int i = 0; i < arr.size(); i++)
+    {
+        if(!arr[i].isObject())
+        {
+            continue;
+        }
+
+        QJsonObject obj = arr[i].toObject();
+
+        NODE node;
+
+        // id, name, type
+        if(obj.contains("id") && obj["id"].isString())
+        {
+            node.id = obj["id"].toString();
+        }
+        if(obj.contains("name") && obj["name"].isString())
+        {
+            node.name = obj["name"].toString();
+        }
+        if(obj.contains("type") && obj["type"].isString())
+        {
+            node.type = obj["type"].toString();
+        }
+
+        // subtype
+        if(obj.contains("subtype") && obj["subtype"].isObject())
+        {
+            QJsonObject st = obj["subtype"].toObject();
+            if(st.contains("name") && st["name"].isString())
+            {
+                node.subtype_name = st["name"].toString();
+            }
+            if(st.contains("index") && st["index"].isString())
+            {
+                node.subtype_index = st["index"].toString();
+            }
+        }
+
+        // size - ignore nulls safely
+        node.size.setZero();
+        if(obj.contains("size") && obj["size"].isObject())
+        {
+            QJsonObject sz = obj["size"].toObject();
+            if(sz.contains("x") && !sz["x"].isNull())
+            {
+                node.size.x() = sz["x"].toDouble();
+            }
+            if(sz.contains("y") && !sz["y"].isNull())
+            {
+                node.size.y() = sz["y"].toDouble();
+            }
+            if(sz.contains("z") && !sz["z"].isNull())
+            {
+                node.size.z() = sz["z"].toDouble();
+            }
+        }
+
+        // info
+        if(obj.contains("info") && obj["info"].isObject())
+        {
+            QJsonObject info_obj = obj["info"].toObject();
+            QJsonDocument info_doc(info_obj);
+            node.info = QString::fromUtf8(info_doc.toJson(QJsonDocument::Compact));
+        }
+        else
+        {
+            node.info = "";
+        }
+
+        // links
+        node.linked.clear();
+        if(obj.contains("links") && obj["links"].isArray())
+        {
+            QJsonArray link_arr = obj["links"].toArray();
+            for(int li = 0; li < link_arr.size(); li++)
+            {
+                if(!link_arr[li].isObject())
+                {
+                    continue;
+                }
+                QJsonObject lo = link_arr[li].toObject();
+                if(lo.contains("id") && lo["id"].isString())
+                {
+                    QString to_id = lo["id"].toString();
+                    if(!to_id.isEmpty())
+                    {
+                        node.linked.push_back(to_id);
+                    }
+                }
+            }
+        }
+
+        // pose
+        if(obj.contains("pose") && obj["pose"].isObject())
+        {
+            QJsonObject p = obj["pose"].toObject();
+
+            double x = 0.0;
+            double y = 0.0;
+            double z = 0.0;
+            double rx = 0.0;
+            double ry = 0.0;
+            double rz = 0.0;
+
+            if(p.contains("x"))
+            {
+                x = p["x"].toDouble();
+            }
+            if(p.contains("y"))
+            {
+                y = p["y"].toDouble();
+            }
+            if(p.contains("z"))
+            {
+                z = p["z"].toDouble();
+            }
+            if(p.contains("rx"))
+            {
+                rx = p["rx"].toDouble() * D2R;
+            }
+            if(p.contains("ry"))
+            {
+                ry = p["ry"].toDouble() * D2R;
+            }
+            if(p.contains("rz"))
+            {
+                rz = p["rz"].toDouble() * D2R;
+            }
+
+            node.tf = ZYX_to_TF(x, y, z, rx, ry, rz);
+        }
+        else
+        {
+            node.tf = Eigen::Matrix4d::Identity();
+        }
+
+        temp_nodes.push_back(node);
+    }
+    node_file.close();
+
+    // set fast find nodes instance
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        if(nodes)
+        {
+            *nodes = temp_nodes;
+        }
+
+        // rebuild node maps with indices
+        rebuild_node_maps();
+
+
+
+        // build KD-tree for nodes
+        std::vector<Eigen::Vector3d> node_pos;
+        std::vector<QString> node_id;
+
+        for(size_t p = 0; p < nodes->size(); p++)
+        {
+            const NODE& node = (*nodes)[p];
+            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+            {
+                node_pos.push_back(node.tf.block(0,3,3,1));
+                node_id.push_back(node.id);
+            }
+        }
+
+        // set kdtree info
+        kdtree_node.pos = node_pos;
+        kdtree_node.id = node_id;
+
+        // build kdtree
+        kdtree_node_index = std::make_unique<KD_TREE_NODE>(3, kdtree_node, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+        kdtree_node_index->buildIndex();
+    }
+
+    logger->write_log(QString("[UNIMAP] %1 loaded").arg(node_path), "Green", true, false);
+    return true;
+
 }
 
 void UNIMAP::save_node()
@@ -866,6 +1089,73 @@ QString UNIMAP::get_node_id_edge(Eigen::Vector3d pos)
             return "";
         }
     }
+}
+
+std::vector<QString> UNIMAP::get_edge_nodes(const Eigen::Vector3d& pos)
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+
+    std::vector<QString> edge_nodes;
+
+    if(!nodes || nodes->empty() || !kdtree_node_index || kdtree_node.id.empty() || kdtree_node.pos.empty())
+    {
+        return edge_nodes;
+    }
+
+    std::vector<unsigned int> near_idxs(knn_search_num, 0);
+    std::vector<double> near_sq_dists(knn_search_num, 0.0);
+
+    double query_pt[3] = { pos[0], pos[1], pos[2] };
+    kdtree_node_index->knnSearch(query_pt, knn_search_num, near_idxs.data(), near_sq_dists.data());
+
+    double min_dist = std::numeric_limits<double>::max();
+    QString best_id0, best_id1;
+
+    for(int i = 0; i < knn_search_num; i++)
+    {
+        unsigned int idx = near_idxs[i];
+        if(idx >= kdtree_node.id.size() || idx >= kdtree_node.pos.size())
+        {
+            continue;
+        }
+
+        QString id0 = kdtree_node.id[idx];
+        NODE* node0 = get_node_by_id(id0);
+        if(!node0)
+        {
+            continue;
+        }
+
+        Eigen::Vector3d pos0 = kdtree_node.pos[idx];
+        for(const QString& id1 : node0->linked)
+        {
+            NODE* node1 = get_node_by_id(id1);
+            if(!node1)
+            {
+                continue;
+            }
+
+            if(node1->type == "ROUTE" || node1->type == "GOAL" || node1->type == "INIT" || node1->type == "STATION")
+            {
+                Eigen::Vector3d pos1 = node1->tf.block(0,3,3,1);
+                double dist = calc_seg_dist(pos0, pos1, pos);
+                if(dist < min_dist)
+                {
+                    min_dist = dist;
+                    best_id0 = id0;
+                    best_id1 = id1;
+                }
+            }
+        }
+    }
+
+    if(!best_id0.isEmpty() && !best_id1.isEmpty())
+    {
+        edge_nodes.push_back(best_id0);
+        edge_nodes.push_back(best_id1);
+    }
+
+    return edge_nodes;
 }
 
 QString UNIMAP::get_goal_id(Eigen::Vector3d pos)

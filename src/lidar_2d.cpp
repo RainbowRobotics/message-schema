@@ -530,7 +530,6 @@ void LIDAR_2D::merge_loop()
                 }
             }
         }
-
         FRAME merge_frm;
         merge_frm.pts.clear();
         if(matched)

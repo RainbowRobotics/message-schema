@@ -50,6 +50,11 @@ public:
     void set_unimap_module(UNIMAP* _unimap);
     void set_localization_module(LOCALIZATION* _localization);
 
+    std::vector<PATH> slice_path(PATH path);
+    void link_speed(const PATH& path, std::vector<double>& ref_v);
+
+
+
 private:
     explicit POLICY(QObject *parent = nullptr);
     ~POLICY();
@@ -67,6 +72,11 @@ private:
     std::atomic<bool> node_flag = {false};
     std::unique_ptr<std::thread> node_thread;
     void node_loop();
+
+    // link loop
+    std::atomic<bool> link_flag = {false};
+    std::unique_ptr<std::thread> link_thread;
+    void link_loop();
 
     // zone loop
     std::atomic<bool> zone_flag = {false};
@@ -97,6 +107,8 @@ private:
     NODE_INFO zone_info;
 
     std::vector<LINK_INFO> link_list;
+
+    PATH global_path;
 
 };
 

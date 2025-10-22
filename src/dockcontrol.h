@@ -39,7 +39,7 @@ public:
     void move();
     void stop();
     bool undock();
-    KFRAME generate_vkframe(int type); // type 0 -oneque, 1 - aline
+    KFRAME generate_vkframe(int type, bool reverse_flag); // type 0 -oneque, 1 - aline
     Eigen::Vector3d calculate_center(const KFRAME& frame);
     double vfrm_icp(KFRAME& frm0, KFRAME& frm1, Eigen::Matrix4d& dG);
     bool is_everything_fine(); 

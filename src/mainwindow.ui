@@ -853,6 +853,9 @@ out</string>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
             </widget>
             <widget class="QDoubleSpinBox" name="spb_AccW">
              <property name="geometry">
@@ -4028,7 +4031,7 @@ Save</string>
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>Page</string>
+        <string>INFO</string>
        </attribute>
        <widget class="QWidget" name="layoutWidget_2">
         <property name="geometry">

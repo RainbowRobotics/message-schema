@@ -75,13 +75,13 @@ void DOCKCONTROL::move()
         dock_retry_flag = false;
         find_check = false;
 
-
         first_aline = Eigen::Matrix4d::Identity();
 
-        vfrm = generate_vkframe(1); // generate aline vmark frame
+        bool reverse_flag = false;
+        vfrm = generate_vkframe(1, reverse_flag); // generate aline vmark frame
         frm1_center = calculate_center(vfrm);
 
-        oneque_vfrm = generate_vkframe(0); // generate oneque vmark frame
+        oneque_vfrm = generate_vkframe(0, reverse_flag); // generate oneque vmark frame
         oneque_frm1_center = calculate_center(oneque_vfrm);
 
         // start docking control loop
@@ -882,7 +882,7 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
     return out_;
 }
 
-KFRAME DOCKCONTROL::generate_vkframe(int type)
+KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
 {
     KFRAME frame;
 

@@ -34,6 +34,9 @@ void POLICY::open()
     node_flag = true;
     node_thread = std::make_unique<std::thread>(&POLICY::node_loop, this);
 
+    link_flag = true;
+    link_thread = std::make_unique<std::thread>(&POLICY::link_loop, this);
+
     zone_flag = true;
     zone_thread = std::make_unique<std::thread>(&POLICY::zone_loop, this);
 
@@ -51,6 +54,13 @@ void POLICY::close()
         node_thread->join();
     }
     node_thread.reset();
+
+    link_flag = false;
+    if(link_thread && link_thread->joinable())
+    {
+        link_thread->join();
+    }
+    link_thread.reset();
 
     zone_flag = false;
     if(zone_thread && zone_thread->joinable())
@@ -131,46 +141,201 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
     loc = _loc;
 }
 
-void POLICY::apply_slow(bool on)
+std::vector<PATH> POLICY::slice_path(PATH path)
 {
-    // prevent duplication
-    static bool prev = false;
-    if(on == prev)
+    global_path = path;
+
+    std::vector<PATH> res;
+    if(path.node.size() < 2)
     {
-        return;
+        return res;
     }
 
+    // determine mode for each edge
+    std::vector<LINK_INFO> links = unimap->get_special_links();
+    std::vector<DriveMode> modes;
+    modes.reserve(path.node.size() - 1);
+    for(size_t i = 0; i + 1 < path.node.size(); i++)
+    {
+        QString st_id = path.node[i];
+        QString ed_id = path.node[i + 1];
 
+        DriveMode drive_mode = DriveMode::FORWARD;
 
-    prev = on;
+        for(size_t j = 0; j < links.size(); j++)
+        {
+            const LINK_INFO& link = links[j];
+            if(link.st_id == st_id && link.ed_id == ed_id)
+            {
+                // convert INFO to uppercase
+                QString info = link.info.toUpper();
+                if(info.contains("REVERSE"))
+                {
+                    drive_mode = DriveMode::REVERSE;
+                }
+                break;
+            }
+        }
+        modes.push_back(drive_mode);
+    }
 
-    printf("[POLICY] SLOW %s\n", on ? "ON" : "OFF");
+    // split the path at the point where the mode changes
+    size_t st_idx = 0;
+    for(size_t i = 1; i < modes.size(); i++)
+    {
+        if(modes[i] != modes[i - 1])
+        {
+            PATH seg;
+            seg.t = path.t;
+            seg.is_final = false;
+            seg.ed_tf = (path.pose.empty() ? path.ed_tf : path.pose[i]);
+            seg.node.assign(path.node.begin() + st_idx, path.node.begin() + (i + 1));
+            seg.drive_mode = modes[st_idx];
+
+            res.push_back(seg);
+            st_idx = i;
+        }
+    }
+
+    // add last section
+    {
+        PATH seg;
+        seg.t = path.t;
+        seg.is_final = true;
+        seg.ed_tf = path.ed_tf;
+        seg.node.assign(path.node.begin() + st_idx, path.node.end());
+        seg.drive_mode = modes[st_idx];
+
+        res.push_back(seg);
+    }
+
+    return res;
 }
 
-void POLICY::apply_fast(bool on)
+void POLICY::link_speed(const PATH& path, std::vector<double>& ref_v)
 {
-    // prevent duplication
-    static bool prev = false;
-    if(on == prev)
+    if(path.node.size() < 2 || path.pose.size() == 0 || ref_v.size() != path.pose.size())
     {
         return;
     }
 
-    prev = on;
+    std::vector<int> node_idx(path.node.size(), 0);
+    for(size_t i = 0; i < path.node.size(); i++)
+    {
+        NODE* node = unimap->get_node_by_id(path.node[i]);
+        if(node == NULL)
+        {
+            continue;
+        }
 
-    printf("[POLICY] FAST %s\n", on ? "ON" : "OFF");
+        Eigen::Vector3d npos = node->tf.block(0,3,3,1);
+
+        double best_d2 = 1e100;
+        int best_k = 0;
+
+        for(size_t k = 0; k < path.pose.size(); k++)
+        {
+            double dx = path.pose[k](0,3) - npos.x();
+            double dy = path.pose[k](1,3) - npos.y();
+            double dz = path.pose[k](2,3) - npos.z();
+            double d2 = dx*dx + dy*dy + dz*dz;
+
+            if(d2 < best_d2)
+            {
+                best_d2 = d2;
+                best_k = (int)k;
+            }
+        }
+
+        node_idx[i] = best_k;
+    }
+
+    for(size_t i = 1; i < node_idx.size(); i++)
+    {
+        if(node_idx[i] <= node_idx[i-1])
+        {
+            node_idx[i] = node_idx[i-1] + 1;
+            if(node_idx[i] >= (int)path.pose.size())
+            {
+                node_idx[i] = (int)path.pose.size() - 1;
+            }
+        }
+    }
+
+    std::unordered_map<std::string, double> speed_map;
+    {
+        std::vector<LINK_INFO> links = unimap->get_special_links();
+        for(size_t j = 0; j < links.size(); j++)
+        {
+            if(links[j].speed <= 0.0)
+            {
+                continue;
+            }
+
+            QString a = links[j].st_id;
+            QString b = links[j].ed_id;
+            QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
+            std::string key = key_q.toStdString();
+
+            if(speed_map.find(key) == speed_map.end())
+            {
+                speed_map[key] = links[j].speed;
+            }
+            else
+            {
+                if(links[j].speed < speed_map[key])
+                {
+                    speed_map[key] = links[j].speed;
+                }
+            }
+        }
+    }
+
+    for(size_t i = 0; i + 1 < path.node.size(); i++)
+    {
+        QString a = path.node[i];
+        QString b = path.node[i+1];
+        QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
+        std::string key = key_q.toStdString();
+
+        auto it = speed_map.find(key);
+        if(it == speed_map.end())
+        {
+            continue;
+        }
+
+        double link_v = it->second;
+        int s = node_idx[i];
+        int e = node_idx[i+1];
+        if(s > e)
+        {
+            int tmp = s; s = e; e = tmp;
+        }
+
+        if(s < 0) s = 0;
+        if(e >= (int)ref_v.size()) e = (int)ref_v.size() - 1;
+
+        for(int k = s; k <= e; k++)
+        {
+            if(ref_v[k] > link_v)
+            {
+                ref_v[k] = link_v;
+            }
+        }
+    }
+
+    // debug
+    // printf("[POLICY] ----- ref_v after applying link speed -----\n");
+    // for(size_t i = 0; i < ref_v.size(); i++)
+    // {
+    //     printf("idx=%3zu  ref_v=%.3f\n", i, ref_v[i]);
+    // }
+    // printf("[POLICY] ------------------------------------------\n");
 }
 
 void POLICY::node_loop()
 {
     printf("[POLICY] node_loop start\n");
-
-    // state for link dir
-    QString last_undir       = "";
-    QString last_oriented    = "";
-    double  last_t           = 0.0;
-    bool    has_last_t       = false;
-    int     outside_cnt      = 0;
 
     while(node_flag)
     {
@@ -183,6 +348,7 @@ void POLICY::node_loop()
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
         Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
 
+        NODE_INFO info;
         QString cur_node_id = unimap->get_node_id_edge(cur_tf.block(0,3,3,1));
         if(!cur_node_id.isEmpty())
         {
@@ -190,170 +356,174 @@ void POLICY::node_loop()
             if(node != nullptr)
             {
                 double d = calc_dist_2d(node->tf.block(0,3,3,1) - cur_tf.block(0,3,3,1));
-                double node_radius = config->get_robot_radius();
-                if(d <= node_radius)
+                if(d <= config->get_robot_radius())
                 {
-                    // link state reset
-                    last_undir.clear();
-                    last_oriented.clear();
-                    has_last_t = false;
-                    outside_cnt = 0;
-
-                    // update
-                    {
-                        std::lock_guard<std::mutex> lock(mtx);
-                        cur_node = cur_node_id;
-                        cur_link.clear();
-                        link_info = NODE_INFO();
-                    }
-
-                    // skip link decision
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    continue;
-                }
-            }
-        }
-
-        // link decision
-        QString inside_link = "";
-        NODE_INFO inside_info;
-
-        int inside_idx = -1;
-        double best_across = 1e9;
-        std::vector<LINK_INFO> links = unimap->get_special_links();
-        for(size_t i = 0; i < links.size(); i++)
-        {
-            LINK_INFO& link = links[i];
-
-            double L = link.length;
-            if(L <= 1e-9)
-            {
-                continue;
-            }
-
-            // link direction vector (u), robot-center vector (v)
-            double ux = link.ed.x() - link.st.x();
-            double uy = link.ed.y() - link.st.y();
-            double vx = pos.x()    - link.mid.x();
-            double vy = pos.y()    - link.mid.y();
-
-            // link axis/alonge, perpendicular/across components to the link
-            double along  = std::abs((vx*ux + vy*uy) / L);
-            double across = std::abs((vx*uy - vy*ux) / L);
-
-            if(along <= 0.5*L && across <= config->get_robot_size_y_max())
-            {
-                if(across < best_across)
-                {
-                    best_across = across;
-                    inside_idx = (int)i;
-                }
-            }
-        }
-
-        if(inside_idx >= 0)
-        {
-            LINK_INFO& link = links[(size_t)inside_idx];
-
-            // detect link changes with undirected keys (A|B)
-            QString cur_undir = (link.st_id < link.ed_id) ? (link.st_id + "|" + link.ed_id) : (link.ed_id + "|" + link.st_id);
-            if(last_undir != cur_undir)
-            {
-                last_undir = cur_undir;
-                has_last_t = false;
-                last_oriented.clear();
-            }
-
-            // estimation of the progress parameter t (projection distance based on st / L)
-            Eigen::Vector2d st(link.st.x(), link.st.y());
-            Eigen::Vector2d u(link.ed.x() - link.st.x(), link.ed.y() - link.st.y());
-            double L = u.norm();
-            double t = 0.0;
-            if(L > 1e-12)
-            {
-                Eigen::Vector2d w = pos - st;
-                t = w.dot(u) / L;
-            }
-
-            if(has_last_t)
-            {
-                if(t > last_t)
-                {
-                    last_oriented = link.st_id + "->" + link.ed_id;
-                }
-                else if(t < last_t)
-                {
-                    last_oriented = link.ed_id + "->" + link.st_id;
+                    parse_info(node->info, "", info);
                 }
                 else
                 {
-                    last_oriented.clear();
+                    cur_node_id.clear();
                 }
-
-                // if(last_oriented.isEmpty())
-                // {
-                //     double ds = (pos - st).squaredNorm();
-                //     double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
-                //     last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
-                // }
-            }
-            else
-            {
-                // double ds = (pos - st).squaredNorm();
-                // double de = (pos - Eigen::Vector2d(link.ed.x(), link.ed.y())).squaredNorm();
-                // last_oriented = (ds <= de) ? (link.st_id + "->" + link.ed_id) : (link.ed_id + "->" + link.st_id);
-
-                last_oriented.clear();
-                has_last_t = true;
-            }
-
-            last_t = t;
-            outside_cnt = 0;
-
-            inside_link = last_oriented;
-
-            // info parsing
-            NODE_INFO res;
-            if(parse_info(link.info, "", res))
-            {
-                inside_info = res;
-            }
-
-            // update
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_node.clear();
-                cur_link = inside_link;
-                link_info = inside_info;
             }
         }
-        else
-        {
-            outside_cnt++;
-            if(outside_cnt >= 3)
-            {
-                last_undir.clear();
-                last_oriented.clear();
-                has_last_t = false;
 
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_link.clear();
-                link_info = NODE_INFO();
-                cur_node.clear();
-            }
-            else
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_node.clear();
-                cur_link = last_oriented;
-                link_info = NODE_INFO();
-            }
+        // update
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            cur_node = cur_node_id;
+            node_info = info;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     printf("[POLICY] node_loop stop\n");
+}
+
+void POLICY::link_loop()
+{
+    QString last_link_str = "";
+    NODE_INFO last_link_info;
+
+    printf("[POLICY] link_loop start\n");
+    while(link_flag)
+    {
+        if(unimap->get_is_loaded() != MAP_LOADED)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+        Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
+
+        QString cur_node_id = get_cur_node();
+
+        QString cur_link_str = "";
+        NODE_INFO cur_link_info;
+        bool info_updated = false;
+
+        if(global_path.node.size() < 2)
+        {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link.clear();
+                link_info = NODE_INFO();
+            }
+            last_link_str.clear();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        if(cur_node_id.isEmpty())
+        {
+            if(!last_link_str.isEmpty())
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link = last_link_str;
+                link_info = last_link_info;
+            }
+            else
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link.clear();
+                link_info = NODE_INFO();
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        // find the idx of the cur_node in path
+        int idx = -1;
+        for(size_t i = 0; i < global_path.node.size(); i++)
+        {
+            if(global_path.node[i] == cur_node_id)
+            {
+                idx = i;
+                break;
+            }
+        }
+
+        // if there is no cur_node on the path, the link is terminated
+        if(idx < 0)
+        {
+            // update
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link.clear();
+                link_info = NODE_INFO();
+            }
+            last_link_str.clear();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        if(idx + 1 < (int)global_path.node.size())
+        {
+            // if there is a next node -> activate link (st=cur_node, ed=next_node)
+            QString st_id = global_path.node[idx];
+            QString ed_id = global_path.node[idx + 1];
+
+            cur_link_str = st_id + "->" + ed_id;
+
+            if(cur_link_str != last_link_str)
+            {
+                std::vector<LINK_INFO> link = unimap->get_special_links();
+                info_updated = false;
+                cur_link_info = NODE_INFO();
+                for(const auto& lk : link)
+                {
+                    if(lk.st_id == st_id && lk.ed_id == ed_id)
+                    {
+                        NODE_INFO res;
+                        if(parse_info(lk.info, "", res))
+                        {
+                            cur_link_info = res;
+                            info_updated  = true;
+                        }
+                        break;
+                    }
+                }
+                if(info_updated)
+                {
+                    last_link_info = cur_link_info;
+                }
+                else
+                {
+                    last_link_info = NODE_INFO();
+                }
+
+                last_link_str = cur_link_str;
+            }
+
+            // update
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link = cur_link_str;
+                if(info_updated)
+                {
+                    link_info = cur_link_info;
+                }
+            }
+        }
+        else
+        {
+            // if there is no next node -> end of link
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cur_link.clear();
+                link_info = NODE_INFO();
+                // cur_link = cur_link_str;
+                // link_info = cur_link_info;
+            }
+            last_link_str.clear();
+            last_link_info = NODE_INFO();
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    printf("[POLICY] link_loop stop\n");
 }
 
 void POLICY::zone_loop()
@@ -445,6 +615,7 @@ void POLICY::policy_loop()
 
         bool slow            = (z.slow           || l.slow           || n.slow);
         bool fast            = (z.fast           || l.fast           || n.fast);
+        bool reverse         = (z.reverse        || l.reverse        || n.reverse);
         bool warning_beep    = (z.warning_beep   || l.warning_beep   || n.warning_beep);
         bool ignore_2d       = (z.ignore_2d      || l.ignore_2d      || n.ignore_2d);
         bool ignore_3d       = (z.ignore_3d      || l.ignore_3d      || n.ignore_3d);
@@ -458,9 +629,10 @@ void POLICY::policy_loop()
             fast = false;
         }
 
-        QString info = QString("S%1 F%2 W%3 I2%4 I3%5 IC%6 O2%7 O3%8 OC%9")
+        QString info = QString("S%1 F%2 R%3 W%4 I2%5 I3%6 IC%7 O2%8 O3%9 OC%10")
                 .arg(slow ? "1" : "0")
                 .arg(fast ? "1" : "0")
+                .arg(reverse ? "1" : "0")
                 .arg(warning_beep ? "1" : "0")
                 .arg(ignore_2d    ? "1" : "0")
                 .arg(ignore_3d    ? "1" : "0")
@@ -471,8 +643,8 @@ void POLICY::policy_loop()
 
         if(info != last_info)
         {
-            apply_slow(slow);
-            apply_fast(fast);
+            // apply_slow(slow);
+            // apply_fast(fast);
             // apply_warning_beep(warning_beep);
             // apply_ignore_2d(ignore_2d);
             // apply_ignore_3d(ignore_3d);

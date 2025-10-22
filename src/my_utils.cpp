@@ -1112,6 +1112,7 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
         // ---- INFO ----
         if (key == "SLOW")           { result.slow           = true; matched = true; continue; }
         if (key == "FAST")           { result.fast           = true; matched = true; continue; }
+        if (key == "REVERSE")        { result.reverse        = true; matched = true; continue; }
         if (key == "WARNING_BEEP")   { result.warning_beep   = true; matched = true; continue; }
         if (key == "IGNORE_2D")      { result.ignore_2d      = true; matched = true; continue; }
         if (key == "IGNORE_3D")      { result.ignore_3d      = true; matched = true; continue; }

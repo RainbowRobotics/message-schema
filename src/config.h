@@ -289,10 +289,14 @@ public:
     /***********************
      * safety monitoring
      ***********************/
-     int get_monitoring_field_count();                    
-     std::vector<MonitoringField> get_monitoring_field();
+    int get_monitoring_field_count();                    
+    std::vector<MonitoringField> get_monitoring_field();
 
-
+    bool get_use_safety_cross_monitor();
+    bool get_use_safety_speed_control();
+    bool get_use_safety_obstacle_detect();
+    bool get_use_safety_bumper();
+    bool get_use_safety_interlock();
 
     //set mileage
     double get_mileage();
@@ -551,6 +555,12 @@ private:
     // safety
     int MONITORING_FIELD_COUNT = 0;
     std::vector<MonitoringField> MONITORING_FIELD;
+    bool USE_SAFETY_CROSS_MONITOR = false;
+    bool USE_SAFETY_SPEED_CONTROL = false;
+    bool USE_SAFETY_OBSTACLE_DETECT = false;
+    bool USE_SAFETY_BUMPER = false;
+    bool USE_SAFETY_INTERLOCK = false;
+    
 
     QStringList load_folder_list();
 

@@ -124,6 +124,20 @@ void MOBILE::set_cur_status(MOBILE_STATUS ms)
     cur_status = ms;
 }
 
+float MOBILE::get_res_linear_dist()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    float res = cur_status.res_linear_dist;
+    return res;
+}
+
+float MOBILE::get_res_linear_remain_dist()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    float res = cur_status.res_linear_remain_dist;
+    return res;
+}
+
 MOBILE_POSE MOBILE::get_pose()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -578,6 +592,8 @@ void MOBILE::receive_data_loop()
                             imu.ry = r[1];
                             imu.rz = r[2];
 
+                            cur_status.t = mobile_t + offset_t;
+                            
                             cur_status.imu_acc_x = imu_acc_x;
                             cur_status.imu_acc_y = imu_acc_y;
                             cur_status.imu_acc_z = imu_acc_z;
@@ -663,7 +679,6 @@ void MOBILE::receive_data_loop()
 
                             // Update status
                             mtx.lock();
-
                             cur_status.om_state = om_state;
                             cur_status.ri_state = ri_state;
                             cur_status.charge_state = charge_state;
@@ -691,6 +706,8 @@ void MOBILE::receive_data_loop()
                             cur_status.safety_state_over_speed_2 = (safety_state_2 >> 5) & 0x01;
                             cur_status.safety_state_ref_meas_mismatch_2 = (safety_state_2 >> 6) & 0x01;
                             cur_status.safety_state_emo_pressed_2 = (safety_state_2 >> 7) & 0x01;
+
+                            cur_status.motor_stop_state = !(cur_status.safety_state_emo_pressed_1||cur_status.safety_state_emo_pressed_2);
 
                             // DIO/DIN
                             for(int i=0; i<8; i++)
@@ -804,7 +821,6 @@ void MOBILE::receive_data_loop()
                             status_text = mobile_status_str;
 
                             mtx.unlock();
-
                         }
 
                         if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
@@ -1914,6 +1930,25 @@ void MOBILE::config_parameter_send()
         }
     }
 
+    //set safety parameter
+    {
+        bool use_safety_cross_monitor = config->get_use_safety_cross_monitor();
+        set_safety_parameter(0, use_safety_cross_monitor);
+
+        bool use_safety_speed_control = config->get_use_safety_speed_control();
+        set_safety_parameter(1, use_safety_speed_control);
+        
+        bool use_safety_obstacle_detect = config->get_use_safety_obstacle_detect();
+        set_safety_parameter(2, use_safety_obstacle_detect);
+
+
+        bool use_safety_bumper = config->get_use_safety_bumper();
+        set_safety_parameter(3, use_safety_bumper);
+
+        bool use_safety_interlock = config->get_use_safety_interlock();
+        set_safety_parameter(4, use_safety_interlock);
+    }
+
 }
 
 // command func
@@ -2064,6 +2099,25 @@ void MOBILE::motor_on()
         }
     }
 
+    //set safety parameter
+    {
+        bool use_safety_cross_monitor = config->get_use_safety_cross_monitor();
+        set_safety_parameter(0, use_safety_cross_monitor);
+
+        bool use_safety_speed_control = config->get_use_safety_speed_control();
+        set_safety_parameter(1, use_safety_speed_control);
+        
+        bool use_safety_obstacle_detect = config->get_use_safety_obstacle_detect();
+        set_safety_parameter(2, use_safety_obstacle_detect);
+
+
+        bool use_safety_bumper = config->get_use_safety_bumper();
+        set_safety_parameter(3, use_safety_bumper);
+
+        bool use_safety_interlock = config->get_use_safety_interlock();
+        set_safety_parameter(4, use_safety_interlock);
+
+    }
     // set init
     {
         std::vector<uchar> send_byte(25, 0);
@@ -2281,12 +2335,16 @@ void MOBILE::move_linear_x(double d, double v)
 
 void MOBILE::move_linear_y(double d, double v)
 {
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model != RobotModel::MECANUM)
+    QString robot_wheel_type = config->get_robot_wheel_type();
+
+    qDebug() << robot_wheel_type;
+    if(robot_wheel_type != "MECANUM")
     {
+        qDebug() << " return";
+        //Todo -- Spdlog 추가
+        // spdlog::info("[MOBILE] move linear y is not supported for this robot wheel type");
         return;
     }
-
     // set last v,w
     vx0 = 0;
     vy0 = 0;
@@ -2306,7 +2364,7 @@ void MOBILE::move_linear_y(double d, double v)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    send_byte[7] = 118; // cmd move linear y
+    send_byte[7] = 121; // cmd move linear y
 
     memcpy(&send_byte[8], &_d, 4); // param1 dist
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
@@ -2376,6 +2434,41 @@ void MOBILE::move_rotate(double th, double w)
     {
         send_byte[7] = 118; // cmd move rotate
     }
+
+    memcpy(&send_byte[8], &_th, 4); // param1 rad
+    memcpy(&send_byte[12], &_w, 4); // param2 angular vel
+    send_byte[24] = 0x25;
+
+    if(is_connected && !config->get_use_sim())
+    {
+        msg_que.push(send_byte);
+    }
+}
+
+void MOBILE::move_circular(double th, double w, int dir)
+{
+    // set last v,w
+    vx0 = 0;
+    vy0 = 0;
+    wz0 = w;
+
+
+    // packet
+    float _th = th;
+    float _w = w;
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA0;
+    send_byte[6] = static_cast<unsigned char>(dir); // dir 0: right, 1: left
+    send_byte[7] = 119; // cmd circular motion 
+    
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
@@ -2987,7 +3080,6 @@ void MOBILE::set_detect_mode(double param)
     {
         msg_que.push(send_byte);
     }
-
 }
 
 void MOBILE::lift_power_onoff(int param)
@@ -3166,6 +3258,36 @@ int MOBILE::calc_battery_percentage(float voltage)
         //printf("[MOBILE] Unknown ROBOT_PLATFORM: %s\n", platform_type.toStdString().c_str());
         return 0;
     }
+}
+
+void MOBILE::set_safety_parameter(int target, bool param)
+{
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xA2;
+    send_byte[6] = target; 
+    // 0 - safety cross monitor 1 - safety speed control 
+    // 2 - safety obstacle detect 3 - safety bumper 4 - safety interlock
+    send_byte[7] = 0x03; // cmd
+
+    float parameter = (float)param; // 1 -detect mode || 0 - detect mode not used
+
+    memcpy(&send_byte[8], &parameter, 4);
+
+    send_byte[24] = 0x25;
+
+    if(is_connected && !config->get_use_sim())
+    {
+        msg_que.push(send_byte);
+    }
+
 }
 
 void MOBILE::set_config_module(CONFIG* _config)

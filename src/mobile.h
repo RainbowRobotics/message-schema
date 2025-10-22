@@ -78,6 +78,8 @@ public:
     bool get_is_speaker_on();
     double get_last_pose_t();
     double get_process_time_mobile();
+    float get_res_linear_dist();
+    float get_res_linear_remain_dist();
     QString get_cur_pdu_state();
     QString get_status_text();
     QString get_pose_text();
@@ -119,6 +121,7 @@ public:
     void moveQD(double vx, double vy, double wz, int hpp_side);
     void move_linear_x(double d, double v);
     void move_linear_y(double d, double v);
+    void move_circular(double th, double w, int dir);
     void move_rotate(double th, double w);
     void stop();
     void led(int target, int mode);
@@ -153,6 +156,7 @@ public:
     void lift_power_onoff(int param);
     void sem_io_speaker(unsigned int speak_num);
     void config_parameter_send();
+    void set_safety_parameter(int target, bool param);
     
 private:
     explicit MOBILE(QObject *parent = nullptr);
@@ -174,7 +178,6 @@ private:
     void recv_loop();
     bool connect_to_pdu(const QString& ip, int port);
     void receive_data_loop();
-
     // send loop
     std::atomic<bool> send_flag = {false};
     std::unique_ptr<std::thread> send_thread;
