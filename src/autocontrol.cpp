@@ -3344,6 +3344,7 @@ void AUTOCONTROL::control_loop()
 
                 fsm_state = AUTO_FSM_COMPLETE;
                 logger->write_log(QString("[AUTO] COMPLETE (already temp goal), err_d:%1").arg(err_d));
+                log_info("COMPLETE (already temp goal), err_d: {}", err_d);
                 return;
             }
 
@@ -3368,18 +3369,19 @@ void AUTOCONTROL::control_loop()
 
                 fsm_state = AUTO_FSM_COMPLETE;
                 logger->write_log(QString("[AUTO] COMPLETE (already goal), err_d: %1, err_th: %2").arg(err_d).arg(err_th*R2D));
-                //log_info("AUTO COMPLETE (already goal), err_d: {}, err_th: {}", err_d, err_th*R2D);
+                log_info("COMPLETE (already goal), err_d: {}, err_th: {}", err_d, err_th*R2D);
                 return;
             }
             else
             {
                 // jump to final align
                 fsm_state = AUTO_FSM_FINAL_ALIGN;
+                log_info("jump to final align state, err_d: {}, err_th: {}", err_d, err_th*R2D);
             }
         }
     }
     logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
-    //log_info("initial fsm state: {}", AUTO_FSM_STATE_STR[fsm_state]);
+    //log_info("initial fsm state: {}", AUTO_FSM_STATE_STR[fsm_state.load()]);
 
     // path storage
     PATH local_path;
@@ -3526,7 +3528,8 @@ void AUTOCONTROL::control_loop()
                 ref_v_oscilation_end_flag = false;
 
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
-                //log_info("FIRST_ALIGN -> DRIVING, err_th: {}", err_th*R2D.load());
+                log_info("FIRST_ALIGN -> DRIVING, err_th: {}", err_th*R2D);
+                
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 continue;
             }
@@ -3560,6 +3563,7 @@ void AUTOCONTROL::control_loop()
                 set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::OBSTACLE);
 
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> OBS, err_th:%1").arg(err_th*R2D));
+                log_info("FIRST_ALIGN -> OBS, err_th: {}", err_th*R2D);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 continue;
             }
@@ -3780,15 +3784,18 @@ void AUTOCONTROL::control_loop()
                 double cur_velocity      = mobile->get_control_input()[0];
                 double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
                 double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
-                if(config->get_use_multi())
-                {
-                    dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
-                    cur_deadzone = dynamic_deadzone;
-                }
-                else
-                {
-                    dynamic_deadzone = config->get_obs_deadzone();
-                }
+                dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                cur_deadzone = dynamic_deadzone;
+
+                //if(config->get_use_multi())
+                //{
+                //    dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                //    cur_deadzone = dynamic_deadzone;
+                //}
+                //else
+                //{
+                //    dynamic_deadzone = config->get_obs_deadzone();
+                //}
 
                 int chk_idx = cur_idx + dynamic_deadzone/AUTOCONTROL_INFO::local_path_step;
                 //int chk_idx = cu_idx + config->get_obs_deadzone()/AUTOCONTROL_INFO::local_path_step;
@@ -3818,7 +3825,7 @@ void AUTOCONTROL::control_loop()
 
                 // Dzon = deadzone, efct = effective
                 //log_info("DRIVING obs check, cur_velocity: {}, stopping_distance: {}, dynamic_deadzone: {}, chk_idx: {}", cur_velocity, stopping_distance, dynamic_deadzone, chk_idx);
-                log_info("cont_loop: obs check, obs_vel:{}, cur_vel:{},  stop_dist:{}, dyn_Dzon:{}", obs_decel_v, cur_velocity, stopping_distance, dynamic_deadzone);
+                log_debug("control_loop: obs check, obs_vel:{}, cur_vel:{},  stop_dist:{}, dyn_Dzon:{}", obs_decel_v, cur_velocity, stopping_distance, dynamic_deadzone);
          
                 if(chk_idx > (int)local_path.pos.size()-1)
                 {
@@ -4063,6 +4070,7 @@ void AUTOCONTROL::control_loop()
                     }
 
                     logger->write_log(QString("[AUTO] FINAL ALIGN COMPLETE(good), err_th: %1").arg(err_th*R2D));
+                    log_info("FINAL ALIGN COMPLETE(good), err_th: {}", err_th*R2D);
                     return;
                 }
             }
@@ -4389,8 +4397,6 @@ void AUTOCONTROL::control_loop()
                 //    continue;
                 //}
                 
-
-                
                 // test 10.18.25
                 
                 if(get_time() - obs_wait_st_time > 2.5)
@@ -4683,7 +4689,7 @@ void AUTOCONTROL::obs_loop()
             if(obs_value != OBS_NONE)
             {
                 //obs_decel_v = 0.0;
-                //log_info("obs_loop obs detected, obs_value: {}, obs_decel_v:{}", obs_value, obs_decel_v);
+                log_debug("obs_loop obs detected, obs_value: {}, obs_decel_v:{}", obs_value, obs_decel_v);
                 
             }
             
@@ -4742,6 +4748,7 @@ void AUTOCONTROL::obs_loop()
             {
                 obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
 
+                /*
                 // test 10.18.25 /////////////////
                 if(obs_condition == "none")
                 {
@@ -4754,7 +4761,7 @@ void AUTOCONTROL::obs_loop()
                     //obs_value = OBS_DYN; 
                     //obs_value = AUTO_OBS_CHECK;
                     
-                    log_info("obs_loop: obs_condition = Non, obs_dist: {}", obs_dist);
+                    log_debug("obs_loop: obs_condition = Non, obs_dist: {}", obs_dist);
                     //log_info("obs_loop dyn pts [far] obs detected, obs_dist: {}", obs_dist);
 
                 }
@@ -4766,7 +4773,7 @@ void AUTOCONTROL::obs_loop()
                     //    obs_state = AUTO_OBS_CHECK;
                     //}
                     obs_decel_v = std::min(obs_decel_v, config->get_obs_map_min_v());
-                    log_info("obs_loop: obs_condition = far, obs_dist: {}", obs_dist);
+                    log_debug("obs_loop: obs_condition = far, obs_dist: {}", obs_dist);
                 }
                 else if(obs_dist <= buf_deadzone)
                 {
@@ -4774,7 +4781,7 @@ void AUTOCONTROL::obs_loop()
                     obs_decel_v = 0.0;
                     //log_info("obs_loop dyn pts near obs detected, obs_dist: {}", obs_dist);
                     //log_info("obs_loop near obs, obs_dist: {}, obs_Dzon:{}, , efct_Dzon: {}", obs_dist, config->get_obs_deadzone(),effective_deadzone);
-                    log_info("obs_loop: obs_condition = near, obs_dist: {}", obs_dist);
+                    log_debug("obs_loop: obs_condition = near, obs_dist: {}", obs_dist);
 
                     if(obs_value == OBS_NONE)
                     {
@@ -4784,21 +4791,21 @@ void AUTOCONTROL::obs_loop()
                     }
                 }
                 /////////////////
-
+                */
 
             }
             else
             {
                 obs_dist = std::numeric_limits<double>::max();
-                //log_info("obs_loop no forward dyn pts detected");
+                log_debug("obs_loop no forward dyn pts detected");
             }
 
             // test 10.18.25
-            //if(obs_condition != "none" && obs_decel_v > 0.0)
-            //{
-            //    //obs_decel_v = 0.0;
-            //    log_info("obs_loop dyn pts, obs_condition: {}, obs_decel_v:{}", obs_condition.toUtf8().constData(),obs_decel_v);
-            //}
+            if(obs_condition != "none" && obs_decel_v > 0.0)
+            {
+                //obs_decel_v = 0.0;
+                log_debug("obs_loop dyn pts, obs_condition: {}, obs_decel_v:{}", obs_condition.toUtf8().constData(),obs_decel_v);
+            }
 
             // final update(conclusion)
             {
