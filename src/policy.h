@@ -33,7 +33,6 @@ public:
     /***********************
      * interface funcs
      ***********************/
-
     QString get_cur_node();
     QString get_cur_link();
     QString get_cur_zone();
@@ -50,8 +49,8 @@ public:
     void set_unimap_module(UNIMAP* _unimap);
     void set_localization_module(LOCALIZATION* _localization);
 
-    std::vector<PATH> slice_path(PATH path);
-    void link_speed(const PATH& path, std::vector<double>& ref_v);
+    std::vector<PATH> drive_policy(PATH path);
+    void speed_policy(const PATH& path, std::vector<double>& ref_v);
 
 
 

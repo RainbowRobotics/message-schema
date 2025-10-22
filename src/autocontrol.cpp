@@ -662,7 +662,7 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
-        std::vector<PATH> policy_path = policy->slice_path(path);
+        std::vector<PATH> policy_path = policy->drive_policy(path);
 
         std::vector<PATH> tmp_storage;
         tmp_storage.reserve(policy_path.size());
@@ -841,7 +841,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         }
 
         // policy path
-        std::vector<PATH> policy_path = policy->slice_path(path);
+        std::vector<PATH> policy_path = policy->drive_policy(path);
         bool first_seg = true;
         if(!policy_path.empty())
         {
@@ -2842,7 +2842,7 @@ PATH AUTOCONTROL::calc_local_path(PATH& global_path)
         tmp.pose = path_pose;
         tmp.pos = path_pos;
         tmp.node = global_path.node;
-        policy->link_speed(tmp, ref_v);
+        policy->speed_policy(tmp, ref_v);
 
         //        std::cout << "Original ref_v ------------------------------------" << std::endl;
         //        for(int i=0; i<ref_v.size(); i++){

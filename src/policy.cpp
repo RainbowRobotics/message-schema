@@ -141,7 +141,7 @@ void POLICY::set_localization_module(LOCALIZATION *_loc)
     loc = _loc;
 }
 
-std::vector<PATH> POLICY::slice_path(PATH path)
+std::vector<PATH> POLICY::drive_policy(PATH path)
 {
     global_path = path;
 
@@ -212,7 +212,7 @@ std::vector<PATH> POLICY::slice_path(PATH path)
     return res;
 }
 
-void POLICY::link_speed(const PATH& path, std::vector<double>& ref_v)
+void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
 {
     if(path.node.size() < 2 || path.pose.size() == 0 || ref_v.size() != path.pose.size())
     {
