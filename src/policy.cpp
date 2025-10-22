@@ -325,12 +325,12 @@ void POLICY::link_speed(const PATH& path, std::vector<double>& ref_v)
     }
 
     // debug
-    printf("[POLICY] ----- ref_v after applying link speed -----\n");
-    for(size_t i = 0; i < ref_v.size(); i++)
-    {
-        printf("idx=%3zu  ref_v=%.3f\n", i, ref_v[i]);
-    }
-    printf("[POLICY] ------------------------------------------\n");
+    // printf("[POLICY] ----- ref_v after applying link speed -----\n");
+    // for(size_t i = 0; i < ref_v.size(); i++)
+    // {
+    //     printf("idx=%3zu  ref_v=%.3f\n", i, ref_v[i]);
+    // }
+    // printf("[POLICY] ------------------------------------------\n");
 }
 
 void POLICY::node_loop()
