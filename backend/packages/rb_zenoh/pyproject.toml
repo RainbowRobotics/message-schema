@@ -12,7 +12,7 @@ dependencies = [
     "psutil>=7.0.0,<8.0.0",
     "flatbuffers>=25.2.10,<26.0.0",
     "fastapi>=0.116.1",
-    "utils",
+    "rb_utils",
     "rb_modules",
 ]
 
@@ -22,5 +22,5 @@ dev = [
 ]
 
 [tool.uv.sources]
-utils = { workspace = true }
+rb_utils = { workspace = true }
 rb_modules = { workspace = true }

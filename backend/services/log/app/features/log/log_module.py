@@ -16,8 +16,8 @@ from rb_database.utils import (
     make_check_search_text_query,
 )
 from rb_modules.log import rb_log
-from utils.asyncio_helper import fire_and_log
-from utils.file import content_disposition_header, sanitize_filename
+from rb_utils.asyncio_helper import fire_and_log
+from rb_utils.file import content_disposition_header, sanitize_filename
 
 
 class LogService:

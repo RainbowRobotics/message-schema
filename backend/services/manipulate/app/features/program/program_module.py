@@ -21,8 +21,8 @@ from rb_flat_buffers.IPC.Request_Move_TickJogJ import Request_Move_TickJogJT
 from rb_flat_buffers.IPC.Request_Move_TickJogL import Request_Move_TickJogLT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
+from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
-from utils.parser import t_to_dict
 
 from .program_schema import (
     Request_MoveJBAddPD,

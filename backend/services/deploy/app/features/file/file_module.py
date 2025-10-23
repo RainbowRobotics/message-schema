@@ -9,8 +9,8 @@ from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from rb_flat_buffers.deploy.Response_Deploy_Upload import Response_Deploy_UploadT
 from rb_modules.log import rb_log
+from rb_utils.asyncio_helper import fire_and_log
 from rb_zenoh.client import ZenohClient
-from utils.asyncio_helper import fire_and_log
 
 zenoh_client = ZenohClient()
 

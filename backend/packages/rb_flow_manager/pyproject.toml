@@ -13,12 +13,12 @@ authors = [
 readme = "README.md"
 
 dependencies = [
-  "utils",
+  "rb_utils",
   "rb_zenoh",
   "rb_flat_buffers",
 ]
 
 [tool.uv.sources]
-utils = { workspace = true }
+rb_utils = { workspace = true }
 rb_zenoh = { workspace = true }
 rb_flat_buffers = { workspace = true }

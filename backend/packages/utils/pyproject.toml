@@ -1,8 +1,8 @@
 [project]
-name = "utils"
+name = "rb_utils"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-description = "Common utilities"
+description = "Rainbow Python Utilities"
 authors = [
     { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
 ]

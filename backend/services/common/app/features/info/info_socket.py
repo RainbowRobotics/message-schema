@@ -1,6 +1,6 @@
 import rb_database.mongo_db as mongo_db
 from rb_socketio import RbSocketIORouter
-from utils.parser import to_json
+from rb_utils.parser import to_json
 
 from .info_module import InfoService
 

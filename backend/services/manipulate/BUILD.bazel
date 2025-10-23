@@ -11,7 +11,7 @@ py_library(
         requirement("python-dotenv"),
          requirement("uvicorn"),
          requirement("pyinstaller"),
-        "//backend/packages/utils:utils",
+        "//backend/packages/rb_utils:rb_utils",
         "//backend/packages/rb_zenoh:rb_zenoh",
         "//backend/packages/flat_buffers:flat_buffers",
         "//schemas/rb/v1:rb_v1_py",

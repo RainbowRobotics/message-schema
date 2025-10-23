@@ -16,7 +16,7 @@ from typing import Any
 import flatbuffers
 import psutil
 from flatbuffers.table import Table
-from utils.parser import t_to_dict
+from rb_utils.parser import t_to_dict
 from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError
 from zenoh import open as zenoh_open
 

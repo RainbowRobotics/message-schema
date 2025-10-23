@@ -9,7 +9,7 @@ authors = [
 readme = "README.md"
 
 dependencies = [
-  "utils",
+  "rb_utils",
   "rb_zenoh",
   "rb_flat_buffers",
   "rb_socketio",
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-utils = { workspace = true }
+rb_utils = { workspace = true }
 rb_zenoh = { workspace = true }
 rb_flat_buffers = { workspace = true }
 rb_socketio = { workspace = true }

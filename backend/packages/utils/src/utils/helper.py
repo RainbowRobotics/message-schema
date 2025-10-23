@@ -2,7 +2,7 @@ import asyncio
 import socket
 from typing import Any
 
-from utils.parser import t_to_dict
+from rb_utils.parser import t_to_dict
 
 
 def ManipulateZenohResHelper(obj: Any):

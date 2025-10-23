@@ -10,10 +10,10 @@ readme = "README.md"
 
 dependencies = [
     "fastapi>=0.116.1",
-    "utils",
+    "rb_utils",
     "pydantic-settings>=2.10.1",
     "motor>=3.7.1",
 ]
 
 [tool.uv.sources]
-utils = { workspace = true }
+rb_utils = { workspace = true }

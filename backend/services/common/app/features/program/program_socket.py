@@ -1,5 +1,5 @@
 from rb_socketio import RbSocketIORouter
-from utils.parser import to_json
+from rb_utils.parser import to_json
 
 from .program_module import ProgramService
 

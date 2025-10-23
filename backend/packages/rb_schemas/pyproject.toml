@@ -11,8 +11,8 @@ readme = "README.md"
 dependencies = [
     "flatbuffers>=25.2.10,<26.0.0",
     "fastapi>=0.116.1",
-    "utils",
+    "rb_utils",
 ]
 
 [tool.uv.sources]
-utils = { workspace = true }
+rb_utils = { workspace = true }

@@ -1,5 +1,5 @@
 from rb_socketio import RbSocketIORouter
-from utils.parser import t_to_dict, to_json
+from rb_utils.parser import t_to_dict, to_json
 
 from .io_module import IoService
 
