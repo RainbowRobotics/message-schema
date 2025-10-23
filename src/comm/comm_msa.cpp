@@ -789,37 +789,45 @@ QJsonValue COMM_MSA::convertItem(sio::message::ptr item)
     }
 }
 
-
-
 void COMM_MSA::handle_path_cmd(const QJsonObject& data)
 {
-    DATA_PATH msg;
-    msg.path          = get_json(data, "path");
-
-    QJsonArray path_array = data.value("path").toArray();
-
-    if (path_array.isEmpty())
-        return;
-
-    QStringList path_list;
-    for (const QJsonValue &val : path_array)
+    if(is_before_given_path)
     {
-        path_list << val.toString();
-    }
+        DATA_PATH msg;
+        msg.path          = get_json(data, "path");
 
-    msg.path = path_list.join(",");
-    qDebug()<<msg.path;
+        QJsonArray path_array = data.value("path").toArray();
 
-    msg.time          = get_json(data, "time").toLongLong();
-    msg.preset        = get_json_int(data, "preset");
-    //    msg.direction     = get_json(data, "direction");
-    msg.action        = get_json(data, "action");
-    msg.command       = get_json(data, "command");
-    msg.vobs_closures = get_json(data, "vobs_c");
-    {
-        std::lock_guard<std::mutex> lock(path_mtx);
-        path_queue.push(msg);
+        if (path_array.isEmpty())
+        {
+            return;
+        }
+
+        QStringList path_list;
+        for (const QJsonValue &val : path_array)
+        {
+            QString name = val.toString();
+             NODE* node = unimap->get_node_by_name(name);
+             if(node)
+             {
+                 path_list << node->id;
+             }
+        }
+
+        msg.path = path_list.join(",");
+        msg.time          = get_json(data, "time").toLongLong();
+        msg.preset        = get_json_int(data, "preset");
+        msg.action        = get_json(data, "action");
+        msg.command       = get_json(data, "command");
+        msg.vobs_closures = get_json(data, "vobs_c");
+        //        qDebug()<<" msg.path : "<< msg.path;
+
+        {
+            std::lock_guard<std::mutex> lock(path_mtx);
+            path_queue.push(msg);
+        }
     }
+    is_before_given_path = false;
 
     path_cv.notify_one();
 }
@@ -3618,7 +3626,10 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
 
         if(config->get_use_multi())
         {
+            is_before_given_path = true;
             fms_cmd_direction = msg.direction;
+
+//            log_info("Move goal accepted — waiting for path from upper system");
             //            qDebug()<<"is multi mode is working";
         }
         else

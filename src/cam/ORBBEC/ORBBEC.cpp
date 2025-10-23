@@ -269,6 +269,7 @@ void ORBBEC::grab_loop(int idx)
     for(int i=0; i<dev_count; i++)
     {
         QString sn = dev_list->getDevice(i)->getDeviceInfo()->serialNumber();
+        qDebug()<<"cam serial number : "<<sn<<"count : "<<i;
         if(sn == config->get_cam_serial_number(idx))
         {
             dev_match_success = true;
@@ -325,8 +326,6 @@ void ORBBEC::grab_loop(int idx)
     Eigen::Matrix4d TF = string_to_TF(config->get_cam_tf(idx));
     Eigen::Matrix3d TF_R = TF.block(0,0,3,3);
     Eigen::Vector3d TF_t = TF.block(0,3,3,1);
-
-
 
     std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
 

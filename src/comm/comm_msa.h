@@ -183,6 +183,7 @@ private:
     std::atomic<bool> is_common_running = {true};
     std::atomic<bool> is_response_running = {true};
     std::atomic<bool> is_send_status_running = {true};
+    std::atomic<bool> is_before_given_path = {false};
 
     std::unique_ptr<std::thread> move_thread;
     std::unique_ptr<std::thread> load_thread;

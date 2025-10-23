@@ -4139,40 +4139,47 @@ void MainWindow::plot_ctrl()
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
                               arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
-
 void MainWindow::plot_cam()
 {
-    //spdlog::debug("[MAIN] plot_cam");
     log_debug("plot_cam");
 
     int cam_num = CONFIG::instance()->get_cam_num();
-    for(int i = 0 ; i<cam_num;i++)
+    for (int i = 0; i < cam_num; i++)
     {
-        if(CAM::instance()->get_connection(i))
+        if (!CAM::instance()->get_connection(i))
         {
-            cv::Mat plot = CAM::instance()->get_time_img(i).img;
-            if(!plot.empty())
+            continue;
+        }
+
+        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
+        if (plot.empty())
+        {
+            continue;
+        }
+
+        QString labelName = QString("lb_Screen%1").arg(i + 2);
+        QLabel* label = this->findChild<QLabel*>(labelName);
+        if (!label)
+        {
+            log_error("plot_cam, {} not found", labelName.toStdString());
+            continue;
+        }
+
+        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
+//        qDebug()<<cam_tf;
+        if (cam_tf.size() >= 4)
+        {
+            bool ok = false;
+            double yaw_deg = cam_tf[3].toDouble(&ok);
+            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
             {
-                //                cv::flip(plot,plot,0);
-
-                // QLabel name create dynamically
-                QString labelName = QString("lb_Screen%1").arg(i+2); // lb_Screen2, lb_Screen3 ...
-                QLabel* label = this->findChild<QLabel*>(labelName);
-
-                if(label)
-                {
-                    label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-                    label->setScaledContents(true);
-                    label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-                }
-                else
-                {
-                    //qDebug() << labelName << " not found!";
-                    spdlog::error("[MAIN] plot_cam,{}not found", labelName.toStdString());
-                    log_error("plot_cam,{}not found", labelName.toStdString());
-                }
+                cv::flip(plot, plot, 0);
             }
         }
+
+        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+        label->setScaledContents(true);
+        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     }
 
     /*
@@ -4535,11 +4542,14 @@ void MainWindow::getIPv4()
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
+//        if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
+//                addr != QHostAddress::LocalHost &&
+//                addr != QHostAddress("192.168.1.5") &&
+//                addr != QHostAddress("192.168.2.2"))
         if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
-                addr != QHostAddress::LocalHost &&
-                addr != QHostAddress("192.168.1.5") &&
-                addr != QHostAddress("192.168.2.2"))
+                addr != QHostAddress::LocalHost)
         {
+            qDebug()<<addr.toString();
             ui->lb_RobotIP->setText(addr.toString());
             return;
         }
