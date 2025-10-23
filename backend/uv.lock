@@ -16,8 +16,8 @@ members = [
     "rb-resources",
     "rb-schemas",
     "rb-socketio",
+    "rb-utils",
     "rb-zenoh",
-    "utils",
 ]
 
 [[package]]
@@ -181,9 +181,9 @@ dependencies = [
     { name = "rb-modules" },
     { name = "rb-resources" },
     { name = "rb-schemas" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
     { name = "redis" },
-    { name = "utils" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -198,9 +198,9 @@ requires-dist = [
     { name = "rb-modules", editable = "packages/rb_modules" },
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
     { name = "redis", specifier = ">=6.4.0" },
-    { name = "utils", editable = "packages/utils" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
 ]
 
@@ -219,8 +219,8 @@ dependencies = [
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
-    { name = "utils" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -236,8 +236,8 @@ requires-dist = [
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
-    { name = "utils", editable = "packages/utils" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
 ]
 
@@ -391,8 +391,8 @@ dependencies = [
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
-    { name = "utils" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -407,8 +407,8 @@ requires-dist = [
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
-    { name = "utils", editable = "packages/utils" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
 ]
 
@@ -438,8 +438,8 @@ dependencies = [
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
-    { name = "utils" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -454,8 +454,8 @@ requires-dist = [
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
-    { name = "utils", editable = "packages/utils" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<0.36.0" },
 ]
 
@@ -881,7 +881,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "motor" },
     { name = "pydantic-settings" },
-    { name = "utils" },
+    { name = "rb-utils" },
 ]
 
 [package.metadata]
@@ -889,7 +889,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "motor", specifier = ">=3.7.1" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
-    { name = "utils", editable = "packages/utils" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
 ]
 
 [[package]]
@@ -913,15 +913,15 @@ version = "0.1.0"
 source = { editable = "packages/rb_flow_manager" }
 dependencies = [
     { name = "rb-flat-buffers" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
-    { name = "utils" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
-    { name = "utils", editable = "packages/utils" },
 ]
 
 [[package]]
@@ -938,8 +938,8 @@ dependencies = [
     { name = "rb-resources" },
     { name = "rb-schemas" },
     { name = "rb-socketio" },
+    { name = "rb-utils" },
     { name = "rb-zenoh" },
-    { name = "utils" },
 ]
 
 [package.metadata]
@@ -953,8 +953,8 @@ requires-dist = [
     { name = "rb-resources", editable = "packages/rb_resources" },
     { name = "rb-schemas", editable = "packages/rb_schemas" },
     { name = "rb-socketio", editable = "packages/rb_socketio" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
-    { name = "utils", editable = "packages/utils" },
 ]
 
 [[package]]
@@ -969,14 +969,14 @@ source = { editable = "packages/rb_schemas" }
 dependencies = [
     { name = "fastapi" },
     { name = "flatbuffers" },
-    { name = "utils" },
+    { name = "rb-utils" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
-    { name = "utils", editable = "packages/utils" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
 ]
 
 [[package]]
@@ -999,6 +999,17 @@ requires-dist = [
 ]
 
 [[package]]
+name = "rb-utils"
+version = "0.1.0"
+source = { editable = "packages/rb_utils" }
+dependencies = [
+    { name = "psutil" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "psutil", specifier = ">=7.0.0,<8.0.0" }]
+
+[[package]]
 name = "rb-zenoh"
 version = "0.1.0"
 source = { editable = "packages/rb_zenoh" }
@@ -1007,7 +1018,7 @@ dependencies = [
     { name = "flatbuffers" },
     { name = "psutil" },
     { name = "rb-modules" },
-    { name = "utils" },
+    { name = "rb-utils" },
 ]
 
 [package.dev-dependencies]
@@ -1021,7 +1032,7 @@ requires-dist = [
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
     { name = "psutil", specifier = ">=7.0.0,<8.0.0" },
     { name = "rb-modules", editable = "packages/rb_modules" },
-    { name = "utils", editable = "packages/utils" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
 ]
 
 [package.metadata.requires-dev]
@@ -1124,17 +1135,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/9b/47798a6c91d8bdb567fe2698fe81e0c6b7cb7ef4d13da4114b41d239f65d/typing_inspection-0.4.2-py3-none-any.whl", hash = "sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7", size = 14611, upload-time = "2025-10-01T02:14:40.154Z" },
 ]
-
-[[package]]
-name = "utils"
-version = "0.1.0"
-source = { editable = "packages/utils" }
-dependencies = [
-    { name = "psutil" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "psutil", specifier = ">=7.0.0,<8.0.0" }]
 
 [[package]]
 name = "uvicorn"
