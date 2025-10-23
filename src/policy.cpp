@@ -228,21 +228,21 @@ void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
             continue;
         }
 
-        Eigen::Vector3d npos = node->tf.block(0,3,3,1);
+        Eigen::Vector3d node_pos = node->tf.block(0,3,3,1);
 
-        double best_d2 = 1e100;
+        double best_d = 1e100;
         int best_k = 0;
 
         for(size_t k = 0; k < path.pose.size(); k++)
         {
-            double dx = path.pose[k](0,3) - npos.x();
-            double dy = path.pose[k](1,3) - npos.y();
-            double dz = path.pose[k](2,3) - npos.z();
-            double d2 = dx*dx + dy*dy + dz*dz;
+            double dx = path.pose[k](0,3) - node_pos.x();
+            double dy = path.pose[k](1,3) - node_pos.y();
+            double dz = path.pose[k](2,3) - node_pos.z();
+            double d = dx*dx + dy*dy + dz*dz;
 
-            if(d2 < best_d2)
+            if(d < best_d)
             {
-                best_d2 = d2;
+                best_d = d;
                 best_k = (int)k;
             }
         }
@@ -250,18 +250,7 @@ void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
         node_idx[i] = best_k;
     }
 
-    for(size_t i = 1; i < node_idx.size(); i++)
-    {
-        if(node_idx[i] <= node_idx[i-1])
-        {
-            node_idx[i] = node_idx[i-1] + 1;
-            if(node_idx[i] >= (int)path.pose.size())
-            {
-                node_idx[i] = (int)path.pose.size() - 1;
-            }
-        }
-    }
-
+    // make speed_map (link, speed)
     std::unordered_map<std::string, double> speed_map;
     {
         std::vector<LINK_INFO> links = unimap->get_special_links();
@@ -272,32 +261,27 @@ void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
                 continue;
             }
 
-            QString a = links[j].st_id;
-            QString b = links[j].ed_id;
-            QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
-            std::string key = key_q.toStdString();
-
-            if(speed_map.find(key) == speed_map.end())
+            std::string key = (links[j].st_id + "->" + links[j].ed_id).toStdString();
+            auto it = speed_map.find(key);
+            if(it == speed_map.end())
             {
                 speed_map[key] = links[j].speed;
             }
             else
             {
-                if(links[j].speed < speed_map[key])
+                // overwrite
+                if(links[j].speed < it->second)
                 {
-                    speed_map[key] = links[j].speed;
+                    it->second = links[j].speed;
                 }
             }
         }
     }
 
+    // edit ref_v
     for(size_t i = 0; i + 1 < path.node.size(); i++)
     {
-        QString a = path.node[i];
-        QString b = path.node[i+1];
-        QString key_q = (a < b) ? (a + "|" + b) : (b + "|" + a);
-        std::string key = key_q.toStdString();
-
+        std::string key = (path.node[i] + "->" + path.node[i+1]).toStdString();
         auto it = speed_map.find(key);
         if(it == speed_map.end())
         {
@@ -305,17 +289,7 @@ void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
         }
 
         double link_v = it->second;
-        int s = node_idx[i];
-        int e = node_idx[i+1];
-        if(s > e)
-        {
-            int tmp = s; s = e; e = tmp;
-        }
-
-        if(s < 0) s = 0;
-        if(e >= (int)ref_v.size()) e = (int)ref_v.size() - 1;
-
-        for(int k = s; k <= e; k++)
+        for(int k = node_idx[i]; k <= node_idx[i+1]; k++)
         {
             if(ref_v[k] > link_v)
             {
