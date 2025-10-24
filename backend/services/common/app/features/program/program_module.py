@@ -1,9 +1,12 @@
 import asyncio
 import time
+from datetime import UTC, datetime
 
 from app.socket.socket_client import socket_client
+from bson import ObjectId
 from fastapi import HTTPException
-from rb_database import mongo_db
+from pymongo.operations import UpdateOne
+from rb_database import MongoDB, mongo_db
 from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
@@ -14,6 +17,16 @@ from rb_resources.file import read_json_file
 from rb_utils.asyncio_helper import fire_and_log
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+
+from .program_schema import (
+    Request_Create_FlowPD,
+    Request_Create_Multiple_FlowPD,
+    Request_Create_Multiple_TaskPD,
+    Request_Create_ProgramPD,
+    Request_Update_FlowPD,
+    Request_Update_Multiple_FlowPD,
+    Request_Update_ProgramPD,
+)
 
 zenoh_client = ZenohClient()
 
@@ -150,3 +163,303 @@ class ProgramService(BaseService):
         except Exception as e:
             rb_log.error(f"call_smoothjog_stop error: {e}", disable_db=True)
             raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e
+
+    # def upload_program_python_script(self, *, script_name: str, script_content: str):
+    #     try:
+    #         col = mongo_db.db["program_script"]
+    #         await col.insert_one({"script_name": script_name, "script_content": script_content})
+    #     except Exception as e:
+    #         raise e
+
+    # async def get_task_status(self, *, robot_model: str, task_id: str):
+    #     col = mongo_db.db["tasks"]
+
+    #     doc = await col.find_one(
+    #         {"robot_model": robot_model, "_id": task_id},
+    #     )
+
+    #     if not doc:
+    #         return None
+
+    #     doc = dict(doc)
+
+    #     doc["task_id"] = doc.pop("_id")
+
+    #     return doc
+
+    # async def set_task_status(self, *, task_id: str, request: Request_Set_Task_StatusPD):
+    #     status = request["status"]
+    #     program_id = request["program_id"]
+    #     sync_task_ids = request["sync_task_ids"]
+    #     node_path = request["node_path"]
+    #     offset = request["offset"]
+    #     updated_at = datetime.now(UTC)
+
+    #     col = mongo_db.db["tasks"]
+
+    #     doc = await col.update_one(
+    #         {"_id": task_id},
+    #         {
+    #             "$set": {
+    #                 "status": status,
+    #                 "program_id": program_id,
+    #                 "sync_task_ids": sync_task_ids,
+    #                 "node_path": node_path,
+    #                 "offset": offset,
+    #                 "updated_at": updated_at,
+    #             }
+    #         },
+    #         upsert=True,
+    #     )
+
+    #     if doc.get("status") == ProgramStatus.ERROR:
+    #         rb_log.error(f"Task error: {task_id}")
+
+    #     req = RB_Program_Task_StatusT()
+
+    #     req.status = status
+    #     req.taskId = task_id
+    #     req.programId = program_id
+    #     req.syncTaskIds = sync_task_ids
+    #     req.nodePath = node_path
+    #     req.offset = offset
+
+    #     zenoh_client.publish("/change-task-status", flatbuffer_req_obj=req, flatbuffer_buf_size=100)
+
+    #     return doc
+
+    # async def set_task_checkpoint(self, *, task_id: str, request: Request_Set_Task_CheckpointPD):
+    #     program_id = request["program_id"]
+    #     sync_task_ids = request["sync_task_ids"]
+    #     node_path = request["node_path"]
+    #     offset = request["offset"]
+    #     updated_at = datetime.now(UTC)
+
+    #     col = mongo_db.db["tasks"]
+
+    #     doc = await col.update_one(
+    #         {"_id": task_id},
+    #         {
+    #             "$set": {
+
+    async def upsert_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
+        now = datetime.now(UTC).isoformat()
+
+        tasks_col = db["tasks"]
+        flows_col = db["flows"]
+
+        tasks = [task.model_dump() for task in request.tasks]
+
+        flow_ids = {t["flowId"] for t in tasks}
+        record_find_flow_ids = []
+
+        for fid in flow_ids:
+            if fid not in record_find_flow_ids:
+                continue
+
+            find_doc = await flows_col.find_one({"_id": ObjectId(fid)})
+
+            if not find_doc:
+                raise HTTPException(status_code=400, detail=f"Invalid flowId: {fid}")
+
+            record_find_flow_ids.append(fid)
+
+        ops: list[UpdateOne] = []
+        index_map: list[tuple[int, str | None]] = []  # (tasks 인덱스, 기존 taskId)
+
+        for i, doc in enumerate(tasks):
+            doc["updatedAt"] = now
+            set_on_insert = {}
+
+            tid = doc.pop("taskId", None)
+
+            q = {"_id": ObjectId(tid)}
+
+            print(f"tid: {tid}", flush=True)
+
+            if tid is not None:
+                find_task_doc = await tasks_col.find_one(q, {"_id": 0, "createdAt": 1})
+                doc["createdAt"] = find_task_doc["createdAt"]
+            else:
+                doc["createdAt"] = now
+                set_on_insert = {"createdAt": now}
+
+            ops.append(
+                UpdateOne(
+                    q,
+                    {"$set": doc, "$setOnInsert": set_on_insert},
+                    upsert=True,
+                )
+            )
+
+            index_map.append((i, tid))
+
+        res = await tasks_col.bulk_write(ops, ordered=False)
+
+        print(f"res: {res}", flush=True)
+
+        for op_idx, oid in (res.upserted_ids or {}).items():
+            i, _ = index_map[op_idx]
+            tasks[i]["taskId"] = str(oid)
+
+        return tasks
+
+    async def create_flows(self, *, request: Request_Create_Multiple_FlowPD, db: MongoDB):
+        flows_col = db["flows"]
+        program_col = db["programs"]
+
+        flows = [flow.model_dump() for flow in request.flows]
+
+        program_ids = {f["programId"] for f in flows}
+        record_find_program_ids = []
+
+        for pid in program_ids:
+            if pid not in record_find_program_ids:
+                continue
+
+            if not await program_col.find_one({"_id": ObjectId(pid)}):
+                raise HTTPException(status_code=400, detail=f"Invalid programId: {pid}")
+
+            record_find_program_ids.append(pid)
+
+        res = await flows_col.insert_many(flows)
+
+        for flow, inserted_id in zip(flows, res.inserted_ids, strict=False):
+            flow["flowId"] = str(inserted_id)
+            flow.pop("_id", None)
+
+        return flows
+
+    async def update_flows(self, *, request: Request_Update_Multiple_FlowPD, db: MongoDB):
+        now = datetime.now(UTC).isoformat()
+        ops = []
+
+        flows_col = db["flows"]
+        program_col = db["programs"]
+
+        flows = [flow.model_dump(exclude_none=True) for flow in request.flows]
+
+        program_ids = {f["programId"] for f in flows}
+
+        record_find_program_ids = []
+        updated_flow_ids = []
+
+        for pid in program_ids:
+            if pid not in record_find_program_ids:
+                continue
+
+            if not await program_col.find_one({"_id": ObjectId(pid)}):
+                raise HTTPException(status_code=400, detail=f"Invalid programId: {pid}")
+
+            record_find_program_ids.append(pid)
+
+        for flow in flows:
+            fid = flow.pop("flowId")
+            flow["updatedAt"] = now
+            ops.append(UpdateOne({"_id": ObjectId(fid)}, {"$set": flow}))
+            updated_flow_ids.append(fid)
+
+        if ops:
+            await flows_col.bulk_write(ops, ordered=False)
+
+        res = await flows_col.find({"_id": {"$in": [ObjectId(fid) for fid in updated_flow_ids]}})
+
+        for doc in res:
+            doc["flowId"] = str(doc.pop("_id"))
+
+        return res
+
+    async def update_program_and_flows(self, *, request: Request_Update_ProgramPD, db: MongoDB):
+        try:
+            now = datetime.now(UTC)
+
+            program_doc = {
+                **request.program.model_dump(exclude_none=True),
+                "updatedAt": now.isoformat(),
+            }
+
+            col = db["programs"]
+
+            find_doc = await col.find_one({"name": program_doc["name"]})
+
+            if not find_doc:
+                raise HTTPException(status_code=400, detail="Program not found")
+
+            program_res = await col.update_one(
+                {"_id": ObjectId(program_doc["programId"])}, {"$set": program_doc}
+            )
+
+            for flow in request.flows:
+                flow.programId = str(program_res["_id"])
+
+            flows_res = await self.update_flows(
+                request=Request_Update_Multiple_FlowPD(
+                    flows=[
+                        Request_Update_FlowPD(**f.model_dump(exclude_none=True))
+                        for f in request.flows
+                    ]
+                ),
+                db=db,
+            )
+
+            return {
+                "program": program_res,
+                "flows": flows_res,
+            }
+        except Exception as e:
+            raise e
+
+    async def create_program_and_flows(self, *, request: Request_Create_ProgramPD, db: MongoDB):
+        try:
+            now = datetime.now(UTC)
+
+            program_doc = {
+                **request.program.model_dump(exclude_none=True),
+                "createdAt": now.isoformat(),
+                "updatedAt": now.isoformat(),
+            }
+
+            col = db["programs"]
+
+            find_doc = await col.find_one({"name": program_doc["name"]})
+
+            if find_doc:
+                raise HTTPException(status_code=400, detail="Program already exists")
+
+            program_res = await col.insert_one(program_doc)
+
+            program_doc["programId"] = str(program_res.inserted_id)
+            program_doc.pop("_id", None)
+
+            for flow in request.flows:
+                flow.programId = str(program_res.inserted_id)
+                flow.name = f'{flow.robotModel}_{program_doc["name"]}'
+                flow.createdAt = now.isoformat()
+                flow.updatedAt = now.isoformat()
+
+            flows_res = await self.create_flows(
+                request=Request_Create_Multiple_FlowPD(
+                    flows=[
+                        Request_Create_FlowPD(**f.model_dump(exclude_none=True))
+                        for f in request.flows
+                    ]
+                ),
+                db=db,
+            )
+
+        except Exception as e:
+            raise e
+
+        return {
+            "program": program_res,
+            "flows": flows_res,
+        }
+
+    async def delete_program(self, *, program_id: str, db: MongoDB):
+        program_col = db["programs"]
+        res = await program_col.delete_one({"_id": program_id})
+
+        flows_col = db["flows"]
+        await flows_col.delete_many({"programId": program_id})
+
+        return res

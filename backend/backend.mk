@@ -1,8 +1,9 @@
 PY ?= python3
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
-ROOT_DIR := $(cd "$SCRIPT_DIR/../.." && pwd)
+
 WORKDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR := $(cd "${WORKDIR}/.." && pwd)
 CONF_PORT ?= $(shell grep ^PORT= ${WORKDIR}/services/${SERVICE}/config.env | cut -d '=' -f2)
 
 .PHONY: backend.sync
@@ -61,6 +62,8 @@ backend.preview: ## Backend 운영 환경 실행
 
 .PHONY: backend.flatc
 backend.flatc: ## FlatBuffers 코드 생성
+	echo "WORKDIR: $(WORKDIR)"
+	echo "ROOT_DIR: $(ROOT_DIR)"
 	@if command -v flatc >/dev/null 2>&1; then \
 		find "$(WORKDIR)/packages/rb_flat_buffers/src/rb_flat_buffers" -mindepth 1 -exec rm -rf {} +; \
 		find "${WORKDIR}/../schemas" -name "*.fbs" -exec flatc --python --gen-object-api --gen-all --python-typing --python-gen-numpy -o "${WORKDIR}/packages/rb_flat_buffers/src/rb_flat_buffers" {} \; ; \

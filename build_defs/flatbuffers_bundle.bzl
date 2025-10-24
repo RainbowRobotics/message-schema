@@ -1,6 +1,6 @@
 load("@flatbuffers//:build_defs.bzl", "flatbuffer_library_public")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("@rules_python//python:py_library.bzl", "py_library")
+# load("@rules_python//python:py_library.bzl", "py_library")
 
 def _basename_no_ext(path):
     """Returns the base name of a file without its extension."""
@@ -20,26 +20,26 @@ def flatbuffers_bundle(name, srcs, out_dir = "", visibility = None):
 
     for s in srcs:
         base = _basename_no_ext(s)
-        py_out = "{}/{}_fb.py".format(out_dir, base) if out_dir else "{}_fb.py".format(base)
+        # py_out = "{}/{}_fb.py".format(out_dir, base) if out_dir else "{}_fb.py".format(base)
         cc_out = "{}/{}_generated.h".format(out_dir, base) if out_dir else "{}_generated.h".format(base)
 
-        py_outs.append(py_out)
+        # py_outs.append(py_out)
         cc_outs.append(cc_out)
 
-        flatbuffer_library_public(
-            name = "{}_{}_py".format(name, base),
-            srcs = [s],
-            outs = [py_out],
-            flatc_args = [
-                "--gen-onefile",
-                "--filename-suffix",
-                "_fb",
-                "--filename-ext",
-                "py",
-            ],
-            language_flag = "--python",
-            visibility = visibility,
-        )
+        # flatbuffer_library_public(
+        #     name = "{}_{}_py".format(name, base),
+        #     srcs = [s],
+        #     outs = [py_out],
+        #     flatc_args = [
+        #         "--gen-onefile",
+        #         "--filename-suffix",
+        #         "_fb",
+        #         "--filename-ext",
+        #         "py",
+        #     ],
+        #     language_flag = "--python",
+        #     visibility = visibility,
+        # )
 
         flatbuffer_library_public(
             name = "{}_{}_cc".format(name, base),
@@ -62,9 +62,9 @@ def flatbuffers_bundle(name, srcs, out_dir = "", visibility = None):
         visibility = visibility,
     )
 
-    py_library(
-        name = "{}_py".format(name),
-        srcs = py_outs,
-        imports = ["."],
-        visibility = visibility,
-    )
+    # py_library(
+    #     name = "{}_py".format(name),
+    #     srcs = py_outs,
+    #     imports = ["."],
+    #     visibility = visibility,
+    # )

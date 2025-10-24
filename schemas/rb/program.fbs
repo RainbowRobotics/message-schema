@@ -1,0 +1,20 @@
+namespace program;
+
+table RB_Program_Task_Status {
+  task_id: string;
+  program_id: string;
+  sync_task_ids: [string];
+  node_path: [string];
+  status: string;
+  offset: int;
+}
+
+
+table RB_Program_Task_Checkpoint {
+  task_id: string;
+  program_id: string;
+  sync_task_ids: [string];
+  node_path: [string];
+  offset: int;
+  status: string;
+}
