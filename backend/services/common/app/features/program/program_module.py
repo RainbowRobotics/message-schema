@@ -428,12 +428,15 @@ class ProgramService(BaseService):
 
             program_res = await col.insert_one(program_doc)
 
-            program_doc["programId"] = str(program_res.inserted_id)
-            program_doc.pop("_id", None)
+            find_program_doc = await col.find_one({"_id": program_res.inserted_id})
+
+            find_program_doc["programId"] = str(program_res.inserted_id)
+            find_program_doc.pop("_id", None)
 
             for flow in request.flows:
                 flow.programId = str(program_res.inserted_id)
                 flow.name = f'{flow.robotModel}_{program_doc["name"]}'
+                flow.scriptName = flow.name
                 flow.createdAt = now.isoformat()
                 flow.updatedAt = now.isoformat()
 
@@ -451,15 +454,34 @@ class ProgramService(BaseService):
             raise e
 
         return {
-            "program": program_res,
+            "program": find_program_doc,
             "flows": flows_res,
         }
 
     async def delete_program(self, *, program_id: str, db: MongoDB):
         program_col = db["programs"]
-        res = await program_col.delete_one({"_id": program_id})
-
         flows_col = db["flows"]
-        await flows_col.delete_many({"programId": program_id})
+        tasks_col = db["tasks"]
 
-        return res
+        program_deleted_res = await program_col.delete_one({"_id": ObjectId(program_id)})
+
+        find_flow_res = await flows_col.find({"programId": program_id}, {"_id": 1}).to_list(
+            length=None
+        )
+
+        find_flow_ids = [str(flow["_id"]) for flow in find_flow_res]
+
+        flow_deleted_res = await flows_col.delete_many({"programId": program_id})
+
+        task_deleted_count = 0
+
+        for fid in find_flow_ids:
+            task_deleted_res = await tasks_col.delete_many({"flowId": fid})
+
+            task_deleted_count += task_deleted_res.deleted_count
+
+        return {
+            "programDeleted": program_deleted_res.deleted_count,
+            "flowDeleted": flow_deleted_res.deleted_count,
+            "taskDeleted": task_deleted_count,
+        }

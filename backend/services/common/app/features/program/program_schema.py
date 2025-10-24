@@ -153,16 +153,14 @@ class Program_Base(BaseModel):
 
 
 class Create_Program_With_FlowPD(
-    Omit(Flow_Base, "_id", "flowId", "programId", "createdAt", "updatedAt")
+    Omit(Flow_Base, "_id", "flowId", "programId", "name", "scriptName", "createdAt", "updatedAt")
 ):
     model_config = ConfigDict(extra="allow")  # 기재되지 않은 필드도 허용하도록 설정
 
 
 class Update_Program_With_FlowPD(Create_Program_With_FlowPD):
-    name: str | None = Field(default=None)
     robotModel: str | None = Field(default=None)
     type: FlowType | None = Field(default=None)
-    scriptName: str | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
     extendsion: FlowExtension | None = Field(default=None)
     state: RB_Flow_Manager_ProgramState | None = Field(default=None)
