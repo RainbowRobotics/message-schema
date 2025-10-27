@@ -347,7 +347,6 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_KD_th", DOCKING_KD_th, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_DIST_THRESHOLD_MAX", DOCKING_CLUST_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CLUST_ANGLE_THRESHOLD", DOCKING_CLUST_ANGLE_THRESHOLD, "docking");
-    check_and_set_double(obj_dock, "DOCKING_EXTENDED_CONTROL_TIME", DOCKING_EXTENDED_CONTROL_TIME, "docking");
     check_and_set_double(obj_dock, "DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX", DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX, "docking");
     check_and_set_double(obj_dock, "DOCKING_CHG_LENGTH", DOCKING_CHG_LENGTH, "docking");
     check_and_set_double(obj_dock, "DOCKING_ICP_ERR_THRESHOLD", DOCKING_ICP_ERR_THRESHOLD, "docking");
@@ -357,6 +356,8 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_X_OFFSET", DOCKING_X_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_Y_OFFSET", DOCKING_Y_OFFSET, "docking");
     check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
+    check_and_set_bool(obj_dock, "DOCKING_REVERSE_FLAG", DOCKING_REVERSE_FLAG, "docking");
+    check_and_set_string(obj_dock, "CHARGE_TYPE", CHARGE_TYPE, "docking");
 }
 
 
@@ -2029,6 +2030,18 @@ int CONFIG::get_docking_type()
     return DOCKING_TYPE;
 }
 
+bool CONFIG::get_docking_reverse_mode()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_REVERSE_FLAG;
+}
+
+QString CONFIG::get_charge_type()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CHARGE_TYPE;
+}
+
 double CONFIG::get_docking_pointdock_margin()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -2045,12 +2058,6 @@ double CONFIG::get_docking_goal_th()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DOCKING_GOAL_TH;
-}
-
-double CONFIG::get_docking_extended_control_time()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return DOCKING_EXTENDED_CONTROL_TIME;
 }
 
 double CONFIG::get_docking_kp_dist()

@@ -279,6 +279,8 @@ public:
     double get_docking_x_offset();
     double get_docking_y_offset();
     double get_docking_linear_x_offset();
+    bool get_docking_reverse_mode();
+    QString get_charge_type();
     /***********************
      * map
      ***********************/
@@ -291,7 +293,6 @@ public:
      ***********************/
     int get_monitoring_field_count();                    
     std::vector<MonitoringField> get_monitoring_field();
-
     bool get_use_safety_cross_monitor();
     bool get_use_safety_speed_control();
     bool get_use_safety_obstacle_detect();
@@ -543,14 +544,16 @@ private:
     double DOCKING_POINTDOCK_MARGIN = 0.18;
     double DOCKING_ICP_ERR_THRESHOLD = 0.003;
     int DOCKING_TYPE = 0; // 0: L_dock 1: FQR_dock 2: bqr
+    bool DOCKING_REVERSE_MODE = false;
     double DOCKING_DWA_YAW_WEIGHT = 0.25;
-    double DOCKING_EXTENDED_CONTROL_TIME = 10.0;
     double DOCKING_CHECK_MOTOR_A = 120.0;
     double DOCKING_WAITING_TIME = 10.0; //second
     double DOCKING_FINAL_ICP_ERR_THRESHOLD = 0.1;
     double DOCKING_X_OFFSET = 0.0;
     double DOCKING_Y_OFFSET = 0.0;
     double DOCKING_LINEAR_X_OFFSET = -0.035;
+    bool DOCKING_REVERSE_FLAG = false;
+    QString CHARGE_TYPE = "RAINBOW";
 
     // safety
     int MONITORING_FIELD_COUNT = 0;

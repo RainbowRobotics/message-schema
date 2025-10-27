@@ -111,7 +111,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
     connect(ui->bt_DockStop,          SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
     connect(ui->bt_UnDockStart,       SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
-
+    connect(ui->bt_ChgTrig,           SIGNAL(clicked()),                    this, SLOT(bt_ChgTrig()));
+    connect(ui->bt_ChgStop,           SIGNAL(clicked()),                    this, SLOT(bt_ChgStop()));
     // start docking
     connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
@@ -1770,6 +1771,18 @@ void MainWindow::bt_UnDockStart()
     });
 }
 
+void MainWindow::bt_ChgTrig()
+{
+    int non_used_int = 0;
+    MOBILE::instance()->xnergy_command(0, non_used_int);
+}
+
+void MainWindow::bt_ChgStop()
+{
+    int non_used_int = 0;
+    MOBILE::instance()->xnergy_command(1, non_used_int);
+}
+
 //for safety
 void MainWindow::bt_ClearMismatch()
 {
@@ -3266,6 +3279,34 @@ void MainWindow::plot_safety()
 
     ui->le_Robot_Init_State->setText(ri_state);
     ui->le_Lidar_Field_Read->setText(QString().sprintf("%d", cur_status.lidar_field));
+
+    QString charge_state = "";
+    if(cur_status.charge_state == 0)
+    {
+        charge_state = "CHARGE_IDLE";
+    }
+    else if(cur_status.charge_state == 1)
+    {
+        charge_state = "CHARGE_TRIG";
+    }
+    else if(cur_status.charge_state == 2)
+    {
+        charge_state = "CHARGE_BATTERY_ON";
+    }
+    else if(cur_status.charge_state == 3)
+    {
+        charge_state = "CHARGING";
+    }
+    else if(cur_status.charge_state == 5)
+    {
+        charge_state = "CHARGE_FAILED";
+    }
+    else
+    {
+        charge_state = "CHARGE_UNKNOWN";
+    }
+
+    ui->le_Charge_State->setText(charge_state);
 
     //emo status
     if(cur_status.safety_state_emo_pressed_1 || cur_status.safety_state_emo_pressed_2)

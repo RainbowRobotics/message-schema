@@ -165,8 +165,9 @@ void SICK::grab_loop(int idx)
     Eigen::Vector3d t_ = pts_tf[idx].block(0,3,3,1);
 
     is_connected[idx] = true;
-    //printf("[SICK] start grab loop, %d\n", idx);
-    log_info("start grab loop, {}", idx);
+    printf("[SICK] start grab loop, %d\n", idx);
+
+
     while(grab_flag[idx])
     {
         if(safety_scanner->isDataAvailable())
@@ -242,6 +243,7 @@ void SICK::grab_loop(int idx)
 //                qDebug()<<"t1 : "<<t1;
                 if(pose_storage[p].t > t1)
                 {
+
                     idx1 = p;
                     break;
                 }
@@ -344,7 +346,6 @@ void SICK::grab_loop(int idx)
             frm.pts = pts;
             frm.mo = mo;
             raw_que[idx].push(frm);
-
             {
                 std::unique_lock<std::shared_mutex> lock(mtx);
                 cur_raw[idx] = frm;

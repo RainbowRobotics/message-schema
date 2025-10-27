@@ -620,7 +620,6 @@ void MOBILE::receive_data_loop()
                             cur_imu = r;
 
                             pose_storage.push_back(mobile_pose);
-
                             if(pose_storage.size() > MO_STORAGE_NUM)
                             {
                                 pose_storage.erase(pose_storage.begin());
@@ -921,13 +920,15 @@ void MOBILE::receive_data_loop()
                             memcpy(&bms_header, &_buf[index], dlc);  index += dlc;
 
                             // TABOS/BMS data
-                            uint16_t tabos_voltage_raw;
-                            int16_t tabos_current_raw;
+                            unsigned short tabos_voltage_raw;
+                            short tabos_current_raw;
                             uint16_t tabos_status;
-                            uint16_t tabos_ttf, tabos_tte;
-                            uint16_t tabos_soc_raw, tabos_soh_raw;
-                            int16_t tabos_temperature_raw;
-                            uint16_t tabos_rc_raw, tabos_ae_raw;
+                            unsigned short tabos_ttf;
+                            unsigned short tabos_tte;
+                            unsigned short  tabos_soc_raw; 
+                            unsigned short tabos_soh_raw;
+                            short tabos_temperature_raw;
+                            unsigned short tabos_rc_raw, tabos_ae_raw;
 
                             memcpy(&tabos_voltage_raw, &_buf[index], dlc_s);      index += dlc_s;
                             memcpy(&tabos_current_raw, &_buf[index], dlc_s);      index += dlc_s;
@@ -951,13 +952,13 @@ void MOBILE::receive_data_loop()
                             float contact_voltage = voltage_contact_raw * 0.1f;
                             float charge_current = current_charge_raw * 0.01f;
 
-                            float tabos_voltage = tabos_voltage_raw * 0.1f;
-                            float tabos_current = tabos_current_raw * 0.1f;
+                            float tabos_voltage = (unsigned short)tabos_voltage_raw * 0.01f;
+                            float tabos_current = (short)tabos_current_raw * 0.01f;
                             uint8_t tabos_soc = (uint8_t)(tabos_soc_raw & 0xFF);
                             uint8_t tabos_soh = (uint8_t)(tabos_soh_raw & 0xFF);
-                            float tabos_temperature = tabos_temperature_raw * 0.1f;
-                            float tabos_rc = tabos_rc_raw * 0.01f;
-                            float tabos_ae = tabos_ae_raw * 0.1f;
+                            float tabos_temperature = (short)tabos_temperature_raw * 0.1f;
+                            float tabos_rc = (unsigned short)tabos_rc_raw * 0.01f;
+                            float tabos_ae = (unsigned short)tabos_ae_raw * 0.1f;
 
                             // Update mobile status with LowFreq data
                             mtx.lock();
@@ -1248,7 +1249,6 @@ void MOBILE::receive_data_loop()
                             }
 
                             uint8_t inter_lock_state;
-
                             if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 inter_lock_state = _buf[index];     index=index+dlc;
@@ -1592,7 +1592,6 @@ void MOBILE::receive_data_loop()
                             cur_imu = r;
 
                             pose_storage.push_back(mobile_pose);
-
                             if(pose_storage.size() > MO_STORAGE_NUM)
                             {
                                 pose_storage.erase(pose_storage.begin());
@@ -2365,7 +2364,7 @@ void MOBILE::move_linear_y(double d, double v)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    send_byte[7] = 121; // cmd move linear y
+    // send_byte[7] = 121; // cmd move linear y
 
     memcpy(&send_byte[8], &_d, 4); // param1 dist
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel
@@ -3109,6 +3108,31 @@ void MOBILE::lift_power_onoff(int param)
     }
 }
 
+void MOBILE::xnergy_command(int command, float param)
+{
+
+    std::vector<uchar> send_byte(25, 0);
+    send_byte[0] = 0x24;
+
+    uint16_t size = 6+8+8;
+    memcpy(&send_byte[1], &size, 2); // size
+    send_byte[3] = 0x00;
+    send_byte[4] = 0x00;
+
+    send_byte[5] = 0xD0;
+    send_byte[6] = 0x00; //0 : charge / 1 : uncharge / 2 : voltage_setting / 3: current_setting
+    send_byte[7] = command; // cmd
+
+    int para1 = param; // 1 on - 0 off
+
+    memcpy(&send_byte[8], &para1, 4);
+    send_byte[24] = 0x25;
+
+    if(is_connected)
+    {
+        msg_que.push(send_byte);
+    }
+}
 void MOBILE::set_IO_output(unsigned char [])
 {
     std::vector<uchar> send_byte(25, 0);
@@ -3278,7 +3302,7 @@ void MOBILE::set_safety_parameter(int target, bool param)
     // 2 - safety obstacle detect 3 - safety bumper 4 - safety interlock
     send_byte[7] = 0x03; // cmd
 
-    float parameter = (float)param; // 1 -detect mode || 0 - detect mode not used
+    int parameter = (int)param;
 
     memcpy(&send_byte[8], &parameter, 4);
 

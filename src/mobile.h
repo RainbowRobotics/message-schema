@@ -157,7 +157,7 @@ public:
     void sem_io_speaker(unsigned int speak_num);
     void config_parameter_send();
     void set_safety_parameter(int target, bool param);
-    
+    void xnergy_command(int command, float param);
 private:
     explicit MOBILE(QObject *parent = nullptr);
     ~MOBILE();

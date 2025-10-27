@@ -98,15 +98,18 @@ private:
     bool path_flag = false;
     bool oneque_dock = false;
     bool undock_flag = false;
+    double dock_waiting_time = 0.0;
+    double dock_success_wait_time = 0.0;
     double undock_waiting_time = 0.0;
+    bool xnergy_charge_trig = false;
     bool find_check = false;
     bool failed_flag = false;
+    bool reverse_mode = false;
     Eigen::Matrix4d docking_station;
     Eigen::Matrix4d docking_station_m;
     Eigen::Matrix4d docking_station_o;
     Eigen::Matrix4d first_aline;
     std::atomic<bool> dock_retry_flag = {false};
-
 
     // for cluster
     int check_oneque();

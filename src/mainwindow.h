@@ -249,6 +249,8 @@ public Q_SLOTS:
     void bt_DockStart();
     void bt_DockStop();
     void bt_UnDockStart();
+    void bt_ChgTrig();
+    void bt_ChgStop();
 
     // for annotation
     void bt_DelNode();

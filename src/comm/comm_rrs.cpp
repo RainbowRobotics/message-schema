@@ -1235,7 +1235,7 @@ void COMM_RRS::recv_profile_move(std::string const& name, sio::message::ptr cons
     {
         // parsing
         DATA_PROFILE_MOVE msg;
-        msg.command = get_json(data, "command"); // "linearXMove", "circularMove" , "ratateMove", "linearStop"
+        msg.command = get_json(data, "command"); // "linearXMove", "linearYMove","circularMove" , "ratateMove", "linearStop" 
         msg.time = get_json(data, "time").toDouble() / 1000;
 
         msg.target = get_json(data, "target").toDouble(); // m or deg
@@ -3148,14 +3148,9 @@ void COMM_RRS::slot_profile_move(DATA_PROFILE_MOVE msg)
 
     if(command == "linearXMove")
     {
-        //        qDebug() << "slot in : linearXMove";
         // setting target and speed unit
         target_linear_ = static_cast<float>(msg.target);
         target_speed_ = static_cast<float>(msg.speed);
-
-        //        qDebug() << "target_linear_ : " << target_linear_;
-        //        qDebug() << "target_speed_ : " << target_speed_;
-
 
         if(fabs(target_linear_) > 10.0 || fabs(target_speed_) > 1.5)
         {
@@ -3198,10 +3193,54 @@ void COMM_RRS::slot_profile_move(DATA_PROFILE_MOVE msg)
                 msg.remain_dist = res_linear_remain_dist;
                 msg.meassured_dist = res_linear_dist;
                 send_profile_move_response(msg);
-                //qDebug() << "send_profile_move_response";
                 return;
             });
+        }
+    }
+    else if(command == "linearYMove")
+    {
+        // setting target and speed unit
+        target_linear_ = static_cast<float>(msg.target);
+        target_speed_ = static_cast<float>(msg.speed);
 
+        if(fabs(target_linear_) > 10.0 || fabs(target_speed_) > 1.5)
+        {
+            //exception
+            msg.result = "reject";
+            msg.message = "invalid target or speed";
+
+            send_profile_move_response(msg);
+            return;
+        }
+        else
+        {
+            // first accept response----------
+            msg.result = "accept";
+            msg.message = "";
+            send_profile_move_response(msg);
+            //--------------------------------
+
+            AUTOCONTROL::instance()->set_is_moving(true);
+
+            MOBILE::instance()->move_linear_y(target_linear_, target_speed_);
+            double t = std::abs(target_linear_/target_speed_) + 0.5;
+
+            QTimer::singleShot(t*1000, [this, msg]() mutable
+            {
+                if (!this) return; // rrs thread is not alive
+
+                AUTOCONTROL::instance()->set_is_moving(false);
+                
+                float res_linear_dist = MOBILE::instance()->get_res_linear_dist();
+                float res_linear_remain_dist = MOBILE::instance()->get_res_linear_remain_dist();
+
+                msg.result = "success";
+                msg.message = "";
+                msg.remain_dist = res_linear_remain_dist;
+                msg.meassured_dist = res_linear_dist;
+                send_profile_move_response(msg);
+                return;
+            });
         }
     }
     else if(command == "circularMove")
