@@ -243,6 +243,7 @@ public Q_SLOTS:
     void bt_AutoResume();
     void bt_ReturnToCharging();
     void bt_AutoPathAppend();
+    void bt_AutoPathErase();
 
     // for dockcontrol
     void bt_DockStart();

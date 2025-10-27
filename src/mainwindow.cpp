@@ -3,7 +3,7 @@
 
 namespace 
 {
-    const char* MODULE_NAME = "MAIN";
+const char* MODULE_NAME = "MAIN";
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
@@ -105,6 +105,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
     connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
     connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                      // move clicked node
+    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                      // move clicked node
 
     // dockcontrol
     connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
@@ -278,7 +279,7 @@ void MainWindow::init_modules()
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
         QString robot_type_str = CONFIG::instance()->get_robot_type_str();
-//        qDebug()<<"robot_type_str : "<<robot_type_str;
+        //        qDebug()<<"robot_type_str : "<<robot_type_str;
         ui->lb_RobotType->setText(robot_type_str);
 
         mileage = CONFIG::instance()->get_mileage();
@@ -320,7 +321,7 @@ void MainWindow::init_modules()
     }
     else
     {
-         ui->bt_SimInit->setEnabled(false);
+        ui->bt_SimInit->setEnabled(false);
     }
 
     // view mode
@@ -1669,6 +1670,39 @@ void MainWindow::bt_AutoPathAppend()
     }
 }
 
+void MainWindow::bt_AutoPathErase()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
+
+        return;
+    }
+    if (!path_append_id.isEmpty())
+    {
+        QStringList path_split = path_append_id.split(",", Qt::SkipEmptyParts);
+
+        if (!path_split.isEmpty())
+        {
+            path_split.removeLast();
+            path_append_id = path_split.join(",");
+            if (!path_append_id.isEmpty())
+            {
+                path_append_id += ",";
+            }
+
+        }
+    }
+    else
+    {
+        path_append_id ="";
+    }
+
+    ui -> te_path -> setText(path_append_id);
+}
+
 void MainWindow::bt_AutoStop()
 {
     AUTOCONTROL::instance()->stop();
@@ -1882,9 +1916,9 @@ void MainWindow::bt_ReturnToCharging()
 
     if(found_ids.size() == 0)
     {
-    LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
-    //spdlog::error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
-    log_error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
+        LOGGER::instance()->write_log(QString("[RTC] No charging node found for robot serial: %1").arg(robot_serial_number), "Red");
+        //spdlog::error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
+        log_error("[RTC] No charging node found for robot serial: {}", qUtf8Printable(robot_serial_number));
         return;
     }
 
@@ -4166,7 +4200,7 @@ void MainWindow::plot_cam()
         }
 
         QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
-//        qDebug()<<cam_tf;
+        //        qDebug()<<cam_tf;
         if (cam_tf.size() >= 4)
         {
             bool ok = false;
@@ -4326,7 +4360,7 @@ void MainWindow::plot_loop()
     plot_node();
     plot_pick();
     plot_info();
-//    plot_safety();
+    //    plot_safety();
     plot_raw_2d();
     plot_raw_3d();
     plot_mapping();
@@ -4542,10 +4576,10 @@ void MainWindow::getIPv4()
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
-//        if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
-//                addr != QHostAddress::LocalHost &&
-//                addr != QHostAddress("192.168.1.5") &&
-//                addr != QHostAddress("192.168.2.2"))
+        //        if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
+        //                addr != QHostAddress::LocalHost &&
+        //                addr != QHostAddress("192.168.1.5") &&
+        //                addr != QHostAddress("192.168.2.2"))
         if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
                 addr != QHostAddress::LocalHost)
         {

@@ -3545,7 +3545,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
 void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
 {
     QString method = msg.method;
-    if(method == "pp")
+    if(method == "pp"||method == "hpp")
     {
         if(unimap->get_is_loaded() != MAP_LOADED)
         {
@@ -3638,12 +3638,12 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         }
 
     }
-    else if(method == "hpp")
-    {
-        msg.result = "reject";
-        msg.message = "not supported yet";
-        send_move_response(msg);
-    }
+//    else if(method == "hpp")
+//    {
+//        msg.result = "reject";
+//        msg.message = "not supported yet";
+//        send_move_response(msg);
+//    }
     else if(method == "tng")
     {
         msg.result = "reject";
@@ -3950,13 +3950,24 @@ void COMM_MSA::handle_path(DATA_PATH& msg)
     {
         QString path_str = msg.path;
         QStringList path_str_list = path_str.split(",");
+        QString path;
         for(int p = 0; p < path_str_list.size(); p++)
         {
-            path.push_back(path_str_list[p]);
-            step.push_back((int)p);
+//            path.push_back(path_str_list[p]);
+            path += path_str_list[p]+",";
+//            step.push_back((int)p);
         }
 
-        ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
+        DATA_PATH msg;
+        msg.command = "goal";
+        msg.path = path;
+        msg.preset = 0;
+//        msg.direction = direction;
+        qDebug()<<"path : "<<path;
+
+         Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
+//        ctrl->move(path, msg.preset);
+//        ctrl->set_path(path, step, msg.preset, (long long)(msg.time));
     }
 
     send_path_response(msg);

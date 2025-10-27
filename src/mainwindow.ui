@@ -1310,7 +1310,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1732,25 +1732,12 @@ Move
                 <x>264</x>
                 <y>107</y>
                 <width>51</width>
-                <height>50</height>
+                <height>61</height>
                </rect>
               </property>
               <property name="text">
                <string>path
 (pp)</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="bt_AutoPathAppend">
-              <property name="geometry">
-               <rect>
-                <x>190</x>
-                <y>130</y>
-                <width>51</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>append</string>
               </property>
              </widget>
              <widget class="QTextEdit" name="te_path">
@@ -1766,8 +1753,8 @@ Move
              <widget class="QCheckBox" name="ckb_MoveBackWard">
               <property name="geometry">
                <rect>
-                <x>189</x>
-                <y>103</y>
+                <x>190</x>
+                <y>100</y>
                 <width>92</width>
                 <height>23</height>
                </rect>
@@ -1775,6 +1762,32 @@ Move
               <property name="text">
                <string>BackWard</string>
               </property>
+             </widget>
+             <widget class="QWidget" name="">
+              <property name="geometry">
+               <rect>
+                <x>190</x>
+                <y>120</y>
+                <width>71</width>
+                <height>52</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_8">
+               <item row="0" column="0">
+                <widget class="QPushButton" name="bt_AutoPathAppend">
+                 <property name="text">
+                  <string>append</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QPushButton" name="bt_AutoPathErase">
+                 <property name="text">
+                  <string>erase</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </widget>
             <widget class="QWidget" name="tab_7">

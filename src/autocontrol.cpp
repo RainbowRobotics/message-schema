@@ -600,6 +600,7 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
 
 void AUTOCONTROL::slot_path(DATA_PATH msg)
 {
+
     const QString path_str = msg.path;
     const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
 
@@ -614,16 +615,16 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
 
     //qDebug()<<"msg.direction : "<<msg.direction;
     //spdlog::info("msg direction:{} ",msg.direction.toUtf8().constData());
-    log_info("msg direction: {}", qUtf8Printable(msg.direction));
+//    log_info("msg direction: {}", qUtf8Printable(msg.direction));
 
-    if(msg.direction == "forward")
-    {
+//    if(msg.direction == "forward")
+//    {
         move(path, preset);
-    }
-    else if(msg.direction == "backward")
-    {
-        backwardmove(path, preset);
-    }
+//    }
+//    else if(msg.direction == "backward")
+//    {
+//        backwardmove(path, preset);
+//    }
 }
 
 void AUTOCONTROL::slot_path()
@@ -632,8 +633,7 @@ void AUTOCONTROL::slot_path()
 }
 
 void AUTOCONTROL::slot_path(QString direction)
-{
-    //qDebug()<<"fms_cmd_direction : "<<direction;
+{    //qDebug()<<"fms_cmd_direction : "<<direction;
     //spdlog::info("fms_cmd_direction:{}",direction);
     if(direction == "forward")
     {
@@ -842,6 +842,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
 
         // policy path
         std::vector<PATH> policy_path = policy->drive_policy(path);
+        qDebug()<<"policy!!!!!!";
         bool first_seg = true;
         if(!policy_path.empty())
         {
@@ -4744,7 +4745,7 @@ void AUTOCONTROL::obs_loop()
 
         Eigen::Vector3d cur_pos = cur_tf.block(0,3,3,1);
 
-        if(fsm_state == AUTO_FSM_DRIVING || AUTO_FSM_OBS == AUTO_FSM_OBS)
+        if(fsm_state == AUTO_FSM_DRIVING || fsm_state == AUTO_FSM_OBS)
         {
             int obs_value = OBS_NONE;
             QString obs_condition = "none";
