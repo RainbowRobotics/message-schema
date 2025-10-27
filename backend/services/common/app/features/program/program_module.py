@@ -1,10 +1,11 @@
 import asyncio
 import time
 from datetime import UTC, datetime
+from typing import Any
 
-from app.socket.socket_client import socket_client
 from bson import ObjectId
 from fastapi import HTTPException
+from pymongo import ReturnDocument
 from pymongo.operations import UpdateOne
 from rb_database import MongoDB, mongo_db
 from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
@@ -17,6 +18,8 @@ from rb_resources.file import read_json_file
 from rb_utils.asyncio_helper import fire_and_log
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+
+from app.socket.socket_client import socket_client
 
 from .program_schema import (
     Request_Create_FlowPD,
@@ -48,7 +51,10 @@ class ProgramService(BaseService):
                         f"{component}/state_core", flatbuffer_obj_t=State_CoreT, timeout=0.5
                     )
 
-                    speedbar = obj["motionSpeedBar"] or 1.0
+                    speedbar = 1.0
+
+                    if obj:
+                        speedbar = obj["motionSpeedBar"]
 
                     if speedbar < min_speedbar:
                         min_speedbar = speedbar
@@ -265,7 +271,7 @@ class ProgramService(BaseService):
             record_find_flow_ids.append(fid)
 
         ops: list[UpdateOne] = []
-        index_map: list[tuple[int, str | None]] = []  # (tasks 인덱스, 기존 taskId)
+        index_map: list[tuple[int, dict[str, Any]]] = []  # (tasks 인덱스, 기존 taskId)
 
         for i, doc in enumerate(tasks):
             doc["updatedAt"] = now
@@ -275,13 +281,12 @@ class ProgramService(BaseService):
 
             q = {"_id": ObjectId(tid)}
 
-            print(f"tid: {tid}", flush=True)
-
             if tid is not None:
                 find_task_doc = await tasks_col.find_one(q, {"_id": 0, "createdAt": 1})
-                doc["createdAt"] = find_task_doc["createdAt"]
+
+                if find_task_doc:
+                    doc["createdAt"] = find_task_doc["createdAt"]
             else:
-                doc["createdAt"] = now
                 set_on_insert = {"createdAt": now}
 
             ops.append(
@@ -292,15 +297,24 @@ class ProgramService(BaseService):
                 )
             )
 
-            index_map.append((i, tid))
+            index_map.append(
+                (
+                    i,
+                    {
+                        "taskId": tid,
+                        "createdAt": now,
+                    },
+                )
+            )
 
         res = await tasks_col.bulk_write(ops, ordered=False)
 
         print(f"res: {res}", flush=True)
 
         for op_idx, oid in (res.upserted_ids or {}).items():
-            i, _ = index_map[op_idx]
+            i, o_doc = index_map[op_idx]
             tasks[i]["taskId"] = str(oid)
+            tasks[i]["createdAt"] = o_doc["createdAt"]
 
         return tasks
 
@@ -362,12 +376,16 @@ class ProgramService(BaseService):
         if ops:
             await flows_col.bulk_write(ops, ordered=False)
 
-        res = await flows_col.find({"_id": {"$in": [ObjectId(fid) for fid in updated_flow_ids]}})
+        res = await flows_col.find(
+            {"_id": {"$in": [ObjectId(fid) for fid in updated_flow_ids]}}
+        ).to_list(length=None)
 
         for doc in res:
             doc["flowId"] = str(doc.pop("_id"))
 
-        return res
+        return {
+            "flows": res,
+        }
 
     async def update_program_and_flows(self, *, request: Request_Update_ProgramPD, db: MongoDB):
         try:
@@ -380,17 +398,23 @@ class ProgramService(BaseService):
 
             col = db["programs"]
 
-            find_doc = await col.find_one({"name": program_doc["name"]})
+            find_doc = await col.find_one({"_id": ObjectId(program_doc["programId"])})
 
             if not find_doc:
                 raise HTTPException(status_code=400, detail="Program not found")
 
-            program_res = await col.update_one(
-                {"_id": ObjectId(program_doc["programId"])}, {"$set": program_doc}
+            program_res = await col.find_one_and_update(
+                {"_id": ObjectId(program_doc["programId"])},
+                {"$set": program_doc},
+                return_document=ReturnDocument.AFTER,
             )
 
+            program_res["programId"] = str(program_res.pop("_id"))
+
             for flow in request.flows:
-                flow.programId = str(program_res["_id"])
+                flow.programId = str(program_res["programId"])
+                flow.name = f'{flow.robotModel}_{program_res["name"]}'
+                flow.scriptName = flow.name
 
             flows_res = await self.update_flows(
                 request=Request_Update_Multiple_FlowPD(
@@ -404,7 +428,7 @@ class ProgramService(BaseService):
 
             return {
                 "program": program_res,
-                "flows": flows_res,
+                "flows": flows_res["flows"],
             }
         except Exception as e:
             raise e
@@ -430,8 +454,9 @@ class ProgramService(BaseService):
 
             find_program_doc = await col.find_one({"_id": program_res.inserted_id})
 
-            find_program_doc["programId"] = str(program_res.inserted_id)
-            find_program_doc.pop("_id", None)
+            if find_program_doc:
+                find_program_doc["programId"] = str(program_res.inserted_id)
+                find_program_doc.pop("_id", None)
 
             for flow in request.flows:
                 flow.programId = str(program_res.inserted_id)

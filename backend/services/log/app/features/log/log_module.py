@@ -1,11 +1,8 @@
 import csv
 import io
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
-from app.features.log.log_schema import (
-    LogItem,
-    Request_LogListParamsPD,
-)
 from app.socket.socket_client import socket_client
 from fastapi.responses import StreamingResponse
 from pymongo import DESCENDING
@@ -18,6 +15,12 @@ from rb_database.utils import (
 from rb_modules.log import rb_log
 from rb_utils.asyncio_helper import fire_and_log
 from rb_utils.file import content_disposition_header, sanitize_filename
+from rb_utils.parser import t_to_dict
+
+from .log_schema import (
+    LogItem,
+    Request_LogListParamsPD,
+)
 
 
 class LogService:
@@ -38,19 +41,21 @@ class LogService:
         db: MongoDB,
         params: Request_LogListParamsPD,
     ):
-        limit = params["limit"]
-        pageNum = params["pageNum"]
-        swName = params["swName"]
-        level = params["level"]
-        searchText = params["searchText"]
-        fromDate = params["fromDate"]
-        toDate = params["toDate"]
+        params_dict = t_to_dict(params)
+
+        limit = params_dict["limit"]
+        pageNum = params_dict["pageNum"]
+        swName = params_dict["swName"]
+        level = params_dict["level"]
+        searchText = params_dict["searchText"]
+        fromDate = params_dict["fromDate"]
+        toDate = params_dict["toDate"]
 
         col = db["state_logs"]
 
         sort_spec = [("createdAt", DESCENDING)]
 
-        query = {}
+        query: dict[str, Any] = {}
 
         if searchText:
             if len(searchText) > 100:
@@ -194,7 +199,7 @@ class LogService:
 
         sort_spec = [("createdAt", DESCENDING)]
 
-        query = {}
+        query: dict[str, Any] = {}
 
         if searchText:
             if len(searchText) > 100:

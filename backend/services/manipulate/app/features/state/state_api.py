@@ -33,8 +33,11 @@ async def state(robot_model: str):
 
 @state_router.post("/{robot_model}/call_powercontrol", response_model=PowerControlResponsePD)
 async def power_control(robot_model: str, request: PowerControlRequestPD):
+    res_dict = {**request.model_dump()}
     res = await state_service.power_control(
-        robot_model=robot_model, power_option=request.power_option, sync_servo=request.sync_servo
+        robot_model=robot_model,
+        power_option=res_dict["power_option"],
+        sync_servo=res_dict["sync_servo"] or True,
     )
 
     if res.get("error"):

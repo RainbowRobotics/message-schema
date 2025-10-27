@@ -22,7 +22,7 @@ from rb_flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_utils.asyncio_helper import fire_and_log
-from rb_utils.parser import t_to_dict, to_json
+from rb_utils.parser import to_json
 from rb_zenoh.client import ZenohClient
 
 from .config_schema import (
@@ -86,10 +86,10 @@ class ConfigService(BaseService):
         )
 
     def call_change_toollist(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Set_Tool_ListT()
-        req.targetToolNum = request["target_tool_num"]
+        req.targetToolNum = request_dict["target_tool_num"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_change_toollist",
@@ -110,19 +110,20 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        return res["dict_payload"]
+        return Response_CallConfigControlBoxPD(**res["dict_payload"])
 
     def parse_get_user_frames(self, config_control_box_res: Response_CallConfigControlBoxPD):
+        config_control_box_res_dict = {**config_control_box_res.model_dump()}
         return {
             "user_frames": [
-                config_control_box_res["userFrame0"],
-                config_control_box_res["userFrame1"],
-                config_control_box_res["userFrame2"],
-                config_control_box_res["userFrame3"],
-                config_control_box_res["userFrame4"],
-                config_control_box_res["userFrame5"],
-                config_control_box_res["userFrame6"],
-                config_control_box_res["userFrame7"],
+                config_control_box_res_dict["userFrame0"],
+                config_control_box_res_dict["userFrame1"],
+                config_control_box_res_dict["userFrame2"],
+                config_control_box_res_dict["userFrame3"],
+                config_control_box_res_dict["userFrame4"],
+                config_control_box_res_dict["userFrame5"],
+                config_control_box_res_dict["userFrame6"],
+                config_control_box_res_dict["userFrame7"],
             ]
         }
 
@@ -143,21 +144,21 @@ class ConfigService(BaseService):
             )
 
     def save_area_parameter(self, robot_model: str, *, request: Request_Save_Area_ParameterPD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_Area_ParaT()
-        req.areaNo = request["area_no"]
-        req.areaName = request["area_name"]
-        req.areaType = request["area_type"]
-        req.areaX = request["area_x"]
-        req.areaY = request["area_y"]
-        req.areaZ = request["area_z"]
-        req.areaRX = request["area_rx"]
-        req.areaRY = request["area_ry"]
-        req.areaRZ = request["area_rz"]
-        req.areaPara0 = request["area_para_0"]
-        req.areaPara1 = request["area_para_1"]
-        req.areaPara2 = request["area_para_2"]
+        req.areaNo = request_dict["area_no"]
+        req.areaName = request_dict["area_name"]
+        req.areaType = request_dict["area_type"]
+        req.areaX = request_dict["area_x"]
+        req.areaY = request_dict["area_y"]
+        req.areaZ = request_dict["area_z"]
+        req.areaRx = request_dict["area_rx"]
+        req.areaRy = request_dict["area_ry"]
+        req.areaRz = request_dict["area_rz"]
+        req.areaPara0 = request_dict["area_para_0"]
+        req.areaPara1 = request_dict["area_para_1"]
+        req.areaPara2 = request_dict["area_para_2"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_area_parameter",
@@ -173,31 +174,31 @@ class ConfigService(BaseService):
     def save_tool_list_parameter(
         self, robot_model: str, *, request: Request_Save_Tool_List_ParameterPD
     ):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_Tool_List_ParaT()
-        req.toolNo = request["tool_no"]
-        req.toolName = request["tool_name"]
-        req.tcpX = request["tcp_x"]
-        req.tcpY = request["tcp_y"]
-        req.tcpZ = request["tcp_z"]
-        req.tcpRx = request["tcp_rx"]
-        req.tcpRy = request["tcp_ry"]
-        req.tcpRz = request["tcp_rz"]
-        req.massM = request["mass_m"]
-        req.massX = request["mass_x"]
-        req.massY = request["mass_y"]
-        req.massZ = request["mass_z"]
-        req.boxType = request["box_type"]
-        req.boxPara0 = request["box_para_0"]
-        req.boxPara1 = request["box_para_1"]
-        req.boxPara2 = request["box_para_2"]
-        req.boxPara3 = request["box_para_3"]
-        req.boxPara4 = request["box_para_4"]
-        req.boxPara5 = request["box_para_5"]
-        req.boxPara6 = request["box_para_6"]
-        req.boxPara7 = request["box_para_7"]
-        req.boxPara8 = request["box_para_8"]
+        req.toolNo = request_dict["tool_no"]
+        req.toolName = request_dict["tool_name"]
+        req.tcpX = request_dict["tcp_x"]
+        req.tcpY = request_dict["tcp_y"]
+        req.tcpZ = request_dict["tcp_z"]
+        req.tcpRx = request_dict["tcp_rx"]
+        req.tcpRy = request_dict["tcp_ry"]
+        req.tcpRz = request_dict["tcp_rz"]
+        req.massM = request_dict["mass_m"]
+        req.massX = request_dict["mass_x"]
+        req.massY = request_dict["mass_y"]
+        req.massZ = request_dict["mass_z"]
+        req.boxType = request_dict["box_type"]
+        req.boxPara0 = request_dict["box_para_0"]
+        req.boxPara1 = request_dict["box_para_1"]
+        req.boxPara2 = request_dict["box_para_2"]
+        req.boxPara3 = request_dict["box_para_3"]
+        req.boxPara4 = request_dict["box_para_4"]
+        req.boxPara5 = request_dict["box_para_5"]
+        req.boxPara6 = request_dict["box_para_6"]
+        req.boxPara7 = request_dict["box_para_7"]
+        req.boxPara8 = request_dict["box_para_8"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_tool_parameter",
@@ -213,11 +214,11 @@ class ConfigService(BaseService):
     def save_direct_teach_sensitivity(
         self, robot_model: str, *, request: Request_Save_Direct_Teach_SensitivityPD
     ):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_Direct_Teach_SensitivityT()
         nj = N_JOINT_fT()
-        nj.f = request["sensitivity"]
+        nj.f = request_dict["sensitivity"]
         req.sensitivity = nj
 
         res = zenoh_client.query_one(
@@ -230,11 +231,11 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def save_side_din_filter(self, robot_model: str, *, request: Request_Save_SideDin_FilterPD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_SideDin_FilterCountT()
-        req.portNum = request["port_num"]
-        req.desiredCount = request["desired_count"]
+        req.portNum = request_dict["port_num"]
+        req.desiredCount = request_dict["desired_count"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_side_din_filter",
@@ -248,11 +249,11 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_FunctionPD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_SideDin_SpecialFuncT()
-        req.portNum = request["port_num"]
-        req.desiredFunction = request["desired_function"]
+        req.portNum = request_dict["port_num"]
+        req.desiredFunction = request_dict["desired_function"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_side_din_function",
@@ -268,11 +269,11 @@ class ConfigService(BaseService):
     def save_side_dout_function(
         self, robot_model: str, *, request: Request_Save_SideDout_FunctionPD
     ):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_SideDout_SpecialFuncT()
-        req.portNum = request["port_num"]
-        req.desiredFunction = request["desired_function"]
+        req.portNum = request_dict["port_num"]
+        req.desiredFunction = request_dict["desired_function"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_side_dout_function",
@@ -288,12 +289,12 @@ class ConfigService(BaseService):
     def save_collision_parameter(
         self, robot_model: str, *, request: Request_Save_Collision_ParameterPD
     ):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_Collision_ParameterT()
-        req.onoff = request["onoff"]
-        req.react = request["react"]
-        req.threshold = request["threshold"]
+        req.onoff = request_dict["onoff"]
+        req.react = request_dict["react"]
+        req.threshold = request_dict["threshold"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_collision_parameter",
@@ -307,12 +308,12 @@ class ConfigService(BaseService):
     def save_selfcoll_parameter(
         self, robot_model: str, *, request: Request_Save_SelfColl_ParameterPD
     ):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_SelfColl_ParameterT()
-        req.mode = request["mode"]
-        req.dist_internal = request["dist_internal"]
-        req.dist_external = request["dist_external"]
+        req.mode = request_dict["mode"]
+        req.distInternal = request_dict["dist_internal"]
+        req.distExternal = request_dict["dist_external"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_selfcoll_parameter",
@@ -331,16 +332,17 @@ class ConfigService(BaseService):
         return user_frames_res
 
     def save_user_frame_parameter(self, robot_model: str, *, request: Request_Save_User_FramePD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Save_User_FrameT()
-        req.userfNo = request["userf_no"]
-        req.userfName = request["userf_name"]
-        req.userfX = request["userf_x"]
-        req.userfY = request["userf_y"]
-        req.userfZ = request["userf_z"]
-        req.userfRX = request["userf_rx"]
-        req.userfRY = request["userf_ry"]
+        req.userfNo = request_dict["userf_no"]
+        req.userfName = request_dict["userf_name"]
+        req.userfX = request_dict["userf_x"]
+        req.userfY = request_dict["userf_y"]
+        req.userfZ = request_dict["userf_z"]
+        req.userfRx = request_dict["userf_rx"]
+        req.userfRy = request_dict["userf_ry"]
+        req.userfRz = request_dict["userf_rz"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/save_user_frame_parameter",
@@ -354,10 +356,10 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def call_change_userframe(self, robot_model: str, *, request: Request_Set_User_FramePD):
-        request = t_to_dict(request)
+        request_dict = {**request.model_dump()}
 
         req = Request_Set_User_FrameT()
-        req.userFrameNum = request["user_frame_num"]
+        req.userFrameNum = request_dict["user_frame_num"]
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_change_userframe",

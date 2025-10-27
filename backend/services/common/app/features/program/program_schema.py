@@ -1,3 +1,5 @@
+# mypy: disable-error-code=misc
+
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
@@ -83,7 +85,7 @@ class Request_Create_TaskPD(Omit(Task_Base, "_id", "taskId", "createdAt", "updat
     )
 
     @field_validator("taskId")
-    def validate_object_id(cls, v):
+    def validate_object_id(self, v):
         if v is None:
             return v
         if not ObjectId.is_valid(v):
@@ -148,8 +150,8 @@ class Program_Base(BaseModel):
     name: str
     repeatCnt: int = Field(default=1)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
-    createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
-    updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
+    createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class Create_Program_With_FlowPD(
@@ -158,12 +160,16 @@ class Create_Program_With_FlowPD(
     model_config = ConfigDict(extra="allow")  # 기재되지 않은 필드도 허용하도록 설정
 
 
-class Update_Program_With_FlowPD(Create_Program_With_FlowPD):
+class Update_Program_With_FlowPD(
+    Omit(Flow_Base, "_id", "programId", "name", "scriptName", "createdAt", "updatedAt")
+):
     robotModel: str | None = Field(default=None)
     type: FlowType | None = Field(default=None)
     scriptPath: str | None = Field(default=None)
     extendsion: FlowExtension | None = Field(default=None)
     state: RB_Flow_Manager_ProgramState | None = Field(default=None)
+
+    model_config = ConfigDict(extra="allow")
 
 
 class Update_ProgramPD(Omit(Program_Base, "createdAt", "updatedAt")):
@@ -188,3 +194,9 @@ class Request_Update_ProgramPD(BaseModel):
 class Response_Upsert_Program_And_FlowsPD(BaseModel):
     program: Program_Base
     flows: list[Flow_Base]
+
+
+class Response_Delete_Program_And_FlowsPD(BaseModel):
+    programDeleted: int
+    flowDeleted: int
+    taskDeleted: int

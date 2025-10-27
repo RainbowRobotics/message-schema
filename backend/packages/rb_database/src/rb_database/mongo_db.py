@@ -1,7 +1,7 @@
 import asyncio
 import time
 from collections.abc import Sequence
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Request
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
@@ -9,7 +9,7 @@ from pymongo.errors import OperationFailure
 from rb_modules.log import rb_log
 
 client: AsyncIOMotorClient | None = None
-db: AsyncIOMotorDatabase | None = None
+db: AsyncIOMotorDatabase
 
 
 def _norm_key_spec(keys: Sequence[tuple[str, int | str]] | tuple[str, int | str] | str):
@@ -59,7 +59,7 @@ async def ensure_index(
         raise
 
     matched_name = None
-    matched_meta = None
+    matched_meta: dict[str, Any] = {}
     for idx_name, meta in existing.items():
         ex_key = meta.get("key") or []
         if [(k, 1 if v == 1 else v) for k, v in ex_key] == norm_req:
@@ -95,7 +95,7 @@ async def ensure_index(
 
             # 1) 다른 인스턴스가 dropIndexes를 쏴서 빌드 중단됨 → 재시도
             if code == 276 or "IndexBuildAborted" in msg or "dropIndexes command" in msg:
-                rb_log.warn(
+                rb_log.warning(
                     f"[index] build aborted by concurrent drop/create on {col_name}.{name}; "
                     f"retrying attempt={attempt}/{max_retries}"
                 )
@@ -179,7 +179,7 @@ def get_db(request: Request) -> AsyncIOMotorDatabase:
     return request.app.state.mongo_db
 
 
-async def wait_db_ready(timeout: int = 2) -> AsyncIOMotorDatabase:
+async def wait_db_ready(timeout: int = 2):
     start = time.monotonic()
     while db is None:
         print("🔎 wait db ready", flush=True)

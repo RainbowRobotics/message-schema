@@ -26,7 +26,7 @@ async def on_call_servocontrol(data, robot_model: str):
 
     res = await state_service.servo_control(
         robot_model=robot_model,
-        reference_option=dict_data["servo_option"],
+        servo_option=dict_data["servo_option"],
     )
 
     return to_json(res)

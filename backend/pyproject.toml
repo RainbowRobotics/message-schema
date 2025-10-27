@@ -54,13 +54,35 @@ ignore = ["E501"]
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
+disallow_untyped_imports = false
 warn_unused_ignores = true
 warn_redundant_casts = true
 warn_return_any = true
+warn_unused_configs = true
 no_implicit_optional = true
 strict_optional = true
+disallow_untyped_defs = false
+check_untyped_defs = true
 pretty = true
+namespace_packages = true
+disable_error_code = ["import-untyped"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
-testpaths = ["backend/services", "backend/packages"]
+testpaths = ["services", "packages"]
+
+[[tool.mypy.overrides]]
+module = [
+    "flatbuffers.*",
+    "psutil",
+    "socketio.*",
+    "zenoh",
+    "rb_flat_buffers.*",
+    "rb_modules.*",
+    "rb_utils.*",
+    "rb_zenoh.*",
+]
+ignore_missing_imports = true
+disallow_untyped_imports = false
+ignore_errors = true
+follow_imports = "skip"

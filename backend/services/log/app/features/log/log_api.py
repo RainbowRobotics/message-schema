@@ -1,15 +1,16 @@
 from typing import Annotated
 
-from app.features.log.log_schema import (
-    Request_ExportStateLogsParamsPD,
-    Response_LogCntPD,
-    Response_LogListPD,
-)
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 from rb_database import MongoDB
 
 from .log_module import LogService
+from .log_schema import (
+    Request_ExportStateLogsParamsPD,
+    Request_LogListParamsPD,
+    Response_LogCntPD,
+    Response_LogListPD,
+)
 
 log_service = LogService()
 
@@ -93,15 +94,15 @@ async def get_log_list(
 ):
     return await log_service.get_log_list(
         db=db,
-        params={
-            "limit": limit,
-            "pageNum": pageNum,
-            "searchText": searchText,
-            "level": level,
-            "swName": swName,
-            "fromDate": fromDate,
-            "toDate": toDate,
-        },
+        params=Request_LogListParamsPD(
+            limit=limit,
+            pageNum=pageNum,
+            searchText=searchText,
+            level=level,
+            swName=swName,
+            fromDate=fromDate,
+            toDate=toDate,
+        ),
     )
 
 

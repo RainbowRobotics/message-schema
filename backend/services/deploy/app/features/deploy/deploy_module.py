@@ -19,13 +19,15 @@ class DeployService:
         self,
         request: DeployProgressSchemaPD,
     ):
-        sw_name = request["sw_name"]
-        ip = request["ip"]
-        mode = request["mode"]
-        tag = request["tag"]
-        percentage = request["percentage"]
-        service_name = request["service_name"]
-        result = request["result"]
+        deploy_progress_data = {**request.model_dump()}
+
+        sw_name = deploy_progress_data["sw_name"]
+        ip = deploy_progress_data["ip"]
+        mode = deploy_progress_data["mode"]
+        tag = deploy_progress_data["tag"]
+        percentage = deploy_progress_data["percentage"]
+        service_name = deploy_progress_data["service_name"]
+        result = deploy_progress_data["result"]
 
         if result not in ["success", "fail"]:
             error_msg = f"[Deploy Progress] sw_name: {sw_name}, result: {result} => result must be 'success' or 'fail'"

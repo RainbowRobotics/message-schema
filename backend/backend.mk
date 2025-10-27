@@ -79,3 +79,10 @@ backend.flatc: ## FlatBuffers 코드 생성
 backend.deploy:  ## 모든 Backend 서비스 또는 지정된 Backend 서비스 배포
 	@bash ${ROOT_DIR}api-gateway/generate-nginx-conf.sh
 	@bash ${ROOT_DIR}scripts/backend/deploy.sh
+
+.PHONY: backend.mypy
+backend.mypy: ## mypy로 type check
+	@cd ${WORKDIR} && uv run mypy services/deploy
+	@cd ${WORKDIR} && uv run mypy services/common
+	@cd ${WORKDIR} && uv run mypy services/manipulate
+	@cd ${WORKDIR} && uv run mypy services/log

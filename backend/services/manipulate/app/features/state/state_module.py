@@ -44,9 +44,9 @@ class StateService:
 
                 servo_return_value = dict_servo_res.get("returnValue", None)
 
-            if servo_return_value != 0:
-                dict_servo_res["target"] = "call_servocontrol"
-                return dict_servo_res
+                if servo_return_value != 0:
+                    dict_servo_res["target"] = "call_servocontrol"
+                    return dict_servo_res
 
         req = Request_PowerControlT()
         req.powerOption = power_option

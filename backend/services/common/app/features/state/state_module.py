@@ -3,9 +3,6 @@ import time
 
 import psutil
 import rb_database.mongo_db as mongo_db
-from app.features.info.info_module import InfoService
-from app.features.program.program_module import ProgramService
-from app.socket.socket_client import socket_client
 from fastapi import HTTPException
 from rb_flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
 from rb_flat_buffers.IPC.Request_PowerControl import (
@@ -22,6 +19,10 @@ from rb_utils.helper import get_current_ip
 from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+
+from app.features.info.info_module import InfoService
+from app.features.program.program_module import ProgramService
+from app.socket.socket_client import socket_client
 
 from .state_schema import StateMessageItemPD
 
@@ -59,14 +60,12 @@ class StateService:
                 )
             elif be_service == "mobility":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
-                    f"{component}/state", timeout=0.2
+                    f"{component}/state", flatbuffer_obj_t=State_CoreT, timeout=0.2
                 )
             elif be_service == "sensor":
                 topic, mv, obj, attachment = await zenoh_client.receive_one(
                     f"{component}/state_core", timeout=0.2
                 )
-
-            self._state_core[component] = obj
 
         return self._state_core
 
@@ -100,6 +99,9 @@ class StateService:
                         f"{core_sw["sw_name"]}/state_core", flatbuffer_obj_t=State_CoreT, timeout=1
                     )
 
+                    if obj is None:
+                        continue
+
                     if obj["statusOutColl"] == 1:
                         core_sw["connected"] = "OUT_COLLISION"
                     elif obj["statusSelfColl"] == 1:
@@ -125,11 +127,11 @@ class StateService:
 
                 elif core_sw["be_service"] == "mobility":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
-                        f"{core_sw.namespace}/state",
+                        f"{core_sw["sw_name"]}/state",
                     )
                 elif core_sw["be_service"] == "sensor":
                     topic, mv, obj, attachment = await zenoh_client.receive_one(
-                        f"{core_sw.namespace}/state_core",
+                        f"{core_sw["sw_name"]}/state_core",
                     )
             except (
                 asyncio.exceptions.TimeoutError,
@@ -179,10 +181,10 @@ class StateService:
                     res = await self.get_system_state(namespaces=namespaces)
 
                     fire_and_log(socket_client.emit("system_state", res), name="emit:system_state")
-                except asyncio.CancelledError:
-                    raise
+                except asyncio.CancelledError as e:
+                    raise e
                 except Exception as e:
-                    rb_log.exception(f"repeat_get_system_state iteration crashed: {e}")
+                    rb_log.error(f"repeat_get_system_state iteration crashed: {e}")
 
                 now = time.monotonic()
                 next_ts = max(next_ts + period, now + period)
@@ -215,18 +217,20 @@ class StateService:
     async def get_state_message(self, *, topic: str, message: StateMessageItemPD):
         rb_log.debug("🔎 subscribe */state_message")
 
+        message_dict = message.model_dump()
+
         sw_name = topic.split("/")[0]
 
-        message["swName"] = sw_name
-        fire_and_log(socket_client.emit("state_message", message))
+        message_dict["sw_name"] = sw_name
+        fire_and_log(socket_client.emit("state_message", message_dict))
 
     async def power_control(
-        self, *, power_option: int, sync_servo: bool, stoptime: int | None = 0.5
+        self, *, power_option: int, sync_servo: bool, stoptime: float | None = 0.5
     ):
         try:
             rb_log.debug(f"power_control {power_option} {sync_servo} {stoptime}")
             req = Request_PowerControlT()
-            req.power_option = power_option
+            req.powerOption = power_option
 
             if sync_servo and power_option == 0:
                 res = await self.servo_control(servo_option=power_option)

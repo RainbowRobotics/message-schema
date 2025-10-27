@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 from rb_utils.date import parse_date_with_time
 from rb_utils.parser import to_iso
@@ -17,24 +17,22 @@ def make_check_search_text_query(
     return query
 
 
-def make_check_include_query(
-    key: str, values: list[str] | str | None, *, map: dict | None = None, query: dict
-):
+def make_check_include_query(key: str, values: Any, *, map: dict | None = None, query: dict):
     if values is not None:
         # 리스트인 경우 각각 처리
         if isinstance(values, list | tuple):
             print("values", values, flush=True)
             vals = []
             for v in values:
-                if isinstance(v, int):
+                if isinstance(v, int | float):
                     vals.append(v)
                 elif isinstance(v, str):
                     if v.isdigit():
                         vals.append(int(v))
                     elif map and v in map:
-                        vals.append(map[v])
+                        vals.append(int(map[v]))
                     else:
-                        vals.append(v)
+                        vals.append(int(v))
             if vals:
                 query[key] = {"$in": vals}
         else:

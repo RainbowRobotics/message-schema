@@ -12,8 +12,8 @@ class IoService:
 
     def side_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_SideDout_GeneralT()
-        req.port_num = port_num
-        req.desired_out = desired_out
+        req.portNum = port_num
+        req.desiredOut = desired_out
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_side_dout",
@@ -26,8 +26,8 @@ class IoService:
 
     def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
         req = Request_SideAout_GeneralT()
-        req.port_num = port_num
-        req.desired_voltage = desired_voltage
+        req.portNum = port_num
+        req.desiredVoltage = desired_voltage
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_side_aout",

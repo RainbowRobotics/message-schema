@@ -3,7 +3,7 @@ import os
 import socketio
 
 _REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
-_SERVICE_SIDS: dict[str, str] = {"manipulate": None, "mobility": None, "sensor": None}
+_SERVICE_SIDS: dict[str, str | None] = {"manipulate": None, "mobility": None, "sensor": None}
 
 _mgr = socketio.AsyncRedisManager(_REDIS_URL)
 
@@ -112,7 +112,7 @@ class RelayNS(socketio.AsyncNamespace):
         if event in ("join", "leave"):
             handler = getattr(self, f"on_{event}", None)
 
-            if handler:
+            if handler is not None:
                 return await handler(sid, (args[0] if args else {}))
 
         if event == "subscribe":
@@ -146,7 +146,7 @@ class RelayNS(socketio.AsyncNamespace):
 
         service = _route_service_by_event(event, payload)
         expect_ack = bool(payload and isinstance(payload, dict) and payload.get("expectAck"))
-        svc_sid = _SERVICE_SIDS.get(service)
+        svc_sid = _SERVICE_SIDS.get(service) if service else None
 
         if claims.get("role") == "service" and not expect_ack:
             await self.emit(event, payload, room=event)

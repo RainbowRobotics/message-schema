@@ -9,16 +9,17 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from functools import partial
 
 # import flatbuffers
 from typing import Any
 
-import flatbuffers
-import psutil
-from flatbuffers.table import Table
+import flatbuffers  # type: ignore
+import psutil  # type: ignore
+from flatbuffers.table import Table  # type: ignore
 from rb_utils.parser import t_to_dict
-from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError
-from zenoh import open as zenoh_open
+from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError  # type: ignore
+from zenoh import open as zenoh_open  # type: ignore
 
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
@@ -29,7 +30,9 @@ from .utils import recommend_cap, rough_size_of_fields
 os.environ.setdefault("ZENOH_LOG", "info")
 os.environ.setdefault("RUST_LOG", "zenoh=info,zenoh_transport=info,zenoh_shm=info")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
-sys.stderr.reconfigure(line_buffering=True)
+
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(line_buffering=True)
 
 
 class ZenohClient:
@@ -207,7 +210,7 @@ class ZenohClient:
         if opts.dispatch == "queue":
             loop = self._ensure_loop()
             task = loop.create_task(self._worker(entry))
-            task._zz_entry = entry  # 워커 ↔ 엔트리 연결
+            task._zz_entry = entry  # type: ignore # 워커 ↔ 엔트리 연결
             self._workers.append(task)
 
         return SubscriptionHandleImpl(self, topic, entry)
@@ -220,7 +223,7 @@ class ZenohClient:
         timeout: float = 3.0,
         allow_self: bool = False,
         parse_obj: bool = True,
-    ) -> tuple[str, memoryview, dict | None, dict]:
+    ) -> tuple[str, memoryview, dict[str, Any] | None, dict]:
         if self.session is None:
             self.connect()
 
@@ -471,7 +474,7 @@ class ZenohClient:
                         "err": None,
                     }
 
-                    if flatbuffer_req_obj is not None:
+                    if flatbuffer_req_obj is not None and flatbuffer_res_T_class is not None:
                         ok_result["dict_payload"] = t_to_dict(
                             flatbuffer_res_T_class.InitFromPackedBuf(res_payload, 0)
                         )
@@ -494,9 +497,9 @@ class ZenohClient:
                     try:
                         msg = res_payload.decode("utf-8")
                     except Exception:
-                        msg = res_payload
+                        msg = res_payload.decode("utf-8", "ignore")
 
-                    err_result = {
+                    err_result: dict[str, Any] = {
                         "key": key_expr,
                         "payload": res_payload,
                         "attachment": {},
@@ -675,8 +678,8 @@ class ZenohClient:
                     entries=imms, topic=origin_topic, mv=mv, obj=obj, attachment=attachment
                 )
 
-            for e in queued:
-                self._push_to_entry(e=e, topic=origin_topic, mv=mv, obj=obj, attachment=attachment)
+            for q in queued:
+                self._push_to_entry(e=q, topic=origin_topic, mv=mv, obj=obj, attachment=attachment)
 
         return _on_sample
 
@@ -684,7 +687,7 @@ class ZenohClient:
         self, cb: Callable, topic: str, mv: memoryview, obj: dict | None, attachment: dict
     ):
         sig = inspect.signature(cb)
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         if "topic" in sig.parameters:
             kwargs["topic"] = topic
         if "mv" in sig.parameters:
@@ -891,7 +894,8 @@ class ZenohClient:
                     else:
                         loop = asyncio.get_running_loop()
                         # 동기 콜백은 run_in_executor로 실행
-                        await loop.run_in_executor(None, lambda cb=e.callback, kw=kwargs: cb(**kw))
+                        callback_with_args = partial(e.callback, **kwargs)
+                        await loop.run_in_executor(None, callback_with_args)
 
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
                     continue
@@ -919,6 +923,9 @@ class ZenohClient:
                     next_ts = time.monotonic() + period
 
                 for it in batch_buf:
+                    if not isinstance(it, dict):
+                        continue
+
                     kwargs = self._select_callback_kwargs(
                         e.callback,
                         topic=it.get("topic"),
@@ -931,7 +938,8 @@ class ZenohClient:
                         await e.callback(**kwargs)
                     else:
                         loop = asyncio.get_running_loop()
-                        await loop.run_in_executor(None, lambda cb=e.callback, kw=kwargs: cb(**kw))
+                        callback_with_args = partial(e.callback, **kwargs)
+                        await loop.run_in_executor(None, callback_with_args)
 
                     e.metrics["delivered"] = e.metrics.get("delivered", 0) + 1
                 batch_buf.clear()

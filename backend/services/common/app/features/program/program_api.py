@@ -12,6 +12,7 @@ from .program_schema import (
     Request_Create_ProgramPD,
     Request_Set_Task_StatusPD,
     Request_Update_ProgramPD,
+    Response_Delete_Program_And_FlowsPD,
     Response_SpeedBarPD,
     Response_Task_StatusPD,
     Response_Upsert_Program_And_FlowsPD,
@@ -59,7 +60,7 @@ async def update_program_and_flows(request: Request_Update_ProgramPD, db: MongoD
     return JSONResponse(res)
 
 
-@program_router.delete("/program/{program_id}", response_model=Response_ReturnValuePD)
+@program_router.delete("/program/{program_id}", response_model=Response_Delete_Program_And_FlowsPD)
 async def delete_program_and_flows(program_id: str, db: MongoDB):
     res = await program_service.delete_program(program_id=program_id, db=db)
     return JSONResponse(res)

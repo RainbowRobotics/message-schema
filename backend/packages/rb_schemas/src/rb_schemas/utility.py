@@ -19,14 +19,14 @@ def Omit(base: type[BaseModel], *omit: str) -> type[BaseModel]:
             fi.default is not PydanticUndefined or fi.default_factory is not None
         ):  # 기본값이 있으면(심지어 None이어도) 그대로
             default = fi
-        # elif fi.default_factory is not None:  # factory가 있으면 그대로 유지
-        #     default = Field(default_factory=fi.default_factory)
-        else:  # 정말 기본값이 없을 때만 필수로
-            default = ...
+        elif fi.default_factory is not None:
+            default = Field(default_factory=fi.default_factory)
+        else:
+            default = ...  # type: ignore
 
         fields[name] = (ann, default)
 
-    return create_model(
+    return create_model(  # type: ignore
         f"{base.__name__}Omit_{'_'.join(sorted(omit_set))}",
         __module__=base.__module__,
         **fields,
@@ -52,7 +52,7 @@ def Pick(base: type[BaseModel], *include: str) -> type[BaseModel]:
 
         fields[name] = (ann, default)
 
-    return create_model(
+    return create_model(  # type: ignore
         f"{base.__name__}Pick_{'_'.join(sorted(include_set))}",
         __module__=base.__module__,
         **fields,

@@ -3,7 +3,6 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_TypeT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
-from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
@@ -82,9 +81,9 @@ class ProgramService(BaseService):
         req = Request_Move_SmoothJogJT()
         req.target = MoveInput_TargetT()
 
-        nj = N_JOINT_fT()
-        nj.f = targetspeed
-        req.target.tarValues = nj
+        nf = N_INPUT_fT()
+        nf.f = targetspeed
+        req.target.tarValues = nf
 
         req.target.tarFrame = frame
         req.target.tarUnit = unit
@@ -104,7 +103,7 @@ class ProgramService(BaseService):
         req = Request_Move_SmoothJogLT()
         req.target = MoveInput_TargetT()
 
-        nf = N_JOINT_fT()
+        nf = N_INPUT_fT()
         nf.f = targetspeed
         req.target.tarValues = nf
 
@@ -136,23 +135,23 @@ class ProgramService(BaseService):
     async def call_move_j(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
-        target = t_to_dict(target)
-        speed = t_to_dict(speed)
+        target_dict = {**target.model_dump()}
+        speed_dict = {**speed.model_dump()}
 
         req = Request_Move_JT()
         move_input_target = MoveInput_TargetT()
         move_input_speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = target["tar_values"]
+        ni.f = target_dict["tar_values"]
 
         move_input_target.tarValues = ni
-        move_input_target.tarFrame = target["tar_frame"]
-        move_input_target.tarUnit = target["tar_unit"]
+        move_input_target.tarFrame = target_dict["tar_frame"]
+        move_input_target.tarUnit = target_dict["tar_unit"]
 
-        move_input_speed.spdMode = speed["spd_mode"]
-        move_input_speed.spdVelPara = speed["spd_vel_para"]
-        move_input_speed.spdAccPara = speed["spd_acc_para"]
+        move_input_speed.spdMode = speed_dict["spd_mode"]
+        move_input_speed.spdVelPara = speed_dict["spd_vel_para"]
+        move_input_speed.spdAccPara = speed_dict["spd_acc_para"]
 
         req.target = move_input_target
         req.speed = move_input_speed
@@ -169,23 +168,23 @@ class ProgramService(BaseService):
     async def call_move_l(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
-        target = t_to_dict(target)
-        speed = t_to_dict(speed)
+        target_dict = {**target.model_dump()}
+        speed_dict = {**speed.model_dump()}
 
         req = Request_Move_LT()
         move_input_target = MoveInput_TargetT()
         move_input_speed = MoveInput_SpeedT()
 
         ni = N_INPUT_fT()
-        ni.f = target["tar_values"]
+        ni.f = target_dict["tar_values"]
 
         move_input_target.tarValues = ni
-        move_input_target.tarFrame = target["tar_frame"]
-        move_input_target.tarUnit = target["tar_unit"]
+        move_input_target.tarFrame = target_dict["tar_frame"]
+        move_input_target.tarUnit = target_dict["tar_unit"]
 
-        move_input_speed.spdMode = speed["spd_mode"]
-        move_input_speed.spdVelPara = speed["spd_vel_para"]
-        move_input_speed.spdAccPara = speed["spd_acc_para"]
+        move_input_speed.spdMode = speed_dict["spd_mode"]
+        move_input_speed.spdVelPara = speed_dict["spd_vel_para"]
+        move_input_speed.spdAccPara = speed_dict["spd_acc_para"]
 
         req.target = move_input_target
         req.speed = move_input_speed

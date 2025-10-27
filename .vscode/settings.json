@@ -63,6 +63,12 @@
     "${workspaceFolder}/backend/services/manipulate",
     "${workspaceFolder}/bazel-bin/schemas"
   ],
+  // Pyright는 basic로 낮추거나 꺼도 됨
+  "python.analysis.typeCheckingMode": "basic",
+
+  // pylint 유지여부는 선택
+  "python.linting.pylintEnabled": true,
+  "mypy-type-checker.cwd": "${workspaceFolder}/backend",
   "[python]": { "editor.defaultFormatter": "ms-python.black-formatter" },
   "editor.formatOnSave": true,
   "ruff.lint.enable": true,
