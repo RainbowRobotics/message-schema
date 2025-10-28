@@ -3,10 +3,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-try:
-    import numpy as np
-except Exception:
-    np = None
+import numpy as np
 
 
 def snake_to_camel(s: str) -> str:
@@ -27,6 +24,8 @@ def t_to_dict(obj: Any) -> Any:
         return obj.tolist()
     # bytes류 → string 디코딩
     if isinstance(obj, bytes | bytearray | memoryview):
+        if isinstance(obj, memoryview):
+            obj = bytes(obj)
         try:
             return obj.decode("utf-8")
         except UnicodeDecodeError:

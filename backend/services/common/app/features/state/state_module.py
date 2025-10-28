@@ -217,7 +217,7 @@ class StateService:
     async def get_state_message(self, *, topic: str, message: StateMessageItemPD):
         rb_log.debug("🔎 subscribe */state_message")
 
-        message_dict = message.model_dump()
+        message_dict = t_to_dict(message)
 
         sw_name = topic.split("/")[0]
 

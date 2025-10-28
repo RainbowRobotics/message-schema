@@ -3,7 +3,7 @@ import functools
 
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
-from rb_modules.log import rb_log
+from .log import rb_log
 
 
 class BaseService:

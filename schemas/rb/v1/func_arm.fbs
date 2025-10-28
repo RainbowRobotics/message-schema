@@ -15,6 +15,13 @@ table Request_Save_SelfColl_Parameter {
   dist_external: float;
 }
 
+table Request_Save_Gravity_Parameter {
+  mode: int;
+  gx: float;
+  gy: float;
+  gz: float;
+}
+
 table Request_Save_Direct_Teach_Sensitivity {
   sensitivity: N_JOINT_f;
 }

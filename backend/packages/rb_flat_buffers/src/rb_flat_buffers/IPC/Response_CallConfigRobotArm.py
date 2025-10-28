@@ -49,8 +49,57 @@ class Response_CallConfigRobotArm(object):
         return 0.0
 
     # Response_CallConfigRobotArm
-    def DirectTeachingSensitivity(self) -> Optional[N_JOINT_f]:
+    def SelfCollMode(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
+    # Response_CallConfigRobotArm
+    def SelfCollDistanceInter(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Response_CallConfigRobotArm
+    def SelfCollDistanceExter(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Response_CallConfigRobotArm
+    def GravityMode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
+    # Response_CallConfigRobotArm
+    def GravityGx(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Response_CallConfigRobotArm
+    def GravityGy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Response_CallConfigRobotArm
+    def GravityGz(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Response_CallConfigRobotArm
+    def DirectTeachingSensitivity(self) -> Optional[N_JOINT_f]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             x = o + self._tab.Pos
             obj = N_JOINT_f()
@@ -59,7 +108,7 @@ class Response_CallConfigRobotArm(object):
         return None
 
 def Response_CallConfigRobotArmStart(builder: flatbuffers.Builder):
-    builder.StartObject(4)
+    builder.StartObject(11)
 
 def Start(builder: flatbuffers.Builder):
     Response_CallConfigRobotArmStart(builder)
@@ -82,8 +131,50 @@ def Response_CallConfigRobotArmAddOutCollLimit(builder: flatbuffers.Builder, out
 def AddOutCollLimit(builder: flatbuffers.Builder, outCollLimit: float):
     Response_CallConfigRobotArmAddOutCollLimit(builder, outCollLimit)
 
+def Response_CallConfigRobotArmAddSelfCollMode(builder: flatbuffers.Builder, selfCollMode: int):
+    builder.PrependInt32Slot(3, selfCollMode, 0)
+
+def AddSelfCollMode(builder: flatbuffers.Builder, selfCollMode: int):
+    Response_CallConfigRobotArmAddSelfCollMode(builder, selfCollMode)
+
+def Response_CallConfigRobotArmAddSelfCollDistanceInter(builder: flatbuffers.Builder, selfCollDistanceInter: float):
+    builder.PrependFloat32Slot(4, selfCollDistanceInter, 0.0)
+
+def AddSelfCollDistanceInter(builder: flatbuffers.Builder, selfCollDistanceInter: float):
+    Response_CallConfigRobotArmAddSelfCollDistanceInter(builder, selfCollDistanceInter)
+
+def Response_CallConfigRobotArmAddSelfCollDistanceExter(builder: flatbuffers.Builder, selfCollDistanceExter: float):
+    builder.PrependFloat32Slot(5, selfCollDistanceExter, 0.0)
+
+def AddSelfCollDistanceExter(builder: flatbuffers.Builder, selfCollDistanceExter: float):
+    Response_CallConfigRobotArmAddSelfCollDistanceExter(builder, selfCollDistanceExter)
+
+def Response_CallConfigRobotArmAddGravityMode(builder: flatbuffers.Builder, gravityMode: int):
+    builder.PrependInt32Slot(6, gravityMode, 0)
+
+def AddGravityMode(builder: flatbuffers.Builder, gravityMode: int):
+    Response_CallConfigRobotArmAddGravityMode(builder, gravityMode)
+
+def Response_CallConfigRobotArmAddGravityGx(builder: flatbuffers.Builder, gravityGx: float):
+    builder.PrependFloat32Slot(7, gravityGx, 0.0)
+
+def AddGravityGx(builder: flatbuffers.Builder, gravityGx: float):
+    Response_CallConfigRobotArmAddGravityGx(builder, gravityGx)
+
+def Response_CallConfigRobotArmAddGravityGy(builder: flatbuffers.Builder, gravityGy: float):
+    builder.PrependFloat32Slot(8, gravityGy, 0.0)
+
+def AddGravityGy(builder: flatbuffers.Builder, gravityGy: float):
+    Response_CallConfigRobotArmAddGravityGy(builder, gravityGy)
+
+def Response_CallConfigRobotArmAddGravityGz(builder: flatbuffers.Builder, gravityGz: float):
+    builder.PrependFloat32Slot(9, gravityGz, 0.0)
+
+def AddGravityGz(builder: flatbuffers.Builder, gravityGz: float):
+    Response_CallConfigRobotArmAddGravityGz(builder, gravityGz)
+
 def Response_CallConfigRobotArmAddDirectTeachingSensitivity(builder: flatbuffers.Builder, directTeachingSensitivity: Any):
-    builder.PrependStructSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(directTeachingSensitivity), 0)
+    builder.PrependStructSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(directTeachingSensitivity), 0)
 
 def AddDirectTeachingSensitivity(builder: flatbuffers.Builder, directTeachingSensitivity: Any):
     Response_CallConfigRobotArmAddDirectTeachingSensitivity(builder, directTeachingSensitivity)
@@ -106,6 +197,13 @@ class Response_CallConfigRobotArmT(object):
         self.outCollOnoff = 0  # type: int
         self.outCollReact = 0  # type: int
         self.outCollLimit = 0.0  # type: float
+        self.selfCollMode = 0  # type: int
+        self.selfCollDistanceInter = 0.0  # type: float
+        self.selfCollDistanceExter = 0.0  # type: float
+        self.gravityMode = 0  # type: int
+        self.gravityGx = 0.0  # type: float
+        self.gravityGy = 0.0  # type: float
+        self.gravityGz = 0.0  # type: float
         self.directTeachingSensitivity = None  # type: Optional[N_JOINT_fT]
 
     @classmethod
@@ -132,6 +230,13 @@ class Response_CallConfigRobotArmT(object):
         self.outCollOnoff = responseCallConfigRobotArm.OutCollOnoff()
         self.outCollReact = responseCallConfigRobotArm.OutCollReact()
         self.outCollLimit = responseCallConfigRobotArm.OutCollLimit()
+        self.selfCollMode = responseCallConfigRobotArm.SelfCollMode()
+        self.selfCollDistanceInter = responseCallConfigRobotArm.SelfCollDistanceInter()
+        self.selfCollDistanceExter = responseCallConfigRobotArm.SelfCollDistanceExter()
+        self.gravityMode = responseCallConfigRobotArm.GravityMode()
+        self.gravityGx = responseCallConfigRobotArm.GravityGx()
+        self.gravityGy = responseCallConfigRobotArm.GravityGy()
+        self.gravityGz = responseCallConfigRobotArm.GravityGz()
         if responseCallConfigRobotArm.DirectTeachingSensitivity() is not None:
             self.directTeachingSensitivity = N_JOINT_fT.InitFromObj(responseCallConfigRobotArm.DirectTeachingSensitivity())
 
@@ -141,6 +246,13 @@ class Response_CallConfigRobotArmT(object):
         Response_CallConfigRobotArmAddOutCollOnoff(builder, self.outCollOnoff)
         Response_CallConfigRobotArmAddOutCollReact(builder, self.outCollReact)
         Response_CallConfigRobotArmAddOutCollLimit(builder, self.outCollLimit)
+        Response_CallConfigRobotArmAddSelfCollMode(builder, self.selfCollMode)
+        Response_CallConfigRobotArmAddSelfCollDistanceInter(builder, self.selfCollDistanceInter)
+        Response_CallConfigRobotArmAddSelfCollDistanceExter(builder, self.selfCollDistanceExter)
+        Response_CallConfigRobotArmAddGravityMode(builder, self.gravityMode)
+        Response_CallConfigRobotArmAddGravityGx(builder, self.gravityGx)
+        Response_CallConfigRobotArmAddGravityGy(builder, self.gravityGy)
+        Response_CallConfigRobotArmAddGravityGz(builder, self.gravityGz)
         if self.directTeachingSensitivity is not None:
             directTeachingSensitivity = self.directTeachingSensitivity.Pack(builder)
             Response_CallConfigRobotArmAddDirectTeachingSensitivity(builder, directTeachingSensitivity)

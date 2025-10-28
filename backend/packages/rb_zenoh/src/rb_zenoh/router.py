@@ -21,6 +21,13 @@ class _Reg:
     handle: Any | None = None
 
 
+@dataclass(slots=True)
+class _QueryableReg:
+    topic: str
+    cb: Callable
+    handle: Any | None = None
+
+
 class ZenohRouterError(Exception):
     pass
 
@@ -40,6 +47,7 @@ class ZenohRouter:
         self.tags = tags or []
         self.name = name or "zenoh"
         self._regs: list[_Reg] = []
+        self._queryables: list[_QueryableReg] = []
         self._lock = asyncio.Lock()
         self._started = False
         self._closed = False
@@ -70,6 +78,20 @@ class ZenohRouter:
                     reg.topic, reg.cb, flatbuffer_obj_t=reg.flatbuffer_obj_t, options=reg.opts
                 )
                 reg.handle = handle
+            return func
+
+        return deco
+
+    def queryable(self, topic: str):
+        full_topic = self._join_topic(self.prefix, topic)
+
+        def deco(func: Callable):
+            queryables = _QueryableReg(full_topic, func)
+            self._queryables.append(queryables)
+
+            if self._started and not self._closed:
+                handle = self.client.queryable(queryables.topic, queryables.cb)
+                queryables.handle = handle
             return func
 
         return deco
@@ -139,6 +161,12 @@ class ZenohRouter:
                     with contextlib.suppress(Exception):
                         r.handle.close()
                     r.handle = None
+
+            for q in self._queryables:
+                if q.handle:
+                    with contextlib.suppress(Exception):
+                        q.handle.close()
+                    q.handle = None
 
             # 세션 닫기
             with contextlib.suppress(Exception):

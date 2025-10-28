@@ -5,7 +5,7 @@ from typing import Any
 
 
 def _join(*parts: str) -> str:
-    parts = [p.strip("/") for p in parts if p]
+    parts = tuple(p.strip("/") for p in parts if p)
     return "/".join(parts)
 
 

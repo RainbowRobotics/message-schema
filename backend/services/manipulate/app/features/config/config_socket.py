@@ -17,7 +17,7 @@ def on_call_config_toollist(data, robot_model: str):
 def on_call_change_toollist(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = config_service.change_toollist(robot_model, request=dict_data)
+    res = config_service.call_change_toollist(robot_model, request=dict_data)
     return to_json(res)
 
 
@@ -116,4 +116,12 @@ def on_call_change_userframe(data, robot_model: str):
     dict_data = t_to_dict(data)
 
     res = config_service.call_change_userframe(robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/save_gravity_parameter")
+def on_save_gravity_parameter(data, robot_model: str):
+    dict_data = t_to_dict(data)
+
+    res = config_service.save_gravity_parameter(robot_model, request=dict_data)
     return to_json(res)

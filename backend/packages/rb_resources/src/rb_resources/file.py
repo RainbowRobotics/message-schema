@@ -3,7 +3,7 @@ from contextlib import AbstractContextManager, contextmanager, suppress
 from dataclasses import dataclass
 from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fastapi import FastAPI
 
@@ -16,8 +16,8 @@ class _PersistEntry:
 
 def _ensure_state(app: FastAPI):
     if not hasattr(app.state, "_persist_entries"):
-        app.state._persist_entries: dict[tuple[str, tuple[str, ...]], _PersistEntry] = {}
-    return app.state._persist_entries
+        app.state._persist_entries = {}
+    return cast(dict[tuple[str, tuple[str, ...]], _PersistEntry], app.state._persist_entries)
 
 
 def open_resource_persist(app: FastAPI, *rel: str) -> Path:
@@ -37,11 +37,11 @@ def open_resource_persist(app: FastAPI, *rel: str) -> Path:
     entries = _ensure_state(app)
     key = ("rb_resources", tuple(rel))
     if key in entries:
-        return entries[key].path
+        return cast(Path, entries[key].path)
 
     res = files("rb_resources").joinpath(*rel)
     cm = as_file(res)
-    path = cm.__enter__()  # 컨텍스트 오픈 (디렉터리/파일 모두 OK)
+    path: Path = cm.__enter__()  # 컨텍스트 오픈 (디렉터리/파일 모두 OK)
 
     entries[key] = _PersistEntry(cm=cm, path=path)
     return path

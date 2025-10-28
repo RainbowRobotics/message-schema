@@ -75,6 +75,15 @@ table Response_CallConfigRobotArm{
   out_coll_react: ubyte;
   out_coll_limit: float;
 
+  self_coll_mode: int;
+  self_coll_distance_inter: float;
+  self_coll_distance_exter: float;
+
+  gravity_mode: int;
+  gravity_gx: float;
+  gravity_gy: float;
+  gravity_gz: float;
+
   direct_teaching_sensitivity: N_JOINT_f;
 }
 

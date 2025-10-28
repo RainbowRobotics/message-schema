@@ -41,7 +41,7 @@ class RBSocketIONsClient(socketio.AsyncClient):
             (
                 list(path_params[t])
                 if isinstance(path_params[t], list | tuple | set)
-                else [path_params[t]]
+                else [str(path_params[t])]
             )
             for t in tokens
         ]

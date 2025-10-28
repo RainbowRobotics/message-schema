@@ -82,7 +82,28 @@ backend.deploy:  ## 모든 Backend 서비스 또는 지정된 Backend 서비스 
 
 .PHONY: backend.mypy
 backend.mypy: ## mypy로 type check
-	@cd ${WORKDIR} && uv run mypy services/deploy
-	@cd ${WORKDIR} && uv run mypy services/common
-	@cd ${WORKDIR} && uv run mypy services/manipulate
-	@cd ${WORKDIR} && uv run mypy services/log
+	@echo "🔍 Type checking backend services..."
+	@find ${WORKDIR}/services -maxdepth 1 -type d ! -path ${WORKDIR}/services -exec basename {} \; | while read service; do \
+		echo "📦 Checking $$service..."; \
+		cd ${WORKDIR} && uv run mypy services/$$service --explicit-package-bases --config-file ${WORKDIR}/pyproject.toml || true; \
+	done
+	@echo "🔍 Type checking backend packages..."
+	@find ${WORKDIR}/packages -maxdepth 1 -type d ! -path ${WORKDIR}/packages -exec basename {} \; | while read package; do \
+		echo "📦 Checking $$package..."; \
+		cd ${WORKDIR} && uv run mypy packages/$$package --config-file ${WORKDIR}/pyproject.toml || true; \
+	done
+	@echo "✅ Type check completed"
+
+.PHONY: backend.mypy2
+backend.mypy2: ## mypy로 type check
+	@find ${WORKDIR}/services -name pyproject.toml -exec dirname {} \; | while read dir; do \
+		echo "📦 mypy ${dir}"; \
+		# cd ${WORKDIR} && uv run mypy ${dir}; \
+	done
+	@find ${WORKDIR}/packages -name pyproject.toml -exec dirname {} \; | while read dir; do \
+		# cd ${WORKDIR} && uv run mypy ${dir}; \
+	done
+	# @cd ${WORKDIR} && uv run mypy services/deploy
+	# @cd ${WORKDIR} && uv run mypy services/common
+	# @cd ${WORKDIR} && uv run mypy services/manipulate
+	# @cd ${WORKDIR} && uv run mypy services/log

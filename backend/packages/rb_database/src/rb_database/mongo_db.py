@@ -3,13 +3,13 @@ import time
 from collections.abc import Sequence
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
 from pymongo.errors import OperationFailure
 from rb_modules.log import rb_log
 
 client: AsyncIOMotorClient | None = None
-db: AsyncIOMotorDatabase
+db: AsyncIOMotorDatabase | None = None
 
 
 def _norm_key_spec(keys: Sequence[tuple[str, int | str]] | tuple[str, int | str] | str):
@@ -175,10 +175,6 @@ async def close_db(app: FastAPI):
         c.close()
 
 
-def get_db(request: Request) -> AsyncIOMotorDatabase:
-    return request.app.state.mongo_db
-
-
 async def wait_db_ready(timeout: int = 2):
     start = time.monotonic()
     while db is None:
@@ -186,6 +182,15 @@ async def wait_db_ready(timeout: int = 2):
         if time.monotonic() - start > timeout:
             raise RuntimeError("MongoDB not ready")
         await asyncio.sleep(0.05)
+
+
+async def get_db():
+    await wait_db_ready()
+
+    if db is None:
+        raise RuntimeError("Database not initialized after waiting")
+
+    return db
 
 
 MongoDB = Annotated[AsyncIOMotorDatabase, Depends(get_db)]

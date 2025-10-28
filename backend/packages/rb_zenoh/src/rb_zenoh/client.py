@@ -12,17 +12,16 @@ from collections.abc import Callable
 from functools import partial
 
 # import flatbuffers
-from typing import Any
+from typing import Any, cast
 
-import flatbuffers  # type: ignore
-import psutil  # type: ignore
-from flatbuffers.table import Table  # type: ignore
+import flatbuffers
+import psutil
+from flatbuffers.table import Table
 from rb_utils.parser import t_to_dict
-from zenoh import Config, Encoding, QueryTarget, ZBytes, ZError  # type: ignore
-from zenoh import open as zenoh_open  # type: ignore
+from zenoh import Config, Encoding, QueryTarget, Session, ZBytes, ZError
+from zenoh import open as zenoh_open
 
-from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
-
+from .exeption import ZenohNoReply, ZenohTransportError
 from .schema import CallbackEntry, OverflowPolicy, SubscribeOptions
 from .utils import recommend_cap, rough_size_of_fields
 
@@ -174,7 +173,8 @@ class ZenohClient:
             payload = bytes(b.Output())
 
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
-        self.session.put(topic, payload, attachment=attachment)
+        if self.session is not None:
+            self.session.put(topic, payload, attachment=attachment)
 
     def subscribe(
         self,
@@ -197,7 +197,7 @@ class ZenohClient:
 
         opts = options or SubscribeOptions()
 
-        if topic not in self._subs:
+        if topic not in self._subs and self.session is not None:
             sub = self.session.declare_subscriber(
                 topic, self._make_on_sample(topic, flatbuffer_obj_t)
             )
@@ -295,7 +295,7 @@ class ZenohClient:
 
             loop.call_soon_threadsafe(lambda: asyncio.create_task(_handle()))
 
-        sub = self.session.declare_subscriber(topic, _raw_cb)
+        sub = cast(Session, self.session).declare_subscriber(topic, _raw_cb)
 
         try:
             try:

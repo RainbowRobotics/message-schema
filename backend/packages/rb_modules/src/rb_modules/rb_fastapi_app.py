@@ -1,8 +1,9 @@
 import asyncio
 import contextlib
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from contextlib import asynccontextmanager
 from importlib.resources import as_file, files
+from typing import Any
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,13 +16,13 @@ from rb_socketio import RBSocketIONsClient, RbSocketIORouter
 from rb_zenoh.exeption import register_zenoh_exception_handlers
 from rb_zenoh.router import ZenohRouter
 
-from rb_modules.log import rb_log
+from .log import rb_log
 
 
 class AppSettings(BaseSettings):
     IS_DEV: bool = Field(default=False)
-    PORT: int
-    SERVICE_NAME: str
+    PORT: int | None = None
+    SERVICE_NAME: str | None = None
 
     ROOT_PATH: str | None = None
 
@@ -61,7 +62,7 @@ def create_app(
     socket_routers: (
         Sequence[RbSocketIORouter] | None
     ) = None,  # [state_socket_router, ...] (client를 받아 등록)
-    bg_tasks: list[asyncio.Task] | None = None,
+    bg_tasks: list[Callable[[], Any]] | None = None,
 ) -> FastAPI:
 
     zenoh_router = ZenohRouter()
@@ -72,7 +73,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         if not settings.no_init_db:
-            await init_db(app, settings.MONGO_URI, settings.MONGO_DB_NAME)
+            await init_db(app, settings.MONGO_URI or "", settings.MONGO_DB_NAME or "")
 
         await zenoh_router.startup()
         print("📡 zenoh subscribe 등록 완료", flush=True)
@@ -94,7 +95,7 @@ def create_app(
                 )
             )
 
-            app.rb_log = rb_log
+            app.state.rb_log = rb_log
 
             print("🔌 socket.io connect issued (non-blocking)", flush=True)
 
@@ -107,7 +108,8 @@ def create_app(
                 else:
                     raise TypeError(f"Invalid bg_task type: {type(task_fn)}")
 
-                bg_tasks[bg_tasks.index(task_fn)] = app_task
+                app.state.bg_tasks = app.state.bg_tasks if hasattr(app.state, "bg_tasks") else []
+                app.state.bg_tasks.append(app_task)
 
         try:
             yield
@@ -116,9 +118,10 @@ def create_app(
                 await zenoh_router.shutdown()
                 print("⛔ zenoh 연결 종료", flush=True)
 
-                await socket_client.disconnect()
+                if socket_client:
+                    await socket_client.disconnect()
 
-                for t in bg_tasks:
+                for t in app.state.bg_tasks:
                     t.cancel()
                 for t in bg_tasks:
                     with contextlib.suppress(asyncio.CancelledError):
@@ -130,8 +133,8 @@ def create_app(
 
     app = FastAPI(
         lifespan=lifespan,
-        root_path=settings.ROOT_PATH,
-        title=f"{settings.SERVICE_NAME.capitalize()} Service",
+        root_path=settings.ROOT_PATH or "",
+        title=f"{(settings.SERVICE_NAME or '').capitalize()} Service",
         docs_url=None,
     )
 
@@ -146,16 +149,17 @@ def create_app(
     register_zenoh_exception_handlers(app)
 
     if zenoh_routers:
-        for r in zenoh_routers:
-            zenoh_router.include_router(r)
+        for zenoh_r in zenoh_routers:  # type: ZenohRouter
+            zenoh_router.include_router(zenoh_r)
 
     if api_routers:
-        for r in api_routers:
-            app.include_router(r)
+        for api_r in api_routers:  # type: APIRouter
+            app.include_router(api_r)
 
     if socket_routers:
-        for r in socket_routers:
-            socket_client.socket_include_router(r)
+        for socket_r in socket_routers:  # type: RbSocketIORouter
+            if socket_client is not None:
+                socket_client.socket_include_router(socket_r)
 
     @app.get("/swagger-ui/swagger-ui.css", include_in_schema=False)
     def _css():
@@ -175,7 +179,7 @@ def create_app(
 
         return get_swagger_ui_html(
             openapi_url=f"{prefix}/openapi.json",
-            title=f"{settings.SERVICE_NAME.capitalize()} Service",
+            title=f"{(settings.SERVICE_NAME or "").capitalize()} Service",
             swagger_css_url=f"{prefix}/swagger-ui/swagger-ui.css",
             swagger_js_url=f"{prefix}/swagger-ui/swagger-ui.js",
         )

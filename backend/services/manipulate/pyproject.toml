@@ -17,6 +17,7 @@ dependencies = [
   "rb_schemas",
   "rb_resources",
   "rb_database",
+  "rb_flow_manager",
   "fastapi>=0.116.1,<0.117.0",
   "uvicorn[standard]>=0.35.0,<0.36.0",
   "python-dotenv>=1.1.1,<2.0.0",
@@ -32,3 +33,4 @@ rb_modules = { workspace = true }
 rb_schemas = { workspace = true }
 rb_resources = { workspace = true }
 rb_database = { workspace = true }
+rb_flow_manager = { workspace = true }

@@ -1,10 +1,11 @@
 from rb_modules.rb_fastapi_app import AppSettings, create_app
 
+from app.features.config.config_api import config_router
+from app.features.config.config_module import ConfigService
+from app.features.config.config_socket import config_socket_router
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.program.program_api import program_router
-from app.features.program.program_module import ProgramService
-from app.features.program.program_socket import program_socket_router
 from app.features.state.state_api import state_router
 from app.features.state.state_module import StateService
 from app.features.state.state_socket import state_socket_router
@@ -20,7 +21,7 @@ socketio_route_path = f"{setting.SOCKET_PATH}/"
 
 
 state_service = StateService()
-program_service = ProgramService()
+config_service = ConfigService()
 
 app = create_app(
     settings=setting,
@@ -28,14 +29,14 @@ app = create_app(
     zenoh_routers=[zenoh_state_router],
     socket_routers=[
         whoami_socket_router,
-        program_socket_router,
+        config_socket_router,
         state_socket_router,
         info_socket_router,
     ],
-    api_routers=[state_router, whoami_router, info_router, program_router],
+    api_routers=[state_router, config_router, whoami_router, info_router, program_router],
     bg_tasks=[
         state_service.repeat_get_system_state,
-        program_service.repeat_get_all_speedbar,
+        config_service.repeat_get_all_speedbar,
     ],
 )
 

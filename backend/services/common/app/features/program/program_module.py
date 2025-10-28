@@ -1,5 +1,4 @@
-import asyncio
-import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -7,25 +6,24 @@ from bson import ObjectId
 from fastapi import HTTPException
 from pymongo import ReturnDocument
 from pymongo.operations import UpdateOne
-from rb_database import MongoDB, mongo_db
-from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
+from rb_database import MongoDB
+from rb_database.utils import make_check_include_query, make_check_search_text_query
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_flat_buffers.IPC.State_Core import State_CoreT
+from rb_flow_manager.control import RB_Flow_Manager_ProgramState
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
-from rb_resources.file import read_json_file
-from rb_utils.asyncio_helper import fire_and_log
+from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
-
-from app.socket.socket_client import socket_client
 
 from .program_schema import (
     Request_Create_FlowPD,
     Request_Create_Multiple_FlowPD,
     Request_Create_Multiple_TaskPD,
     Request_Create_ProgramPD,
+    Request_Delete_FlowsPD,
+    Request_Delete_TasksPD,
     Request_Update_FlowPD,
     Request_Update_Multiple_FlowPD,
     Request_Update_ProgramPD,
@@ -36,119 +34,7 @@ zenoh_client = ZenohClient()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
-        self._robot_models = read_json_file("data", "robot_models.json")
-
-    async def get_all_speedbar(self, *, components: list[str]):
-        try:
-            # diff_flag = False
-            min_speedbar = 1.0
-
-            for component in components:
-                model_info = self._robot_models.get(component)
-                be_service = model_info.get("be_service")
-                if be_service == "manipulate":
-                    topic, mv, obj, attachment = await zenoh_client.receive_one(
-                        f"{component}/state_core", flatbuffer_obj_t=State_CoreT, timeout=0.5
-                    )
-
-                    speedbar = 1.0
-
-                    if obj:
-                        speedbar = obj["motionSpeedBar"]
-
-                    if speedbar < min_speedbar:
-                        min_speedbar = speedbar
-                        # diff_flag = True
-
-                elif be_service == "mobility":
-                    # TODO: mobility speedbar
-                    continue
-                elif be_service == "sensor":
-                    # TODO: sensor speedbar
-                    continue
-                else:
-                    # TODO: other speedbar
-                    continue
-
-            # if diff_flag:
-            #     await self.control_speed_bar(components=components, speedbar=min_speedbar)
-
-            return {"speedbar": min_speedbar}
-        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-            rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
-        except Exception as e:
-            rb_log.error(f"get_all_speedbar {e}")
-
-    async def repeat_get_all_speedbar(self):
-        try:
-            await mongo_db.wait_db_ready()
-            next_ts = time.monotonic()
-            col = mongo_db.db["robot_info"]
-
-            while True:
-                if col is None:
-                    await asyncio.sleep(0.5)
-                    next_ts = time.monotonic() + 1.0
-                    continue
-
-                doc = await col.find_one({}, {"_id": 0, "components": 1}) or {}
-                components = list(doc.get("components") or [])
-
-                res = await self.get_all_speedbar(components=components)
-                if isinstance(res, dict) and "speedbar" in res:
-                    fire_and_log(socket_client.emit("speedbar", res))
-                else:
-                    rb_log.error(f"repeat_get_all_speedbar res: {res}")
-
-                now = time.monotonic()
-                next_ts = max(next_ts + 1.0, now + 1.0)
-                await asyncio.sleep(max(0.0, next_ts - now))
-
-        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-            rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
-        except Exception as e:
-            rb_log.error(f"repeat_get_all_speedbar {e}")
-
-    async def control_speed_bar(self, *, components: list[str], speedbar: int):
-        try:
-            failed_component = []
-            rb_log.debug(f"components>{components}")
-            for component in components:
-                model_info = self._robot_models.get(component)
-                rb_log.debug(f"model_info => ${model_info}")
-                be_service = model_info.get("be_service")
-                if be_service == "manipulate":
-                    req = Request_MotionSpeedBarT()
-                    req.alpha = speedbar
-
-                    res = zenoh_client.query_one(
-                        f"{component}/call_speedbar",
-                        flatbuffer_req_obj=req,
-                        flatbuffer_buf_size=32,
-                        flatbuffer_res_T_class=Response_FunctionsT,
-                    )
-
-                    if res["err"]:
-                        failed_component.append(component)
-                        rb_log.error(res["err"])
-                elif be_service == "mobility":
-                    # TODO: mobility speedbar
-                    pass
-                elif be_service == "sensor":
-                    # TODO: sensor speedbar
-                    pass
-                else:
-                    # TODO: other speedbar
-                    pass
-
-            return {"returnValue": 500 if len(failed_component) > 0 else 0}
-
-        except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
-            rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
-            raise
-        except Exception as e:
-            rb_log.error(f"control_speed_bar error: {e}", disable_db=True)
-            raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e
+        pass
 
     async def call_smoothjog_stop(self, *, stoptime: float):
         try:
@@ -248,13 +134,89 @@ class ProgramService(BaseService):
     #         {
     #             "$set": {
 
+    def build_task_tree(self, tasks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        평면 tasks를 트리로 변환한다.
+        """
+
+        nodes: dict[str, dict] = {}
+        for t in tasks:
+            nodes[str(t["taskId"])] = t.copy()
+
+        children_map: dict[str, list[dict]] = {}
+        roots: list[dict] = []
+
+        for n in nodes.values():
+            pid = n.get("nodeId")
+            if pid and pid in nodes:
+                children_map.setdefault(pid, []).append(n)
+            else:
+                roots.append(n)
+
+        def sort_children(lst: list[dict]):
+            lst.sort(key=lambda x: x.get("order", 0))
+
+        VISITING, VISITED = 1, 2
+        state: dict[str, int] = {}
+
+        def attach(node: dict):
+            nid = node["taskId"]
+            if state.get(nid) == VISITING:
+                return
+            if state.get(nid) == VISITED:
+                return
+            state[nid] = VISITING
+
+            kids = children_map.get(nid)
+            if kids:
+                sort_children(kids)
+                node["steps"] = kids
+                for c in kids:
+                    attach(c)
+
+            state[nid] = VISITED
+
+        sort_children(roots)
+        for r in roots:
+            attach(r)
+
+        return roots
+
+    async def get_task(self, *, task_id: str, db: MongoDB):
+        tasks_col = db["tasks"]
+        task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+
+        if not task_doc:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        task_doc["taskId"] = str(task_doc.pop("_id"))
+
+        return task_doc
+
+    async def get_task_list(self, *, flow_id: str, db: MongoDB):
+        tasks_col = db["tasks"]
+
+        query: dict[str, Any] = {}
+
+        query = make_check_include_query("flowId", flow_id, query=query)
+
+        tasks_docs = await tasks_col.find(query).sort("order", 1).to_list(length=None)
+
+        for doc in tasks_docs:
+            doc["taskId"] = str(doc.pop("_id"))
+
+        return {
+            "tasks": tasks_docs,
+            "taskTree": self.build_task_tree(tasks_docs),
+        }
+
     async def upsert_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
         now = datetime.now(UTC).isoformat()
 
         tasks_col = db["tasks"]
         flows_col = db["flows"]
 
-        tasks = [task.model_dump() for task in request.tasks]
+        tasks = [t_to_dict(task) for task in request.tasks]
 
         flow_ids = {t["flowId"] for t in tasks}
         record_find_flow_ids = []
@@ -318,11 +280,24 @@ class ProgramService(BaseService):
 
         return tasks
 
+    async def delete_tasks(self, *, request: Request_Delete_TasksPD, db: MongoDB):
+        request_dict = t_to_dict(request)
+        task_ids = [ObjectId(tid) for tid in request_dict["task_ids"]]
+
+        tasks_col = db["tasks"]
+        task_deleted_res = await tasks_col.delete_many(
+            {"$or": [{"_id": {"$in": task_ids}}, {"nodeId": {"$in": request_dict["task_ids"]}}]}
+        )
+
+        return {
+            "taskDeleted": task_deleted_res.deleted_count,
+        }
+
     async def create_flows(self, *, request: Request_Create_Multiple_FlowPD, db: MongoDB):
         flows_col = db["flows"]
         program_col = db["programs"]
 
-        flows = [flow.model_dump() for flow in request.flows]
+        flows = [t_to_dict(flow) for flow in request.flows]
 
         program_ids = {f["programId"] for f in flows}
         record_find_program_ids = []
@@ -351,7 +326,7 @@ class ProgramService(BaseService):
         flows_col = db["flows"]
         program_col = db["programs"]
 
-        flows = [flow.model_dump(exclude_none=True) for flow in request.flows]
+        flows = [t_to_dict(flow) for flow in request.flows]
 
         program_ids = {f["programId"] for f in flows}
 
@@ -387,58 +362,76 @@ class ProgramService(BaseService):
             "flows": res,
         }
 
-    async def update_program_and_flows(self, *, request: Request_Update_ProgramPD, db: MongoDB):
-        try:
-            now = datetime.now(UTC)
+    async def delete_flows(self, *, request: Request_Delete_FlowsPD, db: MongoDB):
+        request_dict = t_to_dict(request)
+        flow_ids = request_dict["flow_ids"]
 
-            program_doc = {
-                **request.program.model_dump(exclude_none=True),
-                "updatedAt": now.isoformat(),
-            }
+        flows_col = db["flows"]
+        tasks_col = db["tasks"]
 
-            col = db["programs"]
+        flow_deleted_res = await flows_col.delete_many(
+            {"_id": {"$in": [ObjectId(fid) for fid in flow_ids]}}
+        )
+        task_deleted_res = await tasks_col.delete_many({"flowId": {"$in": flow_ids}})
 
-            find_doc = await col.find_one({"_id": ObjectId(program_doc["programId"])})
+        return {
+            "flowDeleted": flow_deleted_res.deleted_count,
+            "taskDeleted": task_deleted_res.deleted_count,
+        }
 
-            if not find_doc:
-                raise HTTPException(status_code=400, detail="Program not found")
+    async def get_program_info(self, *, program_id: str, db: MongoDB):
+        program_col = db["programs"]
+        flows_col = db["flows"]
 
-            program_res = await col.find_one_and_update(
-                {"_id": ObjectId(program_doc["programId"])},
-                {"$set": program_doc},
-                return_document=ReturnDocument.AFTER,
-            )
+        program_doc = await program_col.find_one({"_id": ObjectId(program_id)})
 
-            program_res["programId"] = str(program_res.pop("_id"))
+        if not program_doc:
+            raise HTTPException(status_code=400, detail="Program not found")
 
-            for flow in request.flows:
-                flow.programId = str(program_res["programId"])
-                flow.name = f'{flow.robotModel}_{program_res["name"]}'
-                flow.scriptName = flow.name
+        program_doc["programId"] = str(program_doc.pop("_id"))
 
-            flows_res = await self.update_flows(
-                request=Request_Update_Multiple_FlowPD(
-                    flows=[
-                        Request_Update_FlowPD(**f.model_dump(exclude_none=True))
-                        for f in request.flows
-                    ]
-                ),
-                db=db,
-            )
+        flows_docs = await flows_col.find({"programId": program_id}).to_list(length=None)
 
-            return {
-                "program": program_res,
-                "flows": flows_res["flows"],
-            }
-        except Exception as e:
-            raise e
+        for doc in flows_docs:
+            doc["flowId"] = str(doc.pop("_id"))
+
+        return {
+            "program": program_doc,
+            "flows": flows_docs,
+        }
+
+    async def get_program_list(
+        self,
+        *,
+        state: RB_Flow_Manager_ProgramState | None = None,
+        search_name: str | None = None,
+        db: MongoDB,
+    ):
+        program_col = db["programs"]
+
+        query: dict[str, Any] = {}
+
+        if search_name:
+            if len(search_name) > 100:
+                raise ValueError("search_name must be less than 100 characters")
+
+            query = make_check_search_text_query("name", search_name, query=query)
+
+        query = make_check_include_query("state", state, query=query)
+
+        program_docs = await program_col.find(query).to_list(length=None)
+
+        for doc in program_docs:
+            doc["programId"] = str(doc.pop("_id"))
+
+        return program_docs
 
     async def create_program_and_flows(self, *, request: Request_Create_ProgramPD, db: MongoDB):
         try:
             now = datetime.now(UTC)
 
             program_doc = {
-                **request.program.model_dump(exclude_none=True),
+                **t_to_dict(request.program),
                 "createdAt": now.isoformat(),
                 "updatedAt": now.isoformat(),
             }
@@ -482,6 +475,52 @@ class ProgramService(BaseService):
             "program": find_program_doc,
             "flows": flows_res,
         }
+
+    async def update_program_and_flows(self, *, request: Request_Update_ProgramPD, db: MongoDB):
+        try:
+            now = datetime.now(UTC)
+
+            program_doc = {
+                **t_to_dict(request.program),
+                "updatedAt": now.isoformat(),
+            }
+
+            col = db["programs"]
+
+            find_doc = await col.find_one({"_id": ObjectId(program_doc["programId"])})
+
+            if not find_doc:
+                raise HTTPException(status_code=400, detail="Program not found")
+
+            program_res = await col.find_one_and_update(
+                {"_id": ObjectId(program_doc["programId"])},
+                {"$set": program_doc},
+                return_document=ReturnDocument.AFTER,
+            )
+
+            program_res["programId"] = str(program_res.pop("_id"))
+
+            for flow in request.flows:
+                flow.programId = str(program_res["programId"])
+                flow.name = f'{flow.robotModel}_{program_res["name"]}'
+                flow.scriptName = flow.name
+
+            flows_res = await self.update_flows(
+                request=Request_Update_Multiple_FlowPD(
+                    flows=[
+                        Request_Update_FlowPD(**f.model_dump(exclude_none=True))
+                        for f in request.flows
+                    ]
+                ),
+                db=db,
+            )
+
+            return {
+                "program": program_res,
+                "flows": flows_res["flows"],
+            }
+        except Exception as e:
+            raise e
 
     async def delete_program(self, *, program_id: str, db: MongoDB):
         program_col = db["programs"]

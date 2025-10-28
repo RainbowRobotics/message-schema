@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from rb_flat_buffers.IPC.State_Core import State_CoreT
 from rb_schemas.base import Response_ReturnValuePD
-from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 
 from .state_module import StateService
@@ -23,12 +22,10 @@ state_router = APIRouter(tags=["State"])
 async def state(robot_model: str):
     topic, mv, obj, attachment = await zenoh_client.receive_one(
         f"{robot_model}/state_core",
+        flatbuffer_obj_t=State_CoreT,
     )
 
-    mv_bytes = bytes(mv)
-    obj = State_CoreT.InitFromPackedBuf(mv_bytes, 0)
-
-    return JSONResponse(t_to_dict(obj))
+    return JSONResponse(obj)
 
 
 @state_router.post("/{robot_model}/call_powercontrol", response_model=PowerControlResponsePD)

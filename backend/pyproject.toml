@@ -30,7 +30,7 @@ target-version = ["py312"]
 [tool.isort]
 profile = "black"
 line_length = 100
-src_paths = ["backend/services", "backend/packages"]
+src_paths = ["services", "packages"]
 
 [tool.ruff]
 line-length = 100
@@ -54,7 +54,6 @@ ignore = ["E501"]
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
-disallow_untyped_imports = false
 warn_unused_ignores = true
 warn_redundant_casts = true
 warn_return_any = true
@@ -67,6 +66,10 @@ pretty = true
 namespace_packages = true
 disable_error_code = ["import-untyped"]
 
+exclude = [
+    "packages/rb_flat_buffers/",
+]
+
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["services", "packages"]
@@ -77,10 +80,6 @@ module = [
     "psutil",
     "socketio.*",
     "zenoh",
-    "rb_flat_buffers.*",
-    "rb_modules.*",
-    "rb_utils.*",
-    "rb_zenoh.*",
 ]
 ignore_missing_imports = true
 disallow_untyped_imports = false

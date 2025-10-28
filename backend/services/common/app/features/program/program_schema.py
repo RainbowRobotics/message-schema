@@ -1,4 +1,5 @@
 # mypy: disable-error-code=misc
+from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
@@ -9,15 +10,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from rb_database import PyObjectId
 from rb_flow_manager.control import RB_Flow_Manager_ProgramState
 from rb_schemas.utility import Omit, Pick
-
-
-class Response_SpeedBarPD(BaseModel):
-    speedbar: float | int
-
-
-class Request_Change_SpeedbarPD(BaseModel):
-    components: list[str]
-    speedbar: float
 
 
 class ProgramStatus(str, Enum):
@@ -79,13 +71,17 @@ class Task_Base(BaseModel):
     }
 
 
+class Task_Tree_Base(Task_Base):
+    steps: list[Task_Tree_Base] | None = Field(default=None)
+
+
 class Request_Create_TaskPD(Omit(Task_Base, "_id", "taskId", "createdAt", "updatedAt")):
     taskId: str | None = Field(
-        default="",
+        default=None,
     )
 
     @field_validator("taskId")
-    def validate_object_id(self, v):
+    def validate_object_id(cls, v: str | None) -> str | None:  # pylint: disable=no-self-argument
         if v is None:
             return v
         if not ObjectId.is_valid(v):
@@ -95,8 +91,21 @@ class Request_Create_TaskPD(Omit(Task_Base, "_id", "taskId", "createdAt", "updat
         return v
 
 
+class Response_Get_TaskListPD(BaseModel):
+    tasks: list[Task_Base]
+    taskTree: list[Task_Tree_Base]
+
+
 class Request_Create_Multiple_TaskPD(BaseModel):
     tasks: list[Request_Create_TaskPD]
+
+
+class Request_Delete_TasksPD(BaseModel):
+    task_ids: list[str]
+
+
+class Response_Delete_TasksPD(BaseModel):
+    taskDeleted: int
 
 
 class FlowType(str, Enum):
@@ -145,6 +154,15 @@ class Request_Update_Multiple_FlowPD(BaseModel):
     flows: list[Request_Update_FlowPD]
 
 
+class Request_Delete_FlowsPD(BaseModel):
+    flow_ids: list[str]
+
+
+class Response_Delete_FlowsPD(BaseModel):
+    flowDeleted: int
+    taskDeleted: int
+
+
 class Program_Base(BaseModel):
     programId: PyObjectId
     name: str
@@ -152,6 +170,16 @@ class Program_Base(BaseModel):
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+
+class Request_Get_Program_ListPD(BaseModel):
+    state: RB_Flow_Manager_ProgramState | None = None
+    search_name: str | None = None
+
+
+class Response_Get_ProgramPD(BaseModel):
+    program: Program_Base
+    flows: list[Flow_Base]
 
 
 class Create_Program_With_FlowPD(

@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timezone
+from datetime import UTC, date, datetime, timezone
 from typing import Literal
 
 _STRPTIME_FORMATS = (
@@ -18,7 +18,7 @@ _STRPTIME_FORMATS = (
 )
 
 
-def is_valid_date(date: str | int):
+def is_valid_date(date: date | str | int):
     if isinstance(date, int):
         try:
             sec = timestamp_ms_to_seconds(int(date))

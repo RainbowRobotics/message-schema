@@ -63,7 +63,8 @@ def fire_and_log(
             fut = asyncio.run_coroutine_threadsafe(coro, loop)
             _attach_done_logging(fut, name=name)
             return fut
-        task = running.create_task(coro, name=name)
+
+        task: asyncio.Task = running.create_task(coro, name=name)  # type: ignore
         _attach_done_logging(task, name=name)
         return task
     except RuntimeError:
@@ -83,8 +84,6 @@ def _attach_done_logging(fut_or_task, *, name: str | None):
         except asyncio.CancelledError:
             rb_log.info(f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] cancelled")
         except Exception:
-            rb_log.exception(
-                f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] crashed"
-            )
+            rb_log.error(f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] crashed")
 
     fut_or_task.add_done_callback(_done)

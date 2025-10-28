@@ -8,6 +8,7 @@ from rb_flat_buffers.IPC.Request_Save_Collision_Parameter import Request_Save_Co
 from rb_flat_buffers.IPC.Request_Save_Direct_Teach_Sensitivity import (
     Request_Save_Direct_Teach_SensitivityT,
 )
+from rb_flat_buffers.IPC.Request_Save_Gravity_Parameter import Request_Save_Gravity_ParameterT
 from rb_flat_buffers.IPC.Request_Save_SelfColl_Parameter import Request_Save_SelfColl_ParameterT
 from rb_flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCountT
 from rb_flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_SideDin_SpecialFuncT
@@ -22,13 +23,14 @@ from rb_flat_buffers.IPC.Response_CallConfigToolList import Response_CallConfigT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_utils.asyncio_helper import fire_and_log
-from rb_utils.parser import to_json
+from rb_utils.parser import t_to_dict, to_json
 from rb_zenoh.client import ZenohClient
 
 from .config_schema import (
     Request_Save_Area_ParameterPD,
     Request_Save_Collision_ParameterPD,
     Request_Save_Direct_Teach_SensitivityPD,
+    Request_Save_Gravity_ParameterPD,
     Request_Save_SelfColl_ParameterPD,
     Request_Save_SideDin_FilterPD,
     Request_Save_SideDin_FunctionPD,
@@ -100,7 +102,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def config_control_box(self, robot_model: str) -> Response_CallConfigControlBoxPD:
+    def config_control_box(self, robot_model: str):
         req = Request_CallConfigControlBoxT()
 
         res = zenoh_client.query_one(
@@ -110,10 +112,10 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        return Response_CallConfigControlBoxPD(**res["dict_payload"])
+        return res["dict_payload"]
 
     def parse_get_user_frames(self, config_control_box_res: Response_CallConfigControlBoxPD):
-        config_control_box_res_dict = {**config_control_box_res.model_dump()}
+        config_control_box_res_dict = t_to_dict(config_control_box_res)
         return {
             "user_frames": [
                 config_control_box_res_dict["userFrame0"],
@@ -214,7 +216,7 @@ class ConfigService(BaseService):
     def save_direct_teach_sensitivity(
         self, robot_model: str, *, request: Request_Save_Direct_Teach_SensitivityPD
     ):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_Direct_Teach_SensitivityT()
         nj = N_JOINT_fT()
@@ -231,7 +233,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def save_side_din_filter(self, robot_model: str, *, request: Request_Save_SideDin_FilterPD):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_SideDin_FilterCountT()
         req.portNum = request_dict["port_num"]
@@ -249,7 +251,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_FunctionPD):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_SideDin_SpecialFuncT()
         req.portNum = request_dict["port_num"]
@@ -269,7 +271,7 @@ class ConfigService(BaseService):
     def save_side_dout_function(
         self, robot_model: str, *, request: Request_Save_SideDout_FunctionPD
     ):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_SideDout_SpecialFuncT()
         req.portNum = request_dict["port_num"]
@@ -289,7 +291,7 @@ class ConfigService(BaseService):
     def save_collision_parameter(
         self, robot_model: str, *, request: Request_Save_Collision_ParameterPD
     ):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_Collision_ParameterT()
         req.onoff = request_dict["onoff"]
@@ -308,7 +310,7 @@ class ConfigService(BaseService):
     def save_selfcoll_parameter(
         self, robot_model: str, *, request: Request_Save_SelfColl_ParameterPD
     ):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_SelfColl_ParameterT()
         req.mode = request_dict["mode"]
@@ -332,7 +334,7 @@ class ConfigService(BaseService):
         return user_frames_res
 
     def save_user_frame_parameter(self, robot_model: str, *, request: Request_Save_User_FramePD):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Save_User_FrameT()
         req.userfNo = request_dict["userf_no"]
@@ -356,7 +358,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
     def call_change_userframe(self, robot_model: str, *, request: Request_Set_User_FramePD):
-        request_dict = {**request.model_dump()}
+        request_dict = t_to_dict(request)
 
         req = Request_Set_User_FrameT()
         req.userFrameNum = request_dict["user_frame_num"]
@@ -369,5 +371,25 @@ class ConfigService(BaseService):
         )
 
         self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
+
+        return res["dict_payload"]
+
+    def save_gravity_parameter(
+        self, robot_model: str, *, request: Request_Save_Gravity_ParameterPD
+    ):
+        request_dict = t_to_dict(request)
+
+        req = Request_Save_Gravity_ParameterT()
+        req.mode = request_dict["mode"]
+        req.gx = request_dict["gx"]
+        req.gy = request_dict["gy"]
+        req.gz = request_dict["gz"]
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/save_gravity_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=32,
+        )
 
         return res["dict_payload"]

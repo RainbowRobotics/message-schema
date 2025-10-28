@@ -35,6 +35,13 @@ class Response_CallConfigRobotArmPD(BaseModel):
     outCollReact: int
     outCollLimit: float
     directTeachingSensitivity: list[float]
+    selfCollMode: int
+    selfCollDistanceInter: float
+    selfCollDistanceExter: float
+    gravityMode: int
+    gravityGx: float
+    gravityGy: float
+    gravityGz: float
 
 
 class Response_CallConfigToolListPD(BaseModel):
@@ -162,3 +169,10 @@ class Response_UserFrameParameterPD(BaseModel):
 
 class Request_Set_User_FramePD(BaseModel):
     user_frame_num: int
+
+
+class Request_Save_Gravity_ParameterPD(BaseModel):
+    mode: int
+    gx: float
+    gy: float
+    gz: float
