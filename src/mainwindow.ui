@@ -1245,7 +1245,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
@@ -1310,7 +1310,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1763,12 +1763,12 @@ Move
                <string>BackWard</string>
               </property>
              </widget>
-             <widget class="QWidget" name="">
+             <widget class="QWidget" name="layoutWidget">
               <property name="geometry">
                <rect>
                 <x>190</x>
                 <y>120</y>
-                <width>71</width>
+                <width>82</width>
                 <height>52</height>
                </rect>
               </property>

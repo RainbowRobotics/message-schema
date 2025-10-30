@@ -168,6 +168,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // ipv4
     getIPv4();
 
+    // gamepad
+    init_gamepad();
+
     // plot timer (pcl-vtk viewr & Qlabel)
     plot_timer = new QTimer(this);
     connect(plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
@@ -228,7 +231,6 @@ void MainWindow::set_opacity(QWidget* w, double opacity)
     effect->setOpacity(opacity);
     w->setGraphicsEffect(effect);
 }
-
 
 void MainWindow::init_ui_effect()
 {
@@ -1020,6 +1022,110 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
     }
 
     return cur_vel;
+}
+
+void MainWindow::init_gamepad()
+{
+    QList<int> ids = QGamepadManager::instance()->connectedGamepads();
+    if(ids.isEmpty())
+    {
+        return;
+    }
+
+    int id = *ids.begin();
+    gamepad = new QGamepad(id, this);
+    printf("[MAIN] gamepad id=%d, name=%s\n", id, gamepad->name().toUtf8().constData());
+
+    cur_lx = 0.0;
+    cur_ly = 0.0;
+    cur_rx = 0.0;
+
+    // deadzone + hysteresis
+    const double deadzone = 0.25;
+    const double hyst  = 0.05;
+
+    // deadzone
+    auto remap_axis = [deadzone](double a) -> double
+    {
+        double v = 0.0;
+
+        if(a > deadzone)
+        {
+            v = (a - deadzone) / (1.0 - deadzone);
+        }
+        else if(a < -deadzone)
+        {
+            v = (a + deadzone) / (1.0 - deadzone);
+        }
+        else
+        {
+            v = 0.0;
+        }
+
+        if(v > 1.0)  v = 1.0;
+        if(v < -1.0) v = -1.0;
+        return v;
+    };
+
+    auto eval_analog = [this, remap_axis, deadzone, hyst]()
+    {
+        double lx_raw = cur_lx;
+        double ly_raw = cur_ly;
+        double rx_raw = cur_rx;
+
+        bool lx_active = (lx_raw >  (deadzone + hyst)) || (lx_raw < -(deadzone + hyst));
+        bool ly_active = (ly_raw >  (deadzone + hyst)) || (ly_raw < -(deadzone + hyst));
+        bool rx_active = (rx_raw >  (deadzone + hyst)) || (rx_raw < -(deadzone + hyst));
+
+        double lx = lx_active ? remap_axis(lx_raw) : 0.0;
+        double ly = ly_active ? remap_axis(ly_raw) : 0.0;
+        double rx = rx_active ? remap_axis(rx_raw) : 0.0;
+
+        double vx = -ly * ui->spb_JogV->value();
+        double vy = -lx * ui->spb_JogV->value();
+        double wz = -rx * ui->spb_JogW->value() * D2R;
+
+        if(vx == 0.0 && vy == 0.0 && wz == 0.0)
+        {
+            if(is_jog_pressed.load())
+            {
+                is_jog_pressed.store(false);
+                bt_JogReleased();
+            }
+            return;
+        }
+
+        is_jog_pressed.store(true);
+        update_jog_values(vx, vy, wz);
+
+        // debug
+        // printf("[AXIS] LX=% .2f LY=% .2f RX=% .2f | vx=% .2f vy=% .2f wz=% .2f\n", cur_lx, cur_ly, cur_rx, vx, vy, wz);
+    };
+
+    connect(gamepad, &QGamepad::axisLeftXChanged, this, [this, eval_analog](double v)
+    {
+        cur_lx = v;
+        eval_analog();
+    });
+    connect(gamepad, &QGamepad::axisLeftYChanged, this, [this, eval_analog](double v)
+    {
+        cur_ly = v;
+        eval_analog();
+    });
+    connect(gamepad, &QGamepad::axisRightXChanged, this, [this, eval_analog](double v)
+    {
+        cur_rx = v;
+        eval_analog();
+    });
+
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int)
+    {
+        cur_lx = 0.0;
+        cur_ly = 0.0;
+        cur_rx = 0.0;
+        is_jog_pressed.store(false);
+        bt_JogReleased();
+    });
 }
 
 // for mobile platform
