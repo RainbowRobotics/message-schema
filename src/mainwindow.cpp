@@ -1069,6 +1069,17 @@ void MainWindow::init_gamepad()
 
     auto eval_analog = [this, remap_axis, deadzone, hyst]()
     {
+        // dead-man (Y button)
+        if(!(lb_pressed.load() && rb_pressed.load()))
+        {
+            if(is_jog_pressed.load())
+            {
+                is_jog_pressed.store(false);
+                bt_JogReleased();
+            }
+            return;
+        }
+
         double lx_raw = cur_lx;
         double ly_raw = cur_ly;
         double rx_raw = cur_rx;
@@ -1126,6 +1137,9 @@ void MainWindow::init_gamepad()
         is_jog_pressed.store(false);
         bt_JogReleased();
     });
+
+    connect(gamepad, &QGamepad::buttonL1Changed, this, [this](bool p){lb_pressed.store(p);});
+    connect(gamepad, &QGamepad::buttonR1Changed, this, [this](bool p){rb_pressed.store(p);});
 }
 
 // for mobile platform

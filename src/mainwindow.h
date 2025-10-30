@@ -291,6 +291,9 @@ private:
     // Gamepad
     QGamepad* gamepad;
 
+    std::atomic<bool> lb_pressed = {false};
+    std::atomic<bool> rb_pressed = {false};
+
     double cur_lx = 0.0; // left stick X  -> vy
     double cur_ly = 0.0; // left stick Y  -> vx
     double cur_rx = 0.0; // right stick X -> wz
