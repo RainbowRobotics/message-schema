@@ -37,6 +37,8 @@ gstreamer1.0-plugins-bad \
 gstreamer1.0-plugins-ugly \
 -y
 
+sudo apt install libqt5gamepad5 libqt5gamepad5-dev
+
 - Cmake upgrade
  	$ wget https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5.tar.gz
  	$ tar -xvf cmake-3.30.5.tar.gz && cd cmake-3.30.5/

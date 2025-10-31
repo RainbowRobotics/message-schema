@@ -1139,8 +1139,39 @@ void MainWindow::init_gamepad()
         bt_JogReleased();
     });
 
-    connect(gamepad, &QGamepad::buttonL1Changed, this, [this](bool p){lb_pressed.store(p);});
-    connect(gamepad, &QGamepad::buttonR1Changed, this, [this](bool p){rb_pressed.store(p);});
+    connect(gamepad, &QGamepad::buttonL1Changed, this, [this, eval_analog](bool p)
+    {
+        lb_pressed.store(p);
+        if(!p)
+        {
+            if(is_jog_pressed.load())
+            {
+                is_jog_pressed.store(false);
+                bt_JogReleased();
+            }
+        }
+        else
+        {
+            eval_analog();
+        }
+    });
+
+    connect(gamepad, &QGamepad::buttonR1Changed, this, [this, eval_analog](bool p)
+    {
+        rb_pressed.store(p);
+        if(!p)
+        {
+            if(is_jog_pressed.load())
+            {
+                is_jog_pressed.store(false);
+                bt_JogReleased();
+            }
+        }
+        else
+        {
+            eval_analog();
+        }
+    });
 }
 
 // for mobile platform
