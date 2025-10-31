@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // config reload
     connect(ui->bt_ConfigLoad,        SIGNAL(clicked()),  this, SLOT(bt_ConfigLoad()));                  // reload config.json file
 
-    // emergency stop
+    // emergenscy stop
     connect(ui->bt_Emergency,         SIGNAL(clicked()),  this, SLOT(bt_Emergency()));                   // software emo button
 
     // mobile
@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_MoveLinearY,       SIGNAL(clicked()),  this, SLOT(bt_MoveLinearY()));                 // move linear y only use odomety
     connect(ui->bt_MoveRotate,        SIGNAL(clicked()),  this, SLOT(bt_MoveRotate()));                  // move rotate only use odomety
     connect(ui->bt_MotorInit,         SIGNAL(clicked()),  this, SLOT(bt_MotorInit()));                   // manual motor power on
+    connect(ui->bt_MoveStop,          SIGNAL(clicked()),  this, SLOT(bt_MoveStop()));                   // software emo button
 
     // jog
     connect(ui->bt_JogF,              SIGNAL(pressed()),  this, SLOT(bt_JogF()));                        // if button pressed, move robot to front direction

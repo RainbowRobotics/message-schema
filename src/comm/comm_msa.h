@@ -223,6 +223,7 @@ private:
     void handle_move_stop(DATA_MOVE& msg);
     void handle_move_pause(DATA_MOVE& msg);
     void handle_move_resume(DATA_MOVE& msg);
+//    void handle_move_linear(DATA_MOVE &msg);
     void handle_move_target(DATA_MOVE& msg);
     void handle_mapping(DATA_MAPPING msg);
     void handle_safetyio_cmd(const QJsonObject& data);
@@ -267,6 +268,8 @@ private:
     void slot_safety_io(DATA_SAFTYIO msg);
     QJsonValue convertItem(sio::message::ptr item);
 
+    void send_profile_move_response(const DATA_MOVE& msg);
+
     std::atomic<double> end_time   = {0.0};
     std::atomic<double> start_time = {0.0};
 
@@ -289,6 +292,8 @@ private:
     QString fms_cmd_direction = "";
 
     Eigen::Vector4d last_tgt_pose_vec = Eigen::Vector4d::Zero();
+
+    QString given_method = "";
 
 private Q_SLOTS:
     void send_loop();
@@ -318,17 +323,21 @@ private Q_SLOTS:
     void send_control_response(DATA_CONTROL msg);
     void send_mapping_response(DATA_MAPPING msg);
     void send_load_response(DATA_LOAD msg);
-    //    void handle_safetyio_cmd(const QJsonObject& data);
-    //    void handle_send_safetyIO(const QJsonObject& data);
 
-
-    //    void send_localization_response(const DATA_LOCALIZATION& msg);
-
-    //    void send_move_response(DATA_MOVE msg);
     void send_path_response(DATA_PATH msg);
+
+    // for linear move -> direct cmd mobile class
+//    void handle_move_linear(DATA_MOVE msg);
+//    void handle_move_circular(DATA_MOVE msg);
+//    void handle_move_rotate(DATA_MOVE msg);
+    void slot_profile_move(DATA_MOVE msg);
 
 Q_SIGNALS:
     void signal_send_move_status();
+ void signal_profile_move(DATA_MOVE msg);
+//    void signal_handle_move_linear(DATA_MOVE msg);
+//    void signal_handle_move_circular(DATA_MOVE msg);
+//    void signal_handle_move_rotate(DATA_MOVE msg);
 };
 
 #endif // COMM_MSA_H

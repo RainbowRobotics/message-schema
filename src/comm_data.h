@@ -9,44 +9,56 @@ struct SOCKET_MESSAGE
     QString event;
     sio::message::ptr data;
 };
-
 struct DATA_MOVE
 {
-    double time;
-    QString command; // goal, jog, target, pause, resume, stop
-    QString method; // pp, hpp, tng
+    double time;               // timestamp
+    QString id;                // rrs message id
+    int preset;                // preset number
+
+    QString command;           // goal, jog, target, pause, resume, stop
+    QString method;            // pp, hpp, tng
+    QString direction;         // move direction (e.g., fwd, back)
+    QString dir;               // optional direction string (legacy)
+
     QString goal_node_id;
     QString goal_node_name;
-    QString id;  // rrs give msg id
-    QString direction;
 
-    int preset;
-    Eigen::Vector3d cur_pos; // x, y, z
-    Eigen::Vector4d tgt_pose_vec; // x, y, z, th
-    Eigen::Vector3d jog_val; // vx, vy, wz
+    Eigen::Vector3d cur_pos;        // current position (x, y, z)
+    Eigen::Vector4d tgt_pose_vec;   // target pose (x, y, z, th)
+    Eigen::Vector3d jog_val;        // jog velocity (vx, vy, wz)
 
-    double remaining_dist;
-    double remaining_time; // estimated time of arrival
-    int bat_percent; // battery percentage
+    double target;             // target distance or angle (m, deg)
+    double speed;              // target speed (m/s, deg/s)
+    double meassured_dist;     // measured distance moved (m, deg)
 
-    QString result;
-    QString message;
-    //QString remark;
+    double remaining_dist;     // remaining distance (m, deg)
+    double remaining_time;     // estimated time of arrival (sec)
+    int bat_percent;           // battery percentage
+
+    QString result;            // result status
+    QString message;           // message text
 
     DATA_MOVE()
     {
         time = 0.0;
+        id = "";
+        preset = 0;
+
         command = "";
         method = "";
+        direction = "";
+        dir = "";
 
         goal_node_id = "";
         goal_node_name = "";
-        id = "";
 
-        preset = 0;
         cur_pos.setZero();
         tgt_pose_vec.setZero();
         jog_val.setZero();
+
+        target = 0.0;
+        speed = 0.0;
+        meassured_dist = 0.0;
 
         remaining_dist = 0.0;
         remaining_time = 9999.0;
@@ -54,58 +66,73 @@ struct DATA_MOVE
 
         result = "";
         message = "";
-        direction = "";
-        //remark = "";
     }
 
     DATA_MOVE(const DATA_MOVE& p)
     {
         time = p.time;
+        id = p.id;
+        preset = p.preset;
+
         command = p.command;
         method = p.method;
+        direction = p.direction;
+        dir = p.dir;
+
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
-        remaining_dist = p.remaining_dist;
-        id = p.id;
 
-        preset = p.preset;
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 
+        target = p.target;
+        speed = p.speed;
+        meassured_dist = p.meassured_dist;
+
+        remaining_dist = p.remaining_dist;
         remaining_time = p.remaining_time;
         bat_percent = p.bat_percent;
 
         result = p.result;
         message = p.message;
-        direction = p.direction;
-        //remark = p.remark;
     }
 
     DATA_MOVE& operator=(const DATA_MOVE& p)
     {
+        if (this == &p) return *this;
+
         time = p.time;
+        id = p.id;
+        preset = p.preset;
+
         command = p.command;
         method = p.method;
+        direction = p.direction;
+        dir = p.dir;
+
         goal_node_id = p.goal_node_id;
         goal_node_name = p.goal_node_name;
-        remaining_dist = p.remaining_dist;
 
-        preset = p.preset;
         cur_pos = p.cur_pos;
         tgt_pose_vec = p.tgt_pose_vec;
         jog_val = p.jog_val;
 
+        target = p.target;
+        speed = p.speed;
+        meassured_dist = p.meassured_dist;
+
+        remaining_dist = p.remaining_dist;
         remaining_time = p.remaining_time;
         bat_percent = p.bat_percent;
 
         result = p.result;
         message = p.message;
-        direction = p.direction;
-        //remark = p.remark;
+
         return *this;
     }
 };
+
 
 struct DATA_LOCALIZATION
 {
@@ -852,6 +879,7 @@ struct DATA_PATH
     QString message;
     QString action;
     QString direction;
+    QString method;
 
     DATA_PATH()
     {
@@ -866,6 +894,7 @@ struct DATA_PATH
         message = "";
         action = "";
         direction = "";
+        method = "";
     }
 
     DATA_PATH(const DATA_PATH& p)
@@ -881,6 +910,7 @@ struct DATA_PATH
         message = p.message;
         action = p.action;
         direction = p.direction;
+        method = p.method;
     }
 
     DATA_PATH& operator=(const DATA_PATH& p)
@@ -896,6 +926,7 @@ struct DATA_PATH
         message = p.message;
         action = p.action;
         direction = p.direction;
+        method = p.method;
         return *this;
     }
 };

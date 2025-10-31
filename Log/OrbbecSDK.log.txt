@@ -652,3 +652,16 @@
 [10/23 19:11:39.657291][debug][690548][UsbDeviceEnumerator.cpp:78] No matched usb device found!
 [10/23 19:11:39.657295][info][690548][DeviceManager.cpp:15] Current found device(s): (0)
 [10/23 19:11:39.657296][debug][690548][DeviceManager.cpp:52] DeviceManager construct done!
+[10/28 20:40:06.716864][debug][230289][Context.cpp:30] Context creating, work_dir=/home/rainbow/code/app_slamnav2
+[10/28 20:40:06.716982][debug][230289][Context.cpp:49] Config file version=1.1
+[10/28 20:40:06.717149][debug][230289][FrameBufferManager.cpp:23] Max global frame buffer size updated! size=2048.000MB
+[10/28 20:40:06.717158][info][230289][Context.cpp:68] Context created with config: default config!
+[10/28 20:40:06.717168][info][230289][Context.cpp:73] Work directory=/home/rainbow/code/app_slamnav2, SDK version=v1.10.16-20241021-5113dad
+[10/28 20:40:06.717179][debug][230289][DeviceManager.cpp:30] DeviceManager init ...
+[10/28 20:40:06.717183][info][230289][LinuxPal.cpp:32] createObPal: create LinuxPal!
+[10/28 20:40:06.717674][debug][230289][DeviceManager.cpp:34] Enable USB Device Enumerator ...
+[10/28 20:40:06.717693][debug][230289][EnumeratorLibusb.cpp:324] queryDevicesInfo done!
+[10/28 20:40:06.717745][info][230289][LinuxPal.cpp:166] Create PollingDeviceWatcher!
+[10/28 20:40:06.717770][debug][230289][UsbDeviceEnumerator.cpp:78] No matched usb device found!
+[10/28 20:40:06.717825][info][230289][DeviceManager.cpp:15] Current found device(s): (0)
+[10/28 20:40:06.717829][debug][230289][DeviceManager.cpp:52] DeviceManager construct done!

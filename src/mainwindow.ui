@@ -1245,7 +1245,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
@@ -1310,7 +1310,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1763,12 +1763,12 @@ Move
                <string>BackWard</string>
               </property>
              </widget>
-             <widget class="QWidget" name="">
+             <widget class="QWidget" name="layoutWidget">
               <property name="geometry">
                <rect>
                 <x>190</x>
                 <y>120</y>
-                <width>71</width>
+                <width>82</width>
                 <height>52</height>
                </rect>
               </property>
@@ -2329,25 +2329,6 @@ start</string>
                <string>move rotate</string>
               </property>
              </widget>
-             <widget class="QPushButton" name="bt_MoveStop">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="geometry">
-               <rect>
-                <x>252</x>
-                <y>40</y>
-                <width>60</width>
-                <height>61</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(246, 97, 81);</string>
-              </property>
-              <property name="text">
-               <string>Stop</string>
-              </property>
-             </widget>
              <widget class="QPushButton" name="bt_MoveLinearY">
               <property name="geometry">
                <rect>
@@ -2584,6 +2565,29 @@ Node</string>
               <property name="text">
                <string>Annot
 Save</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_MoveStop">
+              <property name="geometry">
+               <rect>
+                <x>250</x>
+                <y>40</y>
+                <width>61</width>
+                <height>61</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+                <weight>50</weight>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(246, 97, 81);</string>
+              </property>
+              <property name="text">
+               <string>STOP</string>
               </property>
              </widget>
             </widget>

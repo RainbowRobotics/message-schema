@@ -40,7 +40,7 @@
         "USE_RTSP": false,
         "USE_FMS": false,
         "USE_RRS": false,
-        "USE_MSA": false
+        "USE_MSA": true
     },
     "debug": {
         "USE_SIM": true,
@@ -188,7 +188,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/250414_unicos_test"
+        "MAP_PATH": "/data/maps/250414_unicos_test"
     }
 }
 

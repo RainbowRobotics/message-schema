@@ -613,12 +613,16 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
 
     const int preset = msg.preset;
 
-    //qDebug()<<"msg.direction : "<<msg.direction;
-    //spdlog::info("msg direction:{} ",msg.direction.toUtf8().constData());
-//    log_info("msg direction: {}", qUtf8Printable(msg.direction));
+    qDebug()<<"slot : "<<msg.method;
 
-//    if(msg.direction == "forward")
-//    {
+    if(msg.method == "hpp")
+    {
+        cmd_method = CommandMethod::METHOD_HPP;
+    }
+    else if(msg.method == "pp")
+    {
+        cmd_method = CommandMethod::METHOD_PP;
+    }
         move(path, preset);
 //    }
 //    else if(msg.direction == "backward")
@@ -4033,7 +4037,6 @@ void AUTOCONTROL::control_loop()
                 {
                     v = saturation(v, v0 - params.LIMIT_V_ACC*dt, v0 + params.LIMIT_V_DCC*dt);
                     v = saturation(v, -params.LIMIT_V, params.LIMIT_V);
-//                    qDebug()<<"vvv23333:"<<v;
                 }
             }
             else
@@ -4059,7 +4062,6 @@ void AUTOCONTROL::control_loop()
                 if(back_mode == true)
                 {
                     v = -v;
-
                 }
 
                 // stanley control
