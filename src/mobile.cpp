@@ -1718,7 +1718,18 @@ void MOBILE::receive_data_loop()
                             cur_setting.use_safety_cross_monitor = use_safety_cross_monitor;
                             cur_setting.use_safety_speed_control = use_safety_speed_control;
                             cur_setting.use_sw_io = use_sw_io;
-                            
+
+                            spdlog::info(R"([MOBILE] safety setting:
+                                - cross_monitor: {}
+                                - speed_control: {}
+                                - obstacle_detection: {}
+                                - bumper: {}
+                                - interlock: {}
+                                - sw_io: {}
+                              )",
+                                use_safety_cross_monitor, use_safety_speed_control, use_safety_obstacle_detection, 
+                                use_safety_bumper, use_safety_interlock, use_sw_io
+                            );
                             mtx.unlock();
                         }
 
@@ -2340,7 +2351,6 @@ void MOBILE::move_linear_y(double d, double v)
     qDebug() << robot_wheel_type;
     if(robot_wheel_type != "MECANUM")
     {
-        qDebug() << " return";
         //Todo -- Spdlog 추가
         // spdlog::info("[MOBILE] move linear y is not supported for this robot wheel type");
         return;
@@ -2364,7 +2374,7 @@ void MOBILE::move_linear_y(double d, double v)
 
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
-    // send_byte[7] = 121; // cmd move linear y
+    send_byte[7] = 123; // cmd move linear y
 
     memcpy(&send_byte[8], &_d, 4); // param1 dist
     memcpy(&send_byte[12], &_v, 4); // param2 linear vel

@@ -128,7 +128,7 @@ private:
     int ICP_CORRESPONDENCE_THRESHOLD = 10;
     
     // for control
-    void dockControl(bool final_dock, const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w);
+    void dockControl(bool final_dock, const Eigen::Matrix4d& cur_pos, double& cmd_v , double& cmd_w, double& cmd_v_y);
     double limit_accel = 0.1;
     double limit_vel = 0.1;
     double oneque_limit_vel = 0.5;
@@ -136,6 +136,8 @@ private:
     double limit_th = 0.78;
     double err_th_old = 0.0;
     double err_v_old = 0.0;
+    double dist_x_old = 0.0;
+    double dist_y_old = 0.0;
     double undock_time =0.0;
 
 

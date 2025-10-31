@@ -69,7 +69,6 @@ void DOCKCONTROL::move()
         }
         else
         {
-            qDebug() << "forward mode";
             DWA_TABLE = generate_dwa_traj_table(0.05 ,0.1, 0.01, -10.0, 10.0, 1.0, 0.02, 500); // 0.02 - 500
         }
         
@@ -90,7 +89,6 @@ void DOCKCONTROL::move()
 
         bool reverse_flag = false;
         reverse_flag = config->get_docking_reverse_mode();
-        qDebug() << "reverse_flag: " << reverse_flag;
 
         vfrm = generate_vkframe(1, reverse_flag); // generate aline vmark frame
         frm1_center = calculate_center(vfrm);
@@ -192,6 +190,7 @@ void DOCKCONTROL::a_loop()
         {
             double cmd_v =0.0;
             double cmd_w =0.0;
+            double cmd_v_y =0.0;
 
             if(oneque_dock)
             {
@@ -216,16 +215,15 @@ void DOCKCONTROL::a_loop()
                     double s_d_y = station_rel_tf(1, 3);  // 도킹스테이션 기준 y 위치
 
 
-                    if(dtdr(0) < 0.35)
+                    if(config->get_robot_wheel_type() == "DD")
                     {
-                        final_dock = true;
-                        first_aline = cur_pos_odom;
-                    }
+                        if(dtdr(0) < 0.35)
+                        {
+                            final_dock = true;
+                            first_aline = cur_pos_odom;
+                        }
 
-                    if(dtdr(0) < config->get_docking_goal_dist())
-                    {
-
-                        if(fabs(s_d_y) < 0.02) // 0.01
+                        if(dtdr(0) < config->get_docking_goal_dist())
                         {
                             mobile->move(0,0,0);
 
@@ -236,19 +234,33 @@ void DOCKCONTROL::a_loop()
                             double dist_y = target_tf(1,3);
 
                             fsm_state = DOCKING_FSM_COMPENSATE;
-
                             wait_start_time = get_time();
                             continue;
                         }
+                    }
 
-                        else
+                    else if(config->get_robot_wheel_type() == "MECANUM")
+                    {
+                        final_dock = true;
+
+                        if(dtdr(0) < config->get_docking_goal_dist())
                         {
-                            //후진?
-                            fsm_state = DOCKING_FSM_YCOMPENSATE;
+                            mobile->move(0,0,0);
+
+                            Eigen::Matrix4d target_tf = cur_pos_odom.inverse()*docking_station_o;
+
+                            //calculate dist_y in base_frame
+                            double dist_x = target_tf(0,3);
+                            double dist_y = target_tf(1,3);
+
+                            fsm_state = DOCKING_FSM_COMPENSATE;
+                            wait_start_time = get_time();
+                            continue;
                         }
                     }
-                    dockControl(final_dock,cur_pos_odom,cmd_v,cmd_w);
-                    mobile->move(cmd_v,0,cmd_w);
+
+                    dockControl(final_dock,cur_pos_odom,cmd_v,cmd_w,cmd_v_y);
+                    mobile->move(cmd_v,cmd_v_y,cmd_w);
                 }
             }
 
@@ -258,22 +270,14 @@ void DOCKCONTROL::a_loop()
         {
             Eigen::Vector2d dtdr = dTdR(cur_pos_odom,first_aline);
 
-            if(dtdr(0) < 0.08)
-            {
-                fsm_state = DOCKING_FSM_POINTDOCK;
-            }
-
-            else
-            {
-                //qDebug() << "y compensate error";
-                spdlog::error("[DOCKING] y compensate error");
-            }
+            //not used
         }
 
         else if(fsm_state == DOCKING_FSM_COMPENSATE)
         {
             double cmd_v =0.0;
             double cmd_w =0.0;
+            double cmd_y =0.0;
 
             Eigen::Matrix4d target_tf;
 
@@ -287,18 +291,14 @@ void DOCKCONTROL::a_loop()
                 Eigen::Vector2d dtdr = dTdR(cur_pos_odom,docking_station_o);
 
                 if(std::abs(dtdr(1)) < config->get_docking_goal_th())
-                {
-                    //qDebug() << "last dtdr(0)" << dtdr(0);
-                    //qDebug() << "pointdoc_margin:" << config->get_docking_pointdock_margin();
-                    spdlog::info("[DOCKING] last dtdr(0): {}, pointdoc_margin: {}", dtdr(0), config->get_docking_pointdock_margin());
-                    
+                {                    
                     mobile->move(0,0,0);
                     fsm_state = DOCKING_FSM_DOCK;
                     path_flag = false;
                     find_check = false;
                     continue;
                 }
-                dockControl(0,cur_pos_odom,cmd_v,cmd_w);
+                dockControl(0,cur_pos_odom,cmd_v,cmd_w,cmd_y);
                 mobile->move(cmd_v,0.0,cmd_w);
             }
         }
@@ -346,9 +346,17 @@ void DOCKCONTROL::a_loop()
                     else
                     {
                         dock = true;
-                        double offset_x = config->get_docking_linear_x_offset();
-                        mobile->move_linear_x(avg + offset_x, 0.05);
-                        dock_success_wait_time = std::abs((avg + offset_x) / 0.05) + 0.5;
+                        double linear_offset = config->get_docking_linear_x_offset();
+                        if(reverse_mode)
+                        {
+                            mobile->move_linear_x(-1*(avg + linear_offset), 0.05);
+                        }
+                        else
+                        {
+                            mobile->move_linear_x(avg + linear_offset, 0.05);
+                        }
+
+                        dock_success_wait_time = std::abs((avg + linear_offset) / 0.05) + 0.5;
                         wait_start_time = get_time();
                     }
                 }
@@ -381,7 +389,17 @@ void DOCKCONTROL::a_loop()
                 {
                     undock_flag = true;
                     undock_waiting_time = get_time();
-                    mobile->move_linear_x(-1*config->get_robot_size_x_max() + 0.15, 0.05);
+
+                    if(reverse_mode)
+                    {
+                        mobile->move_linear_x(config->get_robot_size_x_max() + 0.08, 0.05);
+                    }
+                    else
+                    {
+                        mobile->move_linear_x(config->get_robot_size_x_min() - 0.08, 0.05);
+                    }
+
+
                     if(config->get_charge_type() == "XNERGY")
                     {
                         int non_used_int = 0;
@@ -393,6 +411,7 @@ void DOCKCONTROL::a_loop()
                 else
                 {
                     double t = std::abs(config->get_robot_size_x_max() + 0.15 /0.05) + 0.5;
+
                     if(get_time() - undock_waiting_time > t)
                     {
                         spdlog::info("[DOCKING] not charge: {}, {}, {}",ms.charge_state, ms.cur_m0, ms.cur_m1 );
@@ -415,7 +434,6 @@ void DOCKCONTROL::a_loop()
             if(get_time() - obs_wait_st_time > 1.0)
             {
                 fsm_state = DOCKING_FSM_OBS;
-                //printf("[DOCKING] OBS_WAIT -> DRIVING\n");
                 spdlog::info("[DOCKING] OBS_WAIT -> DRIVING");
                 continue;
             }
@@ -453,8 +471,6 @@ void DOCKCONTROL::a_loop()
         }
         else
         {
-            //qDebug() << "[DOCKING] time dritf";
-            //printf("[DOCKING] loop time drift, dt:%f\n", delta_loop_time);
             spdlog::warn("[DOCKING] loop time drift, dt: {}", delta_loop_time);
         }
         pre_loop_time = get_time();
@@ -625,14 +641,28 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         double angle = std::atan2(y,x);
         double dist = std::sqrt(pow(x, 2) + pow(y, 2));
 
-        // FORWARD MODE
-        if(std::abs(angle) < config->get_docking_clust_angle_threshold())
+        // for reverse_mode adjusts the comparison
+        double target_angle = 0.0 ;
+
+        if(reverse_mode)
+        {
+            target_angle = M_PI;
+        }
+        else
+        {
+            target_angle = 0.0;
+        }
+
+        double angle_adjusted = std::abs(std::abs(angle) - target_angle);
+
+        if(std::abs(angle_adjusted) < config->get_docking_clust_angle_threshold())
         {
             if(dist < config->get_docking_clust_dist_threshold_max() )
             {
                 filtered_lidar.push_back(c_lidar[i]);
             }
         }
+
     }
 
     const int c_points = filtered_lidar.size();
@@ -772,12 +802,6 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
         return out_;
     }
 
-
-    // for debug
-    // debug_frame = docking_clust;
-
-
-
     clusters_queue.push(docking_clust);
 
     if(clusters_queue.size() > 10)
@@ -842,16 +866,28 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
         if(fsm_state == DOCKING_FSM_CHKCHARGE)
         {
-            spdlog::info("[DOCKING] find");
             double x = dock_tf(0, 3);
             double y = dock_tf(1, 3);
+
             double head_th = std::atan2(y,x);
             double theta = std::atan2(dock_tf(1, 0), dock_tf(0, 0));
-
+            
             double head_err_th = fabs(head_th*180 / M_PI);
             double orein_err_th = fabs(theta*180.0 /M_PI);
+            
+            bool condition;
 
-            if(orein_err_th <=20.0 && head_err_th <=20.0)
+            
+            if(reverse_mode)
+            {
+                condition = orein_err_th <= 20.0 && head_err_th >= 160.0;
+            }
+            else
+            {
+                condition = orein_err_th <= 20.0 && head_err_th <= 20.0;
+            }
+
+            if(condition)
             {
                 spdlog::info("[DOCKING] dock_check: 1");
                 dock_check = 1; // ONEQUE DOCK CNT
@@ -918,17 +954,17 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
         {
             if(reverse_flag)
             {
-                p1 = Eigen::Vector3d((config->get_robot_size_x_min() + x_offset), 0.225 + y_offset, 0.0);
-                p2 = Eigen::Vector3d(p1.x(), p1.y() - 0.125, 0.0);
-                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() - 0.1, 0.0); 
-                p4 = Eigen::Vector3d(p3.x(), p3.y() - 0.22, 0.0);
+                p1 = Eigen::Vector3d((config->get_robot_size_x_min() - x_offset), -0.225 - y_offset, 0.0);
+                p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.125, 0.0);
+                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0); 
+                p4 = Eigen::Vector3d(p3.x(), p3.y() + 0.22, 0.0);
             }
             else
             {
                 p1 = Eigen::Vector3d(config->get_robot_size_x_max() + x_offset, 0.225 + y_offset, 0.0);
                 p2 = Eigen::Vector3d(p1.x(), p1.y() - 0.125 ,0.0);
-                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1 , 0.0);
-                p4 = Eigen::Vector3d(p3.x() , p3.y() + 0.22 , 0.0);
+                p3 = Eigen::Vector3d(p2.x() + 0.07, p2.y() - 0.1 , 0.0);
+                p4 = Eigen::Vector3d(p3.x() , p3.y() - 0.22 , 0.0);
             }
         }
         else if(config->get_charge_type() == "XNERGY")
@@ -936,7 +972,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
             if(reverse_flag)
             {
                 spdlog::info("[DOCKING] XNERGY reverse charge type");
-                p1 = Eigen::Vector3d((config->get_robot_size_x_min() + x_offset), -0.275 + y_offset, 0.0);
+                p1 = Eigen::Vector3d((config->get_robot_size_x_min() - x_offset), -0.275 - y_offset, 0.0);
                 p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.175 ,0.0);
                 p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1 , 0.0);
                 p4 = Eigen::Vector3d(p3.x() , p3.y() + 0.275 , 0.0);
@@ -986,10 +1022,10 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
             if(reverse_flag)
             {
                 // 후면 라이다 기준으로 좌표 변환 (x축 반대, y축 유지)
-                p1 = Eigen::Vector3d(-(config->get_robot_size_x_max() + config->get_docking_pointdock_margin() + x_offset), 0.225 + y_offset, 0.0);
-                p2 = Eigen::Vector3d(p1.x(), p1.y() - 0.125, 0.0);
-                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() - 0.1, 0.0);  
-                p4 = Eigen::Vector3d(p3.x(), p3.y() - 0.22, 0.0);
+                p1 = Eigen::Vector3d((config->get_robot_size_x_min() - config->get_docking_pointdock_margin() - x_offset), -0.225 - y_offset, 0.0);
+                p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.125, 0.0);
+                p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0);  
+                p4 = Eigen::Vector3d(p3.x(), p3.y() + 0.22, 0.0);
             }
             else
             {
@@ -998,8 +1034,6 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
                 p3 = Eigen::Vector3d(p2.x() + 0.07, p2.y() - 0.1, 0.0);
                 p4 = Eigen::Vector3d(p3.x(), p3.y() - 0.22, 0.0);
             }
-
-
         }
 
         else if(config->get_charge_type() == "XNERGY")
@@ -1007,7 +1041,7 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
             if(reverse_flag)
             {
                 spdlog::info("[DOCKING] XNERGY reverse charge type");
-                p1 = Eigen::Vector3d((config->get_robot_size_x_min() + config->get_docking_pointdock_margin() + x_offset), -0.275 + y_offset, 0.0);
+                p1 = Eigen::Vector3d((config->get_robot_size_x_min() - config->get_docking_pointdock_margin() - x_offset), -0.275 - y_offset, 0.0);
                 p2 = Eigen::Vector3d(p1.x(), p1.y() + 0.175, 0.0);
                 p3 = Eigen::Vector3d(p2.x() - 0.07, p2.y() + 0.1, 0.0);
                 p4 = Eigen::Vector3d(p3.x(), p3.y() + 0.275, 0.0);
@@ -1019,8 +1053,6 @@ KFRAME DOCKCONTROL::generate_vkframe(int type, bool reverse_flag)
                 p2 = Eigen::Vector3d(p1.x(), p1.y() - 0.175, 0.0);
                 p3 = Eigen::Vector3d(p2.x() + 0.07, p2.y() - 0.1, 0.0);
                 p4 = Eigen::Vector3d(p3.x(), p3.y() - 0.275, 0.0);
-
-
             }
 
         }
@@ -1361,7 +1393,7 @@ bool DOCKCONTROL::is_everything_fine()
 }
 
 
-void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, double& linear_vel, double& angular_vel)
+void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, double& linear_vel, double& angular_vel, double& linear_vel_y)
 {
 
     Eigen::Vector3d cur_vel = mobile->get_control_input();
@@ -1369,9 +1401,11 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     const float dt = 0.02;
 
     double v0 = cur_vel(0);
+    double v0_y = cur_vel(1);
     double w0 = cur_vel(2);
 
     double v =0.0;
+    double v_y =0.0;
     double w =0.0;
 
     //use odom frame
@@ -1392,6 +1426,8 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     double err_th = std::atan2(dist_y,dist_x);
     double d_err_th = 0.0;
     double d_err_v = 0.0;
+    double d_dist_x = 0.0;
+    double d_dist_y = 0.0;
 
     err_th = wrapToPi(err_th);
 
@@ -1400,6 +1436,9 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     {
         d_err_th = (err_th - err_th_old) * dt;
         d_err_v = (err_d - err_v_old) * dt;
+        
+        d_dist_x = (dist_x - dist_x_old) * dt;
+        d_dist_y = (dist_y - dist_y_old) * dt;
     }
 
 
@@ -1428,25 +1467,24 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
                 if (err_th > M_PI) err_th -= 2 * M_PI;
             }
 
-            v = direction * (config->get_docking_kp_dist() * err_d + config->get_docking_kd_dist() * d_err_v);
-
-            w = direction * (config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th);
-
-            //w = config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th;
-
-
-            double yaw_now = std::atan2(cur_pose(1,0), cur_pose(0,0));
-            double yaw_first = std::atan2(first_aline(1,0), first_aline(0,0));
-            double yaw_diff = wrapToPi(yaw_now - yaw_first);
-
-            const double yaw_limit = M_PI / 4.0;
-
+            if(config->get_robot_wheel_type() == "MECANUM")
+            {
+                v =  (config->get_docking_kp_dist() * dist_x + config->get_docking_kd_dist() * d_dist_x);
+                v_y = (config->get_docking_kp_dist() * dist_y + config->get_docking_kd_dist() * d_dist_y);
+                // w = (config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th);
+            }
+            else
+            {
+                v = direction * (config->get_docking_kp_dist() * err_d + config->get_docking_kd_dist() * d_err_v);
+                w = direction * (config->get_docking_kp_th() * err_th + config->get_docking_kd_th() * d_err_th);
+            }
         }
 
         else
         {
-            // spdlog::info("[DOCKING] DWA Controller");
-                   //DWA Controller
+            //DWA Controller
+            spdlog::info("[DOCKING] DWA Controller");
+
             Eigen::Vector3d target_pos = target_tf.block<3,1>(0,3);
             double target_yaw = atan2(target_tf(1,0), target_tf(0,0));
 
@@ -1489,17 +1527,24 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
     else if(fsm_state == DOCKING_FSM_YCOMPENSATE)
     {
-        //qDebug() << " ycompensat";
         spdlog::info("[DOCKING] ycompensate");
         
         //use odom frame
         Eigen::Matrix4d target_tf_ycompen = cur_pose.inverse()*first_aline;
 
-        double direction = 1.0;
+        double direction = 0.0;
+        if(reverse_mode)
+        {
+            direction = -1.0;
+        }
+        else
+        {
+            direction = 1.0;
+        }
 
         if (std::abs(err_th) > M_PI_2)
         {
-            direction = -1.0;
+            direction = -1.0* direction;
             err_th = wrapToPi(err_th - M_PI);
             if (err_th > M_PI) err_th -= 2 * M_PI;
         }
@@ -1510,12 +1555,15 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
     }
 
     v = saturation(v, v0- (limit_accel*dt) , v0 +(limit_accel*dt));
+    v_y = saturation(v_y, v0_y- (limit_accel*dt) , v0_y +(limit_accel*dt));
     w = saturation(w, w0-(limit_th_acc*D2R*dt), w0 +(limit_th_acc*D2R*dt));
     v = saturation(v, -limit_vel , limit_vel);
     w = saturation(w, -limit_th, limit_th);
+    v_y = saturation(v_y, -limit_vel, limit_vel);
 
     linear_vel = v;
     angular_vel = w;
+    linear_vel_y = v_y;
 }
 
 Eigen::Matrix4d DOCKCONTROL::calculate_translation_matrix(const Eigen::Vector3d& from, const Eigen::Vector3d& to)
@@ -1654,7 +1702,17 @@ bool DOCKCONTROL::undock()
         b_thread = std::make_unique<std::thread>(&DOCKCONTROL::b_loop, this);
 
         mobile->stop_charge();
-        mobile->move_linear_x(-1*(config->get_robot_size_x_max()), 0.05);
+        reverse_mode = config->get_docking_reverse_mode();
+
+        if(reverse_mode)
+        {
+
+            mobile->move_linear_x((config->get_robot_size_x_max() + 0.08), 0.05);
+        }
+        else
+        {
+            mobile->move_linear_x((config->get_robot_size_x_min() - 0.08), 0.05);
+        }
         undock_time = get_time();
         return true;
     }

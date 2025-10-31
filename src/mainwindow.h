@@ -199,6 +199,11 @@ public Q_SLOTS:
     void bt_MoveLinearY();
     void bt_MoveRotate();
 
+
+    void bt_JogMecaL();
+    void bt_JogMecaR();
+
+
     void bt_JogF();
     void bt_JogB();
     void bt_JogL();

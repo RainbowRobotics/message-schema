@@ -74,7 +74,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_JogB,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
     connect(ui->bt_JogL,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
     connect(ui->bt_JogR,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-
+    connect(ui->bt_JogMecaL,         SIGNAL(pressed()),  this, SLOT(bt_JogMecaL()));                        // if button pressed, move robot to left
+    connect(ui->bt_JogMecaR,         SIGNAL(pressed()),  this, SLOT(bt_JogMecaR()));                        // if button pressed, move robot to right
+    connect(ui->bt_JogMecaL,         SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogMecaR,         SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
     // mapping
     connect(ui->bt_MapBuild,          SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));                    // mapping start
     connect(ui->bt_MapSave,           SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
@@ -1312,6 +1315,18 @@ void MainWindow::bt_MoveStop()
 {
     AUTOCONTROL::instance()->set_is_moving(false);
     MOBILE::instance()->stop();
+}
+
+void MainWindow::bt_JogMecaL()
+{
+    is_jog_pressed.store(true);
+    update_jog_values(0, ui->spb_JogV->value(), 0);
+}
+
+void MainWindow::bt_JogMecaR()
+{
+    is_jog_pressed.store(true);
+    update_jog_values(0, -ui->spb_JogV->value(), 0);
 }
 
 void MainWindow::bt_JogF()
