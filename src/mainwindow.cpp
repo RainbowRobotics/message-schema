@@ -169,7 +169,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // ipv4
     getIPv4();
 
-    // gamepad
+    //
     init_gamepad();
 
     // plot timer (pcl-vtk viewr & Qlabel)
@@ -1094,7 +1094,7 @@ void MainWindow::init_gamepad()
         double rx = rx_active ? remap_axis(rx_raw) : 0.0;
 
         double vx = -ly * ui->spb_JogV->value();
-        double vy = -lx * ui->spb_JogV->value();
+        double vy = (CONFIG::instance()->get_robot_wheel_type() == "MECANUM") ? (-lx * ui->spb_JogV->value()) : 0.0;
         double wz = -rx * ui->spb_JogW->value() * D2R;
 
         if(vx == 0.0 && vy == 0.0 && wz == 0.0)

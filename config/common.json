@@ -1,11 +1,5 @@
 {
-<<<<<<< HEAD
-    "MILEAGE": "1306.770",
-    "ROBOT_MODEL": "MECANUM-SEC_CORE",
-    "ROBOT_TYPE": "MECANUM-SEC_CORE"
-=======
     "MILEAGE": "1315.632",
     "ROBOT_MODEL": "DD-SEC_EE",
     "ROBOT_TYPE": "DD-SEC_EE"
->>>>>>> 5168e64f1a0058501abdb4b7338817b38adce188
 }
