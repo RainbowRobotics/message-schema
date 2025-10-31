@@ -1,10 +1,12 @@
 from rb_database import get_db
 from rb_socketio import RbSocketIORouter
 from rb_utils.parser import t_to_dict, to_json
+from rb_zenoh.client import ZenohClient
 
 from .program_module import ProgramService
 
 program_socket_router = RbSocketIORouter()
+zenoh_client = ZenohClient()
 program_service = ProgramService()
 
 
@@ -83,3 +85,31 @@ async def on_delete_tasks(data):
     db = await get_db()
     res = await program_service.delete_tasks(request=data_dict, db=db)
     return to_json(res)
+
+
+@program_socket_router.on("program/pause")
+async def on_pause_program(data):
+    data_dict = t_to_dict(data)
+
+    db = await get_db()
+
+    return await program_service.call_resume_or_pause(
+        is_pause=True,
+        program_id=data_dict.get("programId"),
+        flow_id=data_dict.get("flowId"),
+        db=db,
+    )
+
+
+@program_socket_router.on("program/resume")
+async def on_resume_program(data):
+    data_dict = t_to_dict(data)
+
+    db = await get_db()
+
+    return await program_service.call_resume_or_pause(
+        is_pause=False,
+        program_id=data_dict.get("programId"),
+        flow_id=data_dict.get("flowId"),
+        db=db,
+    )

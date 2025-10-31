@@ -8,9 +8,10 @@ from pymongo import ReturnDocument
 from pymongo.operations import UpdateOne
 from rb_database import MongoDB
 from rb_database.utils import make_check_include_query, make_check_search_text_query
+from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_flow_manager.control import RB_Flow_Manager_ProgramState
+from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
 from rb_utils.parser import t_to_dict
@@ -35,6 +36,51 @@ zenoh_client = ZenohClient()
 class ProgramService(BaseService):
     def __init__(self) -> None:
         pass
+
+    async def call_resume_or_pause(
+        self,
+        *,
+        db: MongoDB,
+        is_pause: bool,
+        # program_id: str | None = None,
+        # flow_id: str | None = None,
+    ):
+        # state = (
+        #     RB_Flow_Manager_ProgramState.PAUSED
+        #     if is_pause
+        #     else RB_Flow_Manager_ProgramState.RUNNING
+        # )
+        req_manipulate_resume_or_pause = Request_MotionPauseT()
+
+        res_manipulate_resume_or_pause: dict[str, Any] | None = None
+
+        if is_pause:
+            res_manipulate_resume_or_pause = zenoh_client.query_one(
+                "*/call_pause",
+                flatbuffer_req_obj=req_manipulate_resume_or_pause,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=2,
+            )
+        else:
+            res_manipulate_resume_or_pause = zenoh_client.query_one(
+                "*/call_resume",
+                flatbuffer_req_obj=req_manipulate_resume_or_pause,
+                flatbuffer_res_T_class=Response_FunctionsT,
+                flatbuffer_buf_size=2,
+            )
+
+        # if program_id:
+        #     await self.update_program_state(program_id=program_id, state=state, db=db)
+        # if flow_id:
+        #     await self.update_flow_state(flow_id=flow_id, state=state, db=db)
+
+        return {
+            "manipulateReturnValue": (
+                res_manipulate_resume_or_pause["dict_payload"]["returnValue"]
+                if res_manipulate_resume_or_pause
+                else None
+            ),
+        }
 
     async def call_smoothjog_stop(self, *, stoptime: float):
         try:
@@ -211,6 +257,14 @@ class ProgramService(BaseService):
         }
 
     async def upsert_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
+        request_dict = (
+            {**request.model_dump(exclude_none=True, exclude_unset=True)}
+            if hasattr(request, "model_dump")
+            else t_to_dict(request)
+        )
+
+        print(f"request_dict: {request_dict}", flush=True)
+
         now = datetime.now(UTC).isoformat()
 
         tasks_col = db["tasks"]
@@ -235,7 +289,9 @@ class ProgramService(BaseService):
         ops: list[UpdateOne] = []
         index_map: list[tuple[int, dict[str, Any]]] = []  # (tasks 인덱스, 기존 taskId)
 
-        for i, doc in enumerate(tasks):
+        for i, origin_doc in enumerate(tasks):
+            doc = request_dict["tasks"][i] if origin_doc.get("taskId") is not None else origin_doc
+
             doc["updatedAt"] = now
             set_on_insert = {}
 
@@ -244,7 +300,7 @@ class ProgramService(BaseService):
             q = {"_id": ObjectId(tid)}
 
             if tid is not None:
-                find_task_doc = await tasks_col.find_one(q, {"_id": 0, "createdAt": 1})
+                find_task_doc = await tasks_col.find_one(q)
 
                 if find_task_doc:
                     doc["createdAt"] = find_task_doc["createdAt"]
@@ -271,14 +327,48 @@ class ProgramService(BaseService):
 
         res = await tasks_col.bulk_write(ops, ordered=False)
 
-        print(f"res: {res}", flush=True)
-
         for op_idx, oid in (res.upserted_ids or {}).items():
             i, o_doc = index_map[op_idx]
             tasks[i]["taskId"] = str(oid)
             tasks[i]["createdAt"] = o_doc["createdAt"]
 
         return tasks
+
+    async def update_task_state(
+        self, *, task_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
+    ):
+        tasks_col = db["tasks"]
+        flows_col = db["flows"]
+
+        find_task_doc = await tasks_col.find_one_and_update(
+            {"_id": ObjectId(task_id)},
+            {"$set": {"state": state}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        async def recursive_update_node_task_state(node_id: str):
+            find_node_doc = await tasks_col.find_one_and_update(
+                {"nodeId": node_id},
+                {"$set": {"state": state}},
+                return_document=ReturnDocument.AFTER,
+            )
+
+            if find_node_doc:
+                await recursive_update_node_task_state(find_node_doc.get("nodeId"))
+            else:
+                return
+
+        if find_task_doc:
+            await recursive_update_node_task_state(find_task_doc.get("nodeId"))
+
+            find_task_doc["taskId"] = str(find_task_doc.pop("_id"))
+
+            await flows_col.update_one(
+                {"_id": ObjectId(find_task_doc["flowId"])},
+                {"$set": {"state": state}},
+            )
+
+        return find_task_doc
 
     async def delete_tasks(self, *, request: Request_Delete_TasksPD, db: MongoDB):
         request_dict = t_to_dict(request)
@@ -325,6 +415,7 @@ class ProgramService(BaseService):
 
         flows_col = db["flows"]
         program_col = db["programs"]
+        tasks_col = db["tasks"]
 
         flows = [t_to_dict(flow) for flow in request.flows]
 
@@ -334,7 +425,7 @@ class ProgramService(BaseService):
         updated_flow_ids = []
 
         for pid in program_ids:
-            if pid not in record_find_program_ids:
+            if pid in record_find_program_ids:
                 continue
 
             if not await program_col.find_one({"_id": ObjectId(pid)}):
@@ -347,6 +438,11 @@ class ProgramService(BaseService):
             flow["updatedAt"] = now
             ops.append(UpdateOne({"_id": ObjectId(fid)}, {"$set": flow}))
             updated_flow_ids.append(fid)
+
+            if flow["state"] == RB_Flow_Manager_ProgramState.STOPPED:
+                await tasks_col.update_many(
+                    {"flowId": fid}, {"$set": {"state": RB_Flow_Manager_ProgramState.STOPPED}}
+                )
 
         if ops:
             await flows_col.bulk_write(ops, ordered=False)
@@ -361,6 +457,28 @@ class ProgramService(BaseService):
         return {
             "flows": res,
         }
+
+    async def update_flow_state(
+        self, *, flow_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
+    ):
+        flows_col = db["flows"]
+        tasks_col = db["tasks"]
+
+        flow_doc = await flows_col.find_one_and_update(
+            {"_id": ObjectId(flow_id)},
+            {"$set": {"state": state}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if flow_doc:
+            flow_doc["flowId"] = str(flow_doc.pop("_id"))
+
+            find_task_docs = await tasks_col.find({"flowId": flow_id}).to_list(length=None)
+
+            for task_doc in find_task_docs:
+                await self.update_task_state(task_id=str(task_doc["_id"]), state=state, db=db)
+
+        return flow_doc
 
     async def delete_flows(self, *, request: Request_Delete_FlowsPD, db: MongoDB):
         request_dict = t_to_dict(request)
@@ -480,10 +598,17 @@ class ProgramService(BaseService):
         try:
             now = datetime.now(UTC)
 
-            program_doc = {
-                **t_to_dict(request.program),
-                "updatedAt": now.isoformat(),
-            }
+            program_doc = (
+                {
+                    **request.program.model_dump(exclude_none=True, exclude_unset=True),
+                    "updatedAt": now.isoformat(),
+                }
+                if hasattr(request.program, "model_dump")
+                else {
+                    **t_to_dict(request.program),
+                    "updatedAt": now.isoformat(),
+                }
+            )
 
             col = db["programs"]
 
@@ -508,7 +633,7 @@ class ProgramService(BaseService):
             flows_res = await self.update_flows(
                 request=Request_Update_Multiple_FlowPD(
                     flows=[
-                        Request_Update_FlowPD(**f.model_dump(exclude_none=True))
+                        Request_Update_FlowPD(**f.model_dump(exclude_none=True, exclude_unset=True))
                         for f in request.flows
                     ]
                 ),
@@ -521,6 +646,28 @@ class ProgramService(BaseService):
             }
         except Exception as e:
             raise e
+
+    async def update_program_state(
+        self, *, program_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
+    ):
+        program_col = db["programs"]
+        flows_col = db["flows"]
+
+        program_doc = await program_col.find_one_and_update(
+            {"_id": ObjectId(program_id)},
+            {"$set": {"state": state}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if program_doc:
+            program_doc["programId"] = str(program_doc.pop("_id"))
+
+            find_flow_docs = await flows_col.find({"programId": program_id}).to_list(length=None)
+
+            for flow_doc in find_flow_docs:
+                await self.update_flow_state(flow_id=str(flow_doc["_id"]), state=state, db=db)
+
+        return program_doc
 
     async def delete_program(self, *, program_id: str, db: MongoDB):
         program_col = db["programs"]

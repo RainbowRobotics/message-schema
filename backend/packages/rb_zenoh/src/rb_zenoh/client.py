@@ -18,7 +18,7 @@ import flatbuffers
 import psutil
 from flatbuffers.table import Table
 from rb_utils.parser import t_to_dict
-from zenoh import Config, Encoding, QueryTarget, Session, ZBytes, ZError
+from zenoh import Config, Encoding, Queryable, QueryTarget, Session, ZBytes, ZError
 from zenoh import open as zenoh_open
 
 from .exeption import ZenohNoReply, ZenohTransportError
@@ -35,14 +35,19 @@ if hasattr(sys.stderr, "reconfigure"):
 
 
 class ZenohClient:
-    _instance = None
+    _instance: Any | None = None
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
+        pid = os.getpid()
         with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-        return cls._instance
+            inst = getattr(cls, "_instance", None)
+            # 부모 프로세스가 만든 인스턴스를 자식이 재활용하려고 하면 새로 만든다
+            if inst is None or getattr(inst, "_owner_pid", None) != pid:
+                inst = super().__new__(cls)
+                inst._owner_pid = pid
+                cls._instance = inst
+            return inst
 
     def __init__(self):
         if getattr(self, "_init_done", False):
@@ -82,7 +87,7 @@ class ZenohClient:
             # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
             conf.insert_json5(
                 "listen/endpoints",
-                '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
+                '{ "peer": ["tcp/0.0.0.0:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
             )
             conf.insert_json5("listen/exit_on_failure", "false")
             conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
@@ -171,6 +176,15 @@ class ZenohClient:
             b = flatbuffers.Builder(flatbuffer_buf_size)
             b.Finish(flatbuffer_req_obj.Pack(b))
             payload = bytes(b.Output())
+        else:
+            if isinstance(payload, bytes | bytearray | memoryview):
+                payload = bytes(payload)
+            elif isinstance(payload, str):
+                payload = payload.encode("utf-8")
+            elif isinstance(payload, dict):
+                payload = json.dumps(payload).encode("utf-8")
+            else:
+                raise ValueError(f"Invalid payload type: {type(payload)}")
 
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
         if self.session is not None:
@@ -385,7 +399,11 @@ class ZenohClient:
             except Exception as e:
                 q.reply_err(key_expr=q.key_expr, payload=ZBytes(str(e).encode("utf-8")))
 
-        qbl = self.session.declare_queryable(keyexpr, _handler)
+        qbl: Queryable | None = None
+
+        if self.session is not None:
+            qbl = self.session.declare_queryable(keyexpr, _handler)
+
         self._queryables[keyexpr] = qbl
         print(f"🛠️  queryable declared: {keyexpr}")
 
@@ -435,8 +453,10 @@ class ZenohClient:
 
         # dict_params = dict(params or {})
         # sel = Selector(keyexpr, dict_params)
-
-        get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout)
+        if self.session is not None:
+            get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout)
+        else:
+            get_result = []
 
         seen_any = False
 
@@ -711,7 +731,7 @@ class ZenohClient:
 
         async def _spawn_all():
             now = time.time()
-            tasks = []
+            tasks: list[asyncio.Future] = []
 
             for e in entries:
                 opts = e.opts
@@ -755,7 +775,15 @@ class ZenohClient:
                         )
                         cb(**kwargs)
 
-                    tasks.append(loop.run_in_executor(None, _sync_call))
+                    if loop.is_closed():
+                        # 프로세스 내려가는 중이면 이 콜백은 그냥 버림
+                        return
+                    try:
+                        fut = loop.run_in_executor(None, _sync_call)
+                    except RuntimeError:
+                        return
+
+                    tasks.append(fut)
 
                 e.metrics["delivered"] += 1
                 e.metrics["last_ts"] = now

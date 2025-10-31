@@ -15,6 +15,7 @@ members = [
     "rb-modules",
     "rb-resources",
     "rb-schemas",
+    "rb-sdk",
     "rb-socketio",
     "rb-utils",
     "rb-zenoh",
@@ -953,6 +954,8 @@ version = "0.1.0"
 source = { editable = "packages/rb_flow_manager" }
 dependencies = [
     { name = "rb-flat-buffers" },
+    { name = "rb-schemas" },
+    { name = "rb-sdk" },
     { name = "rb-utils" },
     { name = "rb-zenoh" },
 ]
@@ -960,6 +963,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
+    { name = "rb-sdk", editable = "packages/rb_sdk" },
     { name = "rb-utils", editable = "packages/rb_utils" },
     { name = "rb-zenoh", editable = "packages/rb_zenoh" },
 ]
@@ -1009,6 +1014,7 @@ source = { editable = "packages/rb_schemas" }
 dependencies = [
     { name = "fastapi" },
     { name = "flatbuffers" },
+    { name = "rb-flow-manager" },
     { name = "rb-utils" },
 ]
 
@@ -1016,7 +1022,27 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "flatbuffers", specifier = ">=25.2.10,<26.0.0" },
+    { name = "rb-flow-manager", editable = "packages/rb_flow_manager" },
     { name = "rb-utils", editable = "packages/rb_utils" },
+]
+
+[[package]]
+name = "rb-sdk"
+version = "0.1.0"
+source = { editable = "packages/rb_sdk" }
+dependencies = [
+    { name = "rb-flat-buffers" },
+    { name = "rb-schemas" },
+    { name = "rb-utils" },
+    { name = "rb-zenoh" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "rb-flat-buffers", editable = "packages/rb_flat_buffers" },
+    { name = "rb-schemas", editable = "packages/rb_schemas" },
+    { name = "rb-utils", editable = "packages/rb_utils" },
+    { name = "rb-zenoh", editable = "packages/rb_zenoh" },
 ]
 
 [[package]]

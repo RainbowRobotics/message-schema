@@ -3,10 +3,10 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rb_flow_manager"
+name = "rb_sdk"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-description = "Rainbow Python Flow Manager"
+description = "Rainbow Python SDK"
 authors = [
     { name = "Derek", email = "dfd1123@rainbow-robotics.com" }
 ]
@@ -17,7 +17,6 @@ dependencies = [
   "rb_zenoh",
   "rb_flat_buffers",
   "rb_schemas",
-  "rb_sdk",
 ]
 
 [tool.uv.sources]
@@ -25,4 +24,3 @@ rb_utils = { workspace = true }
 rb_zenoh = { workspace = true }
 rb_flat_buffers = { workspace = true }
 rb_schemas = { workspace = true }
-rb_sdk = { workspace = true }

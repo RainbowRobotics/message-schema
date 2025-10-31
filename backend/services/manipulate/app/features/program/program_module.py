@@ -135,8 +135,8 @@ class ProgramService(BaseService):
     async def call_move_j(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
-        target_dict = {**target.model_dump()}
-        speed_dict = {**speed.model_dump()}
+        target_dict = t_to_dict(target)
+        speed_dict = t_to_dict(speed)
 
         req = Request_Move_JT()
         move_input_target = MoveInput_TargetT()
@@ -168,8 +168,8 @@ class ProgramService(BaseService):
     async def call_move_l(
         self, *, robot_model: str, target: MoveInputTarget, speed: MoveInputSpeed
     ):
-        target_dict = {**target.model_dump()}
-        speed_dict = {**speed.model_dump()}
+        target_dict = t_to_dict(target)
+        speed_dict = t_to_dict(speed)
 
         req = Request_Move_LT()
         move_input_target = MoveInput_TargetT()

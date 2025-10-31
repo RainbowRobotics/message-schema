@@ -12,7 +12,9 @@ dependencies = [
     "flatbuffers>=25.2.10,<26.0.0",
     "fastapi>=0.116.1",
     "rb_utils",
+    "rb_flow_manager",
 ]
 
 [tool.uv.sources]
 rb_utils = { workspace = true }
+rb_flow_manager = { workspace = true }

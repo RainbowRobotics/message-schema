@@ -8,7 +8,7 @@ from typing import Any
 from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from rb_database import PyObjectId
-from rb_flow_manager.control import RB_Flow_Manager_ProgramState
+from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_schemas.utility import Omit, Pick
 
 

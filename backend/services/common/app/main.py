@@ -6,6 +6,7 @@ from app.features.config.config_socket import config_socket_router
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.program.program_api import program_router
+from app.features.program.program_zenoh import zenoh_program_router
 from app.features.state.state_api import state_router
 from app.features.state.state_module import StateService
 from app.features.state.state_socket import state_socket_router
@@ -23,10 +24,12 @@ socketio_route_path = f"{setting.SOCKET_PATH}/"
 state_service = StateService()
 config_service = ConfigService()
 
+# zenoh_client = ZenohClient()
+
 app = create_app(
     settings=setting,
     socket_client=socket_client,
-    zenoh_routers=[zenoh_state_router],
+    zenoh_routers=[zenoh_state_router, zenoh_program_router],
     socket_routers=[
         whoami_socket_router,
         config_socket_router,
@@ -45,3 +48,8 @@ app.add_websocket_route(socketio_route_path, app_with_sio)
 
 
 sio.register_namespace(RelayNS("/"))
+
+
+# while True:
+#     time.sleep(1)
+#     zenoh_client.publish("*/pause", payload=b"1")

@@ -7,7 +7,13 @@
 -e ./packages/rb_flat_buffers
     # via
     #   common
+    #   rb-flow-manager
     #   rb-modules
+    #   rb-sdk
+-e ./packages/rb_flow_manager
+    # via
+    #   common
+    #   rb-schemas
 -e ./packages/rb_modules
     # via
     #   common
@@ -19,20 +25,28 @@
 -e ./packages/rb_schemas
     # via
     #   common
+    #   rb-flow-manager
     #   rb-modules
+    #   rb-sdk
+-e ./packages/rb_sdk
+    # via rb-flow-manager
 -e ./packages/rb_socketio
     # via rb-modules
 -e ./packages/rb_utils
     # via
     #   common
     #   rb-database
+    #   rb-flow-manager
     #   rb-modules
     #   rb-schemas
+    #   rb-sdk
     #   rb-zenoh
 -e ./packages/rb_zenoh
     # via
     #   common
+    #   rb-flow-manager
     #   rb-modules
+    #   rb-sdk
 aiohappyeyeballs==2.6.1 \
     --hash=sha256:c3f9d0113123803ccadfdf3f0faa505bc78e6a72d1cc4806cbd719826e943558 \
     --hash=sha256:f349ba8f4b75cb25c99c5c2d84e997e485204d2902a9597802b0371f09331fb8
