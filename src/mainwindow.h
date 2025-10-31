@@ -35,6 +35,8 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGraphicsOpacityEffect>
+#include <QGamepad>
+#include <QGamepadManager>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -285,5 +287,20 @@ public Q_SLOTS:
 private:
     Ui::MainWindow *ui;
     std::shared_mutex mtx;
+
+    // Gamepad
+    QGamepad* gamepad;
+
+    std::atomic<bool> lb_pressed = {false};
+    std::atomic<bool> rb_pressed = {false};
+
+    double cur_lx = 0.0; // left stick X  -> vy
+    double cur_ly = 0.0; // left stick Y  -> vx
+    double cur_rx = 0.0; // right stick X -> wz
+
+    // gamepad init
+    void init_gamepad();
+
+
 };
 #endif // MAINWINDOW_H
