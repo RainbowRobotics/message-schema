@@ -331,6 +331,12 @@ void MainWindow::init_modules()
         ui->bt_SimInit->setEnabled(false);
     }
 
+    if(CONFIG::instance()->get_robot_wheel_type() != "MECANUM")
+    {
+        ui->bt_JogMecaL->setEnabled(false);
+        ui->bt_JogMecaR->setEnabled(false);
+    }
+
     // view mode
     if(CONFIG::instance()->get_loc_mode() == "3D")
     {
@@ -1808,6 +1814,39 @@ void MainWindow::bt_AutoPath()
     msg.path = path_append_id;
     msg.preset = 0;
     msg.direction = direction;
+    msg.method = "pp";
+
+    Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
+    path_append_id = "";
+    ui -> te_path -> setText(path_append_id);
+
+    return;
+}
+
+// for autocontrol
+void MainWindow::bt_AutoPath_hpp()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        //printf("[MAIN] check map load\n");
+        //spdlog::warn("[MAIN] check map load");
+        log_warn("check map load");
+
+        return;
+    }
+
+    QString direction = "forward";
+    if (ui->ckb_MoveBackWard->isChecked() == 1)
+    {
+        direction = "backward";
+    }
+
+    DATA_PATH msg;
+    msg.command = "goal";
+    msg.path = path_append_id;
+    msg.preset = 0;
+    msg.direction = direction;
+    msg.method = "hpp";
 
     Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
     path_append_id = "";

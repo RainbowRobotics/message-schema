@@ -969,11 +969,6 @@ void COMM_MSA::handle_control_cmd(const QJsonObject &data)
     {
         msg.onoff           = data["onoff"].toBool();
     }
-
-    else if(msg.command == DATA_CONTROL::MotorOnOff)
-    {
-        msg.onoff           = data["onoff"].toBool();
-    }
     else if(msg.command == DATA_CONTROL::setDigitalIO)
     {
         handle_safetyio_cmd(data);
