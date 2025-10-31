@@ -612,6 +612,64 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         cv::subtract(_dynamic_map, dynamic_single_pixels, _dynamic_map);
     }
 
+    // debug
+    {
+        double scale = 3.0;
+
+        cv::Mat vis_static, vis_dynamic;
+        cv::resize(_static_map,  vis_static,  cv::Size(), scale, scale, cv::INTER_NEAREST);
+        cv::resize(_dynamic_map, vis_dynamic, cv::Size(), scale, scale, cv::INTER_NEAREST);
+
+        cv::Mat vis_static_c3, vis_dynamic_c3;
+        cv::cvtColor(vis_static,  vis_static_c3,  cv::COLOR_GRAY2BGR);
+        cv::cvtColor(vis_dynamic, vis_dynamic_c3, cv::COLOR_GRAY2BGR);
+
+        Eigen::Vector3d P0(robot_x_max, robot_y_max, 0);
+        Eigen::Vector3d P1(robot_x_max, robot_y_min, 0);
+        Eigen::Vector3d P2(robot_x_min, robot_y_min, 0);
+        Eigen::Vector3d P3(robot_x_min, robot_y_max, 0);
+
+        cv::Vec2i uv0 = xy_uv(P0[0], P0[1]);
+        cv::Vec2i uv1 = xy_uv(P1[0], P1[1]);
+        cv::Vec2i uv2 = xy_uv(P2[0], P2[1]);
+        cv::Vec2i uv3 = xy_uv(P3[0], P3[1]);
+
+        cv::Point s0((int)std::round(uv0[0]*scale), (int)std::round(uv0[1]*scale));
+        cv::Point s1((int)std::round(uv1[0]*scale), (int)std::round(uv1[1]*scale));
+        cv::Point s2((int)std::round(uv2[0]*scale), (int)std::round(uv2[1]*scale));
+        cv::Point s3((int)std::round(uv3[0]*scale), (int)std::round(uv3[1]*scale));
+
+        std::vector<cv::Point> poly;
+        poly.push_back(s0);
+        poly.push_back(s1);
+        poly.push_back(s2);
+        poly.push_back(s3);
+
+        cv::Vec2i uv_c = xy_uv(0.0, 0.0);
+        cv::Point cpt((int)std::round(uv_c[0]*scale), (int)std::round(uv_c[1]*scale));
+
+        double L = (robot_x_max - robot_x_min) * 0.7;
+        cv::Vec2i uv_h = xy_uv(L, 0.0);
+        cv::Point hpt((int)std::round(uv_h[0]*scale), (int)std::round(uv_h[1]*scale));
+
+        int r_px = (int)std::round((config->get_obs_map_range() / gs) * scale);
+
+        cv::polylines(vis_static_c3, poly, true, cv::Scalar(0, 0, 255), 2, cv::LINE_8);
+        cv::circle  (vis_static_c3, cpt, 4, cv::Scalar(0, 255, 255), -1, cv::LINE_8);
+        cv::arrowedLine(vis_static_c3, cpt, hpt, cv::Scalar(0, 255, 255), 2, cv::LINE_8, 0, 0.2);
+        cv::circle  (vis_static_c3, cpt, r_px, cv::Scalar(128, 128, 128), 1, cv::LINE_8);
+
+        cv::polylines(vis_dynamic_c3, poly, true, cv::Scalar(0, 0, 255), 2, cv::LINE_8);
+        cv::circle  (vis_dynamic_c3, cpt, 4, cv::Scalar(0, 255, 255), -1, cv::LINE_8);
+        cv::arrowedLine(vis_dynamic_c3, cpt, hpt, cv::Scalar(0, 255, 255), 2, cv::LINE_8, 0, 0.2);
+        cv::circle  (vis_dynamic_c3, cpt, r_px, cv::Scalar(128, 128, 128), 1, cv::LINE_8);
+
+        cv::namedWindow("STATIC_MAP",  cv::WINDOW_NORMAL);
+        cv::namedWindow("DYNAMIC_MAP", cv::WINDOW_NORMAL);
+        cv::imshow("STATIC_MAP",  vis_static_c3);
+        cv::imshow("DYNAMIC_MAP", vis_dynamic_c3);
+    }
+
     // set denoised obs_pts
     std::vector<Eigen::Vector3d> _obs_pts;
     std::vector<Eigen::Vector3d> _dyn_pts;
