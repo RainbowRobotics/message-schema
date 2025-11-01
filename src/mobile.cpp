@@ -1151,11 +1151,11 @@ void MOBILE::receive_data_loop()
                                 memcpy(&stop_sw, &_buf[index], dlc);              index=index+dlc;
                                 memcpy(&start_sw, &_buf[index], dlc);             index=index+dlc;
 
-                                memcpy(&_om_state, &_buf[index], dlc);         index=index+dlc;
-                                memcpy(&_ri_state, &_buf[index], dlc);         index=index+dlc;
+                                memcpy(&_om_state, &_buf[index], dlc);            index=index+dlc;
+                                memcpy(&_ri_state, &_buf[index], dlc);            index=index+dlc;
                                 memcpy(&charge_state, &_buf[index], dlc);         index=index+dlc;
-                                memcpy(&remote_flag, &_buf[index], dlc);         index=index+dlc;
-                                memcpy(&bumper_state, &_buf[index],dlc);        index=index+dlc;
+                                memcpy(&remote_flag, &_buf[index], dlc);          index=index+dlc;
+                                memcpy(&bumper_state, &_buf[index],dlc);          index=index+dlc;
 
                                 memcpy(&safety_emo_pressed_1, &_buf[index], dlc);             index=index+dlc;
                                 memcpy(&safety_ref_meas_mismatch_1, &_buf[index], dlc);       index=index+dlc;

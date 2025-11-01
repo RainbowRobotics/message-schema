@@ -108,8 +108,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
     connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
-    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                      // move clicked node
-    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                      // move clicked node
+    connect(ui->bt_AutoPath_hpp,      SIGNAL(clicked()),                    this, SLOT(bt_AutoPath_hpp()));                                  // move clicked node
+    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                // move clicked node
+    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                 // move clicked node
 
     // dockcontrol
     connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));

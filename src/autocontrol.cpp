@@ -4757,11 +4757,8 @@ void AUTOCONTROL::obs_loop()
             std::vector<Eigen::Matrix4d> traj;
             double predict_time = config->get_obs_predict_time();
 
-            //            std::cout << "params.LIMIT_V+0.01: " << params.LIMIT_V+0.01 << std::endl;
-
             for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
-                //                std::cout << "checking vv: " << vv << std::endl;
                 traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, predict_time, cur_tf);
 
                 bool is_collision = false;
@@ -4809,7 +4806,7 @@ void AUTOCONTROL::obs_loop()
             {
                 //                Forward filtering (within 45 degrees)
                 Eigen::Vector2d obs_vec(pt[0] - cur_pos[0], pt[1] - cur_pos[1]);
-                double forward_component = heading_vec.dot(obs_vec.normalized());
+//                double forward_component = heading_vec.dot(obs_vec.normalized());
 
                 bool near_traj = false;
                 for(const auto& tf : traj)
@@ -4850,6 +4847,7 @@ void AUTOCONTROL::obs_loop()
             if(found_forward_obs)
             {
                 obs_dist = std::max(0.0, min_dyn_dist - config->get_robot_size_x_max());
+                qDebug()<<"auto obs_dist : "<<obs_dist;
 
                 /*
                 // test 10.18.25 /////////////////
@@ -4921,6 +4919,7 @@ void AUTOCONTROL::obs_loop()
                 //{
                 //    limited_decel = std::min(limited_decel,prev_decel + AUTOCONTROL_INFO::obs_decel_recover_rate);
                 //}
+//                qDebug()<<"auto obs_dist : "<<obs_dist;
 
                 cur_obs_dist      = obs_dist;
                 cur_obs_value     = obs_value;

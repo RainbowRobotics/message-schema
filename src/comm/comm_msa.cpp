@@ -3123,6 +3123,15 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["emo"]          = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
     robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
     robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
+
+    bool temp = (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL);
+    robotStateObj->get_map()["ss2_recovery"] = sio::bool_message::create(temp);
+    robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
+                ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
+    robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
+                ms.safety_state_bumper_stop_1 || ms.safety_state_bumper_stop_2);
+    robotStateObj->get_map()["sf_operational_stop"] = sio::bool_message::create(
+                ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
 
     auto toSioArray = [](unsigned char arr[8]) {
@@ -3302,15 +3311,6 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     send_object->get_map()["result"]     = sio::string_message::create(msg.result.toStdString());
     send_object->get_map()["message"]    = sio::string_message::create(msg.message.toStdString());
 
-    //    if(msg.command == DATA_CONTROL::Dock)
-    //    {
-    //    }
-    //    else if(msg.command == DATA_CONTROL::Undock)
-    //    {
-    //    }
-    //    else if(msg.command == DATA_CONTROL::RandomSeq)
-    //    {
-    //    }
     if(msg.command == DATA_CONTROL::Dock || msg.command == DATA_CONTROL::Undock || msg.command == DATA_CONTROL::RandomSeq)
     {
     }
@@ -3351,7 +3351,6 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
     io->socket("slamnav")->emit("controlResponse", send_object);
-
 }
 
 void COMM_MSA::send_localization_response(DATA_LOCALIZATION msg)
