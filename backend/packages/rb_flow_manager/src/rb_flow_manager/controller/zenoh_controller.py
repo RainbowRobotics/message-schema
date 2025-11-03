@@ -4,7 +4,7 @@ from rb_flow_manager.controller.base_controller import BaseController
 from rb_zenoh.client import ZenohClient
 
 
-class ZenohController(BaseController):
+class Zenoh_Controller(BaseController):
     def __init__(self):
         self._zenoh_client: ZenohClient | None = None
 

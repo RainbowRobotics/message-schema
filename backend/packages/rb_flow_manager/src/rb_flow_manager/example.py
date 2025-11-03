@@ -1,11 +1,12 @@
 # 사용 예제
 import time
 
-from .context import RepeatStep, ScriptExecutor, Step
-from .controller.zenoh_controller import ZenohController
+from .controller.zenoh_controller import Zenoh_Controller
+from .executor import ScriptExecutor
+from .step import RepeatStep, Step
 
 if __name__ == "__main__":
-    zenoh_controller = ZenohController()
+    zenoh_controller = Zenoh_Controller()
 
     # 트리 구조 정의 (모두 Step으로 구성)
     root = Step(
