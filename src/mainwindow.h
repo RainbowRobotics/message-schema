@@ -21,6 +21,7 @@
 #include "policy.h"
 #include "safety.h"
 #include "task.h"
+#include "error_manager.h"
 
 #include "comm/comm_coop.h"
 #include "comm/comm_rrs.h"
@@ -169,6 +170,12 @@ public:
     // plot timer
     QTimer* plot_timer;
 
+    // QA timer
+    QTimer* qa_timer = nullptr;
+    bool is_qa_running = false;
+    int qa_interval_ms = 1000;
+    QString qa_last_node = "";
+
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 
@@ -264,6 +271,10 @@ public Q_SLOTS:
     void bt_DelNode();
     void bt_AnnotSave();
     void bt_QuickAddNode();
+    void bt_QuickAnnotStart();
+    void bt_QuickAnnotStop();
+    void bt_QuickAddAruco();
+    void bt_QuickAddCloud();
 
     // for safety debug
     void bt_ClearMismatch();
@@ -289,6 +300,8 @@ public Q_SLOTS:
 
     // timer loops
     void plot_loop();
+    void qa_loop();
+
 
 private:
     Ui::MainWindow *ui;
