@@ -248,7 +248,6 @@ void ORBBEC::grab_loop(int idx)
                     filter_param_set = true;
                 }
                 auto scale = fs->depthFrame()->getValueScale();
-//                qDebug()<<"scale : "<<scale;
                 point_cloud.setPositionDataScaled(scale);
 
                 std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
