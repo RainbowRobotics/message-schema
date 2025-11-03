@@ -4170,11 +4170,6 @@ void MainWindow::plot_obs()
             ui->lb_Screen1->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot_obs_map)));
             ui->lb_Screen1->setScaledContents(true);
             ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-
-            // debug
-            // cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
-            // cv::resizeWindow("OBS MAP", 700, 700);
-            // cv::imshow("OBS MAP", plot_obs_map);
         }
 
         // plot obs pts
@@ -4211,6 +4206,28 @@ void MainWindow::plot_obs()
 
         // point size
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
+
+        // debug
+        {
+            cv::Mat dyn_map, static_map;
+            cv::cvtColor(OBSMAP::instance()->get_dyn_map(), dyn_map, cv::COLOR_GRAY2BGR);
+            cv::cvtColor( OBSMAP::instance()->get_static_map(), static_map, cv::COLOR_GRAY2BGR);
+
+            OBSMAP::instance()->draw_robot_outline(dyn_map);
+            OBSMAP::instance()->draw_robot_outline(static_map);
+
+            QImage dyn_map_img(dyn_map.data, dyn_map.cols, dyn_map.rows, dyn_map.step, QImage::Format_BGR888);
+            QImage static_map_img(static_map.data, static_map.cols, static_map.rows, static_map.step, QImage::Format_BGR888);
+
+            ui->lb_Screen6->setAlignment(Qt::AlignCenter);
+            ui->lb_Screen7->setAlignment(Qt::AlignCenter);
+
+            QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            QPixmap _static_map  = QPixmap::fromImage(static_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+            ui->lb_Screen6->setPixmap(_static_map);
+            ui->lb_Screen7->setPixmap(_dyn_map);
+        }
     }
 }
 
