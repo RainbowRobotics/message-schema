@@ -1293,7 +1293,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
@@ -1358,7 +1358,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1816,7 +1816,7 @@ Move
                <rect>
                 <x>190</x>
                 <y>118</y>
-                <width>82</width>
+                <width>71</width>
                 <height>52</height>
                </rect>
               </property>
@@ -1824,7 +1824,7 @@ Move
                <item row="0" column="0">
                 <widget class="QPushButton" name="bt_AutoPathAppend">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -1837,7 +1837,7 @@ Move
                <item row="1" column="0">
                 <widget class="QPushButton" name="bt_AutoPathErase">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>

@@ -4307,10 +4307,10 @@ void MainWindow::plot_obs()
             ui->lb_Screen1->setScaledContents(true);
             ui->lb_Screen1->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 
-            // debug
-            // cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
-            // cv::resizeWindow("OBS MAP", 700, 700);
-            // cv::imshow("OBS MAP", plot_obs_map);
+//            // debug
+//             cv::namedWindow("OBS MAP", cv::WINDOW_NORMAL);
+//             cv::resizeWindow("OBS MAP", 700, 700);
+//             cv::imshow("OBS MAP", plot_obs_map);
         }
 
         // plot obs pts
@@ -4587,7 +4587,7 @@ void MainWindow::plot_cam()
         if (cam_tf.size() >= 4)
         {
             bool ok = false;
-            double yaw_deg = cam_tf[3].toDouble(&ok);
+            double yaw_deg = cam_tf[5].toDouble(&ok);
             if (ok && fabs(yaw_deg - 180.0) < 1e-3)
             {
                 cv::flip(plot, plot, 0);

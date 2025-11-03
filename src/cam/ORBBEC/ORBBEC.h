@@ -14,7 +14,8 @@
 // qt
 #include <QObject>
 
-constexpr int depth_profile_idx = 28;  // w:640, h:400, fps:30, format:8
+//constexpr int depth_profile_idx = 28;  // w:640, h:400, fps:30, format:8
+constexpr int depth_profile_idx = 4;  // w:640, h:400, fps:30, format:8
 constexpr int color_profile_idx = 51; // w:640, h:360, fps:5, format:22
 
 class ORBBEC : public QObject

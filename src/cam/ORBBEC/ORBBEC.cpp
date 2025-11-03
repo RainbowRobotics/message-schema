@@ -248,6 +248,7 @@ void ORBBEC::grab_loop(int idx)
                     filter_param_set = true;
                 }
                 auto scale = fs->depthFrame()->getValueScale();
+//                qDebug()<<"scale : "<<scale;
                 point_cloud.setPositionDataScaled(scale);
 
                 std::shared_ptr<ob::Frame> frame = point_cloud.process(fs);
@@ -266,6 +267,7 @@ void ORBBEC::grab_loop(int idx)
                         double x = point[p].x / 1000.0;
                         double y = point[p].y / 1000.0;
                         double z = point[p].z / 1000.0;
+
 
                         if(x == 0 && y == 0 && z == 0)
                         {
@@ -289,14 +291,14 @@ void ORBBEC::grab_loop(int idx)
                         pts.push_back(_P);
                     }
                 }
-
-                pts = voxel_filtering(pts, voxel_size);
+//                pts = voxel_filtering(pts, voxel_size);
                 cur_pts_size[idx] = pts.size();
 
                 TIME_PTS scan;
                 scan.t = t;
                 scan.pts = std::move(pts);
 
+//                std::cout<<"scan.pts size : "<<scan.pts.size()<<std::endl;
                 depth_que[idx].push(scan);
                 if(depth_que[idx].unsafe_size() > 10)
                 {
