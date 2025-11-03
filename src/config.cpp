@@ -120,13 +120,14 @@ void CONFIG::load()
     load_camera_configs(obj);
     load_sensor_specific_configs(obj);
     load_safety_config(obj);
-    
+    load_qa_config(obj);
+
     is_load = true;
     //printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
     spdlog::info("[CONFIG] {}, load succeeded", qUtf8Printable(path_config));
 
     // spdlog level setup
-    setup_spdlog_level();
+    set_spdlog_level();
 
     if(has_missing_variables())
     {
@@ -419,6 +420,13 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
         }
     }
 }
+void CONFIG::load_qa_config(const QJsonObject &obj)
+{
+    QJsonObject obj_qa = obj["qa"].toObject();
+
+    check_and_set_double(obj_qa, "QA_STEP_DISTANCE", QA_STEP_DISTANCE, "qa");
+    check_and_set_double(obj_qa, "QA_STOP_MIN_DISTANCE", QA_STOP_MIN_DISTANCE, "qa");
+}
 
 std::vector<MonitoringField> CONFIG::get_monitoring_field()
 {
@@ -479,19 +487,19 @@ void CONFIG::load_camera_configs(const QJsonObject &obj)
             spdlog::info("[CONFIG] CAM[{}] TF: {}, SERIAL_NUMBER: {}", i, qUtf8Printable(CAM_TF[i]), qUtf8Printable(CAM_SERIAL_NUMBER[i]));
         }
     }
-    if(USE_CAM_RGB || USE_CAM_DEPTH)
-    {
-        QJsonArray cam_arr = obj["cam_config"].toArray();
-        for(int i = 0; i < cam_arr.size(); i++)
-        {
-            QJsonObject obj_cam = cam_arr[i].toObject();
-            CAM_TF[i] = obj_cam["TF"].toString();
-            CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
-            //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
-            spdlog::info("[CONFIG] CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
-            //log_info("CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
-        }
-    }
+    //if(USE_CAM_RGB || USE_CAM_DEPTH)
+    //{
+    //    QJsonArray cam_arr = obj["cam_config"].toArray();
+    //    for(int i = 0; i < cam_arr.size(); i++)
+    //    {
+    //        QJsonObject obj_cam = cam_arr[i].toObject();
+    //        CAM_TF[i] = obj_cam["TF"].toString();
+    //        CAM_SERIAL_NUMBER[i] = obj_cam["SERIAL_NUMBER"].toString();
+    //        //printf("[CONFIG] CAM[%d] TF: %s\n", i, qUtf8Printable(CAM_TF[i]));
+    //        spdlog::info("[CONFIG] CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
+    //        //log_info("CAM[{}] TF: {}", i, qUtf8Printable(CAM_TF[i]));
+    //    }
+    //}
 }
 
 void CONFIG::load_sensor_specific_configs(const QJsonObject &obj)
@@ -1639,7 +1647,7 @@ QString CONFIG::get_log_file_path()
 }
 
 
-void CONFIG::setup_spdlog_level()
+void CONFIG::set_spdlog_level()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     
@@ -1673,7 +1681,7 @@ void CONFIG::setup_spdlog_level()
 
     }
     
-    // spdlog 기본 레벨 설정
+    // set spdlog level
     spdlog::set_level(level);
     
     //printf("[CONFIG] spdlog level set to: %s\n", qUtf8Printable(LOG_LEVEL));
@@ -1681,6 +1689,565 @@ void CONFIG::setup_spdlog_level()
 
 }
 
+void CONFIG::set_update_config_file()
+{
+    QMutexLocker locker(&q_mtx);
+    
+    if (path_config.isEmpty()) 
+    {
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_CONFIG, "Config path is empty");
+        return;
+    }
+
+    try 
+    {
+
+        //if (!set_backup_config_file()) 
+        //{
+        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to backup config file");
+        //    return;
+        //}
+
+        //// 2. check config.json file exists
+        //QJsonObject existing_config;
+        //QFile config_file(path_config);
+        //if (config_file.exists() && config_file.open(QIODevice::ReadOnly)) 
+        //{
+        //    QJsonParseError error;
+        //    QJsonDocument doc = QJsonDocument::fromJson(config_file.readAll(), &error);
+        //    config_file.close();
+        //    
+        //    if (error.error == QJsonParseError::NoError && doc.isObject()) 
+        //    {
+        //        existing_config = doc.object();
+        //    }
+        //}
+
+        //// 3. set default config template
+        //QJsonObject default_config = set_default_config_object();
+
+        //// 4. merge existing config and default config
+        //QJsonObject merged_config = merge_config_objects(existing_config, default_config);
+
+        //// 5. save merged config to file
+        //QFile output_file(path_config);
+        //if (output_file.open(QIODevice::WriteOnly)) 
+        //{
+        //    QJsonDocument output_doc(merged_config);
+        //    output_file.write(output_doc.toJson(QJsonDocument::Indented));
+        //    output_file.close();
+        //    
+        //    // 6. log success message
+        //    QString log_msg = QString("Config file updated successfully. Path: %1").arg(path_config);
+        //    //if (logger) 
+        //    //{
+        //    //    logger->write_log(log_msg, "Green");
+        //    //}
+        //    
+        //    // 7. 업데이트된 설정 다시 로드
+        //    load();
+        //    
+        //} 
+        //else 
+        //{
+        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to write updated config file");
+        //}
+
+        QJsonObject existing_config;
+        QFile config_file(path_config);
+        if (config_file.exists() && config_file.open(QIODevice::ReadOnly)) 
+        {
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(config_file.readAll(), &error);
+            config_file.close();
+            
+            if (error.error == QJsonParseError::NoError && doc.isObject()) 
+            {
+                existing_config = doc.object();
+            }
+        }
+
+        // set default config object
+        QJsonObject default_config = set_default_config_object();
+
+        // set merge config object
+        QJsonObject merged_config = merge_config_objects(existing_config, default_config);
+
+        // if there are changes, backup and save
+        bool has_changes = false;
+        if (existing_config != merged_config) 
+        {
+            has_changes = true;
+
+            // create backup
+            if (!set_backup_config_file()) 
+            {
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to backup config file");
+                return;
+            }
+
+            // save merged config to file
+            QFile output_file(path_config);
+            if (output_file.open(QIODevice::WriteOnly)) 
+            {
+                QJsonDocument output_doc(merged_config);
+                output_file.write(output_doc.toJson(QJsonDocument::Indented));
+                output_file.close();
+                
+                //QString log_msg = QString("Config file updated successfully. Path: %1").arg(path_config);
+                //if (logger) 
+                //{
+                //    logger->write_log(log_msg, "Green");
+                //}
+                
+                // 업데이트된 설정 다시 로드
+                load();
+            } 
+            else 
+            {
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to write updated config file");
+            }
+        }
+        else
+        {
+            //QString log_msg = QString("Config file is already up to date. No backup needed.");
+            //if (logger) 
+            //{
+            //    logger->write_log(log_msg, "Blue");
+            //}
+        }
+        
+        
+    } 
+    
+    catch (const std::exception& e) 
+    {
+        QString error_msg = QString("Exception during config update: %1").arg(e.what());
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::LOAD_CONFIG, error_msg);
+    }
+}
+
+QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJsonObject& defaults)
+{
+    QJsonObject merged = existing;
+    
+    for (auto it = defaults.begin(); it != defaults.end(); ++it) 
+    {
+        const QString& key = it.key();
+        const QJsonValue& default_value = it.value();
+        
+        if (!merged.contains(key)) 
+        {
+            // if key is missing, add default value
+            merged[key] = default_value;
+        } 
+        else if (default_value.isObject() && merged[key].isObject()) 
+        {
+            // if both are objects, merge recursively
+            merged[key] = merge_config_objects(merged[key].toObject(), default_value.toObject());
+        }
+    }
+    
+    return merged;
+}
+
+
+// 1. backup config function
+bool CONFIG::set_backup_config_file()
+{
+    if (path_config.isEmpty() || !QFile::exists(path_config)) 
+    {
+        return false;
+    }
+
+    //QString today = QDateTime::currentDateTime().toString("yyyyMMdd");
+    QFileInfo config_info(path_config);
+    QDir config_dir(config_info.absolutePath());
+    
+    QStringList backup_filters;
+    backup_filters << config_info.baseName() + "_backup" + "*.json";
+    
+    QFileInfoList file_backup = config_dir.entryInfoList(backup_filters, QDir::Files);
+
+    if (!file_backup.isEmpty()) 
+    {
+        QString existing_backup = file_backup.first().fileName();
+        spdlog::info("[CONFIG] Backup already exists for today: {}", existing_backup.toStdString());
+        
+        return true; 
+    }
+
+    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+    QString backup_path = config_info.absolutePath() + "/" + 
+                         config_info.baseName() + "_backup_" + timestamp + "." + 
+                         config_info.completeSuffix();
+
+    bool success = QFile::copy(path_config, backup_path);
+    
+    if (success) 
+    {
+        spdlog::info("[CONFIG] New backup created: {}", backup_path.toStdString());
+    }
+    else 
+    {
+        spdlog::error("[CONFIG] Failed to create backup: {}", backup_path.toStdString());
+    }
+    
+    return success;
+}
+
+void CONFIG::set_restore_config_file_backup()
+{
+    QFileInfo config_info(path_config);
+    QDir config_dir(config_info.absolutePath());
+    
+    QStringList backup_filters;
+    backup_filters << config_info.baseName() + "_backup_*.json";
+    
+    QFileInfoList backup_files = config_dir.entryInfoList(backup_filters, QDir::Files, QDir::Time);
+    
+    if (!backup_files.isEmpty()) 
+    {
+        QString latest_backup = backup_files.first().absoluteFilePath();
+        
+        QFile::remove(path_config);
+        QFile::copy(latest_backup, path_config);
+        
+        spdlog::info("[CONFIG] Config restored from backup: {}", latest_backup.toStdString());
+    }
+}
+
+void CONFIG::set_default_config_template()
+{
+    QString template_path = path_config + ".template";
+    
+    QJsonObject default_config = set_default_config_object();
+    
+    QFile template_file(template_path);
+    if (template_file.open(QIODevice::WriteOnly)) 
+    {
+        QJsonDocument doc(default_config);
+        template_file.write(doc.toJson(QJsonDocument::Indented));
+        template_file.close();
+        
+        spdlog::info("[CONFIG] Default config template created: {}", template_path.toStdString());
+    }
+}
+
+// 2. set default config object
+QJsonObject CONFIG::set_default_config_object()
+{
+    QJsonObject config;
+    
+    config["robot"] =           set_default_robot_config();
+    config["sensors"] =         set_default_sensors_config();
+    config["localization"] =    set_default_localization_config();
+    config["loc_2d"] =          set_default_localization_2d_config();
+    config["loc_3d"] =          set_default_localization_3d_config();
+    config["network"] =         set_default_network_config();
+    config["debug"] =           set_default_debug_config();
+    config["logging"] =         set_default_logging_config();
+    config["motor"] =           set_default_motor_config();
+    config["mapping"] =         set_default_mapping_config();
+    config["obs"] =             set_default_obstacle_config();
+    config["control"] =         set_default_control_config();
+    config["docking"] =         set_default_docking_config();
+    config["safety"] =          set_default_safety_config();
+    config["qa"] =              set_default_qa_config();
+    config["map"] =             QJsonObject{{"MAP_PATH", MAP_PATH}};
+    config["SICK"] =            set_default_sick_config();
+    config["LAKI"] =            set_default_laki_config();
+    config["RPLIDAR"] =         set_default_rplidar_config();
+    config["LIVOX"] =           set_default_livox_config();
+    config["ORBBEC"] =          set_default_orbbec_config();
+    
+    return config;
+}
+
+// 3. section default config functions
+QJsonObject CONFIG::set_default_robot_config()
+{
+    QJsonObject robot;
+    robot["MILEAGE"] =              QString(MILEAGE);
+    robot["SPEAKER"] =              USE_SPEAKER;
+    robot["ROBOT_WHEEL_TYPE"] =     QString(ROBOT_WHEEL_TYPE);
+    robot["ROBOT_SIZE_MIN_X"] =     QString::number(ROBOT_SIZE_X[0]);
+    robot["ROBOT_SIZE_MAX_X"] =     QString::number(ROBOT_SIZE_X[1]);
+    robot["ROBOT_SIZE_MIN_Y"] =     QString::number(ROBOT_SIZE_Y[0]);
+    robot["ROBOT_SIZE_MAX_Y"] =     QString::number(ROBOT_SIZE_Y[1]);
+    robot["ROBOT_SIZE_MIN_Z"] =     QString::number(ROBOT_SIZE_Z[0]);
+    robot["ROBOT_SIZE_MAX_Z"] =     QString::number(ROBOT_SIZE_Z[1]);
+    robot["ROBOT_SIZE_ADD_X"] =     QString::number(ROBOT_SIZE_ADD_X);
+    robot["ROBOT_SIZE_ADD_Y"] =     QString::number(ROBOT_SIZE_ADD_Y);
+    robot["ROBOT_SIZE_ADD_Z"] =     QString::number(ROBOT_SIZE_ADD_Z);
+    robot["ROBOT_WHEEL_RADIUS"] =   QString::number(ROBOT_WHEEL_RADIUS);
+    robot["ROBOT_WHEEL_BASE"] =     QString::number(ROBOT_WHEEL_BASE);
+    robot["ROBOT_LX"] =             QString::number(ROBOT_LX);
+    robot["ROBOT_LY"] =             QString::number(ROBOT_LY);
+    return robot;
+}
+
+QJsonObject CONFIG::set_default_sensors_config()
+{
+    QJsonObject sensors;
+    sensors["USE_LIDAR_2D"] =       USE_LIDAR_2D; //QString(USE_LIDAR_2D ? "true" : "false");
+    sensors["USE_LIDAR_3D"] =       USE_LIDAR_3D; //QString(USE_LIDAR_3D ? "true" : "false");
+    sensors["USE_CAM"] =            USE_CAM; //QString(USE_CAM ? "true" : "false");
+    sensors["USE_CAM_RGB"] =        USE_CAM_RGB; //QString(USE_CAM_RGB ? "true" : "false");
+    sensors["USE_CAM_DEPTH"] =      USE_CAM_DEPTH; //QString(USE_CAM_DEPTH ? "true" : "false");
+    sensors["USE_BQR"] =            USE_BQR; //QString(USE_BQR ? "true" : "false");
+    sensors["USE_IMU"] =            USE_IMU; //QString(USE_IMU ? "true" : "false");
+    sensors["LIDAR_2D_NUM"] =       QString::number(LIDAR_2D_NUM);
+    sensors["LIDAR_3D_NUM"] =       QString::number(LIDAR_3D_NUM);
+    sensors["CAM_NUM"] =            QString::number(CAM_NUM);
+    sensors["LIDAR_2D_TYPE"] =      QString(LIDAR_2D_TYPE);
+    sensors["LIDAR_3D_TYPE"] =      QString(LIDAR_3D_TYPE);
+    sensors["CAM_TYPE"] =           QString(CAM_TYPE);
+    return sensors;
+}
+
+QJsonObject CONFIG::set_default_localization_config()
+{
+    QJsonObject loc;
+    loc["MODE"] =           QString(LOC_MODE);
+    loc["USE_ARUCO"] =      USE_ARUCO;
+    loc["USE_EKF"] =        USE_EKF;
+    return loc;
+}
+
+QJsonObject CONFIG::set_default_localization_2d_config()
+{
+    QJsonObject loc_2d;
+    loc_2d["LOC_SURFEL_NUM"] =                  QString::number(LOC_2D_SURFEL_NUM);
+    loc_2d["LOC_ICP_MAX_FEATURE_NUM"] =         QString::number(LOC_2D_ICP_MAX_FEATURE_NUM);
+    loc_2d["LOC_ARUCO_ODO_FUSION_DIST"] =       QString::number(LOC_2D_ARUCO_ODO_FUSION_DIST);
+    loc_2d["LOC_ARUCO_ODO_FUSION_RATIO"] =      QString::number(LOC_2D_ARUCO_ODO_FUSION_RATIO);
+    loc_2d["LOC_CHECK_DIST"] =                  QString::number(LOC_2D_CHECK_DIST);
+    loc_2d["LOC_CHECK_IE"] =                    QString::number(LOC_2D_CHECK_IE);
+    loc_2d["LOC_CHECK_IR"] =                    QString::number(LOC_2D_CHECK_IR);
+    loc_2d["LOC_ICP_COST_THRESHOLD"] =          QString::number(LOC_2D_ICP_COST_THRESHOLD);
+    loc_2d["LOC_ICP_COST_THRESHOLD_0"] =        QString::number(LOC_2D_ICP_COST_THRESHOLD_0);
+    loc_2d["LOC_ICP_ERROR_THRESHOLD"] =         QString::number(LOC_2D_ICP_ERROR_THRESHOLD);
+    loc_2d["LOC_ICP_ODO_FUSION_RATIO"] =        QString::number(LOC_2D_ICP_ODO_FUSION_RATIO);
+    loc_2d["LOC_SURFEL_RANGE"] =                QString::number(LOC_2D_SURFEL_RANGE);
+    return loc_2d;
+}
+
+QJsonObject CONFIG::set_default_localization_3d_config()
+{
+    QJsonObject loc_3d;
+    loc_3d["LOC_MAX_FEATURE_NUM"] =     QString::number(LOC_MAX_FEATURE_NUM);
+    loc_3d["LOC_SURFEL_NN_NUM"] =       QString::number(LOC_SURFEL_NN_NUM);
+    loc_3d["LOC_SURFEL_BALANCE"] =      QString::number(LOC_SURFEL_BALANCE);
+    loc_3d["LOC_COST_THRESHOLD"] =      QString::number(LOC_COST_THRESHOLD);
+    loc_3d["LOC_INLIER_CHECK_DIST"] =   QString::number(LOC_INLIER_CHECK_DIST);
+    return loc_3d;
+}
+
+QJsonObject CONFIG::set_default_network_config()
+{
+    QJsonObject network;
+    network["USE_MULTI"] =      USE_MULTI;//QString(USE_MULTI ? "true" : "false");
+    network["USE_COOP"] =       USE_COMM_COOP; //QString(USE_COMM_COOP ? "true" : "false");
+    network["USE_RTSP"] =       USE_COMM_RTSP;// QString(USE_COMM_RTSP ? "true" : "false");
+    network["USE_RRS"] =        USE_COMM_RRS;//QString(USE_COMM_RRS ? "true" : "false");
+    network["USE_MSA"] =        USE_COMM_MSA;//QString(USE_COMM_MSA ? "true" : "false");
+    network["USE_FMS"] =        USE_COMM_FMS;//QString(USE_COMM_FMS ? "true" : "false");
+    return network;
+}
+
+QJsonObject CONFIG::set_default_debug_config()
+{
+    QJsonObject debug;
+    debug["USE_SIM"] =      USE_SIM; //QString(USE_SIM ? "true" : "false");
+    debug["USE_BEEP"] =     USE_BEEP; //QString(USE_BEEP ? "true" : "false");
+    //debug["SERVER_IP"] =    QString(SERVER_IP);
+    //debug["SERVER_ID"] =    QString(SERVER_ID);
+    //debug["SERVER_PW"] =    QString(SERVER_PW);
+    return debug;
+}
+
+QJsonObject CONFIG::set_default_logging_config()
+{
+    QJsonObject logging;
+    logging["LOG_LEVEL"] =              QString(LOG_LEVEL);
+    logging["DEBUG_LIDAR_2D"] =         DEBUG_LIDAR_2D; //QString(DEBUG_LIDAR_2D ? "true" : "false");
+    logging["DEBUG_LIDAR_3D"] =         DEBUG_LIDAR_3D; //QString(DEBUG_LIDAR_3D ? "true" : "false");
+    logging["DEBUG_MOBILE"] =           DEBUG_MOBILE; //QString(DEBUG_MOBILE ? "true" : "false");
+    logging["DEBUG_COMM_RRS"] =         DEBUG_COMM_RRS; //QString(DEBUG_COMM_RRS ? "true" : "false");
+    logging["DEBUG_AUTOCONTROL"] =      DEBUG_AUTOCONTROL; //QString(DEBUG_AUTOCONTROL ? "true" : "false");
+    logging["DEBUG_LOCALIZATION"] =     DEBUG_LOCALIZATION; //QString(DEBUG_LOCALIZATION ? "true" : "false");
+    logging["DEBUG_OBSMAP"] =           DEBUG_OBSMAP; //QString(DEBUG_OBSMAP ? "true" : "false");
+    logging["LOG_ENABLE_FILE_OUTPUT"] = LOG_ENABLE_FILE_OUTPUT; //QString(LOG_ENABLE_FILE_OUTPUT ? "true" : "false");
+    logging["LOG_FILE_PATH"] =          QString(LOG_FILE_PATH);
+    return logging;
+}
+
+QJsonObject CONFIG::set_default_motor_config()
+{
+    QJsonObject motor;
+    motor["MOTOR_ID_L"] = QString::number(MOTOR_ID_L);
+    motor["MOTOR_ID_R"] = QString::number(MOTOR_ID_R);
+    motor["MOTOR_DIR"] = QString::number(MOTOR_DIR);
+    motor["MOTOR_GEAR_RATIO"] = QString::number(MOTOR_GEAR_RATIO);
+    motor["MOTOR_LIMIT_V"] = QString::number(MOTOR_LIMIT_V);
+    motor["MOTOR_LIMIT_V_ACC"] = QString::number(MOTOR_LIMIT_V_ACC);
+    motor["MOTOR_LIMIT_W"] = QString::number(MOTOR_LIMIT_W);
+    motor["MOTOR_LIMIT_W_ACC"] = QString::number(MOTOR_LIMIT_W_ACC);
+    motor["MOTOR_GAIN_KP"] = QString::number(MOTOR_GAIN_KP);
+    motor["MOTOR_GAIN_KI"] = QString::number(MOTOR_GAIN_KI);
+    motor["MOTOR_GAIN_KD"] = QString::number(MOTOR_GAIN_KD);
+    motor["MOTOR_SAFETY_LIMIT_V"] = QString::number(MOTOR_SAFETY_LIMIT_V);
+    motor["MOTOR_SAFETY_LIMIT_W"] = QString::number(MOTOR_SAFETY_LIMIT_W);
+    return motor;
+}
+
+QJsonObject CONFIG::set_default_mapping_config()
+{
+    QJsonObject mapping;
+    mapping["SLAM_WINDOW_SIZE"] = QString::number(MAPPING_WINDOW_SIZE);
+    mapping["SLAM_VOXEL_SIZE"] = QString::number(MAPPING_VOXEL_SIZE);
+    mapping["SLAM_ICP_COST_THRESHOLD"] = QString::number(MAPPING_ICP_COST_THRESHOLD);
+    mapping["SLAM_ICP_ERROR_THRESHOLD"] = QString::number(MAPPING_ICP_ERROR_THRESHOLD);
+    mapping["SLAM_ICP_MAX_FEATURE_NUM"] = QString::number(MAPPING_ICP_MAX_FEATURE_NUM);
+    mapping["SLAM_ICP_DO_ERASE_GAP"] = QString::number(MAPPING_ICP_DO_ERASE_GAP);
+    mapping["SLAM_ICP_DO_ACCUM_NUM"] = QString::number(MAPPING_ICP_DO_ACCUM_NUM);
+    mapping["SLAM_ICP_VIEW_THRESHOLD"] = QString::number(MAPPING_ICP_VIEW_THRESHOLD);
+    mapping["SLAM_KFRM_UPDATE_NUM"] = QString::number(MAPPING_KFRM_UPDATE_NUM);
+    mapping["SLAM_KFRM_LC_TRY_DIST"] = QString::number(MAPPING_KFRM_LC_TRY_DIST);
+    mapping["SLAM_KFRM_LC_TRY_OVERLAP"] = QString::number(MAPPING_KFRM_LC_TRY_OVERLAP);
+    return mapping;
+}
+
+QJsonObject CONFIG::set_default_obstacle_config()
+{
+    QJsonObject obs;
+    obs["OBS_AVOID"] = QString::number(OBS_AVOID);
+    obs["OBS_DEADZONE"] = QString::number(OBS_DEADZONE);
+    obs["OBS_LOCAL_GOAL_D"] = QString::number(OBS_LOCAL_GOAL_D);
+    obs["OBS_SAFE_MARGIN_X"] = QString::number(OBS_SAFE_MARGIN_X);
+    obs["OBS_SAFE_MARGIN_Y"] = QString::number(OBS_SAFE_MARGIN_Y);
+    obs["OBS_PATH_MARGIN_X"] = QString::number(OBS_PATH_MARGIN_X);
+    obs["OBS_PATH_MARGIN_Y"] = QString::number(OBS_PATH_MARGIN_Y);
+    obs["OBS_MAP_GRID_SIZE"] = QString::number(OBS_MAP_GRID_SIZE);
+    obs["OBS_MAP_RANGE"] = QString::number(OBS_MAP_RANGE);
+    obs["OBS_MAP_MIN_V"] = QString::number(OBS_MAP_MIN_V);
+    obs["OBS_MAP_MIN_Z"] = QString::number(OBS_MAP_MIN_Z);
+    obs["OBS_MAP_MAX_Z"] = QString::number(OBS_MAP_MAX_Z);
+    obs["OBS_PREDICT_TIME"] = QString::number(OBS_PREDICT_TIME);
+    return obs;
+}
+
+QJsonObject CONFIG::set_default_control_config()
+{
+    QJsonObject control;
+    control["DRIVE_GOAL_APPROACH_GAIN"] = QString::number(DRIVE_GOAL_APPROACH_GAIN);
+    control["DRIVE_GOAL_D"] = QString::number(DRIVE_GOAL_D);
+    control["DRIVE_GOAL_TH"] = QString::number(DRIVE_GOAL_TH);
+    control["DRIVE_EXTENDED_CONTROL_TIME"] = QString::number(DRIVE_EXTENDED_CONTROL_TIME);
+    control["DRIVE_V_DEADZONE"] = QString::number(DRIVE_V_DEADZONE);
+    control["DRIVE_W_DEADZONE"] = QString::number(DRIVE_W_DEADZONE);
+    return control;
+}
+
+QJsonObject CONFIG::set_default_docking_config()
+{
+    QJsonObject dock;
+    dock["DOCKING_TYPE"] = QString::number(DOCKING_TYPE);
+    dock["DOCKING_POINTDOCK_MARGIN"] = QString::number(DOCKING_POINTDOCK_MARGIN);
+    dock["DOCKING_GOAL_D"] = QString::number(DOCKING_GOAL_D);
+    dock["DOCKING_GOAL_TH"] = QString::number(DOCKING_GOAL_TH);
+    dock["DOCKING_KP_d"] = QString::number(DOCKING_KP_d);
+    dock["DOCKING_KD_d"] = QString::number(DOCKING_KD_d);
+    dock["DOCKING_KP_th"] = QString::number(DOCKING_KP_th);
+    dock["DOCKING_KD_th"] = QString::number(DOCKING_KD_th);
+    dock["DOCKING_CLUST_DIST_THRESHOLD_MAX"] = QString::number(DOCKING_CLUST_DIST_THRESHOLD_MAX);
+    dock["DOCKING_CLUST_ANGLE_THRESHOLD"] = QString::number(DOCKING_CLUST_ANGLE_THRESHOLD);
+    dock["DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX"] = QString::number(DOCKING_FIND_VMARK_DIST_THRESHOLD_MAX);
+    dock["DOCKING_CHG_LENGTH"] = QString::number(DOCKING_CHG_LENGTH);
+    dock["DOCKING_ICP_ERR_THRESHOLD"] = QString::number(DOCKING_ICP_ERR_THRESHOLD);
+    dock["DOCKING_DWA_YAW_WEIGTH"] = QString::number(DOCKING_DWA_YAW_WEIGHT);
+    dock["DOCKING_CHECK_MOTOR_A"] = QString::number(DOCKING_CHECK_MOTOR_A);
+    dock["DOCKING_WAITING_TIME"] = QString::number(DOCKING_WAITING_TIME);
+    dock["DOCKING_X_OFFSET"] = QString::number(DOCKING_X_OFFSET);
+    dock["DOCKING_Y_OFFSET"] = QString::number(DOCKING_Y_OFFSET);
+    dock["DOCKING_LINEAR_X_OFFSET"] = QString::number(DOCKING_LINEAR_X_OFFSET);
+    return dock;
+}
+
+QJsonObject CONFIG::set_default_safety_config()
+{
+    QJsonObject safety;
+    safety["USE_SAFETY_CROSS_MONITOR"] =    USE_SAFETY_CROSS_MONITOR; //QString(USE_SAFETY_CROSS_MONITOR ? "true" : "false");
+    safety["USE_SAFETY_SPEED_CONTROL"] =    USE_SAFETY_SPEED_CONTROL; //QString(USE_SAFETY_SPEED_CONTROL ? "true" : "false");
+    safety["USE_SAFETY_OBSTACLE_DETECT"] =  USE_SAFETY_OBSTACLE_DETECT; //QString(USE_SAFETY_OBSTACLE_DETECT ? "true" : "false");
+    safety["USE_SAFETY_BUMPER"] =           USE_SAFETY_BUMPER; //QString(USE_SAFETY_BUMPER ? "true" : "false");
+    safety["USE_SAFETY_INTERLOCK"] =        USE_SAFETY_INTERLOCK; //QString(USE_SAFETY_INTERLOCK ? "true" : "false");
+    safety["MONITORING_FIELD_COUNT"] =      QString::number(MONITORING_FIELD_COUNT);
+    
+    QJsonArray fields;
+    for (const auto& field : MONITORING_FIELD) 
+    {
+        QJsonObject fieldObj;
+        fieldObj["min_x"] = QString::number(field.min_x);
+        fieldObj["max_x"] = QString::number(field.max_x);
+        fieldObj["min_y"] = QString::number(field.min_y);
+        fieldObj["max_y"] = QString::number(field.max_y);
+        fieldObj["is_blocked"] = QString(field.is_blocked ? "true" : "false");
+        fields.append(fieldObj);
+    }
+    safety["MONITORING_FIELDS"] = fields;
+    
+    return safety;
+}
+
+QJsonObject CONFIG::set_default_qa_config()
+{
+    QJsonObject qa;
+    qa["QA_STEP_DISTANCE"] = QString::number(QA_STEP_DISTANCE);
+    qa["QA_STOP_MIN_DISTANCE"] = QString::number(QA_STOP_MIN_DISTANCE);
+    return qa;
+}
+
+QJsonObject CONFIG::set_default_sick_config()
+{
+    QJsonObject sick;
+    sick["LIDAR_2D_MIN_RANGE"] = QString::number(LIDAR_2D_MIN_RANGE);
+    sick["LIDAR_2D_MAX_RANGE"] = QString::number(LIDAR_2D_MAX_RANGE);
+    return sick;
+}
+
+QJsonObject CONFIG::set_default_laki_config()
+{
+    QJsonObject laki;
+    laki["LIDAR_2D_MIN_RANGE"] = QString::number(LIDAR_2D_MIN_RANGE);
+    laki["LIDAR_2D_MAX_RANGE"] = QString::number(LIDAR_2D_MAX_RANGE);
+    return laki;
+}
+
+QJsonObject CONFIG::set_default_rplidar_config()
+{
+    QJsonObject rplidar;
+    rplidar["LIDAR_2D_MIN_RANGE"] = QString::number(LIDAR_2D_MIN_RANGE);
+    rplidar["LIDAR_2D_MAX_RANGE"] = QString::number(LIDAR_2D_MAX_RANGE);
+    return rplidar;
+}
+
+QJsonObject CONFIG::set_default_livox_config()
+{
+    QJsonObject livox;
+    livox["LIDAR_3D_MIN_RANGE"] = QString::number(LIDAR_3D_MIN_RANGE);
+    livox["LIDAR_3D_MAX_RANGE"] = QString::number(LIDAR_3D_MAX_RANGE);
+    return livox;
+}
+
+QJsonObject CONFIG::set_default_orbbec_config()
+{
+    QJsonObject orbbec;
+    orbbec["CAM_HEIGHT_MIN"] = QString::number(CAM_HEIGHT_MIN);
+    orbbec["CAM_HEIGHT_MAX"] = QString::number(CAM_HEIGHT_MAX);
+    return orbbec;
+}
 
 double CONFIG::get_lidar_2d_min_range()
 {
@@ -2197,3 +2764,14 @@ QString CONFIG::get_map_path()
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MAP_PATH;
 } 
+double CONFIG::get_qa_step_distance()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return QA_STEP_DISTANCE;
+}
+
+double CONFIG::get_qa_stop_min_distance()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return QA_STOP_MIN_DISTANCE;
+}
