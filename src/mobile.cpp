@@ -2352,7 +2352,7 @@ void MOBILE::move_linear_y(double d, double v)
     if(robot_wheel_type != "MECANUM")
     {
         //Todo -- Spdlog 추가
-        // spdlog::info("[MOBILE] move linear y is not supported for this robot wheel type");
+        spdlog::info("[MOBILE] move linear y is not supported for this robot wheel type");
         return;
     }
     // set last v,w
@@ -2435,15 +2435,9 @@ void MOBILE::move_rotate(double th, double w)
     send_byte[5] = 0xA0;
     send_byte[6] = 0x00;
 
-    RobotModel robot_model = config->get_robot_model();
-    if(robot_model == RobotModel::MECANUM)
-    {
-        send_byte[7] = 119; // cmd move rotate
-    }
-    else
-    {
-        send_byte[7] = 118; // cmd move rotate
-    }
+
+    send_byte[7] = 118; // cmd move rotate
+    
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel
@@ -2515,6 +2509,8 @@ void MOBILE::stop()
         msg_que.clear();
         msg_que.push(send_byte);
     }
+
+    // To do -- linear stop function add 
 }
 
 void MOBILE::led(int target, int mode)
