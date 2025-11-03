@@ -1358,7 +1358,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1816,7 +1816,7 @@ Move
                <rect>
                 <x>190</x>
                 <y>118</y>
-                <width>71</width>
+                <width>82</width>
                 <height>52</height>
                </rect>
               </property>
@@ -2662,6 +2662,94 @@ Save</string>
               </property>
               <property name="text">
                <string>STOP</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_QuickAnnotStart">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>60</x>
+                <y>200</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>QA
+Start</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_QuickAddAruco">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>200</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>QA
+Aruco</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_QuickAnnotStop">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>110</x>
+                <y>200</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>QA
+Stop</string>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="bt_QuickAddCloud">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>160</x>
+                <y>200</y>
+                <width>51</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>8</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>QA
+Cloud</string>
               </property>
              </widget>
             </widget>

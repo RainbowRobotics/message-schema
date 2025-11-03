@@ -63,7 +63,8 @@ SOURCES += \
     sim.cpp \
     policy.cpp \
     safety.cpp \
-    task.cpp
+    task.cpp \
+    error_manager.cpp
 
 
 
@@ -104,7 +105,8 @@ HEADERS += \
     sim.h \
     policy.h \
     safety.h \
-    task.h
+    task.h \
+    error_manager.h
 
 
 FORMS += \
