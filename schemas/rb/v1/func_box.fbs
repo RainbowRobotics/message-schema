@@ -32,6 +32,27 @@ table Request_Save_User_Frame {
     userf_rz: float;
 }
 
-table Request_Set_User_Frame {
-  user_frame_num: int;
+table Request_Save_SideDin_SpecialFunc {
+  port_num: int;
+  desired_function: int;
+}
+
+table Request_Save_SideDout_SpecialFunc {
+  port_num: int;
+  desired_function: int;
+}
+
+table Request_Save_SideDin_FilterCount {
+  port_num: int;
+  desired_count: int;
+}
+
+table Request_SideDout_General {
+  port_num: int;
+  desired_out: int;
+}
+
+table Request_SideAout_General {
+  port_num: int;
+  desired_voltage: float;
 }

@@ -54,6 +54,3 @@ table Request_Save_Tool_List_Para {
     box_para_8: float;
 }
 
-table Request_Set_Tool_List {
-  target_tool_num: int;
-}

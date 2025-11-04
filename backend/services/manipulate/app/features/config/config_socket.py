@@ -13,11 +13,11 @@ def on_call_config_toollist(data, robot_model: str):
     return to_json(res)
 
 
-@config_socket_router.on("{robot_model}/call_change_toollist")
-def on_call_change_toollist(data, robot_model: str):
+@config_socket_router.on("{robot_model}/set_toolist_num")
+def on_set_toolist_num(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = config_service.call_change_toollist(robot_model, request=dict_data)
+    res = config_service.set_toolist_num(robot_model, request=dict_data)
     return to_json(res)
 
 
@@ -111,11 +111,11 @@ def on_rb_api_user_frames(data, robot_model: str):
     return to_json(res)
 
 
-@config_socket_router.on("{robot_model}/call_change_userframe")
-def on_call_change_userframe(data, robot_model: str):
+@config_socket_router.on("{robot_model}/set_userframe_num")
+def on_set_userframe_num(data, robot_model: str):
     dict_data = t_to_dict(data)
 
-    res = config_service.call_change_userframe(robot_model, request=dict_data)
+    res = config_service.set_userframe_num(robot_model, request=dict_data)
     return to_json(res)
 
 

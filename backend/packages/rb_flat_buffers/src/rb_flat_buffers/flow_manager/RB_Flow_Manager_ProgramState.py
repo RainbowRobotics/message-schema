@@ -3,9 +3,10 @@
 # namespace: flow_manager
 
 class RB_Flow_Manager_ProgramState(object):
-    RUNNING = 0
-    PAUSED = 1
-    STOPPED = 2
-    WAITING = 3
-    ERROR = 4
-    COMPLETED = 5
+    IDLE = 0
+    RUNNING = 1
+    PAUSED = 2
+    STOPPED = 3
+    WAITING = 4
+    ERROR = 5
+    COMPLETED = 6

@@ -30,6 +30,8 @@ def _execute_tree_in_process(
     repeat_count: int = 1,
 ):
     """프로세스에서 실행될 트리 실행 함수"""
+    ctx: ExecutionContext | None = None
+
     try:
         state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
         state_dict["current_step_id"] = step.step_id
@@ -45,6 +47,10 @@ def _execute_tree_in_process(
             resume_event=resume_event,
             stop_event=stop_event,
         )
+
+        print(f"Executing tree in process: {process_id}")
+        print(f"Step: {step.name}")
+        print(f"Repeat count: {repeat_count}")
 
         if repeat_count > 0:
             for i in range(repeat_count):
@@ -69,14 +75,18 @@ def _execute_tree_in_process(
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
         result_queue.put({"success": False, "process_id": process_id, "error": str(e)})
 
-    except Exception as e:  # noqa: BLE001
+    except RuntimeError as e:  # noqa: BLE001
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
         state_dict["error"] = str(e)
-        ctx.emit_error(step.step_id, state_dict["error"])
+
+        if ctx is not None:
+            ctx.emit_error(step.step_id, RuntimeError(state_dict["error"]))
     finally:
         # 완료 이벤트 설정
         completion_event.set()
-        ctx.close()
+
+        if ctx is not None:
+            ctx.close()
 
         print(f"Execution completed: {process_id}")
 
@@ -195,46 +205,58 @@ class ScriptExecutor:
             except queue.Empty:
                 break
 
-            evt_type = evt.get("type")
-            pid = evt.get("process_id")
-            step_id = evt.get("step_id")
+            try:
+                evt_type = evt.get("type")
+                pid = evt.get("process_id")
+                step_id = evt.get("step_id")
 
-            if evt_type == "next":
-                if self._on_next is not None:
-                    self._on_next(pid, step_id)
+                print("evt >>>", evt, flush=True)
 
-                if self.controller is not None:
-                    self.controller.on_next(pid, step_id)
+                if evt_type == "next":
+                    if self._on_next is not None:
+                        self._on_next(pid, step_id)
 
-            elif evt_type == "error":
-                err_repr = evt.get("error")
+                    if self.controller is not None:
+                        self.controller.on_next(pid, step_id)
 
-                if self._on_error is not None:
-                    self._on_error(pid, step_id, RuntimeError(err_repr))
+                elif evt_type == "error":
+                    print("error >>>", evt, flush=True)
+                    err_repr = evt.get("error")
 
-                if self.controller is not None:
-                    self.controller.on_error(pid, step_id, RuntimeError(err_repr))
+                    if self._on_error is not None:
+                        self.stop_all()
+                        self._on_error(pid, step_id, RuntimeError(err_repr))
 
-            elif evt_type == "pause":
-                if self._on_pause is not None:
-                    self._on_pause(pid, step_id)
+                    if self.controller is not None:
+                        self.controller.on_error(pid, step_id, RuntimeError(err_repr))
 
-                if self.controller is not None:
-                    self.controller.on_pause(pid, step_id)
+                elif evt_type == "pause":
+                    if self._on_pause is not None:
+                        self._on_pause(pid, step_id)
 
-            elif evt_type == "resume":
-                if self._on_resume is not None:
-                    self._on_resume(pid, step_id)
+                    if self.controller is not None:
+                        self.controller.on_pause(pid, step_id)
 
-                if self.controller is not None:
-                    self.controller.on_resume(pid, step_id)
+                elif evt_type == "resume":
+                    if self._on_resume is not None:
+                        self._on_resume(pid, step_id)
 
-            elif evt_type == "stop":
-                if self._on_stop is not None:
-                    self._on_stop(pid, step_id)
+                    if self.controller is not None:
+                        self.controller.on_resume(pid, step_id)
 
-                if self.controller is not None:
-                    self.controller.on_stop(pid, step_id)
+                elif evt_type == "stop":
+                    if self._on_stop is not None:
+                        self._on_stop(pid, step_id)
+
+                    if self.controller is not None:
+                        self.controller.on_stop(pid, step_id)
+
+            except Exception as e:
+                print(f"Error draining events: {e}")
+                self.result_queue.put(
+                    {"type": "error", "process_id": pid, "step_id": step_id, "error": str(e)}
+                )
+                raise e
 
     def _start_monitor(self):
         """백그라운드 모니터 스레드 시작"""
@@ -300,7 +322,7 @@ class ScriptExecutor:
             if self.manager is not None:
                 self.manager.shutdown()
             print("Manager shutdown completed")
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Manager shutdown warning: {e}")
         finally:
             self.manager = None
@@ -396,6 +418,7 @@ class ScriptExecutor:
 
         if completed:
             print(f"Stopped softly process: {process_id}")
+            self._auto_cleanup()
             return True
 
         with contextlib.suppress(Exception):
@@ -405,6 +428,7 @@ class ScriptExecutor:
 
         if completed or not self.processes[process_id].is_alive():
             print(f"Stopped terminate process: {process_id}")
+            self._auto_cleanup()
             return True
 
         try:
@@ -413,9 +437,8 @@ class ScriptExecutor:
             elif sys.platform != "win32":
                 os.kill(self.processes[process_id].pid or 0, signal.SIGKILL)
 
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Stopped kill process: {process_id} error: {e}")
-            pass
 
         self.processes[process_id].join(timeout=1)
 
@@ -423,6 +446,8 @@ class ScriptExecutor:
             self.completion_events[process_id].set()
 
         print(f"Stopped kill process: {process_id}")
+        self._auto_cleanup()
+
         return True
 
     def _wait_completion(self, process_id: str, timeout: float) -> bool:
@@ -481,6 +506,8 @@ class ScriptExecutor:
 
         if self.controller is not None:
             self.controller.on_all_stop()
+
+        self._auto_cleanup()
 
     def pause_all(self):
         """모든 스크립트 일시정지"""

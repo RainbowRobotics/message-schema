@@ -160,6 +160,18 @@ class ExecutionContext:
             }
         )
 
+    def emit_complete(self, step_id: str):
+        """complete 이벤트 발생"""
+        self.result_queue.put(
+            {
+                "type": "complete",
+                "process_id": self.process_id,
+                "step_id": step_id,
+                "ts": time.time(),
+                "error": None,
+            }
+        )
+
     def _safe_close_sdk(self):
         """SDK 안전 종료"""
         with contextlib.suppress(Exception):

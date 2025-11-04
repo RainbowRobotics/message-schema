@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
@@ -36,6 +37,7 @@ class SubscribeOptions:
     # 예상 평균 바이트(EMA 초기 힌트). 없으면 첫 메시지 크기에서 시작
     expected_avg_bytes: int | None = None
     allowed_same_sender: bool = False
+    done_func: Callable[[], None] | None = None
 
 
 class CallbackEntry:

@@ -2,8 +2,8 @@ import asyncio
 import time
 
 import psutil
-import rb_database.mongo_db as mongo_db
 from fastapi import HTTPException
+from rb_database import get_db
 from rb_flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
 from rb_flat_buffers.IPC.Request_PowerControl import (
     Request_PowerControlT,
@@ -158,13 +158,13 @@ class StateService:
 
     async def repeat_get_system_state(self):
         try:
-            await mongo_db.wait_db_ready()
+            db = await get_db()
 
             period = float(self._all_connect_state_period)
 
             next_ts = time.monotonic()
 
-            col = mongo_db.db["robot_info"]
+            col = db["robot_info"]
 
             while True:
                 try:

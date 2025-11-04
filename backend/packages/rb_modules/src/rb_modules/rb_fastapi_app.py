@@ -124,8 +124,11 @@ def create_app(
                 for t in app.state.bg_tasks:
                     t.cancel()
                 for t in bg_tasks:
-                    with contextlib.suppress(asyncio.CancelledError):
-                        await t
+                    if isinstance(t, asyncio.Task):
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await t
+                    else:
+                        t()
 
                 await close_db(app)
             except Exception as e:

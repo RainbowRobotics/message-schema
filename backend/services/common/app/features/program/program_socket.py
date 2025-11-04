@@ -35,7 +35,7 @@ async def on_create_program(data):
 
     db = await get_db()
 
-    res = await program_service.create_program_and_flows(request=data_dict, db=db)
+    res = await program_service.create_program_and_tasks(request=data_dict, db=db)
     return to_json(res)
 
 
@@ -44,7 +44,7 @@ async def on_edit_program(data):
     data_dict = t_to_dict(data)
 
     db = await get_db()
-    res = await program_service.update_program_and_flows(request=data_dict, db=db)
+    res = await program_service.update_program_and_tasks(request=data_dict, db=db)
     return to_json(res)
 
 
@@ -55,17 +55,17 @@ async def on_delete_program(data, program_id: str):
     return to_json(res)
 
 
-@program_socket_router.on("program/task/{task_id}")
-async def on_get_task(data, task_id: str):
+@program_socket_router.on("program/step/{step_id}")
+async def on_get_step(data, step_id: str):
     db = await get_db()
-    res = await program_service.get_task(task_id=task_id, db=db)
+    res = await program_service.get_step(step_id=step_id, db=db)
     return to_json(res)
 
 
-@program_socket_router.on("program/tasks/{flow_id}")
-async def on_get_task_list(data, flow_id: str):
+@program_socket_router.on("program/steps/{task_id}")
+async def on_get_step_list(data, task_id: str):
     db = await get_db()
-    res = await program_service.get_task_list(flow_id=flow_id, db=db)
+    res = await program_service.get_step_list(task_id=task_id, db=db)
     return to_json(res)
 
 
@@ -74,7 +74,7 @@ async def on_upsert_tasks(data):
     data_dict = t_to_dict(data)
 
     db = await get_db()
-    res = await program_service.upsert_tasks(request=data_dict, db=db)
+    res = await program_service.upsert_steps(request=data_dict, db=db)
     return to_json(res)
 
 
@@ -89,27 +89,27 @@ async def on_delete_tasks(data):
 
 @program_socket_router.on("program/pause")
 async def on_pause_program(data):
-    data_dict = t_to_dict(data)
+    # data_dict = t_to_dict(data)
 
     db = await get_db()
 
     return await program_service.call_resume_or_pause(
         is_pause=True,
-        program_id=data_dict.get("programId"),
-        flow_id=data_dict.get("flowId"),
+        # program_id=data_dict.get("programId"),
+        # flow_id=data_dict.get("flowId"),
         db=db,
     )
 
 
 @program_socket_router.on("program/resume")
 async def on_resume_program(data):
-    data_dict = t_to_dict(data)
+    # data_dict = t_to_dict(data)
 
     db = await get_db()
 
     return await program_service.call_resume_or_pause(
         is_pause=False,
-        program_id=data_dict.get("programId"),
-        flow_id=data_dict.get("flowId"),
+        # program_id=data_dict.get("programId"),
+        # flow_id=data_dict.get("flowId"),
         db=db,
     )

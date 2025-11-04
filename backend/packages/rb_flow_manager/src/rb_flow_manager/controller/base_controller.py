@@ -33,7 +33,7 @@ class BaseController(ABC):
         """각 Step에서 실제 동작을 수행"""
 
     @abstractmethod
-    def on_complete(self, process_id: str) -> None:
+    def on_complete(self, process_id: str, step_id: str) -> None:
         """각 Step에서 실제 동작을 수행"""
 
     @abstractmethod

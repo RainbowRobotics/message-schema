@@ -1,4 +1,4 @@
-import rb_database.mongo_db as mongo_db
+from rb_database.mongo_db import get_db
 from rb_socketio import RbSocketIORouter
 from rb_utils.parser import to_json
 
@@ -10,7 +10,8 @@ info_socket_router = RbSocketIORouter()
 
 @info_socket_router.on("robot-info")
 async def on_robot_info(_):
-    res = await info_service.get_robot_info(db=mongo_db.db)
+    db = await get_db()
+    res = await info_service.get_robot_info(db=db)
     return to_json(res)
 
 

@@ -1,17 +1,27 @@
+import asyncio
+import contextlib
+import importlib.util
+import sys
 from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 
 from bson import ObjectId
 from fastapi import HTTPException
-from pymongo import ReturnDocument
+from motor.motor_asyncio import AsyncIOMotorClientSession
+from pymongo import ReadPreference, ReturnDocument, WriteConcern
+from pymongo.errors import PyMongoError
 from pymongo.operations import UpdateOne
-from rb_database import MongoDB
+from rb_database import MongoDB, get_db
 from rb_database.utils import make_check_include_query, make_check_search_text_query
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
+from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller
+from rb_flow_manager.executor import ScriptExecutor
 from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
+from rb_flow_manager.step import Step
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
 from rb_utils.parser import t_to_dict
@@ -19,15 +29,18 @@ from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
 from .program_schema import (
-    Request_Create_FlowPD,
-    Request_Create_Multiple_FlowPD,
+    Request_Create_Multiple_StepPD,
     Request_Create_Multiple_TaskPD,
     Request_Create_ProgramPD,
-    Request_Delete_FlowsPD,
+    Request_Create_TaskPD,
+    Request_Delete_StepsPD,
     Request_Delete_TasksPD,
-    Request_Update_FlowPD,
-    Request_Update_Multiple_FlowPD,
+    Request_Program_ExecutionPD,
+    Request_Tasks_ExecutionPD,
+    Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
+    Request_Update_StepStatePD,
+    Request_Update_TaskPD,
 )
 
 zenoh_client = ZenohClient()
@@ -35,7 +48,9 @@ zenoh_client = ZenohClient()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
-        pass
+        zenoh_controller = Zenoh_Controller()
+        self.script_executor = ScriptExecutor(controller=zenoh_controller)
+        self._script_base_path = Path("/app/data/common/scripts")
 
     async def call_resume_or_pause(
         self,
@@ -45,6 +60,10 @@ class ProgramService(BaseService):
         # program_id: str | None = None,
         # flow_id: str | None = None,
     ):
+        """
+        Resume 또는 Pause를 호출하는 함수.
+        """
+
         # state = (
         #     RB_Flow_Manager_ProgramState.PAUSED
         #     if is_pause
@@ -83,6 +102,10 @@ class ProgramService(BaseService):
         }
 
     async def call_smoothjog_stop(self, *, stoptime: float):
+        """
+        SmoothJog Stop을 호출하는 함수.
+        """
+
         try:
             req = Request_Move_SmoothJogStopT()
             req.stoptime = stoptime
@@ -109,91 +132,20 @@ class ProgramService(BaseService):
     #     except Exception as e:
     #         raise e
 
-    # async def get_task_status(self, *, robot_model: str, task_id: str):
-    #     col = mongo_db.db["tasks"]
-
-    #     doc = await col.find_one(
-    #         {"robot_model": robot_model, "_id": task_id},
-    #     )
-
-    #     if not doc:
-    #         return None
-
-    #     doc = dict(doc)
-
-    #     doc["task_id"] = doc.pop("_id")
-
-    #     return doc
-
-    # async def set_task_status(self, *, task_id: str, request: Request_Set_Task_StatusPD):
-    #     status = request["status"]
-    #     program_id = request["program_id"]
-    #     sync_task_ids = request["sync_task_ids"]
-    #     node_path = request["node_path"]
-    #     offset = request["offset"]
-    #     updated_at = datetime.now(UTC)
-
-    #     col = mongo_db.db["tasks"]
-
-    #     doc = await col.update_one(
-    #         {"_id": task_id},
-    #         {
-    #             "$set": {
-    #                 "status": status,
-    #                 "program_id": program_id,
-    #                 "sync_task_ids": sync_task_ids,
-    #                 "node_path": node_path,
-    #                 "offset": offset,
-    #                 "updated_at": updated_at,
-    #             }
-    #         },
-    #         upsert=True,
-    #     )
-
-    #     if doc.get("status") == ProgramStatus.ERROR:
-    #         rb_log.error(f"Task error: {task_id}")
-
-    #     req = RB_Program_Task_StatusT()
-
-    #     req.status = status
-    #     req.taskId = task_id
-    #     req.programId = program_id
-    #     req.syncTaskIds = sync_task_ids
-    #     req.nodePath = node_path
-    #     req.offset = offset
-
-    #     zenoh_client.publish("/change-task-status", flatbuffer_req_obj=req, flatbuffer_buf_size=100)
-
-    #     return doc
-
-    # async def set_task_checkpoint(self, *, task_id: str, request: Request_Set_Task_CheckpointPD):
-    #     program_id = request["program_id"]
-    #     sync_task_ids = request["sync_task_ids"]
-    #     node_path = request["node_path"]
-    #     offset = request["offset"]
-    #     updated_at = datetime.now(UTC)
-
-    #     col = mongo_db.db["tasks"]
-
-    #     doc = await col.update_one(
-    #         {"_id": task_id},
-    #         {
-    #             "$set": {
-
-    def build_task_tree(self, tasks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    def build_step_tree(self, tasks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         """
-        평면 tasks를 트리로 변환한다.
+        평면 steps를 트리로 변환한다.
         """
 
         nodes: dict[str, dict] = {}
         for t in tasks:
-            nodes[str(t["taskId"])] = t.copy()
+            nodes[str(t["stepId"])] = t.copy()
 
         children_map: dict[str, list[dict]] = {}
         roots: list[dict] = []
 
         for n in nodes.values():
-            pid = n.get("nodeId")
+            pid = n.get("parentStepId")
             if pid and pid in nodes:
                 children_map.setdefault(pid, []).append(n)
             else:
@@ -206,7 +158,7 @@ class ProgramService(BaseService):
         state: dict[str, int] = {}
 
         def attach(node: dict):
-            nid = node["taskId"]
+            nid = node["stepId"]
             if state.get(nid) == VISITING:
                 return
             if state.get(nid) == VISITED:
@@ -216,7 +168,7 @@ class ProgramService(BaseService):
             kids = children_map.get(nid)
             if kids:
                 sort_children(kids)
-                node["steps"] = kids
+                node["children"] = kids
                 for c in kids:
                     attach(c)
 
@@ -228,35 +180,47 @@ class ProgramService(BaseService):
 
         return roots
 
-    async def get_task(self, *, task_id: str, db: MongoDB):
-        tasks_col = db["tasks"]
-        task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+    async def get_step(self, *, step_id: str, db: MongoDB):
+        """
+        Step을 조회하는 함수.
+        """
 
-        if not task_doc:
-            raise HTTPException(status_code=404, detail="Task not found")
+        steps_col = db["steps"]
+        step_doc = await steps_col.find_one({"_id": ObjectId(step_id)})
 
-        task_doc["taskId"] = str(task_doc.pop("_id"))
+        if not step_doc:
+            raise HTTPException(status_code=404, detail="Step not found")
 
-        return task_doc
+        step_doc["stepId"] = str(step_doc.pop("_id"))
 
-    async def get_task_list(self, *, flow_id: str, db: MongoDB):
-        tasks_col = db["tasks"]
+        return step_doc
+
+    async def get_step_list(self, *, task_id: str, db: MongoDB):
+        """
+        Steps들을 조회하는 함수.
+        """
+
+        steps_col = db["steps"]
 
         query: dict[str, Any] = {}
 
-        query = make_check_include_query("flowId", flow_id, query=query)
+        query = make_check_include_query("taskId", task_id, query=query)
 
-        tasks_docs = await tasks_col.find(query).sort("order", 1).to_list(length=None)
+        steps_docs = await steps_col.find(query).sort("order", 1).to_list(length=None)
 
-        for doc in tasks_docs:
-            doc["taskId"] = str(doc.pop("_id"))
+        for doc in steps_docs:
+            doc["stepId"] = str(doc.pop("_id"))
 
         return {
-            "tasks": tasks_docs,
-            "taskTree": self.build_task_tree(tasks_docs),
+            "steps": steps_docs,
+            "stepTree": self.build_step_tree(steps_docs),
         }
 
-    async def upsert_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
+    async def upsert_steps(self, *, request: Request_Create_Multiple_StepPD, db: MongoDB):
+        """
+        Steps들을 생성하거나 업데이트하는 함수.
+        """
+
         request_dict = (
             {**request.model_dump(exclude_none=True, exclude_unset=True)}
             if hasattr(request, "model_dump")
@@ -267,43 +231,43 @@ class ProgramService(BaseService):
 
         now = datetime.now(UTC).isoformat()
 
+        steps_col = db["steps"]
         tasks_col = db["tasks"]
-        flows_col = db["flows"]
 
-        tasks = [t_to_dict(task) for task in request.tasks]
+        steps = [t_to_dict(step) for step in request.steps]
 
-        flow_ids = {t["flowId"] for t in tasks}
-        record_find_flow_ids = []
+        task_ids = {t["taskId"] for t in steps}
+        record_find_task_ids = []
 
-        for fid in flow_ids:
-            if fid not in record_find_flow_ids:
+        for tid in task_ids:
+            if tid not in record_find_task_ids:
                 continue
 
-            find_doc = await flows_col.find_one({"_id": ObjectId(fid)})
+            find_doc = await tasks_col.find_one({"_id": ObjectId(tid)})
 
             if not find_doc:
-                raise HTTPException(status_code=400, detail=f"Invalid flowId: {fid}")
+                raise HTTPException(status_code=400, detail=f"Invalid taskId: {tid}")
 
-            record_find_flow_ids.append(fid)
+            record_find_task_ids.append(tid)
 
         ops: list[UpdateOne] = []
         index_map: list[tuple[int, dict[str, Any]]] = []  # (tasks 인덱스, 기존 taskId)
 
-        for i, origin_doc in enumerate(tasks):
-            doc = request_dict["tasks"][i] if origin_doc.get("taskId") is not None else origin_doc
+        for i, origin_doc in enumerate(steps):
+            doc = request_dict["steps"][i] if origin_doc.get("stepId") is not None else origin_doc
 
             doc["updatedAt"] = now
             set_on_insert = {}
 
-            tid = doc.pop("taskId", None)
+            sid = doc.pop("stepId", None)
 
-            q = {"_id": ObjectId(tid)}
+            q = {"_id": ObjectId(sid)}
 
-            if tid is not None:
-                find_task_doc = await tasks_col.find_one(q)
+            if sid is not None:
+                find_step_doc = await steps_col.find_one(q)
 
-                if find_task_doc:
-                    doc["createdAt"] = find_task_doc["createdAt"]
+                if find_step_doc:
+                    doc["createdAt"] = find_step_doc["createdAt"]
             else:
                 set_on_insert = {"createdAt": now}
 
@@ -319,110 +283,156 @@ class ProgramService(BaseService):
                 (
                     i,
                     {
-                        "taskId": tid,
+                        "stepId": sid,
                         "createdAt": now,
                     },
                 )
             )
 
-        res = await tasks_col.bulk_write(ops, ordered=False)
+        res = await steps_col.bulk_write(ops, ordered=False)
 
         for op_idx, oid in (res.upserted_ids or {}).items():
             i, o_doc = index_map[op_idx]
-            tasks[i]["taskId"] = str(oid)
-            tasks[i]["createdAt"] = o_doc["createdAt"]
+            steps[i]["stepId"] = str(oid)
+            steps[i]["createdAt"] = o_doc["createdAt"]
 
-        return tasks
+        return steps
 
-    async def update_task_state(
-        self, *, task_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
-    ):
-        tasks_col = db["tasks"]
-        flows_col = db["flows"]
+    async def update_step_state(self, *, request: Request_Update_StepStatePD, db: MongoDB):
+        """
+        Step의 state를 업데이트하는 함수.
+        """
 
-        find_task_doc = await tasks_col.find_one_and_update(
-            {"_id": ObjectId(task_id)},
+        request_dict = t_to_dict(request)
+
+        step_id = request_dict["stepId"]
+        state = request_dict["state"]
+
+        steps_col = db["steps"]
+
+        if not ObjectId.is_valid(step_id):
+            return
+
+        find_step_doc = await steps_col.find_one_and_update(
+            {"_id": ObjectId(step_id)},
             {"$set": {"state": state}},
             return_document=ReturnDocument.AFTER,
         )
 
-        async def recursive_update_node_task_state(node_id: str):
-            find_node_doc = await tasks_col.find_one_and_update(
-                {"nodeId": node_id},
+        if find_step_doc and state == RB_Flow_Manager_ProgramState.ERROR:
+            await self.stop_program(find_step_doc["programId"], db=db)
+
+        async def recursive_update_node_step_state(node_id: str):
+            find_node_doc = await steps_col.find_one_and_update(
+                {"parentStepId": node_id},
                 {"$set": {"state": state}},
                 return_document=ReturnDocument.AFTER,
             )
 
             if find_node_doc:
-                await recursive_update_node_task_state(find_node_doc.get("nodeId"))
+                await recursive_update_node_step_state(find_node_doc.get("parentStepId"))
             else:
                 return
 
-        if find_task_doc:
-            await recursive_update_node_task_state(find_task_doc.get("nodeId"))
+        if find_step_doc:
+            await recursive_update_node_step_state(find_step_doc.get("parentStepId"))
 
-            find_task_doc["taskId"] = str(find_task_doc.pop("_id"))
+            find_step_doc["stepId"] = str(find_step_doc.pop("_id"))
 
-            await flows_col.update_one(
-                {"_id": ObjectId(find_task_doc["flowId"])},
-                {"$set": {"state": state}},
-            )
+        return find_step_doc
 
-        return find_task_doc
+    async def delete_steps(self, *, request: Request_Delete_StepsPD, db: MongoDB):
+        """
+        Steps들을 삭제하는 함수.
+        """
 
-    async def delete_tasks(self, *, request: Request_Delete_TasksPD, db: MongoDB):
         request_dict = t_to_dict(request)
-        task_ids = [ObjectId(tid) for tid in request_dict["task_ids"]]
+        step_ids = [ObjectId(sid) for sid in request_dict["step_ids"]]
 
-        tasks_col = db["tasks"]
-        task_deleted_res = await tasks_col.delete_many(
-            {"$or": [{"_id": {"$in": task_ids}}, {"nodeId": {"$in": request_dict["task_ids"]}}]}
+        steps_col = db["steps"]
+        step_deleted_res = await steps_col.delete_many(
+            {
+                "$or": [
+                    {"_id": {"$in": step_ids}},
+                    {"parentStepId": {"$in": request_dict["step_ids"]}},
+                ]
+            }
         )
 
         return {
-            "taskDeleted": task_deleted_res.deleted_count,
+            "stepDeleted": step_deleted_res.deleted_count,
         }
 
-    async def create_flows(self, *, request: Request_Create_Multiple_FlowPD, db: MongoDB):
-        flows_col = db["flows"]
-        program_col = db["programs"]
+    async def create_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
+        """
+        Task들을 생성하는 함수.
+        """
 
-        flows = [t_to_dict(flow) for flow in request.flows]
+        try:
+            tasks_col = db["tasks"]
+            program_col = db["programs"]
 
-        program_ids = {f["programId"] for f in flows}
-        record_find_program_ids = []
+            request_dict = t_to_dict(request)
 
-        for pid in program_ids:
-            if pid not in record_find_program_ids:
-                continue
+            tasks = request_dict["tasks"]
 
-            if not await program_col.find_one({"_id": ObjectId(pid)}):
-                raise HTTPException(status_code=400, detail=f"Invalid programId: {pid}")
+            for task in tasks:
+                if not task["scriptPath"]:
+                    task["scriptPath"] = str((self._script_base_path).resolve())
 
-            record_find_program_ids.append(pid)
+            program_ids = {t["programId"] for t in tasks}
+            record_find_program_ids = []
 
-        res = await flows_col.insert_many(flows)
+            for pid in program_ids:
+                if pid not in record_find_program_ids:
+                    continue
 
-        for flow, inserted_id in zip(flows, res.inserted_ids, strict=False):
-            flow["flowId"] = str(inserted_id)
-            flow.pop("_id", None)
+                if not await program_col.find_one({"_id": ObjectId(pid)}):
+                    raise HTTPException(status_code=400, detail=f"Invalid programId: {pid}")
 
-        return flows
+                record_find_program_ids.append(pid)
 
-    async def update_flows(self, *, request: Request_Update_Multiple_FlowPD, db: MongoDB):
+            existed = await tasks_col.find(
+                {"scriptName": {"$in": [task.get("scriptName") for task in tasks]}},
+                {"scriptName": 1},
+            ).to_list(length=None)
+
+            if existed:
+                exist_names = sorted({d["scriptName"] for d in existed})
+                raise HTTPException(
+                    status_code=409, detail=f"Already exists scriptName: {exist_names}"
+                )
+
+            res = await tasks_col.insert_many(tasks)
+
+            for task, inserted_id in zip(tasks, res.inserted_ids, strict=False):
+                task["taskId"] = str(inserted_id)
+                task.pop("_id", None)
+
+            return tasks
+        except Exception as e:
+            await tasks_col.delete_many(
+                {"_id": {"$in": [ObjectId(task["taskId"]) for task in tasks]}}
+            )
+            raise e
+
+    async def update_tasks(self, *, request: Request_Update_Multiple_TaskPD, db: MongoDB):
+        """
+        Task들을 업데이트하는 함수.
+        """
+
         now = datetime.now(UTC).isoformat()
         ops = []
 
-        flows_col = db["flows"]
-        program_col = db["programs"]
         tasks_col = db["tasks"]
+        program_col = db["programs"]
 
-        flows = [t_to_dict(flow) for flow in request.flows]
+        tasks = [t_to_dict(task) for task in request.tasks]
 
-        program_ids = {f["programId"] for f in flows}
+        program_ids = {t["programId"] for t in tasks}
 
         record_find_program_ids = []
-        updated_flow_ids = []
+        updated_task_ids = []
 
         for pid in program_ids:
             if pid in record_find_program_ids:
@@ -433,73 +443,54 @@ class ProgramService(BaseService):
 
             record_find_program_ids.append(pid)
 
-        for flow in flows:
-            fid = flow.pop("flowId")
-            flow["updatedAt"] = now
-            ops.append(UpdateOne({"_id": ObjectId(fid)}, {"$set": flow}))
-            updated_flow_ids.append(fid)
-
-            if flow["state"] == RB_Flow_Manager_ProgramState.STOPPED:
-                await tasks_col.update_many(
-                    {"flowId": fid}, {"$set": {"state": RB_Flow_Manager_ProgramState.STOPPED}}
-                )
+        for task in tasks:
+            tid = task.pop("taskId")
+            task["updatedAt"] = now
+            ops.append(UpdateOne({"_id": ObjectId(tid)}, {"$set": task}))
+            updated_task_ids.append(tid)
 
         if ops:
-            await flows_col.bulk_write(ops, ordered=False)
+            await tasks_col.bulk_write(ops, ordered=False)
 
-        res = await flows_col.find(
-            {"_id": {"$in": [ObjectId(fid) for fid in updated_flow_ids]}}
+        res = await tasks_col.find(
+            {"_id": {"$in": [ObjectId(tid) for tid in updated_task_ids]}}
         ).to_list(length=None)
 
         for doc in res:
-            doc["flowId"] = str(doc.pop("_id"))
+            doc["taskId"] = str(doc.pop("_id"))
 
         return {
-            "flows": res,
+            "tasks": res,
         }
 
-    async def update_flow_state(
-        self, *, flow_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
-    ):
-        flows_col = db["flows"]
-        tasks_col = db["tasks"]
+    async def delete_tasks(self, *, request: Request_Delete_TasksPD, db: MongoDB):
+        """
+        Task들을 삭제하는 함수.
+        """
 
-        flow_doc = await flows_col.find_one_and_update(
-            {"_id": ObjectId(flow_id)},
-            {"$set": {"state": state}},
-            return_document=ReturnDocument.AFTER,
-        )
-
-        if flow_doc:
-            flow_doc["flowId"] = str(flow_doc.pop("_id"))
-
-            find_task_docs = await tasks_col.find({"flowId": flow_id}).to_list(length=None)
-
-            for task_doc in find_task_docs:
-                await self.update_task_state(task_id=str(task_doc["_id"]), state=state, db=db)
-
-        return flow_doc
-
-    async def delete_flows(self, *, request: Request_Delete_FlowsPD, db: MongoDB):
         request_dict = t_to_dict(request)
-        flow_ids = request_dict["flow_ids"]
+        task_ids = request_dict["task_ids"]
 
-        flows_col = db["flows"]
         tasks_col = db["tasks"]
+        steps_col = db["steps"]
 
-        flow_deleted_res = await flows_col.delete_many(
-            {"_id": {"$in": [ObjectId(fid) for fid in flow_ids]}}
+        task_deleted_res = await tasks_col.delete_many(
+            {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
         )
-        task_deleted_res = await tasks_col.delete_many({"flowId": {"$in": flow_ids}})
+        steps_deleted_res = await steps_col.delete_many({"taskId": {"$in": task_ids}})
 
         return {
-            "flowDeleted": flow_deleted_res.deleted_count,
             "taskDeleted": task_deleted_res.deleted_count,
+            "stepDeleted": steps_deleted_res.deleted_count,
         }
 
     async def get_program_info(self, *, program_id: str, db: MongoDB):
+        """
+        Program과 Task를 동시에 조회하는 함수.
+        """
+
         program_col = db["programs"]
-        flows_col = db["flows"]
+        tasks_col = db["tasks"]
 
         program_doc = await program_col.find_one({"_id": ObjectId(program_id)})
 
@@ -508,14 +499,14 @@ class ProgramService(BaseService):
 
         program_doc["programId"] = str(program_doc.pop("_id"))
 
-        flows_docs = await flows_col.find({"programId": program_id}).to_list(length=None)
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
 
-        for doc in flows_docs:
-            doc["flowId"] = str(doc.pop("_id"))
+        for doc in tasks_docs:
+            doc["taskId"] = str(doc.pop("_id"))
 
         return {
             "program": program_doc,
-            "flows": flows_docs,
+            "tasks": tasks_docs,
         }
 
     async def get_program_list(
@@ -525,6 +516,10 @@ class ProgramService(BaseService):
         search_name: str | None = None,
         db: MongoDB,
     ):
+        """
+        Program 목록을 조회하는 함수.
+        """
+
         program_col = db["programs"]
 
         query: dict[str, Any] = {}
@@ -544,7 +539,11 @@ class ProgramService(BaseService):
 
         return program_docs
 
-    async def create_program_and_flows(self, *, request: Request_Create_ProgramPD, db: MongoDB):
+    async def create_program_and_tasks(self, *, request: Request_Create_ProgramPD, db: MongoDB):
+        """
+        Program과 Task를 동시에 생성하는 함수.
+        """
+
         try:
             now = datetime.now(UTC)
 
@@ -554,47 +553,53 @@ class ProgramService(BaseService):
                 "updatedAt": now.isoformat(),
             }
 
-            col = db["programs"]
+            program_col = db["programs"]
 
-            find_doc = await col.find_one({"name": program_doc["name"]})
+            find_doc = await program_col.find_one({"name": program_doc["name"]})
 
             if find_doc:
                 raise HTTPException(status_code=400, detail="Program already exists")
 
-            program_res = await col.insert_one(program_doc)
+            program_res = await program_col.insert_one(program_doc)
 
-            find_program_doc = await col.find_one({"_id": program_res.inserted_id})
+            find_program_doc = await program_col.find_one({"_id": program_res.inserted_id})
 
             if find_program_doc:
                 find_program_doc["programId"] = str(program_res.inserted_id)
                 find_program_doc.pop("_id", None)
 
-            for flow in request.flows:
-                flow.programId = str(program_res.inserted_id)
-                flow.name = f'{flow.robotModel}_{program_doc["name"]}'
-                flow.scriptName = flow.name
-                flow.createdAt = now.isoformat()
-                flow.updatedAt = now.isoformat()
+            for task in request.tasks:
+                task.programId = str(program_res.inserted_id)
+                task.name = f'{task.robotModel}_{program_doc["name"]}'
+                task.scriptName = task.name
+                task.scriptPath = ""
+                task.createdAt = now.isoformat()
+                task.updatedAt = now.isoformat()
 
-            flows_res = await self.create_flows(
-                request=Request_Create_Multiple_FlowPD(
-                    flows=[
-                        Request_Create_FlowPD(**f.model_dump(exclude_none=True))
-                        for f in request.flows
+            tasks_res = await self.create_tasks(
+                request=Request_Create_Multiple_TaskPD(
+                    tasks=[
+                        Request_Create_TaskPD(**t.model_dump(exclude_none=True))
+                        for t in request.tasks
                     ]
                 ),
                 db=db,
             )
 
         except Exception as e:
+            await program_col.delete_one({"_id": program_res.inserted_id})
             raise e
 
         return {
             "program": find_program_doc,
-            "flows": flows_res,
+            "tasks": tasks_res,
         }
 
-    async def update_program_and_flows(self, *, request: Request_Update_ProgramPD, db: MongoDB):
+    async def update_program_and_tasks(self, *, request: Request_Update_ProgramPD, db: MongoDB):
+        """
+        Program과 Task를 동시에 업데이트하는 함수.
+        """
+
         try:
             now = datetime.now(UTC)
 
@@ -625,16 +630,16 @@ class ProgramService(BaseService):
 
             program_res["programId"] = str(program_res.pop("_id"))
 
-            for flow in request.flows:
-                flow.programId = str(program_res["programId"])
-                flow.name = f'{flow.robotModel}_{program_res["name"]}'
-                flow.scriptName = flow.name
+            for task in request.tasks:
+                task.programId = str(program_res["programId"])
+                task.name = f'{task.robotModel}_{program_res["name"]}'
+                task.scriptName = task.name
 
-            flows_res = await self.update_flows(
-                request=Request_Update_Multiple_FlowPD(
-                    flows=[
-                        Request_Update_FlowPD(**f.model_dump(exclude_none=True, exclude_unset=True))
-                        for f in request.flows
+            tasks_res = await self.update_tasks(
+                request=Request_Update_Multiple_TaskPD(
+                    tasks=[
+                        Request_Update_TaskPD(**t.model_dump(exclude_none=True, exclude_unset=True))
+                        for t in request.tasks
                     ]
                 ),
                 db=db,
@@ -642,57 +647,466 @@ class ProgramService(BaseService):
 
             return {
                 "program": program_res,
-                "flows": flows_res["flows"],
+                "tasks": tasks_res["tasks"],
             }
         except Exception as e:
             raise e
 
-    async def update_program_state(
-        self, *, program_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
-    ):
-        program_col = db["programs"]
-        flows_col = db["flows"]
-
-        program_doc = await program_col.find_one_and_update(
-            {"_id": ObjectId(program_id)},
-            {"$set": {"state": state}},
-            return_document=ReturnDocument.AFTER,
-        )
-
-        if program_doc:
-            program_doc["programId"] = str(program_doc.pop("_id"))
-
-            find_flow_docs = await flows_col.find({"programId": program_id}).to_list(length=None)
-
-            for flow_doc in find_flow_docs:
-                await self.update_flow_state(flow_id=str(flow_doc["_id"]), state=state, db=db)
-
-        return program_doc
-
     async def delete_program(self, *, program_id: str, db: MongoDB):
+        """
+        Program을 삭제하는 함수.
+        """
+
         program_col = db["programs"]
-        flows_col = db["flows"]
         tasks_col = db["tasks"]
+        steps_col = db["steps"]
 
         program_deleted_res = await program_col.delete_one({"_id": ObjectId(program_id)})
-
-        find_flow_res = await flows_col.find({"programId": program_id}, {"_id": 1}).to_list(
-            length=None
-        )
-
-        find_flow_ids = [str(flow["_id"]) for flow in find_flow_res]
-
-        flow_deleted_res = await flows_col.delete_many({"programId": program_id})
-
-        task_deleted_count = 0
-
-        for fid in find_flow_ids:
-            task_deleted_res = await tasks_col.delete_many({"flowId": fid})
-
-            task_deleted_count += task_deleted_res.deleted_count
+        task_deleted_res = await tasks_col.delete_many({"programId": program_id})
+        step_deleted_res = await steps_col.delete_many({"programId": program_id})
 
         return {
             "programDeleted": program_deleted_res.deleted_count,
-            "flowDeleted": flow_deleted_res.deleted_count,
-            "taskDeleted": task_deleted_count,
+            "taskDeleted": task_deleted_res.deleted_count,
+            "stepDeleted": step_deleted_res.deleted_count,
+        }
+
+    def _state_priority_expr(self, field="$state"):
+        """
+        Steps collection의 state를 우선순위로 변환하는 함수.
+        """
+        return {
+            "$switch": {
+                "branches": [
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.IDLE]}, "then": 0},
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.COMPLETED]}, "then": 1},
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.RUNNING]}, "then": 2},
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.PAUSED]}, "then": 3},
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.STOPPED]}, "then": 4},
+                    {"case": {"$eq": [field, RB_Flow_Manager_ProgramState.ERROR]}, "then": 5},
+                ],
+                "default": 0,
+            }
+        }
+
+    def _state_max_priority_expr(self):
+        """
+        Steps collection의 state를 재계산하는 함수.
+        """
+        return {
+            "$switch": {
+                "branches": [
+                    {
+                        "case": {"$eq": ["$maxPrio", 0]},
+                        "then": RB_Flow_Manager_ProgramState.IDLE,
+                    },
+                    {
+                        "case": {"$eq": ["$maxPrio", 1]},
+                        "then": RB_Flow_Manager_ProgramState.COMPLETED,
+                    },
+                    {
+                        "case": {"$eq": ["$maxPrio", 2]},
+                        "then": RB_Flow_Manager_ProgramState.RUNNING,
+                    },
+                    {
+                        "case": {"$eq": ["$maxPrio", 3]},
+                        "then": RB_Flow_Manager_ProgramState.PAUSED,
+                    },
+                    {
+                        "case": {"$eq": ["$maxPrio", 4]},
+                        "then": RB_Flow_Manager_ProgramState.STOPPED,
+                    },
+                    {
+                        "case": {"$eq": ["$maxPrio", 5]},
+                        "then": RB_Flow_Manager_ProgramState.ERROR,
+                    },
+                ],
+                "default": RB_Flow_Manager_ProgramState.IDLE,
+            }
+        }
+
+    async def recompute_task_and_program(
+        self, *, session: AsyncIOMotorClientSession, program_id: str, task_id: str, db: MongoDB
+    ):
+        """
+        Task와 Program의 state를 재계산하는 함수.
+        """
+        steps_col = db["steps"]
+        tasks_col = db["tasks"]
+        programs_col = db["programs"]
+
+        cursor = steps_col.aggregate(
+            [
+                {"$match": {"programId": program_id, "taskId": task_id}},
+                {
+                    "$group": {
+                        "_id": {"programId": "$programId", "taskId": "$taskId"},
+                        "maxPrio": {"$max": self._state_priority_expr("$state")},
+                    }
+                },
+                {
+                    "$addFields": {
+                        "state": self._state_max_priority_expr(),
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "programId": "$_id.programId",
+                        "taskId": "$_id.taskId",
+                        "state": 1,
+                    }
+                },
+            ],
+            session=session,
+        )
+
+        task_row = await cursor.to_list(length=1)
+        task_status = task_row[0]["state"] if task_row else "idle"
+
+        await tasks_col.update_one(
+            {"_id": task_id},
+            {"$set": {"state": task_status, "programId": program_id}},
+            session=session,
+            upsert=False,
+        )
+
+        cursor2 = tasks_col.aggregate(
+            [
+                {"$match": {"programId": program_id}},
+                {
+                    "$group": {
+                        "_id": "$programId",
+                        "maxPrio": {"$max": self._state_priority_expr("$state")},
+                    }
+                },
+                {
+                    "$addFields": {
+                        "state": self._state_max_priority_expr(),
+                    }
+                },
+                {"$project": {"_id": 0, "programId": "$_id", "state": 1}},
+            ],
+            session=session,
+        )
+
+        program_row = await cursor2.to_list(length=1)
+        program_state = (
+            program_row[0]["state"] if program_row else RB_Flow_Manager_ProgramState.IDLE
+        )
+
+        await programs_col.update_one(
+            {"_id": ObjectId(program_id)},
+            {"$set": {"state": program_state}},
+            session=session,
+            upsert=False,
+        )
+
+    async def _handle_step_change(self, db: MongoDB, change: dict[str, Any]):
+        """
+        Change Stream 이벤트를 받아 해당 (programId, taskId)만 부분 갱신.
+        """
+        op = change["operationType"]
+        full = change.get("fullDocument")
+        before = change.get("fullDocumentBeforeChange")
+        doc_id = change["documentKey"]["_id"]
+
+        program_id = None
+        task_id = None
+
+        steps_col = db["steps"]
+
+        if op in ("insert", "replace"):
+            program_id = full["programId"] if full else None
+            task_id = full["taskId"] if full else None
+
+        elif op == "update":
+            if full and "programId" in full and "taskId" in full:
+                program_id = full["programId"]
+                task_id = full["taskId"]
+            else:
+                cur = await steps_col.find_one({"_id": doc_id})
+                if cur:
+                    program_id = cur["programId"]
+                    task_id = cur["taskId"]
+
+        elif op == "delete":
+            if before and "programId" in before and "taskId" in before:
+                program_id = before["programId"]
+                task_id = before["taskId"]
+            else:
+                rb_log.warning(f"delete step: {doc_id} pre-image is not found")
+                return
+
+        if program_id is None or task_id is None:
+            return
+
+        async with await db["client"].start_session() as s:
+
+            async def txn(sess):
+                await self.recompute_task_and_program(
+                    db=db, session=sess, program_id=program_id, task_id=task_id
+                )
+
+            await s.with_transaction(
+                txn,
+                read_concern="snapshot",
+                write_concern=WriteConcern("majority"),
+                read_preference=ReadPreference.PRIMARY,
+            )
+
+    async def steps_watch_worker(self):
+        """
+        Steps collection의 Change Stream을 처리하는 백그라운드 작업자.
+        """
+        db = await get_db()
+
+        steps_col = db["steps"]
+
+        # Change Stream: update에도 최신 문서를 주도록
+        # pre-image 쓰려면 서버/컬렉션 설정 + fullDocumentBeforeChange="required"
+        pipeline = [
+            {"$match": {"operationType": {"$in": ["insert", "update", "replace", "delete"]}}}
+        ]
+
+        while True:
+            try:
+                async with steps_col.watch(
+                    pipeline,
+                    full_document="updateLookup",
+                    # full_document_before_change="required",  # pre-image 활성화 시 주석 해제
+                    batch_size=100,
+                ) as stream:
+                    async for change in stream:
+                        with contextlib.suppress(Exception):
+                            await self._handle_step_change(db=db, change=change)
+            except PyMongoError:
+                await asyncio.sleep(0.5)
+
+    def _load_tree_from_script(self, script_path: str) -> Step:
+        """
+        주어진 Python 스크립트 경로에서 `tree` 변수를 가져옴
+        """
+        path = Path(script_path).resolve()
+
+        if not path.exists():
+            raise FileNotFoundError(f"파일을 찾을 수 없습니다: {path}")
+
+        module_name = path.stem
+
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"모듈을 로드할 수 없습니다: {path}")
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        if not hasattr(module, "tree"):
+            raise AttributeError(f"{path} 안에 `tree` 변수가 없습니다.")
+
+        return cast(Step, module.tree)
+
+    async def start_program(self, request: Request_Program_ExecutionPD, db: MongoDB):
+        """
+        ScriptExecutor를 시작하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        program_id = request_dict["programId"]
+
+        program_col = db["programs"]
+        tasks_col = db["tasks"]
+
+        program_doc = await program_col.find_one({"_id": ObjectId(program_id)})
+
+        if not program_doc:
+            raise HTTPException(status_code=404, detail="Program not found")
+
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
+        task_ids = [str(t["_id"]) for t in tasks_docs]
+
+        await self.start_tasks(
+            request=Request_Tasks_ExecutionPD(
+                taskIds=task_ids, repeatCount=program_doc["repeatCnt"]
+            ),
+            db=db,
+        )
+
+        return {
+            "status": "success",
+        }
+
+    async def stop_program(self, request: Request_Program_ExecutionPD, db: MongoDB):
+        """
+        Program을 중지하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        program_id = request_dict["programId"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
+        for task in tasks_docs:
+            self.stop_script(task["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    async def pause_program(self, request: Request_Program_ExecutionPD, db: MongoDB):
+        """
+        Program을 일시정지하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        program_id = request_dict["programId"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
+        for task in tasks_docs:
+            self.pause_script(task["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    async def resume_program(self, request: Request_Program_ExecutionPD, db: MongoDB):
+        """
+        Program을 재개하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        program_id = request_dict["programId"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
+        for task in tasks_docs:
+            self.resume_script(task["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    async def start_tasks(self, request: Request_Tasks_ExecutionPD, db: MongoDB):
+        """
+        Tasks를 시작하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+        repeat_count = request_dict["repeatCount"] or 1
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find(
+            {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
+        ).to_list(length=None)
+        for task_doc in tasks_docs:
+            script_name = task_doc["scriptName"]
+            script_path = task_doc["scriptPath"]
+            extension = task_doc["extension"]
+
+            tree = self._load_tree_from_script(f"{script_path}/{script_name}.{extension}")
+
+            self.script_executor.start(script_name, tree, repeat_count)
+
+        return {
+            "status": "success",
+        }
+
+    async def stop_tasks(self, request: Request_Tasks_ExecutionPD, db: MongoDB):
+        """
+        Tasks를 중지하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find(
+            {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
+        ).to_list(length=None)
+
+        for task_doc in tasks_docs:
+            self.stop_script(task_doc["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    async def pause_tasks(self, request: Request_Tasks_ExecutionPD, db: MongoDB):
+        """
+        Tasks를 일시정지하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find(
+            {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
+        ).to_list(length=None)
+
+        for task_doc in tasks_docs:
+            self.pause_script(task_doc["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    async def resume_tasks(self, request: Request_Tasks_ExecutionPD, db: MongoDB):
+        """
+        Tasks를 재개하는 함수.
+        """
+
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find(
+            {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
+        ).to_list(length=None)
+
+        for task_doc in tasks_docs:
+            self.resume_script(task_doc["scriptName"])
+
+        return {
+            "status": "success",
+        }
+
+    def stop_script(self, script_name: str):
+        """
+        Script을 중지하는 함수.
+        """
+
+        self.script_executor.stop(script_name)
+
+        return {
+            "status": "success",
+        }
+
+    def pause_script(self, script_name: str):
+        """
+        Script을 일시정지하는 함수.
+        """
+
+        self.script_executor.pause(script_name)
+
+        return {
+            "status": "success",
+        }
+
+    def resume_script(self, script_name: str):
+        """
+        Script을 재개하는 함수.
+        """
+
+        self.script_executor.resume(script_name)
+
+        return {
+            "status": "success",
         }

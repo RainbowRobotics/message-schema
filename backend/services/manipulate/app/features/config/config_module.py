@@ -87,14 +87,14 @@ class ConfigService(BaseService):
             socket_client.emit(f"{robot_model}/call_config_robotarm", to_json(config_robot_arm_res))
         )
 
-    def call_change_toollist(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
+    def set_toolist_num(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
         request_dict = {**request.model_dump()}
 
         req = Request_Set_Tool_ListT()
         req.targetToolNum = request_dict["target_tool_num"]
 
         res = zenoh_client.query_one(
-            f"{robot_model}/call_change_toollist",
+            f"{robot_model}/set_toolist_num",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
@@ -357,14 +357,14 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def call_change_userframe(self, robot_model: str, *, request: Request_Set_User_FramePD):
+    def set_userframe_num(self, robot_model: str, *, request: Request_Set_User_FramePD):
         request_dict = t_to_dict(request)
 
         req = Request_Set_User_FrameT()
         req.userFrameNum = request_dict["user_frame_num"]
 
         res = zenoh_client.query_one(
-            f"{robot_model}/call_change_userframe",
+            f"{robot_model}/set_userframe_num",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
@@ -393,3 +393,6 @@ class ConfigService(BaseService):
         )
 
         return res["dict_payload"]
+
+    def call_reset_outcoll(self, robot_model: str):
+        pass

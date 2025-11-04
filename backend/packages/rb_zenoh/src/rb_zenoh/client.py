@@ -18,8 +18,16 @@ import flatbuffers
 import psutil
 from flatbuffers.table import Table
 from rb_utils.parser import t_to_dict
-from zenoh import Config, Encoding, Queryable, QueryTarget, Session, ZBytes, ZError
-from zenoh import open as zenoh_open
+from zenoh import (  # pylint: disable=no-name-in-module
+    Config,
+    Encoding,
+    Queryable,
+    QueryTarget,
+    Session,
+    ZBytes,
+    ZError,
+)
+from zenoh import open as zenoh_open  # pylint: disable=no-name-in-module
 
 from .exeption import ZenohNoReply, ZenohTransportError
 from .schema import CallbackEntry, OverflowPolicy, SubscribeOptions
@@ -138,6 +146,9 @@ class ZenohClient:
     #     except Exception as e:
     #         print(f"🚫 zenoh publish failed: {e}")
 
+    def is_current_process_client(self) -> bool:
+        return self._owner_pid == os.getpid()
+
     def _estimate_initial_size(self, topic: str, fb_class_name: str, fields: dict) -> int:
         key = (topic, fb_class_name)
         stat = self._fb_stats.get(key)
@@ -236,7 +247,6 @@ class ZenohClient:
         flatbuffer_obj_t: Table | None = None,
         timeout: float = 3.0,
         allow_self: bool = False,
-        parse_obj: bool = True,
     ) -> tuple[str, memoryview, dict[str, Any] | None, dict]:
         if self.session is None:
             self.connect()
@@ -269,8 +279,8 @@ class ZenohClient:
                 att_b = str(att).encode("utf-8", "ignore")
 
             sid = None
+            s = att_b.decode("utf-8", "ignore")
             try:
-                s = att_b.decode("utf-8", "ignore")
                 for seg in s.split(";"):
                     if seg.startswith("sender_id="):
                         sid = seg.split("=", 1)[1]
@@ -282,18 +292,16 @@ class ZenohClient:
                 return
 
             async def _handle():
-                parts = dict(
-                    seg.split("=", 1)
-                    for seg in (s if "s" in locals() else att_b.decode("utf-8", "ignore")).split(
-                        ";"
-                    )
-                    if "=" in seg
-                )
+                parts = dict(seg.split("=", 1) for seg in s.split(";") if "=" in seg)
                 obj = None
                 try:
                     if flatbuffer_obj_t is not None:
                         obj = await asyncio.to_thread(
-                            lambda: t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
+                            lambda: t_to_dict(
+                                flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0)
+                                if flatbuffer_obj_t is not None
+                                else None
+                            )
                         )
                 except Exception:
                     obj = None
@@ -389,6 +397,10 @@ class ZenohClient:
                     q.reply_del(q.key_expr)
                     return
                 data = _to_bytes(payload)
+
+                if data is None:
+                    data = b""
+
                 att = f"sender={self.sender};sender_id={self.sender_id}"
                 q.reply(
                     key_expr=q.key_expr,
@@ -476,7 +488,7 @@ class ZenohClient:
 
                     if isinstance(att, bytes | bytearray):
                         att = att.decode("utf-8", "ignore")
-                    elif hasattr(att, "to_bytes"):
+                    elif hasattr(att, "to_bytes") and att is not None:
                         att = att.to_bytes().decode("utf-8", "ignore")
 
                     att_dict = dict(
@@ -794,6 +806,7 @@ class ZenohClient:
                     exc = t.exception()
                     if exc:
                         print(f"[callback error:{topic}] {exc}", flush=True)
+                        raise RuntimeError(f"[callback error:{topic}] {exc}") from exc
 
                 for t in tasks:
                     if isinstance(t, asyncio.Task):
@@ -956,10 +969,10 @@ class ZenohClient:
 
                     kwargs = self._select_callback_kwargs(
                         e.callback,
-                        topic=it.get("topic"),
-                        mv=it.get("mv"),
-                        obj=it.get("obj"),
-                        attachment=it.get("attachment"),
+                        topic=it.get("topic") or "",
+                        mv=it.get("mv") or memoryview(b""),
+                        obj=it.get("obj") or {},
+                        attachment=it.get("attachment") or {},
                     )
 
                     if inspect.iscoroutinefunction(e.callback):

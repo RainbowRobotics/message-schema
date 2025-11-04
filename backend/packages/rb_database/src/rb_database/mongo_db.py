@@ -155,6 +155,8 @@ async def init_indexes(db: AsyncIOMotorDatabase):
         name="state_logs_sw_level_created_idx",
     )
     await ensure_index(db, "state_logs", [("contents", "text")], name="state_logs_text_idx")
+    await ensure_index(db, "tasks", [("scriptName", 1)], name="uniq_scriptName", unique=True)
+    await ensure_index(db, "programs", [("name", 1)], name="uniq_program_name", unique=True)
 
 
 async def init_db(app: FastAPI, uri: str, db_name: str):

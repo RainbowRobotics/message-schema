@@ -6,6 +6,7 @@ from app.features.config.config_socket import config_socket_router
 from app.features.info.info_api import info_router
 from app.features.info.info_socket import info_socket_router
 from app.features.program.program_api import program_router
+from app.features.program.program_module import ProgramService
 from app.features.program.program_zenoh import zenoh_program_router
 from app.features.state.state_api import state_router
 from app.features.state.state_module import StateService
@@ -23,6 +24,7 @@ socketio_route_path = f"{setting.SOCKET_PATH}/"
 
 state_service = StateService()
 config_service = ConfigService()
+program_service = ProgramService()
 
 # zenoh_client = ZenohClient()
 
@@ -40,6 +42,7 @@ app = create_app(
     bg_tasks=[
         state_service.repeat_get_system_state,
         config_service.repeat_get_all_speedbar,
+        program_service.steps_watch_worker,
     ],
 )
 

@@ -8,12 +8,31 @@ RUN pip install --upgrade pip && pip install uv==0.8.18
 ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
+ENV DATA_DIR=/app/data/${SERVICE}
+RUN mkdir -p ${DATA_DIR}
+RUN chmod -R 777 ${DATA_DIR}
+
+VOLUME [${DATA_DIR}]
+
 COPY backend/services ./services
 COPY backend/packages ./packages
 COPY backend/pyproject.toml ./pyproject.toml
 COPY backend/uv.lock ./uv.lock
 
 RUN uv sync --all-packages --frozen --group dev
+
+RUN python - <<'PY'
+import sys, site, pathlib
+paths = site.getsitepackages() or [site.getusersitepackages()] or [sys.prefix + "/lib/python" + sys.version[:3] + "/site-packages"]
+sp = next((pathlib.Path(p) for p in paths if "site-packages" in p), None)
+assert sp and sp.exists(), f"site-packages not found in {paths}"
+
+pth = sp / "rb_packages.pth"
+lines = [str(d.resolve()) for d in pathlib.Path("./packages").glob("*/src") if d.is_dir()]
+pth.write_text("\n".join(lines) + "\n", encoding="utf-8")
+print("==> Created", pth, "with:", lines)
+PY
+
 
 COPY scripts ../scripts
 COPY schemas ../schemas

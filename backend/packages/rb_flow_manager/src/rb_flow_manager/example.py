@@ -47,7 +47,7 @@ if __name__ == "__main__":
     print("\n=== All States ===")
     print(executor.get_all_states())
 
-    time.sleep(4)
+    time.sleep(3)
     executor.pause("script_1")
 
     time.sleep(4)

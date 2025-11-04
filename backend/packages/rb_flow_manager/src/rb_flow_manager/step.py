@@ -32,6 +32,7 @@ class Step:
 
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
+        ctx.emit_next(self.step_id)
         ctx.check_stop()
 
         # func가 있으면 실행
@@ -45,7 +46,7 @@ class Step:
             done_event = Event()
 
             def done():
-                ctx.emit_next(self.step_id)
+                ctx.emit_complete(self.step_id)
                 done_event.set()
 
             flow_manager_args = FlowManagerArgs(ctx=ctx, done=done)
@@ -54,6 +55,7 @@ class Step:
                 eval_args = {
                     k: safe_eval_expr(v, variables=ctx.variables) for k, v in self.args.items()
                 }
+
                 call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
             except RuntimeError as e:
                 ctx.stop()

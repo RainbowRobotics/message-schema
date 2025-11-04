@@ -1,0 +1,4 @@
+{
+  "extraPaths": ["stubs"],
+  "exclude": ["**/zenoh/**"]
+}

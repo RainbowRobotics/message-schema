@@ -1,6 +1,7 @@
 namespace flow_manager; 
 
 enum RB_Flow_Manager_ProgramState : byte {
+  IDLE,
   RUNNING,
   PAUSED,
   STOPPED,
@@ -9,7 +10,7 @@ enum RB_Flow_Manager_ProgramState : byte {
   COMPLETED
 }
 
-table Request_Update_Task_State {
-  task_id: string;
+table Request_Update_Step_State {
+  step_id: string;
   state: RB_Flow_Manager_ProgramState;
 }

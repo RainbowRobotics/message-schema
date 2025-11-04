@@ -51,6 +51,8 @@ class RBManipulateSDK:
         # 이벤트 루프 생성
         self.loop = asyncio.new_event_loop()
 
+        self._tasks: set[asyncio.Task] = set()
+
         # 별도 스레드에서 이벤트 루프 실행
         self._loop_thread = threading.Thread(
             target=self._run_loop, name=f"rb-sdk-loop-{self._pid}", daemon=True
@@ -70,9 +72,19 @@ class RBManipulateSDK:
 
     def _submit(self, coro):
         """이벤트 루프에 코루틴 제출"""
-        return asyncio.run_coroutine_threadsafe(coro, self.loop)
 
-    def move_j(
+        async def _wrap():
+            task = asyncio.current_task()
+            if task is not None:
+                self._tasks.add(task)
+                try:
+                    return await coro
+                finally:
+                    self._tasks.discard(task)
+
+        return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
+
+    async def move_j(
         self,
         robot_model: str,
         joints: list[float],
@@ -105,6 +117,8 @@ class RBManipulateSDK:
             req.target = move_input_target
             req.speed = move_input_speed
 
+            print("req >>", req, flush=True)
+
             # 명령 전송
             res = self.zenoh_client.query_one(
                 f"{robot_model}/call_move_j",
@@ -115,11 +129,21 @@ class RBManipulateSDK:
 
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None and res.get("dict_payload"):
-                self.zenoh_client.subscribe(
-                    f"{robot_model}/state_core",
-                    lambda topic, mv, obj, attachment: self._on_state_core(obj, flow_manager_args),
-                    flatbuffer_obj_t=State_CoreT,
-                )
+                while True:
+                    try:
+                        topic, mv, obj, attachment = await self.zenoh_client.receive_one(
+                            f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
+                        )
+
+                        if obj is not None and obj.get("motionMode") == 0:
+                            flow_manager_args.done()
+                            break
+                    except asyncio.CancelledError:
+                        print("CancelledError", flush=True)
+                        break
+                    except Exception as e:
+                        print("Exception >>", e, flush=True)
+                        raise RuntimeError(e) from e
 
         except Exception as e:
             if flow_manager_args is not None:
@@ -145,30 +169,38 @@ class RBManipulateSDK:
         """SDK 종료 (현재 프로세스만)"""
         try:
             if hasattr(self, "zenoh_client") and self.zenoh_client is not None:
-                try:
+                with contextlib.suppress(Exception, TimeoutError):
                     self.zenoh_client.close()
-                except TimeoutError:
-                    print("[SDK] zenoh close timed out → force closing loop")
-                except Exception as e:
-                    print(f"[SDK] zenoh close error: {e}")
 
             if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
+
+                async def _cancel_all():
+                    tasks = list(self._tasks)
+                    for t in tasks:
+                        t.cancel()
+                    if tasks:
+                        await asyncio.gather(*tasks, return_exceptions=True)
+
+                fut = asyncio.run_coroutine_threadsafe(_cancel_all(), self.loop)
+                with contextlib.suppress(Exception):
+                    fut.result(timeout=2)
+
                 self.loop.call_soon_threadsafe(self.loop.stop)
 
-            if (
-                hasattr(self, "_loop_thread")
-                and self._loop_thread is not None
-                and self._loop_thread.is_alive()
-            ):
+            if getattr(self, "_loop_thread", None) and self._loop_thread.is_alive():
                 self._loop_thread.join(timeout=2)
 
-            # 4) 남은 루프 완전히 닫기
             if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
                 self.loop.close()
 
             print(f"[SDK] Closed for PID {self._pid}")
         except Exception as e:
             print(f"[SDK] Close error: {e}")
+        finally:
+            cls = self.__class__
+            with cls._lock:  # pylint: disable=protected-access
+                if cls._instances.get(self._pid) is self:  # pylint: disable=protected-access
+                    cls._instances.pop(self._pid, None)  # pylint: disable=protected-access
 
     def __del__(self):
         """소멸자"""
@@ -178,12 +210,3 @@ class RBManipulateSDK:
         if os.getpid() == getattr(self, "_pid", None):
             with contextlib.suppress(builtins.BaseException):
                 self.close()
-
-    @classmethod
-    def cleanup_current_process(cls):
-        """현재 프로세스의 SDK 인스턴스 정리"""
-        pid = os.getpid()
-        with cls._lock:
-            instance = cls._instances.pop(pid, None)
-            if instance:
-                instance.close()

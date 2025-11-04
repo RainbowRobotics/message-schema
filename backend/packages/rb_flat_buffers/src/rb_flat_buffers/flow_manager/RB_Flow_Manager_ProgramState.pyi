@@ -9,6 +9,7 @@ import typing
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
 class RB_Flow_Manager_ProgramState(object):
+  IDLE: int
   RUNNING: int
   PAUSED: int
   STOPPED: int

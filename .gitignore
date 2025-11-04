@@ -29,3 +29,5 @@ backend/docker-compose.preview.yml
 
 .out-amd64
 .out-arm64
+
+backend/temp-data/**

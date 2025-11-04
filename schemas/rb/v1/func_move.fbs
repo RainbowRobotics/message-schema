@@ -4,21 +4,6 @@ include "common_struct.fbs";
 namespace IPC;
 
 //---------------------------------------------------------------
-table MoveInput_Target {
-    tar_values:     N_INPUT_f;
-    tar_frame:      int;
-    tar_unit:       int;
-}
-table MoveInput_Type{
-    pnt_type:       int;
-    pnt_para:       float;
-}
-table MoveInput_Speed {
-    spd_mode:       int;
-    spd_vel_para:   float;
-    spd_acc_para:   float;
-}
-//---------------------------------------------------------------
 // Jog - Smooth
 //---------------------------------------------------------------
 table Request_Move_SmoothJogJ{

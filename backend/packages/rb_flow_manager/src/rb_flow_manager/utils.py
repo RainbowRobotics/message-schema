@@ -1,4 +1,5 @@
 import ast
+import asyncio
 import inspect
 import math
 import operator
@@ -140,8 +141,22 @@ def safe_eval_expr(expr: str, variables: dict[str, dict[str, Any]] | None = None
     return _eval(tree.body)
 
 
+def _pick_target_loop(func, provided: dict) -> asyncio.AbstractEventLoop | None:
+    bound_self = getattr(func, "__self__", None)
+    if bound_self is not None:
+        loop = getattr(bound_self, "loop", None)
+        if isinstance(loop, asyncio.AbstractEventLoop):
+            return loop
+
+    loop = provided.get("loop")
+    if isinstance(loop, asyncio.AbstractEventLoop):
+        return loop
+
+    return None
+
+
 def call_with_matching_args(func, **provided):
-    """func의 시그니처를 보고 필요한 인자만 추려서 호출"""
+    """func의 시그니처를 보고 필요한 인자만 추려서 호출 (동기/비동기 모두 지원, 루프 안전)"""
     sig = inspect.signature(func)
     call_kwargs = {}
 
@@ -154,4 +169,25 @@ def call_with_matching_args(func, **provided):
         ):
             raise TypeError(f"Missing required parameter: {name}")
 
-    return func(**call_kwargs)
+    result: Any = func(**call_kwargs)
+
+    async def _await_awaitable(a):
+        return await a
+
+    if inspect.isawaitable(result):
+        target_loop = _pick_target_loop(func, provided)
+
+        if target_loop is not None:
+            future = asyncio.run_coroutine_threadsafe(result, target_loop)
+            return future.result()
+
+        try:
+            running = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(_await_awaitable(result))
+
+        task: asyncio.Task = running.create_task(_await_awaitable(result))
+        return task
+
+    # 3) 동기 함수면 결과 그대로 반환
+    return result

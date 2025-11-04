@@ -59,6 +59,7 @@ for dir in "$BE/services"/*; do
       - ./services/${NAME}:/app/backend/services/${NAME}
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
+      - ./temp-data:/app/data/${NAME}
 
 EOF
 
