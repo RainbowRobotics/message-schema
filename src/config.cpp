@@ -775,6 +775,12 @@ bool CONFIG::load_common(QString path)
         spdlog::info("[CONFIG] ROBOT_TYPE: {}, ROBOT_MODEL: {}", qUtf8Printable(robot_type_str), qUtf8Printable(robot_model_str));
     }
 
+    if(obj.contains("ROBOT_SERIAL_NUMBER"))
+    {
+        ROBOT_SERIAL_NUMBER = obj["ROBOT_SERIAL_NUMBER"].toString();
+        spdlog::info("[CONFIG] ROBOT_SERIAL_NUMBER: {}", qUtf8Printable(ROBOT_SERIAL_NUMBER));
+    }
+
     if(obj.contains("MILEAGE"))
     {
         MILEAGE = obj["MILEAGE"].toString();
