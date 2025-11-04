@@ -223,7 +223,8 @@ void CAM::post_process_loop(int idx)
             {
                 // use depth only
                 //if(config->get_use_cam_depth() == true && config->get_use_cam_rgb() == false || config->get_use_cam() == true)
-                if(config->get_use_cam_depth() || config->get_use_cam())
+                //if(config->get_use_cam_depth() || config->get_use_cam())
+                if(config->get_use_cam_depth())
                 {
                    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
                    TIME_PTS tp;
@@ -240,7 +241,8 @@ void CAM::post_process_loop(int idx)
                 }
                 
                 // use rgb only
-                if(config->get_use_cam_rgb() || config->get_use_cam())
+                //if(config->get_use_cam_rgb() || config->get_use_cam())
+                if(config->get_use_cam_rgb())
                 {
                     TIME_IMG ti;
                     if(orbbec->try_pop_img_que(idx, ti))
