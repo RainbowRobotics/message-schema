@@ -1508,19 +1508,24 @@ void COMM_MSA::load_loop()
 
         QString command = msg.command;
         qDebug() << "Load Loop : " << msg.command;
+        
         if(command == "loadMap")
         {
             handle_common_load_map(msg);
+            log_info("Load Map Command Processed");
         }
         else if(command == "loadTopo")
         {
             handle_common_load_topo(msg);
+            log_info("Load Topo Command Processed");
         }
         else
         {
             msg.result = "reject";
-            msg.message = "알 수 없는 command 값입니다.";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_UNKNOWN_ERROR, ERROR_MANAGER::LOAD_UNKNOWN_ERROR);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_UNKNOWN_ERROR, ERROR_MANAGER::LOAD_UNKNOWN_ERROR);
             send_load_response(msg);
+            log_error("Unknown error load loop");
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -2086,15 +2091,26 @@ void COMM_MSA::control_loop()
                     mobile->recover();
                 }
 
-            }else{
+            }
+            else
+            {
                 msg.result = "reject";
-                msg.message = "resetField 값이 잘못되었습니다.";
+                //msg.message = "resetField 값이 잘못되었습니다.";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::SAFETY_RESET_FIELD_ERROR);
+                log_error("Invalid resetField value");
+                send_control_response(msg);
             }
         }
         else
         {
             msg.result = "reject";
-            msg.message = "command 값이 잘못되었습니다.";
+            //msg.message = "command 값이 잘못되었습니다.";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::CONTROL_UNKNOWN_CMD);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::CONTROL_UNKNOWN_CMD);
+            send_control_response(msg);
+            log_error("Invalid command value");
+        
         }
 
         send_control_response(msg);
@@ -2161,9 +2177,12 @@ void COMM_MSA::common_loop()
                 else
                 {
                     msg.result = "reject";
-                    msg.message = "mainwindow module not available";
+                    //msg.message = "mainwindow module not available";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::RANDOM_SEQ);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::RANDOM_SEQ);
+                    log_error("MainWindow not available for random sequence");
 
-                    logger->write_log("[COMM_MSA] MainWindow not available for mapping", "Red");
+                    logger->write_log("[COMM_MSA] MainWindow not available for random sequence", "Red");
                 }
             }
         }
@@ -2184,7 +2203,10 @@ void COMM_MSA::common_loop()
                 else
                 {
                     msg.result = "reject";
-                    msg.message = "mainwindow module not available";
+                    //msg.message = "mainwindow module not available";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_START);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_START);
+                    log_error("MainWindow not available for docking");  
 
                     logger->write_log("[COMM_MSA] MainWindow not available", "Red");
                 }
@@ -2202,7 +2224,10 @@ void COMM_MSA::common_loop()
                 else
                 {
                     msg.result = "reject";
-                    msg.message = "mainwindow module not available";
+                    //msg.message = "mainwindow module not available";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_STOP);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::DOCK_STOP);
+                    log_error("MainWindow not available for undocking");
 
                     logger->write_log("[COMM_MSA] MainWindow not available", "Red");
                 }
@@ -2595,7 +2620,9 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
         else
         {
             msg.result = "reject";
-            msg.message = "[R0Lx0800]lidar not connected";
+            //msg.message = "[R0Lx0800]lidar not connected";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::MAPPING_START);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::MAPPING_START);
 
             send_mapping_response(msg);
         }
@@ -2653,7 +2680,9 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
             else
             {
                 msg.result = "fail";
-                msg.message = "[R1Cx2100] csv file not found in map directory";
+                //msg.message = "[R1Cx2100] csv file not found in map directory";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_SAVE_FAIL_CSV, ERROR_MANAGER::MAPPING_SAVE);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_SAVE_FAIL_CSV, ERROR_MANAGER::MAPPING_SAVE);
 
                 send_mapping_response(msg);
             }
@@ -3475,6 +3504,8 @@ void COMM_MSA::send_mapping_response(DATA_MAPPING msg)
     io->socket("slamnav")->emit("mappingResponse", send_object);
 }
 
+
+
 //void COMM_MSA::send_ping_response(DATA_MOVE msg)
 //{
 //    if(!is_connected)
@@ -3549,6 +3580,8 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
     {
         msg.result = "reject";
         msg.message = "module not loaded";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_INIT_CONDITION_FAILED, ERROR_MANAGER::MOVE_TARGET);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_INIT_CONDITION_FAILED, ERROR_MANAGER::MOVE_TARGET);
         send_move_response(msg);
         return;
     }
@@ -3559,7 +3592,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         if(unimap->get_is_loaded() != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "[R0Mx1800] map not loaded";
+            //msg.message = "[R0Mx1800] map not loaded";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
             return;
         }
@@ -3567,7 +3602,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         if(!loc->get_is_loc())
         {
             msg.result = "reject";
-            msg.message = "[R0Px1800] no localization";
+            //msg.message = "[R0Px1800] no localization";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
             return;
         }
@@ -3575,7 +3612,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         if(config->get_use_multi())
         {
             msg.result = "reject";
-            msg.message = "[R0Tx1802] target command not supported by multi. use goal_id";
+            //msg.message = "[R0Tx1802] target command not supported by multi. use goal_id";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_TARGET_NOT_SUPPORTED_MULTI, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_TARGET_NOT_SUPPORTED_MULTI, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
             return;
         }
@@ -3585,7 +3624,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         if(x < unimap->get_map_min_x() || x > unimap->get_map_max_x() || y < unimap->get_map_min_y() || y > unimap->get_map_max_y())
         {
             msg.result = "reject";
-            msg.message = "[R0Tx1800] target location out of range";
+            //msg.message = "[R0Tx1800] target location out of range";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OUT_OF_RANGE, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_TARGET_OUT_OF_RANGE, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
             return;
         }
@@ -3596,7 +3637,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
         if(obsmap->is_tf_collision(goal_tf))
         {
             msg.result = "reject";
-            msg.message = "[R0Tx1801] target location occupied(static obs)";
+            //msg.message = "[R0Tx1801] target location occupied(static obs)";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_TARGET_OCCUPIED_STATIC_OBS, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_TARGET_OCCUPIED_STATIC_OBS, ERROR_MANAGER::MOVE_TARGET);
             send_move_response(msg);
             return;
         }
@@ -3696,7 +3739,9 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
     else
     {
         msg.result = "reject";
-        msg.message = "[R0Sx1800]not supported";
+        //msg.message = "[R0Sx1800]not supported";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_METHOD_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_METHOD_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
 
         send_move_response(msg);
     }
@@ -3711,7 +3756,9 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         if(unimap->get_is_loaded() != MAP_LOADED)
         {
             msg.result = "reject";
-            msg.message = "[R0Mx1800] map not loaded";
+            //msg.message = "[R0Mx1800] map not loaded";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_GOAL);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
             return;
         }
@@ -3719,7 +3766,9 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         if(!loc->get_is_loc())
         {
             msg.result = "reject";
-            msg.message = "[R0Px1800] no localization";
+            //msg.message = "[R0Px1800] no localization";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_GOAL);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
             return;
         }
@@ -3728,7 +3777,9 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
         if(goal_id.isEmpty())
         {
             msg.result = "reject";
-            msg.message = "[R0Nx2000]empty node id";
+            //msg.message = "[R0Nx2000]empty node id";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
             send_move_response(msg);
             return;
         }
@@ -3740,7 +3791,9 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
             if(!node)
             {
                 msg.result = "reject";
-                msg.message = "[R0Nx2001]can not find node";
+                //msg.message = "[R0Nx2001]can not find node";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
                 send_move_response(msg);
                 return;
             }
@@ -3885,13 +3938,17 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
     else if(method == "tng")
     {
         msg.result = "reject";
-        msg.message = "not supported yet";
+        //msg.message = "not supported yet";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_METHOD_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_METHOD_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL);
         send_move_response(msg);
     }
     else
     {
         msg.result = "reject";
-        msg.message = "[R0Sx2000]not supported";
+        //msg.message = "[R0Sx2000]not supported";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_GOAL);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_GOAL);
         send_move_response(msg);
     }
 }
@@ -4045,7 +4102,9 @@ void COMM_MSA::slot_profile_move(DATA_MOVE msg)
             //qDebug() << "invalid target or speed";
             //exception
             msg.result = "reject";
-            msg.message = "invalid target or speed";
+            //msg.message = "invalid target or speed";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::PROFILE_MOVE_X_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::PROFILE_MOVE_X_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
 
             send_profile_move_response(msg);
             return;
@@ -4095,7 +4154,9 @@ void COMM_MSA::slot_profile_move(DATA_MOVE msg)
         {
             //exception
             msg.result = "reject";
-            msg.message = "invalid target or speed";
+            //msg.message = "invalid target or speed";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::PROFILE_MOVE_Y_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::PROFILE_MOVE_Y_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
 
             send_profile_move_response(msg);
             return;
@@ -4151,7 +4212,9 @@ void COMM_MSA::slot_profile_move(DATA_MOVE msg)
         {
             //exception
             msg.result = "reject";
-            msg.message = "invalid target or speed";
+            //msg.message = "invalid target or speed";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::PROFILE_MOVE_CIRCLE_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::PROFILE_MOVE_CIRCLE_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
 
             send_profile_move_response(msg);
             return;
@@ -4202,7 +4265,9 @@ void COMM_MSA::slot_profile_move(DATA_MOVE msg)
         if(fabs(target_linear_) > 360.0 || fabs(target_speed_) > 60.0)
         {
             msg.result = "reject";
-            msg.message = "invalid target or speed";
+            //msg.message = "invalid target or speed";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::PROFILE_MOVE_ROTATE_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::PROFILE_MOVE_ROTATE_INVALID_TARGET_SPEED, ERROR_MANAGER::MOVE_PROFILE);
 
             send_profile_move_response(msg);
             return;
@@ -4269,7 +4334,9 @@ void COMM_MSA::handle_move_stop(DATA_MOVE &msg)
     else
     {
         msg.result = "reject";
-        msg.message = "mainwindow module not available";
+        //msg.message = "mainwindow module not available";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_STOP);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_STOP);
         send_move_response(msg);
 
         logger->write_log("[COMM_MSA] MainWindow not available", "Red");
@@ -4637,7 +4704,9 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
         if(!QDir(load_dir).exists())
         {
             msg.result = "reject";
-            msg.message = "[R0Mx0201] invalid map dir";
+            //msg.message = "[R0Mx0201] invalid map dir";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
 
             send_load_response(msg);
             return;
@@ -4657,7 +4726,9 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
     else
     {
         msg.result = "reject";
-        msg.message = "[R0Mx0201] invalid map dir";
+        //msg.message = "[R0Mx0201] invalid map dir";
+        msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
+        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::LOAD_MAP);
 
         send_load_response(msg);
         return;
@@ -4667,13 +4738,19 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
 void COMM_MSA::handle_common_load_topo(DATA_LOAD& msg)
 {
     msg.result = "reject";
-    msg.message = "[R0Sx0301]not support yet";
+    //msg.message = "[R0Sx0301]not support yet";
+    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
+    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
+    send_load_response(msg);
 }
 
 void COMM_MSA::handle_common_load_config(DATA_LOAD& msg)
 {
     msg.result = "reject";
-    msg.message = "[R0Sx0401]not support yet";
+    //msg.message = "[R0Sx0401]not support yet";
+    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_CONFIG_ERROR, ERROR_MANAGER::LOAD_CONFIG);;
+    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_CONFIG_ERROR, ERROR_MANAGER::LOAD_CONFIG);
+    send_load_response(msg);
 }
 
 // for safetyio
@@ -4812,6 +4889,18 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_TOPO));
 
     }
+    else if(message.contains("[R0Mx1006]") || message.contains("1006"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_UNKNOWN_ERROR, ERROR_MANAGER::SAVE_MAP));
+    }
+    else if(message.contains("[R0Mx1007]") || message.contains("1007"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_SAVE_FAIL_CSV, ERROR_MANAGER::SAVE_MAP));
+    }
+    else if(message.contains("[R0Mx1008]") || message.contains("1008"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::SAVE_MAP));
+    }
 
     // Localization Error Codes
     else if(message.contains("[R0Lx2001]") || message.contains("2001"))
@@ -4863,8 +4952,32 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     else if(message.contains("[R0Nx3006]") || message.contains("3006"))
     {
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_TARGET));
-
     }
+    else if(message.contains("[R0Nx3007]") || message.contains("3007"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_INIT_CONDITION_FAILED, ERROR_MANAGER::MOVE_GOAL));
+    }
+    else if(message.contains("[R0Nx3008]") || message.contains("3008"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_NOT_SUPPORTED_MULTI, ERROR_MANAGER::MOVE_GOAL));
+    }
+    else if(message.contains("[R0Nx3009]") || message.contains("3009"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_OUT_OF_RANGE, ERROR_MANAGER::MOVE_GOAL));
+    }
+    else if(message.contains("[R0Nx3010]") || message.contains("3010"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_OCCUPIED_STATIC_OBS, ERROR_MANAGER::MOVE_GOAL));
+    }
+    else if(message.contains("[R0Nx3011]") || message.contains("3011"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_METHOD_NOT_SUPPORTED, ERROR_MANAGER::MOVE_PROFILE));
+    }
+    else if(message.contains("[R0Nx3012]") || message.contains("3012"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_UNKNOWN_ERROR, ERROR_MANAGER::MOVE_PROFILE));
+    }
+
 
     // Sensor Error Codes
     else if(message.contains("[R0Sx4001]") || message.contains("4001"))
@@ -4939,6 +5052,21 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_NETWORK_ERROR, ERROR_MANAGER::MOVE_GOAL));
 
     }
+    else if(message.contains("[R0Sx5006]") || message.contains("5006"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_NOT_READY, ERROR_MANAGER::MOVE_GOAL));
+
+    } 
+    else if(message.contains("[R0Sx5007]") || message.contains("5007"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_UNKNOWN_ERROR, ERROR_MANAGER::FIELD_GET));
+
+    }
+    else if(message.contains("[R0Sx5008]") || message.contains("5008"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_CONFIG_ERROR, ERROR_MANAGER::FIELD_GET));
+
+    }
 
     // Safety Error Codes
     else if(message.contains("[R0Sx6001]") || message.contains("6001"))
@@ -4964,6 +5092,11 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     else if(message.contains("[R0Sx6005]") || message.contains("6005"))
     {
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_ZONE_VIOLATION, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx6006]") || message.contains("6006"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_FIELD_ERROR, ERROR_MANAGER::FIELD_GET));
 
     }
 
