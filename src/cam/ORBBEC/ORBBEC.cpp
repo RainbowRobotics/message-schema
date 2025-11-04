@@ -1,4 +1,8 @@
 #include "ORBBEC.h"
+namespace
+{
+    const char* MODULE_NAME = "ORBBEC";
+}
 
 ORBBEC* ORBBEC::instance(QObject* parent)
 {
@@ -46,7 +50,8 @@ void ORBBEC::init()
         extrinsic[i] = string_to_TF(config->get_cam_tf(i));
     }
 
-    printf("[ORBBEC] init\n");
+    //printf("[ORBBEC] init\n");
+    log_info("init");
 }
 
 void ORBBEC::open()
@@ -54,7 +59,8 @@ void ORBBEC::open()
     // check simulation mode
     if(config->get_use_sim())
     {
-        printf("[ORBBEC] simulation mode\n");
+        //printf("[ORBBEC] simulation mode\n");
+        log_info("simulation mode");
         return;
     }
 
@@ -171,6 +177,8 @@ void ORBBEC::grab_loop(int idx)
         grab_flag[idx] = false;
 
         logger->write_log("[ORBBEC] no camera", "Red");
+        //spdlog::error("[ORBBEC] no camera");
+        log_error("no camera");
         return;
     }
 
@@ -183,6 +191,7 @@ void ORBBEC::grab_loop(int idx)
     //    return;
     //}
     logger->write_log(QString("[ORBBEC] detected serial number, sn:%1").arg(sn));
+    log_info("detected serial number, sn:{}", sn.toStdString());
 
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
@@ -201,26 +210,30 @@ void ORBBEC::grab_loop(int idx)
 
     auto depth_profile_list = pipe->getStreamProfileList(OB_SENSOR_DEPTH);
     auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
-    printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
+    //printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
+    log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
     cur_w_depth = depth_profile->width();
     cur_h_depth = depth_profile->height();
 
     for(size_t p = 0; p < depth_profile_list->count(); p++)
     {
         auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+        //printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+        log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
     }
 
     auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
     auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
-    printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
+    //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
+    log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
     cur_w_color = color_profile->width();
     cur_h_color = color_profile->height();
 
     for(size_t p = 0; p < color_profile_list->count(); p++)
     {
         auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+        //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+        log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
     }
 
     std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
@@ -356,6 +369,7 @@ void ORBBEC::grab_loop(int idx)
         {
             QString str = QString::fromLocal8Bit(e.getMessage());
             logger->write_log("[ORBBEC] " + str, "Red");
+            log_error("ORBBEC error: {}", str.toStdString());
         }
 
         // get intrinsic cam 0
@@ -380,18 +394,21 @@ void ORBBEC::grab_loop(int idx)
             intrinsic[idx].coef_num = 8;
 
             extrinsic[idx] = string_to_TF(config->get_cam_tf(idx));
-            printf("[ORBBEC] intrinsic%d, fx:%f, fy:%f, cx:%f, cy:%f\n", idx, intrinsic[idx].fx, intrinsic[idx].fy, intrinsic[idx].cx, intrinsic[idx].cy);
+            //printf("[ORBBEC] intrinsic%d, fx:%f, fy:%f, cx:%f, cy:%f\n", idx, intrinsic[idx].fx, intrinsic[idx].fy, intrinsic[idx].cx, intrinsic[idx].cy);
+            log_info("intrinsic{}, fx:{}, fy:{}, cx:{}, cy:{}", idx, intrinsic[idx].fx, intrinsic[idx].fy, intrinsic[idx].cx, intrinsic[idx].cy);
         }
     });
 
-    printf("[ORBBEC] grab loop started\n");
+    //printf("[ORBBEC] grab loop started\n");
+    log_info("grab loop started");
     std::this_thread::sleep_for(std::chrono::milliseconds(idx * 500));
     while(grab_flag[idx])
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
     pipe->stop();
-    printf("[ORBBEC] grab loop stopped\n");
+    //printf("[ORBBEC] grab loop stopped\n");
+    log_info("grab loop stopped");
 }
 
 /*void ORBBEC::grab_loop()
