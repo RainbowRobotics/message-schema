@@ -253,7 +253,7 @@ void CAM::post_process_loop(int idx)
                         RobotModel robot_model = config->get_robot_model();
                         if(robot_model == RobotModel::S100)
                         {
-                            log_info("S100 image flip processing");
+                            //log_debug("S100 image flip processing");
                             // right camera
                             if(idx == 1)
                             {
