@@ -52,6 +52,7 @@ public:
     double get_last_vobs_update_time();
     cv::Mat get_obs_map();
     cv::Mat get_dyn_map();
+    cv::Mat get_static_map();
     cv::Mat get_vir_map();
     Eigen::Matrix4d get_map_tf();
     std::vector<Eigen::Vector3d> get_obs_pts();
@@ -71,6 +72,7 @@ public:
 
     // for plot
     void draw_robot(cv::Mat& img);
+    void draw_robot_outline(cv::Mat& img);
 
     /***********************
      * set other modules

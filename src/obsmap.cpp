@@ -315,9 +315,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     Eigen::Matrix4d cur_tf = tpp.tf;
     Eigen::Matrix4d cur_tf_inv = cur_tf.inverse();
 
-    double obsmap_min_z = config->get_obs_map_min_z();
-    double obsmap_max_z = config->get_obs_map_max_z();
-
     double step = 0.25*D2R;
     double lidar_max_range = (config->get_loc_mode() == "2D") ? config->get_lidar_2d_max_range() : config->get_lidar_3d_max_range();
     size_t range_data_size = (size_t)((2*M_PI)/step);
@@ -328,6 +325,8 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     const double robot_x_max = config->get_robot_size_x_max();
     const double robot_y_min = config->get_robot_size_y_min();
     const double robot_y_max = config->get_robot_size_y_max();
+    const double robot_z_min = config->get_robot_size_z_min();
+    const double robot_z_max = config->get_robot_size_z_max();
     const double robot_add_x = config->get_robot_size_add_x();
     const double robot_add_y = config->get_robot_size_add_y();
     
@@ -341,21 +340,19 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     {
         Eigen::Vector3d pt = tpp.pts[p];
         double z = pt[2];
-        if(z < obsmap_min_z || z > obsmap_max_z)
+        if(z < config->get_obs_map_min_z() || z > config->get_obs_map_max_z())
         {
             continue;
         }
 
-        double x = pt[0]; double y = pt[1];
+        double x = pt[0];
+        double y = pt[1];
 
-        // test S100B
-        //if(x > total_x_min && x < total_x_max && y > total_y_min && y < total_y_max)
-        //{
-        //    if(x > robot_x_min && x < robot_x_max && y > robot_y_min && y < robot_y_max)
-        //    {
-        //        continue;
-        //    }
-        //}
+        // self collision filter
+        if(check_self_collision(x, y, z, robot_x_min, robot_x_max, robot_y_min, robot_y_max, robot_z_min, robot_z_max))
+        {
+            continue;
+        }
         
         double th = std::atan2(y, x) + M_PI;
         int idx = (int)(th/step);
@@ -450,9 +447,6 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
     nanoflann::SearchParameters params;
     unimap->radius_search_kdtree_idx(&query_pt[0], sq_radius, res_idxs, params);
 
-    double obs_map_min_z = config->get_obs_map_min_z();
-    double obs_map_max_z = config->get_obs_map_max_z();
-
     cv::Mat _static_map(h, w, CV_8U, cv::Scalar(0));
     std::shared_ptr<XYZR_CLOUD> kdtree_cloud = unimap->get_kdtree_cloud();
     for(size_t p = 0; p < res_idxs.size(); p++)
@@ -471,7 +465,13 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
         Eigen::Vector3d P(x,y,z);
         Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
         //if(_P[2] < obs_map_min_z * 0.5 || _P[2] > obs_map_max_z)
-        if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
+        if(_P[2] < config->get_obs_map_min_z() || _P[2] > config->get_obs_map_max_z())
+        {
+            continue;
+        }
+
+        // self collision filter
+        if(check_self_collision(_P[0], _P[1], _P[2], robot_x_min, robot_x_max, robot_y_min, robot_y_max, robot_z_min, robot_z_max))
         {
             continue;
         }
@@ -520,7 +520,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
                     Eigen::Vector3d l_P3 = cur_tf_inv.block(0,0,3,3)*_P3 + cur_tf_inv.block(0,3,3,1);
 
                     // check z overlap
-                    if(l_P1[2] < obs_map_min_z || l_P0[2] > obs_map_max_z)
+                    if(l_P1[2] < config->get_obs_map_min_z() || l_P0[2] > config->get_obs_map_max_z())
                     {
                         // no overlap
                         continue;
@@ -844,6 +844,12 @@ cv::Mat OBSMAP::get_dyn_map()
     return dynamic_map;
 }
 
+cv::Mat OBSMAP::get_static_map()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return static_map;
+}
+
 cv::Mat OBSMAP::get_vir_map()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -917,6 +923,45 @@ void OBSMAP::draw_robot(cv::Mat& img)
     pts[0].push_back(cv::Point(uv3[0], uv3[1]));
 
     cv::fillPoly(img, pts, cv::Scalar(255, 127, 0), cv::LINE_AA);
+
+    // draw axis
+    Eigen::Vector3d P_c(0, 0, 0);
+    Eigen::Vector3d P_x(x_max, 0, 0);
+    Eigen::Vector3d P_y(0, y_max, 0);
+
+    cv::Vec2i uv_c = xy_uv(P_c[0], P_c[1]);
+    cv::Vec2i uv_x = xy_uv(P_x[0], P_x[1]);
+    cv::Vec2i uv_y = xy_uv(P_y[0], P_y[1]);
+
+    cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_y[0], uv_y[1]), cv::Scalar(0,255,0), 1, cv::LINE_AA);
+    cv::line(img, cv::Point(uv_c[0], uv_c[1]), cv::Point(uv_x[0], uv_x[1]), cv::Scalar(0,0,255), 1, cv::LINE_AA);
+}
+
+void OBSMAP::draw_robot_outline(cv::Mat& img)
+{
+    // draw rect
+    double x_min = config->get_robot_size_x_min();
+    double x_max = config->get_robot_size_x_max();
+    double y_min = config->get_robot_size_y_min();
+    double y_max = config->get_robot_size_y_max();
+
+    Eigen::Vector3d P0(x_max, y_max, 0);
+    Eigen::Vector3d P1(x_max, y_min, 0);
+    Eigen::Vector3d P2(x_min, y_min, 0);
+    Eigen::Vector3d P3(x_min, y_max, 0);
+
+    cv::Vec2i uv0 = xy_uv(P0[0], P0[1]);
+    cv::Vec2i uv1 = xy_uv(P1[0], P1[1]);
+    cv::Vec2i uv2 = xy_uv(P2[0], P2[1]);
+    cv::Vec2i uv3 = xy_uv(P3[0], P3[1]);
+
+    std::vector<std::vector<cv::Point>> pts(1);
+    pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+    pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+    pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+    pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+    cv::polylines(img, pts, true, cv::Scalar(0, 140, 255), 1, cv::LINE_AA);
 
     // draw axis
     Eigen::Vector3d P_c(0, 0, 0);
