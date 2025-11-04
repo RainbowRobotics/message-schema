@@ -4344,6 +4344,7 @@ void MainWindow::plot_obs()
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
 
         // debug
+        if(ui->ckb_PlotObs->isChecked())
         {
             cv::Mat dyn_map, static_map;
             cv::cvtColor(OBSMAP::instance()->get_dyn_map(), dyn_map, cv::COLOR_GRAY2BGR);

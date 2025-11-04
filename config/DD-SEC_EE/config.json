@@ -188,7 +188,7 @@
     	"DOCKING_ICP_ERR_THRESHOLD" : "0.003"
     },
     "map": {
-        "MAP_PATH": "/data/maps/250414_unicos_test"
+        "MAP_PATH": "/home/juyeon/maps/250414_unicos_test"
     }
 }
 

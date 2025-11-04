@@ -1293,7 +1293,7 @@ stop</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
@@ -4569,6 +4569,13 @@ Cloud</string>
         <string>OBS</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="ckb_PlotObs">
+          <property name="text">
+           <string>Plot</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
