@@ -97,6 +97,34 @@ void UNIMAP::clear()
     map_path = "";
 }
 
+QString UNIMAP::is_load_map_check(QString path)
+{
+    // clear flag
+    is_loaded.store(MAP_LOADING);
+
+    // set load map dir
+    map_path = path;
+
+    bool loaded_2d = load_2d();
+    auto future = std::async(std::launch::async, [this]()
+    {
+        return this->load_3d();
+    });
+    bool loaded_3d = future.get();
+
+    QString msg;
+
+    if(!loaded_2d)
+    {
+        return msg = "no 2d map!";
+    }
+    if(!loaded_3d)
+    {
+        return msg = "no 3d map!";
+    }
+    return msg = "all map is available!";
+}
+
 void UNIMAP::load_map(QString path)
 {
     // clear flag
@@ -295,6 +323,7 @@ bool UNIMAP::load_3d()
     QString file_path = path + "/map.las";
     if(!QFile::exists(file_path))
     {
+        qDebug()<<"no las!!!!!!!!!!!";
         return false;
     }
 

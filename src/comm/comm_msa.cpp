@@ -4698,7 +4698,8 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
 {
     QString map_name = msg.map_name;
 
-    if(map_name != ""){
+    if(map_name != "")
+    {
         QString load_dir = "/data/maps/" + map_name;
 
         if(!QDir(load_dir).exists())
@@ -4711,6 +4712,26 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
             send_load_response(msg);
             return;
         }
+
+        QString map_exist_msg = unimap->is_load_map_check(load_dir);
+        if(map_exist_msg == "no 2d map!")
+        {
+            msg.result = "reject";
+            msg.message = "[R0Mx0201] invalid map dir";
+
+
+            send_load_response(msg);
+            return;
+        }
+        else if(map_exist_msg == "no 3d map!")
+        {
+            msg.result = "reject";
+            msg.message = "[R0Mx0201] invalid map dir";
+
+            send_load_response(msg);
+            return;
+        }
+
         loc->stop();
         obsmap->clear();
         config->set_map_path(load_dir);
