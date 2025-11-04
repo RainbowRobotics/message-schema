@@ -1,5 +1,9 @@
 #include "comm_msa.h"
 #include "mainwindow.h"
+namespace
+{
+    const char* MODULE_NAME = "MSA";
+}
 
 COMM_MSA* COMM_MSA::instance(QObject* parent)
 {
@@ -316,6 +320,7 @@ void COMM_MSA::init()
         // start reconnect loop
         reconnect_timer->start(3000);
         logger->write_log("[COMM_MSA] start reconnect timer");
+        log_info("start reconnect timer");
 
         if(recv_thread == nullptr)
         {
@@ -380,6 +385,7 @@ void COMM_MSA::reconnect_loop()
         if(!config || !client)
         {
             logger->write_log("[COMM_MSA] not ready to modules");
+            log_error("not ready to modules");
             return;
         }
 
@@ -387,6 +393,7 @@ void COMM_MSA::reconnect_loop()
         if(server_ip.isEmpty())
         {
             logger->write_log("[COMM_MSA] Invalid server ip");
+            log_error("Invalid server ip");
             return;
         }
         io->connect("ws://localhost:15001");
@@ -401,10 +408,12 @@ void COMM_MSA::connected()
     {
         is_connected = true;
         logger->write_log("[COMM_MSA] connected");
+        log_info("connected to MSA server");
 
         if(!ctrl)
         {
             logger->write_log("[COMM_MSA] not ready to modules");
+            log_error("not ready to modules");
             return;
         }
 
@@ -418,10 +427,12 @@ void COMM_MSA::disconnected()
     {
         is_connected = false;
         logger->write_log("[COMM_MSA] disconnected");
+        log_error("disconnected from MSA server");
 
         if(!ctrl)
         {
             logger->write_log("[COMM_MSA] not ready to modules");
+            log_error("not ready to modules");
             return;
         }
 
@@ -576,12 +587,14 @@ void COMM_MSA::recv_message(sio::event& ev)
         {
             std::string data = msg->get_string();
             std::cout << "받은 문자열 메시지: " << data << std::endl;
+            log_info("받은 문자열 메시지: %s", data.c_str());
         }
         // number
         else if (msg->get_flag() == sio::message::flag_integer)
         {
             int val = msg->get_int();
             std::cout << "받은 정수 메시지: " << val << std::endl;
+            log_info("받은 정수 메시지: %d", val);
         }
         // JSON
         else if (msg->get_flag() == sio::message::flag_object)
@@ -1576,8 +1589,10 @@ void COMM_MSA::localization_loop()
             if(unimap->get_is_loaded() != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx0602]not loaded map";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_SEMI_AUTO);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_SEMI_AUTO);
                 send_localization_response(msg);
+                log_error("Map is not loaded");
                 return;
             }
 
@@ -1587,10 +1602,11 @@ void COMM_MSA::localization_loop()
                 if(!lidar_2d->get_is_connected())
                 {
                     msg.result = "reject";
-                    msg.message = "[R0Lx0601]not connected lidar";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_SEMI_AUTO);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_SEMI_AUTO);
                     send_localization_response(msg);
+                    log_error("LIDAR 2D is not connected");
                     return;
-
                 }
             }
             else if(loc_mode == "3D")
@@ -1598,30 +1614,36 @@ void COMM_MSA::localization_loop()
                 if(!lidar_3d->get_is_connected())
                 {
                     msg.result = "reject";
-                    msg.message = "[R0Lx0601]not connected lidar";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_SEMI_AUTO);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_SEMI_AUTO);
                     send_localization_response(msg);
-
+                    log_error("LIDAR 3D is not connected");
                     return;
                 }
             }
             else
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx0602] invalid lidar cnt";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_SEMI_AUTO);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_SEMI_AUTO);
                 send_localization_response(msg);
+                log_error("Localization mode is invalid");
                 return;
             }
 
             if(loc->get_is_busy())
             {
                 msg.result = "reject";
-                msg.message = "[R0Rx0600]already running";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::LOC_ALREADY_RUNNING, ERROR_MANAGER::LOC_SEMI_AUTO);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::LOC_ALREADY_RUNNING, ERROR_MANAGER::LOC_SEMI_AUTO);
                 send_localization_response(msg);
+                log_error("Localization is already running");
                 return;
             }
 
             // do process
             logger->write_log("[AUTO_INIT] recv_loc, try semi-auto init", "Green", true, false);
+            log_info("recv_loc, try semi-auto init");
 
             msg.result = "accept";
             msg.message = "";
@@ -1639,6 +1661,7 @@ void COMM_MSA::localization_loop()
                 if(logger)
                 {
                     logger->write_log("[AUTO_INIT] recv_loc, thread already running.", "Orange", true, false);
+                    log_info("recv_loc, thread already running.");
                 }
                 if(semi_auto_init_thread->joinable())
                 {
@@ -1651,6 +1674,7 @@ void COMM_MSA::localization_loop()
             {
                 //                qDebug()<<"start!!!!!";
                 semi_auto_init_thread = std::make_unique<std::thread>(&LOCALIZATION::start_semiauto_init, loc);
+                log_info("recv_loc, start semi-auto init");
             }
         }
         else if(command == "init")
@@ -1658,8 +1682,11 @@ void COMM_MSA::localization_loop()
             if(unimap->get_is_loaded() != MAP_LOADED)
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx0702]not loaded map";
+                //msg.message = "[R0Mx0702]not loaded map";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_INIT);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOC_INIT);
                 send_localization_response(msg);
+                log_error("Map is not loaded");
                 continue;
             }
 
@@ -1669,8 +1696,10 @@ void COMM_MSA::localization_loop()
                 if(!lidar_2d->get_is_connected())
                 {
                     msg.result = "reject";
-                    msg.message = "[R0Lx0601]not connected lidar";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_INIT);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_INIT);
                     send_localization_response(msg);
+                    log_error("LIDAR 2D is not connected");
                     return;
                 }
             }
@@ -1679,16 +1708,20 @@ void COMM_MSA::localization_loop()
                 if(!lidar_3d->get_is_connected())
                 {
                     msg.result = "reject";
-                    msg.message = "[R0Lx0601]not connected lidar";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_INIT);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::LOC_INIT);
                     send_localization_response(msg);
+                    log_error("LIDAR 3D is not connected");
                     return;
                 }
             }
             else
             {
                 msg.result = "reject";
-                msg.message = "[R0Mx0602] invalid lidar cnt";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
                 send_localization_response(msg);
+                log_error("Localization mode is invalid");
                 return;
             }
 
@@ -1708,6 +1741,7 @@ void COMM_MSA::localization_loop()
         }
         else if(command == "start")
         {
+            log_info("recv_loc, start localization");
             msg.result = "accept";
             msg.message = "";
             send_localization_response(msg);
@@ -1724,6 +1758,7 @@ void COMM_MSA::localization_loop()
         }
         else if(command == "stop")
         {
+            log_info("recv_loc, stop localization");
             msg.result = "accept";
             msg.message = "";
             send_localization_response(msg);
@@ -1735,7 +1770,9 @@ void COMM_MSA::localization_loop()
             if(is_main_window_valid())
             {
                 msg.result = "reject";
-                msg.message = "randominit 기능을 지원하지 않습니다.";
+                //msg.message = "randominit 기능을 지원하지 않습니다.";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
                 send_localization_response(msg);
                 //                msg.result = "accept";
                 //                msg.message = "";
@@ -1743,20 +1780,24 @@ void COMM_MSA::localization_loop()
                 //                QString seed = msg.seed;
                 //                MainWindow* _main = (MainWindow*)main;
                 //                QMetaObject::invokeMethod(_main, "slot_sim_random_init", Qt::QueuedConnection, Q_ARG(QString, seed));
+                log_error("randominit function is not supported");
             }
             else
             {
                 msg.result = "reject";
-                msg.message = "mainwindow module not available";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_RANDOM_INIT);
                 send_localization_response(msg);
 
                 logger->write_log("[COMM_MSA] MainWindow not available", "Red");
+                log_error("MainWindow not available for randominit");
             }
         }
         else
         {
             msg.result = "reject";
-            msg.message = "알 수 없는 command 입니다.";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::LOC_INIT);
             send_localization_response(msg);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1797,13 +1838,17 @@ void COMM_MSA::control_loop()
 
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_DockStart", Qt::QueuedConnection);
+                log_info("recv_loc, start docking");
             }
             else
             {
                 msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_START);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_START);
                 msg.message = "mainwindow module not available";
 
                 logger->write_log("[COMM_MSA] MainWindow not available", "Red");
+                log_error("MainWindow not available for docking");
             }
         }
         else if(command == DATA_CONTROL::Undock)
@@ -1815,13 +1860,17 @@ void COMM_MSA::control_loop()
 
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_UnDockStart", Qt::QueuedConnection);
+                log_info("recv_loc, start undocking");
             }
             else
             {
                 msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_STOP);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::DOCK_STOP);
                 msg.message = "mainwindow module not available";
 
                 logger->write_log("[COMM_MSA] MainWindow not available", "Red");
+                log_error("MainWindow not available for undocking");
             }
         }
         else if(command == DATA_CONTROL::RandomSeq)
@@ -1833,13 +1882,17 @@ void COMM_MSA::control_loop()
 
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "slot_sim_random_seq", Qt::QueuedConnection);
+                log_info("recv_loc, start random sequence");
             }
             else
             {
                 msg.result = "reject";
-                msg.message = "mainwindow module not available";
+                //msg.message = "mainwindow module not available";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::RANDOM_SEQ);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::RANDOM_SEQ);
 
                 logger->write_log("[COMM_MSA] MainWindow not available for mapping", "Red");
+                log_error("MainWindow not available for mapping");
             }
         }
         else if(command == DATA_CONTROL::LedControl)
@@ -2048,7 +2101,6 @@ void COMM_MSA::control_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
-
 
 void COMM_MSA::common_loop()
 {
@@ -3051,6 +3103,7 @@ void COMM_MSA::send_status()
     motorObj1->get_map()["status"]     = sio::double_message::create(ms.status_m0);
     motorObj1->get_map()["temp"]       = sio::double_message::create(ms.temp_m0);
     motorObj1->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m0) / 10.0);
+
     motorArray->get_vector().push_back(motorObj1);
 
     sio::object_message::ptr motorObj2 = sio::object_message::create();
@@ -3123,6 +3176,15 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["emo"]          = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
     robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
     robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
+
+    bool temp = (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL);
+    robotStateObj->get_map()["ss2_recovery"] = sio::bool_message::create(temp);
+    robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
+                ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
+    robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
+                ms.safety_state_bumper_stop_1 || ms.safety_state_bumper_stop_2);
+    robotStateObj->get_map()["sf_operational_stop"] = sio::bool_message::create(
+                ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
 
     auto toSioArray = [](unsigned char arr[8]) {
@@ -3302,15 +3364,6 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     send_object->get_map()["result"]     = sio::string_message::create(msg.result.toStdString());
     send_object->get_map()["message"]    = sio::string_message::create(msg.message.toStdString());
 
-    //    if(msg.command == DATA_CONTROL::Dock)
-    //    {
-    //    }
-    //    else if(msg.command == DATA_CONTROL::Undock)
-    //    {
-    //    }
-    //    else if(msg.command == DATA_CONTROL::RandomSeq)
-    //    {
-    //    }
     if(msg.command == DATA_CONTROL::Dock || msg.command == DATA_CONTROL::Undock || msg.command == DATA_CONTROL::RandomSeq)
     {
     }
@@ -3351,7 +3404,6 @@ void COMM_MSA::send_control_response(DATA_CONTROL msg)
     send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
 
     io->socket("slamnav")->emit("controlResponse", send_object);
-
 }
 
 void COMM_MSA::send_localization_response(DATA_LOCALIZATION msg)
@@ -3555,6 +3607,92 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
 
         Q_EMIT (ctrl->signal_move(msg));
     }
+    else if(method == "hpp")
+    {
+        spdlog::info("[COMM_MSA] method" "hpp" " received");
+        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO)
+        {
+            spdlog::info("[COMM_MSA] current robot type is MECANUM");
+            if(unimap->get_is_loaded() != MAP_LOADED)
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                send_move_response(msg);
+                return;
+            }
+            if(!loc->get_is_loc())
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                send_move_response(msg);
+                return;
+            }
+            QString goal_id = msg.goal_node_id;
+            if(goal_id.isEmpty())
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
+                send_move_response(msg);
+                return;
+            }
+            NODE* node = unimap->get_node_by_id(goal_id);
+            if(!node)
+            {
+                node = unimap->get_node_by_name(goal_id);
+                if(!node)
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                    send_move_response(msg);
+                    return;
+                }
+                // convert name to id
+                msg.goal_node_id = node->id;
+                msg.goal_node_name = node->name;
+            }
+            else
+            {
+                msg.goal_node_name = node->name;
+            }
+            const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+            const Eigen::Vector3d cur_pos = cur_tf.block(0, 3, 3, 1);
+            msg.cur_pos = cur_pos;
+            const Eigen::Vector3d xi = TF_to_se2(node->tf);
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2, 3);
+            msg.tgt_pose_vec[3] = xi[2];
+            // calc eta (estimation time arrival)
+            const Eigen::Matrix4d goal_tf = node->tf;
+            PATH global_path = ctrl->calc_global_path(goal_tf);
+            if(global_path.pos.size() < 2)
+            {
+                msg.result = "accept";
+                msg.message = "success";
+                msg.remaining_time = 0.0;
+            }
+            else
+            {
+                msg.result = "accept";
+                msg.message = "success";
+            }
+            send_move_response(msg);
+            // pure pursuit
+            Q_EMIT (ctrl->signal_move(msg));
+        }
+        else
+        {
+            msg.result = "reject";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+            send_move_response(msg);
+        }
+    }
+
     else
     {
         msg.result = "reject";
@@ -3660,6 +3798,89 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
             Q_EMIT (ctrl->signal_move(msg));
         }
 
+    }
+    else if(method == "hpp")
+    {
+        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO)
+        {
+            if(unimap->get_is_loaded() != MAP_LOADED)
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::MOVE_TARGET);
+                send_move_response(msg);
+                return;
+            }
+            if(!loc->get_is_loc())
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::MOVE_TARGET);
+                send_move_response(msg);
+                return;
+            }
+            QString goal_id = msg.goal_node_id;
+            if(goal_id.isEmpty())
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_GOAL);
+                send_move_response(msg);
+                return;
+            }
+            NODE* node = unimap->get_node_by_id(goal_id);
+            if(!node)
+            {
+                node = unimap->get_node_by_name(goal_id);
+                if(!node)
+                {
+                    msg.result = "reject";
+                    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_GOAL);
+                    send_move_response(msg);
+                    return;
+                }
+                // convert name to id
+                msg.goal_node_id = node->id;
+                msg.goal_node_name = node->name;
+            }
+            else
+            {
+                msg.goal_node_name = node->name;
+            }
+            const Eigen::Matrix4d cur_tf = loc->get_cur_tf();
+            const Eigen::Vector3d cur_pos = cur_tf.block(0, 3, 3, 1);
+            msg.cur_pos = cur_pos;
+            const Eigen::Vector3d xi = TF_to_se2(node->tf);
+            msg.tgt_pose_vec[0] = xi[0];
+            msg.tgt_pose_vec[1] = xi[1];
+            msg.tgt_pose_vec[2] = node->tf(2, 3);
+            msg.tgt_pose_vec[3] = xi[2];
+            // calc eta (estimation time arrival)
+            const Eigen::Matrix4d goal_tf = node->tf;
+            PATH global_path = ctrl->calc_global_path(goal_tf);
+            if(global_path.pos.size() < 2)
+            {
+                msg.result = "accept";
+                msg.message = "success";
+                msg.remaining_time = 0.0;
+            }
+            else
+            {
+                msg.result = "accept";
+                msg.message = "success";
+            }
+            send_move_response(msg);
+            // pure pursuit
+            Q_EMIT (ctrl->signal_move(msg));
+        }
+        else
+        {
+            msg.result = "reject";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_TARGET);
+            send_move_response(msg);
+        }
     }
     else if(method == "tng")
     {
@@ -4540,6 +4761,265 @@ void COMM_MSA::send_safetyio_response(const DATA_SAFTYIO& msg)
 
     //    sio::message::ptr res = sio::string_message::create(doc.toJson().toStdString());
     io->socket()->emit("controlResponse", send_obj);
+}
+QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
+{
+    QJsonObject errorCode;
+    QString error_code = "Unknown";
+    QString alarm_code = "Unknown";
+    QString category = "Unknown";
+    QString cause = "Unknown";
+    QString level = "Critical";
+    QString solution = "Contact system administrator required";
+    QString remark = "";
+
+    auto apply = [&](const ERROR_MANAGER::ErrorInfo& error_detail)
+    {
+        error_code =    error_detail.error_code;
+        alarm_code =    error_detail.alarm_code;
+        category =      error_detail.category;
+        cause =         error_detail.cause;
+        level =         error_detail.level;
+        solution =      error_detail.solution;
+        remark =        error_detail.remark;
+    };
+    
+    // Error code mapping
+
+    // Map Management Error Codes
+    if(message.contains("[R0Mx1001]") || message.contains("1001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_NOT_LOADED, ERROR_MANAGER::LOAD_MAP));
+
+    }
+    else if(message.contains("[R0Mx1002]") || message.contains("1002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_MAP));
+
+    }
+    else if(message.contains("[R0Mx1003]") || message.contains("1003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP));
+
+    }
+    else if(message.contains("[R0Mx1004]") || message.contains("1004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_MAP));
+
+    }
+    else if(message.contains("[R0Mx1005]") || message.contains("1005"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_TOPO));
+
+    }
+
+    // Localization Error Codes
+    else if(message.contains("[R0Lx2001]") || message.contains("2001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::LOC_NOT_INIT, ERROR_MANAGER::LOC_START));
+
+    }
+    else if(message.contains("[R0Lx2002]") || message.contains("2002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::LOC_SENSOR_ERROR, ERROR_MANAGER::LOC_START));
+
+    }
+    else if(message.contains("[R0Lx2003]") || message.contains("2003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::LOC_ALREADY_RUNNING, ERROR_MANAGER::LOC_START));
+
+    }
+    else if(message.contains("[R0Lx2004]") || message.contains("2004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::LOC_INIT_FAILED, ERROR_MANAGER::LOC_INIT));
+
+    }
+
+    // MOVE - Navigation Error Codes
+    else if(message.contains("[R0Nx3001]") || message.contains("3001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_NO_TARGET, ERROR_MANAGER::MOVE_TARGET));
+
+    }
+    else if(message.contains("[R0Nx3002]") || message.contains("3002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_INVALID, ERROR_MANAGER::MOVE_TARGET));
+
+    }
+    else if(message.contains("[R0Nx3003]") || message.contains("3003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_OCCUPIED, ERROR_MANAGER::MOVE_TARGET));
+
+    }
+    else if(message.contains("[R0Nx3004]") || message.contains("3004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_TARGET_OUT_RANGE, ERROR_MANAGER::MOVE_TARGET));
+
+    }
+    else if(message.contains("[R0Nx3005]") || message.contains("3005"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_NODE_NOT_FOUND, ERROR_MANAGER::MOVE_TARGET));
+    }
+    else if(message.contains("[R0Nx3006]") || message.contains("3006"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOVE_EMPTY_NODE_ID, ERROR_MANAGER::MOVE_TARGET));
+
+    }
+
+    // Sensor Error Codes
+    else if(message.contains("[R0Sx4001]") || message.contains("4001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_LIDAR_DISCON, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4002]") || message.contains("4002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_LIDAR_DATA_ERROR, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4003]") || message.contains("4003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_LIDAR_CALIB_ERROR, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4004]") || message.contains("4004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_IMU_DISCON, ERROR_MANAGER::LOC_START));
+
+    }
+    else if(message.contains("[R0Sx4005]") || message.contains("4005"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_IMU_DATA_ERROR, ERROR_MANAGER::LOC_START));
+
+    }
+    else if(message.contains("[R0Sx4006]") || message.contains("4006"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_CAM_DISCON, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4007]") || message.contains("4007"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_CAM_DATA_ERROR, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4008]") || message.contains("4008"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_QR_ERROR, ERROR_MANAGER::MAPPING_START));
+
+    }
+    else if(message.contains("[R0Sx4009]") || message.contains("4009"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SENSOR_TEMP_ERROR, ERROR_MANAGER::FIELD_GET));
+
+    }
+
+    // System Error Codes
+    else if(message.contains("[R0Sx5001]") || message.contains("5001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_NOT_SUPPORTED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx5002]") || message.contains("5002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_MULTI_MODE_LIMIT, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx5003]") || message.contains("5003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_PROCESS_START_FAILED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx5004]") || message.contains("5004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx5005]") || message.contains("5005"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SYS_NETWORK_ERROR, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+
+    // Safety Error Codes
+    else if(message.contains("[R0Sx6001]") || message.contains("6001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_EMO_RELEASED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx6002]") || message.contains("6002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_EMO_PRESSED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx6003]") || message.contains("6003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_BUMPER_PRESSED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx6004]") || message.contains("6004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_OBS_DETECTED, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+    else if(message.contains("[R0Sx6005]") || message.contains("6005"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::SAFETY_ZONE_VIOLATION, ERROR_MANAGER::MOVE_GOAL));
+
+    }
+
+    // Battery Error Codes
+    else if(message.contains("[R0Bx7001]") || message.contains("7001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::BAT_NOT_CHARGING, ERROR_MANAGER::FIELD_GET));
+
+    }
+    else if(message.contains("[R0Bx7002]") || message.contains("7002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::BAT_LOW, ERROR_MANAGER::FIELD_GET));
+
+    }
+    else if(message.contains("[R0Bx7003]") || message.contains("7003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::BAT_CRITICAL, ERROR_MANAGER::FIELD_GET));
+
+    }
+    else if(message.contains("[R0Bx7004]") || message.contains("7004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::BAT_POWER_ERROR, ERROR_MANAGER::FIELD_GET));
+
+    }
+
+    // Motor Error Codes
+    else if(message.contains("[R0Mx8001]") || message.contains("8001"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOTOR_CONNECTION_LOST, ERROR_MANAGER::MOTOR_CONTROL));
+
+    }
+    else if(message.contains("[R0Mx8002]") || message.contains("8002"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOTOR_OVERHEAT, ERROR_MANAGER::MOTOR_CONTROL));
+
+    }
+    else if(message.contains("[R0Mx8003]") || message.contains("8003"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOTOR_OVERLOAD, ERROR_MANAGER::MOTOR_CONTROL));
+
+    }
+    else if(message.contains("[R0Mx8004]") || message.contains("8004"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MOTOR_ENCODER_ERROR, ERROR_MANAGER::MOTOR_CONTROL));
+
+    }
+
+    errorCode["error_code"] = error_code;
+    errorCode["alarm_code"] = alarm_code;
+    errorCode["category"] = category;
+    errorCode["cause"] = cause;
+    errorCode["level"] = level;
+    errorCode["solution"] = solution;
+    errorCode["timestamp"] = QDateTime::currentDateTime().toUTC().toString(Qt::ISODate);
+    
+    return errorCode;
 }
 
 

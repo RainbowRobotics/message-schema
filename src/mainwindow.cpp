@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     SAFETY::instance(this);
 
     TASK::instance(this);
+    ERROR_MANAGER::instance(this);
 
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
@@ -108,8 +109,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
     connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
-    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                      // move clicked node
-    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                      // move clicked node
+    connect(ui->bt_AutoPath_hpp,      SIGNAL(clicked()),                    this, SLOT(bt_AutoPath_hpp()));                                  // move clicked node
+    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                // move clicked node
+    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                 // move clicked node
 
     // dockcontrol
     connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
@@ -130,6 +132,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_QuickAnnotStart,   SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
+    connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+    connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
+    connect(ui->bt_QuickAddCloud,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
 
     // safety function
     connect(ui->bt_ClearMismatch,      SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
@@ -179,6 +185,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     plot_timer = new QTimer(this);
     connect(plot_timer, SIGNAL(timeout()), this, SLOT(plot_loop()));
     plot_timer->start(50);
+
+    // qa timer (quick annotation)
+    qa_timer = new QTimer(this);
+    connect(qa_timer, SIGNAL(timeout()), this, SLOT(qa_loop()));
 }
 
 MainWindow::~MainWindow()
@@ -372,7 +382,8 @@ void MainWindow::init_modules()
 
     // cam module init
     {
-        if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
+        //if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
+         if(CONFIG::instance()->get_use_cam())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
             CAM::instance()->set_logger_module(LOGGER::instance());
@@ -2257,6 +2268,131 @@ void MainWindow::bt_QuickAddNode()
     //printf("[QA_Node] quick add node\n");
     //spdlog::info("[QA_Node] quick add node");
     log_info("quick add node");
+}
+void MainWindow::bt_QuickAnnotStart()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("check localization");
+        return;
+    }
+
+    {
+        Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+        //qa_last_node = UNIMAP::instance()->add_node(cur_tf, "GOAL");
+        if(UNIMAP::instance()->add_node(cur_tf, "GOAL"))
+        {
+            auto nodes = UNIMAP::instance()->get_nodes_origin();
+            if(nodes && !nodes->empty())
+            {
+                qa_last_node = nodes->back().id; 
+                log_info("[QA] Initial GOAL node added: {}", qa_last_node.toStdString());
+            }
+            else
+            {
+                log_error("[QA] Failed to get node list after adding GOAL node");
+                return;
+            }
+        }
+        else
+        {
+            log_error("[QA] Failed to add initial GOAL node");
+            return;
+        }
+
+        topo_update();
+    }
+    is_qa_running = true;
+    qa_timer->start(qa_interval_ms);
+
+    log_info("quick annot start");
+}
+
+void MainWindow::bt_QuickAnnotStop()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("check map load");
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("check localization");
+        return;
+    }
+
+    //UNIMAP::instance()->stop_annotation();
+    
+    is_qa_running = false;
+    qa_timer->stop();
+    
+
+    NODE* last_node = UNIMAP::instance()->get_node_by_id(qa_last_node);
+    if(last_node == nullptr)
+    {
+        log_warn("[QA] stop - last node not found");
+        qa_last_node = "";
+        return;
+    }
+
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+    double qa_step_distance = CONFIG::instance()->get_qa_step_distance();
+    double qa_stop_min_distance = CONFIG::instance()->get_qa_stop_min_distance();
+
+    // Calculate distance from last node
+    double d = (cur_tf.block(0,3,3,1) - last_node->tf.block(0,3,3,1)).norm();
+    log_info("[QA] Distance from last node: {:.2f} m, qa_distance: {:.2f} m", d, qa_step_distance);
+
+    const double qa_stop_min_d = qa_step_distance * qa_stop_min_distance; 
+
+    if(d >= qa_stop_min_d)
+    {
+        log_info("[QA] Adding final GOAL node at distance: {:.2f}m (min: {:.2f}m)", d, qa_stop_min_d);
+        //if(UNIMAP::instance()->add_node(cur_tf, "GOAL"))
+        //{
+        //    auto nodes = UNIMAP::instance()->get_nodes_origin();
+        //    if(nodes && !nodes->empty())
+        //    {
+        //        log_info("[QA] Final GOAL node added successfully");
+        //    }
+        //    else
+        //    {
+        //        log_error("[QA] Failed to get node list after adding final GOAL node");
+        //    }
+        //}
+        //else
+        //{
+        //    log_error("[QA] Failed to add final GOAL node");
+        //}
+
+        topo_update();
+    }
+    else
+    {
+        log_info("[QA] Distance too small ({:.2f}m < {:.2f}m), no final node added", d, qa_stop_min_d);
+    }
+
+    qa_last_node = "";
+    log_info("quick annot stop completed");
+}
+
+void MainWindow::bt_QuickAddCloud()
+{
+    log_info("bt_QuickAddCloud called");
+
+}
+
+void MainWindow::bt_QuickAddAruco()
+{
+    log_info("bt_QuickAddAruco called");
+
 }
 
 
@@ -4468,7 +4604,7 @@ void MainWindow::plot_cam()
         if (cam_tf.size() >= 4)
         {
             bool ok = false;
-            double yaw_deg = cam_tf[3].toDouble(&ok);
+            double yaw_deg = cam_tf[5].toDouble(&ok);
             if (ok && fabs(yaw_deg - 180.0) < 1e-3)
             {
                 cv::flip(plot, plot, 0);
@@ -4854,4 +4990,75 @@ void MainWindow::getIPv4()
     }
 
     ui->lb_RobotIP->setText(chosen);
+}
+void MainWindow::qa_loop()
+{
+    if(!is_qa_running)
+        return;
+
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        log_warn("[QA] map not loaded");
+        qa_timer->stop();
+        is_qa_running = false;
+        return;
+    }
+
+    if(LOCALIZATION::instance()->get_is_loc() == false)
+    {
+        log_warn("[QA] localization not ready");
+        qa_timer->stop();
+        is_qa_running = false;
+        return;
+    }
+
+    // Get last node
+    if(qa_last_node.isEmpty())
+    {
+        log_warn("[QA] loop - last node empty");
+        qa_timer->stop();
+        is_qa_running = false;
+        return;
+    }
+
+    NODE* last_node = UNIMAP::instance()->get_node_by_id(qa_last_node);
+    if(last_node == nullptr)
+    {
+        log_warn("[QA] loop - last node not found");
+        qa_timer->stop();
+        is_qa_running = false;
+        return;
+    }
+
+    // Get current transform
+    Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+
+    // Calculate distance from last node
+    double d = (cur_tf.block(0,3,3,1) - last_node->tf.block(0,3,3,1)).norm();
+
+
+    double qa_step_distance = CONFIG::instance()->get_qa_step_distance();
+
+    if(d > qa_step_distance)
+    {
+        // Add new node - add_node() returns bool, not QString
+        if(UNIMAP::instance()->add_node(cur_tf, "ROUTE"))
+        {
+            auto nodes = UNIMAP::instance()->get_nodes_origin();
+            if(nodes && !nodes->empty())
+            {
+                QString new_node_id = nodes->back().id;
+                
+                //UNIMAP::instance()->add_link2(qa_last_node, new_node_id);
+                qa_last_node = new_node_id;
+
+                topo_update();
+                log_info("[QA] Added new route node at distance: {:.2f}m", d);
+            }
+        }
+        else
+        {
+            log_warn("[QA] Failed to add new node");
+        }
+    }
 }

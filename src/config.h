@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include "global_defines.h"
+#include "error_manager.h"
 
 #include <cmath>
 #include <algorithm>
@@ -136,8 +137,8 @@ public:
 
     bool get_log_enable_file_output();  // enable/disable file output
     QString get_log_file_path();        // get log file path
-    void setup_spdlog_level();          // setup spdlog level from config
-    void setup_spdlog_file_output();    // setup spdlog file output from config
+    void set_spdlog_level();            // setup spdlog level from config
+    void set_spdlog_file_output();      // setup spdlog file output from config
 
     /***********************
      * 2d lidar sensor
@@ -188,9 +189,9 @@ public:
     int get_mapping_icp_do_accum_num();         // Cumulative number of dynamic obstacle judgments
     int get_mapping_kfrm_update_num();          // Number of frames required to update a keyframe
     int get_mapping_window_size();              // Mapping window size
-    double get_mapping_icp_cost_threshold();   // ICP cost threadhold
+    double get_mapping_icp_cost_threshold();    // ICP cost threadhold
     double get_mapping_icp_error_threshold();   // ICP error threadhold
-    double get_mapping_icp_view_threshold();   // ICP view threadhold
+    double get_mapping_icp_view_threshold();    // ICP view threadhold
     double get_mapping_kfrm_lc_try_dist();      // Loop Closing try distance
     double get_mapping_kfrm_lc_try_overlap();   // Loop Closing try overlap
     double get_mapping_voxel_size();            // common voxel size
@@ -311,6 +312,20 @@ public:
     bool has_missing_variables();
     void show_missing_variables_dialog();
 
+    /***********************
+     * QA
+     ***********************/
+    double get_qa_step_distance();
+    double get_qa_stop_min_distance();
+
+    /***********************
+     * auto update config
+     ***********************/
+    void set_update_config_file();
+    bool set_backup_config_file();
+    void set_restore_config_file_backup();
+    void set_default_config_template();
+
 private:
 
     /***********************
@@ -334,6 +349,7 @@ private:
     void load_camera_configs(const QJsonObject& obj);
     void load_sensor_specific_configs(const QJsonObject& obj);
     void load_safety_config(const QJsonObject& obj);
+    void load_qa_config(const QJsonObject& obj);
 
     /***********************
      * helper functions for loading json
@@ -344,6 +360,39 @@ private:
     void check_and_set_double(const QJsonObject& obj, const QString& key, double& target, const QString& section);
 
     void add_missing_variable(const QString& section, const QString& variable);
+
+    /***********************
+     * default config objects
+     ***********************/
+    QJsonObject set_default_config_object();
+    QJsonObject merge_config_objects(const QJsonObject& existing, const QJsonObject& defaults);  
+    void add_missing_keys_to_section(QJsonObject& target, const QJsonObject& defaults, const QString& section_name);
+
+    QJsonObject set_default_robot_config();
+    QJsonObject set_default_sensors_config();
+    QJsonObject set_default_localization_config();
+    QJsonObject set_default_network_config();
+    QJsonObject set_default_debug_config();
+    QJsonObject set_default_logging_config();
+    QJsonObject set_default_motor_config();
+    QJsonObject set_default_localization_2d_config();
+    QJsonObject set_default_localization_3d_config();
+    QJsonObject set_default_mapping_config();
+    QJsonObject set_default_obstacle_config();
+    QJsonObject set_default_control_config();
+    QJsonObject set_default_docking_config();
+    QJsonObject set_default_safety_config();
+    QJsonObject set_default_qa_config();
+
+    QJsonObject set_default_sick_config();
+    QJsonObject set_default_laki_config();
+    QJsonObject set_default_rplidar_config();
+    QJsonObject set_default_livox_config();
+    QJsonObject set_default_orbbec_config();
+    
+    QJsonArray set_default_lidar_2d_config_array();
+    QJsonArray set_default_lidar_3d_config_array();
+    QJsonArray set_default_cam_config_array();
 
 private:
     explicit CONFIG(QObject *parent = nullptr);
@@ -563,6 +612,10 @@ private:
     bool USE_SAFETY_OBSTACLE_DETECT = false;
     bool USE_SAFETY_BUMPER = false;
     bool USE_SAFETY_INTERLOCK = false;
+
+    // QA
+    double QA_STEP_DISTANCE = 0.7;
+    double QA_STOP_MIN_DISTANCE = 0.3;
     
 
     QStringList load_folder_list();

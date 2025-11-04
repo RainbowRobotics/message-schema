@@ -3655,7 +3655,17 @@ void AUTOCONTROL::control_loop()
             }
 
             // obs check
-            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
+
+            double temp_w = w;
+            if(std::abs(temp_w) < 0.001)
+            {
+                temp_w = 0.001;
+            }
+
+            double temp_predict_time = std::min(abs(err_th/temp_w),config->get_obs_predict_time());
+            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, temp_predict_time, cur_tf);
+
+//            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
             obs_value = obsmap->is_path_collision(traj, true);
             if(obs_value != OBS_NONE)
             {
@@ -3703,9 +3713,10 @@ void AUTOCONTROL::control_loop()
                 Eigen::Vector3d _goal_pos = cur_tf_inv.block(0,0,3,3)*goal_pos + cur_tf_inv.block(0,3,3,1);
                 double v0 = cur_vel[0];
                 double v;
+                double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
                 if(back_mode)
                 {
-                    double v_ref = -std::abs(config->get_drive_goal_approach_gain()*_goal_pos[0]);
+                    double v_ref = -std::abs(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt);
                     double v_min = std::max(v0 - params.LIMIT_V_DCC*dt, -params.ED_V);
                     double v_max = 0.0;
 
@@ -3713,25 +3724,17 @@ void AUTOCONTROL::control_loop()
                 }
                 else
                 {
-                    v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0], v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
+                    v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
                 }
                 if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
                 {
-                    double local_dx = _goal_pos[0];
-                    double local_dy = _goal_pos[1];
+//                    double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
 
-                    double local_goal_d = std::sqrt(local_dx * local_dx + local_dy * local_dy);
-                    double local_dir_x = local_dx / (local_goal_d + 1.0e-6);
-                    double local_dir_y = local_dy / (local_goal_d + 1.0e-6);
+                    qDebug()<<"remain_dt !!!!!!!! : "<<remain_dt;
+                    double vx = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, cur_vel[0] - params.LIMIT_V_DCC*dt, cur_vel[0] + params.LIMIT_V_ACC*dt);
+                    double vy = saturation(config->get_drive_goal_approach_gain()*_goal_pos[1]/remain_dt, cur_vel[1] - params.LIMIT_V_DCC*dt, cur_vel[1] + params.LIMIT_V_ACC*dt);
 
-                    double local_vx = local_dir_x * v;
-                    double local_vy = local_dir_y * v;
-
-                    double vx_sat = saturation(local_vx, cur_vel[0] - params.LIMIT_V_DCC*dt, cur_vel[0] + params.LIMIT_V_DCC*dt);
-                    double vy_sat = saturation(local_vy, cur_vel[1] - params.LIMIT_V_DCC*dt, cur_vel[1] + params.LIMIT_V_DCC*dt);
-
-                    local_vx = vx_sat;
-                    local_vy = vy_sat;
+//                    std::cout << "remain_dt: " << remain_dt << "   vx,vy: " << vx << ", " << vy << std::endl;
 
                     double _err_th = deltaRad(goal_xi[2], cur_xi[2]);
                     double k_wz = 1.0 - std::exp(-std::abs(_err_th) * 3.0);
@@ -3745,18 +3748,18 @@ void AUTOCONTROL::control_loop()
                     {
                         if(cmd_method == CommandMethod::METHOD_HPP)
                         {
-                            mobile->moveQD(local_vx, local_vy, wz, 1);
+                            mobile->moveQD(vx, vy, wz, 1);
                             //                                    std::cout << "MoveQD : HPP " << local_vx << ", " << local_vy << ", " << wz << std::endl;
                         }
                         else if(cmd_method == CommandMethod::METHOD_SIDE)
                         {
-                            mobile->moveQD(local_vx, local_vy, wz, 2);
+                            mobile->moveQD(vx, vy, wz, 2);
                             //                                    std::cout << "MoveQD : SIDE " << local_vx << ", " << local_vy << ", " << wz << std::endl;
                         }
                     }
                     else
                     {
-                        mobile->move(local_vx, local_vy, wz);
+                        mobile->move(vx, vy, wz);
                     }
 
                     //                            mobile->move(local_vx, local_vy, wz);
@@ -4015,12 +4018,9 @@ void AUTOCONTROL::control_loop()
                 ref_v = local_path.ref_v[cur_idx];
             }
 
-            //            std::cout<<"ref_v :"<<ref_v<<std::endl;
             // calc control input
             double v0 = cur_vel[0];
             double v = std::min<double>((params.LIMIT_V/params.DRIVE_L)*err_d, ref_v);
-
-            //            std::cout<<"vvvvvv:"<<v<<std::endl;
 
             if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
             {
@@ -4029,9 +4029,7 @@ void AUTOCONTROL::control_loop()
 
             if(back_mode)
             {
-//                std::cout<<"obs_decel_v : "<<obs_decel_v<<std::endl;
                 v = saturation(v, -obs_decel_v, 0.0);
-                //                   std::cout<<"vv111111v:"<<v<<std::endl;
 
                 if(v0 < 0)
                 {
@@ -4179,11 +4177,22 @@ void AUTOCONTROL::control_loop()
             }
 
             // obs check
+//            double temp_w = w;
+//            if(std::abs(temp_w) < 0.001)
+//            {
+//                temp_w = 0.001;
+//            }
+
+//            double temp_predict_time = std::min(abs(err_th/temp_w),config->get_obs_predict_time());
+//            std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 5.0*D2R);
+
+
             std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
             obs_value = obsmap->is_path_collision(traj, true);
             if(obs_value == OBS_DYN)
             {
                 mobile->move(0, 0, 0);
+                qDebug()<<"obs!!!!!!!!!!";
 
                 fsm_state = AUTO_FSM_OBS;
                 obs_state = AUTO_OBS_WAIT2;
@@ -4757,11 +4766,8 @@ void AUTOCONTROL::obs_loop()
             std::vector<Eigen::Matrix4d> traj;
             double predict_time = config->get_obs_predict_time();
 
-            //            std::cout << "params.LIMIT_V+0.01: " << params.LIMIT_V+0.01 << std::endl;
-
             for(double vv = config->get_obs_map_min_v(); vv <= params.LIMIT_V+0.01; vv += 0.025)
             {
-                //                std::cout << "checking vv: " << vv << std::endl;
                 traj = calc_trajectory(Eigen::Vector3d(vv, 0, 0), 0.2, predict_time, cur_tf);
 
                 bool is_collision = false;
@@ -4809,7 +4815,7 @@ void AUTOCONTROL::obs_loop()
             {
                 //                Forward filtering (within 45 degrees)
                 Eigen::Vector2d obs_vec(pt[0] - cur_pos[0], pt[1] - cur_pos[1]);
-                double forward_component = heading_vec.dot(obs_vec.normalized());
+//                double forward_component = heading_vec.dot(obs_vec.normalized());
 
                 bool near_traj = false;
                 for(const auto& tf : traj)
@@ -4921,6 +4927,7 @@ void AUTOCONTROL::obs_loop()
                 //{
                 //    limited_decel = std::min(limited_decel,prev_decel + AUTOCONTROL_INFO::obs_decel_recover_rate);
                 //}
+//                qDebug()<<"auto obs_dist : "<<obs_dist;
 
                 cur_obs_dist      = obs_dist;
                 cur_obs_value     = obs_value;

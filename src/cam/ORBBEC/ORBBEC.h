@@ -14,10 +14,9 @@
 // qt
 #include <QObject>
 
-//constexpr int depth_profile_idx = 55;  // depth_profile(55),  w:640, h:480, fps:30, format:11
-//constexpr int color_profile_idx = 124; // color_profile(124), w:320, h:180, fps:5, format:22
-constexpr int depth_profile_idx = 4;  // depth_profile(55),  w:640, h:480, fps:30, format:11
-constexpr int color_profile_idx = 34; // color_profile(124), w:320, h:180, fps:5, format:22
+//constexpr int depth_profile_idx = 28;  // w:640, h:400, fps:30, format:8
+constexpr int depth_profile_idx = 4;  // w:640, h:400, fps:30, format:8
+constexpr int color_profile_idx = 51; // w:640, h:360, fps:5, format:22
 
 class ORBBEC : public QObject
 {

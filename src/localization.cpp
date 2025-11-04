@@ -1140,6 +1140,7 @@ void LOCALIZATION::obs_loop()
                 TIME_PTS scan = cam->get_scan(i);
                 if(!scan.pts.empty())
                 {
+//                    qDebug()<<"use cam!!! : "<<i;
                     Eigen::Matrix4d tf0 = _cur_tf.inverse() * get_best_tf(scan.t);
                     Eigen::Matrix3d R0 = tf0.block(0,0,3,3);
                     Eigen::Vector3d t0 = tf0.block(0,3,3,1);
