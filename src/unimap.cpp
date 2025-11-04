@@ -753,31 +753,98 @@ void UNIMAP::save_node()
     // get save folder
     QString path = map_path;
 
-    // save topo.json
-    QString topo_path = path + "/topo.json";
-    QFile topo_file(topo_path);
-    if(topo_file.open(QIODevice::WriteOnly|QFile::Truncate))
+    // decide target by presence of node.json
+    QString node_path = path + "/node.json";
+    QFileInfo node_info(node_path);
+
+    if(node_info.exists() && node_info.isFile())
     {
-        QJsonArray arr;
-        for(size_t p = 0; p < nodes->size(); p++)
+        // save as node.json
+        QFile node_file(node_path);
+        if(node_file.open(QIODevice::WriteOnly | QFile::Truncate))
         {
-            QJsonObject obj;
-            obj["id"] = (*nodes)[p].id;
-            obj["name"] = (*nodes)[p].name;
-            obj["type"] = (*nodes)[p].type;
-            obj["info"] = (*nodes)[p].info;
-            obj["pose"] = TF_to_string((*nodes)[p].tf);
-            obj["links"] = links_to_array((*nodes)[p].linked);
+            QJsonArray arr;
+            for(size_t p = 0; p < nodes->size(); p++)
+            {
+                const NODE &n = (*nodes)[p];
 
-            arr.append(obj);
+                QJsonObject obj;
+                obj["id"]   = n.id;
+                obj["name"] = n.name;
+                obj["type"] = n.type;
+                obj["info"] = n.info;
+                obj["pose"] = TF_to_string(n.tf);
+
+                // build links array as objects
+                QJsonArray link_arr;
+                for(size_t i = 0; i < n.linked.size(); i++)
+                {
+                    QString ed = n.linked[i];
+
+                    QJsonObject lo;
+                    lo["id"] = ed;
+
+                    // attach attributes from special_links if exists
+                    for(size_t k = 0; k < special_links.size(); k++)
+                    {
+                        const LINK_INFO &s = special_links[k];
+                        if(s.st_id == n.id && s.ed_id == ed)
+                        {
+                            if(!s.info.isEmpty())
+                            {
+                                lo["info"] = s.info;
+                            }
+                            if(s.speed > 0.0)
+                            {
+                                lo["speed"] = s.speed;
+                            }
+                            break;
+                        }
+                    }
+
+                    link_arr.append(lo);
+                }
+
+                obj["links"] = link_arr;
+                arr.append(obj);
+            }
+
+            QJsonDocument doc(arr);
+            node_file.write(doc.toJson());
+            node_file.close();
+
+            spdlog::info("[UNIMAP] {} saved", node_path.toStdString());
         }
+        return;
+    }
+    else
+    {
+        // save as topo.json
+        QString topo_path = path + "/topo.json";
+        QFile topo_file(topo_path);
+        if(topo_file.open(QIODevice::WriteOnly|QFile::Truncate))
+        {
+            QJsonArray arr;
+            for(size_t p = 0; p < nodes->size(); p++)
+            {
+                QJsonObject obj;
+                obj["id"] = (*nodes)[p].id;
+                obj["name"] = (*nodes)[p].name;
+                obj["type"] = (*nodes)[p].type;
+                obj["info"] = (*nodes)[p].info;
+                obj["pose"] = TF_to_string((*nodes)[p].tf);
+                obj["links"] = links_to_array((*nodes)[p].linked);
 
-        QJsonDocument doc(arr);
-        topo_file.write(doc.toJson());
-        topo_file.close();
+                arr.append(obj);
+            }
 
-        //printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
-        spdlog::info("[UNIMAP] {} saved", topo_path.toStdString());
+            QJsonDocument doc(arr);
+            topo_file.write(doc.toJson());
+            topo_file.close();
+
+            //printf("[UNIMAP] %s saved\n", topo_path.toLocal8Bit().data());
+            spdlog::info("[UNIMAP] {} saved", topo_path.toStdString());
+        }
     }
 }
 
