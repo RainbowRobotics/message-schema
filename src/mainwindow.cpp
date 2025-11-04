@@ -2879,11 +2879,12 @@ void MainWindow::watch_loop()
                 else
                 {
                     Eigen::Vector2d ieir = LOCALIZATION::instance()->get_cur_ieir();
-                    if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_ratio() ||
-                            ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_error())
+
+                    if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_error() ||
+                            ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_ratio())
                     {
                         loc_fail_cnt++;
-                        if(loc_fail_cnt > 3)
+                        if(loc_fail_cnt > 10)
                         {
                             LOCALIZATION::instance()->set_cur_loc_state("fail");
                             //                            led_color = LED_MAGENTA_BLINK;
