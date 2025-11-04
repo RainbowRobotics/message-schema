@@ -1127,8 +1127,8 @@ out</string>
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>250</x>
-               <y>570</y>
+               <x>120</x>
+               <y>590</y>
                <width>31</width>
                <height>31</height>
               </rect>
@@ -1188,9 +1188,9 @@ stop</string>
              <property name="geometry">
               <rect>
                <x>120</x>
-               <y>610</y>
+               <y>630</y>
                <width>41</width>
-               <height>41</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="font">
@@ -1199,7 +1199,7 @@ stop</string>
               </font>
              </property>
              <property name="text">
-              <string>↖</string>
+              <string>←</string>
              </property>
              <property name="autoRepeat">
               <bool>false</bool>
@@ -1212,9 +1212,9 @@ stop</string>
              <property name="geometry">
               <rect>
                <x>200</x>
-               <y>610</y>
+               <y>630</y>
                <width>41</width>
-               <height>41</height>
+               <height>21</height>
               </rect>
              </property>
              <property name="font">
@@ -1223,7 +1223,7 @@ stop</string>
               </font>
              </property>
              <property name="text">
-              <string>↗</string>
+              <string>→</string>
              </property>
              <property name="autoRepeat">
               <bool>false</bool>

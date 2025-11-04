@@ -639,6 +639,15 @@ bool UNIMAP::load_node()
                         L.speed = 0.0;
                     }
 
+                    if(lo.contains("method") && lo["method"].isString())
+                    {
+                        L.method = lo["method"].toString();
+                    }
+                    else
+                    {
+                        L.method = "";
+                    }
+
                     L.st.setZero();
                     L.ed.setZero();
                     L.mid.setZero();
@@ -797,6 +806,10 @@ void UNIMAP::save_node()
                             if(s.speed > 0.0)
                             {
                                 lo["speed"] = s.speed;
+                            }
+                            if(!s.method.isEmpty())
+                            {
+                                lo["method"] = s.method;
                             }
                             break;
                         }

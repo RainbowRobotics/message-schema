@@ -675,7 +675,7 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
             const PATH& seg = policy_path[i];
             PATH _seg = calc_global_path(seg.node, i == 0);
 
-            _seg.drive_mode = seg.drive_mode;
+            _seg.drive_dir = seg.drive_dir;
             _seg.is_final   = seg.is_final;
             _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
 
@@ -857,7 +857,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
                 PATH _seg = calc_global_path(seg.node, first_seg);
                 first_seg = false;
 
-                _seg.drive_mode = seg.drive_mode;
+                _seg.drive_dir = seg.drive_dir;
                 _seg.is_final = seg.is_final;
                 if(_seg.pose.empty())
                 {
@@ -1259,7 +1259,7 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
-        path.drive_mode = DriveMode::REVERSE;
+        path.drive_dir = DriveDir::REVERSE;
 
         // enque global path
         global_path_que.clear();
@@ -3389,7 +3389,7 @@ void AUTOCONTROL::control_loop()
 
         Q_EMIT signal_global_path_updated();
 
-        back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+        back_mode = (global_path.drive_dir == DriveDir::REVERSE);
         logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
     }
 
@@ -3816,7 +3816,7 @@ void AUTOCONTROL::control_loop()
                             logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
                             log_info("next global path, deque global path, size: {}", global_path.pos.size());
 
-                            back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+                            back_mode = (global_path.drive_dir == DriveDir::REVERSE);
                             logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
 
                             // update global goal
