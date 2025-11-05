@@ -4618,6 +4618,18 @@ void MainWindow::plot_cam()
                         pt.g = 255;
                         pt.b = 0;
                     }
+                    else if(idx == 2)
+                    {
+                        pt.r = 0;
+                        pt.g = 0;
+                        pt.b = 255;
+                    }
+                    else if(idx == 3)
+                    {
+                        pt.r = 0;
+                        pt.g = 255;
+                        pt.b = 255;
+                    }
 
                     cloud->push_back(pt);
                 }
