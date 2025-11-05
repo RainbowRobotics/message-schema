@@ -399,6 +399,8 @@ struct DATA_DOCK
     QString result;
     QString message;
 
+    QString id;
+
     DATA_DOCK()
     {
         time = 0.0;
@@ -406,6 +408,7 @@ struct DATA_DOCK
 
         result = "";
         message = "";
+        id ="";
     }
 
     DATA_DOCK(const DATA_DOCK& p)
@@ -415,6 +418,7 @@ struct DATA_DOCK
 
         result = p.result;
         message = p.message;
+        id = p.id;
     }
 
     DATA_DOCK& operator=(const DATA_DOCK& p)
@@ -424,6 +428,7 @@ struct DATA_DOCK
 
         result = p.result;
         message = p.message;
+        id = p.id;
         return *this;
     }
 };

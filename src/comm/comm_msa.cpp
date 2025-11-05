@@ -485,7 +485,6 @@ void COMM_MSA::send_move_status()
     {
         auto_state = "error";
     }
-
     QString dock_state = "stop";
 
     QString jog_state = "none";
@@ -1834,6 +1833,7 @@ void COMM_MSA::control_loop()
         lock.unlock();
 
         QString command = msg.command;
+        dctrl->set_cmd_id(msg.id);
         if(command == DATA_CONTROL::Dock)
         {
             if(is_main_window_valid())
@@ -1844,6 +1844,7 @@ void COMM_MSA::control_loop()
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_DockStart", Qt::QueuedConnection);
                 log_info("recv_loc, start docking");
+
             }
             else
             {
@@ -1863,9 +1864,12 @@ void COMM_MSA::control_loop()
                 msg.result = "accept";
                 msg.message = "";
 
+                //spdlog::info("[DOCK] bt_UnDockStart");
+                log_info("[DOCK] bt_UnDockStart");
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_UnDockStart", Qt::QueuedConnection);
-                log_info("recv_loc, start undocking");
+//                log_info("recv_loc, start undocking");
+
             }
             else
             {
@@ -2116,6 +2120,26 @@ void COMM_MSA::control_loop()
         send_control_response(msg);
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+}
+
+void COMM_MSA::send_dock_response(const DATA_DOCK& msg)
+{
+    spdlog::debug("[RRS] send_dock_response connected");
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr send_object = sio::object_message::create();
+    send_object->get_map()["id"]         = sio::string_message::create(msg.id.toStdString());
+    send_object->get_map()["command"]    = sio::string_message::create(msg.command.toStdString());
+    send_object->get_map()["result"]     = sio::string_message::create(msg.result.toStdString());
+    send_object->get_map()["message"]    = sio::string_message::create(msg.message.toStdString());
+//    QJsonObject errorCode = ERROR_MANAGER::instance()->getErrorCodeMapping(msg.message);
+//    send_object->get_map()["message_detail"]    = sio::string_message::create(errorCode.toStdString());
+    send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
+
+    io->socket("slamnav")->emit("controlResponse", send_object);
 }
 
 void COMM_MSA::common_loop()

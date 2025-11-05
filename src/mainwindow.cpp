@@ -121,12 +121,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // start docking
     connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
-    // for response
-    connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-    connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
-    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-    connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
-
     // annotation
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
@@ -175,6 +169,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // init modules
     init_modules();
+
+    // for response
+    if(CONFIG::instance()->get_use_rrs())
+    {
+        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
+        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+    }
+    if(CONFIG::instance()->get_use_msa())
+    {
+        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_MSA::instance(), SLOT(send_dock_response(DATA_DOCK)));
+        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+    }
 
     // ipv4
     getIPv4();

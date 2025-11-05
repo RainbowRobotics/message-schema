@@ -56,8 +56,6 @@ void DOCKCONTROL::init()
 
 void DOCKCONTROL::move()
 {
-
-
     if(config->get_docking_type() == 0) // 0 - lidar docking
     {
         reverse_mode = config->get_docking_reverse_mode();
@@ -375,6 +373,7 @@ void DOCKCONTROL::a_loop()
                 fsm_state = DOCKING_FSM_COMPLETE;
 
                 DATA_DOCK ddock;
+                ddock.id = cmd_id;
                 ddock.command = "dock";
                 ddock.result = "success";
                 ddock.message = "";
@@ -445,6 +444,7 @@ void DOCKCONTROL::a_loop()
             {
                 failed_flag = false;
                 DATA_DOCK ddock;
+                 ddock.id = cmd_id;
                 ddock.command = "dock";
                 ddock.result = "fail";
                 ddock.message = failed_reason;
@@ -501,6 +501,7 @@ void DOCKCONTROL::b_loop()
                 spdlog::info("[DOCKING] UNDOCK SUCCESS");
 
                 DATA_DOCK ddock;
+                ddock.id = cmd_id;
                 ddock.command = "undock";
                 ddock.result = "success";
                 ddock.message = "";
@@ -522,6 +523,7 @@ void DOCKCONTROL::b_loop()
             spdlog::info("[DOCKING] UNDOCK FAILED");
 
             DATA_DOCK ddock;
+            ddock.id = cmd_id;
             ddock.command = "undock";
             ddock.result = "fail";
             ddock.message = failed_reason;
@@ -1792,6 +1794,13 @@ void DOCKCONTROL::set_dock_retry_flag(bool val)
 int DOCKCONTROL::get_dock_fsm_state()
 {
     return (int)fsm_state.load();
+}
+
+void DOCKCONTROL::set_cmd_id(QString id)
+{
+    mtx.lock();
+    cmd_id = id;
+    mtx.unlock();
 }
 
 double DOCKCONTROL::wrapToPi(double angle)

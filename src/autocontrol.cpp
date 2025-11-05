@@ -4055,7 +4055,8 @@ void AUTOCONTROL::control_loop()
                 dir_x = local_dx / (local_d + 1.0e-6);
                 dir_y = local_dy / (local_d + 1.0e-6);
 
-                err_d = calc_dist_2d(goal_pos - cur_pos);
+//                err_d = calc_dist_2d(goal_pos - cur_pos);
+                err_d  = calc_dist_2d(_tgt_xi);
             }
             else
             {

@@ -319,6 +319,7 @@ private Q_SLOTS:
 
     //MSA
     void send_move_response(DATA_MOVE msg);
+    void send_dock_response(const DATA_DOCK& msg);
     void send_localization_response(DATA_LOCALIZATION msg);
     void send_control_response(DATA_CONTROL msg);
     void send_mapping_response(DATA_MAPPING msg);
