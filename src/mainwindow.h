@@ -252,7 +252,6 @@ public Q_SLOTS:
     void bt_AutoMove2();
     void bt_AutoMove3();
     void bt_AutoPath();
-    void bt_AutoPath_hpp();
     void bt_AutoStop();
     void bt_AutoPause();
     void bt_AutoResume();
