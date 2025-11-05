@@ -294,12 +294,12 @@ void ORBBEC::grab_loop(int idx)
                             continue;
                         }
 
-                        if(_P[2] < z_min || _P[2] > z_max)
-                        {
-                            continue;
-                        }
+//                        if(_P[2] < z_min || _P[2] > z_max)
+//                        {
+//                            continue;
+//                        }
 
-                        _P[2] = 0;
+//                        _P[2] = 0;
                         pts.push_back(_P);
                     }
                 }

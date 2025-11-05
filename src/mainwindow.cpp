@@ -2879,7 +2879,6 @@ void MainWindow::watch_loop()
                 else
                 {
                     Eigen::Vector2d ieir = LOCALIZATION::instance()->get_cur_ieir();
-
                     if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_error() ||
                             ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_ratio())
                     {
@@ -4580,51 +4579,62 @@ void MainWindow::plot_cam()
     log_debug("plot_cam");
 
     int cam_num = CONFIG::instance()->get_cam_num();
-    for (int i = 0; i < cam_num; i++)
+//    for (int i = 0; i < cam_num; i++)
+//    {
+//        if (!CAM::instance()->get_connection(i))
+//        {
+//            continue;
+//        }
+
+//        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
+//        if (plot.empty())
+//        {
+//            continue;
+//        }
+
+//        QString labelName = QString("lb_Screen%1").arg(i + 2);
+//        QLabel* label = this->findChild<QLabel*>(labelName);
+//        if (!label)
+//        {
+//            log_error("plot_cam, {} not found", labelName.toStdString());
+//            continue;
+//        }
+
+//        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
+//        //        qDebug()<<cam_tf;
+//        if (cam_tf.size() >= 4)
+//        {
+//            bool ok = false;
+//            double yaw_deg = cam_tf[5].toDouble(&ok);
+//            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
+//            {
+//                cv::flip(plot, plot, 0);
+//            }
+//        }
+
+//        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+//        label->setScaledContents(true);
+//        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+//    }
+
+    if(CAM::instance()->get_connection(0))
     {
-        if (!CAM::instance()->get_connection(i))
+        cv::Mat plot = CAM::instance()->get_time_img(0).img;
+        if(!plot.empty())
         {
-            continue;
-        }
+//            cv::flip(plot, plot, 0);
 
-        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
-        if (plot.empty())
-        {
-            continue;
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
-
-        QString labelName = QString("lb_Screen%1").arg(i + 2);
-        QLabel* label = this->findChild<QLabel*>(labelName);
-        if (!label)
-        {
-            log_error("plot_cam, {} not found", labelName.toStdString());
-            continue;
-        }
-
-        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
-        //        qDebug()<<cam_tf;
-        if (cam_tf.size() >= 4)
-        {
-            bool ok = false;
-            double yaw_deg = cam_tf[5].toDouble(&ok);
-            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
-            {
-                cv::flip(plot, plot, 0);
-            }
-        }
-
-        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-        label->setScaledContents(true);
-        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     }
-
-    /*
     if(CAM::instance()->get_connection(1))
     {
         cv::Mat plot = CAM::instance()->get_time_img(1).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
+//            cv::flip(plot, plot, 0);
 
             ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen3->setScaledContents(true);
@@ -4636,7 +4646,7 @@ void MainWindow::plot_cam()
         cv::Mat plot = CAM::instance()->get_time_img(2).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
+//            cv::flip(plot, plot, 0);
 
             ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen4->setScaledContents(true);
@@ -4648,13 +4658,13 @@ void MainWindow::plot_cam()
         cv::Mat plot = CAM::instance()->get_time_img(3).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
+//            cv::flip(plot, plot, 0);
 
             ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen5->setScaledContents(true);
             ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
-    }*/
+    }
 }
 
 void MainWindow::plot_tractile()
