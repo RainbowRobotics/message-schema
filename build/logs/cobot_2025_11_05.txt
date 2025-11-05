@@ -1,0 +1,130 @@
+I 13:05:16.850   [MAIN]         System Version: 1.0.0
+I 13:05:20.846   [LAN2CAN]      Succeed to create socket
+I 13:05:21.348   [DAEMON]       Succeed to start read thread
+I 13:05:21.348   [DAEMON]       Succeed to start real-time thread
+I 13:05:21.846   [LAN2CAN]      Succeed to connect l2c
+I 13:05:28.245   [MAIN]         System Version: 1.0.0
+I 13:05:29.255   [LAN2CAN]      Succeed to create socket
+I 13:05:29.758   [DAEMON]       Succeed to start read thread
+I 13:05:29.758   [DAEMON]       Succeed to start real-time thread
+I 13:05:30.256   [LAN2CAN]      Succeed to connect l2c
+I 13:06:59.744   [MAIN]         System Version: 1.0.0
+I 13:07:00.754   [LAN2CAN]      Succeed to create socket
+I 13:07:01.257   [DAEMON]       Succeed to start read thread
+I 13:07:01.257   [DAEMON]       Succeed to start real-time thread
+I 13:07:01.755   [LAN2CAN]      Succeed to connect l2c
+I 13:07:03.968   [MAIN]         System Version: 1.0.0
+I 13:07:04.978   [LAN2CAN]      Succeed to create socket
+I 13:07:05.481   [DAEMON]       Succeed to start read thread
+I 13:07:05.481   [DAEMON]       Succeed to start real-time thread
+I 13:07:05.979   [LAN2CAN]      Succeed to connect l2c
+I 13:24:17.053   [MAIN]         System Version: 1.0.0
+I 13:24:18.063   [LAN2CAN]      Succeed to create socket
+I 13:24:18.565   [DAEMON]       Succeed to start read thread
+I 13:24:18.565   [DAEMON]       Succeed to start real-time thread
+I 13:24:19.063   [LAN2CAN]      Succeed to connect l2c
+I 13:24:57.451   [MAIN]         System Version: 1.0.0
+I 13:24:58.460   [LAN2CAN]      Succeed to create socket
+I 13:24:58.963   [DAEMON]       Succeed to start real-time thread
+I 13:24:58.963   [DAEMON]       Succeed to start read thread
+I 13:24:59.461   [LAN2CAN]      Succeed to connect l2c
+I 13:25:15.086   [MAIN]         System Version: 1.0.0
+I 13:25:16.096   [LAN2CAN]      Succeed to create socket
+I 13:25:16.599   [DAEMON]       Succeed to start read thread
+I 13:25:16.599   [DAEMON]       Succeed to start real-time thread
+I 13:25:17.097   [LAN2CAN]      Succeed to connect l2c
+I 13:25:49.313   [MAIN]         System Version: 1.0.0
+I 13:25:50.323   [LAN2CAN]      Succeed to create socket
+I 13:25:50.826   [DAEMON]       Succeed to start read thread
+I 13:25:50.826   [DAEMON]       Succeed to start real-time thread
+I 13:25:51.323   [LAN2CAN]      Succeed to connect l2c
+I 13:26:24.477   [MAIN]         System Version: 1.0.0
+I 13:26:25.487   [LAN2CAN]      Succeed to create socket
+I 13:26:25.990   [DAEMON]       Succeed to start read thread
+I 13:26:25.990   [DAEMON]       Succeed to start real-time thread
+I 13:26:26.487   [LAN2CAN]      Succeed to connect l2c
+I 13:27:03.156   [MAIN]         System Version: 1.0.0
+I 13:27:04.166   [LAN2CAN]      Succeed to create socket
+I 13:27:04.669   [DAEMON]       Succeed to start read thread
+I 13:27:04.669   [DAEMON]       Succeed to start real-time thread
+I 13:27:05.167   [LAN2CAN]      Succeed to connect l2c
+I 13:27:37.485   [MAIN]         System Version: 1.0.0
+I 13:27:38.495   [LAN2CAN]      Succeed to create socket
+I 13:27:38.998   [DAEMON]       Succeed to start read thread
+I 13:27:38.998   [DAEMON]       Succeed to start real-time thread
+I 13:27:39.495   [LAN2CAN]      Succeed to connect l2c
+I 13:28:06.908   [MAIN]         System Version: 1.0.0
+I 13:28:07.918   [LAN2CAN]      Succeed to create socket
+I 13:28:08.421   [DAEMON]       Succeed to start read thread
+I 13:28:08.421   [DAEMON]       Succeed to start real-time thread
+I 13:28:08.919   [LAN2CAN]      Succeed to connect l2c
+I 13:29:08.652   [MAIN]         System Version: 1.0.0
+I 13:29:09.662   [LAN2CAN]      Succeed to create socket
+I 13:29:10.165   [DAEMON]       Succeed to start read thread
+I 13:29:10.165   [DAEMON]       Succeed to start real-time thread
+I 13:29:10.663   [LAN2CAN]      Succeed to connect l2c
+I 13:29:17.174   [MAIN]         SYSTEM STARTING
+I 13:29:40.925   [MAIN]         System Version: 1.0.0
+I 13:29:41.935   [LAN2CAN]      Succeed to create socket
+I 13:29:42.437   [DAEMON]       Succeed to start read thread
+I 13:29:42.437   [DAEMON]       Succeed to start real-time thread
+I 13:29:42.935   [LAN2CAN]      Succeed to connect l2c
+I 13:29:44.948   [MAIN]         SYSTEM STARTING
+I 13:30:04.966   [SYSTEM]       CMD Power On
+I 13:30:05.201   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 13:30:05.211   [SYSTEM]       STATE POWER ENGAGED
+I 13:30:05.730   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 13:30:05.730   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 13:30:06.241   [SYSTEM]       Servo Call: 1/1
+I 13:30:06.241   [SYSTEM]       ServoState: 0
+I 13:30:06.241   [SYSTEM]       ServoState: 1
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 13:30:06.271   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 13:30:06.271   [SYSTEM]       Side Firmware : 29
+I 13:30:06.271   [SYSTEM]       ToolFlange Firmware : 92
+I 13:30:06.271   [SYSTEM]       ServoState: 2
+I 13:30:06.271   [SYSTEM]       ServoState: 3
+I 13:30:07.833   [SYSTEM]       Motor Acts: 0[-0.172083,0.171865/0.174041]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 1[-0.171865,0.172518/0.174041]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 2[-0.170342,0.170778/0.174041]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 3[-0.172083,0.172083/0.174041]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 4[-0.119653,0.121393/0.130531]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 5[-0.116390,0.121393/0.130531]
+I 13:30:07.833   [SYSTEM]       Motor Acts: 6[-0.120523,0.122264/0.130531]
+I 13:30:07.833   [SYSTEM]       ServoState: 4
+I 13:30:07.833   [SYSTEM]       ServoState: 5
+I 13:30:07.833   [SYSTEM]       ServoState: 6
+I 13:30:07.833   [SYSTEM]       Reference On
+I 13:30:17.931   [MOTION]       Motion Mode Changed: 0->1
+I 13:30:19.933   [MOTION]       Motion-Time Done
+I 13:30:19.933   [MOTION]       Motion Mode Changed: 1->0
+I 13:30:21.104   [MOTION]       Motion Mode Changed: 0->1
+I 13:30:23.105   [MOTION]       Motion-Time Done
+I 13:30:23.105   [MOTION]       Motion Mode Changed: 1->0
+I 13:30:24.352   [MOTION]       Motion Mode Changed: 0->8
+I 13:30:25.291   [MOTION]       Motion Mode Changed: 8->0
+W 13:30:25.291   [SYSTEM]       MSG:132/MSG_SYSTEM_SELF_COLL_AREA_TOOL_OCCUR
+I 13:30:30.479   [MOTION]       Motion Mode Changed: 0->8
+I 13:30:30.876   [SYSTEM]       Break Called
+I 13:30:31.177   [SYSTEM]       Break Finished
+I 13:30:31.177   [MOTION]       Motion Mode Changed: 8->0
+I 13:30:31.613   [MOTION]       Motion Mode Changed: 0->8
+I 13:30:32.155   [MOTION]       Motion Mode Changed: 8->0
+W 13:30:32.155   [SYSTEM]       MSG:132/MSG_SYSTEM_SELF_COLL_AREA_TOOL_OCCUR
+I 13:30:36.270   [MOTION]       Motion Mode Changed: 0->8
+I 13:30:37.799   [MOTION]       Motion Mode Changed: 8->0
+W 13:30:37.799   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_TOOL_OCCUR
+I 13:31:13.533   [SYSTEM]       RUN DT Mode
+I 13:31:14.691   [SYSTEM]       STOP DT Mode
+I 13:31:15.353   [SYSTEM]       RUN DT Mode
+I 13:31:20.091   [SYSTEM]       STOP DT Mode

@@ -1,0 +1,68 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+
+//---------------------------------------------------------------
+// Jog - Smooth
+//---------------------------------------------------------------
+table Request_Move_SmoothJogJ{
+    target:         MoveInput_Target;
+}
+table Request_Move_SmoothJogL{
+    target:         MoveInput_Target;
+}
+table Request_Move_SmoothJogStop{
+    stoptime:       float;
+}
+//---------------------------------------------------------------
+// Jog - Tick
+//---------------------------------------------------------------
+table Request_Move_TickJogJ {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+table Request_Move_TickJogL {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+//---------------------------------------------------------------
+// Move J
+//---------------------------------------------------------------
+table Request_Move_J {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+//---------------------------------------------------------------
+// Move L
+//---------------------------------------------------------------
+table Request_Move_L {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+}
+//---------------------------------------------------------------
+// Move JB
+//---------------------------------------------------------------
+table Request_Move_JB_CLR {
+}
+table Request_Move_JB_ADD {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    type:           MoveInput_Type;
+}
+table Request_Move_JB_RUN {
+}
+//---------------------------------------------------------------
+// Move LB
+//---------------------------------------------------------------
+table Request_Move_LB_CLR {
+}
+table Request_Move_LB_ADD {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    type:           MoveInput_Type;
+}
+table Request_Move_LB_RUN {
+    orientation:    int;
+}
+//---------------------------------------------------------------

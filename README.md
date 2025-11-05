@@ -1,0 +1,17 @@
+```bash
+flatc --cpp -o rb_ipc/comm_generated rb_ipc/comm_fbs/*.fbs
+flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb/v1" *.fbs
+flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -o "rb_ipc/comm_generated" rb_ipc/comm_fbs/*.fbs
+pmap -x 2504110
+```
+
+
+
+---
+
+KJ
+
+- Code format 은 통일하는 것이 좋을 것 같습니다. (clang-format을 활용하시면 됩니다.)
+- Docker를 활용한 개발환경 구축
+  - https://learn.microsoft.com/ko-kr/training/modules/use-docker-container-dev-env-vs-code/3-use-as-development-environment
+  - VSCode > F1 > Dev Containers: Rebuild and Reopen in Container

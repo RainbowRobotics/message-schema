@@ -1,0 +1,6 @@
+/root/Desktop/test_project/build/CMakeFiles/rb_program.dir
+/root/Desktop/test_project/build/CMakeFiles/edit_cache.dir
+/root/Desktop/test_project/build/CMakeFiles/rebuild_cache.dir
+/root/Desktop/test_project/build/rb_session/CMakeFiles/rb_session.dir
+/root/Desktop/test_project/build/rb_session/CMakeFiles/edit_cache.dir
+/root/Desktop/test_project/build/rb_session/CMakeFiles/rebuild_cache.dir

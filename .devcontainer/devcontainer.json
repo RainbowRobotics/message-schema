@@ -1,0 +1,33 @@
+{
+  "name": "xeno3-ubuntu-22.04 (Xenomai 3.2.4)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  // Xenomai 실시간 작업까지 하실 게 아니라면 기본값으로 충분합니다.
+  // 필요 시 runArgs에 --cap-add SYS_NICE 등을 추가하세요.
+  "runArgs": [
+    "--shm-size=1g"
+  ],
+
+  "containerEnv": {
+    // CMakeLists의 ZENOH_C_PATH를 이 위치로 바라보게 합니다.
+    "ZENOH_C_PATH": "/opt/zenoh-c"
+  },
+
+  "settings": {
+    "cmake.generator": "Ninja",
+    "cmake.configureOnOpen": true
+  },
+
+  "postCreateCommand": "ldconfig",
+
+  "extensions": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "twxs.cmake",
+    "ms-vscode.cpptools-themes"
+  ],
+
+  "remoteUser": "root"
+}

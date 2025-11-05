@@ -1,0 +1,19 @@
+{
+  connect: {
+    endpoints: [
+      "tcp/127.0.0.1:7447",
+    ],
+    timeout_ms: {
+      "peer": -1
+    }
+  },
+  listen: {
+    endpoints: ["tcp/127.0.0.1:7447"],
+    exit_on_failure: false
+  },
+  transport: {
+    shared_memory: {
+      enabled: true
+    }
+  }
+}

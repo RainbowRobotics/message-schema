@@ -1,0 +1,12 @@
+namespace rb.v1;
+
+struct State {
+  q: [float: 7];
+  qdot: [float: 7];
+}
+
+table RootState {
+  state: State;
+}
+
+root_type RootState;
