@@ -215,13 +215,13 @@ void ORBBEC::grab_loop(int idx)
     cur_w_depth = depth_profile->width();
     cur_h_depth = depth_profile->height();
 
-    log_info("Available Depth profiles:");
-    for(size_t p = 0; p < depth_profile_list->count(); p++)
-    {
-        auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        //printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
-        log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
-    }
+    //log_info("Available Depth profiles:");
+    //for(size_t p = 0; p < depth_profile_list->count(); p++)
+    //{
+    //    auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
+    //    //printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+    //    log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
+    //}
 
     auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
     auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
@@ -230,13 +230,13 @@ void ORBBEC::grab_loop(int idx)
     cur_w_color = color_profile->width();
     cur_h_color = color_profile->height();
 
-    log_info("Available Color profiles:");
-    for(size_t p = 0; p < color_profile_list->count(); p++)
-    {
-        auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
-        log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
-    }
+    //log_info("Available Color profiles:");
+    //for(size_t p = 0; p < color_profile_list->count(); p++)
+    //{
+    //    auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
+    //    //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+    //    log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
+    //}
 
     std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
     //cam_config->disableAllStream();
