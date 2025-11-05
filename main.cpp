@@ -36,7 +36,7 @@ int main() {
         return 0;
     }std::this_thread::sleep_for(0.5s);
 
-    std::cout<<"2"<<std::endl;
+    std::cout<<"?2"<<std::endl;
 
     if(!rb_daemon::initialize(SYSTEM_NAME)){
         LOG_ERROR("FAIL to initialize rb_daemon");
