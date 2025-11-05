@@ -168,6 +168,7 @@ private:
     // mutex
     std::recursive_mutex mtx;
     CommandMethod cmd_method;
+    CommandMethod initial_method;
 
     // other modules
     CONFIG* config;

@@ -659,7 +659,7 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     // stop first
     stop();
 
-    CommandMethod initial_method = cmd_method;
+    initial_method = cmd_method;
 
     // load preset
     params = load_preset(preset);
@@ -693,9 +693,15 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
             PATH _seg = calc_global_path(seg.node, i == 0);
 
             _seg.drive_dir = seg.drive_dir;
-            _seg.drive_method  = seg.drive_method;
+            _seg.drive_method = seg.drive_method;
             _seg.is_final   = seg.is_final;
             _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
+
+            log_info("[AUTO] Segment {} -> Method: {}, Dir: {}, Final: {}",
+                         i,
+                         _seg.drive_method.toStdString(),
+                         (seg.drive_dir == DriveDir::FORWARD ? "FWD" : "REV"),
+                         (seg.is_final ? "true" : "false"));
 
             tmp_storage.push_back(std::move(_seg));
         }
@@ -740,7 +746,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
     }
     back_mode = false;
 
-    CommandMethod initial_method = cmd_method;
+    initial_method = cmd_method;
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
@@ -3402,7 +3408,6 @@ void AUTOCONTROL::control_loop()
     // set flag
     is_moving = true;
     multi_inter_lock = false;
-    CommandMethod initial_method = cmd_method;
 
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
@@ -3434,6 +3439,10 @@ void AUTOCONTROL::control_loop()
         else if(method == "SIDE")
         {
             cmd_method = CommandMethod::METHOD_SIDE;
+        }
+        else
+        {
+            cmd_method = initial_method;
         }
 
         back_mode = ((global_path.drive_dir == (DriveDir::REVERSE)) && cmd_method == (CommandMethod::METHOD_PP));
