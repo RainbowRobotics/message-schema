@@ -150,7 +150,7 @@
         "USE_FMS": false,
         "USE_MULTI": false,
         "USE_RRS": false,
-          "USE_MSA": true,
+        "USE_MSA": true,
         "USE_RTSP": false
     },
     "obs": {

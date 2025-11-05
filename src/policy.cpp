@@ -151,16 +151,21 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
         return res;
     }
 
+    size_t edge_cnt = path.node.size() - 1;
+
     // determine mode for each edge
     std::vector<LINK_INFO> links = unimap->get_special_links();
-    std::vector<DriveMode> modes;
-    modes.reserve(path.node.size() - 1);
+    std::vector<DriveDir> dir;
+    std::vector<QString> method;
+    dir.reserve(path.node.size() - 1);
+    method.reserve(path.node.size() - 1);
     for(size_t i = 0; i + 1 < path.node.size(); i++)
     {
         QString st_id = path.node[i];
         QString ed_id = path.node[i + 1];
 
-        DriveMode drive_mode = DriveMode::FORWARD;
+        DriveDir drive_dir = DriveDir::FORWARD;
+        QString  drive_method = "PP";
 
         for(size_t j = 0; j < links.size(); j++)
         {
@@ -171,26 +176,46 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
                 QString info = link.info.toUpper();
                 if(info.contains("REVERSE"))
                 {
-                    drive_mode = DriveMode::REVERSE;
+                    drive_dir = DriveDir::REVERSE;
+                }
+                if(!link.method.isEmpty())
+                {
+                    drive_method = link.method.toUpper();
                 }
                 break;
             }
         }
-        modes.push_back(drive_mode);
+        dir.push_back(drive_dir);
+        method.push_back(drive_method);
     }
 
     // split the path at the point where the mode changes
     size_t st_idx = 0;
-    for(size_t i = 1; i < modes.size(); i++)
+    for(size_t i = 1; i < edge_cnt; i++)
     {
-        if(modes[i] != modes[i - 1])
+        if(dir[i] != dir[i - 1] || method[i] != method[i - 1])
         {
             PATH seg;
             seg.t = path.t;
             seg.is_final = false;
-            seg.ed_tf = (path.pose.empty() ? path.ed_tf : path.pose[i]);
+            // seg.ed_tf = (path.pose.empty() ? path.ed_tf : path.pose[i]);
+            if(path.pose.empty())
+            {
+                seg.ed_tf = path.ed_tf;
+            }
+            else
+            {
+                size_t pose_idx = i;
+                if(pose_idx >= path.pose.size())
+                {
+                    pose_idx = path.pose.size() - 1;
+                }
+                seg.ed_tf = path.pose[pose_idx];
+            }
+
             seg.node.assign(path.node.begin() + st_idx, path.node.begin() + (i + 1));
-            seg.drive_mode = modes[st_idx];
+            seg.drive_dir = dir[st_idx];
+            seg.drive_method = method[st_idx];
 
             res.push_back(seg);
             st_idx = i;
@@ -204,10 +229,29 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
         seg.is_final = true;
         seg.ed_tf = path.ed_tf;
         seg.node.assign(path.node.begin() + st_idx, path.node.end());
-        seg.drive_mode = modes[st_idx];
+        seg.drive_dir = dir[st_idx];
+        seg.drive_method = method[st_idx];
 
         res.push_back(seg);
     }
+
+    // debug
+    // {
+    //     for(size_t k = 0; k < res.size(); k++)
+    //     {
+    //         const PATH& s = res[k];
+    //         QString nodes = "";
+    //         for(size_t i = 0; i < s.node.size(); i++)
+    //         {
+    //             nodes += s.node[i] + (i+1<s.node.size()? "->" : "");
+    //         }
+    //         spdlog::info("[POLICY] seg[{}]: dir={}, method={}, nodes={}",
+    //                      (int)k,
+    //                      (s.drive_dir==DriveDir::REVERSE?"R":"F"),
+    //                      s.drive_method.toStdString(),
+    //                      nodes.toStdString());
+    //     }
+    // }
 
     return res;
 }

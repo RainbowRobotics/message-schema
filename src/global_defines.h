@@ -464,7 +464,7 @@ enum class AttributeZone
     MASK
 };
 
-enum class DriveMode
+enum class DriveDir
 {
     FORWARD,
     REVERSE
@@ -853,6 +853,7 @@ struct MOBILE_STATUS
     float res_linear_dist = 0.0;
     float res_linear_remain_dist = 0.0;
 
+    uint8_t sss_recovery_state = 0;
 };
 
 
@@ -1448,14 +1449,15 @@ struct PATH
     std::vector<Eigen::Matrix4d> pose;
     std::vector<Eigen::Vector3d> pos;    
     std::vector<double> ref_v;
-    DriveMode drive_mode;
+    DriveDir drive_dir;
+    QString drive_method;
 
     PATH()
     {
         t = 0;
         ed_tf.setIdentity();
         is_final = false;
-        drive_mode = DriveMode::FORWARD;
+        drive_dir = DriveDir::FORWARD;
     }
 
     PATH(const PATH& p)
@@ -1467,7 +1469,8 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
-        drive_mode = p.drive_mode;
+        drive_dir = p.drive_dir;
+        drive_method = p.drive_method;
     }
 
     PATH& operator=(const PATH& p)
@@ -1479,7 +1482,8 @@ struct PATH
         ref_v = p.ref_v;        
         ed_tf = p.ed_tf;
         is_final = p.is_final;
-        drive_mode = p.drive_mode;
+        drive_dir = p.drive_dir;
+        drive_method = p.drive_method;
         return *this;
     }
 
@@ -1785,8 +1789,8 @@ struct LINK_INFO
     double length = 0.0;
 
     QString info;
-
     double speed = 0.0;
+    QString method;
 
     LINK_INFO()
     {
@@ -1810,8 +1814,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
-
         speed = p.speed;
+        method = p.method;
     }
 
     LINK_INFO& operator=(const LINK_INFO& p)
@@ -1826,8 +1830,8 @@ struct LINK_INFO
         length = p.length;
 
         info = p.info;
-
         speed = p.speed;
+        method = p.method;
 
         return *this;
     }
