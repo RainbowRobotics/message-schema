@@ -3205,9 +3205,11 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["emo"]          = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
     robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
     robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
-
-    bool temp = (ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL);
-    robotStateObj->get_map()["ss2_recovery"] = sio::bool_message::create(temp);
+    robotStateObj->get_map()["sss_recovery"] = sio::bool_message::create(ms.sss_recovery_state == 1);
+    robotStateObj->get_map()["sw_reset"] = sio::bool_message::create(ms.sw_reset == 1);
+    robotStateObj->get_map()["sw_stop"] = sio::bool_message::create(ms.sw_stop == 1);
+    robotStateObj->get_map()["sw_start"] = sio::bool_message::create(ms.sw_start == 1);
+    
     robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
                 ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
     robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
@@ -3321,7 +3323,6 @@ void COMM_MSA::send_move_response(DATA_MOVE msg)
 {
     if(!is_connected)
     {
-        //        qDebug()<<"is not connected!!!!!!1";
         return;
     }
 

@@ -447,7 +447,7 @@ void MOBILE::receive_data_loop()
                 {
                     if(buf[data_size + 6] == 0x25)
                     {
-                        // Footer
+                        // **********************************************Footer*********************************************** */
                         int index = 6;
                         const int dlc   = 1;
                         const int dlc_s = 2;
@@ -490,8 +490,9 @@ void MOBILE::receive_data_loop()
                             //std::cout << "wrong robot_type: " << static_cast<int>(robot_type) << ", data_size: " << data_size << std::endl;
                             spdlog::warn("[MOBILE]wrong robot_type:{}, data_size:{}", static_cast<int>(robot_type), data_size);
                         }
+                        //*************************************************************************************************************** */
 
-                        if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
+                        if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_high)
                         {
                             // HighFreq Data - Pose, Velocity, IMU
                             uint32_t tick;
@@ -642,7 +643,7 @@ void MOBILE::receive_data_loop()
                             last_imu_t = imu.t;
                         }
 
-                        if(_buf[5] == 0xA1 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
+                        else if(_buf[5] == 0xA1 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_mid)
                         {
                             // MidFreq Data - Safety States, IO
 
@@ -677,6 +678,11 @@ void MOBILE::receive_data_loop()
                             memcpy(&mcu0_din_raw, &_buf[index], dlc); index += dlc;
                             memcpy(&mcu1_din_raw, &_buf[index], dlc); index += dlc;
 
+                            unsigned char sss_recovery_state;
+                            memcpy(&sss_recovery_state, &_buf[index], dlc); index += dlc;
+
+
+                            
                             // Update status
                             mtx.lock();
                             cur_status.om_state = om_state;
@@ -686,6 +692,10 @@ void MOBILE::receive_data_loop()
                             cur_status.bumper_state = bumper_state;
                             cur_status.lidar_field = lidar_field;
 
+                            cur_status.sw_reset = (io_info_raw >> 0) & 0x01;
+                            cur_status.sw_stop = (io_info_raw >> 1) & 0x01;
+                            cur_status.sw_start = (io_info_raw >> 2) & 0x01;
+                            
                             // Parse safety states from safety_state bytes if needed
                             // Safety state 1
                             cur_status.safety_state_bumper_stop_1 = (safety_state_1 >> 0) & 0x01;
@@ -707,6 +717,7 @@ void MOBILE::receive_data_loop()
                             cur_status.safety_state_ref_meas_mismatch_2 = (safety_state_2 >> 6) & 0x01;
                             cur_status.safety_state_emo_pressed_2 = (safety_state_2 >> 7) & 0x01;
 
+                            cur_status.sss_recovery_state = sss_recovery_state;
                             cur_status.motor_stop_state = !(cur_status.safety_state_emo_pressed_1||cur_status.safety_state_emo_pressed_2);
 
                             // DIO/DIN
@@ -823,7 +834,7 @@ void MOBILE::receive_data_loop()
                             mtx.unlock();
                         }
 
-                        if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
+                        else if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_low)
                         {
                             // LowFreq Data - Power Info, Motor Info, BMS Info
 
@@ -1038,7 +1049,7 @@ void MOBILE::receive_data_loop()
                         }
 
 
-                        if(_buf[5] == 0xA2 && robot_type != RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
+                        else if(_buf[5] == 0xA2 && robot_type != RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
                         {
                             // Normal Data
                             uint32_t tick;
@@ -1732,7 +1743,7 @@ void MOBILE::receive_data_loop()
                             );
                             mtx.unlock();
                         }
-
+                        
                         buf.erase(buf.begin(), buf.begin()+data_size+7);
                     }
                     else
@@ -2437,7 +2448,6 @@ void MOBILE::move_rotate(double th, double w)
 
 
     send_byte[7] = 118; // cmd move rotate
-    
 
     memcpy(&send_byte[8], &_th, 4); // param1 rad
     memcpy(&send_byte[12], &_w, 4); // param2 angular vel

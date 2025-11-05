@@ -853,6 +853,7 @@ struct MOBILE_STATUS
     float res_linear_dist = 0.0;
     float res_linear_remain_dist = 0.0;
 
+    uint8_t sss_recovery_state = 0;
 };
 
 
