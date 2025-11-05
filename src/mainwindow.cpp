@@ -109,7 +109,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
     connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
     connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
-    connect(ui->bt_AutoPath_hpp,      SIGNAL(clicked()),                    this, SLOT(bt_AutoPath_hpp()));                                  // move clicked node
     connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                // move clicked node
     connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                 // move clicked node
 
@@ -1864,44 +1863,6 @@ void MainWindow::bt_AutoPath()
     msg.preset = 0;
     msg.direction = direction;
     msg.method = "pp";
-
-    Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
-    path_append_id = "";
-    ui -> te_path -> setText(path_append_id);
-
-    return;
-}
-
-// for autocontrol
-void MainWindow::bt_AutoPath_hpp()
-{
-    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
-    {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
-        log_warn("check map load");
-
-        return;
-    }
-
-    if(!CONFIG::instance()->get_use_multi())
-    {
-        log_warn("auto path allowed in multi-robot mode, check config use multi");
-        //return;
-    }
-
-    QString direction = "forward";
-    if (ui->ckb_MoveBackWard->isChecked() == 1)
-    {
-        direction = "backward";
-    }
-
-    DATA_PATH msg;
-    msg.command = "goal";
-    msg.path = path_append_id;
-    msg.preset = 0;
-    msg.direction = direction;
-    msg.method = "hpp";
 
     Q_EMIT (AUTOCONTROL::instance()->slot_path(msg));
     path_append_id = "";

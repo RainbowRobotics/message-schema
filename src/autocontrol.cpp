@@ -659,6 +659,8 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
     // stop first
     stop();
 
+    CommandMethod initial_method = cmd_method;
+
     // load preset
     params = load_preset(preset);
 
@@ -685,7 +687,7 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
             }
             else
             {
-                cmd_method = CommandMethod::METHOD_PP;
+                cmd_method = initial_method;
             }
 
             PATH _seg = calc_global_path(seg.node, i == 0);
@@ -737,6 +739,8 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
         return;
     }
     back_mode = false;
+
+    CommandMethod initial_method = cmd_method;
 
     // symmetric cut
     std::vector<std::vector<QString>> path_list = symmetric_cut(node_path);
@@ -881,7 +885,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
                 }
                 else
                 {
-                    cmd_method = CommandMethod::METHOD_PP;
+                    cmd_method = initial_method;
                 }
 
                 PATH _seg = calc_global_path(seg.node, first_seg);
@@ -3420,9 +3424,6 @@ void AUTOCONTROL::control_loop()
 
         Q_EMIT signal_global_path_updated();
 
-        back_mode = (global_path.drive_dir == DriveDir::REVERSE);
-        logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
-
         // method
         QString method = global_path.drive_method.toUpper();
         if(method == "HPP")
@@ -3433,6 +3434,9 @@ void AUTOCONTROL::control_loop()
         {
             cmd_method = CommandMethod::METHOD_SIDE;
         }
+
+        back_mode = ((global_path.drive_dir == (DriveDir::REVERSE)) && cmd_method == (CommandMethod::METHOD_PP));
+        logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
     }
 
     if(global_path.pose.size() == 0)
@@ -3877,7 +3881,7 @@ void AUTOCONTROL::control_loop()
                             logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
                             log_info("next global path, deque global path, size: {}", global_path.pos.size());
 
-                            back_mode = (global_path.drive_dir == DriveDir::REVERSE);
+                            back_mode = ((global_path.drive_dir == (DriveDir::REVERSE)) && cmd_method == (CommandMethod::METHOD_PP));
                             logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
                             log_info("next segment back_mode: {}", back_mode.load() ? "true" : "false");
 

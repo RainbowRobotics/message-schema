@@ -1374,7 +1374,7 @@ stop</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1793,15 +1793,14 @@ Move
              <widget class="QPushButton" name="bt_AutoPath">
               <property name="geometry">
                <rect>
-                <x>264</x>
-                <y>107</y>
+                <x>260</x>
+                <y>120</y>
                 <width>51</width>
-                <height>31</height>
+                <height>51</height>
                </rect>
               </property>
               <property name="text">
-               <string>path
-(pp)</string>
+               <string>path</string>
               </property>
              </widget>
              <widget class="QTextEdit" name="te_path">
@@ -1825,20 +1824,6 @@ Move
               </property>
               <property name="text">
                <string>BackWard</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="bt_AutoPath_hpp">
-              <property name="geometry">
-               <rect>
-                <x>264</x>
-                <y>140</y>
-                <width>51</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>path
-(hpp)</string>
               </property>
              </widget>
              <widget class="QWidget" name="layoutWidget">
