@@ -3402,6 +3402,7 @@ void AUTOCONTROL::control_loop()
     // set flag
     is_moving = true;
     multi_inter_lock = false;
+    CommandMethod initial_method = cmd_method;
 
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
@@ -3864,6 +3865,10 @@ void AUTOCONTROL::control_loop()
                             else if(method == "SIDE")
                             {
                                 cmd_method = CommandMethod::METHOD_SIDE;
+                            }
+                            else
+                            {
+                                cmd_method = initial_method;
                             }
 
                             if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
