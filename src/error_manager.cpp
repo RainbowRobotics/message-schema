@@ -219,6 +219,26 @@ ERROR_MANAGER::ErrorInfo ERROR_MANAGER::getErrorInfo(ErrorCause cause, ErrorCont
             info.remark = "Map load failed";
             break;
         }
+    case MAP_LOAD_NO_2D_MAP:       // 0x1009
+        {
+            info.error_code = "R0Mx" + info.alarm_code;
+            info.message = "no 2d map loaded";
+            info.solution = "Load 2D map required";
+            info.description = "2D map is not loaded";
+            info.level = "error";
+            info.remark = "2D Navigation unavailable";
+            break;
+        }
+    case MAP_LOAD_NO_3D_MAP:       // 0x1010
+        {
+            info.error_code = "R0Mx" + info.alarm_code;
+            info.message = "no 3d map loaded";
+            info.solution = "Load 3D map required";
+            info.description = "3D map is not loaded";
+            info.level = "error";
+            info.remark = "3D Navigation unavailable";
+            break;
+        }
 
     // Localization
     case LOC_NOT_INIT:              // 0x2001
@@ -1130,6 +1150,8 @@ QString ERROR_MANAGER::getCauseName(ErrorCause cause)
         case MAP_UNKNOWN_ERROR:                 return "Map Unknown Error";
         case MAP_SAVE_FAIL_CSV:                 return "Map Save Failed (CSV)";
         case MAP_LOAD_INVALID_DIR:              return "Map Load Invalid Directory";
+        case MAP_LOAD_NO_2D_MAP:                return "Map Load No 2D Map";
+        case MAP_LOAD_NO_3D_MAP:                return "Map Load No 3D Map";
 
         case LOC_NOT_INIT:                      return "Localization Not Initialized";
         case LOC_SENSOR_ERROR:                  return "Localization Sensor Error";
@@ -1295,6 +1317,14 @@ ERROR_MANAGER::ErrorCause ERROR_MANAGER::findErrorCauseFromMessage(const QString
     else if(message.contains("[R0Mx1008]") || message.contains("1008"))
     {
         return MAP_LOAD_INVALID_DIR;
+    }
+    else if(message.contains("[R0Mx1009]") || message.contains("1009"))
+    {
+        return MAP_LOAD_NO_2D_MAP;
+    }
+    else if(message.contains("[R0Mx1010]") || message.contains("1010"))
+    {
+        return MAP_LOAD_NO_3D_MAP;
     }
 
     // Localization

@@ -49,7 +49,9 @@ public:
         MAP_TOPO_LOAD_FAILED                = 0x1005,
         MAP_UNKNOWN_ERROR                   = 0x1006,
         MAP_SAVE_FAIL_CSV                   = 0x1007,
-        MAP_LOAD_INVALID_DIR                 = 0x1008,
+        MAP_LOAD_INVALID_DIR                = 0x1008,
+        MAP_LOAD_NO_2D_MAP                  = 0x1010,
+        MAP_LOAD_NO_3D_MAP                  = 0x1011,
 
         // Localization (0x2000)            
         LOC_NOT_INIT                        = 0x2001,
