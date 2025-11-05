@@ -31,7 +31,7 @@ ORBBEC::ORBBEC(QObject *parent) : QObject(parent)
 
 ORBBEC::~ORBBEC()
 {
-    for(int p=0; p<max_cam_cnt; p++)
+    for(int p = 0; p < max_cam_cnt; p++)
     {
         grab_flag[p] = false;
 
@@ -196,6 +196,22 @@ void ORBBEC::grab_loop(int idx)
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
     double z_min = config->get_cam_height_min(),  z_max = config->get_cam_height_max();
+
+
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+
     double voxel_size = config->get_mapping_voxel_size();
 
     // set cam
@@ -215,12 +231,12 @@ void ORBBEC::grab_loop(int idx)
     cur_w_depth = depth_profile->width();
     cur_h_depth = depth_profile->height();
 
-    for(size_t p = 0; p < depth_profile_list->count(); p++)
-    {
-        auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        //printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
-        log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
-    }
+    //for(size_t p = 0; p < depth_profile_list->count(); p++)
+    //{
+    //    auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
+    //    //printf("depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+    //    log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
+    //}
 
     auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
     auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
@@ -229,12 +245,12 @@ void ORBBEC::grab_loop(int idx)
     cur_w_color = color_profile->width();
     cur_h_color = color_profile->height();
 
-    for(size_t p = 0; p < color_profile_list->count(); p++)
-    {
-        auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
-        //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
-        log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
-    }
+    //for(size_t p = 0; p < color_profile_list->count(); p++)
+    //{
+    //    auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
+    //    //printf("color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", p, profile->width(), profile->height(), profile->fps(), profile->format());
+    //    log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", p, profile->width(), profile->height(), profile->fps(), static_cast<int>(profile->format()));
+    //}
 
     std::shared_ptr<ob::Config> cam_config = std::make_shared<ob::Config>();
     //cam_config->disableAllStream();
@@ -294,23 +310,23 @@ void ORBBEC::grab_loop(int idx)
                             continue;
                         }
 
-//                        if(_P[2] < z_min || _P[2] > z_max)
-//                        {
-//                            continue;
-//                        }
+                        if(_P[2] < z_min || _P[2] > z_max)
+                        {
+                            continue;
+                        }
 
 //                        _P[2] = 0;
                         pts.push_back(_P);
                     }
                 }
-//                pts = voxel_filtering(pts, voxel_size);
+
+                pts = voxel_filtering(pts, voxel_size);
                 cur_pts_size[idx] = pts.size();
 
                 TIME_PTS scan;
                 scan.t = t;
                 scan.pts = std::move(pts);
 
-//                std::cout<<"scan.pts size : "<<scan.pts.size()<<std::endl;
                 depth_que[idx].push(scan);
                 if(depth_que[idx].unsafe_size() > 10)
                 {
