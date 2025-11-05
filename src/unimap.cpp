@@ -795,7 +795,7 @@ void UNIMAP::save_node()
     QString node_path = path + "/node.json";
     QFileInfo node_info(node_path);
 
-    if(node_info.exists() && node_info.isFile())
+    // if(node_info.exists() && node_info.isFile())
     {
         // save as node.json
         QFile node_file(node_path);
@@ -859,7 +859,7 @@ void UNIMAP::save_node()
         }
         return;
     }
-    else
+    // else
     {
         // save as topo.json
         QString topo_path = path + "/topo.json";
