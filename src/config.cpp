@@ -957,7 +957,6 @@ bool CONFIG::set_value_change(QString key, QString value)
     return false;
 }
 
-
 bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
 {
     QMutexLocker locker(&q_mtx);
@@ -1036,7 +1035,6 @@ void CONFIG::set_mileage(const QString &mileage)
         config_file.close();
     }
 
-
     QString pattern = R"("MILEAGE"\s*:\s*".*?")";
     QRegularExpression re(pattern);
     QRegularExpressionMatch match = re.match(data);
@@ -1066,16 +1064,35 @@ void CONFIG::set_mileage(const QString &mileage)
         }
     }
 
-    if(!config_file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+    // save in temp file
+    QString tempPath = common_path + ".tmp";
+    QFile tempFile(tempPath);
+    if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
     {
-        //printf("[config] failed to open config file for writing.\n");
-        spdlog::info("[CONFIG] failed to open config file for writing.");
+        spdlog::error("[CONFIG] failed to open temp file for writing: {}", tempPath.toStdString());
         return;
     }
 
-    QTextStream out(&config_file);
-    out << data;
-    config_file.close();
+    {
+        QTextStream out(&tempFile);
+        out << data;
+        tempFile.close();
+    }
+
+    // ✅ 기존 파일 교체 (atomic replace)
+    if (!QFile::remove(common_path))
+    {
+        spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
+    }
+
+    if (!QFile::rename(tempPath, common_path))
+    {
+        spdlog::error("[CONFIG] failed to rename temp file to config file.");
+        return;
+    }
+
+    spdlog::info("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
+
 }
 
 bool CONFIG::get_use_safety_cross_monitor()

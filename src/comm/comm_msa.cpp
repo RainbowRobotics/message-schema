@@ -890,10 +890,9 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     // msg.dir           = get_json(data, "dir"); // 필요 시 사용
 
     msg.goal_node_id    = get_json(data, "goalId");
-    msg.goal_node_name  = get_json(data, "goalName");  // JSON에 존재하면 추가
+    msg.goal_node_name  = get_json(data, "goalName");
 
-    // 위치 및 속도 정보
-    msg.cur_pos.setZero(); // 필요 시 갱신
+    msg.cur_pos.setZero();
     msg.tgt_pose_vec[0] = get_json_double(data, "x");
     msg.tgt_pose_vec[1] = get_json_double(data, "y");
     msg.tgt_pose_vec[2] = get_json_double(data, "z");
@@ -903,17 +902,14 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     msg.jog_val[1] = get_json_double(data, "vy");
     msg.jog_val[2] = get_json_double(data, "wz");
 
-    // 이동 파라미터
     msg.target          = get_json_double(data, "target");
     msg.speed           = get_json_double(data, "speed");
     msg.meassured_dist  = get_json_double(data, "measuredDist");
 
-    // 진행 상태
     msg.remaining_dist  = get_json_double(data, "remainingDist");
     msg.remaining_time  = get_json_double(data, "remainingTime");
     msg.bat_percent     = get_json_int(data, "battery");
 
-    // 결과
     msg.result          = get_json(data, "result");
     msg.message         = get_json(data, "message");
 
@@ -1225,17 +1221,14 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
         return jsonArr;
     };
 
-    // mcuDio 배열 생성
     sio::array_message::ptr mcuDioArr = sio::array_message::create();
     mcuDioArr->get_vector().push_back(toSioArray(ms.mcu0_dio));
     mcuDioArr->get_vector().push_back(toSioArray(ms.mcu1_dio));
 
-    // mcuDin 배열 생성
     sio::array_message::ptr mcuDinArr = sio::array_message::create();
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu0_din));
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu1_din));
 
-    // rootObj에 직접 넣기
     rootObj->get_map()["mcuDio"] = mcuDioArr;
     rootObj->get_map()["mcuDin"] = mcuDinArr;
 
@@ -1248,7 +1241,7 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "controlResponse";
-    socket_msg.data = rootObj;  // 타입 그대로 전달
+    socket_msg.data = rootObj;
 
     io->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
 

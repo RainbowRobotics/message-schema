@@ -180,6 +180,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     }
     if(CONFIG::instance()->get_use_msa())
     {
+        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
         connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_MSA::instance(), SLOT(send_dock_response(DATA_DOCK)));
         connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
         connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
@@ -2940,7 +2941,7 @@ void MainWindow::watch_loop()
             // plot mobile pose
             ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
 
-            if(cnt % 100 == 0)
+            if(cnt % 50 == 0)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }
@@ -3512,7 +3513,34 @@ void MainWindow::plot_info()
     }
     if(CONFIG::instance()->get_use_msa())
     {
-        if(COMM_MSA::instance()->get_msa_connect_check())
+        if(COMM_MSA::instance()->get    QString tempPath = common_path + ".tmp";
+                QFile tempFile(tempPath);
+                if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
+                {
+                    spdlog::error("[CONFIG] failed to open temp file for writing: {}", tempPath.toStdString());
+                    return;
+                }
+
+                {
+                    QTextStream out(&tempFile);
+                    out << data;
+                    tempFile.close();
+                }
+
+                // ✅ 기존 파일 교체 (atomic replace)
+                if (!QFile::remove(common_path))
+                {
+                    spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
+                }
+
+                if (!QFile::rename(tempPath, common_path))
+                {
+                    spdlog::error("[CONFIG] failed to rename temp file to config file.");
+                    return;
+                }
+
+                spdlog::info("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
+_msa_connect_check())
         {
             ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
@@ -5118,20 +5146,21 @@ int MainWindow::led_handler()
             return led_out;
 
         }
-
-        if(obs_d < 2.0)
-        {
-            led_out = SAFETY_LED_PURPLE;
-            return led_out;
-
-        }
-
         else
         {
             //normal auto drive led
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
+
+//        if(obs_d < 2.0)
+//        {
+//            led_out = SAFETY_LED_PURPLE;
+//            return led_out;
+
+//        }
+
+
     }
 
     // not autodrive led control
