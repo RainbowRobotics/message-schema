@@ -235,6 +235,24 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
         res.push_back(seg);
     }
 
+    // debug
+    // {
+    //     for(size_t k = 0; k < res.size(); k++)
+    //     {
+    //         const PATH& s = res[k];
+    //         QString nodes = "";
+    //         for(size_t i = 0; i < s.node.size(); i++)
+    //         {
+    //             nodes += s.node[i] + (i+1<s.node.size()? "->" : "");
+    //         }
+    //         spdlog::info("[POLICY] seg[{}]: dir={}, method={}, nodes={}",
+    //                      (int)k,
+    //                      (s.drive_dir==DriveDir::REVERSE?"R":"F"),
+    //                      s.drive_method.toStdString(),
+    //                      nodes.toStdString());
+    //     }
+    // }
+
     return res;
 }
 
