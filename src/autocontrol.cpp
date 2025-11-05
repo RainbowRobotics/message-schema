@@ -673,9 +673,25 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
         for(size_t i = 0; i < policy_path.size(); i++)
         {
             const PATH& seg = policy_path[i];
+
+            QString method = seg.drive_method.toUpper();
+            if(method == "HPP")
+            {
+                cmd_method = CommandMethod::METHOD_HPP;
+            }
+            else if(method == "SIDE")
+            {
+                cmd_method = CommandMethod::METHOD_SIDE;
+            }
+            else
+            {
+                cmd_method = CommandMethod::METHOD_PP;
+            }
+
             PATH _seg = calc_global_path(seg.node, i == 0);
 
-            _seg.drive_mode = seg.drive_mode;
+            _seg.drive_dir = seg.drive_dir;
+            _seg.drive_method  = seg.drive_method;
             _seg.is_final   = seg.is_final;
             _seg.ed_tf = seg.is_final ? path.ed_tf : _seg.pose.back();
 
@@ -846,7 +862,7 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
 
         // policy path
         std::vector<PATH> policy_path = policy->drive_policy(path);
-        qDebug()<<"policy!!!!!!";
+        // qDebug()<<"policy!!!!!!";
         bool first_seg = true;
         if(!policy_path.empty())
         {
@@ -854,10 +870,25 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
             {
                 const PATH& seg = policy_path[i];
 
+                QString method = seg.drive_method.toUpper();
+                if(method == "HPP")
+                {
+                    cmd_method = CommandMethod::METHOD_HPP;
+                }
+                else if(method == "SIDE")
+                {
+                    cmd_method = CommandMethod::METHOD_SIDE;
+                }
+                else
+                {
+                    cmd_method = CommandMethod::METHOD_PP;
+                }
+
                 PATH _seg = calc_global_path(seg.node, first_seg);
                 first_seg = false;
 
-                _seg.drive_mode = seg.drive_mode;
+                _seg.drive_dir = seg.drive_dir;
+                _seg.drive_method  = seg.drive_method;
                 _seg.is_final = seg.is_final;
                 if(_seg.pose.empty())
                 {
@@ -1259,7 +1290,7 @@ void AUTOCONTROL::backwardmove(Eigen::Matrix4d goal_tf, int preset)
     PATH path = calc_global_path(goal_tf);
     if(path.pos.size() > 0)
     {
-        path.drive_mode = DriveMode::REVERSE;
+        path.drive_dir = DriveDir::REVERSE;
 
         // enque global path
         global_path_que.clear();
@@ -3389,8 +3420,19 @@ void AUTOCONTROL::control_loop()
 
         Q_EMIT signal_global_path_updated();
 
-        back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+        back_mode = (global_path.drive_dir == DriveDir::REVERSE);
         logger->write_log(QString("[AUTO] set back_mode from PATH: %1").arg(back_mode ? "true" : "false"));
+
+        // method
+        QString method = global_path.drive_method.toUpper();
+        if(method == "HPP")
+        {
+            cmd_method = CommandMethod::METHOD_HPP;
+        }
+        else if(method == "SIDE")
+        {
+            cmd_method = CommandMethod::METHOD_SIDE;
+        }
     }
 
     if(global_path.pose.size() == 0)
@@ -3426,7 +3468,7 @@ void AUTOCONTROL::control_loop()
     if(global_path_que.unsafe_size() == 0)
     {
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        if (fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
             Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);
@@ -3509,7 +3551,7 @@ void AUTOCONTROL::control_loop()
     {
         // get current status
         Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        if (fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
+        if(fsm_state != AUTO_FSM_FINAL_ALIGN && back_mode == true)
         {
             Eigen::Matrix4d Rz = Eigen::Matrix4d::Identity();
             Rz(0,0) =  cos(M_PI);  Rz(0,1) = -sin(M_PI);
@@ -3664,8 +3706,8 @@ void AUTOCONTROL::control_loop()
 
             double temp_predict_time = std::min(abs(err_th/temp_w),config->get_obs_predict_time());
             std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, temp_predict_time, cur_tf);
+            // std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
 
-//            std::vector<Eigen::Matrix4d> traj = calc_trajectory(Eigen::Vector3d(0, 0, w), 0.2, config->get_obs_predict_time(), cur_tf);
             obs_value = obsmap->is_path_collision(traj, true);
             if(obs_value != OBS_NONE)
             {
@@ -3726,22 +3768,23 @@ void AUTOCONTROL::control_loop()
                 {
                     v = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, v0 - params.LIMIT_V_DCC*dt, v0 + params.LIMIT_V_DCC*dt);
                 }
+
                 if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
                 {
-//                    double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
+                    // double remain_dt = std::max(config->get_drive_extended_control_time() - extend_dt, 0.01);
 
-                    qDebug()<<"remain_dt !!!!!!!! : "<<remain_dt;
+                    // qDebug()<<"remain_dt !!!!!!!! : "<<remain_dt;
                     double vx = saturation(config->get_drive_goal_approach_gain()*_goal_pos[0]/remain_dt, cur_vel[0] - params.LIMIT_V_DCC*dt, cur_vel[0] + params.LIMIT_V_ACC*dt);
                     double vy = saturation(config->get_drive_goal_approach_gain()*_goal_pos[1]/remain_dt, cur_vel[1] - params.LIMIT_V_DCC*dt, cur_vel[1] + params.LIMIT_V_ACC*dt);
 
-//                    std::cout << "remain_dt: " << remain_dt << "   vx,vy: " << vx << ", " << vy << std::endl;
+                    // std::cout << "remain_dt: " << remain_dt << "   vx,vy: " << vx << ", " << vy << std::endl;
 
                     double _err_th = deltaRad(goal_xi[2], cur_xi[2]);
                     double k_wz = 1.0 - std::exp(-std::abs(_err_th) * 3.0);
                     double wz = k_wz * saturation(config->get_drive_goal_approach_gain() * _err_th, -3.0 * D2R, 3.0 * D2R);
-                    //                            double wz = saturation(config->get_drive_goal_approach_gain() * _err_th / config->get_drive_extended_control_time(), -3.0 * D2R, 3.0 * D2R);
+                    // double wz = saturation(config->get_drive_goal_approach_gain() * _err_th / config->get_drive_extended_control_time(), -3.0 * D2R, 3.0 * D2R);
 
-                    //                            printf("%.3f, %.3f, %.3f  ==  %.3f, %.3f, %.3f\n", v0, v, val_, local_vx, local_vy, wz*R2D);
+                    // printf("%.3f, %.3f, %.3f  ==  %.3f, %.3f, %.3f\n", v0, v, val_, local_vx, local_vy, wz*R2D);
 
                     // send control
                     if(robot_model == RobotModel::QD)
@@ -3749,12 +3792,12 @@ void AUTOCONTROL::control_loop()
                         if(cmd_method == CommandMethod::METHOD_HPP)
                         {
                             mobile->moveQD(vx, vy, wz, 1);
-                            //                                    std::cout << "MoveQD : HPP " << local_vx << ", " << local_vy << ", " << wz << std::endl;
+                            // std::cout << "MoveQD : HPP " << local_vx << ", " << local_vy << ", " << wz << std::endl;
                         }
                         else if(cmd_method == CommandMethod::METHOD_SIDE)
                         {
                             mobile->moveQD(vx, vy, wz, 2);
-                            //                                    std::cout << "MoveQD : SIDE " << local_vx << ", " << local_vy << ", " << wz << std::endl;
+                            // std::cout << "MoveQD : SIDE " << local_vx << ", " << local_vy << ", " << wz << std::endl;
                         }
                     }
                     else
@@ -3762,7 +3805,7 @@ void AUTOCONTROL::control_loop()
                         mobile->move(vx, vy, wz);
                     }
 
-                    //                            mobile->move(local_vx, local_vy, wz);
+                    // mobile->move(local_vx, local_vy, wz);
                 }
                 else
                 {
@@ -3779,14 +3822,13 @@ void AUTOCONTROL::control_loop()
                             v = saturation(v, -temp_v, temp_v);
                         }
                     }
+                    mobile->move(v, 0, 0);
                 }
-
-                mobile->move(v, 0, 0);
 
                 extend_dt += dt;
                 if(extend_dt > config->get_drive_extended_control_time())
                 {
-                    //                    qDebug()<<"extended ctrl time!!!!!1";
+                    // qDebug()<<"extended ctrl time!!!!!1";
                     spdlog::debug("extended ctrl time!");
                     mobile->move(0, 0, 0);
 
@@ -3809,14 +3851,33 @@ void AUTOCONTROL::control_loop()
                         PATH _global_path;
                         if(global_path_que.try_pop(_global_path))
                         {
-                            fsm_state = AUTO_FSM_FIRST_ALIGN;
+                            // method
+                            QString method = _global_path.drive_method.toUpper();
+                            if(method == "HPP")
+                            {
+                                cmd_method = CommandMethod::METHOD_HPP;
+                            }
+                            else if(method == "SIDE")
+                            {
+                                cmd_method = CommandMethod::METHOD_SIDE;
+                            }
+
+                            if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
+                            {
+                                fsm_state = AUTO_FSM_DRIVING;
+                            }
+                            else
+                            {
+                                fsm_state = AUTO_FSM_FIRST_ALIGN;
+                            }
+                            log_info("CommandMethod:{} ----- FSM_STATE : {}", method.toStdString(), fsm_state.load());
 
                             // update global path
                             global_path = _global_path;
                             logger->write_log(QString("[AUTO] next global path, deque global path, size: %1").arg(global_path.pos.size()));
                             log_info("next global path, deque global path, size: {}", global_path.pos.size());
 
-                            back_mode = (global_path.drive_mode == DriveMode::REVERSE);
+                            back_mode = (global_path.drive_dir == DriveDir::REVERSE);
                             logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
                             log_info("next segment back_mode: {}", back_mode.load() ? "true" : "false");
 
@@ -3828,7 +3889,7 @@ void AUTOCONTROL::control_loop()
                             // update local path
                             local_path = calc_local_path(global_path);
 
-                            //                            qDebug()<<"AAA:"<<local_path.ref_v;
+                            // qDebug()<<"AAA:"<<local_path.ref_v;
                             avoid_path = PATH();
 
                             // update global & local path
@@ -3842,8 +3903,8 @@ void AUTOCONTROL::control_loop()
                                 Q_EMIT signal_local_path_updated();
                             }
 
-                            logger->write_log(QString("[AUTO] next global path, DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
-                            log_info("next global path, DRIVING -> FIRST_ALIGN, err_d: {}", goal_err_d);
+                            // logger->write_log(QString("[AUTO] next global path, DRIVING -> FIRST_ALIGN, err_d:%1").arg(goal_err_d));
+                            log_info("next global path, DRIVING -> {}, err_d: {}", goal_err_d, fsm_state.load());
                             std::this_thread::sleep_for(std::chrono::milliseconds(1));
                             continue;
                         }

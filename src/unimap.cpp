@@ -668,6 +668,15 @@ bool UNIMAP::load_node()
                         L.speed = 0.0;
                     }
 
+                    if(lo.contains("method") && lo["method"].isString())
+                    {
+                        L.method = lo["method"].toString();
+                    }
+                    else
+                    {
+                        L.method = "";
+                    }
+
                     L.st.setZero();
                     L.ed.setZero();
                     L.mid.setZero();
@@ -730,20 +739,20 @@ bool UNIMAP::load_node()
                 //     for(size_t i = 0; i < special_links.size(); i++)
                 //     {
                 //         const LINK_INFO &s = special_links[i];
-                //         printf("[UNIMAP][SPECIAL_LINK][%zu]\n", i);
-                //         printf("  st_id = %s, ed_id = %s, info = %s\n",
-                //                s.st_id.toStdString().c_str(),
-                //                s.ed_id.toStdString().c_str(),
-                //                s.info.toStdString().c_str());
-                //         if(s.speed > 0.0)
+                //         if(s.info != "" || s.method != "" || s.speed > 0.0)
                 //         {
-                //             printf(", speed = %f", s.speed);
+                //             printf("[UNIMAP] %s -> %s, info = %s, method = %s",
+                //                    s.st_id.toStdString().c_str(),
+                //                    s.ed_id.toStdString().c_str(),
+                //                    s.info.toStdString().c_str(),
+                //                    s.method.toStdString().c_str());
+
+                //             if(s.speed > 0.0)
+                //             {
+                //                 printf(", speed = %f", s.speed);
+                //             }
+                //             printf("\n");
                 //         }
-                //         printf("\n");
-                //         printf("  length = %.3f\n", s.length);
-                //         printf("  st  = (%.3f, %.3f, %.3f)\n", s.st.x(), s.st.y(), s.st.z());
-                //         printf("  ed  = (%.3f, %.3f, %.3f)\n", s.ed.x(), s.ed.y(), s.ed.z());
-                //         printf("  mid = (%.3f, %.3f, %.3f)\n", s.mid.x(), s.mid.y(), s.mid.z());
                 //     }
                 // }
             }
@@ -826,6 +835,10 @@ void UNIMAP::save_node()
                             if(s.speed > 0.0)
                             {
                                 lo["speed"] = s.speed;
+                            }
+                            if(!s.method.isEmpty())
+                            {
+                                lo["method"] = s.method;
                             }
                             break;
                         }
