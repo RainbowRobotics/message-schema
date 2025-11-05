@@ -31,7 +31,7 @@ ORBBEC::ORBBEC(QObject *parent) : QObject(parent)
 
 ORBBEC::~ORBBEC()
 {
-    for(int p=0; p<max_cam_cnt; p++)
+    for(int p = 0; p < max_cam_cnt; p++)
     {
         grab_flag[p] = false;
 
@@ -196,6 +196,22 @@ void ORBBEC::grab_loop(int idx)
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
     double z_min = config->get_cam_height_min(),  z_max = config->get_cam_height_max();
+
+
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
+
     double voxel_size = config->get_mapping_voxel_size();
 
     // set cam
@@ -301,18 +317,18 @@ void ORBBEC::grab_loop(int idx)
                             continue;
                         }
 
-                        _P[2] = 0;
+//                        _P[2] = 0;
                         pts.push_back(_P);
                     }
                 }
-//                pts = voxel_filtering(pts, voxel_size);
+
+                pts = voxel_filtering(pts, voxel_size);
                 cur_pts_size[idx] = pts.size();
 
                 TIME_PTS scan;
                 scan.t = t;
                 scan.pts = std::move(pts);
 
-//                std::cout<<"scan.pts size : "<<scan.pts.size()<<std::endl;
                 depth_que[idx].push(scan);
                 if(depth_que[idx].unsafe_size() > 10)
                 {

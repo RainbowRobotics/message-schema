@@ -963,7 +963,7 @@ bool CONFIG::set_cam_order(QString CAM_SERIAL_NUMBER[])
     QMutexLocker locker(&q_mtx);
 
     QFile file(path_config);
-    //qDebug()<<"path_config : "<<path_config;
+    qDebug()<<"path_config : "<<path_config;
     spdlog::warn("[CONFIG] path_config : {}", qUtf8Printable(path_config));
     if(!file.open(QIODevice::ReadOnly))
     {

@@ -2919,7 +2919,6 @@ void MainWindow::watch_loop()
                 else
                 {
                     Eigen::Vector2d ieir = LOCALIZATION::instance()->get_cur_ieir();
-
                     if(ieir[0] > CONFIG::instance()->get_loc_2d_check_inlier_error() ||
                             ieir[1] < CONFIG::instance()->get_loc_2d_check_inlier_ratio())
                     {
@@ -4620,81 +4619,162 @@ void MainWindow::plot_cam()
     log_debug("plot_cam");
 
     int cam_num = CONFIG::instance()->get_cam_num();
-    for (int i = 0; i < cam_num; i++)
+
+    if(!MAPPING::instance()->get_is_mapping() && !LOCALIZATION::instance()->get_is_loc())
     {
-        if (!CAM::instance()->get_connection(i))
-        {
-            continue;
-        }
+        Eigen::Matrix4d cur_tf = LOCALIZATION::instance()->get_cur_tf();
+        Eigen::Matrix3d cur_R = cur_tf.block(0,0,3,3);
+        Eigen::Vector3d cur_t = cur_tf.block(0,3,3,1);
 
-        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
-        if (plot.empty())
+        for(int idx = 0; idx < cam_num; idx++)
         {
-            continue;
-        }
-
-        QString labelName = QString("lb_Screen%1").arg(i + 2);
-        QLabel* label = this->findChild<QLabel*>(labelName);
-        if (!label)
-        {
-            log_error("plot_cam, {} not found", labelName.toStdString());
-            continue;
-        }
-
-        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
-        //        qDebug()<<cam_tf;
-        if (cam_tf.size() >= 4)
-        {
-            bool ok = false;
-            double yaw_deg = cam_tf[5].toDouble(&ok);
-            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
+            if(CAM::instance()->get_connection(idx))
             {
-                cv::flip(plot, plot, 0);
+                TIME_PTS cur_scan = CAM::instance()->get_scan(idx);
+
+                const size_t point_size = cur_scan.pts.size();
+                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+                cloud->reserve(point_size);
+
+                for(size_t p = 0; p < point_size; p++)
+                {
+                    Eigen::Vector3d P(cur_scan.pts[p][0], cur_scan.pts[p][1], cur_scan.pts[p][2]);
+                    Eigen::Vector3d _P = cur_R * P + cur_t;
+
+                    pcl::PointXYZRGB pt;
+                    pt.x = _P[0];
+                    pt.y = _P[1];
+                    pt.z = _P[2];
+
+                    if(idx == 0)
+                    {
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+                    }
+                    else if(idx == 1)
+                    {
+                        pt.r = 0;
+                        pt.g = 255;
+                        pt.b = 0;
+                    }
+
+                    cloud->push_back(pt);
+                }
+
+                QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                if(!pcl_viewer->updatePointCloud(cloud, cloud_id.toStdString()))
+                {
+                    pcl_viewer->addPointCloud(cloud, cloud_id.toStdString());
+                }
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY,  0.5, cloud_id.toStdString());
+            }
+            else
+            {
+                QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                std::string id = cloud_id.toStdString();
+                if(pcl_viewer->contains(id))
+                {
+                    pcl_viewer->removePointCloud(id);
+                }
             }
         }
-
-        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
-        label->setScaledContents(true);
-        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    }
+    else
+    {
+        for(int idx = 0; idx < cam_num; idx++)
+        {
+            QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+            std::string id = cloud_id.toStdString();
+            if(pcl_viewer->contains(id))
+            {
+                pcl_viewer->removePointCloud(id);
+            }
+        }
     }
 
-    /*
+//    for (int i = 0; i < cam_num; i++)
+//    {
+//        if (!CAM::instance()->get_connection(i))
+//        {
+//            continue;
+//        }
+
+//        cv::Mat plot = CAM::instance()->get_time_img(i).img.clone();
+//        if (plot.empty())
+//        {
+//            continue;
+//        }
+
+//        QString labelName = QString("lb_Screen%1").arg(i + 2);
+//        QLabel* label = this->findChild<QLabel*>(labelName);
+//        if (!label)
+//        {
+//            log_error("plot_cam, {} not found", labelName.toStdString());
+//            continue;
+//        }
+
+//        QStringList cam_tf = CONFIG::instance()->get_cam_tf(i).split(',');
+//        //        qDebug()<<cam_tf;
+//        if (cam_tf.size() >= 4)
+//        {
+//            bool ok = false;
+//            double yaw_deg = cam_tf[5].toDouble(&ok);
+//            if (ok && fabs(yaw_deg - 180.0) < 1e-3)
+//            {
+//                cv::flip(plot, plot, 0);
+//            }
+//        }
+
+//        label->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+//        label->setScaledContents(true);
+//        label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+//    }
+
+    if(CAM::instance()->get_connection(0))
+    {
+        cv::Mat plot = CAM::instance()->get_time_img(0).img;
+        if(!plot.empty())
+        {
+            ui->lb_Screen2->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
+            ui->lb_Screen2->setScaledContents(true);
+            ui->lb_Screen2->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+        }
+    }
+
     if(CAM::instance()->get_connection(1))
     {
         cv::Mat plot = CAM::instance()->get_time_img(1).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
-
             ui->lb_Screen3->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen3->setScaledContents(true);
             ui->lb_Screen3->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+
     if(CAM::instance()->get_connection(2))
     {
         cv::Mat plot = CAM::instance()->get_time_img(2).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
-
             ui->lb_Screen4->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen4->setScaledContents(true);
             ui->lb_Screen4->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
     }
+
     if(CAM::instance()->get_connection(3))
     {
         cv::Mat plot = CAM::instance()->get_time_img(3).img;
         if(!plot.empty())
         {
-            cv::flip(plot, plot, 0);
-
             ui->lb_Screen5->setPixmap(QPixmap::fromImage(mat_to_qimage_cpy(plot)));
             ui->lb_Screen5->setScaledContents(true);
             ui->lb_Screen5->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
         }
-    }*/
+    }
 }
 
 void MainWindow::plot_tractile()
