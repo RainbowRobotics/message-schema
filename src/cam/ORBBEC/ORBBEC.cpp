@@ -227,10 +227,11 @@ void ORBBEC::grab_loop(int idx)
     auto depth_profile_list = pipe->getStreamProfileList(OB_SENSOR_DEPTH);
     auto depth_profile = depth_profile_list->getProfile(depth_profile_idx)->as<ob::VideoStreamProfile>();
     //printf("[ORBBEC] depth_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), depth_profile->format());
-    log_info("depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
+    log_info("Current depth_profile({}, w:{}, h:{}, fps:{}, format:{})", depth_profile_idx, depth_profile->width(), depth_profile->height(), depth_profile->fps(), static_cast<int>(depth_profile->format()));
     cur_w_depth = depth_profile->width();
     cur_h_depth = depth_profile->height();
 
+    //log_info("Available Depth profiles:");
     //for(size_t p = 0; p < depth_profile_list->count(); p++)
     //{
     //    auto profile = depth_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();
@@ -241,10 +242,11 @@ void ORBBEC::grab_loop(int idx)
     auto color_profile_list = pipe->getStreamProfileList(OB_SENSOR_COLOR);
     auto color_profile = color_profile_list->getProfile(color_profile_idx)->as<ob::VideoStreamProfile>();
     //printf("[ORBBEC] color_profile(%d), w:%d, h:%d, fps:%d, format:%d\n", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), color_profile->format());
-    log_info("color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
+    log_info("Current color_profile({}, w:{}, h:{}, fps:{}, format:{})", color_profile_idx, color_profile->width(), color_profile->height(), color_profile->fps(), static_cast<int>(color_profile->format()));
     cur_w_color = color_profile->width();
     cur_h_color = color_profile->height();
 
+    //log_info("Available Color profiles:");
     //for(size_t p = 0; p < color_profile_list->count(); p++)
     //{
     //    auto profile = color_profile_list->getProfile(p)->as<ob::VideoStreamProfile>();

@@ -1620,8 +1620,15 @@ void MainWindow::bt_AutoMove()
         return;
     }
 
+    if(CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto move not allowed in multi-robot mode, check config use multi");
+        //return;
+    }
+
     if(pick.cur_node != "")
     {
+        log_info("bt_AutoMove to node:{}", pick.cur_node.toStdString());
         NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
         if(node)
         {
@@ -1668,8 +1675,16 @@ void MainWindow::bt_AutoBackMove()
         log_warn("check map load");
         return;
     }
+
+    if(CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto move not allowed in multi-robot mode, check config use multi");
+        //return;
+    }
+
     if(pick.cur_node != "")
     {
+        log_info("bt_AutoBackMove to node:{}", pick.cur_node.toStdString());
         NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
         if(node)
         {
@@ -1716,8 +1731,15 @@ void MainWindow::bt_AutoMove2()
         return;
     }
 
+    if(CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto move not allowed in multi-robot mode, check config use multi");
+        //return;
+    }
+
     if(pick.cur_node != "")
     {
+        log_info("bt_AutoMove2 to node:{}", pick.cur_node.toStdString());
         NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
         if(node != NULL)
         {
@@ -1763,9 +1785,15 @@ void MainWindow::bt_AutoMove3()
         log_warn("check map load");
         return;
     }
+    if(CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto move not allowed in multi-robot mode, check config use multi");
+        //return;
+    }
 
     if(pick.cur_node != "")
     {
+        log_info("bt_AutoMove3 to node:{}", pick.cur_node.toStdString());
         NODE* node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
         if(node != NULL)
         {
@@ -1814,6 +1842,12 @@ void MainWindow::bt_AutoPath()
         return;
     }
 
+    if(!CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto path allowed in multi-robot mode, check config use multi");
+        //return;
+    }
+
     QString direction = "forward";
     if (ui->ckb_MoveBackWard->isChecked() == 1)
     {
@@ -1844,6 +1878,12 @@ void MainWindow::bt_AutoPath_hpp()
         log_warn("check map load");
 
         return;
+    }
+
+    if(!CONFIG::instance()->get_use_multi())
+    {
+        log_warn("auto path allowed in multi-robot mode, check config use multi");
+        //return;
     }
 
     QString direction = "forward";

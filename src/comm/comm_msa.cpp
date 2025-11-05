@@ -3579,7 +3579,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
     if(!unimap || !loc || !obsmap || !config || !ctrl || !mobile)
     {
         msg.result = "reject";
-        msg.message = "module not loaded";
+        //msg.message = "module not loaded";
         msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MOVE_INIT_CONDITION_FAILED, ERROR_MANAGER::MOVE_TARGET);
         ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MOVE_INIT_CONDITION_FAILED, ERROR_MANAGER::MOVE_TARGET);
         send_move_response(msg);
@@ -3653,7 +3653,7 @@ void COMM_MSA::handle_move_target(DATA_MOVE &msg)
     else if(method == "hpp")
     {
         spdlog::info("[COMM_MSA] method" "hpp" " received");
-        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO)
+        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO || config->get_robot_type() == RobotType::SEC_CORE)
         {
             spdlog::info("[COMM_MSA] current robot type is MECANUM");
             if(unimap->get_is_loaded() != MAP_LOADED)
@@ -3854,7 +3854,7 @@ void COMM_MSA::handle_move_goal(DATA_MOVE &msg)
     }
     else if(method == "hpp")
     {
-        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO)
+        if(config->get_robot_type() == RobotType::MECANUM_Q150 || config->get_robot_type() == RobotType::MECANUM_VALEO || config->get_robot_type() == RobotType::SEC_CORE)
         {
             if(unimap->get_is_loaded() != MAP_LOADED)
             {
@@ -4717,7 +4717,9 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
         if(map_exist_msg == "no 2d map!")
         {
             msg.result = "reject";
-            msg.message = "[R0Mx0201] invalid map dir";
+            //msg.message = "[R0Mx0201] invalid map dir";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_2D_MAP, ERROR_MANAGER::LOAD_MAP);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_2D_MAP, ERROR_MANAGER::LOAD_MAP);
 
 
             send_load_response(msg);
@@ -4726,7 +4728,8 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
         else if(map_exist_msg == "no 3d map!")
         {
             msg.result = "reject";
-            msg.message = "[R0Mx0201] invalid map dir";
+            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
+            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
 
             send_load_response(msg);
             return;
@@ -4921,6 +4924,14 @@ QJsonObject COMM_RRS::get_error_code_mapping(const QString& message)
     else if(message.contains("[R0Mx1008]") || message.contains("1008"))
     {
         apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_LOAD_INVALID_DIR, ERROR_MANAGER::SAVE_MAP));
+    }
+    else if(message.contains("[R0Mx1009]") || message.contains("1009"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_LOAD_NO_2D_MAP, ERROR_MANAGER::LOAD_MAP));
+    }
+    else if(message.contains("[R0Mx1010]") || message.contains("1010"))
+    {
+        apply(ERROR_MANAGER::instance()->getErrorInfo(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP));
     }
 
     // Localization Error Codes

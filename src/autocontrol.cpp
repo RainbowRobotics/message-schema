@@ -3484,7 +3484,7 @@ void AUTOCONTROL::control_loop()
         }
     }
     logger->write_log(QString("[AUTO] initial fsm state: %1").arg(AUTO_FSM_STATE_STR[fsm_state]));
-    //log_info("initial fsm state: {}", AUTO_FSM_STATE_STR[fsm_state.load()]);
+    log_info("initial fsm state: {}", AUTO_FSM_STATE_STR[fsm_state.load()].toStdString());
 
     // path storage
     PATH local_path;
@@ -3818,6 +3818,7 @@ void AUTOCONTROL::control_loop()
 
                             back_mode = (global_path.drive_mode == DriveMode::REVERSE);
                             logger->write_log(QString("[AUTO] next segment back_mode: %1").arg(back_mode ? "true" : "false"));
+                            log_info("next segment back_mode: {}", back_mode.load() ? "true" : "false");
 
                             // update global goal
                             goal_tf = global_path.ed_tf;
