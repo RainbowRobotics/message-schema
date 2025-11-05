@@ -69,10 +69,12 @@ public:
     // interface funcs (set)
     void set_map_path(QString path);
 
-    // interface funcs (node)
+    // interface funcs (node & link)
     bool add_node(const NODE& node);
     bool add_node(const Eigen::Matrix4d tf, const QString type);
     bool remove_node(const QString& id);
+    void add_link1(PICKING pick);
+    void add_link2(PICKING pick);
 
     /***********************
      * set other modules

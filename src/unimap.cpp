@@ -1537,6 +1537,57 @@ void UNIMAP::remove_node_from_maps(const QString& id, const QString& name)
     }
 }
 
+void UNIMAP::add_link1(PICKING pick)
+{
+    if(pick.pre_node != "" && pick.cur_node != "" && pick.pre_node != pick.cur_node)
+    {
+        NODE* node = get_node_by_id(pick.pre_node);
+        if(node != NULL)
+        {
+            auto it = std::find(node->linked.begin(), node->linked.end(), pick.cur_node);
+            if(it == node->linked.end())
+            {
+                node->linked.push_back(pick.cur_node);
+            }
+            else
+            {
+                node->linked.erase(it);
+            }
+        }
+    }
+}
+
+void UNIMAP::add_link2(PICKING pick)
+{
+    if(pick.pre_node != "" && pick.cur_node != "" && pick.pre_node != pick.cur_node)
+    {
+        NODE* node0 = get_node_by_id(pick.pre_node);
+        NODE* node1 = get_node_by_id(pick.cur_node);
+        if(node0 != NULL && node1 != NULL)
+        {
+            auto it0 = std::find(node0->linked.begin(), node0->linked.end(), pick.cur_node);
+            auto it1 = std::find(node1->linked.begin(), node1->linked.end(), pick.pre_node);
+            if(it0 == node0->linked.end() && it1 == node1->linked.end())
+            {
+                node0->linked.push_back(pick.cur_node);
+                node1->linked.push_back(pick.pre_node);
+            }
+            else
+            {
+                if(it0 != node0->linked.end())
+                {
+                    node0->linked.erase(it0);
+                }
+
+                if(it1 != node1->linked.end())
+                {
+                    node1->linked.erase(it1);
+                }
+            }
+        }
+    }
+}
+
 void UNIMAP::update_node_in_maps(const NODE& node, size_t index)
 {
     // Remove old entries first

@@ -268,6 +268,8 @@ public Q_SLOTS:
     void bt_ChgStop();
 
     // for annotation
+    void bt_AddLink1();
+    void bt_AddLink2();
     void bt_DelNode();
     void bt_AnnotSave();
     void bt_QuickAddNode();

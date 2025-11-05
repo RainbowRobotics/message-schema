@@ -129,6 +129,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
 
     // annotation
+    connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
+    connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
@@ -666,6 +668,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+                    pick.pre_node = pick.cur_node;
                     pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
 
                     std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
@@ -802,6 +805,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         picking_ray(x, y, w, h, ray_center, ray_direction, pcl_viewer);
 
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
+                        pick.pre_node = pick.cur_node;
                         pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
 
                         //                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
@@ -2232,6 +2236,18 @@ void MainWindow::bt_ReturnToCharging()
 }
 
 // annotation
+void MainWindow::bt_AddLink1()
+{
+    UNIMAP::instance()->add_link1(pick);
+    topo_update();
+}
+
+void MainWindow::bt_AddLink2()
+{
+    UNIMAP::instance()->add_link2(pick);
+    topo_update();
+}
+
 void MainWindow::bt_DelNode()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
@@ -2272,13 +2288,13 @@ void MainWindow::bt_AnnotSave()
         return;
     }
 
-    if(LOCALIZATION::instance()->get_is_loc() == false)
-    {
-        //printf("[Del_Node] check localization\n");
-        //spdlog::warn("[Del_Node] check localization");
-        log_warn("check localization");
-        return;
-    }
+    // if(LOCALIZATION::instance()->get_is_loc() == false)
+    // {
+    //     //printf("[Del_Node] check localization\n");
+    //     //spdlog::warn("[Del_Node] check localization");
+    //     log_warn("check localization");
+    //     return;
+    // }
 
     UNIMAP::instance()->save_node();
 }
@@ -3372,9 +3388,24 @@ void MainWindow::plot_pick()
             pcl_viewer->removeShape("pick_body");
         }
 
+        if(pcl_viewer->contains("sel_pre"))
+        {
+            pcl_viewer->removeShape("sel_pre");
+        }
+
         if(pcl_viewer->contains("sel_cur"))
         {
             pcl_viewer->removeShape("sel_cur");
+        }
+
+        if(pick.pre_node != "")
+        {
+            NODE *node = UNIMAP::instance()->get_node_by_id(pick.pre_node);
+            if(node != nullptr)
+            {
+                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node->tf, 0.8, 0.8, 0.8);
+                pcl_viewer->addPolygonMesh(donut, "sel_pre");
+            }
         }
 
         if(pick.cur_node != "")
