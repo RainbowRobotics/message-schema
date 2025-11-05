@@ -196,22 +196,6 @@ void ORBBEC::grab_loop(int idx)
     double x_min = config->get_robot_size_x_min(), x_max = config->get_robot_size_x_max();
     double y_min = config->get_robot_size_y_min(), y_max = config->get_robot_size_y_max();
     double z_min = config->get_cam_height_min(),  z_max = config->get_cam_height_max();
-
-
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-    std::cout << "z_min: " << z_min << ", z_max: " << z_max << std::endl;
-
     double voxel_size = config->get_mapping_voxel_size();
 
     // set cam

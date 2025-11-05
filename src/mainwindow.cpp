@@ -4630,6 +4630,51 @@ void MainWindow::plot_cam()
         {
             if(CAM::instance()->get_connection(idx))
             {
+                if(idx == 0 && !ui->chk_ViewCam0->isChecked())
+                {
+                    QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                    std::string id = cloud_id.toStdString();
+                    if(pcl_viewer->contains(id))
+                    {
+                        pcl_viewer->removePointCloud(id);
+                    }
+
+                    continue;
+                }
+                else if(idx == 1 && !ui->chk_ViewCam1->isChecked())
+                {
+                    QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                    std::string id = cloud_id.toStdString();
+                    if(pcl_viewer->contains(id))
+                    {
+                        pcl_viewer->removePointCloud(id);
+                    }
+
+                    continue;
+                }
+                else if(idx == 2 && !ui->chk_ViewCam2->isChecked())
+                {
+                    QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                    std::string id = cloud_id.toStdString();
+                    if(pcl_viewer->contains(id))
+                    {
+                        pcl_viewer->removePointCloud(id);
+                    }
+
+                    continue;
+                }
+                else if(idx == 3 && !ui->chk_ViewCam3->isChecked())
+                {
+                    QString cloud_id = QString("cam_cur_pts_%1").arg(idx);
+                    std::string id = cloud_id.toStdString();
+                    if(pcl_viewer->contains(id))
+                    {
+                        pcl_viewer->removePointCloud(id);
+                    }
+
+                    continue;
+                }
+
                 TIME_PTS cur_scan = CAM::instance()->get_scan(idx);
 
                 const size_t point_size = cur_scan.pts.size();
@@ -4746,6 +4791,9 @@ void MainWindow::plot_cam()
 
     if(CAM::instance()->get_connection(0))
     {
+        QString serial_number_str = CONFIG::instance()->get_cam_serial_number(0);
+        ui->lb_CamSerialNumber0->setText(serial_number_str);
+
         cv::Mat plot = CAM::instance()->get_time_img(0).img;
         if(!plot.empty())
         {
@@ -4757,6 +4805,9 @@ void MainWindow::plot_cam()
 
     if(CAM::instance()->get_connection(1))
     {
+        QString serial_number_str = CONFIG::instance()->get_cam_serial_number(1);
+        ui->lb_CamSerialNumber1->setText(serial_number_str);
+
         cv::Mat plot = CAM::instance()->get_time_img(1).img;
         if(!plot.empty())
         {
@@ -4768,6 +4819,9 @@ void MainWindow::plot_cam()
 
     if(CAM::instance()->get_connection(2))
     {
+        QString serial_number_str = CONFIG::instance()->get_cam_serial_number(2);
+        ui->lb_CamSerialNumber2->setText(serial_number_str);
+
         cv::Mat plot = CAM::instance()->get_time_img(2).img;
         if(!plot.empty())
         {
@@ -4779,6 +4833,9 @@ void MainWindow::plot_cam()
 
     if(CAM::instance()->get_connection(3))
     {
+        QString serial_number_str = CONFIG::instance()->get_cam_serial_number(3);
+        ui->lb_CamSerialNumber3->setText(serial_number_str);
+
         cv::Mat plot = CAM::instance()->get_time_img(3).img;
         if(!plot.empty())
         {
