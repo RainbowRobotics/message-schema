@@ -62,22 +62,24 @@ public:
     /***********************
      * robot hardware
      ***********************/
-    double get_robot_size_x_min();      // robot x-axis minimum size
-    double get_robot_size_x_max();      // robot x-axis maximum size
-    double get_robot_size_y_min();      // robot y-axis minimum size
-    double get_robot_size_y_max();      // robot y-axis maximum size
-    double get_robot_size_z_min();      // robot z-axis minimum size
-    double get_robot_size_z_max();      // robot z-axis maximum size
-    double get_robot_size_add_x();      // robot x-axis maximum size plus
-    double get_robot_size_add_y();      // robot y-axis maximum size plus
-    double get_robot_size_add_z();      // robot y-axis maximum size plus
-    double get_robot_wheel_base();      // the distance between the robot's two wheels
-    double get_robot_wheel_radius();    // robot wheel radius (mm)
-    double get_robot_radius();          // robot radius (auto calc)
-    bool get_robot_use_speaker();     // robot io-speaker use
-    double get_robot_lx();            // robot lx
-    double get_robot_ly();            // robot ly
-
+    double get_robot_size_x_min();          // robot x-axis minimum size
+    double get_robot_size_x_max();          // robot x-axis maximum size
+    double get_robot_size_y_min();          // robot y-axis minimum size
+    double get_robot_size_y_max();          // robot y-axis maximum size
+    double get_robot_size_z_min();          // robot z-axis minimum size
+    double get_robot_size_z_max();          // robot z-axis maximum size
+    double get_robot_size_add_x();          // robot x-axis maximum size plus
+    double get_robot_size_add_y();          // robot y-axis maximum size plus
+    double get_robot_size_add_z();          // robot y-axis maximum size plus
+    double get_robot_wheel_base();          // the distance between the robot's two wheels
+    double get_robot_wheel_radius();        // robot wheel radius (mm)
+    double get_robot_radius();              // robot radius (auto calc)
+    bool get_robot_use_speaker();           // robot io-speaker use
+    double get_robot_lx();                  // robot lx
+    double get_robot_ly();                  // robot ly
+    double get_robot_alarm_bat_low();       // robot battery low alarm threshold (%)
+    double get_robot_alarm_bat_critical();  // robot battery critical alarm threshold (%)
+    bool get_robot_use_alarm();       // robot use robot alarm
 
     /***********************
      * sensor common
@@ -330,6 +332,11 @@ public:
     bool set_backup_config_file();
     void set_restore_config_file_backup();
     void set_default_config_template();
+    void cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups);
+
+
+
+    // update 
     bool get_update_use_config();
 
 private:
@@ -436,7 +443,9 @@ private:
     bool USE_SPEAKER = false;
     double ROBOT_LX = 0.5;
     double ROBOT_LY = 0.23;
-    bool USE_CONFIG_UPDATE = false;
+    double ROBOT_ALARM_BAT_LOW = 60.0;        // battery low alarm threshold (%)
+    double ROBOT_ALARM_BAT_CRITICAL = 40.0;   // battery critical alarm threshold (%)
+    bool USE_ROBOT_ALARM = true;
 
     // sensors
     bool USE_LIDAR_2D = false;
@@ -629,6 +638,11 @@ private:
     // QA
     double QA_STEP_DISTANCE = 0.7;
     double QA_STOP_MIN_DISTANCE = 0.3;
+
+
+    // update 
+    bool USE_CONFIG_UPDATE = false;
+
     
 
     QStringList load_folder_list();
