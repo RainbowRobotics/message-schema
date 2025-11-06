@@ -321,6 +321,12 @@ void MainWindow::init_modules()
             QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
+            if (CONFIG::instance ()->get_update_use_config() == true)
+            {
+                CONFIG::instance()->set_update_config_file();
+                spdlog::info("Deactivate config file update flag.");
+            }
+
 
             QString path_version = QCoreApplication::applicationDirPath() + "/version.json";
             CONFIG::instance()->set_version_path(path_version);
@@ -3513,38 +3519,12 @@ void MainWindow::plot_info()
     }
     if(CONFIG::instance()->get_use_msa())
     {
-        if(COMM_MSA::instance()->get    QString tempPath = common_path + ".tmp";
-                QFile tempFile(tempPath);
-                if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
-                {
-                    spdlog::error("[CONFIG] failed to open temp file for writing: {}", tempPath.toStdString());
-                    return;
-                }
-
-                {
-                    QTextStream out(&tempFile);
-                    out << data;
-                    tempFile.close();
-                }
-
-                // ✅ 기존 파일 교체 (atomic replace)
-                if (!QFile::remove(common_path))
-                {
-                    spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
-                }
-
-                if (!QFile::rename(tempPath, common_path))
-                {
-                    spdlog::error("[CONFIG] failed to rename temp file to config file.");
-                    return;
-                }
-
-                spdlog::info("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
-_msa_connect_check())
+        if(COMM_MSA::instance()->get_msa_connect_check())
         {
             ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
     }
+
 }
 
 void MainWindow::plot_safety()
@@ -5109,6 +5089,8 @@ int MainWindow::led_handler()
     log_debug("led_handler");
 
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
+    double led_dist_near = CONFIG::instance()->get_obs_distance_led_near();
+    double led_dist_far  = CONFIG::instance()->get_obs_distance_led_far();
 
     int led_out = SAFETY_LED_OFF;
     if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
@@ -5140,12 +5122,22 @@ int MainWindow::led_handler()
 
         //autocontrol
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-        if(obs_d < 1.0)
+
+        if(obs_d < led_dist_far)
         {
+            // far auto drive led
             led_out = SAFETY_LED_PURPLE_BLINKING;
+            return led_out;
+        }
+
+        if(obs_d < led_dist_near)
+        {
+            //near auto drive led
+            led_out = SAFETY_LED_PURPLE;
             return led_out;
 
         }
+
         else
         {
             //normal auto drive led
