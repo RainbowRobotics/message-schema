@@ -1079,7 +1079,6 @@ void CONFIG::set_mileage(const QString &mileage)
         tempFile.close();
     }
 
-    // ✅ 기존 파일 교체 (atomic replace)
     if (!QFile::remove(common_path))
     {
         spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
