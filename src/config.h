@@ -92,6 +92,7 @@ public:
     bool get_use_cam();                 // check if the robot uses cam
     bool get_use_cam_rgb();             // check if the robot uses cam rgb
     bool get_use_cam_depth();           // check if the robot uses cam depth
+    bool get_use_cam_filter();           // check if the robot uses cam filter
     QString get_cam_type();             // check cam type
     int get_cam_num();                  // check cam number
     bool get_use_bqr();                 // check if the robot uses bottom QR sensor
@@ -450,6 +451,7 @@ private:
     bool USE_CAM = false;
     bool USE_CAM_RGB = false;
     bool USE_CAM_DEPTH = false;
+    bool USE_CAM_FILTER = false;
     QString CAM_TYPE = "";
     int CAM_NUM = 2;
 

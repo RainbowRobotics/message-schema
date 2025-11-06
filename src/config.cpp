@@ -175,6 +175,7 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_RGB",    USE_CAM_RGB,   "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_DEPTH",  USE_CAM_DEPTH, "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_FILTER",  USE_CAM_FILTER, "sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
@@ -1416,6 +1417,12 @@ bool CONFIG::get_use_cam_depth()
     return USE_CAM_DEPTH;
 }
 
+bool CONFIG::get_use_cam_filter()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CAM_FILTER;
+}
+
 QString CONFIG::get_cam_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -2010,6 +2017,7 @@ QJsonObject CONFIG::set_default_sensors_config()
     sensors["USE_CAM"] =            USE_CAM; //QString(USE_CAM ? "true" : "false");
     sensors["USE_CAM_RGB"] =        USE_CAM_RGB; //QString(USE_CAM_RGB ? "true" : "false");
     sensors["USE_CAM_DEPTH"] =      USE_CAM_DEPTH; //QString(USE_CAM_DEPTH ? "true" : "false");
+    sensors["USE_CAM_FILTER"] =     USE_CAM_FILTER; //QString(USE_CAM_FILTER ? "true" : "false");
     sensors["USE_BQR"] =            USE_BQR; //QString(USE_BQR ? "true" : "false");
     sensors["USE_IMU"] =            USE_IMU; //QString(USE_IMU ? "true" : "false");
     sensors["LIDAR_2D_NUM"] =       QString::number(LIDAR_2D_NUM);

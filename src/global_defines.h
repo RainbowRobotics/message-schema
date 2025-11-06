@@ -53,6 +53,13 @@
 #include <pcl/features/moment_of_inertia_estimation.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/obj_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/filter.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/search/kdtree.h>
+
 
 // Eigen
 #include <Eigen/Core>
