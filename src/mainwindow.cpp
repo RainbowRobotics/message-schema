@@ -4767,7 +4767,7 @@ void MainWindow::plot_cam()
                 {
                     pcl_viewer->addPointCloud(cloud, cloud_id.toStdString());
                 }
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, cloud_id.toStdString());
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
                 pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY,  0.5, cloud_id.toStdString());
             }
             else
