@@ -3226,7 +3226,7 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["sw_reset"] = sio::bool_message::create(ms.sw_reset == 1);
     robotStateObj->get_map()["sw_stop"] = sio::bool_message::create(ms.sw_stop == 1);
     robotStateObj->get_map()["sw_start"] = sio::bool_message::create(ms.sw_start == 1);
-    
+
     robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
                 ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
     robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
@@ -3235,7 +3235,8 @@ void COMM_MSA::send_status()
                 ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
 
-    auto toSioArray = [](unsigned char arr[8]) {
+    auto toSioArray = [](unsigned char arr[8]) 
+    {
         sio::array_message::ptr jsonArr = sio::array_message::create();
         for (int i = 0; i < 8; ++i)
         {

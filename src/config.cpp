@@ -362,6 +362,8 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "DOCKING_LINEAR_X_OFFSET", DOCKING_LINEAR_X_OFFSET, "docking");
     check_and_set_bool(obj_dock, "DOCKING_REVERSE_FLAG", DOCKING_REVERSE_FLAG, "docking");
     check_and_set_string(obj_dock, "CHARGE_TYPE", CHARGE_TYPE, "docking");
+    check_and_set_int(obj_dock, "DOCKING_FIELD", DOCKING_FIELD, "docking");
+    check_and_set_double(obj_dock, "XNERGY_SET_CURRENT", XNERGY_SET_CURRENT, "docking");
 }
 
 
@@ -1089,7 +1091,6 @@ void CONFIG::set_mileage(const QString &mileage)
         tempFile.close();
     }
 
-    // ✅ 기존 파일 교체 (atomic replace)
     if (!QFile::remove(common_path))
     {
         spdlog::warn("[CONFIG] failed to remove old config file: {}", common_path.toStdString());
@@ -2631,6 +2632,18 @@ double CONFIG::get_drive_w_deadzone()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return DRIVE_W_DEADZONE;
+}
+
+double CONFIG::get_xnergy_set_current()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return XNERGY_SET_CURRENT;
+}
+
+int CONFIG::get_docking_field()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return DOCKING_FIELD;
 }
 
 int CONFIG::get_docking_type()

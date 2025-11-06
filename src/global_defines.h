@@ -848,6 +848,10 @@ struct MOBILE_STATUS
     unsigned char tabos_soc  = 0;   // state of charge-%
     unsigned char tabos_soh  = 0;   // state of health-%
 
+    uint8_t xnergy_main_state = 0;
+    uint32_t xnergy_error_code_low = 0;
+    uint32_t xnergy_error_code_high = 0;
+
     uint8_t bms_type         = 0;
 
     float res_linear_dist = 0.0;

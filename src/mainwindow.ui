@@ -1526,6 +1526,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="currentIndex">
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -2147,6 +2148,52 @@ start</string>
               </property>
               <property name="text">
                <string>Chg_stop</string>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="le_errorcode">
+              <property name="geometry">
+               <rect>
+                <x>80</x>
+                <y>76</y>
+                <width>113</width>
+                <height>25</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="le_mainstate">
+              <property name="geometry">
+               <rect>
+                <x>80</x>
+                <y>107</y>
+                <width>113</width>
+                <height>25</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_6">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>81</y>
+                <width>67</width>
+                <height>17</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>error_code</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_8">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>110</y>
+                <width>67</width>
+                <height>17</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>main_state</string>
               </property>
              </widget>
             </widget>
