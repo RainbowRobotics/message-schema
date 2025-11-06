@@ -332,6 +332,11 @@ public:
     bool set_backup_config_file();
     void set_restore_config_file_backup();
     void set_default_config_template();
+    void cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups);
+
+
+
+    // update 
     bool get_update_use_config();
 
 private:

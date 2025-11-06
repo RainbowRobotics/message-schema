@@ -321,6 +321,7 @@ void MainWindow::init_modules()
             QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
+                        
             if (CONFIG::instance ()->get_update_use_config() == true)
             {
                 CONFIG::instance()->set_update_config_file();

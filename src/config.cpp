@@ -1788,7 +1788,7 @@ void CONFIG::set_update_config_file()
             }
             else
             {
-                spdlog::error("[CONFIG] JSON parse error: {}", error.errorString().toStdString());
+                spdlog::error("[CONFIG]docking.XNERGY_SET_CURRENT JSON parse error: {}", error.errorString().toStdString());
                 return;
             }
         }
@@ -1897,23 +1897,30 @@ bool CONFIG::set_backup_config_file()
         return false;
     }
 
-    //QString today = QDateTime::currentDateTime().toString("yyyyMMdd");
+    QString today = QDateTime::currentDateTime().toString("yyyyMMdd");
     QFileInfo config_info(path_config);
     QDir config_dir(config_info.absolutePath());
     
-    QStringList backup_filters;
-    backup_filters << config_info.baseName() + "_backup" + "*.json";
-    
-    QFileInfoList file_backup = config_dir.entryInfoList(backup_filters, QDir::Files);
+    // today backup file check
+    QStringList today_backup_filters;
+    today_backup_filters << config_info.baseName() + "_backup_" + today + "*.json";
 
-    if (!file_backup.isEmpty()) 
+    QFileInfoList today_backup = config_dir.entryInfoList(today_backup_filters, QDir::Files);
+
+    if (!today_backup.isEmpty()) 
     {
-        QString existing_backup = file_backup.first().fileName();
+        QString existing_backup = today_backup.first().fileName();
         spdlog::info("[CONFIG] Backup already exists for today: {}", existing_backup.toStdString());
         
         return true; 
     }
 
+    int max_backups = 5;
+
+    // remove old backups
+    cleanup_old_backups(config_info, config_dir, max_backups);
+
+    // create new backup
     QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
     QString backup_path = config_info.absolutePath() + "/" + 
                          config_info.baseName() + "_backup_" + timestamp + "." + 
@@ -1931,6 +1938,37 @@ bool CONFIG::set_backup_config_file()
     }
     
     return success;
+}
+
+void CONFIG::cleanup_old_backups(const QFileInfo& config_info, const QDir& config_dir, int max_backups)
+{
+    // find all backup files
+    QStringList backup_filters;
+    backup_filters << config_info.baseName() + "_backup_*.json";
+    
+    // aline date order (newest → oldest)
+    QFileInfoList all_backups = config_dir.entryInfoList(backup_filters, QDir::Files, QDir::Time);
+    
+    if (all_backups.size() >= max_backups) 
+    {
+        // remove files to make space for new backup
+        int files_to_remove = all_backups.size() - max_backups + 1; // 새 백업을 위한 공간 확보
+        
+        for (int i = all_backups.size() - files_to_remove; i < all_backups.size(); i++) 
+        {
+            QString old_backup_path = all_backups[i].absoluteFilePath();
+            if (QFile::remove(old_backup_path)) 
+            {
+                spdlog::info("[CONFIG] Removed old backup: {}", old_backup_path.toStdString());
+            }
+            else 
+            {
+                spdlog::warn("[CONFIG] Failed to remove old backup: {}", old_backup_path.toStdString());
+            }
+        }
+        
+        spdlog::info("[CONFIG] Backup cleanup completed. Removed {} old backup(s)", files_to_remove);
+    }
 }
 
 void CONFIG::set_restore_config_file_backup()
@@ -1969,6 +2007,10 @@ void CONFIG::set_default_config_template()
         
         spdlog::info("[CONFIG] Default config template created: {}", template_path.toStdString());
     }
+    else 
+    {
+        spdlog::error("[CONFIG] Failed to create config template: {}", template_path.toStdString());
+    }
 }
 
 // 2. set default config object
@@ -1992,11 +2034,13 @@ QJsonObject CONFIG::set_default_config_object()
     config["safety"] =          set_default_safety_config();
     config["qa"] =              set_default_qa_config();
     config["map"] =             QJsonObject{{"MAP_PATH", MAP_PATH}};
+
     config["SICK"] =            set_default_sick_config();
     config["LAKI"] =            set_default_laki_config();
     config["RPLIDAR"] =         set_default_rplidar_config();
     config["LIVOX"] =           set_default_livox_config();
     config["ORBBEC"] =          set_default_orbbec_config();
+
     config["update"] =          set_default_update_config();
     
     return config;
@@ -2221,6 +2265,8 @@ QJsonObject CONFIG::set_default_docking_config()
     dock["DOCKING_LINEAR_X_OFFSET"] = QString::number(DOCKING_LINEAR_X_OFFSET);
     dock["DOCKING_REVERSE_FLAG"] =              DOCKING_REVERSE_FLAG;
     dock["CHARGE_TYPE"] =                       QString(CHARGE_TYPE);
+    dock["DOCKING_FIELD"] =                     QString::number(DOCKING_FIELD);
+    dock["XNERGY_SET_CURRENT"] =                QString::number(XNERGY_SET_CURRENT);
 
     return dock;
 }
@@ -2303,6 +2349,8 @@ QJsonObject CONFIG::set_default_update_config()
 {
     QJsonObject update;
     update["CONFIG"] =        USE_CONFIG_UPDATE;
+    //update["CONFIG"] = QString(USE_CONFIG_UPDATE ? "true" : "false");
+
     return update;
 }
 
