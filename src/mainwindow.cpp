@@ -5108,6 +5108,9 @@ int MainWindow::led_handler()
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
     double led_dist_near = CONFIG::instance()->get_obs_distance_led_near();
     double led_dist_far  = CONFIG::instance()->get_obs_distance_led_far();
+    double battery_soc = MOBILE::instance()->get_battery_soc();
+    double battery_low = CONFIG::instance()->get_robot_alarm_bat_low();
+    double battery_critical = CONFIG::instance()->get_robot_alarm_bat_critical();
 
     int led_out = SAFETY_LED_OFF;
     if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
@@ -5115,6 +5118,24 @@ int MainWindow::led_handler()
         led_out = SAFETY_LED_RED;
         return led_out;
     }
+
+    if(CONFIG::instance()->get_robot_use_alarm() == true)
+    {
+        // Battery low
+        if(battery_soc < battery_low)
+        {
+            // low battery auto drive led
+            led_out = SAFETY_LED_YELLOW_BLINKING;
+            return led_out;
+        }
+        if(battery_soc < battery_critical)
+        {
+            // critical battery auto drive led
+            led_out = SAFETY_LED_RED;
+            return led_out;
+        }
+    }
+    
 
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
@@ -5161,14 +5182,6 @@ int MainWindow::led_handler()
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
-
-//        if(obs_d < 2.0)
-//        {
-//            led_out = SAFETY_LED_PURPLE;
-//            return led_out;
-
-//        }
-
 
     }
 

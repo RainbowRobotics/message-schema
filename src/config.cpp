@@ -159,6 +159,11 @@ void CONFIG::load_robot_config(const QJsonObject &obj)
     check_and_set_double(obj_robot, "ROBOT_LX", ROBOT_LX, "robot");
     check_and_set_double(obj_robot, "ROBOT_LY", ROBOT_LY, "robot");
 
+    check_and_set_double(obj_robot, "ROBOT_ALARM_BAT_LOW", ROBOT_ALARM_BAT_LOW, "robot");
+    check_and_set_double(obj_robot, "ROBOT_ALARM_BAT_CRITICAL", ROBOT_ALARM_BAT_CRITICAL, "robot");
+
+    check_and_set_bool(obj_robot, "ROBOT_ALARM", USE_ROBOT_ALARM, "robot");
+
     double lx = std::max<double>(std::abs(ROBOT_SIZE_X[0]), std::abs(ROBOT_SIZE_X[1]));
     double ly = std::max<double>(std::abs(ROBOT_SIZE_Y[0]), std::abs(ROBOT_SIZE_Y[1]));
     ROBOT_RADIUS = std::sqrt(lx * lx + ly * ly);
@@ -1356,6 +1361,24 @@ bool CONFIG::get_robot_use_speaker()
     return USE_SPEAKER;
 }
 
+bool CONFIG::get_robot_use_alarm()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_ROBOT_ALARM;
+}
+
+double CONFIG::get_robot_alarm_bat_low()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_ALARM_BAT_LOW;
+}
+
+double CONFIG::get_robot_alarm_bat_critical()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return ROBOT_ALARM_BAT_CRITICAL;
+}
+
 bool CONFIG::get_use_lidar_2d()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1983,22 +2006,25 @@ QJsonObject CONFIG::set_default_config_object()
 QJsonObject CONFIG::set_default_robot_config()
 {
     QJsonObject robot;
-    robot["MILEAGE"] =              QString(MILEAGE);
-    robot["SPEAKER"] =              USE_SPEAKER;
-    robot["ROBOT_WHEEL_TYPE"] =     QString(ROBOT_WHEEL_TYPE);
-    robot["ROBOT_SIZE_MIN_X"] =     QString::number(ROBOT_SIZE_X[0]);
-    robot["ROBOT_SIZE_MAX_X"] =     QString::number(ROBOT_SIZE_X[1]);
-    robot["ROBOT_SIZE_MIN_Y"] =     QString::number(ROBOT_SIZE_Y[0]);
-    robot["ROBOT_SIZE_MAX_Y"] =     QString::number(ROBOT_SIZE_Y[1]);
-    robot["ROBOT_SIZE_MIN_Z"] =     QString::number(ROBOT_SIZE_Z[0]);
-    robot["ROBOT_SIZE_MAX_Z"] =     QString::number(ROBOT_SIZE_Z[1]);
-    robot["ROBOT_SIZE_ADD_X"] =     QString::number(ROBOT_SIZE_ADD_X);
-    robot["ROBOT_SIZE_ADD_Y"] =     QString::number(ROBOT_SIZE_ADD_Y);
-    robot["ROBOT_SIZE_ADD_Z"] =     QString::number(ROBOT_SIZE_ADD_Z);
-    robot["ROBOT_WHEEL_RADIUS"] =   QString::number(ROBOT_WHEEL_RADIUS);
-    robot["ROBOT_WHEEL_BASE"] =     QString::number(ROBOT_WHEEL_BASE);
-    robot["ROBOT_LX"] =             QString::number(ROBOT_LX);
-    robot["ROBOT_LY"] =             QString::number(ROBOT_LY);
+    robot["MILEAGE"] =                      QString(MILEAGE);
+    robot["SPEAKER"] =                      USE_SPEAKER;
+    robot["ROBOT_WHEEL_TYPE"] =             QString(ROBOT_WHEEL_TYPE);
+    robot["ROBOT_SIZE_MIN_X"] =             QString::number(ROBOT_SIZE_X[0]);
+    robot["ROBOT_SIZE_MAX_X"] =             QString::number(ROBOT_SIZE_X[1]);
+    robot["ROBOT_SIZE_MIN_Y"] =             QString::number(ROBOT_SIZE_Y[0]);
+    robot["ROBOT_SIZE_MAX_Y"] =             QString::number(ROBOT_SIZE_Y[1]);
+    robot["ROBOT_SIZE_MIN_Z"] =             QString::number(ROBOT_SIZE_Z[0]);
+    robot["ROBOT_SIZE_MAX_Z"] =             QString::number(ROBOT_SIZE_Z[1]);
+    robot["ROBOT_SIZE_ADD_X"] =             QString::number(ROBOT_SIZE_ADD_X);
+    robot["ROBOT_SIZE_ADD_Y"] =             QString::number(ROBOT_SIZE_ADD_Y);
+    robot["ROBOT_SIZE_ADD_Z"] =             QString::number(ROBOT_SIZE_ADD_Z);
+    robot["ROBOT_WHEEL_RADIUS"] =           QString::number(ROBOT_WHEEL_RADIUS);
+    robot["ROBOT_WHEEL_BASE"] =             QString::number(ROBOT_WHEEL_BASE);
+    robot["ROBOT_LX"] =                     QString::number(ROBOT_LX);
+    robot["ROBOT_LY"] =                     QString::number(ROBOT_LY);
+    robot["ROBOT_ALARM_BAT_LOW"] =          QString::number(ROBOT_ALARM_BAT_LOW);
+    robot["ROBOT_ALARM_BAT_CRITICAL"] =     QString::number(ROBOT_ALARM_BAT_CRITICAL);
+    robot["ROBOT_ALARM"] =                  USE_ROBOT_ALARM;
     return robot;
 }
 
