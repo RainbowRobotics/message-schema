@@ -1171,6 +1171,11 @@ void MainWindow::init_gamepad()
         eval_analog();
     });
 
+    connect(gamepad, &QGamepad::buttonAChanged, this, [this, eval_analog](double v)
+    {
+        bt_MotorInit();
+    });
+
     connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int)
     {
         cur_lx = 0.0;
