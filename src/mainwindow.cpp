@@ -3708,6 +3708,10 @@ void MainWindow::plot_safety()
     {
         charge_state = "CHARGING";
     }
+    else if(cur_status.charge_state == 4)
+    {
+        charge_state = "CHARGE_FINISH";
+    }
     else if(cur_status.charge_state == 5)
     {
         charge_state = "CHARGE_FAILED";
@@ -5131,6 +5135,12 @@ int MainWindow::led_handler()
         {
             //docking process sucess
             led_out = SAFETY_LED_CONTRACTING_GREEN;
+            return led_out;
+        }
+        
+        else if (ms.charge_state == CHARGING_STATION_CHARGE_FINISH)
+        {
+            led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
 
