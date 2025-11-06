@@ -335,7 +335,8 @@ void ORBBEC::grab_loop(int idx)
                             pts.push_back(_P);
                         }
                     }
-                    std::cout << idx << ", pts.size(): " << pts.size() << std::endl;
+
+                    //std::cout << idx << ", pts.size(): " << pts.size() << std::endl;
 
                     pts = voxel_filtering(pts, voxel_size);
                     cur_pts_size[idx] = pts.size();
