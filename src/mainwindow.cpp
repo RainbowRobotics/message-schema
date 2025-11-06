@@ -164,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 
     // others
+    connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
     connect(ui->ckb_PlotKfrm, SIGNAL(stateChanged(int)), this, SLOT(ckb_PlotKfrm()));
 
@@ -2102,6 +2103,11 @@ void MainWindow::bt_SetLidarField()
     log_info("bt_SetLidarField");
     unsigned int field = ui->le_Lidar_Field_Write->text().toUInt();
     MOBILE::instance()->setlidarfield(field);
+}
+
+void MainWindow::bt_Test()
+{
+    CAM::instance()->restart();
 }
 
 void MainWindow::bt_TestLed()

@@ -293,6 +293,7 @@ public Q_SLOTS:
     void bt_SetLidarField();
 
     // others
+    void bt_Test();
     void bt_TestLed();
     void ckb_PlotKfrm();
 

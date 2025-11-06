@@ -38,6 +38,9 @@ public:
     // stop ORBBEC module
     void close();
 
+    // restart ORBBEC module
+    void restart();
+
     /***********************
      * interface funcs
      ***********************/
@@ -96,6 +99,12 @@ private:
     tbb::concurrent_queue<TIME_PTS> depth_que[max_cam_cnt];
     tbb::concurrent_queue<TIME_IMG> img_que[max_cam_cnt];
 
+
+Q_SIGNALS:
+    void signal_restart();
+
+private Q_SLOTS:
+    void slot_restart();
 };
 
 #endif // ORBBEC_H

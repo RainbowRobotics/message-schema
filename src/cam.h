@@ -32,6 +32,9 @@ public:
     // close cam module
     void close();
 
+    // restart cam module
+    void restart();
+
     /***********************
      * interface funcs
      ***********************/

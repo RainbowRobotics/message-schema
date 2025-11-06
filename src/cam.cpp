@@ -58,6 +58,14 @@ void CAM::close()
     }
 }
 
+void CAM::restart()
+{
+    if(config->get_cam_type() == "ORBBEC" && orbbec)
+    {
+        orbbec->restart();
+    }
+}
+
 CAM::~CAM()
 {
     int cam_num = config->get_cam_num();
