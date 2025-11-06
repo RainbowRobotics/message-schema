@@ -4645,14 +4645,13 @@ void MainWindow::plot_ctrl()
                          POLICY::instance()->get_zone_info().info.toLocal8Bit().data());
             ui->lb_Policy->setText(text);
         }
-
     }
-
 
     // plot goal info
     ui->lb_RobotGoal->setText(QString("id:%1\ninfo:%2").arg(AUTOCONTROL::instance()->get_cur_move_info().goal_node_id).
                               arg(AUTOCONTROL::instance()->get_cur_move_state()));
 }
+
 void MainWindow::plot_cam()
 {
     log_debug("plot_cam");
@@ -4732,13 +4731,13 @@ void MainWindow::plot_cam()
 
                     if(idx == 0)
                     {
-                        pt.r = 255;
-                        pt.g = 0;
+                        pt.r = 0;
+                        pt.g = 255;
                         pt.b = 0;
                     }
                     else if(idx == 1)
                     {
-                        pt.r = 0;
+                        pt.r = 255;
                         pt.g = 255;
                         pt.b = 0;
                     }
@@ -4750,9 +4749,9 @@ void MainWindow::plot_cam()
                     }
                     else if(idx == 3)
                     {
-                        pt.r = 0;
-                        pt.g = 255;
-                        pt.b = 255;
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
                     }
 
                     cloud->push_back(pt);
@@ -4763,7 +4762,7 @@ void MainWindow::plot_cam()
                 {
                     pcl_viewer->addPointCloud(cloud, cloud_id.toStdString());
                 }
-                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, cloud_id.toStdString());
+                pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, cloud_id.toStdString());
                 pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY,  0.5, cloud_id.toStdString());
             }
             else

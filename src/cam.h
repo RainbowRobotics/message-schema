@@ -83,6 +83,9 @@ private:
     std::unique_ptr<std::thread> rtsp_thread;
     void rtsp_loop();
 
+    // func
+    TIME_PTS filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER);
+
     // params
     std::atomic<bool> is_connected[max_cam_cnt];
     std::atomic<double> process_time_post[max_cam_cnt];

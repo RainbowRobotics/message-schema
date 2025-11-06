@@ -195,6 +195,7 @@
         "USE_CAM": true,
         "USE_CAM_RGB": true,
         "USE_CAM_DEPTH": true,
+        "USE_CAM_FILTER": true,
         "USE_IMU": false,
         "USE_LIDAR_2D": true,
         "USE_LIDAR_3D": true
