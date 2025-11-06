@@ -214,6 +214,112 @@ TIME_PTS CAM::get_scan(int idx)
 //    }
 //}
 
+TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_neighbors, bool USE_ROR, bool USE_CLUSTER)
+{
+    TIME_PTS res;
+    res.t = tp.t;
+
+    if(tp.pts.size() == 0)
+    {
+        return res;
+    }
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    cloud->reserve(tp.pts.size());
+    for(size_t i = 0; i < tp.pts.size(); i++)
+    {
+        const Eigen::Vector3d &p = tp.pts[i];
+        if(std::isfinite(p.x()) && std::isfinite(p.y()) && std::isfinite(p.z()))
+        {
+            cloud->push_back(pcl::PointXYZ((float)p.x(), (float)p.y(), (float)p.z()));
+        }
+    }
+    if(cloud->size() == 0)
+    {
+        return res;
+    }
+
+    // downsample
+    pcl::PointCloud<pcl::PointXYZ>::Ptr ds(new pcl::PointCloud<pcl::PointXYZ>);
+    {
+        pcl::VoxelGrid<pcl::PointXYZ> voxel_grid;
+        float leaf = (float)0.01;
+        voxel_grid.setInputCloud(cloud);
+        voxel_grid.setLeafSize(leaf, leaf, leaf);
+        voxel_grid.filter(*ds);
+    }
+    if(ds->size() == 0)
+    {
+        return res;
+    }
+
+    // ror
+    pcl::PointCloud<pcl::PointXYZ> cloud_ror;
+    if(USE_ROR)
+    {
+        pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
+        ror.setInputCloud(cloud);
+        ror.setRadiusSearch(radius);
+        ror.setMinNeighborsInRadius(min_neighbors);
+        ror.filter(cloud_ror);
+    }
+    else
+    {
+        cloud_ror = *cloud;
+    }
+
+    // cluster
+    pcl::PointCloud<pcl::PointXYZ> cloud_final;
+    if(USE_CLUSTER)
+    {
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+        tree->setInputCloud(cloud_ror.makeShared());
+
+        std::vector<pcl::PointIndices> cluster_indices;
+        pcl::EuclideanClusterExtraction<pcl::PointXYZ> extractor;
+        extractor.setClusterTolerance((float)(radius * 1.5));
+        extractor.setMinClusterSize(20);
+        extractor.setMaxClusterSize(500000);
+        extractor.setSearchMethod(tree);
+        extractor.setInputCloud(cloud_ror.makeShared());
+        extractor.extract(cluster_indices);
+
+        for(size_t ci = 0; ci < cluster_indices.size(); ci++)
+        {
+            const pcl::PointIndices &inds = cluster_indices[ci];
+            for(size_t k = 0; k < inds.indices.size(); k++)
+            {
+                int idx = inds.indices[k];
+                cloud_final.push_back(cloud_ror[idx]);
+            }
+        }
+    }
+    else
+    {
+        cloud_final = cloud_ror;
+    }
+
+    // result
+    res.pts.clear();
+    res.pts.reserve(cloud_final.size());
+    for(size_t i = 0; i < cloud_final.size(); i++)
+    {
+        const pcl::PointXYZ &p = cloud_final[i];
+        res.pts.emplace_back((double)p.x, (double)p.y, (double)p.z);
+    }
+
+    // debug
+    // log_info("[CAM] DS/ROR/CL raw:{} → ds:{} → ror:{} → final:{}  (USE_ROR:{} USE_CLUSTER:{}) (r:{:.2f} nmin:{})",
+    //          (int)tp.pts.size(),
+    //          (int)ds->size(),
+    //          (int)cloud_ror.size(),
+    //          (int)cloud_final.size(),
+    //          (int)USE_ROR, (int)USE_CLUSTER,
+    //          radius, min_neighbors);
+
+    return res;
+}
+
 void CAM::post_process_loop(int idx)
 {
     const double dt = 0.1; // 10hz
@@ -234,8 +340,8 @@ void CAM::post_process_loop(int idx)
                 //if(config->get_use_cam_depth() || config->get_use_cam())
                 if(config->get_use_cam_depth())
                 {
-                   // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                   TIME_PTS tp;
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    TIME_PTS tp;
                     if(orbbec->try_pop_depth_que(idx, tp))
                     {
                         if(is_connected[idx] == false)
@@ -243,8 +349,17 @@ void CAM::post_process_loop(int idx)
                             is_connected[idx] = true;
                         }
 
-                    std::lock_guard<std::mutex> lock(mtx);
-                    cur_scan[idx] = tp;
+                        if(config->get_use_cam_filter())
+                        {
+                            TIME_PTS filtered_tp = filter_radius_outlier(tp, 0.1, 5, true, true);
+                            std::lock_guard<std::mutex> lock(mtx);
+                            cur_scan[idx] = filtered_tp;
+                        }
+                        else
+                        {
+                            std::lock_guard<std::mutex> lock(mtx);
+                            cur_scan[idx] = tp;
+                        }
                     }
                 }
                 
@@ -301,7 +416,7 @@ void CAM::post_process_loop(int idx)
         }
         else
         {
-            logger->write_log(QString("[AUTO] loop time drift, dt:%1").arg(delta_loop_time));
+            logger->write_log(QString("[CAM] loop time drift, dt:%1").arg(delta_loop_time));
             log_warn("loop time drift, dt:{}", delta_loop_time);
         }
 

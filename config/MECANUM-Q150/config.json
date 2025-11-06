@@ -22,6 +22,9 @@
         "LIDAR_3D_NUM": "1",
         
         "USE_CAM": false,
+        "USE_CAM_RGB": true,
+        "USE_CAM_DEPTH": true,
+        "USE_CAM_FILTER": true,
         "CAM_TYPE": "ORBBEC",
         "CAM_NUM": "2",
         

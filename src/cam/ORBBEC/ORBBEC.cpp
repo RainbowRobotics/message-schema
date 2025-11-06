@@ -360,7 +360,7 @@ void ORBBEC::grab_loop(int idx)
                 else
                 {
                     cnt ++;
-                    std::cout << "cnt: " << cnt << std::endl;
+                    // std::cout << "cnt: " << cnt << std::endl;
                     if(cnt > 100)
                     {
                         std::cout << "signal_restart, " << cnt << std::endl;
