@@ -311,7 +311,7 @@ void MainWindow::init_modules()
         //        qDebug()<<"robot_type_str : "<<robot_type_str;
         ui->lb_RobotType->setText(robot_type_str);
 
-        mileage = CONFIG::instance()->get_mileage();
+        //mileage = CONFIG::instance()->get_mileage();
 
         if(robot_type_str.isEmpty())
         {
@@ -2958,7 +2958,7 @@ void MainWindow::watch_loop()
         }
 
         // plot mobile distance info
-        {
+        /*{
             double move_distance = prev_move_distance;
             double candidate = CONFIG::instance()->get_use_sim() ? SIM::instance()->distance : MOBILE::instance()->get_move_distance();
 
@@ -2979,7 +2979,7 @@ void MainWindow::watch_loop()
             }
 
             old_total_mileage = total_mileage;
-        }
+        }*/
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
