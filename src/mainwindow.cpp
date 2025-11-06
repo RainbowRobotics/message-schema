@@ -121,12 +121,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // start docking
     connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
-    // for response
-    connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-    connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
-    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-    connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
-
     // annotation
     connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
     connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
@@ -176,6 +170,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // init modules
     init_modules();
+
+    // for response
+    if(CONFIG::instance()->get_use_rrs())
+    {
+        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
+        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+    }
+    if(CONFIG::instance()->get_use_msa())
+    {
+        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_MSA::instance(), SLOT(send_dock_response(DATA_DOCK)));
+        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
+        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+    }
 
     // ipv4
     getIPv4();
@@ -312,6 +322,12 @@ void MainWindow::init_modules()
             QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
+            if (CONFIG::instance ()->get_update_use_config() == true)
+            {
+                CONFIG::instance()->set_update_config_file();
+                spdlog::info("Deactivate config file update flag.");
+            }
+
 
             QString path_version = QCoreApplication::applicationDirPath() + "/version.json";
             CONFIG::instance()->set_version_path(path_version);
@@ -1954,8 +1970,15 @@ void MainWindow::bt_DockStart()
     //spdlog::info("[DOCK] bt_DockStart");
     log_info("[DOCK] bt_DockStart");
 
-    // no use OSSD
-    MOBILE::instance()->set_detect_mode(0.0);
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    else
+    {
+        MOBILE::instance()->setlidarfield(d_field);
+    }
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->move();
 }
@@ -1965,11 +1988,14 @@ void MainWindow::bt_DockStop()
     //spdlog::info("[DOCK] bt_DockStop");
     log_info("[DOCK] bt_DockStop");
 
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
-
-    // use OSSD
-    MOBILE::instance()->set_detect_mode(1.0);
 }
 
 void MainWindow::bt_UnDockStart()
@@ -1977,19 +2003,22 @@ void MainWindow::bt_UnDockStart()
     //spdlog::info("[DOCK] bt_UnDockStart");
     log_info("[DOCK] bt_UnDockStart");
 
-    // no use OSSD
-    MOBILE::instance()->set_detect_mode(0.0);
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    else
+    {
+        MOBILE::instance()->setlidarfield(d_field);
+    }
 
-    AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->undock();
 
     double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
     QTimer::singleShot(t*1000, [&]()
     {
         AUTOCONTROL::instance()->set_is_moving(false);
-
-        // use OSSD
-        MOBILE::instance()->set_detect_mode(1.0);
         DOCKCONTROL::instance()->stop();
     });
 }
@@ -1998,6 +2027,7 @@ void MainWindow::bt_ChgTrig()
 {
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
+
 }
 
 void MainWindow::bt_ChgStop()
@@ -2937,7 +2967,7 @@ void MainWindow::watch_loop()
             // plot mobile pose
             ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
 
-            if(cnt % 100 == 0)
+            if(cnt % 50 == 0)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }
@@ -3514,6 +3544,7 @@ void MainWindow::plot_info()
             ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
     }
+
 }
 
 void MainWindow::plot_safety()
@@ -3767,6 +3798,9 @@ void MainWindow::plot_safety()
     {
         ui->le_Safety_Op_Stop_State->setText(QString().sprintf("none"));
     }
+
+    ui->le_mainstate->setText(QString().sprintf("%d", cur_status.xnergy_main_state));
+    ui->le_errorcode->setText(QString().sprintf("%d", cur_status.xnergy_error_code_low));
 }
 
 void MainWindow::plot_raw_2d()
@@ -5078,6 +5112,8 @@ int MainWindow::led_handler()
     log_debug("led_handler");
 
     MOBILE_STATUS ms = MOBILE::instance()->get_status();
+    double led_dist_near = CONFIG::instance()->get_obs_distance_led_near();
+    double led_dist_far  = CONFIG::instance()->get_obs_distance_led_far();
 
     int led_out = SAFETY_LED_OFF;
     if(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2)
@@ -5109,15 +5145,17 @@ int MainWindow::led_handler()
 
         //autocontrol
         double obs_d = AUTOCONTROL::instance()->get_obs_dist();
-        if(obs_d < 1.0)
+
+        if(obs_d < led_dist_far)
         {
+            // far auto drive led
             led_out = SAFETY_LED_PURPLE_BLINKING;
             return led_out;
-
         }
 
-        if(obs_d < 2.0)
+        if(obs_d < led_dist_near)
         {
+            //near auto drive led
             led_out = SAFETY_LED_PURPLE;
             return led_out;
 
@@ -5129,6 +5167,15 @@ int MainWindow::led_handler()
             led_out = SAFETY_LED_GREEN_BLINKING;
             return led_out;
         }
+
+//        if(obs_d < 2.0)
+//        {
+//            led_out = SAFETY_LED_PURPLE;
+//            return led_out;
+
+//        }
+
+
     }
 
     // not autodrive led control

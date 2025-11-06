@@ -74,6 +74,8 @@ public:
     int  get_dock_fsm_state();
     void set_dock_retry_flag(bool val);
 
+    void set_cmd_id(QString id);
+
 private:
     explicit DOCKCONTROL(QObject *parent = nullptr);
     ~DOCKCONTROL();
@@ -89,6 +91,7 @@ private:
     void b_loop();
     std::unique_ptr<std::thread> b_thread;
 
+    QString cmd_id ="";
 
     // flags
     std::atomic<bool> is_moving     = {false};

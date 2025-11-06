@@ -681,6 +681,16 @@ void MOBILE::receive_data_loop()
                             unsigned char sss_recovery_state;
                             memcpy(&sss_recovery_state, &_buf[index], dlc); index += dlc;
 
+                            //for xnergy
+                            uint8_t xnergy_main_state;
+                            memcpy(&xnergy_main_state, &_buf[index], dlc); index += dlc;
+
+                            uint32_t xnergy_error_code_low;
+                            memcpy(&xnergy_error_code_low, &_buf[index], dlc_f); index += dlc_f;
+
+                            uint32_t xnergy_error_code_high;
+                            memcpy(&xnergy_error_code_high, &_buf[index], dlc_f); index += dlc_f;
+
 
                             
                             // Update status
@@ -719,6 +729,11 @@ void MOBILE::receive_data_loop()
 
                             cur_status.sss_recovery_state = sss_recovery_state;
                             cur_status.motor_stop_state = !(cur_status.safety_state_emo_pressed_1||cur_status.safety_state_emo_pressed_2);
+
+                            // for xnergy
+                            cur_status.xnergy_main_state = xnergy_main_state;
+                            cur_status.xnergy_error_code_low = xnergy_error_code_low;
+                            cur_status.xnergy_error_code_high = xnergy_error_code_high;
 
                             // DIO/DIN
                             for(int i=0; i<8; i++)

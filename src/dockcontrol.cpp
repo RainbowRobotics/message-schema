@@ -56,8 +56,6 @@ void DOCKCONTROL::init()
 
 void DOCKCONTROL::move()
 {
-
-
     if(config->get_docking_type() == 0) // 0 - lidar docking
     {
         reverse_mode = config->get_docking_reverse_mode();
@@ -339,6 +337,7 @@ void DOCKCONTROL::a_loop()
                             {
                                 int non_used_int = 0;
                                 mobile->xnergy_command(0, non_used_int);
+                                
                                 spdlog::info("[DOCKING] xnergy command charge start");
                             }
                         }
@@ -375,6 +374,7 @@ void DOCKCONTROL::a_loop()
                 fsm_state = DOCKING_FSM_COMPLETE;
 
                 DATA_DOCK ddock;
+                ddock.id = cmd_id;
                 ddock.command = "dock";
                 ddock.result = "success";
                 ddock.message = "";
@@ -445,6 +445,7 @@ void DOCKCONTROL::a_loop()
             {
                 failed_flag = false;
                 DATA_DOCK ddock;
+                 ddock.id = cmd_id;
                 ddock.command = "dock";
                 ddock.result = "fail";
                 ddock.message = failed_reason;
@@ -456,6 +457,12 @@ void DOCKCONTROL::a_loop()
 
         else if (fsm_state == DOCKING_FSM_COMPLETE)
         {
+            if(config->get_charge_type() == "XNERGY")
+            {
+                double xnergy_set_current = config->get_xnergy_set_current();
+
+                mobile->xnergy_command(3, xnergy_set_current); 
+            }
             fsm_state = DOCKING_FSM_OFF;
 
         }
@@ -501,6 +508,7 @@ void DOCKCONTROL::b_loop()
                 spdlog::info("[DOCKING] UNDOCK SUCCESS");
 
                 DATA_DOCK ddock;
+                ddock.id = cmd_id;
                 ddock.command = "undock";
                 ddock.result = "success";
                 ddock.message = "";
@@ -522,6 +530,7 @@ void DOCKCONTROL::b_loop()
             spdlog::info("[DOCKING] UNDOCK FAILED");
 
             DATA_DOCK ddock;
+            ddock.id = cmd_id;
             ddock.command = "undock";
             ddock.result = "fail";
             ddock.message = failed_reason;
@@ -889,7 +898,6 @@ Eigen::Matrix4d DOCKCONTROL::find_vmark(int& dock_check)
 
             if(condition)
             {
-                spdlog::info("[DOCKING] dock_check: 1");
                 dock_check = 1; // ONEQUE DOCK CNT
             }
 
@@ -1447,7 +1455,6 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
 
         if (final_dock)
         {       
-            spdlog::info("[DOCKING] Final Docking");
             //final PID Controller
             double direction = 1.0;
 
@@ -1483,7 +1490,6 @@ void DOCKCONTROL::dockControl(bool final_dock, const Eigen::Matrix4d& cur_pose, 
         else
         {
             //DWA Controller
-            spdlog::info("[DOCKING] DWA Controller");
 
             Eigen::Vector3d target_pos = target_tf.block<3,1>(0,3);
             double target_yaw = atan2(target_tf(1,0), target_tf(0,0));
@@ -1792,6 +1798,13 @@ void DOCKCONTROL::set_dock_retry_flag(bool val)
 int DOCKCONTROL::get_dock_fsm_state()
 {
     return (int)fsm_state.load();
+}
+
+void DOCKCONTROL::set_cmd_id(QString id)
+{
+    mtx.lock();
+    cmd_id = id;
+    mtx.unlock();
 }
 
 double DOCKCONTROL::wrapToPi(double angle)

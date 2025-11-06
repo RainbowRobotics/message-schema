@@ -485,7 +485,6 @@ void COMM_MSA::send_move_status()
     {
         auto_state = "error";
     }
-
     QString dock_state = "stop";
 
     QString jog_state = "none";
@@ -891,10 +890,9 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     // msg.dir           = get_json(data, "dir"); // 필요 시 사용
 
     msg.goal_node_id    = get_json(data, "goalId");
-    msg.goal_node_name  = get_json(data, "goalName");  // JSON에 존재하면 추가
+    msg.goal_node_name  = get_json(data, "goalName");
 
-    // 위치 및 속도 정보
-    msg.cur_pos.setZero(); // 필요 시 갱신
+    msg.cur_pos.setZero();
     msg.tgt_pose_vec[0] = get_json_double(data, "x");
     msg.tgt_pose_vec[1] = get_json_double(data, "y");
     msg.tgt_pose_vec[2] = get_json_double(data, "z");
@@ -904,17 +902,14 @@ void COMM_MSA::handle_move_cmd(const QJsonObject& data)
     msg.jog_val[1] = get_json_double(data, "vy");
     msg.jog_val[2] = get_json_double(data, "wz");
 
-    // 이동 파라미터
     msg.target          = get_json_double(data, "target");
     msg.speed           = get_json_double(data, "speed");
     msg.meassured_dist  = get_json_double(data, "measuredDist");
 
-    // 진행 상태
     msg.remaining_dist  = get_json_double(data, "remainingDist");
     msg.remaining_time  = get_json_double(data, "remainingTime");
     msg.bat_percent     = get_json_int(data, "battery");
 
-    // 결과
     msg.result          = get_json(data, "result");
     msg.message         = get_json(data, "message");
 
@@ -1226,17 +1221,14 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
         return jsonArr;
     };
 
-    // mcuDio 배열 생성
     sio::array_message::ptr mcuDioArr = sio::array_message::create();
     mcuDioArr->get_vector().push_back(toSioArray(ms.mcu0_dio));
     mcuDioArr->get_vector().push_back(toSioArray(ms.mcu1_dio));
 
-    // mcuDin 배열 생성
     sio::array_message::ptr mcuDinArr = sio::array_message::create();
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu0_din));
     mcuDinArr->get_vector().push_back(toSioArray(ms.mcu1_din));
 
-    // rootObj에 직접 넣기
     rootObj->get_map()["mcuDio"] = mcuDioArr;
     rootObj->get_map()["mcuDin"] = mcuDinArr;
 
@@ -1249,7 +1241,7 @@ void COMM_MSA::handle_send_safetyIO(const QJsonObject& data)
 
     SOCKET_MESSAGE socket_msg;
     socket_msg.event = "controlResponse";
-    socket_msg.data = rootObj;  // 타입 그대로 전달
+    socket_msg.data = rootObj;
 
     io->socket("slamnav")->emit(socket_msg.event.toStdString(), socket_msg.data);
 
@@ -1834,6 +1826,7 @@ void COMM_MSA::control_loop()
         lock.unlock();
 
         QString command = msg.command;
+        dctrl->set_cmd_id(msg.id);
         if(command == DATA_CONTROL::Dock)
         {
             if(is_main_window_valid())
@@ -1844,6 +1837,7 @@ void COMM_MSA::control_loop()
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_DockStart", Qt::QueuedConnection);
                 log_info("recv_loc, start docking");
+
             }
             else
             {
@@ -1863,9 +1857,12 @@ void COMM_MSA::control_loop()
                 msg.result = "accept";
                 msg.message = "";
 
+                //spdlog::info("[DOCK] bt_UnDockStart");
+                log_info("[DOCK] bt_UnDockStart");
                 MainWindow* _main = (MainWindow*)main;
                 QMetaObject::invokeMethod(_main, "bt_UnDockStart", Qt::QueuedConnection);
-                log_info("recv_loc, start undocking");
+//                log_info("recv_loc, start undocking");
+
             }
             else
             {
@@ -2116,6 +2113,26 @@ void COMM_MSA::control_loop()
         send_control_response(msg);
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+}
+
+void COMM_MSA::send_dock_response(const DATA_DOCK& msg)
+{
+    spdlog::debug("[RRS] send_dock_response connected");
+    if(!is_connected)
+    {
+        return;
+    }
+
+    sio::object_message::ptr send_object = sio::object_message::create();
+    send_object->get_map()["id"]         = sio::string_message::create(msg.id.toStdString());
+    send_object->get_map()["command"]    = sio::string_message::create(msg.command.toStdString());
+    send_object->get_map()["result"]     = sio::string_message::create(msg.result.toStdString());
+    send_object->get_map()["message"]    = sio::string_message::create(msg.message.toStdString());
+//    QJsonObject errorCode = ERROR_MANAGER::instance()->getErrorCodeMapping(msg.message);
+//    send_object->get_map()["message_detail"]    = sio::string_message::create(errorCode.toStdString());
+    send_object->get_map()["time"]   = sio::string_message::create(QString::number((long long)(msg.time*1000), 10).toStdString());
+
+    io->socket("slamnav")->emit("controlResponse", send_object);
 }
 
 void COMM_MSA::common_loop()
@@ -3209,7 +3226,7 @@ void COMM_MSA::send_status()
     robotStateObj->get_map()["sw_reset"] = sio::bool_message::create(ms.sw_reset == 1);
     robotStateObj->get_map()["sw_stop"] = sio::bool_message::create(ms.sw_stop == 1);
     robotStateObj->get_map()["sw_start"] = sio::bool_message::create(ms.sw_start == 1);
-    
+
     robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
                 ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
     robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
@@ -3218,7 +3235,8 @@ void COMM_MSA::send_status()
                 ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
     rootObj->get_map()["robot_state"]        = robotStateObj;
 
-    auto toSioArray = [](unsigned char arr[8]) {
+    auto toSioArray = [](unsigned char arr[8]) 
+    {
         sio::array_message::ptr jsonArr = sio::array_message::create();
         for (int i = 0; i < 8; ++i)
         {
