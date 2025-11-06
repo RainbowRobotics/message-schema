@@ -78,6 +78,7 @@ public:
     double get_robot_lx();            // robot lx
     double get_robot_ly();            // robot ly
 
+
     /***********************
      * sensor common
      ***********************/
@@ -240,6 +241,8 @@ public:
     double get_obs_map_min_z();             //
     double get_obs_map_max_z();             //
     double get_obs_predict_time();          //
+    double get_obs_distance_led_near();     // LED near distance
+    double get_obs_distance_led_far();      // LED far distance
 
     /***********************
      * drive
@@ -327,6 +330,7 @@ public:
     bool set_backup_config_file();
     void set_restore_config_file_backup();
     void set_default_config_template();
+    bool get_update_use_config();
 
 private:
 
@@ -352,6 +356,7 @@ private:
     void load_sensor_specific_configs(const QJsonObject& obj);
     void load_safety_config(const QJsonObject& obj);
     void load_qa_config(const QJsonObject& obj);
+    void load_update_config(const QJsonObject& obj);
 
     /***********************
      * helper functions for loading json
@@ -385,6 +390,7 @@ private:
     QJsonObject set_default_docking_config();
     QJsonObject set_default_safety_config();
     QJsonObject set_default_qa_config();
+    QJsonObject set_default_update_config();
 
     QJsonObject set_default_sick_config();
     QJsonObject set_default_laki_config();
@@ -430,6 +436,7 @@ private:
     bool USE_SPEAKER = false;
     double ROBOT_LX = 0.5;
     double ROBOT_LY = 0.23;
+    bool USE_CONFIG_UPDATE = false;
 
     // sensors
     bool USE_LIDAR_2D = false;
@@ -568,6 +575,8 @@ private:
     double OBS_MAP_MIN_Z = -1.0;
     double OBS_MAP_MAX_Z = 1.0;
     double OBS_PREDICT_TIME = 3.0;
+    double OBS_DISTANCE_LED_NEAR = 1.0;
+    double OBS_DISTANCE_LED_FAR = 1.5;
 
     // control
     double DRIVE_GOAL_APPROACH_GAIN = 1.0;

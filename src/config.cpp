@@ -121,6 +121,7 @@ void CONFIG::load()
     load_sensor_specific_configs(obj);
     load_safety_config(obj);
     load_qa_config(obj);
+    load_update_config(obj);
 
     is_load = true;
     //printf("[CONFIG] %s, load successed\n", qUtf8Printable(path_config));
@@ -320,6 +321,8 @@ void CONFIG::load_obstacle_config(const QJsonObject &obj)
     check_and_set_double(obj_obs, "OBS_MAP_MIN_Z",     OBS_MAP_MIN_Z,     "obs");
     check_and_set_double(obj_obs, "OBS_MAP_MAX_Z",     OBS_MAP_MAX_Z,     "obs");
     check_and_set_double(obj_obs, "OBS_PREDICT_TIME",  OBS_PREDICT_TIME,  "obs");
+    check_and_set_double(obj_obs, "OBS_DISTANCE_LED_NEAR",  OBS_DISTANCE_LED_NEAR,  "obs");
+    check_and_set_double(obj_obs, "OBS_DISTANCE_LED_FAR",  OBS_DISTANCE_LED_FAR,  "obs");
 }
 
 void CONFIG::load_control_config(const QJsonObject &obj)
@@ -428,6 +431,13 @@ void CONFIG::load_qa_config(const QJsonObject &obj)
 
     check_and_set_double(obj_qa, "QA_STEP_DISTANCE", QA_STEP_DISTANCE, "qa");
     check_and_set_double(obj_qa, "QA_STOP_MIN_DISTANCE", QA_STOP_MIN_DISTANCE, "qa");
+}
+
+void CONFIG::load_update_config(const QJsonObject &obj)
+{
+    QJsonObject obj_update = obj["update"].toObject();
+
+    check_and_set_bool(obj_update, "CONFIG", USE_CONFIG_UPDATE, "update");
 }
 
 std::vector<MonitoringField> CONFIG::get_monitoring_field()
@@ -1092,7 +1102,7 @@ void CONFIG::set_mileage(const QString &mileage)
         return;
     }
 
-    spdlog::info("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
+    spdlog::debug("[CONFIG] config file updated successfully with mileage: {}", mileage.toStdString());
 
 }
 
@@ -1640,6 +1650,12 @@ QString CONFIG::get_log_level()
     return LOG_LEVEL;
 }
 
+bool CONFIG::get_update_use_config()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_CONFIG_UPDATE;
+}
+
 bool CONFIG::set_debug_lidar_2d()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1719,66 +1735,23 @@ void CONFIG::set_update_config_file()
     
     if (path_config.isEmpty()) 
     {
-        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_CONFIG, "Config path is empty");
+        //ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_INVALID_PATH, ERROR_MANAGER::LOAD_CONFIG, "Config path is empty");
+        spdlog::error("[CONFIG] Config path is empty");
         return;
     }
 
     try 
     {
-
-        //if (!set_backup_config_file()) 
-        //{
-        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to backup config file");
-        //    return;
-        //}
-
-        //// 2. check config.json file exists
-        //QJsonObject existing_config;
-        //QFile config_file(path_config);
-        //if (config_file.exists() && config_file.open(QIODevice::ReadOnly)) 
-        //{
-        //    QJsonParseError error;
-        //    QJsonDocument doc = QJsonDocument::fromJson(config_file.readAll(), &error);
-        //    config_file.close();
-        //    
-        //    if (error.error == QJsonParseError::NoError && doc.isObject()) 
-        //    {
-        //        existing_config = doc.object();
-        //    }
-        //}
-
-        //// 3. set default config template
-        //QJsonObject default_config = set_default_config_object();
-
-        //// 4. merge existing config and default config
-        //QJsonObject merged_config = merge_config_objects(existing_config, default_config);
-
-        //// 5. save merged config to file
-        //QFile output_file(path_config);
-        //if (output_file.open(QIODevice::WriteOnly)) 
-        //{
-        //    QJsonDocument output_doc(merged_config);
-        //    output_file.write(output_doc.toJson(QJsonDocument::Indented));
-        //    output_file.close();
-        //    
-        //    // 6. log success message
-        //    QString log_msg = QString("Config file updated successfully. Path: %1").arg(path_config);
-        //    //if (logger) 
-        //    //{
-        //    //    logger->write_log(log_msg, "Green");
-        //    //}
-        //    
-        //    // 7. 업데이트된 설정 다시 로드
-        //    load();
-        //    
-        //} 
-        //else 
-        //{
-        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to write updated config file");
-        //}
+        QString template_path = path_config + ".template";
+        if (!QFile::exists(template_path))
+        {
+            set_default_config_template();
+            spdlog::info("[CONFIG] Template file created: {}", template_path.toStdString());
+        }
 
         QJsonObject existing_config;
         QFile config_file(path_config);
+        
         if (config_file.exists() && config_file.open(QIODevice::ReadOnly)) 
         {
             QJsonParseError error;
@@ -1788,72 +1761,67 @@ void CONFIG::set_update_config_file()
             if (error.error == QJsonParseError::NoError && doc.isObject()) 
             {
                 existing_config = doc.object();
+                spdlog::info("[CONFIG] Existing config loaded successfully");
             }
-        }
-
-        // set default config object
-        QJsonObject default_config = set_default_config_object();
-
-        // set merge config object
-        QJsonObject merged_config = merge_config_objects(existing_config, default_config);
-
-        // if there are changes, backup and save
-        bool has_changes = false;
-        if (existing_config != merged_config) 
-        {
-            has_changes = true;
-
-            // create backup
-            if (!set_backup_config_file()) 
+            else
             {
-                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to backup config file");
+                spdlog::error("[CONFIG] JSON parse error: {}", error.errorString().toStdString());
                 return;
             }
+        }
+        else
+        {
+            spdlog::warn("[CONFIG] Config file not found, will create new one: {}", path_config.toStdString());
+        }
 
-            // save merged config to file
+        QJsonObject default_config = set_default_config_object();
+
+        QJsonObject merged_config = merge_config_objects(existing_config, default_config);
+
+        bool has_changes = (existing_config != merged_config);
+
+        if (has_changes) 
+        {
+            spdlog::info("[CONFIG] Changes detected, creating backup and updating config");
+
+            if (!set_backup_config_file()) 
+            {
+                spdlog::warn("[CONFIG] Failed to create backup, but continuing with update");
+            }
+
             QFile output_file(path_config);
-            if (output_file.open(QIODevice::WriteOnly)) 
+            if (output_file.open(QIODevice::WriteOnly | QIODevice::Truncate)) 
             {
                 QJsonDocument output_doc(merged_config);
                 output_file.write(output_doc.toJson(QJsonDocument::Indented));
                 output_file.close();
                 
-                //QString log_msg = QString("Config file updated successfully. Path: %1").arg(path_config);
-                //if (logger) 
-                //{
-                //    logger->write_log(log_msg, "Green");
-                //}
+                spdlog::info("[CONFIG] Config file updated successfully: {}", path_config.toStdString());
                 
-                // 업데이트된 설정 다시 로드
                 load();
             } 
             else 
             {
-                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_COPY_FAILED, ERROR_MANAGER::LOAD_CONFIG, "Failed to write updated config file");
+                spdlog::error("[CONFIG] Failed to write updated config file: {}", path_config.toStdString());
             }
         }
         else
         {
-            //QString log_msg = QString("Config file is already up to date. No backup needed.");
-            //if (logger) 
-            //{
-            //    logger->write_log(log_msg, "Blue");
-            //}
+            spdlog::info("[CONFIG] Config file is already up to date");
         }
-        
-        
     } 
-    
     catch (const std::exception& e) 
     {
-        QString error_msg = QString("Exception during config update: %1").arg(e.what());
-        ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::LOAD_CONFIG, error_msg);
+        //QString error_msg = QString("Exception during config update: %1").arg(e.what());
+        //ERROR_MANAGER::instance()->logError(ERROR_MANAGER::SYS_PROCESS_FINISH_FAILED, ERROR_MANAGER::LOAD_CONFIG, error_msg);
+        spdlog::error("[CONFIG] Exception during config update: {}", e.what());
     }
 }
 
 QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJsonObject& defaults)
 {
     QJsonObject merged = existing;
+    QStringList added_keys;
     
     for (auto it = defaults.begin(); it != defaults.end(); ++it) 
     {
@@ -1864,12 +1832,34 @@ QJsonObject CONFIG::merge_config_objects(const QJsonObject& existing, const QJso
         {
             // if key is missing, add default value
             merged[key] = default_value;
+            added_keys.append(key);
+            spdlog::info("[CONFIG] Added missing config key: {}", key.toStdString());
         } 
         else if (default_value.isObject() && merged[key].isObject()) 
         {
             // if both are objects, merge recursively
-            merged[key] = merge_config_objects(merged[key].toObject(), default_value.toObject());
+            //merged[key] = merge_config_objects(merged[key].toObject(), default_value.toObject());
+            QJsonObject child_merged = merge_config_objects
+            (
+                merged[key].toObject(), 
+                default_value.toObject()
+            );
+
+            // check if child_merged is different from existing
+            if (child_merged != merged[key].toObject())
+            {
+                merged[key] = child_merged;
+                added_keys.append(key + ".*");  //view lower level keys
+            }
         }
+        //spdlog::info("[CONFIG] Config key Not changed: {}", key.toStdString());
+    }
+
+    if (!added_keys.isEmpty()) 
+    {
+        //QString log_msg = QString("Added missing config keys: %1").arg(added_keys.join(", "));
+        //log_info("{}", log_msg.toStdString());
+        spdlog::info("[CONFIG] Added missing keys: {}", added_keys.join(", ").toStdString());
     }
     
     return merged;
@@ -1984,6 +1974,7 @@ QJsonObject CONFIG::set_default_config_object()
     config["RPLIDAR"] =         set_default_rplidar_config();
     config["LIVOX"] =           set_default_livox_config();
     config["ORBBEC"] =          set_default_orbbec_config();
+    config["update"] =          set_default_update_config();
     
     return config;
 }
@@ -2054,6 +2045,10 @@ QJsonObject CONFIG::set_default_localization_2d_config()
     loc_2d["LOC_ICP_ERROR_THRESHOLD"] =         QString::number(LOC_2D_ICP_ERROR_THRESHOLD);
     loc_2d["LOC_ICP_ODO_FUSION_RATIO"] =        QString::number(LOC_2D_ICP_ODO_FUSION_RATIO);
     loc_2d["LOC_SURFEL_RANGE"] =                QString::number(LOC_2D_SURFEL_RANGE);
+    loc_2d["LOC_ROTATION_FALLBACK_USE"] =       LOC_2D_USE_ROTATION_FALLBACK;
+    loc_2d["LOC_ROTATION_FALLBACK_STEP"] =      QString::number(LOC_2D_ROTATION_FALLBACK_STEP);
+    loc_2d["LOC_ROTATION_FALLBACK_RANGE"] =     QString::number(LOC_2D_ROTATION_FALLBACK_RANGE);
+    
     return loc_2d;
 }
 
@@ -2085,9 +2080,9 @@ QJsonObject CONFIG::set_default_debug_config()
     QJsonObject debug;
     debug["USE_SIM"] =      USE_SIM; //QString(USE_SIM ? "true" : "false");
     debug["USE_BEEP"] =     USE_BEEP; //QString(USE_BEEP ? "true" : "false");
-    //debug["SERVER_IP"] =    QString(SERVER_IP);
-    //debug["SERVER_ID"] =    QString(SERVER_ID);
-    //debug["SERVER_PW"] =    QString(SERVER_PW);
+    debug["SERVER_IP"] =    QString(SERVER_IP);
+    debug["SERVER_ID"] =    QString(SERVER_ID);
+    debug["SERVER_PW"] =    QString(SERVER_PW);
     return debug;
 }
 
@@ -2159,6 +2154,8 @@ QJsonObject CONFIG::set_default_obstacle_config()
     obs["OBS_MAP_MIN_Z"] = QString::number(OBS_MAP_MIN_Z);
     obs["OBS_MAP_MAX_Z"] = QString::number(OBS_MAP_MAX_Z);
     obs["OBS_PREDICT_TIME"] = QString::number(OBS_PREDICT_TIME);
+    obs["OBS_DISTANCE_LED_NEAR"] = QString::number(OBS_DISTANCE_LED_NEAR);
+    obs["OBS_DISTANCE_LED_FAR"] = QString::number(OBS_DISTANCE_LED_FAR);
     return obs;
 }
 
@@ -2196,6 +2193,9 @@ QJsonObject CONFIG::set_default_docking_config()
     dock["DOCKING_X_OFFSET"] = QString::number(DOCKING_X_OFFSET);
     dock["DOCKING_Y_OFFSET"] = QString::number(DOCKING_Y_OFFSET);
     dock["DOCKING_LINEAR_X_OFFSET"] = QString::number(DOCKING_LINEAR_X_OFFSET);
+    dock["DOCKING_REVERSE_FLAG"] =              DOCKING_REVERSE_FLAG;
+    dock["CHARGE_TYPE"] =                       QString(CHARGE_TYPE);
+
     return dock;
 }
 
@@ -2271,6 +2271,13 @@ QJsonObject CONFIG::set_default_orbbec_config()
     orbbec["CAM_HEIGHT_MIN"] = QString::number(CAM_HEIGHT_MIN);
     orbbec["CAM_HEIGHT_MAX"] = QString::number(CAM_HEIGHT_MAX);
     return orbbec;
+}
+
+QJsonObject CONFIG::set_default_update_config()
+{
+    QJsonObject update;
+    update["CONFIG"] =        USE_CONFIG_UPDATE;
+    return update;
 }
 
 double CONFIG::get_lidar_2d_min_range()
@@ -2577,6 +2584,18 @@ double CONFIG::get_obs_predict_time()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return OBS_PREDICT_TIME;
+}
+
+double CONFIG::get_obs_distance_led_near()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_DISTANCE_LED_NEAR;
+}
+
+double CONFIG::get_obs_distance_led_far()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return OBS_DISTANCE_LED_FAR;
 }
 
 double CONFIG::get_drive_goal_approach_gain()
