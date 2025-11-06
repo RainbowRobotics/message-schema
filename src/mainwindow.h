@@ -176,6 +176,8 @@ public:
     int qa_interval_ms = 1000;
     QString qa_last_node = "";
 
+    float old_total_mileage;
+
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
 

@@ -2960,17 +2960,19 @@ void MainWindow::watch_loop()
             {
                 move_distance = candidate;
             }
-            float total_mileage = mileage + abs(move_distance);
+
+            float total_mileage = mileage + fabs(move_distance);
             mileage_sum = QString::number(total_mileage, 'f', 3);
             prev_move_distance = move_distance;
 
-            // plot mobile pose
-            ui->lb_Mileage->setText("[Mileage] : "+mileage_sum);
+            ui->lb_Mileage->setText("[Mileage] : " + mileage_sum);
 
-            if(cnt % 50 == 0)
+            if (cnt % 50 == 0 && fabs(old_total_mileage - total_mileage) > 0.01f)
             {
                 CONFIG::instance()->set_mileage(mileage_sum);
             }
+
+            old_total_mileage = total_mileage;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
