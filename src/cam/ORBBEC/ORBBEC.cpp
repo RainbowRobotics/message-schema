@@ -313,25 +313,25 @@ void ORBBEC::grab_loop(int idx)
                             double y = point[p].y / 1000.0;
                             double z = point[p].z / 1000.0;
 
-                            //if(x == 0 && y == 0 && z == 0)
-                            //{
-                            //    continue;
-                            //}
+                            if(x == 0 && y == 0 && z == 0)
+                            {
+                                continue;
+                            }
 
                             Eigen::Vector3d P(x, y, z);
                             Eigen::Vector3d _P = TF_R * P + TF_t;
 
-                            //if(_P[0] > x_min && _P[0] < x_max && _P[1] > y_min && _P[1] < y_max)
-                            //{
-                            //    continue;
-                            //}
+                            if(_P[0] > x_min && _P[0] < x_max && _P[1] > y_min && _P[1] < y_max)
+                            {
+                                continue;
+                            }
 
-                            //if(_P[2] < z_min || _P[2] > z_max)
-                            //{
-                            //    continue;
-                            //}
+                            if(_P[2] < z_min || _P[2] > z_max)
+                            {
+                                continue;
+                            }
 
-    //                        _P[2] = 0;
+                            //_P[2] = 0;
                             pts.push_back(_P);
                         }
                     }
@@ -361,7 +361,7 @@ void ORBBEC::grab_loop(int idx)
                 {
                     cnt ++;
                     std::cout << "cnt: " << cnt << std::endl;
-                    if(cnt > 50)
+                    if(cnt > 100)
                     {
                         std::cout << "signal_restart, " << cnt << std::endl;
                         cnt = 0;
