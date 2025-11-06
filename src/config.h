@@ -282,6 +282,8 @@ public:
     double get_docking_linear_x_offset();
     bool get_docking_reverse_mode();
     QString get_charge_type();
+    int get_docking_field();
+    double get_xnergy_set_current();
     /***********************
      * map
      ***********************/
@@ -602,6 +604,8 @@ private:
     double DOCKING_Y_OFFSET = 0.0;
     double DOCKING_LINEAR_X_OFFSET = -0.035;
     bool DOCKING_REVERSE_FLAG = false;
+    int DOCKING_FIELD = 0;
+    double XNERGY_SET_CURRENT = 8.0;
     QString CHARGE_TYPE = "RAINBOW";
 
     // safety

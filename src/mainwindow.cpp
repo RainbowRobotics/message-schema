@@ -1963,8 +1963,15 @@ void MainWindow::bt_DockStart()
     //spdlog::info("[DOCK] bt_DockStart");
     log_info("[DOCK] bt_DockStart");
 
-    // no use OSSD
-    MOBILE::instance()->set_detect_mode(0.0);
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    else
+    {
+        MOBILE::instance()->setlidarfield(d_field);
+    }
     AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->move();
 }
@@ -1974,11 +1981,14 @@ void MainWindow::bt_DockStop()
     //spdlog::info("[DOCK] bt_DockStop");
     log_info("[DOCK] bt_DockStop");
 
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    
     DOCKCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_is_moving(false);
-
-    // use OSSD
-    MOBILE::instance()->set_detect_mode(1.0);
 }
 
 void MainWindow::bt_UnDockStart()
@@ -1986,19 +1996,22 @@ void MainWindow::bt_UnDockStart()
     //spdlog::info("[DOCK] bt_UnDockStart");
     log_info("[DOCK] bt_UnDockStart");
 
-    // no use OSSD
-    MOBILE::instance()->set_detect_mode(0.0);
+    int d_field = CONFIG::instance()->get_docking_field();
+    if(d_field == -1)
+    {
+        MOBILE::instance()->set_detect_mode(0.0);
+    }
+    else
+    {
+        MOBILE::instance()->setlidarfield(d_field);
+    }
 
-    AUTOCONTROL::instance()->set_is_moving(true);
     DOCKCONTROL::instance()->undock();
 
     double t = std::abs(CONFIG::instance()->get_robot_size_x_max() / 0.05) + 1.0;
     QTimer::singleShot(t*1000, [&]()
     {
         AUTOCONTROL::instance()->set_is_moving(false);
-
-        // use OSSD
-        MOBILE::instance()->set_detect_mode(1.0);
         DOCKCONTROL::instance()->stop();
     });
 }
@@ -2007,6 +2020,7 @@ void MainWindow::bt_ChgTrig()
 {
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
+
 }
 
 void MainWindow::bt_ChgStop()
@@ -3771,6 +3785,9 @@ void MainWindow::plot_safety()
     {
         ui->le_Safety_Op_Stop_State->setText(QString().sprintf("none"));
     }
+
+    ui->le_mainstate->setText(QString().sprintf("%d", cur_status.xnergy_main_state));
+    ui->le_errorcode->setText(QString().sprintf("%d", cur_status.xnergy_error_code_low));
 }
 
 void MainWindow::plot_raw_2d()
