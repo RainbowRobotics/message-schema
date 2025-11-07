@@ -19,9 +19,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     UNIMAP::instance(this);
     OBSMAP::instance(this);
     MOBILE::instance(this);
-    CAM::instance(this);
-    LIDAR_2D::instance(this);
-    LIDAR_3D::instance(this);
     LOCALIZATION::instance(this);
     MAPPING::instance(this);
     AUTOCONTROL::instance(this);
@@ -29,108 +26,116 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     DOCKCONTROL::instance(this);
     POLICY::instance(this);
     SAFETY::instance(this);
-
     TASK::instance(this);
     ERROR_MANAGER::instance(this);
 
+    // sensors
+    CAM::instance(this);
+    LIDAR_2D::instance(this);
+    LIDAR_3D::instance(this);
+
+    // communication
     COMM_COOP::instance(this);
     COMM_RRS::instance(this);
     COMM_MSA::instance(this);
 
+    /*****************************
+     * connect signal & slots (UI)
+     *****************************/
+
+    connect(ui->ckb_PlotEnable, SIGNAL(stateChanged(int)), this, SLOT(vtk_viewer_update(int)));
+
     // for 3d viewer
-    connect(ui->cb_ViewType,          SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
-    connect(ui->spb_PointSize,        SIGNAL(valueChanged(int)),            this, SLOT(map_update()));   // change point size -> update map rendering elements
+    connect(ui->cb_ViewType,   SIGNAL(currentIndexChanged(QString)), this, SLOT(all_update()));   // change view type 2D, 3D, mapping -> update all rendering elements
+    connect(ui->spb_PointSize, SIGNAL(valueChanged(int)),            this, SLOT(map_update()));   // change point size -> update map rendering elements
 
     // for viewer control
-    connect(ui->bt_ViewLeft,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(-2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewRight,         &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(+2, 0, 0, 0, 0, 0);});
-    connect(ui->bt_ViewUp,            &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, +2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewDown,          &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, -2, 0, 0, 0, 0);});
-    connect(ui->bt_ViewZoomIn,        &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, +2, 0, 0, 0);});
-    connect(ui->bt_ViewZoomOut,       &QPushButton::clicked, this, [this]()   { viewer_camera_relative_control(0, 0, -2, 0, 0, 0);});
+    connect(ui->bt_ViewLeft,    &QPushButton::clicked, this, [this]() { viewer_camera_relative_control(-2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewRight,   &QPushButton::clicked, this, [this]() { viewer_camera_relative_control(+2,  0,  0, 0, 0, 0);});
+    connect(ui->bt_ViewUp,      &QPushButton::clicked, this, [this]() { viewer_camera_relative_control( 0, +2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewDown,    &QPushButton::clicked, this, [this]() { viewer_camera_relative_control( 0, -2,  0, 0, 0, 0);});
+    connect(ui->bt_ViewZoomIn,  &QPushButton::clicked, this, [this]() { viewer_camera_relative_control( 0,  0, +2, 0, 0, 0);});
+    connect(ui->bt_ViewZoomOut, &QPushButton::clicked, this, [this]() { viewer_camera_relative_control( 0,  0, -2, 0, 0, 0);});
 
     // for simulation
-    connect(ui->bt_SimInit,           SIGNAL(clicked()),  this, SLOT(bt_SimInit()));                     // simulation virtual localization initialization
+    connect(ui->bt_SimInit, SIGNAL(clicked()), this, SLOT(bt_SimInit()));  // simulation virtual localization initialization
 
     // config reload
-    connect(ui->bt_ConfigLoad,        SIGNAL(clicked()),  this, SLOT(bt_ConfigLoad()));                  // reload config.json file
+    connect(ui->bt_ConfigLoad, SIGNAL(clicked()), this, SLOT(bt_ConfigLoad()));  // reload config.json file
 
     // emergenscy stop
-    connect(ui->bt_Emergency,         SIGNAL(clicked()),  this, SLOT(bt_Emergency()));                   // software emo button
+    connect(ui->bt_Emergency, SIGNAL(clicked()), this, SLOT(bt_Emergency()));  // software emo button
 
     // mobile
-    connect(ui->bt_Sync,              SIGNAL(clicked()),  this, SLOT(bt_Sync()));                        // manual sync (mobile, 2d lidar, 3d lidar)
-    connect(ui->bt_MoveLinearX,       SIGNAL(clicked()),  this, SLOT(bt_MoveLinearX()));                 // move linear x only use odomety
-    connect(ui->bt_MoveLinearY,       SIGNAL(clicked()),  this, SLOT(bt_MoveLinearY()));                 // move linear y only use odomety
-    connect(ui->bt_MoveRotate,        SIGNAL(clicked()),  this, SLOT(bt_MoveRotate()));                  // move rotate only use odomety
-    connect(ui->bt_MotorInit,         SIGNAL(clicked()),  this, SLOT(bt_MotorInit()));                   // manual motor power on
-    connect(ui->bt_MoveStop,          SIGNAL(clicked()),  this, SLOT(bt_MoveStop()));                   // software emo button
+    connect(ui->bt_Sync,        SIGNAL(clicked()), this, SLOT(bt_Sync()));         // manual sync (mobile, 2d lidar, 3d lidar)
+    connect(ui->bt_MoveLinearX, SIGNAL(clicked()), this, SLOT(bt_MoveLinearX()));  // move linear x only use odomety
+    connect(ui->bt_MoveLinearY, SIGNAL(clicked()), this, SLOT(bt_MoveLinearY()));  // move linear y only use odomety
+    connect(ui->bt_MoveRotate,  SIGNAL(clicked()), this, SLOT(bt_MoveRotate()));   // move rotate only use odomety
+    connect(ui->bt_MotorInit,   SIGNAL(clicked()), this, SLOT(bt_MotorInit()));    // manual motor power on
+    connect(ui->bt_MoveStop,    SIGNAL(clicked()), this, SLOT(bt_MoveStop()));     // software emo button
 
     // jog
-    connect(ui->bt_JogF,              SIGNAL(pressed()),  this, SLOT(bt_JogF()));                        // if button pressed, move robot to front direction
-    connect(ui->bt_JogB,              SIGNAL(pressed()),  this, SLOT(bt_JogB()));                        // if button pressed, move robot to back direction
-    connect(ui->bt_JogL,              SIGNAL(pressed()),  this, SLOT(bt_JogL()));                        // if button pressed, move robot to left
-    connect(ui->bt_JogR,              SIGNAL(pressed()),  this, SLOT(bt_JogR()));                        // if button pressed, move robot to right
-    connect(ui->bt_JogF,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogB,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogL,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogR,              SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogMecaL,         SIGNAL(pressed()),  this, SLOT(bt_JogMecaL()));                        // if button pressed, move robot to left
-    connect(ui->bt_JogMecaR,         SIGNAL(pressed()),  this, SLOT(bt_JogMecaR()));                        // if button pressed, move robot to right
-    connect(ui->bt_JogMecaL,         SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
-    connect(ui->bt_JogMecaR,         SIGNAL(released()), this, SLOT(bt_JogReleased()));                 // if button released, slow down and stop
+    connect(ui->bt_JogF,     SIGNAL(pressed()),  this, SLOT(bt_JogF()));         // if button pressed, move robot to front direction
+    connect(ui->bt_JogB,     SIGNAL(pressed()),  this, SLOT(bt_JogB()));         // if button pressed, move robot to back direction
+    connect(ui->bt_JogL,     SIGNAL(pressed()),  this, SLOT(bt_JogL()));         // if button pressed, move robot to left
+    connect(ui->bt_JogR,     SIGNAL(pressed()),  this, SLOT(bt_JogR()));         // if button pressed, move robot to right
+    connect(ui->bt_JogF,     SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop
+    connect(ui->bt_JogB,     SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop
+    connect(ui->bt_JogL,     SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop
+    connect(ui->bt_JogR,     SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop
+    connect(ui->bt_JogMecaL, SIGNAL(pressed()),  this, SLOT(bt_JogMecaL()));     // if button pressed, move robot to left  (parallel movement)
+    connect(ui->bt_JogMecaR, SIGNAL(pressed()),  this, SLOT(bt_JogMecaR()));     // if button pressed, move robot to right (parallel movement)
+    connect(ui->bt_JogMecaL, SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop (parallel movement)
+    connect(ui->bt_JogMecaR, SIGNAL(released()), this, SLOT(bt_JogReleased()));  // if button released, slow down and stop (parallel movement)
+
     // mapping
-    connect(ui->bt_MapBuild,          SIGNAL(clicked()),  this, SLOT(bt_MapBuild()));                    // mapping start
-    connect(ui->bt_MapSave,           SIGNAL(clicked()),  this, SLOT(bt_MapSave()));                     // if mapping end, save map file
-    connect(ui->bt_MapLoad,           SIGNAL(clicked()),  this, SLOT(bt_MapLoad()));                     // map load
-    connect(ui->bt_MapLastLc,         SIGNAL(clicked()),  this, SLOT(bt_MapLastLc()));                   // manual loop closing
-    connect(ui->bt_MapPause,          SIGNAL(clicked()),  this, SLOT(bt_MapPause()));
-    connect(ui->bt_MapResume,         SIGNAL(clicked()),  this, SLOT(bt_MapResume()));
+    connect(ui->bt_MapBuild,  SIGNAL(clicked()), this, SLOT(bt_MapBuild()));   // mapping start
+    connect(ui->bt_MapSave,   SIGNAL(clicked()), this, SLOT(bt_MapSave()));    // if mapping end, save map file
+    connect(ui->bt_MapLoad,   SIGNAL(clicked()), this, SLOT(bt_MapLoad()));    // map load
+    connect(ui->bt_MapLastLc, SIGNAL(clicked()), this, SLOT(bt_MapLastLc()));  // manual loop closing
+    connect(ui->bt_MapPause,  SIGNAL(clicked()), this, SLOT(bt_MapPause()));   // mapping pasue
+    connect(ui->bt_MapResume, SIGNAL(clicked()), this, SLOT(bt_MapResume()));  // mapping resume
+    connect(ui->ckb_PlotKfrm, SIGNAL(stateChanged()), this, SLOT(ckb_PlotKfrm()));
 
     // localization
-    connect(ui->bt_LocInit,           SIGNAL(clicked()),  this, SLOT(bt_LocInit()));                     // specify the robot position to estimate the location
-    connect(ui->bt_LocStart,          SIGNAL(clicked()),  this, SLOT(bt_LocStart()));                    // localization start
-    connect(ui->bt_LocStop,           SIGNAL(clicked()),  this, SLOT(bt_LocStop()));                     // localization stop
-    connect(ui->bt_LocInitSemiAuto,   SIGNAL(clicked()),  this, SLOT(bt_LocInitSemiAuto()));             // semi-auto localization initialization
+    connect(ui->bt_LocInit,         SIGNAL(clicked()), this, SLOT(bt_LocInit()));         // specify the robot position to estimate the location
+    connect(ui->bt_LocStart,        SIGNAL(clicked()), this, SLOT(bt_LocStart()));        // localization start
+    connect(ui->bt_LocStop,         SIGNAL(clicked()), this, SLOT(bt_LocStop()));         // localization stop
+    connect(ui->bt_LocInitSemiAuto, SIGNAL(clicked()), this, SLOT(bt_LocInitSemiAuto())); // semi-auto localization initialization
 
     // obsmap
     connect(ui->bt_ObsClear,          SIGNAL(clicked()),     this, SLOT(bt_ObsClear()));                         // manual obstacle map clear
-    connect(OBSMAP::instance(),       SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);    // if obsmap changed, plot update
 
     // autocontrol
-    connect(ui->bt_AutoMove,          SIGNAL(clicked()),                    this, SLOT(bt_AutoMove()));                                      // move A to B (use stanley, differential type)
-    connect(ui->bt_AutoBackMove,      SIGNAL(clicked()),                    this, SLOT(bt_AutoBackMove()));
-    connect(ui->bt_AutoMove2,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove2()));                                     // move A to B (use holonomic pure pursuit, mecanum type)
-    connect(ui->bt_AutoMove3,         SIGNAL(clicked()),                    this, SLOT(bt_AutoMove3()));                                     // move A to B (use PID, turn & go mode)
-    connect(ui->bt_AutoStop,          SIGNAL(clicked()),                    this, SLOT(bt_AutoStop()));                                      // stop auto-control
-    connect(ui->bt_AutoPause,         SIGNAL(clicked()),                    this, SLOT(bt_AutoPause()));                                     // pause auto-control
-    connect(ui->bt_AutoResume,        SIGNAL(clicked()),                    this, SLOT(bt_AutoResume()));                                    // resume auto-control
-    connect(ui->bt_ReturnToCharging,  SIGNAL(clicked()),                    this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
-    connect(AUTOCONTROL::instance(),  SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
-    connect(AUTOCONTROL::instance(),  SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
-    connect(ui->bt_AutoPath,          SIGNAL(clicked()),                    this, SLOT(bt_AutoPath()));                                      // move clicked node
-    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()),                    this, SLOT(bt_AutoPathAppend()));                                // move clicked node
-    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()),                    this, SLOT(bt_AutoPathErase()));                                 // move clicked node
+    connect(ui->bt_AutoMove,          SIGNAL(clicked()), this, SLOT(bt_AutoMove()));                                      // move A to B (use stanley, differential type)
+    connect(ui->bt_AutoBackMove,      SIGNAL(clicked()), this, SLOT(bt_AutoBackMove()));
+    connect(ui->bt_AutoMove2,         SIGNAL(clicked()), this, SLOT(bt_AutoMove2()));                                     // move A to B (use holonomic pure pursuit, mecanum type)
+    connect(ui->bt_AutoMove3,         SIGNAL(clicked()), this, SLOT(bt_AutoMove3()));                                     // move A to B (use PID, turn & go mode)
+    connect(ui->bt_AutoStop,          SIGNAL(clicked()), this, SLOT(bt_AutoStop()));                                      // stop auto-control
+    connect(ui->bt_AutoPause,         SIGNAL(clicked()), this, SLOT(bt_AutoPause()));                                     // pause auto-control
+    connect(ui->bt_AutoResume,        SIGNAL(clicked()), this, SLOT(bt_AutoResume()));                                    // resume auto-control
+    connect(ui->bt_ReturnToCharging,  SIGNAL(clicked()), this, SLOT(bt_ReturnToCharging()));                              // move to assigned charging location
+    connect(ui->bt_AutoPath,          SIGNAL(clicked()), this, SLOT(bt_AutoPath()));                                      // move clicked node
+    connect(ui->bt_AutoPathAppend,    SIGNAL(clicked()), this, SLOT(bt_AutoPathAppend()));                                // move clicked node
+    connect(ui->bt_AutoPathErase,     SIGNAL(clicked()), this, SLOT(bt_AutoPathErase()));                                 // move clicked node
 
     // dockcontrol
-    connect(ui->bt_DockStart,         SIGNAL(clicked()),                    this, SLOT(bt_DockStart()));
-    connect(ui->bt_DockStop,          SIGNAL(clicked()),                    this, SLOT(bt_DockStop()));
-    connect(ui->bt_UnDockStart,       SIGNAL(clicked()),                    this, SLOT(bt_UnDockStart()));
-    connect(ui->bt_ChgTrig,           SIGNAL(clicked()),                    this, SLOT(bt_ChgTrig()));
-    connect(ui->bt_ChgStop,           SIGNAL(clicked()),                    this, SLOT(bt_ChgStop()));
-    // start docking
-    connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
+    connect(ui->bt_DockStart,   SIGNAL(clicked()), this, SLOT(bt_DockStart()));
+    connect(ui->bt_DockStop,    SIGNAL(clicked()), this, SLOT(bt_DockStop()));
+    connect(ui->bt_UnDockStart, SIGNAL(clicked()), this, SLOT(bt_UnDockStart()));
+    connect(ui->bt_ChgTrig,     SIGNAL(clicked()), this, SLOT(bt_ChgTrig()));
+    connect(ui->bt_ChgStop,     SIGNAL(clicked()), this, SLOT(bt_ChgStop()));
 
     // annotation
-    connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
-    connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
-    connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
-    connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
-    connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
-    connect(ui->bt_QuickAnnotStart,   SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
-    connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
-    connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
-    connect(ui->bt_QuickAddCloud,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
+    connect(ui->bt_AddLink1,        SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
+    connect(ui->bt_AddLink2,        SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
+    connect(ui->bt_DelNode,         SIGNAL(clicked()), this, SLOT(bt_DelNode()));
+    connect(ui->bt_AnnotSave,       SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
+    connect(ui->bt_QuickAddNode,    SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_QuickAnnotStart, SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
+    connect(ui->bt_QuickAnnotStop,  SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
+    connect(ui->bt_QuickAddAruco,   SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
+    connect(ui->bt_QuickAddCloud,   SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
 
     // safety function
     connect(ui->bt_ClearMismatch,      SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
@@ -142,56 +147,54 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_Recover,            SIGNAL(clicked()), this, SLOT(bt_Recover()));
     connect(ui->bt_SetDetectModeT,     SIGNAL(clicked()), this, SLOT(bt_SetDetectModeT()));
     connect(ui->bt_SetDetectModeF,     SIGNAL(clicked()), this, SLOT(bt_SetDetectModeF()));
-    connect(ui->bt_Request,            SIGNAL(clicked()), this, SLOT(bt_Request()));
+    connect(ui->bt_RequestPduInfo,     SIGNAL(clicked()), this, SLOT(bt_RequestPduInfo()));
     connect(ui->bt_LiftPowerOn,        SIGNAL(clicked()), this, SLOT(bt_LiftPowerOn()));
     connect(ui->bt_LiftPowerOff,       SIGNAL(clicked()), this, SLOT(bt_LiftPowerOff()));
     connect(ui->bt_SetLidarField,      SIGNAL(clicked()), this, SLOT(bt_SetLidarField()));
 
     // task
-    connect(ui->bt_TaskAdd,             SIGNAL(clicked()), this, SLOT(bt_TaskAdd()));
-    connect(ui->bt_TaskDel,             SIGNAL(clicked()), this, SLOT(bt_TaskDel()));
-    connect(ui->bt_TaskSave,            SIGNAL(clicked()), this, SLOT(bt_TaskSave()));
-    connect(ui->bt_TaskLoad,            SIGNAL(clicked()), this, SLOT(bt_TaskLoad()));
-    connect(ui->bt_TaskPlay,            SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
-    connect(ui->bt_TaskPause,           SIGNAL(clicked()), this, SLOT(bt_TaskPause()));
-    connect(ui->bt_TaskCancel,          SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
-
+    connect(ui->bt_TaskAdd,    SIGNAL(clicked()), this, SLOT(bt_TaskAdd()));
+    connect(ui->bt_TaskDel,    SIGNAL(clicked()), this, SLOT(bt_TaskDel()));
+    connect(ui->bt_TaskSave,   SIGNAL(clicked()), this, SLOT(bt_TaskSave()));
+    connect(ui->bt_TaskLoad,   SIGNAL(clicked()), this, SLOT(bt_TaskLoad()));
+    connect(ui->bt_TaskPlay,   SIGNAL(clicked()), this, SLOT(bt_TaskPlay()));
+    connect(ui->bt_TaskPause,  SIGNAL(clicked()), this, SLOT(bt_TaskPause()));
+    connect(ui->bt_TaskCancel, SIGNAL(clicked()), this, SLOT(bt_TaskCancel()));
 
     // others
     connect(ui->bt_Test, SIGNAL(clicked()), this, SLOT(bt_Test()));
     connect(ui->bt_TestLed, SIGNAL(clicked()), this, SLOT(bt_TestLed()));
-    connect(ui->ckb_PlotKfrm, SIGNAL(stateChanged(int)), this, SLOT(ckb_PlotKfrm()));
+
+    // for response
+    connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+
+    connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_MSA::instance(), SLOT(send_dock_response(DATA_DOCK)));
+    connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
+    connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
+
+    connect(AUTOCONTROL::instance(), SIGNAL(signal_local_path_updated()),  this, SLOT(slot_local_path_updated()),  Qt::QueuedConnection);   // if local path changed, plot update
+    connect(AUTOCONTROL::instance(), SIGNAL(signal_global_path_updated()), this, SLOT(slot_global_path_updated()), Qt::QueuedConnection);   // if global path changed, plot update
+
+    connect(OBSMAP::instance(), SIGNAL(obs_updated()), this, SLOT(obs_update()), Qt::QueuedConnection);    // if obsmap changed, plot update
 
     // set effect
     init_ui_effect();
 
-    // set plot window
-    setup_vtk();
+    // set plot vtk window
+    init_vtk();
 
     // init modules
     init_modules();
 
-    // for response
-    if(CONFIG::instance()->get_use_rrs())
-    {
-        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_RRS::instance(), SLOT(send_dock_response(DATA_DOCK)));
-        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_RRS::instance(), SLOT(send_move_response(DATA_MOVE)));
-        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_RRS::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
-    }
-    if(CONFIG::instance()->get_use_msa())
-    {
-        connect(this,                     SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
-        connect(DOCKCONTROL::instance(),  SIGNAL(signal_dock_response(DATA_DOCK)),                 COMM_MSA::instance(), SLOT(send_dock_response(DATA_DOCK)));
-        connect(AUTOCONTROL::instance(),  SIGNAL(signal_move_response(DATA_MOVE)),                 COMM_MSA::instance(), SLOT(send_move_response(DATA_MOVE)));
-        connect(LOCALIZATION::instance(), SIGNAL(signal_localization_response(DATA_LOCALIZATION)), COMM_MSA::instance(), SLOT(send_localization_response(DATA_LOCALIZATION)));
-    }
+    // init gamepad
+    init_gamepad();
 
     // ipv4
-    getIPv4();
-
-    //
-    init_gamepad();
+    get_cur_IP();
 
     // plot timer (pcl-vtk viewr & Qlabel)
     plot_timer = new QTimer(this);
@@ -277,7 +280,7 @@ void MainWindow::init_ui_effect()
     set_opacity(ui->lb_RobotGoal,   MAINWINDOW_INFO::opacity_val);
 }
 
-void MainWindow::setup_vtk()
+void MainWindow::init_vtk()
 {
     // Set up the QVTK window
     vtkNew<vtkGenericOpenGLRenderWindow> renderWindow;
@@ -303,44 +306,40 @@ void MainWindow::setup_vtk()
 
 void MainWindow::init_modules()
 {
-
-    // load config
+    // First, read common.json to get the robot type, then get the corresponding config file.
     if(CONFIG::instance()->load_common(QCoreApplication::applicationDirPath() + "/config/common.json"))
     {
         QString robot_type_str = CONFIG::instance()->get_robot_type_str();
-        //        qDebug()<<"robot_type_str : "<<robot_type_str;
-        ui->lb_RobotType->setText(robot_type_str);
-
-        //mileage = CONFIG::instance()->get_mileage();
-
         if(robot_type_str.isEmpty())
         {
+            log_critical("Failed to load common config file (common.json)");
             QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
         }
         else
         {
+            // Set robot type in UI
+            ui->lb_RobotType->setText(robot_type_str);
+
+            // Load config appropriate for robot type
             QString path = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config.json";
             CONFIG::instance()->set_config_path(path);
             CONFIG::instance()->load();
                         
-            if (CONFIG::instance ()->get_update_use_config() == true)
+            if(CONFIG::instance()->get_update_use_config() == true)
             {
+                log_info("Deactivate config file update flag.");
                 CONFIG::instance()->set_update_config_file();
-                spdlog::info("Deactivate config file update flag.");
             }
 
-
+            // Load program version
             QString path_version = QCoreApplication::applicationDirPath() + "/version.json";
             CONFIG::instance()->set_version_path(path_version);
             CONFIG::instance()->load_version();
-
-            QString path_cam_serial_number = QCoreApplication::applicationDirPath() + "/config/" + robot_type_str + "/config_sn.json";
-            CONFIG::instance()->set_serial_number_path(path_cam_serial_number);
-            CONFIG::instance()->load_cam_serial_number();
         }
     }
     else
     {
+        log_critical("Failed to load common config file (common.json)");
         QMessageBox::warning(this, "Config Load Failed", "Failed to load common config file.\nPlease check the path or configuration.");
     }
 
@@ -401,7 +400,6 @@ void MainWindow::init_modules()
 
     // cam module init
     {
-        //if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
          if(CONFIG::instance()->get_use_cam())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
@@ -413,50 +411,44 @@ void MainWindow::init_modules()
     }
 
     // lidar 2d module init
+    if(CONFIG::instance()->get_use_lidar_2d())
     {
-        if(CONFIG::instance()->get_use_lidar_2d())
-        {
-            LIDAR_2D::instance()->set_config_module(CONFIG::instance());
-            LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
-            LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
-            LIDAR_2D::instance()->init();
-            LIDAR_2D::instance()->open();
-        }
+        LIDAR_2D::instance()->set_config_module(CONFIG::instance());
+        LIDAR_2D::instance()->set_logger_module(LOGGER::instance());
+        LIDAR_2D::instance()->set_mobile_module(MOBILE::instance());
+        LIDAR_2D::instance()->init();
+        LIDAR_2D::instance()->open();
     }
 
     // lidar 3d module init
+    if(CONFIG::instance()->get_use_lidar_3d())
     {
-        if(CONFIG::instance()->get_use_lidar_3d())
-        {
-            LIDAR_3D::instance()->set_config_module(CONFIG::instance());
-            LIDAR_3D::instance()->set_logger_module(LOGGER::instance());
-            LIDAR_3D::instance()->init();
-            LIDAR_3D::instance()->open();
-        }
+        LIDAR_3D::instance()->set_config_module(CONFIG::instance());
+        LIDAR_3D::instance()->set_logger_module(LOGGER::instance());
+        LIDAR_3D::instance()->init();
+        LIDAR_3D::instance()->open();
     }
 
     // localization module init
     {
+        LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_config_module(CONFIG::instance());
         LOCALIZATION::instance()->set_logger_module(LOGGER::instance());
         LOCALIZATION::instance()->set_mobile_module(MOBILE::instance());
-        LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        LOCALIZATION::instance()->set_cam_module(CAM::instance());
         LOCALIZATION::instance()->set_unimap_module(UNIMAP::instance());
         LOCALIZATION::instance()->set_obsmap_module(OBSMAP::instance());
+        LOCALIZATION::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        LOCALIZATION::instance()->set_lidar_3d_module(LIDAR_3D::instance());
     }
 
     // mapping module init
+    if(CONFIG::instance()->get_use_lidar_2d())
     {
-        if(CONFIG::instance()->get_use_lidar_2d())
-        {
-            MAPPING::instance()->set_config_module(CONFIG::instance());
-            MAPPING::instance()->set_logger_module(LOGGER::instance());
-            MAPPING::instance()->set_unimap_module(UNIMAP::instance());
-            MAPPING::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-            MAPPING::instance()->set_localization_module(LOCALIZATION::instance());
-        }
+        MAPPING::instance()->set_config_module(CONFIG::instance());
+        MAPPING::instance()->set_logger_module(LOGGER::instance());
+        MAPPING::instance()->set_unimap_module(UNIMAP::instance());
+        MAPPING::instance()->set_lidar_2d_module(LIDAR_2D::instance());
+        MAPPING::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
     // autocontrol module init
@@ -464,12 +456,10 @@ void MainWindow::init_modules()
         AUTOCONTROL::instance()->set_config_module(CONFIG::instance());
         AUTOCONTROL::instance()->set_logger_module(LOGGER::instance());
         AUTOCONTROL::instance()->set_mobile_module(MOBILE::instance());
-        // ctrl->lidar = lidar;
-        // ctrl->cam = cam;
-        AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->set_unimap_module(UNIMAP::instance());
         AUTOCONTROL::instance()->set_obsmap_module(OBSMAP::instance());
         AUTOCONTROL::instance()->set_policy_module(POLICY::instance());
+        AUTOCONTROL::instance()->set_localization_module(LOCALIZATION::instance());
         AUTOCONTROL::instance()->init();
     }
 
@@ -479,14 +469,7 @@ void MainWindow::init_modules()
         SIM::instance()->set_logger_module(LOGGER::instance());
         SIM::instance()->set_unimap_module(UNIMAP::instance());
         SIM::instance()->set_mobile_module(MOBILE::instance());
-        if(CONFIG::instance()->get_loc_mode() == "3D")
-        {
-            SIM::instance()->set_lidar_3d_module(LIDAR_3D::instance());
-        }
-        else
-        {
-            SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
-        }
+        CONFIG::instance()->get_loc_mode() == "3D" ? SIM::instance()->set_lidar_3d_module(LIDAR_3D::instance()) : SIM::instance()->set_lidar_2d_module(LIDAR_2D::instance());
         SIM::instance()->set_localization_module(LOCALIZATION::instance());
     }
 
@@ -567,7 +550,6 @@ void MainWindow::init_modules()
         TASK::instance()->init();
         TASK::instance()->pause();
         TASK::instance()->cancel();
-
     }
 
     // start jog loop
@@ -584,8 +566,9 @@ void MainWindow::init_modules()
     {
         UNIMAP::instance()->load_map(map_path);
     }
+
     all_update();
-    bt_Request();
+    bt_RequestPduInfo();
 }
 
 void MainWindow::all_plot_clear()
@@ -613,7 +596,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                 if(!touch_event->touchPoints().isEmpty())
                 {
                     const QTouchEvent::TouchPoint &point = touch_event->touchPoints().first();
-                    QPointF pos = point.pos(); // touch point position
+                    QPointF pos = point.pos();
 
                     QEvent::Type mouse_event_type;
                     if(ev->type() == QEvent::TouchBegin)
@@ -687,8 +670,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                     Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                     pick.pre_node = pick.cur_node;
                     pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                    std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
 
                     // update last mouse button
                     pick.last_btn = 0;
@@ -824,8 +805,6 @@ bool MainWindow::eventFilter(QObject *object, QEvent *ev)
                         Eigen::Vector3d pt = ray_intersection(ray_center, ray_direction, Eigen::Vector3d(0,0,0), Eigen::Vector3d(0,0,1));
                         pick.pre_node = pick.cur_node;
                         pick.cur_node = UNIMAP::instance()->get_goal_id(pt);
-
-                        //                        std::cout << "pick.cur_node:" << pick.cur_node.toStdString() << std::endl;
 
                         // update last mouse button
                         pick.last_btn = 0;
@@ -972,10 +951,9 @@ void MainWindow::viewer_camera_relative_control(double tx, double ty, double tz,
     Eigen::Vector3d pos_new = tf_new.block<3, 1>(0, 3);
     Eigen::Vector3d focal_new = tf_new.block<3, 1>(0, 2)*d + pos_new;
 
-    pcl_viewer->setCameraPosition(pos_new[0], pos_new[1], pos_new[2],
-            focal_new[0], focal_new[1], focal_new[2],
-            up_new[0], up_new[1], up_new[2]);
-
+    pcl_viewer->setCameraPosition(pos_new[0],   pos_new[1],   pos_new[2],
+                                focal_new[0], focal_new[1], focal_new[2],
+                                   up_new[0],    up_new[1],    up_new[2]);
 
     pcl_viewer->setCameraClipDistances(2.0, 1000.0);
 }
@@ -985,36 +963,26 @@ void MainWindow::picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center
     // ray casting
     std::vector<pcl::visualization::Camera> cams;
     pcl_viewer->getCameras(cams);
-
-    Eigen::Matrix4d proj;
-    Eigen::Matrix4d view;
-
-    pcl::visualization::Camera cam0;
-    try
+    if(cams.empty())
     {
-        cam0 = cams.at(0);
-    }
-    catch(std::out_of_range)
-    {
-        //logger.write_log("pcl viewer not have camera ..", "Red", true, false);
-
-        //spdlog::error("pcl viewer not have camera ..");
         log_error("pcl viewer not have camera ..");
         center = Eigen::Vector3d(0,0,0);
         dir = Eigen::Vector3d(0,0,0);
         return;
     }
 
+    Eigen::Matrix4d view, proj;
+    pcl::visualization::Camera cam0;
+    cam0 = cams[0];
     cam0.computeProjectionMatrix(proj);
     cam0.computeViewMatrix(view);
-
     Eigen::Vector3d pos(cam0.pos[0], cam0.pos[1], cam0.pos[2]);
 
     Eigen::Vector4d p_ndc;
-    p_ndc[0] = (2.0*u)/w - 1.0;
-    p_ndc[1] = 1.0 - (2.0*v)/h;
+    p_ndc[0] = (2.0 * u) / w - 1.0;
+    p_ndc[1] =  1.0 - (2.0 * v)/h;
     p_ndc[2] = -1.0;
-    p_ndc[3] = 1.0;
+    p_ndc[3] =  1.0;
 
     Eigen::Vector4d p_view = proj.inverse()*p_ndc;
     Eigen::Vector4d q_view = p_view;
@@ -1071,12 +1039,19 @@ void MainWindow::init_gamepad()
     QList<int> ids = QGamepadManager::instance()->connectedGamepads();
     if(ids.isEmpty())
     {
+        log_error("gamepad not connected");
         return;
     }
 
     int id = *ids.begin();
     gamepad = new QGamepad(id, this);
-    printf("[MAIN] gamepad id=%d, name=%s\n", id, gamepad->name().toUtf8().constData());
+    if(!gamepad)
+    {
+        log_error("gamepad not connected");
+        return;
+    }
+
+    log_info("gamepad id:{}, name:{}", id, gamepad->name().toUtf8().constData());
 
     cur_lx = 0.0;
     cur_ly = 0.0;
@@ -1084,13 +1059,12 @@ void MainWindow::init_gamepad()
 
     // deadzone + hysteresis
     const double deadzone = 0.25;
-    const double hyst  = 0.05;
+    const double hyst = 0.05;
 
     // deadzone
     auto remap_axis = [deadzone](double a) -> double
     {
         double v = 0.0;
-
         if(a > deadzone)
         {
             v = (a - deadzone) / (1.0 - deadzone);
@@ -1104,9 +1078,7 @@ void MainWindow::init_gamepad()
             v = 0.0;
         }
 
-        if(v > 1.0)  v = 1.0;
-        if(v < -1.0) v = -1.0;
-        return v;
+        return std::clamp(v, -1.0, 1.0);
     };
 
     auto eval_analog = [this, remap_axis, deadzone, hyst]()
@@ -1150,9 +1122,6 @@ void MainWindow::init_gamepad()
 
         is_jog_pressed.store(true);
         update_jog_values(vx, vy, wz);
-
-        // debug
-        // printf("[AXIS] LX=% .2f LY=% .2f RX=% .2f | vx=% .2f vy=% .2f wz=% .2f\n", cur_lx, cur_ly, cur_rx, vx, vy, wz);
     };
 
     connect(gamepad, &QGamepad::axisLeftXChanged, this, [this, eval_analog](double v)
@@ -1223,12 +1192,10 @@ void MainWindow::init_gamepad()
 // for mobile platform
 void MainWindow::bt_SimInit()
 {
-    //spdlog::info("[SIM] simulation init");
     log_info("[SIM] simulation init");
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
         LOGGER::instance()->write_log("[SIM] map load first", "Red", true, false);
-        //spdlog::error("[SIM] map load first");
         log_error("[SIM] map load first");
         return;
     }
@@ -1264,18 +1231,17 @@ void MainWindow::bt_SimInit()
 void MainWindow::bt_ConfigLoad()
 {
     CONFIG::instance()->load();
-    //spdlog::info("[MAIN] config reloaded");
     log_info("config reloaded");
 }
 
 // for emergency stop
 void MainWindow::bt_Emergency()
 {
-    // task.cancel();
+    TASK::instance()->cancel();
     AUTOCONTROL::instance()->stop();
     AUTOCONTROL::instance()->set_multi_request("none");
     AUTOCONTROL::instance()->set_obs_condition("none");
-    // dctrl.stop();
+    DOCKCONTROL::instance()->stop();
     MOBILE::instance()->move(0,0,0);
 }
 
@@ -1407,60 +1373,51 @@ void MainWindow::bt_MapBuild()
 {
     if(CONFIG::instance()->get_use_sim())
     {
-        LOGGER::instance()->write_log("[MAIN] map build not allowed SIM_MODE", "Red", true, false);
-        //spdlog::warn("[MAIN] map build not allowed SIM_MODE");
-        log_warn("map build not allowed SIM_MODE");
-
+        log_warn("map build not allowed Simulation mode");
         return;
     }
+
+    all_plot_clear();
+    set_is_change_map_name(false);
 
     // stop first
     MAPPING::instance()->stop();
 
     // clear
-    all_plot_clear();
     UNIMAP::instance()->clear();
 
     // mapping start
-    MAPPING::instance()->start();
-    change_map_name =  false;
+    MAPPING::instance()->start();    
 }
 
 void MainWindow::bt_MapSave()
 {
     if(CONFIG::instance()->get_use_sim())
     {
-        LOGGER::instance()->write_log("[MAIN] map save not allowed SIM_MODE", "Red", true, false);
-        //spdlog::warn("[MAIN] map save not allowed SIM_MODE");
-        log_warn("map save not allowed SIM_MODE");
-
+        log_warn("map save not allowed Simulation mode");
         return;
     }
 
-    if(!change_map_name)
+    if(!get_is_change_map_name())
     {
         // auto generation dir path
         QString _map_dir = "/data/maps/" + get_time_str();
-        //printf("[MAIN] Creating map directory: %s\n", _map_dir.toLocal8Bit().data());
-        //spdlog::info("[MAIN] Creating map directory:{}", map_dir.toLocal8Bit().data());
         log_info("Creating map directory:{}", _map_dir.toLocal8Bit().data());
 
         QDir().mkpath(_map_dir);
 
         UNIMAP::instance()->set_map_path(_map_dir);
-        map_dir = _map_dir;
+        set_map_dir(_map_dir);
     }
     else
     {
         QString _map_dir = "/data/maps/" + map_dir;
-        //printf("[MAIN] Using existing map directory: %s\n", _map_dir.toLocal8Bit().data());
-        //spdlog::info("[MAIN] Using existing map directory:{}",map_dir.toLocal8Bit().data());
         log_info("Using existing map directory:{}",map_dir.toLocal8Bit().data());
 
         QDir().mkpath(_map_dir);
 
         UNIMAP::instance()->set_map_path(_map_dir);
-        map_dir = _map_dir;
+        set_map_dir(_map_dir);
     }
 
     // check
@@ -1468,7 +1425,6 @@ void MainWindow::bt_MapSave()
     if(map_path.isEmpty())
     {
         LOGGER::instance()->write_log("[MAIN] no map_dir", "Red", true, false);
-        //spdlog::warn("[no map_dir]");
         log_warn("no map_dir");
 
         return;
@@ -1480,10 +1436,7 @@ void MainWindow::bt_MapSave()
     // check kfrm
     if(MAPPING::instance()->get_kfrm_storage_size() == 0)
     {
-        //printf("[MAIN] no keyframe\n");
-        //spdlog::warn("[MAIN] no keyframe");
         log_warn("no keyframe");
-
         return;
     }
 
@@ -1508,10 +1461,6 @@ void MainWindow::bt_MapSave()
 
             Eigen::Vector3d _P = G.block(0,0,3,3)*P + G.block(0,3,3,1);
 
-            // int64_t x = _P[0];
-            // int64_t y = _P[1];
-            // int64_t z = _P[2];
-
             int64_t x = std::floor(_P[0]/voxel_size);
             int64_t y = std::floor(_P[1]/voxel_size);
             int64_t z = std::floor(_P[2]/voxel_size);
@@ -1529,8 +1478,6 @@ void MainWindow::bt_MapSave()
             }
         }
 
-        //printf("[MAIN] convert: %d/%d ..\n", (int)(p+1), (int)kfrm_storage->size());
-        //spdlog::info("[MAIN] convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
         log_info("convert: {}/{} ..", (int)(p+1), (int)kfrm_storage->size());
     }
 
@@ -1552,18 +1499,14 @@ void MainWindow::bt_MapSave()
         }
 
         cloud_csv_file.close();
-        //printf("[MAIN] %s saved, pts: %zu\n", cloud_csv_path.toLocal8Bit().data(), pts.size());
-        //spdlog::info("[MAIN] {}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
         log_info("{}, pts: {} saved", cloud_csv_path.toLocal8Bit().data(), pts.size());
     }
 }
 
 void MainWindow::bt_MapLoad()
 {
-    //spdlog::info("[MAIN] bt_MapLoad");
     log_info("bt_MapLoad");
-    
-    //QString path = QFileDialog::getExistingDirectory(this, "Select dir", QDir::homePath() + "/maps");
+
     QString path = QFileDialog::getExistingDirectory(this, "Select dir", "/data/maps");
     if(!path.isNull())
     {
@@ -1580,23 +1523,18 @@ void MainWindow::bt_MapLoad()
 void MainWindow::bt_MapLastLc()
 {
     MAPPING::instance()->last_loop_closing();
-    //spdlog::info("[MAIN] bt_MapLastLc");
     log_info("bt_MapLastLc");
 }
 
 void MainWindow::bt_MapPause()
 {
     MAPPING::instance()->is_pause.store(true);
-    //printf("[MAIN] mapping pasue\n");
-    //spdlog::info("[MAIN] mapping pasue");
     log_info("mapping pause");
 }
 
 void MainWindow::bt_MapResume()
 {
     MAPPING::instance()->is_pause.store(false);
-    //printf("[MAIN] mapping resume\n");
-    //spdlog::info("[MAIN] mapping resume");
     spdlog::info("mapping resume");
 }
 
@@ -1604,35 +1542,30 @@ void MainWindow::bt_MapResume()
 void MainWindow::bt_LocInit()
 {
     LOCALIZATION::instance()->set_cur_tf(se2_to_TF(pick.r_pose));
-    //spdlog::info("[MAIN] bt_LocInit");
     log_info("bt_LocInit");
 }
 
 void MainWindow::bt_LocStart()
 {
     LOCALIZATION::instance()->start();
-    //spdlog::info("[MAIN] bt_LocStart");
     log_info("bt_LocStart");
 }
 
 void MainWindow::bt_LocStop()
 {
     LOCALIZATION::instance()->stop();
-    //spdlog::info("[MAIN] bt_LocStop");
     log_info("bt_LocStop");
 }
 
 void MainWindow::bt_LocInitSemiAuto()
 {
-    if  (UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
         return;
     }
 
     LOCALIZATION::instance()->start_semiauto_init();
-    //spdlog::info("[MAIN] bt_LocSemiAuto");
     log_info("bt_LocSemiAuto");
 }
 // for autocontrol
@@ -1640,8 +1573,6 @@ void MainWindow::bt_AutoMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
         return;
     }
@@ -1696,8 +1627,6 @@ void MainWindow::bt_AutoBackMove()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
         return;
     }
@@ -1751,8 +1680,6 @@ void MainWindow::bt_AutoMove2()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
         return;
     }
@@ -1806,8 +1733,6 @@ void MainWindow::bt_AutoMove3()
 {
     if(UNIMAP::instance()->get_is_loaded() == MAP_NOT_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
         return;
     }
@@ -1861,8 +1786,6 @@ void MainWindow::bt_AutoPath()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
 
         return;
@@ -1898,8 +1821,6 @@ void MainWindow::bt_AutoPathAppend()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
     {
-        //printf("[MAIN] check map load\n");
-        //spdlog::warn("[MAIN] check map load");
         log_warn("check map load");
 
         return;
@@ -1952,28 +1873,24 @@ void MainWindow::bt_AutoPathErase()
 void MainWindow::bt_AutoStop()
 {
     AUTOCONTROL::instance()->stop();
-    //spdlog::info("[MAIN] bt_AutoStop");
     log_info("bt_AutoStop");
 }
 
 void MainWindow::bt_AutoPause()
 {
     AUTOCONTROL::instance()->set_is_pause(true);
-    //spdlog::info("[MAIN] bt_AutoPause");
     log_info("bt_AutoPause");
 }
 
 void MainWindow::bt_AutoResume()
 {
     AUTOCONTROL::instance()->set_is_pause(false);
-    //spdlog::info("[MAIN] bt_AutoResume");
     log_info("bt_AutoResume");
 }
 
 //docking
 void MainWindow::bt_DockStart()
 {
-    //spdlog::info("[DOCK] bt_DockStart");
     log_info("[DOCK] bt_DockStart");
 
     int d_field = CONFIG::instance()->get_docking_field();
@@ -1991,7 +1908,6 @@ void MainWindow::bt_DockStart()
 
 void MainWindow::bt_DockStop()
 {
-    //spdlog::info("[DOCK] bt_DockStop");
     log_info("[DOCK] bt_DockStop");
 
     int d_field = CONFIG::instance()->get_docking_field();
@@ -2006,7 +1922,6 @@ void MainWindow::bt_DockStop()
 
 void MainWindow::bt_UnDockStart()
 {
-    //spdlog::info("[DOCK] bt_UnDockStart");
     log_info("[DOCK] bt_UnDockStart");
 
     int d_field = CONFIG::instance()->get_docking_field();
@@ -2033,7 +1948,6 @@ void MainWindow::bt_ChgTrig()
 {
     int non_used_int = 0;
     MOBILE::instance()->xnergy_command(0, non_used_int);
-
 }
 
 void MainWindow::bt_ChgStop()
@@ -2112,11 +2026,11 @@ void MainWindow::bt_SetDetectModeF()
     MOBILE::instance()->set_detect_mode(0.0);
 }
 
-void MainWindow::bt_Request()
+void MainWindow::bt_RequestPduInfo()
 {
     //spdlog::info("[MAIN] bt_Request");
     log_info("bt_Request");
-    MOBILE::instance()->robot_request();
+    MOBILE::instance()->request_robot_pdu_info();
 }
 
 void MainWindow::bt_LiftPowerOn()
@@ -3455,7 +3369,6 @@ void MainWindow::plot_pick()
 
 void MainWindow::plot_info()
 {
-    //spdlog::debug("[MAIN] plot_info");
     log_debug("plot_info");
 
     // plot mobile info
@@ -3507,20 +3420,19 @@ void MainWindow::plot_info()
 
     // plot auto info
     {
-        QString _multi_state = "";
         int fsm_state = AUTOCONTROL::instance()->get_fsm_state();
+        QString auto_info_str = QString("[AUTO_INFO]\n"
+                                "fsm_state: %1\n"
+                                "is_moving: %2, is_pause: %3, obs: %4 (%5)\n"
+                                "is_multi: %6, request: %7")
+                                .arg(AUTO_FSM_STATE_STR[fsm_state])
+                                .arg(AUTOCONTROL::instance()->get_is_moving() ? "1" : "0")
+                                .arg(AUTOCONTROL::instance()->get_is_pause() ? "1" : "0")
+                                .arg(AUTOCONTROL::instance()->get_obs_condition())
+                                .arg(QString::number(AUTOCONTROL::instance()->get_obs_dist(), 'f', 3))
+                                .arg(CONFIG::instance()->get_use_multi())
+                                .arg(AUTOCONTROL::instance()->get_multi_reqest_state());
 
-        //        qDebug()<<"print : "<<AUTOCONTROL::instance()->get_obs_dist();
-        QString auto_info_str;
-        auto_info_str.sprintf("[AUTO_INFO]\nfsm_state: %s\nis_moving: %s, is_pause: %s, obs: %s (%.3f),\nis_multi: %d, request: %s, multi_state: %s",
-                              AUTO_FSM_STATE_STR[fsm_state].toLocal8Bit().data(),
-                              AUTOCONTROL::instance()->get_is_moving() ? "1" : "0",
-                              AUTOCONTROL::instance()->get_is_pause() ? "1" : "0",
-                              AUTOCONTROL::instance()->get_obs_condition().toLocal8Bit().data(),
-                              AUTOCONTROL::instance()->get_obs_dist(),
-                              CONFIG::instance()->get_use_multi(),
-                              AUTOCONTROL::instance()->get_multi_reqest_state().toLocal8Bit().data(),
-                              _multi_state.toLocal8Bit().data());
         ui->lb_AutoInfo->setText(auto_info_str);
     }
 
@@ -3552,36 +3464,38 @@ void MainWindow::plot_info()
             ui->lb_RrsMsgInfo->setText(COMM_MSA::instance()->get_msa_text());
         }
     }
-
 }
 
 void MainWindow::plot_safety()
 {
-    //spdlog::debug("[MAIN] plot_safety");
     log_debug("plot_safety");
 
     //for safety parameter plot
     MOBILE_SETTING cur_setting = MOBILE::instance()->get_setting();
 
-    ui->le_Setting_Version->setText(QString().sprintf("%d", cur_setting.version));
-    ui->le_Setting_Type->setText(QString().sprintf("%d", cur_setting.robot_type));
+    ui->le_Setting_Version->setText(QString::number(cur_setting.version));
+    ui->le_Setting_Type->setText(QString::number(cur_setting.robot_type));
 
-    ui->le_Setting_Limit_V->setText(QString().sprintf("%.2f",cur_setting.v_limit/1000.0));
-    ui->le_Setting_Limit_V_Jog->setText(QString().sprintf("%.2f",cur_setting.v_limit_jog/1000.0));
-    ui->le_Setting_Limit_W->setText(QString().sprintf("%.2f", cur_setting.w_limit));
-    ui->le_Setting_Limit_W_Jog->setText(QString().sprintf("%.2f",cur_setting.w_limit_jog));
-    ui->le_Setting_Limit_A->setText(QString().sprintf("%.2f", cur_setting.a_limit/1000.0));
-    ui->le_Setting_Limit_A_Jog->setText(QString().sprintf("%.2f", cur_setting.a_limit_jog/1000.0));
-    ui->le_Setting_Limit_B->setText(QString().sprintf("%.2f", cur_setting.b_limit));
-    ui->le_Setting_Limit_B_Jog->setText(QString().sprintf("%.2f", cur_setting.b_limit_jog));
+    ui->le_Setting_Limit_V->setText(QString::number(cur_setting.v_limit / 1000.0, 'f', 2));
+    ui->le_Setting_Limit_V_Jog->setText(QString::number(cur_setting.v_limit_jog / 1000.0, 'f', 2));
 
-    ui->le_Setting_W_R->setText(QString().sprintf("%.2f", cur_setting.w_r));
-    ui->le_Setting_W_S->setText(QString().sprintf("%.2f", cur_setting.w_s));
-    ui->le_Setting_Gear->setText(QString().sprintf("%.2f", cur_setting.gear));
-    ui->le_Setting_Dir->setText(QString().sprintf("%.2f", cur_setting.dir));
+    ui->le_Setting_Limit_W->setText(QString::number(cur_setting.w_limit, 'f', 2));
+    ui->le_Setting_Limit_W_Jog->setText(QString::number(cur_setting.w_limit_jog, 'f', 2));
 
-    ui->le_Setting_Limit_V_Monitor->setText(QString().sprintf("%.2f",cur_setting.v_limit_monitor/1000.0));
-    ui->le_Setting_Limit_W_Monitor->setText(QString().sprintf("%.2f",cur_setting.w_limit_monitor));
+    ui->le_Setting_Limit_A->setText(QString::number(cur_setting.a_limit / 1000.0, 'f', 2));
+    ui->le_Setting_Limit_A_Jog->setText(QString::number(cur_setting.a_limit_jog / 1000.0, 'f', 2));
+
+    ui->le_Setting_Limit_B->setText(QString::number(cur_setting.b_limit, 'f', 2));
+    ui->le_Setting_Limit_B_Jog->setText(QString::number(cur_setting.b_limit_jog, 'f', 2));
+
+    ui->le_Setting_W_R->setText(QString::number(cur_setting.w_r, 'f', 2));
+    ui->le_Setting_W_S->setText(QString::number(cur_setting.w_s, 'f', 2));
+
+    ui->le_Setting_Gear->setText(QString::number(cur_setting.gear, 'f', 2));
+    ui->le_Setting_Dir->setText(QString::number(cur_setting.dir, 'f', 2));
+
+    ui->le_Setting_Limit_V_Monitor->setText(QString::number(cur_setting.v_limit_monitor / 1000.0, 'f', 2));
+    ui->le_Setting_Limit_W_Monitor->setText(QString::number(cur_setting.w_limit_monitor, 'f', 2));
 
     if(cur_setting.robot_wheel_type == 0)
     {
@@ -3597,222 +3511,71 @@ void MainWindow::plot_safety()
         ui->le_Setting_Wheel_Type->setText("MECANUM");
     }
     
-    ui->le_Setting_Lx->setText(QString().sprintf("%.2f", cur_setting.lx));
-    ui->le_Setting_Ly->setText(QString().sprintf("%.2f", cur_setting.ly));
+    ui->le_Setting_Lx->setText(QString::number(cur_setting.lx, 'f', 2));
+    ui->le_Setting_Ly->setText(QString::number(cur_setting.ly, 'f', 2));
 
     MOBILE_STATUS cur_status = MOBILE::instance()->get_status();
 
-    QString state = "";
-    if(cur_status.om_state == MOBILE_POWER_OFF)
-    {
-        state = "POWER_OFF";
-    }
-    else if(cur_status.om_state == MOBILE_MAIN_POWER_UP)
-    {
-        state = "MAIN_POWER_UP";
-    }
-    else if(cur_status.om_state == MOBILE_PC_POWER_UP)
-    {
-        state = "PC_POWER_UP";
-    }
-    else if(cur_status.om_state == MOBILE_ROBOT_POWER_OFF)
-    {
-        state = "ROBOT_POWER_OFF";
-    }
-    else if(cur_status.om_state == MOBILE_ROBOT_INITIALIZE)
-    {
-        state = "ROBOT_INITIALIZE";
-    }
-    else if(cur_status.om_state == MOBILE_NORMAL_OP)
-    {
-        state = "NORMAL_OP";
-    }
-    else if(cur_status.om_state == MOBILE_NORMAL_OP_AUTO)
-    {
-        state = "NORMAL_OP_AUTO";
-    }
-    else if(cur_status.om_state == MOBILE_NORMAL_OP_MANUAL)
-    {
-        state = "NORMAL_OP_MANUAL";
-    }
-    else if(cur_status.om_state == MOBILE_NORMAL_LOW_BAT)
-    {
-        state = "NORMAL_LOW_BAT";
-    }
-    else if(cur_status.om_state == MOBILE_OPERATIONL_STOP)
-    {
-        state = "OPERATIONL_STOP";
-    }
-    else if(cur_status.om_state == MOBILE_CHARGING)
-    {
-        state = "CHARGING";
-    }
-    else if(cur_status.om_state == MOBILE_CONFIGURATION)
-    {
-        state = "CONFIGURATION";
-    }
-    else
-    {
-        state = "";
-    }
+    // set pdu robot operaion state
+    PduOperationState op_state_enum = static_cast<PduOperationState>(cur_status.om_state);
+    auto it0 = pdu_operation_state_to_string.find(op_state_enum);
+    QString op_state_str = (it0 != pdu_operation_state_to_string.end()) ? it0->second : "";
+    ui->le_Op_Mode->setText(op_state_str);
 
-    ui->le_Op_Mode->setText(state);
+    // set pdu robot initialization state
+    PduInitializationState ri_state_enum = static_cast<PduInitializationState>(cur_status.ri_state);
+    auto it1 = pdu_initialization_state_to_string.find(ri_state_enum);
+    QString ri_state_str = (it1 != pdu_initialization_state_to_string.end()) ? it1->second : "";
+    ui->le_Robot_Init_State->setText(ri_state_str);
 
-    QString ri_state = "";
-    if(cur_status.ri_state == MOBILE_RI_IDLE)
-    {
-        ri_state = "RI_IDLE";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_SAFETY_CHECK)
-    {
-        ri_state = "RI_SAFETY_CHECK";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_POWER_ON)
-    {
-        ri_state = "RI_POWER_ON";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_POWER_CHECK)
-    {
-        ri_state = "RI_POWER_CHECK";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_MOTOR_INIT)
-    {
-        ri_state = "RI_MOTOR_INIT";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_MOTOR_CHECK)
-    {
-        ri_state = "RI_MOTOR_CHECK";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_DONE)
-    {
-        ri_state = "RI_DONE";
-    }
-    else if(cur_status.ri_state == MOBILE_RI_FAIL)
-    {
-        ri_state = "RI_FAIL";
-    }
-    else
-    {
-        ri_state = "";
-    }
+    ui->le_Lidar_Field_Read->setText(QString("%1").arg(cur_status.lidar_field));
 
-    ui->le_Robot_Init_State->setText(ri_state);
-    ui->le_Lidar_Field_Read->setText(QString().sprintf("%d", cur_status.lidar_field));
+    // set charge state
+    ChargeState charge_state_enum = static_cast<ChargeState>(cur_status.charge_state);
+    auto it2 = charge_state_to_string.find(charge_state_enum);
+    QString charge_state_str = (it2 != charge_state_to_string.end()) ? it2->second : "";
+    ui->le_Charge_State->setText(charge_state_str);
 
-    QString charge_state = "";
-    if(cur_status.charge_state == 0)
+    auto trig_or_none = [](bool a, bool b)
     {
-        charge_state = "CHARGE_IDLE";
-    }
-    else if(cur_status.charge_state == 1)
-    {
-        charge_state = "CHARGE_TRIG";
-    }
-    else if(cur_status.charge_state == 2)
-    {
-        charge_state = "CHARGE_BATTERY_ON";
-    }
-    else if(cur_status.charge_state == 3)
-    {
-        charge_state = "CHARGING";
-    }
-    else if(cur_status.charge_state == 4)
-    {
-        charge_state = "CHARGE_FINISH";
-    }
-    else if(cur_status.charge_state == 5)
-    {
-        charge_state = "CHARGE_FAILED";
-    }
-    else
-    {
-        charge_state = "CHARGE_UNKNOWN";
-    }
+        return a || b ? "trig" : "none";
+    };
 
-    ui->le_Charge_State->setText(charge_state);
+    // emo status
+    QString safety_emo_pressed_str = trig_or_none(cur_status.safety_state_emo_pressed_1, cur_status.safety_state_emo_pressed_2);
+    ui->le_Safety_Emo_Pressed->setText(safety_emo_pressed_str);
 
-    //emo status
-    if(cur_status.safety_state_emo_pressed_1 || cur_status.safety_state_emo_pressed_2)
-    {
-        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Emo_Pressed->setText(QString().sprintf("none"));
-    }
+    // speed mismatch
+    QString safety_ref_meas_mismatch_str = trig_or_none(cur_status.safety_state_ref_meas_mismatch_1, cur_status.safety_state_ref_meas_mismatch_2);
+    ui->le_Safety_Ref_Meas_Mismatch->setText(safety_ref_meas_mismatch_str);
 
-    //speed mismatch
-    if(cur_status.safety_state_ref_meas_mismatch_1 || cur_status.safety_state_ref_meas_mismatch_2)
-    {
-        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Ref_Meas_Mismatch->setText(QString().sprintf("none"));
-    }
+    // overspeed
+    QString safety_over_speed_str = trig_or_none(cur_status.safety_state_over_speed_1, cur_status.safety_state_over_speed_2);
+    ui->le_Safety_Over_Speed->setText(safety_over_speed_str);
 
-    //overspeed
-    if(cur_status.safety_state_over_speed_1 || cur_status.safety_state_over_speed_2)
-    {
-        ui->le_Safety_Over_Speed->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Over_Speed->setText(QString().sprintf("none"));
-    }
+    // obstacle detect
+    QString safety_obstacle_detect_str = trig_or_none(cur_status.safety_state_obstacle_detected_1, cur_status.safety_state_obstacle_detected_2);
+    ui->le_Safety_Obstacle_Detect->setText(safety_obstacle_detect_str);
 
-    //obstacle detect
-    if(cur_status.safety_state_obstacle_detected_1 || cur_status.safety_state_obstacle_detected_2)
-    {
-        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Obstacle_Detect->setText(QString().sprintf("none"));
-    }
+    // speed field mismatch
+    QString safety_speed_field_mismatch_str = trig_or_none(cur_status.safety_state_speed_field_mismatch_1, cur_status.safety_state_speed_field_mismatch_2);
+    ui->le_Safety_Speed_Field_Mismatch->setText(safety_speed_field_mismatch_str);
 
-    //speed field mismatch
-    if(cur_status.safety_state_speed_field_mismatch_1 || cur_status.safety_state_speed_field_mismatch_1)
-    {
-        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Speed_Field_Mismatch->setText(QString().sprintf("none"));
-    }
+    // interlock detect
+    QString safety_interlock_stop_str = trig_or_none(cur_status.safety_state_interlock_stop_1, cur_status.safety_state_interlock_stop_2);
+    ui->le_Safety_Interlock_Stop->setText(safety_interlock_stop_str);
 
-    //interlock detect
-    if(cur_status.safety_state_interlock_stop_1 || cur_status.safety_state_interlock_stop_2)
-    {
-        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Interlock_Stop->setText(QString().sprintf("none"));
-    }
+    // bumper detect
+    QString safety_bumper_stop_str = trig_or_none(cur_status.safety_state_bumper_stop_1, cur_status.safety_state_bumper_stop_2);
+    ui->le_Safety_Bumper_Stop->setText(safety_bumper_stop_str);
 
-    //bumper detect
-    if(cur_status.safety_state_bumper_stop_1 || cur_status.safety_state_bumper_stop_2)
-    {
-        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Bumper_Stop->setText(QString().sprintf("none"));
-    }
+    // operation stop detect
+    QString safety_op_stop_state_str = trig_or_none(cur_status.operational_stop_state_flag_1, cur_status.operational_stop_state_flag_2);
+    ui->le_Safety_Op_Stop_State->setText(safety_op_stop_state_str);
 
-    //operation stop detect
-    if(cur_status.operational_stop_state_flag_1 || cur_status.operational_stop_state_flag_2)
-    {
-        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("trig"));
-    }
-    else
-    {
-        ui->le_Safety_Op_Stop_State->setText(QString().sprintf("none"));
-    }
-
-    ui->le_mainstate->setText(QString().sprintf("%d", cur_status.xnergy_main_state));
-    ui->le_errorcode->setText(QString().sprintf("%d", cur_status.xnergy_error_code_low));
+    // main state / error code
+    ui->le_mainstate->setText(QString::number(cur_status.xnergy_main_state));
+    ui->le_errorcode->setText(QString::number(cur_status.xnergy_error_code_low));
 }
 
 void MainWindow::plot_raw_2d()
@@ -5065,6 +4828,66 @@ void MainWindow::plot_loop()
     plot_timer->start();
 }
 
+void MainWindow::set_temperature_value(float val)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    temperature_value = val;
+}
+
+void MainWindow::set_is_change_map_name(bool val)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    is_change_map_name = val;
+}
+
+void MainWindow::set_map_dir(const QString& val)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    map_dir = val;
+}
+
+void MainWindow::set_manual_led_color(const LedState& val)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    manual_led_color = val;
+}
+
+void MainWindow::set_is_manual_led(bool val)
+{
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    is_manual_led = val;
+}
+
+bool MainWindow::get_is_change_map_name()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return is_change_map_name;
+}
+
+bool MainWindow::get_is_manual_led()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return is_manual_led;
+}
+
+float MainWindow::get_temperature_value()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return temperature_value;
+}
+
+QString MainWindow::get_map_dir()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return map_dir;
+}
+
+LedState MainWindow::get_manual_led_color()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return manual_led_color;
+}
+
 void MainWindow::speaker_handler(int speaker_cnt)
 {
     //spdlog::debug("[MAIN] speaker_handler");
@@ -5099,7 +4922,7 @@ void MainWindow::speaker_handler(int speaker_cnt)
     }
     else
     {
-        if(ms.om_state == SM_OM_NORMAL_OP_AUTO || ms.om_state == SM_OM_NORMAL_OP_MANUAL)
+        if(static_cast<PduOperationState>(ms.om_state) == PduOperationState::NORMAL_OP_AUTO || static_cast<PduOperationState>(ms.om_state) == PduOperationState::NORMAL_OP_MANUAL)
         {
             speak_code = 11;
         }
@@ -5157,7 +4980,6 @@ int MainWindow::led_handler()
     // autodrive led control
     if(AUTOCONTROL::instance()->get_is_moving())
     {
-
         //charging
         if(ms.charge_state == CHARGING_STATION_CHARGING)
         {
@@ -5165,7 +4987,6 @@ int MainWindow::led_handler()
             led_out = SAFETY_LED_CONTRACTING_GREEN;
             return led_out;
         }
-        
         else if (ms.charge_state == CHARGING_STATION_CHARGE_FINISH)
         {
             led_out = SAFETY_LED_GREEN_BLINKING;
@@ -5233,19 +5054,14 @@ int MainWindow::led_handler()
     return led_out;
 }
 
-void MainWindow::getIPv4()
+void MainWindow::get_cur_IP()
 {
-    //spdlog::debug("[MAIN] getIPv4");
     log_debug("getIPv4");
 
     QString chosen = "N/A";
 
     for(const QHostAddress &addr : QNetworkInterface::allAddresses())
     {
-        //        if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
-        //                addr != QHostAddress::LocalHost &&
-        //                addr != QHostAddress("192.168.1.5") &&
-        //                addr != QHostAddress("192.168.2.2"))
         if(addr.protocol() == QAbstractSocket::IPv4Protocol &&
                 addr != QHostAddress::LocalHost)
         {
@@ -5257,6 +5073,7 @@ void MainWindow::getIPv4()
 
     ui->lb_RobotIP->setText(chosen);
 }
+
 void MainWindow::qa_loop()
 {
     if(!is_qa_running)

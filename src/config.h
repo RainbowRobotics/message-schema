@@ -54,7 +54,7 @@ public:
      ***********************/
     QString get_robot_type_str();       // robot type_str
     QString get_robot_model_str();      // robot model_str
-    QString get_robot_wheel_type();  // robot wheel type
+    QString get_robot_wheel_type();     // robot wheel type (Differential, Quad, Mecanum)
     QString get_robot_serial_number();  // robot serial number : in the case of manufactured goods, the production team manages them. Otherwise, leave it blank.
     RobotType get_robot_type();         // robot type  : S100-A-3D
     RobotModel get_robot_model();       // robot model : S100, D400, Mecanum, SEM ...

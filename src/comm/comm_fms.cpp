@@ -985,61 +985,12 @@ void COMM_FMS::common_loop()
             if(command == "on")
             {
                 MainWindow* _main = (MainWindow*)main;
-                _main->is_user_led = true;
 
-                QString led = msg.led;
-                if(led == "none")
-                {
-                    _main->user_led_color = LED_OFF;
-                }
-                else if(led == "red")
-                {
-                    _main->user_led_color = LED_RED;
-                }
-                else if(led == "blue")
-                {
-                    _main->user_led_color = LED_BLUE;
-                }
-                else if(led == "white")
-                {
-                    _main->user_led_color = LED_WHITE;
-                }
-                else if(led == "green")
-                {
-                    _main->user_led_color = LED_GREEN;
-                }
-                else if(led == "magenta")
-                {
-                    _main->user_led_color = LED_MAGENTA;
-                }
-                else if(led == "yellow")
-                {
-                    _main->user_led_color = LED_YELLOW;
-                }
-                else if(led == "red blink")
-                {
-                    _main->user_led_color = LED_RED_BLINK;
-                }
-                else if(led == "blue blink")
-                {
-                    _main->user_led_color = LED_BLUE_BLINK;
-                }
-                else if(led == "white blink")
-                {
-                    _main->user_led_color = LED_WHITE_BLINK;
-                }
-                else if(led == "green blink")
-                {
-                    _main->user_led_color = LED_GREEN_BLINK;
-                }
-                else if(led == "magenta blink")
-                {
-                    _main->user_led_color = LED_MAGENTA_BLINK;
-                }
-                else if(led == "yellow blink")
-                {
-                    _main->user_led_color = LED_YELLOW_BLINK;
-                }
+                _main->set_is_manual_led(true);
+
+                const auto it = led_state_table.find(msg.led.toStdString());
+                _main->set_manual_led_color(it != led_state_table.end() ? it->second : LedState::OFF);
+
 
                 msg.result = "accept";
                 msg.message = "";
@@ -1047,7 +998,8 @@ void COMM_FMS::common_loop()
             else if(command == "off")
             {
                 MainWindow* _main = (MainWindow*)main;
-                _main->is_user_led = false;
+
+                _main->set_is_manual_led(false);
 
                 msg.result = "accept";
                 msg.message = "";
