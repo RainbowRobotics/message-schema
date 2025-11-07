@@ -2,7 +2,6 @@
 #define GLOBAL_DEFINES_H
 
 // OpenMP
-#include <omp.h>
 
 // linux native
 #include <sys/timerfd.h>
@@ -23,105 +22,55 @@
 #include <variant>
 
 // tbb
-#include <tbb/concurrent_queue.h>
 #include <tbb/concurrent_vector.h>
 
 // vtk
 #include <QVTKOpenGLNativeWidget.h>
-#include <vtkCamera.h>
-#include <vtkCubeSource.h>
-#include <vtkDataObjectToTable.h>
-#include <vtkElevationFilter.h>
-#include <vtkGenericOpenGLRenderWindow.h>
-#include <vtkNamedColors.h>
-#include <vtkNew.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkQtTableView.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
-#include <vtkSphereSource.h>
-#include <vtkVersion.h>
-#include <vtkWindowToImageFilter.h>
 
 // pcl
-#include <pcl/point_types.h>
-#include <pcl/common/common.h>
 #include <pcl/common/transforms.h>
-#include <pcl/geometry/mesh_base.h>
-#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/features/moment_of_inertia_estimation.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/obj_io.h>
-#include <pcl/point_cloud.h>
-#include <pcl/filters/radius_outlier_removal.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/filter.h>
-#include <pcl/segmentation/extract_clusters.h>
-#include <pcl/search/kdtree.h>
 
 
 // Eigen
 #include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
 Q_DECLARE_METATYPE(Eigen::Matrix4d)
 
 // sophus
 #define SOPHUS_USE_BASIC_LOGGING
 #include <sophus/geometry.hpp>
-#include <sophus/se3.hpp>
-#include <sophus/interpolate.hpp>
 
 // opencv
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
-#include "cv_to_qt.h"
 
 // nanoflann
 #include "nanoflann.hpp"
 
 // octomap
 #include <octomap/octomap.h>
-#include <octomap/math/Utils.h>
 
 // pseudo color
-#include "tinycolormap.hpp"
 
 // pdal
 #include <pdal/PointTable.hpp>
 #include <pdal/PointView.hpp>
-#include <pdal/Dimension.hpp>
 #include <pdal/Options.hpp>
-#include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasWriter.hpp>
-#include <pdal/io/LasReader.hpp>
-#include <pdal/StageFactory.hpp>
 
 // spdlog
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/rotating_file_sink.h>
 
 // std::error code
 #include <system_error>
 
 // qt
 #include <QApplication>
-#include <QStandardPaths>
-#include <QDateTime>
-#include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
-#include <QTextStream>
 #include <QInputDialog>
-#include <QJsonDocument>
-#include <QJsonValue>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QTableWidget>
-#include <QHeaderView>
 #include <QtConcurrent/QtConcurrent>
 
 // defines
@@ -276,24 +225,25 @@ inline static const std::unordered_map<ChargeState, QString> charge_state_to_str
     {ChargeState::FAIL,                "CHARGE_FAILED"},
 };
 
-enum AUTO_FSM_STATE
+enum class AutoFsmState
 {
-    AUTO_FSM_FIRST_ALIGN = 0,
-    AUTO_FSM_DRIVING,
-    AUTO_FSM_FINAL_ALIGN,
-    AUTO_FSM_OBS,
-    AUTO_FSM_COMPLETE,
+    FIRST_ALIGN = 0,
+    DRIVING     = 1,
+    FINAL_ALIGN = 2,
+    OBS         = 3,
+    COMPLETE    = 4,
+    FAIL        = 5,
 };
 // conversion map (std::string to AutoFsmState)
-//inline static const std::unordered_map<AutoFsmState, QString> auto_state_to_string =
-//{
-//    {AutoFsmState::FIRST_ALIGN,  "FIRST_ALIGN"},
-//    {AutoFsmState::DRIVING,      "DRIVING"},
-//    {AutoFsmState::FINAL_ALIGN,  "FINAL_ALIGN"},
-//    {AutoFsmState::OBS,          "OBS"},
-//    {AutoFsmState::COMPLETE,     "COMPLETE"},
-//    {AutoFsmState::FAIL,         "FAIL"},
-//};
+inline static const std::unordered_map<AutoFsmState, QString> auto_state_to_string =
+{
+    {AutoFsmState::FIRST_ALIGN,  "FIRST_ALIGN"},
+    {AutoFsmState::DRIVING,      "DRIVING"},
+    {AutoFsmState::FINAL_ALIGN,  "FINAL_ALIGN"},
+    {AutoFsmState::OBS,          "OBS"},
+    {AutoFsmState::COMPLETE,     "COMPLETE"},
+    {AutoFsmState::FAIL,         "FAIL"},
+};
 
 enum class LedState
 {

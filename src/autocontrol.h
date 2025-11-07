@@ -94,11 +94,11 @@ public:
     // stop control loop
     void stop();
 
+    int get_last_step();
+
     /***********************
      * interface funcs
      ***********************/
-    int get_fsm_state();                            // get current Finit State Machine state
-    int get_last_step();
     bool get_is_debug();                            // check if debug
     bool get_is_pause();                            // check if paused
     bool get_is_moving();                           // check if moving
@@ -118,6 +118,7 @@ public:
     DATA_MOVE get_cur_move_info();                  // get last received move msg
     long long get_global_path_time();
     CTRL_PARAM get_cur_ctrl_params();
+    AutoFsmState get_fsm_state();                   // get current Finit State Machine state
     Eigen::Vector3d get_last_cur_pos();             // get last current pos
     Eigen::Vector3d get_last_tgt_pos();             // get last target pos
     Eigen::Vector3d get_last_local_goal();          // get last local goal
@@ -299,7 +300,6 @@ private:
     std::atomic<long long> global_path_time = {(long long)0};
 
     // flags
-    std::atomic<int>  fsm_state              = {AUTO_FSM_COMPLETE};
     std::atomic<bool> is_rrs                 = {false};
     std::atomic<bool> is_debug               = {false};
     std::atomic<bool> is_pause               = {false};
@@ -309,6 +309,7 @@ private:
     std::atomic<double> process_time_obs     = {0.0};
     std::atomic<double> process_time_control = {0.0};
     std::atomic<bool> back_mode              = {false};
+    std::atomic<AutoFsmState>  fsm_state     = {AutoFsmState::COMPLETE};
 
     // params for rrs & plot
     PATH cur_local_path;
