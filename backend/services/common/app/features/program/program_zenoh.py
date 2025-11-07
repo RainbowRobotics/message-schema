@@ -1,8 +1,14 @@
 from rb_database import get_db
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
+from rb_flat_buffers.flow_manager.Request_Update_All_Step_State import (
+    Request_Update_All_Step_StateT,
+)
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_utils.parser import t_to_dict, to_json
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
+
+from app.socket.socket_client import socket_client
 
 from .program_module import ProgramService
 from .program_schema import RB_Flow_Manager_ProgramState as RB_Flow_Manager_ProgramState_PB
@@ -23,6 +29,18 @@ async def on_pause(*, topic, mv, obj, attachment):
 async def on_resume(*, topic, mv, obj, attachment):
     db = await get_db()
     return await program_service.call_resume_or_pause(db=db, is_pause=False)
+
+
+@zenoh_program_router.subscribe(
+    "rrs/task/update_all_step_state",
+    flatbuffer_obj_t=Request_Update_All_Step_StateT,
+    opts=SubscribeOptions(allowed_same_sender=True),
+)
+async def on_update_all_step_state(*, topic, mv, obj, attachment):
+    db = await get_db()
+    task_id = obj["taskId"]
+    state = convert_state_to_string(obj["state"])
+    return await program_service.update_all_task_step_state(task_id=task_id, state=state, db=db)
 
 
 @zenoh_program_router.subscribe(
@@ -51,3 +69,12 @@ def convert_state_to_string(state: RB_Flow_Manager_ProgramState) -> RB_Flow_Mana
         RB_Flow_Manager_ProgramState.ERROR: RB_Flow_Manager_ProgramState_PB.ERROR,
         RB_Flow_Manager_ProgramState.COMPLETED: RB_Flow_Manager_ProgramState_PB.COMPLETED,
     }[state]
+
+
+@zenoh_program_router.subscribe(
+    "rrs/executor/state", opts=SubscribeOptions(allowed_same_sender=True)
+)
+async def on_executor_state(*, topic, mv, obj, attachment):
+    print("obj >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
+
+    await socket_client.emit("executor/state", t_to_dict(mv))

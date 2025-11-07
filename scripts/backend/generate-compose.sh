@@ -59,7 +59,7 @@ for dir in "$BE/services"/*; do
       - ./services/${NAME}:/app/backend/services/${NAME}
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
-      - ./temp-data:/app/data/${NAME}
+      - ./temp-data:/app/data
 
 EOF
 
@@ -150,10 +150,12 @@ for FD in 3 4 5; do
   rrs-mongo-dev:
     image: mongo:7
     container_name: rrs-mongo-dev
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports: ["27017:27017"]
     networks: [rb_net]
     volumes:
       - rrs-mongo-data:/data/db
+      - ../scripts/backend/mongo-dev-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
 volumes:
   rrs-mongo-data:
@@ -174,6 +176,7 @@ EOF
       - BUILDKIT_PROVENANCE=0
       - BUILDKIT_SBOM_SCAN=0
     container_name: api-gateway-preview
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     restart: unless-stopped
     volumes:
       - ../api-gateway/nginx.dev.conf:/etc/nginx/nginx.conf:ro
@@ -186,6 +189,7 @@ EOF
     network_mode: host
     volumes:
       - rrs-mongo-data:/data/db
+      - ../scripts/backend/mongo-preview-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
 volumes:
   rrs-mongo-data:
@@ -210,6 +214,7 @@ EOF
   rrs-mongo:
     image: mongo:7
     container_name: rrs-mongo
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     profiles: [rrs-mongo]
     ports: ["27017:27017"]
     network_mode: host

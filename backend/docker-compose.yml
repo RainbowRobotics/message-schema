@@ -98,6 +98,7 @@ services:
   rrs-mongo:
     image: mongo:7
     container_name: rrs-mongo
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     profiles: [rrs-mongo]
     ports: ["27017:27017"]
     network_mode: host

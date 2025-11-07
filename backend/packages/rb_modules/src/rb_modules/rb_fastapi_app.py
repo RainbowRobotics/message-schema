@@ -32,8 +32,8 @@ class AppSettings(BaseSettings):
     SOCKET_URL_PROD: str | None = "http://127.0.0.1:8000"
     SOCKET_SERVER_URL: str | None = None
 
-    MONGO_URI_DEV: str | None = "mongodb://rrs-mongo-dev:27017"
-    MONGO_URI_PROD: str | None = "mongodb://127.0.0.1:27017"
+    MONGO_URI_DEV: str | None = "mongodb://rrs-mongo-dev:27017?replicaSet=rs0"
+    MONGO_URI_PROD: str | None = "mongodb://127.0.0.1:27017?replicaSet=rs0"
     MONGO_URI: str | None = None
     MONGO_DB_NAME: str | None = "rrs"
 

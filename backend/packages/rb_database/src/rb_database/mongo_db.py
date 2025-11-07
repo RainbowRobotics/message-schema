@@ -5,10 +5,12 @@ from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
+from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 from rb_modules.log import rb_log
 
 client: AsyncIOMotorClient | None = None
+py_mongo_client: MongoClient | None = None
 db: AsyncIOMotorDatabase | None = None
 
 
@@ -31,6 +33,66 @@ async def _find_index_name_by_keys(col, norm_req):
         if norm_ex == norm_req:
             return idx_name, meta
     return None, None
+
+
+async def ensure_replica_set(
+    motor_client: AsyncIOMotorClient,
+    *,
+    rs_name: str = "rs0",
+    seed_host: str = "rrs-mongo-dev:27017",
+):
+    """
+    1) rs.status로 활성 여부 확인 (Motor)
+    2) NotYetInitialized면 동기 pymongo로 rs.initiate() 1회 수행
+    3) PRIMARY 선출될 때까지 hello로 대기 (Motor)
+    """
+    # 1) 이미 활성화?
+    try:
+        await motor_client.admin.command("replSetGetStatus")
+        print("✅ Replica set already active.")
+        return
+    except OperationFailure as e:
+        msg = str(e)
+        if "not running with --replSet" in msg:
+            print("❌ mongod가 --replSet 없이 실행됨. 컨테이너 command 확인 필요.")
+            return
+        if "no replset config has been received" in msg:
+            # 2) initiate (동기 pymongo 사용: await 금지)
+            print("🔧 Initializing replica set...")
+            sync_client: MongoClient = MongoClient(
+                f"mongodb://{seed_host}"
+            )  # RS 파라미터 없이 단일 연결
+            try:
+                sync_client.admin.command(
+                    "replSetInitiate",
+                    {"_id": rs_name, "members": [{"_id": 0, "host": seed_host}]},
+                )
+                print("✅ rs.initiate() sent")
+            except OperationFailure as e2:
+                # 이미 초기화된 경우 포함
+                if "already initialized" in str(e2):
+                    print("ℹ️ Replica set already initialized (server says).")
+                else:
+                    raise
+            finally:
+                sync_client.close()
+        else:
+            # 다른 오류는 그대로 위로
+            raise
+
+    # 3) PRIMARY 선출 대기 (hello: MongoDB 5+)
+    for i in range(90):  # 최대 90초
+        try:
+            hello = await motor_client.admin.command({"hello": 1})
+            if hello.get("isWritablePrimary"):
+                print(f"🎉 PRIMARY ready: {hello.get('primary') or seed_host}")
+                return
+        except Exception:
+            pass
+        print(f"⏳ Waiting for PRIMARY election... {i+1}s", flush=True)
+        await asyncio.sleep(1)
+
+    raise RuntimeError("Primary not elected within timeout")
 
 
 async def ensure_index(
@@ -160,10 +222,12 @@ async def init_indexes(db: AsyncIOMotorDatabase):
 
 
 async def init_db(app: FastAPI, uri: str, db_name: str):
-    global client, db
+    global client, db, py_mongo_client
     client = AsyncIOMotorClient(uri, uuidRepresentation="standard")
+    py_mongo_client = MongoClient(uri)
     db = client[db_name]
 
+    await ensure_replica_set(client)
     await init_indexes(db)
 
     app.state.mongo_client = client
@@ -177,7 +241,7 @@ async def close_db(app: FastAPI):
         c.close()
 
 
-async def wait_db_ready(timeout: int = 2):
+async def wait_db_ready(timeout: int = 15):
     start = time.monotonic()
     while db is None:
         print("🔎 wait db ready", flush=True)

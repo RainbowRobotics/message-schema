@@ -9,15 +9,20 @@ from .program_schema import (
     Request_Create_Multiple_StepPD,
     Request_Create_ProgramPD,
     Request_Delete_StepsPD,
+    Request_Get_Script_ContextPD,
+    Request_Preview_Start_ProgramPD,
+    Request_Preview_Stop_ProgramPD,
     Request_Program_ExecutionPD,
     Request_Tasks_ExecutionPD,
     Request_Update_ProgramPD,
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
     Response_Get_ProgramPD,
+    Response_Get_Script_ContextPD,
     Response_Get_StepListPD,
     Response_Script_ExecutionPD,
     Response_Upsert_Program_And_TasksPD,
+    Response_Upsert_StepsPD,
     Step_Base,
 )
 
@@ -71,15 +76,51 @@ async def get_step_list(task_id: str, db: MongoDB):
     return JSONResponse(res)
 
 
-@program_router.post("/program/tasks/upsert", response_model=Step_Base)
+@program_router.post("/program/tasks/upsert", response_model=Response_Upsert_StepsPD)
 async def create_or_update_steps(request: Request_Create_Multiple_StepPD, db: MongoDB):
     res = await program_service.upsert_steps(request=request, db=db)
+    return JSONResponse(res)
+
+
+@program_router.post("/program/task/script-context", response_model=Response_Get_Script_ContextPD)
+async def get_script_context(request: Request_Get_Script_ContextPD, db: MongoDB):
+    res = await program_service.get_script_context(request=request, db=db)
     return JSONResponse(res)
 
 
 @program_router.delete("/program/steps/delete", response_model=Response_Delete_StepsPD)
 async def delete_steps(request: Request_Delete_StepsPD, db: MongoDB):
     res = await program_service.delete_steps(request=request, db=db)
+    return JSONResponse(res)
+
+
+@program_router.get("/program/executor/state", response_model=dict)
+async def get_executor_state():
+    res = program_service.get_executor_state()
+    return JSONResponse(res)
+
+
+@program_router.post("/program/preview/start", response_model=Response_Script_ExecutionPD)
+async def preview_start_program(request: Request_Preview_Start_ProgramPD):
+    res = await program_service.preview_start_program(request=request)
+    return JSONResponse(res)
+
+
+@program_router.post("/program/preview/stop", response_model=Response_Script_ExecutionPD)
+async def preview_stop_program(request: Request_Preview_Stop_ProgramPD):
+    res = await program_service.preview_stop_program(request=request)
+    return JSONResponse(res)
+
+
+@program_router.post("/program/preview/pause", response_model=Response_Script_ExecutionPD)
+async def preview_pause_program(request: Request_Preview_Stop_ProgramPD):
+    res = await program_service.preview_pause_program(request=request)
+    return JSONResponse(res)
+
+
+@program_router.post("/program/preview/resume", response_model=Response_Script_ExecutionPD)
+async def preview_resume_program(request: Request_Preview_Stop_ProgramPD):
+    res = await program_service.preview_resume_program(request=request)
     return JSONResponse(res)
 
 

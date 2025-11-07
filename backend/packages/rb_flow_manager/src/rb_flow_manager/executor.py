@@ -4,9 +4,9 @@ import queue
 import signal
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from multiprocessing import Event, Manager, Process, Queue
-from multiprocessing.managers import DictProxy, SyncManager
+from multiprocessing.managers import SyncManager
 from multiprocessing.synchronize import Event as EventType
 from threading import Thread
 from typing import Any
@@ -71,9 +71,11 @@ def _execute_tree_in_process(
         if state_dict["state"] != RB_Flow_Manager_ProgramState.STOPPED:
             state_dict["state"] = RB_Flow_Manager_ProgramState.COMPLETED
 
-    except StopExecution as e:
+    except StopExecution:
         state_dict["state"] = RB_Flow_Manager_ProgramState.STOPPED
-        result_queue.put({"success": False, "process_id": process_id, "error": str(e)})
+
+        if ctx is not None:
+            ctx.emit_stop(step.step_id)
 
     except RuntimeError as e:  # noqa: BLE001
         state_dict["state"] = RB_Flow_Manager_ProgramState.ERROR
@@ -98,7 +100,7 @@ class ScriptExecutor:
         self,
         *,
         # zenoh_client: ZenohClient,
-        on_init: Callable[[], None] | None = None,
+        on_init: Callable[[dict[str, MutableMapping[str, Any]]], None] | None = None,
         on_start: Callable[[str], None] | None = None,
         on_pause: Callable[[str, str], None] | None = None,
         on_resume: Callable[[str, str], None] | None = None,
@@ -107,6 +109,7 @@ class ScriptExecutor:
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
         on_complete: Callable[[str], None] | None = None,
+        on_process_complete: Callable[[str], None] | None = None,
         on_all_complete: Callable[[], None] | None = None,
         on_all_stop: Callable[[], None] | None = None,
         on_all_pause: Callable[[], None] | None = None,
@@ -121,6 +124,7 @@ class ScriptExecutor:
         self._on_error = on_error
         self._on_close = on_close
         self._on_complete = on_complete
+        self._on_process_complete = on_process_complete
         self._on_all_complete = on_all_complete
         self._on_all_stop = on_all_stop
         self._on_all_pause = on_all_pause
@@ -129,7 +133,7 @@ class ScriptExecutor:
 
         self.manager: SyncManager | None = None
         self.processes: dict[str, Process] = {}
-        self.state_dicts: dict[str, DictProxy[str, Any]] = {}
+        self.state_dicts: dict[str, MutableMapping[str, Any]] = {}
         self.completion_events: dict[str, EventType] = {}
         self.result_queue: Queue = Queue()
         self._monitor_thread: Thread | None = None
@@ -149,10 +153,10 @@ class ScriptExecutor:
             return False
 
         if self._on_init is not None:
-            self._on_init()
+            self._on_init(self.state_dicts)
 
         if self.controller is not None:
-            self.controller.on_init()
+            self.controller.on_init(self.state_dicts)
 
         self._ensure_manager()
 
@@ -210,8 +214,6 @@ class ScriptExecutor:
                 pid = evt.get("process_id")
                 step_id = evt.get("step_id")
 
-                print("evt >>>", evt, flush=True)
-
                 if evt_type == "next":
                     if self._on_next is not None:
                         self._on_next(pid, step_id)
@@ -219,9 +221,16 @@ class ScriptExecutor:
                     if self.controller is not None:
                         self.controller.on_next(pid, step_id)
 
+                elif evt_type == "complete":
+                    if self._on_complete is not None:
+                        self._on_complete(pid)
+
+                    if self.controller is not None:
+                        self.controller.on_complete(pid, step_id)
+
                 elif evt_type == "error":
-                    print("error >>>", evt, flush=True)
                     err_repr = evt.get("error")
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.ERROR
 
                     if self._on_error is not None:
                         self.stop_all()
@@ -231,6 +240,8 @@ class ScriptExecutor:
                         self.controller.on_error(pid, step_id, RuntimeError(err_repr))
 
                 elif evt_type == "pause":
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.PAUSED
+
                     if self._on_pause is not None:
                         self._on_pause(pid, step_id)
 
@@ -238,6 +249,8 @@ class ScriptExecutor:
                         self.controller.on_pause(pid, step_id)
 
                 elif evt_type == "resume":
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.RUNNING
+
                     if self._on_resume is not None:
                         self._on_resume(pid, step_id)
 
@@ -245,6 +258,8 @@ class ScriptExecutor:
                         self.controller.on_resume(pid, step_id)
 
                 elif evt_type == "stop":
+                    self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.STOPPED
+
                     if self._on_stop is not None:
                         self._on_stop(pid, step_id)
 
@@ -279,8 +294,11 @@ class ScriptExecutor:
                     finished.append(pid)
 
             for pid in finished:
-                if self._on_complete is not None:
-                    self._on_complete(pid)
+                if self._on_process_complete is not None:
+                    self._on_process_complete(pid)
+
+                if self.controller is not None:
+                    self.controller.on_process_complete(pid)
 
                 p = self.processes.pop(pid, None)
                 if p:
@@ -300,7 +318,7 @@ class ScriptExecutor:
 
     def _auto_cleanup(self):
         """모든 스크립트가 끝났을 때만 실행되는 정리"""
-        print("\n=== All processes completed, auto cleanup ===")
+        print("\n=== All processes completed, auto cleanup ===", flush=True)
         if self.manager is not None:
             with contextlib.suppress(Exception):
                 self.manager.shutdown()

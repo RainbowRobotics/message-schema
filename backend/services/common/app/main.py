@@ -19,14 +19,13 @@ from app.socket.socket_server import RelayNS, app_with_sio, sio
 
 setting = AppSettings()
 
-socketio_route_path = f"{setting.SOCKET_PATH}/"
+SOCKET_IO_ROUTE_PATH = f"{setting.SOCKET_PATH}/"
 
 
 state_service = StateService()
 config_service = ConfigService()
 program_service = ProgramService()
 
-# zenoh_client = ZenohClient()
 
 app = create_app(
     settings=setting,
@@ -43,11 +42,12 @@ app = create_app(
         state_service.repeat_get_system_state,
         config_service.repeat_get_all_speedbar,
         program_service.steps_watch_worker,
+        program_service.send_executor_state,
     ],
 )
 
-app.add_route(socketio_route_path, route=app_with_sio, methods=["GET", "POST", "OPTIONS"])
-app.add_websocket_route(socketio_route_path, app_with_sio)
+app.add_route(SOCKET_IO_ROUTE_PATH, route=app_with_sio, methods=["GET", "POST", "OPTIONS"])
+app.add_websocket_route(SOCKET_IO_ROUTE_PATH, app_with_sio)
 
 
 sio.register_namespace(RelayNS("/"))

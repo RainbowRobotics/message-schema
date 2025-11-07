@@ -45,7 +45,7 @@ class ExecutionContext:
         pass
 
     def _make_zenoh_sdk_method_key_value_map(self):
-        sdk_list = [{"name": "rb_manupulate_sdk", "class": RBManipulateSDK}]
+        sdk_list = [{"name": "rb_manipulate_sdk", "class": RBManipulateSDK}]
 
         for item in sdk_list:
             sdk = item["class"]()

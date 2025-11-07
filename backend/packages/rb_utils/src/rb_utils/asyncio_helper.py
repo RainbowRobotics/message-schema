@@ -83,7 +83,9 @@ def _attach_done_logging(fut_or_task, *, name: str | None):
             _ = f.result()
         except asyncio.CancelledError:
             rb_log.info(f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] cancelled")
-        except Exception:
-            rb_log.error(f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] crashed")
+        except Exception as e:
+            rb_log.error(
+                f"[task:{name or getattr(f, 'get_name', lambda: '')() or id(f)}] crashed, {e}"
+            )
 
     fut_or_task.add_done_callback(_done)

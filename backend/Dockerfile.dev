@@ -8,11 +8,9 @@ RUN pip install --upgrade pip && pip install uv==0.8.18
 ENV WORKDIR=/app/backend
 WORKDIR ${WORKDIR}
 
-ENV DATA_DIR=/app/data/${SERVICE}
+ENV DATA_DIR=/app/data
 RUN mkdir -p ${DATA_DIR}
 RUN chmod -R 777 ${DATA_DIR}
-
-VOLUME [${DATA_DIR}]
 
 COPY backend/services ./services
 COPY backend/packages ./packages

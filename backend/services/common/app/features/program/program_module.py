@@ -1,6 +1,8 @@
 import asyncio
+import codecs
 import contextlib
 import importlib.util
+import os
 import sys
 from collections.abc import Iterable
 from datetime import UTC, datetime
@@ -24,9 +26,12 @@ from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_flow_manager.step import Step
 from rb_modules.log import rb_log
 from rb_modules.service import BaseService
+from rb_utils.asyncio_helper import fire_and_log
 from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+
+from app.socket.socket_client import socket_client
 
 from .program_schema import (
     Request_Create_Multiple_StepPD,
@@ -35,6 +40,9 @@ from .program_schema import (
     Request_Create_TaskPD,
     Request_Delete_StepsPD,
     Request_Delete_TasksPD,
+    Request_Get_Script_ContextPD,
+    Request_Preview_Start_ProgramPD,
+    Request_Preview_Stop_ProgramPD,
     Request_Program_ExecutionPD,
     Request_Tasks_ExecutionPD,
     Request_Update_Multiple_TaskPD,
@@ -132,14 +140,17 @@ class ProgramService(BaseService):
     #     except Exception as e:
     #         raise e
 
-    def build_step_tree(self, tasks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    def build_step_tree(self, steps: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         평면 steps를 트리로 변환한다.
         """
 
         nodes: dict[str, dict] = {}
-        for t in tasks:
-            nodes[str(t["stepId"])] = t.copy()
+        for step in steps:
+            stepId = step.get("stepId") or step.get("_id")
+            step["stepId"] = str(stepId)
+            step.pop("_id", None)
+            nodes[step["stepId"]] = step.copy()
 
         children_map: dict[str, list[dict]] = {}
         roots: list[dict] = []
@@ -154,16 +165,16 @@ class ProgramService(BaseService):
         def sort_children(lst: list[dict]):
             lst.sort(key=lambda x: x.get("order", 0))
 
-        VISITING, VISITED = 1, 2
+        visiting, visited = 1, 2
         state: dict[str, int] = {}
 
         def attach(node: dict):
-            nid = node["stepId"]
-            if state.get(nid) == VISITING:
+            nid = str(node.get("stepId"))
+            if state.get(nid) == visiting:
                 return
-            if state.get(nid) == VISITED:
+            if state.get(nid) == visited:
                 return
-            state[nid] = VISITING
+            state[nid] = visiting
 
             kids = children_map.get(nid)
             if kids:
@@ -172,7 +183,7 @@ class ProgramService(BaseService):
                 for c in kids:
                     attach(c)
 
-            state[nid] = VISITED
+            state[nid] = visited
 
         sort_children(roots)
         for r in roots:
@@ -227,21 +238,30 @@ class ProgramService(BaseService):
             else t_to_dict(request)
         )
 
-        print(f"request_dict: {request_dict}", flush=True)
-
         now = datetime.now(UTC).isoformat()
 
         steps_col = db["steps"]
         tasks_col = db["tasks"]
 
-        steps = [t_to_dict(step) for step in request.steps]
+        steps = [t_to_dict(step) for step in request_dict["steps"]]
 
-        task_ids = {t["taskId"] for t in steps}
         record_find_task_ids = []
 
-        for tid in task_ids:
-            if tid not in record_find_task_ids:
+        for step in steps:
+            tid = step.get("taskId", None)
+            pid = step.get("programId", None)
+
+            if tid is None or tid in record_find_task_ids:
                 continue
+
+            if tid is None and step.get("stepId", None) is None:
+                raise HTTPException(
+                    status_code=400, detail="insert step without taskId is not allowed"
+                )
+            elif pid is None and step.get("stepId", None) is not None:
+                raise HTTPException(
+                    status_code=400, detail="insert step without programId is not allowed"
+                )
 
             find_doc = await tasks_col.find_one({"_id": ObjectId(tid)})
 
@@ -296,13 +316,69 @@ class ProgramService(BaseService):
             steps[i]["stepId"] = str(oid)
             steps[i]["createdAt"] = o_doc["createdAt"]
 
-        return steps
+        for step in steps:
+            tid = step.get("taskId", None)
+            if tid is None:
+                continue
+
+            fire_and_log(self.write_script_context(tid, db), name="write_script_context")
+
+        print(f"res: {res}", flush=True)
+
+        return {
+            "inserted_count": res.inserted_count,
+            "matched_count": res.matched_count,
+            "upserted_count": res.upserted_count,
+            "modified_count": res.modified_count,
+            "deleted_count": res.deleted_count,
+            "upserted_ids": res.upserted_ids,
+        }
+
+    async def update_all_task_step_state(
+        self, *, task_id: str, state: RB_Flow_Manager_ProgramState, db: MongoDB
+    ):
+        steps_col = db["steps"]
+        tasks_col = db["tasks"]
+
+        query: dict[str, Any] = {"scriptName": task_id}
+
+        if ObjectId.is_valid(task_id):
+            query = {"_id": ObjectId(task_id)}
+
+        task_doc = await tasks_col.find_one(query)
+
+        if not task_doc:
+            return {
+                "updated_count": 0,
+            }
+
+        real_task_id = str(task_doc["_id"])
+
+        if state == RB_Flow_Manager_ProgramState.IDLE:
+            fire_and_log(
+                socket_client.emit(
+                    f"program/task/{real_task_id}/ended",
+                    {
+                        "taskId": real_task_id,
+                        "state": state,
+                    },
+                ),
+                name="emit_task_ended",
+            )
+
+        update_res = await steps_col.update_many(
+            {
+                "taskId": real_task_id,
+                "state": {"$ne": RB_Flow_Manager_ProgramState.ERROR},
+            },
+            {"$set": {"state": state}},
+        )
+
+        return {
+            "updated_count": update_res.modified_count,
+        }
 
     async def update_step_state(self, *, request: Request_Update_StepStatePD, db: MongoDB):
-        """
-        Step의 state를 업데이트하는 함수.
-        """
-
         request_dict = t_to_dict(request)
 
         step_id = request_dict["stepId"]
@@ -313,6 +389,17 @@ class ProgramService(BaseService):
         if not ObjectId.is_valid(step_id):
             return
 
+        if state == RB_Flow_Manager_ProgramState.RUNNING:
+            fire_and_log(
+                socket_client.emit(
+                    "program/current/running/step",
+                    {
+                        "stepId": step_id,
+                    },
+                ),
+                name="emit_current_running_step",
+            )
+
         find_step_doc = await steps_col.find_one_and_update(
             {"_id": ObjectId(step_id)},
             {"$set": {"state": state}},
@@ -320,24 +407,35 @@ class ProgramService(BaseService):
         )
 
         if find_step_doc and state == RB_Flow_Manager_ProgramState.ERROR:
-            await self.stop_program(find_step_doc["programId"], db=db)
-
-        async def recursive_update_node_step_state(node_id: str):
-            find_node_doc = await steps_col.find_one_and_update(
-                {"parentStepId": node_id},
-                {"$set": {"state": state}},
-                return_document=ReturnDocument.AFTER,
+            await self.stop_program(
+                request=Request_Program_ExecutionPD(programId=find_step_doc["programId"]), db=db
             )
 
-            if find_node_doc:
-                await recursive_update_node_step_state(find_node_doc.get("parentStepId"))
-            else:
+        visited = set()
+
+        async def update_children(parent_id: str):
+            if parent_id in visited:
                 return
+            visited.add(parent_id)
 
+            children = await steps_col.find({"parentStepId": parent_id}).to_list(length=None)
+
+            for child in children:
+                cid = str(child["_id"])
+
+                await steps_col.update_one(
+                    {"_id": child["_id"]},
+                    {"$set": {"state": state}},
+                )
+
+                await update_children(cid)
+
+        # 3) 시작 Step의 자식들만 전파
         if find_step_doc:
-            await recursive_update_node_step_state(find_step_doc.get("parentStepId"))
+            root_id = str(find_step_doc["_id"])
+            await update_children(root_id)
 
-            find_step_doc["stepId"] = str(find_step_doc.pop("_id"))
+            find_step_doc["stepId"] = root_id
 
         return find_step_doc
 
@@ -361,6 +459,129 @@ class ProgramService(BaseService):
 
         return {
             "stepDeleted": step_deleted_res.deleted_count,
+        }
+
+    async def write_script_context(self, task_id: str, db: MongoDB):
+        """
+        Steps를 컨텍스트로 변환하고 파일로 저장하는 함수.
+        """
+        task_col = db["tasks"]
+        steps_col = db["steps"]
+        program_col = db["programs"]
+
+        task_doc = await task_col.find_one({"_id": ObjectId(task_id)})
+
+        if not task_doc:
+            raise HTTPException(status_code=400, detail=f"Invalid taskId: {task_id}")
+
+        program_doc = await program_col.find_one({"_id": ObjectId(task_doc["programId"])})
+
+        if not program_doc:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid programId: {task_doc['programId']}"
+            )
+
+        steps_docs = await steps_col.find({"taskId": task_id}).to_list(length=None)
+
+        steps_tree = self.build_step_tree(steps_docs)
+
+        script_context = self.build_script_context(
+            steps_tree, task_id, task_doc["scriptName"], program_doc["repeatCnt"]
+        )
+
+        os.makedirs(task_doc["scriptPath"], exist_ok=True)
+
+        with open(
+            f"{task_doc['scriptPath']}/{task_doc['scriptName']}.{task_doc['extension']}",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            return f.write(script_context.encode("utf-8").decode("unicode_escape"))
+
+    def parse_step_context(self, step: dict[str, Any], depth: int = 0, *, to_string: bool = False):
+        """Steps tree를 컨텍스트로 변환하는 함수."""
+
+        step_obj = Step.from_dict(step)
+        return step_obj.to_py_string(depth) if to_string else step_obj
+
+    def build_tree_from_client(self, steps_tree: list[dict[str, Any]], task_id: str):
+        """
+        프론트에서 받은 JSON(dict)을 실제 Step / RepeatStep 트리 객체로 변환하는 함수.
+        """
+
+        return Step(
+            step_id=task_id,
+            name=task_id,
+            children=[self.parse_step_context(step, depth=8) for step in steps_tree],
+        )
+
+    def build_script_context(
+        self, steps_tree: list[dict[str, Any]], task_id: str, script_name: str, repeat_count: int
+    ):
+        """
+        Steps tree를 컨텍스트로 변환하는 함수.
+        """
+        body_context = "\n".join(
+            self.parse_step_context(step, depth=8, to_string=True) for step in steps_tree
+        )
+
+        if not body_context:
+            body_context = ""
+
+        header_context = "from rb_flow_manager.executor import ScriptExecutor\n"
+        header_context += "from rb_flow_manager.step import RepeatStep, Step\n"
+        header_context += (
+            "from rb_flow_manager.controller.zenoh_controller import Zenoh_Controller\n\n"
+        )
+        header_context += "zenoh_controller = Zenoh_Controller()\n\n"
+
+        root_block = (
+            "tree = Step(\n"
+            f"    step_id='{task_id}',\n"
+            f"    name='{script_name}',\n"
+            "    children=[\n"
+            f"{body_context}\n"
+            "    ],\n"
+            ")\n"
+        )
+
+        footer_context = 'if __name__ == "__main__":\n'
+        footer_context += "    executor = ScriptExecutor(controller=zenoh_controller)\n\n"
+        footer_context += (
+            f"    executor.start('{script_name}', tree, repeat_count={repeat_count})\n\n"
+        )
+
+        return header_context + "\n" + root_block + "\n" + footer_context
+
+    async def get_script_context(self, *, request: Request_Get_Script_ContextPD, db: MongoDB):
+        """
+        Task의 스크립트 컨텍스트를 조회하는 함수.
+        """
+        request_dict = t_to_dict(request)
+        task_id = request_dict["taskId"]
+        steps_tree = request_dict["steps"]
+
+        task_col = db["tasks"]
+        program_col = db["programs"]
+
+        task_doc = await task_col.find_one({"_id": ObjectId(task_id)})
+
+        if not task_doc:
+            raise HTTPException(status_code=400, detail=f"Invalid taskId: {task_id}")
+
+        program_doc = await program_col.find_one({"_id": ObjectId(task_doc["programId"])})
+
+        if not program_doc:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid programId: {task_doc['programId']}"
+            )
+
+        script_context = self.build_script_context(
+            steps_tree, task_id, task_doc["scriptName"], program_doc["repeatCnt"]
+        )
+
+        return {
+            "context": codecs.decode(script_context, "unicode_escape"),
         }
 
     async def create_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
@@ -408,6 +629,10 @@ class ProgramService(BaseService):
             for task, inserted_id in zip(tasks, res.inserted_ids, strict=False):
                 task["taskId"] = str(inserted_id)
                 task.pop("_id", None)
+
+                fire_and_log(
+                    self.write_script_context(task["taskId"], db), name="write_script_context"
+                )
 
             return tasks
         except Exception as e:
@@ -816,19 +1041,9 @@ class ProgramService(BaseService):
 
         steps_col = db["steps"]
 
-        if op in ("insert", "replace"):
+        if op in ("insert", "replace", "update"):
             program_id = full["programId"] if full else None
             task_id = full["taskId"] if full else None
-
-        elif op == "update":
-            if full and "programId" in full and "taskId" in full:
-                program_id = full["programId"]
-                task_id = full["taskId"]
-            else:
-                cur = await steps_col.find_one({"_id": doc_id})
-                if cur:
-                    program_id = cur["programId"]
-                    task_id = cur["taskId"]
 
         elif op == "delete":
             if before and "programId" in before and "taskId" in before:
@@ -840,6 +1055,27 @@ class ProgramService(BaseService):
 
         if program_id is None or task_id is None:
             return
+
+        steps_doc = await steps_col.find({"programId": program_id, "taskId": task_id}).to_list(
+            length=None
+        )
+
+        if full:
+            full["stepId"] = str(full.pop("_id"))
+
+        steps_tree = self.build_step_tree(steps_doc)
+
+        fire_and_log(
+            socket_client.emit(
+                f"program/task/{task_id}/change",
+                {
+                    "programId": str(program_id),
+                    "taskId": str(task_id),
+                    "step": full,
+                    "stepsTree": steps_tree,
+                },
+            )
+        )
 
         async with await db["client"].start_session() as s:
 
@@ -881,6 +1117,7 @@ class ProgramService(BaseService):
                         with contextlib.suppress(Exception):
                             await self._handle_step_change(db=db, change=change)
             except PyMongoError:
+                rb_log.debug(f"steps_watch_worker error: {sys.exc_info()}")
                 await asyncio.sleep(0.5)
 
     def _load_tree_from_script(self, script_path: str) -> Step:
@@ -906,6 +1143,67 @@ class ProgramService(BaseService):
             raise AttributeError(f"{path} 안에 `tree` 변수가 없습니다.")
 
         return cast(Step, module.tree)
+
+    def get_executor_state(self):
+        return self.script_executor.get_all_states()
+
+    async def send_executor_state(self):
+        while True:
+            try:
+                fire_and_log(socket_client.emit("executor/state", self.get_executor_state()))
+            except Exception as e:
+                rb_log.error(f"send_executor_state error: {e}")
+            await asyncio.sleep(1)
+
+    async def preview_start_program(self, request: Request_Preview_Start_ProgramPD):
+        request_dict = t_to_dict(request)
+        scripts = request_dict["scripts"]
+
+        for script in scripts:
+            task_id = script["taskId"]
+            repeat_count = script["repeatCount"]
+            steps_tree = script["steps"]
+
+            tree = self.build_tree_from_client(steps_tree, task_id)
+
+            self.script_executor.start(task_id, tree, repeat_count)
+
+        return {
+            "status": "success",
+        }
+
+    async def preview_stop_program(self, request: Request_Preview_Stop_ProgramPD):
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        for task_id in task_ids:
+            self.script_executor.stop(task_id)
+
+        return {
+            "status": "success",
+        }
+
+    async def preview_pause_program(self, request: Request_Preview_Stop_ProgramPD):
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        for task_id in task_ids:
+            self.script_executor.pause(task_id)
+
+        return {
+            "status": "success",
+        }
+
+    async def preview_resume_program(self, request: Request_Preview_Stop_ProgramPD):
+        request_dict = t_to_dict(request)
+        task_ids = request_dict["taskIds"]
+
+        for task_id in task_ids:
+            self.script_executor.resume(task_id)
+
+        return {
+            "status": "success",
+        }
 
     async def start_program(self, request: Request_Program_ExecutionPD, db: MongoDB):
         """
@@ -1005,12 +1303,15 @@ class ProgramService(BaseService):
         tasks_docs = await tasks_col.find(
             {"_id": {"$in": [ObjectId(tid) for tid in task_ids]}}
         ).to_list(length=None)
+        print("tasks_docs >>>", tasks_docs, task_ids, flush=True)
         for task_doc in tasks_docs:
             script_name = task_doc["scriptName"]
             script_path = task_doc["scriptPath"]
             extension = task_doc["extension"]
 
             tree = self._load_tree_from_script(f"{script_path}/{script_name}.{extension}")
+
+            print("tree >>>", tree, flush=True)
 
             self.script_executor.start(script_name, tree, repeat_count)
 

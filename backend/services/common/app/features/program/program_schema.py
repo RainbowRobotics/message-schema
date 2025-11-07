@@ -38,12 +38,24 @@ class Step_Base(BaseModel):
     }
 
 
-class Step_Tree_Base(Step_Base):
-    steps: list[Step_Tree_Base] | None = Field(default=None)
+class Temp_Step_Base(Step_Base):
+    realStepId: PyObjectId
+    isEditing: bool = Field(default=False)
 
 
-class Request_Create_StepPD(Omit(Step_Base, "_id", "stepId", "createdAt", "updatedAt")):
+class Step_Tree_Base(Omit(Step_Base, "_id")):
+    stepId: PyObjectId | None = Field(alias="_id", default=None)
+    children: list[Step_Tree_Base] | None = Field(default=None)
+
+
+class Request_Create_StepPD(Omit(Temp_Step_Base, "_id", "stepId", "createdAt", "updatedAt")):
     stepId: str | None = Field(
+        default=None,
+    )
+    programId: str | None = Field(
+        default=None,
+    )
+    taskId: str | None = Field(
         default=None,
     )
 
@@ -80,6 +92,15 @@ class Response_Delete_StepsPD(BaseModel):
     stepDeleted: int
 
 
+class Response_Upsert_StepsPD(BaseModel):
+    inserted_count: int
+    matched_count: int
+    upserted_count: int
+    modified_count: int
+    deleted_count: int
+    upserted_ids: list[str]
+
+
 class TaskType(str, Enum):
     MAIN = "MAIN"
     SUB = "SUB"
@@ -97,7 +118,7 @@ class Task_Base(BaseModel):
     scriptName: str
     scriptPath: str
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
-    state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
+    state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
 
@@ -221,3 +242,26 @@ class Request_Tasks_ExecutionPD(BaseModel):
 
 class Response_Script_ExecutionPD(BaseModel):
     status: Literal["success", "error"]
+
+
+class Response_Get_Script_ContextPD(BaseModel):
+    context: str
+
+
+class Client_Script_InfoPD(BaseModel):
+    taskId: str
+    repeatCount: int
+    steps: list[Step_Tree_Base]
+
+
+class Request_Preview_Start_ProgramPD(BaseModel):
+    scripts: list[Client_Script_InfoPD]
+
+
+class Request_Preview_Stop_ProgramPD(BaseModel):
+    taskIds: list[str]
+
+
+class Request_Get_Script_ContextPD(BaseModel):
+    taskId: str
+    steps: list[Step_Tree_Base]

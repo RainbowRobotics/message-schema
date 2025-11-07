@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import Callable
 from multiprocessing import Event
 
@@ -17,11 +18,12 @@ class Step:
         step_id: str,
         name: str,
         func: Callable | None = None,
-        children: list | None = None,
+        children: list["Step"] | None = None,
         *,
         func_name: str | None = None,
         args: dict[str, str] | None = None,
     ):
+        self._class_name = "Step"
         self.step_id = step_id
         self.name = name
         self.func_name = func_name
@@ -29,6 +31,59 @@ class Step:
         self.args = args or {}
 
         self.func = func
+
+    @staticmethod
+    def from_dict(d) -> "Step":
+        if d.get("method") == "Repeat":
+            return RepeatStep.from_dict(d)
+
+        return Step(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            func_name=d.get("funcName"),
+            args=d.get("args") or {},
+            children=[Step.from_dict(child) for child in (d.get("children") or [])],
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "funcName": self.func_name,
+            "args": self.args,
+            "method": "Step",
+            "children": [child.to_dict() for child in self.children],
+        }
+
+    def to_py_string(self, depth: int = 0):
+        def _indent(s: str, n: int) -> str:
+            pad = " " * n
+            return "\n".join(pad + line if line else line for line in s.splitlines())
+
+        if self.children:
+            inner_steps = [child.to_py_string(depth + 8) for child in self.children]
+            inner_src = ",\n".join(inner_steps)
+
+            children_block = "[\n" + inner_src + "\n" + (" " * (depth + 4)) + "]"
+        else:
+            children_block = "[]"
+
+        return (
+            (" " * depth)
+            + f"{self._class_name}(\n"
+            + _indent(f"step_id={repr(self.step_id)},", depth + 4)
+            + "\n"
+            + _indent(f"name={repr(self.name)},", depth + 4)
+            + "\n"
+            + _indent(f"func_name={repr(self.func_name)},", depth + 4)
+            + "\n"
+            + (" " * (depth + 4))
+            + f"children={children_block},\n"
+            + _indent(f"args={repr(self.args)},", depth + 4)
+            + "\n"
+            + (" " * depth)
+            + ")"
+        )
 
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
@@ -82,6 +137,55 @@ class RepeatStep(Step):
     def __init__(self, step_id: str, name: str, count: int, children: list | None = None):
         super().__init__(step_id, name, func=None, children=children)
         self.count = count
+        self._class_name = "RepeatStep"
+
+    @staticmethod
+    def from_dict(d) -> "RepeatStep":
+        return RepeatStep(
+            step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
+            name=d["name"],
+            count=int(d.get("count", 1)),
+            children=[Step.from_dict(child) for child in (d.get("children") or [])],
+        )
+
+    def to_dict(self):
+        return {
+            "stepId": self.step_id,
+            "name": self.name,
+            "method": "Repeat",
+            "count": self.count,
+            "children": [child.to_dict() for child in self.children],
+        }
+
+    def to_py_string(self, depth: int = 0):
+        def _indent(s: str, n: int) -> str:
+            pad = " " * n
+            return "\n".join(pad + line if line else line for line in s.splitlines())
+
+        if self.children:
+            inner_steps = [child.to_py_string(depth + 8) for child in self.children]
+            inner_src = ",\n".join(inner_steps)
+
+            children_block = "[\n" + inner_src + "\n" + (" " * (depth + 4)) + "]"
+        else:
+            children_block = "[]"
+
+        return (
+            (" " * depth)
+            + f"{self._class_name}(\n"
+            + _indent(f"step_id={repr(self.step_id)},", depth + 4)
+            + "\n"
+            + _indent(f"name={repr(self.name)},", depth + 4)
+            + "\n"
+            + _indent(f"count={self.count},", depth + 4)
+            + "\n"
+            + (" " * (depth + 4))
+            + f"children={children_block},\n"
+            + _indent(f"args={repr(self.args)},", depth + 4)
+            + "\n"
+            + (" " * depth)
+            + ")"
+        )
 
     def execute(self, ctx: ExecutionContext):
         """지정된 횟수만큼 자식 Step 반복 실행"""
