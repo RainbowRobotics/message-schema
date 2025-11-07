@@ -389,17 +389,6 @@ class ProgramService(BaseService):
         if not ObjectId.is_valid(step_id):
             return
 
-        if state == RB_Flow_Manager_ProgramState.RUNNING:
-            fire_and_log(
-                socket_client.emit(
-                    "program/current/running/step",
-                    {
-                        "stepId": step_id,
-                    },
-                ),
-                name="emit_current_running_step",
-            )
-
         find_step_doc = await steps_col.find_one_and_update(
             {"_id": ObjectId(step_id)},
             {"$set": {"state": state}},
@@ -411,31 +400,41 @@ class ProgramService(BaseService):
                 request=Request_Program_ExecutionPD(programId=find_step_doc["programId"]), db=db
             )
 
-        visited = set()
+        fire_and_log(
+            socket_client.emit(
+                f"program/task/{str(find_step_doc['_id'])}/update_state",
+                {
+                    "stepId": step_id,
+                    "state": state,
+                },
+            ),
+            name="emit_step_update_state",
+        )
 
-        async def update_children(parent_id: str):
-            if parent_id in visited:
-                return
-            visited.add(parent_id)
+        # visited = set()
 
-            children = await steps_col.find({"parentStepId": parent_id}).to_list(length=None)
+        # async def update_children(parent_id: str):
+        #     if parent_id in visited:
+        #         return
+        #     visited.add(parent_id)
 
-            for child in children:
-                cid = str(child["_id"])
+        #     children = await steps_col.find({"parentStepId": parent_id}).to_list(length=None)
 
-                await steps_col.update_one(
-                    {"_id": child["_id"]},
-                    {"$set": {"state": state}},
-                )
+        #     for child in children:
+        #         cid = str(child["_id"])
 
-                await update_children(cid)
+        #         await steps_col.update_one(
+        #             {"_id": child["_id"]},
+        #             {"$set": {"state": state}},
+        #         )
 
-        # 3) 시작 Step의 자식들만 전파
-        if find_step_doc:
-            root_id = str(find_step_doc["_id"])
-            await update_children(root_id)
+        #         await update_children(cid)
 
-            find_step_doc["stepId"] = root_id
+        # if find_step_doc:
+        #     root_id = str(find_step_doc["_id"])
+        #     await update_children(root_id)
+
+        #     find_step_doc["stepId"] = root_id
 
         return find_step_doc
 
