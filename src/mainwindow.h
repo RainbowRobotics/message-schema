@@ -57,171 +57,126 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    // setter
-    void set_temperature_value(float val);
-    void set_is_change_map_name(bool val);
-    void set_map_dir(const QString& val);
-    void set_manual_led_color(const LedState& val);
-    void set_is_manual_led(bool val);
-
-    bool get_is_change_map_name();
-    bool get_is_manual_led();
-    float get_temperature_value();
-    QString get_map_dir();
-    LedState get_manual_led_color();
-
-    void update_jog_values(double vx, double vy, double wz);
-
-private:
-    Ui::MainWindow *ui;
-
-    // mutex
-    std::shared_mutex mtx;
-
-    // initialization other modules
-    void init_modules();
-
-    // initialization gamepad
-    void init_gamepad();
-
-    // initialization vtk
-    void init_vtk();
-
-    // initialization ui effect
-    void init_ui_effect();
-
-    // qt gui jog func
-    void jog_loop();
-    double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
-
-    // ----> planned for future modularization
-    void watch_loop();
-
-    // vtk funcs
-    void set_opacity(QWidget* w, double opacity);
-    void picking_ray(int u, int v, int w, int h,
-                     Eigen::Vector3d& center, Eigen::Vector3d& dir,
-                     boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
-    void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
-    Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction,
-                                     Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
-
-    // plot funcs
-    void plot_map();           // plot loaded map
-    void plot_node();          // plot topo.json info
-    void plot_pick();          // plot picking info (mouse clicked)
-    void plot_info();          // plot robot's basic info
-    void plot_safety();        // plot safety field info
-    void plot_raw_2d();        // plot 2d lidar info
-    void plot_raw_3d();        // plot 3d lidar info
-    void plot_loc();           // plot localization info
-    void plot_mapping();       // plot mapping info
-    void plot_obs();           // plot obstacle
-    void plot_ctrl();          // plot auto-control info
-    void plot_cam();           // plot cam(RGB, depth) info
-    void plot_tractile();      //
-    void plot_process_time();  // plot thread process time
-    void all_plot_clear();
-
-    // for task
-    void ui_tasks_update();
-
-    // ----> delete soon
-    void speaker_handler(int cnt);
-
-    // handler funcs
-    int led_handler();
-
-    // utils funcs
-    void get_cur_IP();
-
     // picking module: qt gui click event
     PICKING pick;
 
     // pcl viewer (point cloud viewer)
     boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer;
 
-    // thread
+    // qt gui jog func
+    std::atomic<bool> jog_flag = {false};
     std::unique_ptr<std::thread> jog_thread;
+    void jog_loop();
+
+    // watchdog loop -> planned for future modularization
+    std::atomic<bool> watch_flag = {false};
     std::unique_ptr<std::thread> watch_thread;
+    void watch_loop();
 
-    // thread flags
-    std::atomic<bool> jog_flag   = {false};   // jog thread
-    std::atomic<bool> watch_flag = {false};   // watchdog thread
+    // funcs
+    Eigen::Vector3d ray_intersection(Eigen::Vector3d ray_center, Eigen::Vector3d ray_direction, Eigen::Vector3d plane_center, Eigen::Vector3d plane_normal);
+    double apply_jog_acc(double cur_vel, double tgt_vel, double acc, double dcc, double dt);
+    void viewer_camera_relative_control(double tx, double ty, double tz, double rx, double ry, double rz);
+    void update_jog_values(double vx, double vy, double wz);
+    void picking_ray(int u, int v, int w, int h, Eigen::Vector3d& center, Eigen::Vector3d& dir, boost::shared_ptr<pcl::visualization::PCLVisualizer> pcl_viewer);
+    void all_plot_clear();
+    void ui_tasks_update();
+    void init_ui_effect();
+    void set_opacity(QWidget* w, double opacity);
+    void init_modules();
+    void setup_vtk();
+    void speaker_handler(int cnt);
+    int led_handler();
 
-    // plot update
-    std::atomic<bool> is_map_update  = {false};        // To plot changes once
-    std::atomic<bool> is_obs_update  = {false};        // To plot changes once
-    std::atomic<bool> is_topo_update = {false};        // To plot changes once
-    std::atomic<bool> is_pick_update = {false};        // To plot changes once
-    std::atomic<bool> is_local_path_update = {false};  // To plot changes once
-    std::atomic<bool> is_global_path_update = {false}; // To plot changes once
+    void getIPv4();
+
+    // vars
     std::atomic<double> plot_dt = {0.};
 
-    // viewing flags
-    std::atomic<bool> is_view_reset   = {false};  // reset vtk camera view
-    std::atomic<bool> is_set_top_view = {false};  // set camera top view
+    // flags
+    std::atomic<bool> is_map_update = {false};
+    std::atomic<bool> is_topo_update = {false};
+    std::atomic<bool> is_pick_update = {false};
+    std::atomic<bool> is_obs_update = {false};
+    std::atomic<bool> is_local_path_update = {false};
+    std::atomic<bool> is_global_path_update = {false};
+    std::atomic<bool> is_3d_update = {false};
 
-    // jog flags
-    std::atomic<bool> is_jog_pressed = {false};     // check jog button pressed
-    std::atomic<double> last_jog_update_time = {0}; // check last update time
+    std::atomic<bool> is_view_reset = {false};
+    std::atomic<bool> is_set_top_view = {false};
 
-    // jog current & target velocity
+    // jog
+    std::atomic<bool> is_jog_pressed = {false};
+    std::atomic<double> last_jog_update_time = {0};
+
     std::atomic<double> vx_target = {0.};
-    std::atomic<double> vx_current = {0.};
     std::atomic<double> vy_target = {0.};
-    std::atomic<double> vy_current = {0.};
     std::atomic<double> wz_target = {0.};
+
+    std::atomic<double> vx_current = {0.};
+    std::atomic<double> vy_current = {0.};
     std::atomic<double> wz_current = {0.};
 
     // plot object names
     std::vector<QString> last_plot_kfrms;
     std::vector<QString> last_plot_nodes;
     std::vector<QString> last_plot_names;
-    std::vector<QString> last_plot_tactile;
     std::vector<QString> last_plot_local_path;
+    std::vector<QString> last_plot_tactile;
     std::vector<QString> last_obs_plot_tactile;
 
-    // mobile odometry & lidar sync time
     atomic<double> last_sync_time = {0.};
 
-    // for change map name
-    std::atomic<bool> is_change_map_name = {false};
+    // plot cur loc pts
+    std::vector<Eigen::Vector3d> plot_cur_pts;
+
+    // for user led
+    std::atomic<bool> is_user_led = {false};
+    std::atomic<int> user_led_color = {LED_OFF};
+
+    // usb temp sensor
+    std::atomic<float> temperature_value = {0.0};
+
+    //for change map name
+    std::atomic<bool> change_map_name = {false};
 
     // for mileage
-    float old_total_mileage;
-    double mileage = {0.0};
-    double prev_move_distance = {0.0};
-    QString mileage_sum;
+   double mileage = {0.0};
+   double prev_move_distance = {0.0};
 
-    // vars
-    QString map_dir = "";
+   QString mileage_sum;
 
-    QString path_append_id = "";
+   // vars
+   QString map_dir = "";
 
-    // QA value
-    double cur_lx = 0.0; // left stick X  -> vy
-    double cur_ly = 0.0; // left stick Y  -> vx
-    double cur_rx = 0.0; // right stick X -> wz
-    std::atomic<bool> lb_pressed = {false};
-    std::atomic<bool> rb_pressed = {false};
+   QString path_append_id = "";
 
-    // Gamepad
-    QGamepad* gamepad;
+    // plot funcs
+    void plot_map();
+    void plot_node();
+    void plot_pick();
+    void plot_info();
+    void plot_safety();
+    void plot_raw_2d();
+    void plot_raw_3d();
+    void plot_loc();
+    void plot_mapping();
+    void plot_obs();
+    void plot_ctrl();
+    void plot_cam();
+    void plot_tractile();
+    void plot_process_time();
 
-    // timer
-    QTimer* plot_timer; // plot timer
-    QTimer* qa_timer;   // quick annotation timer
+    // plot timer
+    QTimer* plot_timer;
 
-    // for QA
+    // QA timer
+    QTimer* qa_timer = nullptr;
     bool is_qa_running = false;
     int qa_interval_ms = 1000;
     QString qa_last_node = "";
 
-    // etccc......
-    float temperature_value = 0.f;
-    LedState manual_led_color = LedState::OFF;
-    std::atomic<bool> is_manual_led = {false};
+    float old_total_mileage;
 
 protected:
     bool eventFilter(QObject *object, QEvent *ev);
@@ -253,8 +208,10 @@ public Q_SLOTS:
     void bt_MoveLinearY();
     void bt_MoveRotate();
 
+
     void bt_JogMecaL();
     void bt_JogMecaR();
+
 
     void bt_JogF();
     void bt_JogB();
@@ -332,7 +289,7 @@ public Q_SLOTS:
     void bt_Recover();
     void bt_SetDetectModeT();
     void bt_SetDetectModeF();
-    void bt_RequestPduInfo();
+    void bt_Request();
     void bt_LiftPowerOn();
     void bt_LiftPowerOff();
     void bt_SetLidarField();
@@ -348,6 +305,25 @@ public Q_SLOTS:
     // timer loops
     void plot_loop();
     void qa_loop();
+
+
+private:
+    Ui::MainWindow *ui;
+    std::shared_mutex mtx;
+
+    // Gamepad
+    QGamepad* gamepad;
+
+    std::atomic<bool> lb_pressed = {false};
+    std::atomic<bool> rb_pressed = {false};
+
+    double cur_lx = 0.0; // left stick X  -> vy
+    double cur_ly = 0.0; // left stick Y  -> vx
+    double cur_rx = 0.0; // right stick X -> wz
+
+    // gamepad init
+    void init_gamepad();
+
 
 };
 #endif // MAINWINDOW_H

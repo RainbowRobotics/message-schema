@@ -17,14 +17,23 @@
 // qt
 #include <QObject>
 
-enum class PduRobotType
+enum class RobotWheelModel
 {
-    UNKNOWN = 0,
-    D400    = 1,
-    S100    = 2,
-    MECANUM = 3,
-    SAFETY  = 4,
-    SAFETY_V2 = 5
+    ROBOT_WHEEL_MODEL_UNKNOWN = 0,
+    ROBOT_WHEEL_MODEL_DD = 1,
+    ROBOT_WHEEL_MODEL_QD= 2,
+    ROBOT_WHEEL_MODEL_MECANUM = 3
+};
+
+
+enum class RobotType_PDU
+{
+    ROBOT_TYPE_UNKNOWN = 0,
+    ROBOT_TYPE_D400    = 1,
+    ROBOT_TYPE_S100    = 2,
+    ROBOT_TYPE_MECANUM = 3,
+    ROBOT_TYPE_SAFETY  = 4,
+    ROBOT_TYPE_SAFETY_V2 = 5
 };
 
 struct MOBILE_INFO
@@ -123,7 +132,7 @@ public:
      * mobile command (safty)
      ***********************/
     void robot_initialize();
-    void request_robot_pdu_info();
+    void robot_request();
     void clearmismatch();
     void clearoverspd();
     void clearobs();
@@ -167,7 +176,6 @@ private:
     std::atomic<bool> recv_flag = {false};
     std::unique_ptr<std::thread> recv_thread;
     void recv_loop();
-
     bool connect_to_pdu(const QString& ip, int port);
     void receive_data_loop();
     // send loop
@@ -194,7 +202,7 @@ private:
     bool is_imu_used = false;
     uint8_t bms_type = 0x00; // 0x0A: not_used, 0x0B: bms_tabos
 
-    WheelType wheel_model = WheelType::UNKNOWN;
+    RobotWheelModel wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_UNKNOWN;
 
     std::atomic<double> bat_soc = 0.0;
 
@@ -204,6 +212,7 @@ private:
     std::atomic<bool> is_synced = {false};
     std::atomic<double> sync_st_time = {0};
     std::atomic<double> offset_t = {0};
+    std::atomic<bool>  mobile_first_connected = {false};
 
     std::atomic<double> process_time_mobile = {0.0};
 

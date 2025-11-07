@@ -210,13 +210,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>Pts size:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QSpinBox" name="spb_PointSize">
               <property name="enabled">
                <bool>true</bool>
@@ -352,7 +345,7 @@ color: rgb(0, 0, 0);</string>
             <item>
              <widget class="QLabel" name="lb_MapName">
               <property name="text">
-               <string>[MAP_NAME]</string>
+               <string>NamName</string>
               </property>
              </widget>
             </item>
@@ -563,7 +556,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QLabel" name="lb_Screen4">
              <property name="geometry">
               <rect>
-               <x>520</x>
+               <x>530</x>
                <y>0</y>
                <width>160</width>
                <height>90</height>
@@ -584,7 +577,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QLabel" name="lb_Screen5">
              <property name="geometry">
               <rect>
-               <x>680</x>
+               <x>690</x>
                <y>0</y>
                <width>160</width>
                <height>90</height>
@@ -883,7 +876,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_AccW">
              <property name="geometry">
               <rect>
-               <x>590</x>
+               <x>10</x>
                <y>670</y>
                <width>51</width>
                <height>21</height>
@@ -913,7 +906,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_AccV">
              <property name="geometry">
               <rect>
-               <x>590</x>
+               <x>10</x>
                <y>630</y>
                <width>51</width>
                <height>21</height>
@@ -943,7 +936,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_JogV">
              <property name="geometry">
               <rect>
-               <x>590</x>
+               <x>10</x>
                <y>610</y>
                <width>101</width>
                <height>20</height>
@@ -970,7 +963,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_JogW">
              <property name="geometry">
               <rect>
-               <x>590</x>
+               <x>10</x>
                <y>650</y>
                <width>101</width>
                <height>21</height>
@@ -994,7 +987,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_DecelV">
              <property name="geometry">
               <rect>
-               <x>640</x>
+               <x>60</x>
                <y>630</y>
                <width>51</width>
                <height>21</height>
@@ -1024,7 +1017,7 @@ out</string>
             <widget class="QDoubleSpinBox" name="spb_DecelW">
              <property name="geometry">
               <rect>
-               <x>640</x>
+               <x>60</x>
                <y>670</y>
                <width>51</width>
                <height>21</height>
@@ -1054,7 +1047,7 @@ out</string>
             <widget class="QPushButton" name="bt_JogR">
              <property name="geometry">
               <rect>
-               <x>780</x>
+               <x>200</x>
                <y>650</y>
                <width>41</width>
                <height>41</height>
@@ -1078,7 +1071,7 @@ out</string>
             <widget class="QPushButton" name="bt_JogF">
              <property name="geometry">
               <rect>
-               <x>740</x>
+               <x>160</x>
                <y>610</y>
                <width>41</width>
                <height>41</height>
@@ -1102,7 +1095,7 @@ out</string>
             <widget class="QPushButton" name="bt_JogB">
              <property name="geometry">
               <rect>
-               <x>740</x>
+               <x>160</x>
                <y>650</y>
                <width>41</width>
                <height>41</height>
@@ -1126,7 +1119,7 @@ out</string>
             <widget class="QPushButton" name="bt_JogL">
              <property name="geometry">
               <rect>
-               <x>700</x>
+               <x>120</x>
                <y>650</y>
                <width>41</width>
                <height>41</height>
@@ -1150,7 +1143,7 @@ out</string>
             <widget class="QPushButton" name="bt_MotorInit">
              <property name="geometry">
               <rect>
-               <x>700</x>
+               <x>120</x>
                <y>590</y>
                <width>31</width>
                <height>31</height>
@@ -1168,7 +1161,7 @@ out</string>
             <widget class="QPushButton" name="bt_Emergency">
              <property name="geometry">
               <rect>
-               <x>830</x>
+               <x>250</x>
                <y>610</y>
                <width>71</width>
                <height>81</height>
@@ -1210,7 +1203,7 @@ stop</string>
             <widget class="QPushButton" name="bt_JogMecaL">
              <property name="geometry">
               <rect>
-               <x>700</x>
+               <x>120</x>
                <y>630</y>
                <width>41</width>
                <height>21</height>
@@ -1234,7 +1227,7 @@ stop</string>
             <widget class="QPushButton" name="bt_JogMecaR">
              <property name="geometry">
               <rect>
-               <x>780</x>
+               <x>200</x>
                <y>630</y>
                <width>41</width>
                <height>21</height>
@@ -1302,7 +1295,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QLabel" name="lb_CamSerialNumber2">
              <property name="geometry">
               <rect>
-               <x>520</x>
+               <x>530</x>
                <y>90</y>
                <width>140</width>
                <height>17</height>
@@ -1324,7 +1317,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QLabel" name="lb_CamSerialNumber3">
              <property name="geometry">
               <rect>
-               <x>680</x>
+               <x>690</x>
                <y>90</y>
                <width>140</width>
                <height>17</height>
@@ -1346,7 +1339,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QCheckBox" name="chk_ViewCam3">
              <property name="geometry">
               <rect>
-               <x>820</x>
+               <x>836</x>
                <y>90</y>
                <width>20</width>
                <height>17</height>
@@ -1362,7 +1355,7 @@ color: rgb(0, 0, 0);</string>
             <widget class="QCheckBox" name="chk_ViewCam2">
              <property name="geometry">
               <rect>
-               <x>660</x>
+               <x>650</x>
                <y>90</y>
                <width>20</width>
                <height>17</height>
@@ -1445,7 +1438,7 @@ color: rgb(0, 0, 0);</string>
     <item row="0" column="1" rowspan="2">
      <widget class="QTabWidget" name="menu_tab">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -1468,7 +1461,7 @@ color: rgb(0, 0, 0);</string>
        </font>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_ROBOT">
        <attribute name="title">
@@ -1533,7 +1526,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1819,11 +1812,6 @@ LC</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Move
 (pp)</string>
@@ -1837,11 +1825,6 @@ LC</string>
                 <width>51</width>
                 <height>31</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Move
@@ -1857,11 +1840,6 @@ LC</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Move
 (tng)</string>
@@ -1876,11 +1854,6 @@ LC</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Stop</string>
               </property>
@@ -1893,11 +1866,6 @@ LC</string>
                 <width>51</width>
                 <height>31</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Pause</string>
@@ -1912,11 +1880,6 @@ LC</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Resume</string>
               </property>
@@ -1929,11 +1892,6 @@ LC</string>
                 <width>51</width>
                 <height>41</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>rtc</string>
@@ -1950,7 +1908,7 @@ LC</string>
               </property>
               <property name="font">
                <font>
-                <pointsize>8</pointsize>
+                <pointsize>15</pointsize>
                </font>
               </property>
               <property name="focusPolicy">
@@ -1978,11 +1936,6 @@ LC</string>
                 <height>41</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Back
 Move
@@ -1998,11 +1951,6 @@ Move
                 <height>51</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>path</string>
               </property>
@@ -2016,11 +1964,6 @@ Move
                 <height>70</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
              </widget>
              <widget class="QCheckBox" name="ckb_MoveBackWard">
               <property name="geometry">
@@ -2030,11 +1973,6 @@ Move
                 <width>92</width>
                 <height>23</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>BackWard</string>
@@ -2048,11 +1986,6 @@ Move
                 <width>70</width>
                 <height>52</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <layout class="QGridLayout" name="gridLayout_8">
                <item row="0" column="0">
@@ -2068,11 +2001,6 @@ Move
                    <width>60</width>
                    <height>50</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>8</pointsize>
-                  </font>
                  </property>
                  <property name="text">
                   <string>append</string>
@@ -2098,11 +2026,6 @@ Move
                    <width>60</width>
                    <height>50</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>8</pointsize>
-                  </font>
                  </property>
                  <property name="text">
                   <string>erase</string>
@@ -2131,11 +2054,6 @@ Move
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="focusPolicy">
                <enum>Qt::StrongFocus</enum>
               </property>
@@ -2159,11 +2077,6 @@ start</string>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="focusPolicy">
                <enum>Qt::StrongFocus</enum>
               </property>
@@ -2181,11 +2094,6 @@ start</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Stop</string>
               </property>
@@ -2198,11 +2106,6 @@ start</string>
                 <width>51</width>
                 <height>31</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Pause</string>
@@ -2217,11 +2120,6 @@ start</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Resume</string>
               </property>
@@ -2234,11 +2132,6 @@ start</string>
                 <width>61</width>
                 <height>31</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Chg_trig</string>
@@ -2253,11 +2146,6 @@ start</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Chg_stop</string>
               </property>
@@ -2271,11 +2159,6 @@ start</string>
                 <height>25</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
              </widget>
              <widget class="QLineEdit" name="le_mainstate">
               <property name="geometry">
@@ -2286,11 +2169,6 @@ start</string>
                 <height>25</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
              </widget>
              <widget class="QLabel" name="label_6">
               <property name="geometry">
@@ -2300,11 +2178,6 @@ start</string>
                 <width>67</width>
                 <height>17</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>error_code</string>
@@ -2318,11 +2191,6 @@ start</string>
                 <width>67</width>
                 <height>17</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>main_state</string>
@@ -2348,11 +2216,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Task Delete [I]</string>
               </property>
@@ -2369,11 +2232,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Pause</string>
               </property>
@@ -2389,11 +2247,6 @@ start</string>
                 <width>61</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>looping</string>
@@ -2414,11 +2267,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Task Play [O]</string>
               </property>
@@ -2434,11 +2282,6 @@ start</string>
                 <width>101</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Task Add [U]</string>
@@ -2480,11 +2323,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Load</string>
               </property>
@@ -2500,11 +2338,6 @@ start</string>
                 <width>51</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Resume</string>
@@ -2522,11 +2355,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Save</string>
               </property>
@@ -2543,11 +2371,6 @@ start</string>
                 <height>61</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
              </widget>
              <widget class="QComboBox" name="cb_TaskDrivingMode">
               <property name="enabled">
@@ -2560,11 +2383,6 @@ start</string>
                 <width>91</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <item>
                <property name="text">
@@ -2593,11 +2411,6 @@ start</string>
                 <width>71</width>
                 <height>23</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Acc log</string>
@@ -2653,11 +2466,6 @@ start</string>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>send map
 (sn -&gt; fms)</string>
@@ -2683,11 +2491,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Time sync</string>
               </property>
@@ -2703,11 +2506,6 @@ start</string>
                 <width>50</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>Test</string>
@@ -2725,11 +2523,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="maximum">
                <number>14</number>
               </property>
@@ -2745,11 +2538,6 @@ start</string>
                 <width>80</width>
                 <height>20</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>LED test</string>
@@ -2767,11 +2555,6 @@ start</string>
                 <height>20</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>Debug</string>
               </property>
@@ -2788,11 +2571,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>IMG save</string>
               </property>
@@ -2806,11 +2584,6 @@ start</string>
                 <height>16</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>v:</string>
               </property>
@@ -2823,11 +2596,6 @@ start</string>
                 <width>51</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="minimum">
                <double>-5.000000000000000</double>
@@ -2848,11 +2616,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>move rotate</string>
               </property>
@@ -2866,11 +2629,6 @@ start</string>
                 <height>20</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>move linear y</string>
               </property>
@@ -2883,11 +2641,6 @@ start</string>
                 <width>50</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="minimum">
                <double>-180.000000000000000</double>
@@ -2908,11 +2661,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="minimum">
                <double>-180.000000000000000</double>
               </property>
@@ -2931,11 +2679,6 @@ start</string>
                 <width>20</width>
                 <height>17</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>w:</string>
@@ -2971,11 +2714,6 @@ start</string>
                 <height>21</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
-              </property>
               <property name="text">
                <string>deg:</string>
               </property>
@@ -2988,11 +2726,6 @@ start</string>
                 <width>50</width>
                 <height>21</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="minimum">
                <double>-1.500000000000000</double>
@@ -3012,11 +2745,6 @@ start</string>
                 <width>80</width>
                 <height>20</height>
                </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="text">
                <string>move linear x</string>
@@ -3253,19 +2981,14 @@ Cloud</string>
        <attribute name="title">
         <string>PDU</string>
        </attribute>
-       <widget class="QPushButton" name="bt_RequestPduInfo">
+       <widget class="QPushButton" name="bt_Request">
         <property name="geometry">
          <rect>
-          <x>140</x>
-          <y>640</y>
-          <width>131</width>
-          <height>31</height>
+          <x>160</x>
+          <y>420</y>
+          <width>160</width>
+          <height>20</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
         </property>
         <property name="text">
          <string>request</string>
@@ -3274,16 +2997,11 @@ Cloud</string>
        <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
-          <x>130</x>
-          <y>410</y>
-          <width>141</width>
+          <x>170</x>
+          <y>460</y>
+          <width>161</width>
           <height>230</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
          <property name="verticalSpacing">
@@ -3296,11 +3014,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>Dir</string>
@@ -3327,11 +3040,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3356,11 +3064,6 @@ Cloud</string>
              <width>20</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string/>
@@ -3387,11 +3090,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3416,11 +3114,6 @@ Cloud</string>
              <width>20</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string/>
@@ -3447,11 +3140,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3477,11 +3165,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3494,11 +3177,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit v(jog)</string>
@@ -3525,11 +3203,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3542,11 +3215,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>wheel_type</string>
@@ -3561,11 +3229,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>limit a(jog)</string>
            </property>
@@ -3578,11 +3241,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit w(jog)</string>
@@ -3597,11 +3255,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Gear</string>
            </property>
@@ -3614,11 +3267,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit b(jog)</string>
@@ -3633,11 +3281,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>         ly</string>
            </property>
@@ -3650,11 +3293,6 @@ Cloud</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>         lx</string>
@@ -3681,11 +3319,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3711,11 +3344,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3727,15 +3355,10 @@ Cloud</string>
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>410</y>
-          <width>131</width>
+          <y>460</y>
+          <width>171</width>
           <height>256</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="0" column="1">
@@ -3757,11 +3380,6 @@ Cloud</string>
              <width>20</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string/>
@@ -3788,11 +3406,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3812,11 +3425,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>type</string>
            </property>
@@ -3835,11 +3443,6 @@ Cloud</string>
              <width>100</width>
              <height>16777215</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit w</string>
@@ -3866,11 +3469,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3896,11 +3494,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3920,11 +3513,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>limit v</string>
            </property>
@@ -3943,11 +3531,6 @@ Cloud</string>
              <width>100</width>
              <height>16777215</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>version</string>
@@ -3974,11 +3557,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -3998,11 +3576,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>wheel R</string>
            </property>
@@ -4021,11 +3594,6 @@ Cloud</string>
              <width>50</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string/>
@@ -4052,11 +3620,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -4075,11 +3638,6 @@ Cloud</string>
              <width>20</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string/>
@@ -4100,11 +3658,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>limit v(Monitor)</string>
            </property>
@@ -4124,11 +3677,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>limit a</string>
            </property>
@@ -4147,11 +3695,6 @@ Cloud</string>
              <width>100</width>
              <height>16777215</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit b</string>
@@ -4178,11 +3721,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -4201,11 +3739,6 @@ Cloud</string>
              <width>110</width>
              <height>16777215</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>limit w(Monitor)</string>
@@ -4232,11 +3765,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -4256,11 +3784,6 @@ Cloud</string>
              <height>16777215</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>7</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>wheel S</string>
            </property>
@@ -4273,14 +3796,9 @@ Cloud</string>
          <rect>
           <x>0</x>
           <y>3</y>
-          <width>271</width>
-          <height>231</height>
+          <width>321</width>
+          <height>239</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="0" column="0">
@@ -4290,11 +3808,6 @@ Cloud</string>
              <width>50</width>
              <height>16777215</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
            </property>
            <property name="text">
             <string>EMO</string>
@@ -4321,11 +3834,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4336,11 +3844,6 @@ Cloud</string>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_37">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Meas Mis</string>
            </property>
@@ -4366,11 +3869,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4387,11 +3885,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear mis</string>
            </property>
@@ -4399,11 +3892,6 @@ Cloud</string>
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_38">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Ovr Spd</string>
            </property>
@@ -4429,11 +3917,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4450,11 +3933,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear over spd</string>
            </property>
@@ -4462,11 +3940,6 @@ Cloud</string>
          </item>
          <item row="3" column="0">
           <widget class="QLabel" name="label_39">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Obs Detect</string>
            </property>
@@ -4492,11 +3965,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4513,11 +3981,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear obs</string>
            </property>
@@ -4525,11 +3988,6 @@ Cloud</string>
          </item>
          <item row="4" column="0">
           <widget class="QLabel" name="label_40">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Field Mis</string>
            </property>
@@ -4555,11 +4013,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4576,11 +4029,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear field mis</string>
            </property>
@@ -4588,11 +4036,6 @@ Cloud</string>
          </item>
          <item row="5" column="0">
           <widget class="QLabel" name="label_41">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Interlock</string>
            </property>
@@ -4618,11 +4061,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4639,11 +4077,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear interlock</string>
            </property>
@@ -4651,11 +4084,6 @@ Cloud</string>
          </item>
          <item row="6" column="0">
           <widget class="QLabel" name="label_42">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>bumper</string>
            </property>
@@ -4681,11 +4109,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4702,11 +4125,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>clear bumper</string>
            </property>
@@ -4714,11 +4132,6 @@ Cloud</string>
          </item>
          <item row="7" column="0">
           <widget class="QLabel" name="label_43">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>OP Mode</string>
            </property>
@@ -4744,11 +4157,6 @@ Cloud</string>
              <height>20</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="cursor">
             <cursorShape>IBeamCursor</cursorShape>
            </property>
@@ -4765,11 +4173,6 @@ Cloud</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>recover</string>
            </property>
@@ -4781,233 +4184,38 @@ Cloud</string>
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>330</y>
-          <width>271</width>
+          <y>340</y>
+          <width>361</width>
           <height>79</height>
          </rect>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
-        </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_32">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_30">
            <property name="text">
-            <string>Charge State</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="le_Charge_State">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>20</horstretch>
-             <verstretch>20</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_34">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Lidar Filed (W))</string>
+            <string>OP Mode</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="le_Op_Mode">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
              <horstretch>20</horstretch>
              <verstretch>20</verstretch>
             </sizepolicy>
            </property>
            <property name="minimumSize">
             <size>
-             <width>20</width>
+             <width>100</width>
              <height>20</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLineEdit" name="le_Lidar_Field_Write">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>20</horstretch>
-             <verstretch>20</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
              <width>20</width>
              <height>20</height>
             </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="cursor">
-            <cursorShape>IBeamCursor</cursorShape>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2" colspan="2">
-          <widget class="QPushButton" name="bt_SetLidarField">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Set  Field</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="le_Robot_Init_State">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>20</horstretch>
-             <verstretch>20</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_31">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>R Init State</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_30">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>OP Mode</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QLineEdit" name="le_Lidar_Field_Read">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>20</horstretch>
-             <verstretch>20</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="cursor">
-            <cursorShape>IBeamCursor</cursorShape>
            </property>
            <property name="text">
             <string/>
@@ -5016,13 +4224,142 @@ Cloud</string>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_35">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>Lidar Filed (R)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLineEdit" name="le_Lidar_Field_Read">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>R Init State</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="le_Robot_Init_State">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_34">
+           <property name="text">
+            <string>Lidar Filed (W))</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLineEdit" name="le_Lidar_Field_Write">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Charge State</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="le_Charge_State">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>20</horstretch>
+             <verstretch>20</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" colspan="2">
+          <widget class="QPushButton" name="bt_SetLidarField">
+           <property name="text">
+            <string>Set  Field</string>
            </property>
           </widget>
          </item>
@@ -5032,24 +4369,14 @@ Cloud</string>
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>240</y>
-          <width>271</width>
+          <y>250</y>
+          <width>321</width>
           <height>81</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>8</pointsize>
-         </font>
         </property>
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="1" column="0">
           <widget class="QPushButton" name="bt_SetDetectModeT">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>detect_mod</string>
            </property>
@@ -5057,11 +4384,6 @@ Cloud</string>
          </item>
          <item row="1" column="1">
           <widget class="QPushButton" name="bt_SetDetectModeF">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>no detect_mod</string>
            </property>
@@ -5069,11 +4391,6 @@ Cloud</string>
          </item>
          <item row="2" column="1">
           <widget class="QPushButton" name="bt_LiftPowerOff">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>LIFT_POWER_OFF</string>
            </property>
@@ -5081,11 +4398,6 @@ Cloud</string>
          </item>
          <item row="2" column="0">
           <widget class="QPushButton" name="bt_LiftPowerOn">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>LIFT_POWER_ON</string>
            </property>
@@ -5093,11 +4405,6 @@ Cloud</string>
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_33">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
            <property name="text">
             <string>OSSD</string>
            </property>

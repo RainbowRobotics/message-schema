@@ -124,6 +124,26 @@ std::vector<VoltageCapacity> voltage_lookup_table =
     {58.8,         100}
 };
 
+QString AUTO_FSM_STATE_STR[7] =
+{
+    "AUTO_FSM_FIRST_ALIGN",
+    "AUTO_FSM_DRIVING",
+    "AUTO_FSM_FINAL_ALIGN",
+    "AUTO_FSM_OBS",
+    "AUTO_FSM_COMPLETE",
+    "AUTO_FSM_DOCKING",
+    "AUTO_FSM_PAUSE"
+};
+
+QString DOCK_FSM_STATE_STR[5] =
+{
+    "DOCK_FSM_DRIVING",
+    "DOCK_FSM_DRIVING_FOR_CHRGE",
+    "DOCK_FSM_WAIT_FOR_CHRGE",
+    "DOCK_FSM_COMPLETE",
+    "DOCK_FSM_FAILED"
+};
+
 bool ping(std::string ip_address)
 {
     std::string command = "ping -c 1 -W 1 " + ip_address + " > /dev/null 2>&1";

@@ -1901,21 +1901,68 @@ void COMM_MSA::control_loop()
         {
             MainWindow* _main = (MainWindow*)main;
 
-            if(msg.onoff)
-            {
-                _main->set_is_manual_led(true);
-
-                const auto it = led_state_table.find(msg.color.toStdString());
-                _main->set_manual_led_color(it != led_state_table.end() ? it->second : LedState::OFF);
+            if(msg.onoff){
+                _main->is_user_led = true;
+                QString led = msg.color;
+                if(led == "none")
+                {
+                    _main->user_led_color = LED_OFF;
+                }
+                else if(led == "red")
+                {
+                    _main->user_led_color = LED_RED;
+                }
+                else if(led == "blue")
+                {
+                    _main->user_led_color = LED_BLUE;
+                }
+                else if(led == "white")
+                {
+                    _main->user_led_color = LED_WHITE;
+                }
+                else if(led == "green")
+                {
+                    _main->user_led_color = LED_GREEN;
+                }
+                else if(led == "magenta")
+                {
+                    _main->user_led_color = LED_MAGENTA;
+                }
+                else if(led == "yellow")
+                {
+                    _main->user_led_color = LED_YELLOW;
+                }
+                else if(led == "red blink")
+                {
+                    _main->user_led_color = LED_RED_BLINK;
+                }
+                else if(led == "blue blink")
+                {
+                    _main->user_led_color = LED_BLUE_BLINK;
+                }
+                else if(led == "white blink")
+                {
+                    _main->user_led_color = LED_WHITE_BLINK;
+                }
+                else if(led == "green blink")
+                {
+                    _main->user_led_color = LED_GREEN_BLINK;
+                }
+                else if(led == "magenta blink")
+                {
+                    _main->user_led_color = LED_MAGENTA_BLINK;
+                }
+                else if(led == "yellow blink")
+                {
+                    _main->user_led_color = LED_YELLOW_BLINK;
+                }
 
                 msg.result = "accept";
                 msg.message = "";
 
-            }
-            else
-            {
+            }else{
                 MainWindow* _main = (MainWindow*)main;
-                _main->set_is_manual_led(false);
+                _main->is_user_led = false;
 
                 msg.result = "accept";
                 msg.message = "";
@@ -2411,10 +2458,61 @@ void COMM_MSA::common_loop()
             if(command == "on")
             {
                 MainWindow* _main = (MainWindow*)main;
-                _main->set_is_manual_led(true);
+                _main->is_user_led = true;
 
-                const auto it = led_state_table.find(msg.led.toStdString());
-                _main->set_manual_led_color(it != led_state_table.end() ? it->second : LedState::OFF);
+                QString led = msg.led;
+                if(led == "none")
+                {
+                    _main->user_led_color = LED_OFF;
+                }
+                else if(led == "red")
+                {
+                    _main->user_led_color = LED_RED;
+                }
+                else if(led == "blue")
+                {
+                    _main->user_led_color = LED_BLUE;
+                }
+                else if(led == "white")
+                {
+                    _main->user_led_color = LED_WHITE;
+                }
+                else if(led == "green")
+                {
+                    _main->user_led_color = LED_GREEN;
+                }
+                else if(led == "magenta")
+                {
+                    _main->user_led_color = LED_MAGENTA;
+                }
+                else if(led == "yellow")
+                {
+                    _main->user_led_color = LED_YELLOW;
+                }
+                else if(led == "red blink")
+                {
+                    _main->user_led_color = LED_RED_BLINK;
+                }
+                else if(led == "blue blink")
+                {
+                    _main->user_led_color = LED_BLUE_BLINK;
+                }
+                else if(led == "white blink")
+                {
+                    _main->user_led_color = LED_WHITE_BLINK;
+                }
+                else if(led == "green blink")
+                {
+                    _main->user_led_color = LED_GREEN_BLINK;
+                }
+                else if(led == "magenta blink")
+                {
+                    _main->user_led_color = LED_MAGENTA_BLINK;
+                }
+                else if(led == "yellow blink")
+                {
+                    _main->user_led_color = LED_YELLOW_BLINK;
+                }
 
                 msg.result = "accept";
                 msg.message = "";
@@ -2422,7 +2520,7 @@ void COMM_MSA::common_loop()
             else if(command == "off")
             {
                 MainWindow* _main = (MainWindow*)main;
-                _main->set_is_manual_led(false);
+                _main->is_user_led = false;
 
                 msg.result = "accept";
                 msg.message = "";
@@ -2564,14 +2662,11 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
         MainWindow* _main = qobject_cast<MainWindow*>(main);
         if(_main)
         {
+            _main -> map_dir = "";
             if(msg.map_name != "")
             {
-                _main->set_is_change_map_name(true);
-                _main->set_map_dir(msg.map_name);
-            }
-            else
-            {
-                _main->set_map_dir("");
+                _main ->change_map_name = true;
+                _main -> map_dir =  msg.map_name;
             }
 
             _main->bt_MapSave();
@@ -2580,7 +2675,8 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
             const QString save_dir = "/data/maps/" + map_name;
 
             bool found_csv = false;
-            if(std::filesystem::exists(save_dir.toStdString()) && std::filesystem::is_directory(save_dir.toStdString()))
+
+            if (std::filesystem::exists(save_dir.toStdString()) && std::filesystem::is_directory(save_dir.toStdString()))
             {
                 for (const auto& entry : std::filesystem::directory_iterator(save_dir.toStdString()))
                 {
@@ -2591,7 +2687,7 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
                     }
                 }
             }
-            if(found_csv)
+            if (found_csv)
             {
                 msg.result = "success";
                 msg.message = "";
@@ -2601,6 +2697,7 @@ void COMM_MSA::handle_mapping(DATA_MAPPING msg)
             else
             {
                 msg.result = "fail";
+                //msg.message = "[R1Cx2100] csv file not found in map directory";
                 msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_SAVE_FAIL_CSV, ERROR_MANAGER::MAPPING_SAVE);
                 ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_SAVE_FAIL_CSV, ERROR_MANAGER::MAPPING_SAVE);
 
@@ -3081,9 +3178,30 @@ void COMM_MSA::send_status()
     RobotModel robot_model = config->get_robot_model();
     if(robot_model == RobotModel::D400 || robot_model == RobotModel::MECANUM)
     {
-        ChargeState charge_state_enum = static_cast<ChargeState>(ms.charge_state);
-        auto it = charge_state_to_string.find(charge_state_enum);
-        charge_st_string = (it != charge_state_to_string.end()) ? it->second : "none";
+        if(ms.charge_state == CHARGE_STATE_IDLE)
+        {
+            charge_st_string = "none";
+        }
+        else if(ms.charge_state == CHARGE_STATE_TRIG_TO_CHARGE)
+        {
+            charge_st_string = "ready";
+        }
+        else if(ms.charge_state == CHARGE_STATE_BATTERY_ON)
+        {
+            charge_st_string = "battery_on";
+        }
+        else if(ms.charge_state == CHARGE_STATE_CHARGING)
+        {
+            charge_st_string = "charging";
+        }
+        else if(ms.charge_state == CHARGE_STATE_TRIG_TO_STOP_CHARGE)
+        {
+            charge_st_string = "finish";
+        }
+        else if(ms.charge_state == CHARGE_STATE_FAIL)
+        {
+            charge_st_string = "fail";
+        }
     }
     else if(robot_model == RobotModel::S100)
     {
@@ -3099,19 +3217,23 @@ void COMM_MSA::send_status()
     bool is_dock = dctrl->get_dock_state();
 
     sio::object_message::ptr robotStateObj = sio::object_message::create();
-    robotStateObj->get_map()["charge"]              = sio::string_message::create(charge_st_string.toStdString());
-    robotStateObj->get_map()["dock"]                = sio::bool_message::create((is_dock == true) ? "true" : "false");
-    robotStateObj->get_map()["emo"]                 = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
-    robotStateObj->get_map()["localization"]        = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
-    robotStateObj->get_map()["power"]               = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
-    robotStateObj->get_map()["sss_recovery"]        = sio::bool_message::create(ms.sss_recovery_state == 1);
-    robotStateObj->get_map()["sw_reset"]            = sio::bool_message::create(ms.sw_reset == 1);
-    robotStateObj->get_map()["sw_stop"]             = sio::bool_message::create(ms.sw_stop == 1);
-    robotStateObj->get_map()["sw_start"]            = sio::bool_message::create(ms.sw_start == 1);
-    robotStateObj->get_map()["sf_obs_detect"]       = sio::bool_message::create(ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
-    robotStateObj->get_map()["sf_bumper_detect"]    = sio::bool_message::create(ms.safety_state_bumper_stop_1 || ms.safety_state_bumper_stop_2);
-    robotStateObj->get_map()["sf_operational_stop"] = sio::bool_message::create(ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
-    rootObj->get_map()["robot_state"] = robotStateObj;
+    robotStateObj->get_map()["charge"]       = sio::string_message::create(charge_st_string.toStdString());
+    robotStateObj->get_map()["dock"]         = sio::bool_message::create((is_dock == true) ? "true" : "false");
+    robotStateObj->get_map()["emo"]          = sio::bool_message::create((ms.motor_stop_state == 1) ? "true" : "false");
+    robotStateObj->get_map()["localization"] = sio::string_message::create(cur_loc_state.toStdString()); // "none", "good", "fail"
+    robotStateObj->get_map()["power"]        = sio::bool_message::create((ms.power_state == 1) ? "true" : "false");
+    robotStateObj->get_map()["sss_recovery"] = sio::bool_message::create(ms.sss_recovery_state == 1);
+    robotStateObj->get_map()["sw_reset"] = sio::bool_message::create(ms.sw_reset == 1);
+    robotStateObj->get_map()["sw_stop"] = sio::bool_message::create(ms.sw_stop == 1);
+    robotStateObj->get_map()["sw_start"] = sio::bool_message::create(ms.sw_start == 1);
+
+    robotStateObj->get_map()["sf_obs_detect"] = sio::bool_message::create(
+                ms.safety_state_obstacle_detected_1 || ms.safety_state_obstacle_detected_2);
+    robotStateObj->get_map()["sf_bumper_detect"] = sio::bool_message::create(
+                ms.safety_state_bumper_stop_1 || ms.safety_state_bumper_stop_2);
+    robotStateObj->get_map()["sf_operational_stop"] = sio::bool_message::create(
+                ms.operational_stop_state_flag_1 || ms.operational_stop_state_flag_2);
+    rootObj->get_map()["robot_state"]        = robotStateObj;
 
     auto toSioArray = [](unsigned char arr[8]) 
     {

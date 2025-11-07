@@ -276,18 +276,23 @@ void MOBILE::recv_loop()
 
     while(recv_flag)
     {
+        // 연결 시도
         if(!connect_to_pdu(pdu_ip, pdu_port))
         {
+            // 연결 실패 시 잠시 대기 후 재시도
             std::this_thread::sleep_for(std::chrono::seconds(3));
             continue;
         }
 
+        // 연결 성공 시 데이터 수신 루프
         config_parameter_send();
         receive_data_loop();
 
+        // 연결이 끊어진 경우 소켓 정리
         close(fd);
         is_connected = false;
 
+        // 재접속을 위한 짧은 대기
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
@@ -450,35 +455,35 @@ void MOBILE::receive_data_loop()
 
                         uchar *_buf = (uchar*)buf.data();
 
-                        PduRobotType robot_type = PduRobotType::UNKNOWN;
+                        RobotType_PDU robot_type = RobotType_PDU::ROBOT_TYPE_UNKNOWN;
 
                         if(data_size == MOBILE_INFO::packet_size_d400)
                         {
-                            robot_type = PduRobotType::D400;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_D400;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_s100)
                         {
-                            robot_type = PduRobotType::S100;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_S100;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_mecanum)
                         {
-                            robot_type = PduRobotType::MECANUM;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_MECANUM;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety)
                         {
-                            robot_type = PduRobotType::SAFETY;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety_v2_high)
                         {
-                            robot_type = PduRobotType::SAFETY_V2;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY_V2;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety_v2_mid)
                         {
-                            robot_type = PduRobotType::SAFETY_V2;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY_V2;
                         }
                         else if(data_size == MOBILE_INFO::packet_size_safety_v2_low)
                         {
-                            robot_type = PduRobotType::SAFETY_V2;
+                            robot_type = RobotType_PDU::ROBOT_TYPE_SAFETY_V2;
                         }
                         else
                         {
@@ -487,7 +492,7 @@ void MOBILE::receive_data_loop()
                         }
                         //*************************************************************************************************************** */
 
-                        if(_buf[5] == 0xA2 && robot_type == PduRobotType::SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_high)
+                        if(_buf[5] == 0xA2 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_high)
                         {
                             // HighFreq Data - Pose, Velocity, IMU
                             uint32_t tick;
@@ -638,7 +643,7 @@ void MOBILE::receive_data_loop()
                             last_imu_t = imu.t;
                         }
 
-                        else if(_buf[5] == 0xA1 && robot_type == PduRobotType::SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_mid)
+                        else if(_buf[5] == 0xA1 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_mid)
                         {
                             // MidFreq Data - Safety States, IO
 
@@ -741,7 +746,7 @@ void MOBILE::receive_data_loop()
 
                             QString mobile_status_str = "[MOBILE_STATUS]";
                             
-                            if(wheel_model == WheelType::DIFFERENTIAL)
+                            if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
                                 // connection 정보
                                 mobile_status_str += "connection(m0,m1):" + QString::number(cur_status.connection_m0) + "," +
@@ -757,7 +762,7 @@ void MOBILE::receive_data_loop()
                                 "cur(m0,m1):" + QString::number((double)cur_status.cur_m0/10.0, 'f', 2) + "," +
                                 QString::number((double)cur_status.cur_m1/10.0, 'f', 2) + "\n";
                             }
-                            else if(wheel_model == WheelType::QUAD || wheel_model == WheelType::MECANUM)
+                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM)
                             {
                                 // connection 정보
                                 mobile_status_str += "connection(m0,m1,m2,m3):" + QString::number(cur_status.connection_m0) + "," +
@@ -844,7 +849,7 @@ void MOBILE::receive_data_loop()
                             mtx.unlock();
                         }
 
-                        else if(_buf[5] == 0xA0 && robot_type == PduRobotType::SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_low)
+                        else if(_buf[5] == 0xA0 && robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY_V2 && data_size == MOBILE_INFO::packet_size_safety_v2_low)
                         {
                             // LowFreq Data - Power Info, Motor Info, BMS Info
 
@@ -881,21 +886,22 @@ void MOBILE::receive_data_loop()
 
                             if(motor_robot_type == 0x01)
                             {
-                                wheel_model = WheelType::DIFFERENTIAL;
+                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_DD;
                             }
                             else if(motor_robot_type == 0x02)
                             {
-                                wheel_model = WheelType::QUAD;
+                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_QD;
                             }
                             else if(motor_robot_type == 0x03)
                             {
-                                wheel_model = WheelType::MECANUM;
+                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM;
                             }
                             else
                             {
-                                wheel_model = WheelType::UNKNOWN;
-                                log_critical("[MOBILE] Unknown motor robot type: {}", motor_robot_type);
+                                wheel_model = RobotWheelModel::ROBOT_WHEEL_MODEL_UNKNOWN;
+                                spdlog::error("[MOBILE] Unknown motor robot type: {}", motor_robot_type);
                             }
+
 
                             // Motor data - assume MAX_MC_BOARD = 2 for safety robot
                             const int MAX_MC_BOARD = 8;
@@ -996,7 +1002,7 @@ void MOBILE::receive_data_loop()
                             cur_status.power = main_power;
 
                             // Setting Motor info
-                            if(wheel_model == WheelType::DIFFERENTIAL)
+                            if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_DD)
                             {
                                 cur_status.status_m0 = motor_stat[0];
                                 cur_status.status_m1 = motor_stat[1];
@@ -1010,7 +1016,7 @@ void MOBILE::receive_data_loop()
                                 cur_status.connection_m0 = motor_connection_status[0];
                                 cur_status.connection_m1 = motor_connection_status[1];
                             }
-                            else if(wheel_model == WheelType::QUAD || wheel_model == WheelType::MECANUM)
+                            else if(wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_QD || wheel_model == RobotWheelModel::ROBOT_WHEEL_MODEL_MECANUM)
                             {
                                 cur_status.status_m0 = motor_stat[0];
                                 cur_status.status_m1 = motor_stat[1];
@@ -1058,7 +1064,7 @@ void MOBILE::receive_data_loop()
                         }
 
 
-                        else if(_buf[5] == 0xA2 && robot_type != PduRobotType::SAFETY_V2)
+                        else if(_buf[5] == 0xA2 && robot_type != RobotType_PDU::ROBOT_TYPE_SAFETY_V2)
                         {
                             // Normal Data
                             uint32_t tick;
@@ -1070,7 +1076,7 @@ void MOBILE::receive_data_loop()
 
                             uint32_t recv_tick; float return_time;
 
-                            if(robot_type != PduRobotType::MECANUM)
+                            if(robot_type != RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);   index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f); index=index+dlc_f;
@@ -1080,7 +1086,7 @@ void MOBILE::receive_data_loop()
                             connection_status_m0 = _buf[index]; index=index+dlc;
                             connection_status_m1 = _buf[index]; index=index+dlc;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 connection_status_m2 = _buf[index]; index=index+dlc;
                                 connection_status_m3 = _buf[index]; index=index+dlc;
@@ -1099,7 +1105,7 @@ void MOBILE::receive_data_loop()
                             float local_v, local_w;
                             float local_vx, local_vy, local_wz;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&local_vx, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&local_vy, &_buf[index], dlc_f);     index=index+dlc_f;
@@ -1117,7 +1123,7 @@ void MOBILE::receive_data_loop()
                             stat_m0 = _buf[index];     index=index+dlc;
                             stat_m1 = _buf[index];     index=index+dlc;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 stat_m2 = _buf[index];     index=index+dlc;
                                 stat_m3 = _buf[index];     index=index+dlc;
@@ -1129,7 +1135,7 @@ void MOBILE::receive_data_loop()
                             temp_m0 = _buf[index];     index=index+dlc;
                             temp_m1 = _buf[index];     index=index+dlc;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 temp_m2 = _buf[index];     index=index+dlc;
                                 temp_m3 = _buf[index];     index=index+dlc;
@@ -1137,7 +1143,7 @@ void MOBILE::receive_data_loop()
 
                             uint8_t esti_temp_m0, esti_temp_m1;
 
-                            if(robot_type == PduRobotType::D400)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_D400)
                             {
                                 memcpy(&esti_temp_m0, &_buf[index], dlc);     index=index+dlc;
                                 memcpy(&esti_temp_m1, &_buf[index], dlc);     index=index+dlc;
@@ -1149,7 +1155,7 @@ void MOBILE::receive_data_loop()
                             cur_m0 = _buf[index];     index=index+dlc;
                             cur_m1 = _buf[index];     index=index+dlc;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 cur_m2 = _buf[index];     index=index+dlc;
                                 cur_m3 = _buf[index];     index=index+dlc;
@@ -1163,7 +1169,7 @@ void MOBILE::receive_data_loop()
                             uint8_t safety_emo_pressed_2, safety_ref_meas_mismatch_2, safety_over_speed_2,safety_obs_detect_2,
                                     safety_speed_field_mismatch_2, safety_stop_state_flag_2, safety_interlock_stop_2, safety_bumper_stop_2;
 
-                            if(robot_type == PduRobotType::SAFETY)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&auto_manual_sw, &_buf[index], dlc);       index=index+dlc;
                                 memcpy(&brake_sw, &_buf[index], dlc);             index=index+dlc;
@@ -1212,7 +1218,7 @@ void MOBILE::receive_data_loop()
                             memcpy(&bat_out, &_buf[index], dlc_f);              index=index+dlc_f;
                             memcpy(&bat_cur, &_buf[index], dlc_f);              index=index+dlc_f;
 
-                            if(robot_type == PduRobotType::SAFETY)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&lift_voltage_in, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&lift_voltage_out, &_buf[index], dlc_f);              index=index+dlc_f;
@@ -1226,18 +1232,18 @@ void MOBILE::receive_data_loop()
                             memcpy(&power, &_buf[index], dlc_f);                index=index+dlc_f;
                             memcpy(&total_used_power, &_buf[index], dlc_f);     index=index+dlc_f;
 
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&recv_tick, &_buf[index], dlc_f);        index=index+dlc_f;
                                 memcpy(&return_time, &_buf[index], dlc_f);      index=index+dlc_f;
                             }
 
-                            if(robot_type == PduRobotType::D400)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_D400)
                             {
                                 memcpy(&charge_current, &_buf[index], dlc_f);               index=index+dlc_f;
                                 memcpy(&contact_voltage, &_buf[index], dlc_f);               index=index+dlc_f;
                             }
-                            else if(robot_type == PduRobotType::S100 || robot_type == PduRobotType::SAFETY)
+                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_S100 || robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&motor_core_temp0, &_buf[index], dlc_f);     index=index+dlc_f;
                                 memcpy(&motor_core_temp1, &_buf[index], dlc_f);     index=index+dlc_f;
@@ -1248,11 +1254,11 @@ void MOBILE::receive_data_loop()
                             float imu_gyr_x=0.0, imu_gyr_y=0.0, imu_gyr_z=0.0;
                             float imu_acc_x=0.0, imu_acc_y=0.0, imu_acc_z=0.0;
 
-                            if(robot_type == PduRobotType::S100)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
                             {
                                 state = _buf[index];     index=index+dlc;
                             }
-                            else if(robot_type == PduRobotType::D400 || robot_type == PduRobotType::MECANUM)
+                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_D400 || robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 memcpy(&q0, &_buf[index], dlc_f);      index=index+dlc_f;
                                 memcpy(&q1, &_buf[index], dlc_f);      index=index+dlc_f;
@@ -1269,7 +1275,7 @@ void MOBILE::receive_data_loop()
                             }
 
                             uint8_t inter_lock_state;
-                            if(robot_type == PduRobotType::MECANUM)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 inter_lock_state = _buf[index];     index=index+dlc;
                             }
@@ -1295,7 +1301,7 @@ void MOBILE::receive_data_loop()
                             unsigned short _tabos_ae;
 
 
-                            if(robot_type == PduRobotType::SAFETY)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 memcpy(&lidar_field, &_buf[index], dlc);                index=index+dlc;
                                 memcpy(&ref_dps_0, &_buf[index], dlc_s);                index=index+dlc_s;
@@ -1394,7 +1400,7 @@ void MOBILE::receive_data_loop()
                             mobile_status.charge_state = charge_state;
                             mobile_status.power_state = power_state;
 
-                            if(robot_type == PduRobotType::SAFETY)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 mobile_status.motor_stop_state = !(safety_emo_pressed_1||safety_emo_pressed_2);
                             }
@@ -1525,7 +1531,7 @@ void MOBILE::receive_data_loop()
                             QString mobile_pose_str   = "[MOBILE_POSE]";
                             QString mobile_status_str = "[MOBILE_STATUS]";
 
-                            if(robot_type == PduRobotType::S100)
+                            if(robot_type == RobotType_PDU::ROBOT_TYPE_S100)
                             {
 
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
@@ -1542,7 +1548,7 @@ void MOBILE::receive_data_loop()
                                                           mobile_status.power, mobile_status.total_power,
                                                           mobile_status.core_temp0, mobile_status.core_temp1, mobile_status.state);
                             }
-                            else if(robot_type == PduRobotType::D400 || robot_type == PduRobotType::SAFETY)
+                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_D400 || robot_type == RobotType_PDU::ROBOT_TYPE_SAFETY)
                             {
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                                           mobile_pose.t,
@@ -1579,7 +1585,7 @@ void MOBILE::receive_data_loop()
                                             mobile_status.safety_state_bumper_stop_1,         mobile_status.safety_state_bumper_stop_2,
                                             mobile_status.lidar_field);
                             }
-                            else if(robot_type == PduRobotType::MECANUM)
+                            else if(robot_type == RobotType_PDU::ROBOT_TYPE_MECANUM)
                             {
                                 mobile_pose_str.sprintf("[MOBILE_POSE]\nt:%.3f\npos:%.2f,%.2f,%.2f\nvel:%.2f, %.2f, %.2f\ncmd:%.2f, %.2f, %.2f",
                                                           mobile_pose.t,
@@ -2603,7 +2609,7 @@ void MOBILE::robot_initialize()
     }
 }
 
-void MOBILE::request_robot_pdu_info()
+void MOBILE::robot_request()
 {
     std::vector<uchar> send_byte(25, 0);
     send_byte[0] = 0x24;

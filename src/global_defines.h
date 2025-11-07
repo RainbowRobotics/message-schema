@@ -2,6 +2,7 @@
 #define GLOBAL_DEFINES_H
 
 // OpenMP
+#include <omp.h>
 
 // linux native
 #include <sys/timerfd.h>
@@ -22,55 +23,105 @@
 #include <variant>
 
 // tbb
+#include <tbb/concurrent_queue.h>
 #include <tbb/concurrent_vector.h>
 
 // vtk
 #include <QVTKOpenGLNativeWidget.h>
+#include <vtkCamera.h>
+#include <vtkCubeSource.h>
+#include <vtkDataObjectToTable.h>
+#include <vtkElevationFilter.h>
+#include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkNamedColors.h>
+#include <vtkNew.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkQtTableView.h>
+#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
+#include <vtkSphereSource.h>
+#include <vtkVersion.h>
+#include <vtkWindowToImageFilter.h>
 
 // pcl
+#include <pcl/point_types.h>
+#include <pcl/common/common.h>
 #include <pcl/common/transforms.h>
+#include <pcl/geometry/mesh_base.h>
+#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/features/moment_of_inertia_estimation.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/obj_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/filter.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/search/kdtree.h>
 
 
 // Eigen
 #include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 Q_DECLARE_METATYPE(Eigen::Matrix4d)
 
 // sophus
 #define SOPHUS_USE_BASIC_LOGGING
 #include <sophus/geometry.hpp>
+#include <sophus/se3.hpp>
+#include <sophus/interpolate.hpp>
 
 // opencv
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
+#include "cv_to_qt.h"
 
 // nanoflann
 #include "nanoflann.hpp"
 
 // octomap
 #include <octomap/octomap.h>
+#include <octomap/math/Utils.h>
 
 // pseudo color
+#include "tinycolormap.hpp"
 
 // pdal
 #include <pdal/PointTable.hpp>
 #include <pdal/PointView.hpp>
+#include <pdal/Dimension.hpp>
 #include <pdal/Options.hpp>
+#include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasWriter.hpp>
+#include <pdal/io/LasReader.hpp>
+#include <pdal/StageFactory.hpp>
 
 // spdlog
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 
 // std::error code
 #include <system_error>
 
 // qt
 #include <QApplication>
+#include <QStandardPaths>
+#include <QDateTime>
+#include <QDir>
+#include <QFileDialog>
 #include <QFileInfo>
+#include <QTextStream>
 #include <QInputDialog>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QTableWidget>
+#include <QHeaderView>
 #include <QtConcurrent/QtConcurrent>
 
 // defines
@@ -112,15 +163,6 @@ enum class RobotType
     NONE
 };
 
-enum class FootState
-{
-    IDLE     = 0,
-    INIT     = 1,
-    MOVING   = 2,
-    EMO_STOP = 3,
-    DONE     = 4,
-};
-
 enum class RobotModel
 {
     S100,
@@ -134,178 +176,81 @@ enum class RobotModel
     NONE
 };
 
-enum class WheelType
+enum FOOT_STATE
 {
-    UNKNOWN      = 0,
-    DIFFERENTIAL = 1,
-    QUAD         = 2,
-    MECANUM      = 3
+    FOOT_STATE_IDLE = 0,         // 정지 상태
+    FOOT_STATE_INIT,            // 시작 준비 or 초기화
+    FOOT_STATE_MOVING ,       // 위로 이동 동작 수행 중
+    FOOT_STATE_EMO_STOP ,       // 비상정지
+    FOOT_STATE_DONE      // 이동 동작 완료
 };
 
-enum class BatteryType
+enum OPEARATION_MODE_STATE
 {
-    NO_COMM  = 0,
-    TABOS    = 1,
-    XNERGY   = 2,
+    MOBILE_POWER_OFF        = 0,
+    MOBILE_MAIN_POWER_UP    = 1,
+    MOBILE_PC_POWER_UP      = 2,
+    MOBILE_ROBOT_POWER_OFF  = 3,
+    MOBILE_ROBOT_INITIALIZE = 4,
+    MOBILE_NORMAL_OP        = 5,
+    MOBILE_NORMAL_OP_AUTO   = 6,
+    MOBILE_NORMAL_OP_MANUAL = 7,
+    MOBILE_NORMAL_LOW_BAT   = 8,
+    MOBILE_OPERATIONL_STOP  = 9,
+    MOBILE_CHARGING         = 10,
+    MOBILE_CONFIGURATION    = 11,
 };
 
-enum class PduOperationState
+enum ROBOT_INITIALZATION_STATE
 {
-    OFF              = 0,
-    MAIN_POWER_UP    = 1,
-    PC_POWER_UP      = 2,
-    ROBOT_POWER_OFF  = 3,
-    ROBOT_INITIALIZE = 4,
-    NORMAL_OP        = 5,
-    NORMAL_OP_AUTO   = 6,
-    NORMAL_OP_MANUAL = 7,
-    NORMAL_LOW_BAT   = 8,
-    OPERATIONL_STOP  = 9,
-    CHARGING         = 10,
-    CONFIGURATION    = 11,
-};
-// conversion map (std::string to PduOperationState)
-inline static const std::map<PduOperationState, QString> pdu_operation_state_to_string =
-{
-    {PduOperationState::OFF,              "POWER_OFF"},
-    {PduOperationState::MAIN_POWER_UP,    "MAIN_POWER_UP"},
-    {PduOperationState::PC_POWER_UP,      "PC_POWER_UP"},
-    {PduOperationState::ROBOT_POWER_OFF,  "ROBOT_POWER_OFF"},
-    {PduOperationState::ROBOT_INITIALIZE, "ROBOT_INITIALIZE"},
-    {PduOperationState::NORMAL_OP,        "NORMAL_OP"},
-    {PduOperationState::NORMAL_OP_AUTO,   "NORMAL_OP_AUTO"},
-    {PduOperationState::NORMAL_OP_MANUAL, "NORMAL_OP_MANUAL"},
-    {PduOperationState::NORMAL_LOW_BAT,   "NORMAL_LOW_BAT"},
-    {PduOperationState::OPERATIONL_STOP,  "OPERATIONL_STOP"},
-    {PduOperationState::CHARGING,         "CHARGING"},
-    {PduOperationState::CONFIGURATION,    "CONFIGURATION"},
+    MOBILE_RI_IDLE          = 0,
+    MOBILE_RI_SAFETY_CHECK  = 1,
+    MOBILE_RI_POWER_ON      = 2,
+    MOBILE_RI_POWER_CHECK   = 3,
+    MOBILE_RI_MOTOR_INIT    = 4,
+    MOBILE_RI_MOTOR_CHECK   = 5,
+    MOBILE_RI_DONE          = 6,
+    MOBILE_RI_FAIL          = 7,
 };
 
-enum class PduInitializationState
+enum DOCKING_CHARGE_STATE
 {
-    IDLE          = 0,
-    SAFETY_CHECK  = 1,
-    POWER_ON      = 2,
-    POWER_CHECK   = 3,
-    MOTOR_INIT    = 4,
-    MOTOR_CHECK   = 5,
-    DONE          = 6,
-    FAIL          = 7,
-};
-// conversion map (PduInitializationState to QString)
-inline static const std::unordered_map<PduInitializationState, QString> pdu_initialization_state_to_string =
-{
-    {PduInitializationState::IDLE,         "RI_IDLE"},
-    {PduInitializationState::SAFETY_CHECK, "RI_SAFETY_CHECK"},
-    {PduInitializationState::POWER_ON,     "RI_POWER_ON"},
-    {PduInitializationState::POWER_CHECK,  "RI_POWER_CHECK"},
-    {PduInitializationState::MOTOR_INIT,   "RI_MOTOR_INIT"},
-    {PduInitializationState::MOTOR_CHECK,  "RI_MOTOR_CHECK"},
-    {PduInitializationState::DONE,         "RI_DONE"},
-    {PduInitializationState::FAIL,         "RI_FAIL"},
+    CHARGE_STATE_IDLE=0,
+    CHARGE_STATE_TRIG_TO_CHARGE,
+    CHARGE_STATE_BATTERY_ON,
+    CHARGE_STATE_CHARGING,
+    CHARGE_STATE_TRIG_TO_STOP_CHARGE,
+    CHARGE_STATE_FAIL,
 };
 
-enum class ChargeState
+enum AUTO_FSM_STATE
 {
-    IDLE                = 0,
-    TRIG_TO_CHARGE      = 1,
-    BATTERY_ON          = 2,
-    CHARGING            = 3,
-    TRIG_TO_STOP_CHARGE = 4,
-    FAIL                = 5,
-};
-// conversion map (ChargeState to QString)
-inline static const std::unordered_map<ChargeState, QString> charge_state_to_string =
-{
-    {ChargeState::IDLE,                "CHARGE_IDLE"},
-    {ChargeState::TRIG_TO_CHARGE,      "CHARGE_TRIG"},
-    {ChargeState::BATTERY_ON,          "CHARGE_BATTERY_ON"},
-    {ChargeState::CHARGING,            "CHARGING"},
-    {ChargeState::TRIG_TO_STOP_CHARGE, "CHARGE_FINISH"},
-    {ChargeState::FAIL,                "CHARGE_FAILED"},
+    AUTO_FSM_FIRST_ALIGN = 0,
+    AUTO_FSM_DRIVING,
+    AUTO_FSM_FINAL_ALIGN,
+    AUTO_FSM_OBS,
+    AUTO_FSM_COMPLETE,    
+    AUTO_FSM_DOCKING,
+    AUTO_FSM_PAUSE,    
 };
 
-enum class AutoFsmState
+enum LED_STATE
 {
-    FIRST_ALIGN = 0,
-    DRIVING     = 1,
-    FINAL_ALIGN = 2,
-    OBS         = 3,
-    COMPLETE    = 4,
-    FAIL        = 5,
-};
-// conversion map (std::string to AutoFsmState)
-inline static const std::unordered_map<AutoFsmState, QString> auto_state_to_string =
-{
-    {AutoFsmState::FIRST_ALIGN,  "FIRST_ALIGN"},
-    {AutoFsmState::DRIVING,      "DRIVING"},
-    {AutoFsmState::FINAL_ALIGN,  "FINAL_ALIGN"},
-    {AutoFsmState::OBS,          "OBS"},
-    {AutoFsmState::COMPLETE,     "COMPLETE"},
-    {AutoFsmState::FAIL,         "FAIL"},
-};
-
-enum class LedState
-{
-    OFF                 = 0,
-    RED                 = 1,
-    GREEN               = 2,
-    WHITE               = 3,
-    BLUE                = 4,
-    YELLOW              = 5,
-    MAGENTA             = 6,
-    RED_BLINK           = 7,
-    GREEN_BLINK         = 8,
-    WHITE_BLINK         = 9,
-    BLUE_BLINK          = 10,
-    YELLOW_BLINK        = 11,
-    RIGHT_YELLOW_BLINK  = 12,
-    LEFT_YELLOW_BLINK   = 13,
-    MAGENTA_BLINK       = 14,
-};
-// conversion map (std::string to LedState)
-inline static const std::map<std::string, LedState> led_state_table =
-{
-    {"none",          LedState::OFF},
-    {"red",           LedState::RED},
-    {"blue",          LedState::BLUE},
-    {"white",         LedState::WHITE},
-    {"green",         LedState::GREEN},
-    {"magenta",       LedState::MAGENTA},
-    {"yellow",        LedState::YELLOW},
-    {"red blink",     LedState::RED_BLINK},
-    {"blue blink",    LedState::BLUE_BLINK},
-    {"white blink",   LedState::WHITE_BLINK},
-    {"green blink",   LedState::GREEN_BLINK},
-    {"magenta blink", LedState::MAGENTA_BLINK},
-    {"yellow blink",  LedState::YELLOW_BLINK}
-};
-
-enum ROBOT_OPERATION_STATE
-{
-    //for safety
-    SM_OM_POWER_OFF         = 0,
-    SM_OM_MAIN_POWER_UP     = 1,
-    SM_OM_PC_POWER_UP       = 2,
-    SM_OM_ROBOT_POWER_OFF   = 3,
-    SM_OM_ROBOT_INITIALIZE  = 4,
-    SM_OM_NORMAL_OP         = 5,
-    SM_OM_NORMAL_OP_AUTO    = 6,
-    SM_OM_NORMAL_OP_MANUAL  = 7,
-    SM_OM_NORMAL_LOW_BAT    = 8,
-    SM_OM_OPERATIONAL_STOP  = 9,
-    SM_OM_CHARGING          = 10,
-    SM_OM_CONFIGURATION     = 11,
-};
-
-enum CHARGING_STATION_STATE
-{
-    CHARGING_STATION_IDLE                 = 0,
-    CHARGING_STATION_TRIG_TO_CHARGE       = 1,
-    CHARGING_STATION_BATTERY_ON           = 2,
-    CHARGING_STATION_CHARGING             = 3,
-    CHARGING_STATION_CHARGE_FINISH  = 4,
-    CHARGING_STATION_FAIL                 = 5,
+    LED_OFF = 0,
+    LED_RED,
+    LED_GREEN,
+    LED_WHITE,
+    LED_BLUE,
+    LED_YELLOW,
+    LED_MAGENTA,
+    LED_RED_BLINK,
+    LED_GREEN_BLINK,
+    LED_WHITE_BLINK,
+    LED_BLUE_BLINK,
+    LED_YELLOW_BLINK,
+    LED_RIGHT_YELLOW_BLINK,
+    LED_LEFT_YELLOW_BLINK,
+    LED_MAGENTA_BLINK,
 };
 
 enum SAFETY_LED_STATE
@@ -361,6 +306,13 @@ enum OBS_STATE
     OBS_VIR  = 2,
 };
 
+enum LOCAL_PATH_STATE
+{
+    LOCAL_PATH_IDLE = 0,
+    LOCAL_PATH_REQUEST,
+    LOCAL_PATH_BUSY,
+};
+
 enum TASK_FSM_STATE
 {
     TASK_IDLE = 0,
@@ -389,6 +341,39 @@ enum MOTOR_ERROR_STATE
     MOTOR_ERR_IN  = 32,
     MOTOR_ERR_PSI = 64,
     MOTOR_ERR_NON = 128,
+};
+
+enum ROBOT_OPERATING_MODE
+{
+    ROBOT_AUTO_MODE     =0,
+    ROBOT_JOYSTICK_MODE =1,
+};
+
+enum ROBOT_OPERATION_STATE
+{
+    //for safety
+    SM_OM_POWER_OFF         = 0,
+    SM_OM_MAIN_POWER_UP     = 1,
+    SM_OM_PC_POWER_UP       = 2,
+    SM_OM_ROBOT_POWER_OFF   = 3,
+    SM_OM_ROBOT_INITIALIZE  = 4,
+    SM_OM_NORMAL_OP         = 5,
+    SM_OM_NORMAL_OP_AUTO    = 6,
+    SM_OM_NORMAL_OP_MANUAL  = 7,
+    SM_OM_NORMAL_LOW_BAT    = 8,
+    SM_OM_OPERATIONAL_STOP  = 9,
+    SM_OM_CHARGING          = 10,
+    SM_OM_CONFIGURATION     = 11,
+};
+
+enum CHARGING_STATION_STATE
+{
+    CHARGING_STATION_IDLE                 = 0,
+    CHARGING_STATION_TRIG_TO_CHARGE       = 1,
+    CHARGING_STATION_BATTERY_ON           = 2,
+    CHARGING_STATION_CHARGING             = 3,
+    CHARGING_STATION_CHARGE_FINISH  = 4,
+    CHARGING_STATION_FAIL                 = 5,
 };
 
 enum SEMIAUTOINIT_STATE
@@ -491,8 +476,6 @@ enum class DriveDir
     FORWARD,
     REVERSE
 };
-
-
 
 // structure
 struct TIME_IMG
