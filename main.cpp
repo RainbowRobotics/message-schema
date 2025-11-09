@@ -29,35 +29,25 @@ int main() {
         return 0;
     }std::this_thread::sleep_for(0.5s);
 
-    std::cout<<"?1"<<std::endl;
-
     if(!rb_system::initialize(SYSTEM_NAME, 2)){
         LOG_ERROR("FAIL to initialize rb_system");
         return 0;
     }std::this_thread::sleep_for(0.5s);
-
-    std::cout<<"?2"<<std::endl;
 
     if(!rb_daemon::initialize(SYSTEM_NAME)){
         LOG_ERROR("FAIL to initialize rb_daemon");
         return 0;
     }std::this_thread::sleep_for(0.5s);
 
-    std::cout<<"?3"<<std::endl;
-
     if(!rb_motion::initialize()){
         LOG_ERROR("FAIL to initialize rb_motion");
         return 0;
     }std::this_thread::sleep_for(0.5s);
-
-    std::cout<<"?4"<<std::endl;
     
     if(!rb_ipc::initialize(SYSTEM_NAME, 3)){
         LOG_ERROR("FAIL to initialize rb_ipc");
         return 0;
     }std::this_thread::sleep_for(0.5s);
-
-    std::cout<<"?5"<<std::endl;
 
     if(!rb_joystick::initialize(SYSTEM_NAME, 3)){
         LOG_ERROR("FAIL to initialize rb_joystick");
