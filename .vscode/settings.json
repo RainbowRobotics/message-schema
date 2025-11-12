@@ -58,6 +58,9 @@
     "span": "cpp",
     "*.inc": "cpp"
   },
+  "files.exclude": {
+    "**/__pycache__": true
+  },
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/backend/services/manipulate",
@@ -76,6 +79,6 @@
     "source.fixAll.ruff",
     "source.organizeImports.ruff"
   ],
-  "editor.tabSize": 2,
+  "editor.tabSize": 4,
   "files.eol": "\n"
 }

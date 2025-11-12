@@ -328,29 +328,53 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Save_Tool_List_ParaT(object):
 
     # Request_Save_Tool_List_ParaT
-    def __init__(self):
-        self.toolNo = 0  # type: int
-        self.toolName = None  # type: str
-        self.tcpX = 0.0  # type: float
-        self.tcpY = 0.0  # type: float
-        self.tcpZ = 0.0  # type: float
-        self.tcpRx = 0.0  # type: float
-        self.tcpRy = 0.0  # type: float
-        self.tcpRz = 0.0  # type: float
-        self.massM = 0.0  # type: float
-        self.massX = 0.0  # type: float
-        self.massY = 0.0  # type: float
-        self.massZ = 0.0  # type: float
-        self.boxType = 0  # type: int
-        self.boxPara0 = 0.0  # type: float
-        self.boxPara1 = 0.0  # type: float
-        self.boxPara2 = 0.0  # type: float
-        self.boxPara3 = 0.0  # type: float
-        self.boxPara4 = 0.0  # type: float
-        self.boxPara5 = 0.0  # type: float
-        self.boxPara6 = 0.0  # type: float
-        self.boxPara7 = 0.0  # type: float
-        self.boxPara8 = 0.0  # type: float
+    def __init__(
+        self,
+        toolNo = 0,
+        toolName = None,
+        tcpX = 0.0,
+        tcpY = 0.0,
+        tcpZ = 0.0,
+        tcpRx = 0.0,
+        tcpRy = 0.0,
+        tcpRz = 0.0,
+        massM = 0.0,
+        massX = 0.0,
+        massY = 0.0,
+        massZ = 0.0,
+        boxType = 0,
+        boxPara0 = 0.0,
+        boxPara1 = 0.0,
+        boxPara2 = 0.0,
+        boxPara3 = 0.0,
+        boxPara4 = 0.0,
+        boxPara5 = 0.0,
+        boxPara6 = 0.0,
+        boxPara7 = 0.0,
+        boxPara8 = 0.0,
+    ):
+        self.toolNo = toolNo  # type: int
+        self.toolName = toolName  # type: Optional[str]
+        self.tcpX = tcpX  # type: float
+        self.tcpY = tcpY  # type: float
+        self.tcpZ = tcpZ  # type: float
+        self.tcpRx = tcpRx  # type: float
+        self.tcpRy = tcpRy  # type: float
+        self.tcpRz = tcpRz  # type: float
+        self.massM = massM  # type: float
+        self.massX = massX  # type: float
+        self.massY = massY  # type: float
+        self.massZ = massZ  # type: float
+        self.boxType = boxType  # type: int
+        self.boxPara0 = boxPara0  # type: float
+        self.boxPara1 = boxPara1  # type: float
+        self.boxPara2 = boxPara2  # type: float
+        self.boxPara3 = boxPara3  # type: float
+        self.boxPara4 = boxPara4  # type: float
+        self.boxPara5 = boxPara5  # type: float
+        self.boxPara6 = boxPara6  # type: float
+        self.boxPara7 = boxPara7  # type: float
+        self.boxPara8 = boxPara8  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

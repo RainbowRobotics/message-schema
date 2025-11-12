@@ -1,0 +1,37 @@
+[project]
+name = "amr"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+description = "Amr Service"
+authors = [
+    { name = "Yujin", email = "yjheo4@rainbow-robotics.com" }
+]
+readme = "README.md"
+
+dependencies = [
+  "rb_utils",
+  "rb_zenoh",
+  "rb_flat_buffers",
+  "rb_socketio",
+  "rb_modules",
+  "rb_schemas",
+  "rb_resources",
+  "rb_database",
+  "fastapi>=0.116.1,<0.117.0",
+  "uvicorn[standard]>=0.35.0,<0.36.0",
+  "python-dotenv>=1.1.1,<2.0.0",
+  "pyinstaller>=6.15.0",
+]
+
+[tool.uv.sources]
+rb_utils = { workspace = true }
+rb_zenoh = { workspace = true }
+rb_flat_buffers = { workspace = true }
+rb_socketio = { workspace = true }
+rb_modules = { workspace = true }
+rb_schemas = { workspace = true }
+rb_resources = { workspace = true }
+rb_database = { workspace = true }
+
+[tool.ruff]
+line-length = 120

@@ -1,0 +1,15 @@
+namespace SLAMNAV;
+
+table Request_Update {
+    version: string;
+}
+
+table Response_Update {
+    version: string;
+    result: string;
+    message: string;
+}
+
+table Request_Version {
+}
+

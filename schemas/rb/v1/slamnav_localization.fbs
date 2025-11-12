@@ -1,0 +1,20 @@
+namespace SLAMNAV;
+
+table Request_Localization {
+    id: string;
+    command: string;
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+}
+table Response_Localization {
+    id: string;
+    command: string;
+    x: float;
+    y: float;
+    z: float;
+    rz: float;
+    result: string;
+    message: string;
+}

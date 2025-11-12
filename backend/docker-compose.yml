@@ -1,5 +1,25 @@
 
 services:
+  amr:
+    build:
+      dockerfile: Dockerfile.prod
+    image: rrs-fastapi:latest
+    container_name: amr-service
+    profiles: [amr, all]
+    environment:
+      - SERVICE=amr
+      - PORT=8007
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    network_mode: host
+    ipc: host
+    env_file:
+      - ./services/amr/config.env
+    volumes:
+      - ./services/amr/amr.arm64.bin:/amr.arm64.bin
+      - ./services/amr/amr.amd64.bin:/amr.amd64.bin
+
   common:
     build:
       dockerfile: Dockerfile.prod

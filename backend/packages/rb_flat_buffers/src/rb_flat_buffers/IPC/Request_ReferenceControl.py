@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_ReferenceControlT(object):
 
     # Request_ReferenceControlT
-    def __init__(self):
-        self.refcontrolOption = 0  # type: int
+    def __init__(
+        self,
+        refcontrolOption = 0,
+    ):
+        self.refcontrolOption = refcontrolOption  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

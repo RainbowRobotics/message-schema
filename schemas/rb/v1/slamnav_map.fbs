@@ -1,0 +1,105 @@
+namespace SLAMNAV;
+
+table Request_Map_Load {
+    id: string;
+    map_name: string;
+}
+table Response_Map_Load {
+    id: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Map_List {
+    id: string;
+}
+table Response_Map_List {
+    id: string;
+    list: [string];
+    result: string;
+    message: string;
+}
+
+//------------------------------------
+
+table Request_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Map_File {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
+    size: uint32;
+    data: [ubyte];
+}
+table Request_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+}
+table Response_Map_Cloud {
+    id: string;
+    map_name: string;
+    file_name: string;
+    result: string;
+    message: string;
+    size: int;
+    data: [double];
+}
+table Node {
+    id: string;
+    name: string;
+    pose: [double];
+    info: string;
+    links: [string];
+    type: string;
+}
+
+table Request_Map_Topology {
+    id: string;
+    map_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+}
+table Response_Map_Topology {
+    id: string;
+    map_name: string;
+    page_no: int;
+    page_size: int;
+    total_page: int;
+    node_type: string;
+    search_text: string;
+    sort_option: string;
+    sort_direction: string;
+    result: string;
+    message: string;
+    data: [Node];
+}
+table Request_Map_Tiles {}
+table Response_Map_Tiles {}
+
+table Request_Mapping {
+    id: string;
+    command: string;
+    map_name: string;
+}
+table Response_Mapping {
+    id: string;
+    command: string;
+    map_name: string;
+    result: string;
+    message: string;
+}
+
