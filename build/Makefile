@@ -886,6 +886,54 @@ rb_service/shareddata.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.s
 .PHONY : rb_service/shareddata.cpp.s
 
+rb_service/socket_server/command_server.o: rb_service/socket_server/command_server.cpp.o
+.PHONY : rb_service/socket_server/command_server.o
+
+# target to build an object file
+rb_service/socket_server/command_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o
+.PHONY : rb_service/socket_server/command_server.cpp.o
+
+rb_service/socket_server/command_server.i: rb_service/socket_server/command_server.cpp.i
+.PHONY : rb_service/socket_server/command_server.i
+
+# target to preprocess a source file
+rb_service/socket_server/command_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.i
+.PHONY : rb_service/socket_server/command_server.cpp.i
+
+rb_service/socket_server/command_server.s: rb_service/socket_server/command_server.cpp.s
+.PHONY : rb_service/socket_server/command_server.s
+
+# target to generate assembly for a file
+rb_service/socket_server/command_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.s
+.PHONY : rb_service/socket_server/command_server.cpp.s
+
+rb_service/socket_server/data_server.o: rb_service/socket_server/data_server.cpp.o
+.PHONY : rb_service/socket_server/data_server.o
+
+# target to build an object file
+rb_service/socket_server/data_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o
+.PHONY : rb_service/socket_server/data_server.cpp.o
+
+rb_service/socket_server/data_server.i: rb_service/socket_server/data_server.cpp.i
+.PHONY : rb_service/socket_server/data_server.i
+
+# target to preprocess a source file
+rb_service/socket_server/data_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.i
+.PHONY : rb_service/socket_server/data_server.cpp.i
+
+rb_service/socket_server/data_server.s: rb_service/socket_server/data_server.cpp.s
+.PHONY : rb_service/socket_server/data_server.s
+
+# target to generate assembly for a file
+rb_service/socket_server/data_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rb_program.dir/build.make CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s
+.PHONY : rb_service/socket_server/data_server.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -989,6 +1037,12 @@ help:
 	@echo "... rb_service/shareddata.o"
 	@echo "... rb_service/shareddata.i"
 	@echo "... rb_service/shareddata.s"
+	@echo "... rb_service/socket_server/command_server.o"
+	@echo "... rb_service/socket_server/command_server.i"
+	@echo "... rb_service/socket_server/command_server.s"
+	@echo "... rb_service/socket_server/data_server.o"
+	@echo "... rb_service/socket_server/data_server.i"
+	@echo "... rb_service/socket_server/data_server.s"
 .PHONY : help
 
 

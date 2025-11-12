@@ -223,4 +223,5 @@ rb_session/CMakeFiles/rb_session.dir/zenoh_backend.cpp.o: \
  /usr/include/c++/12/mutex /usr/include/c++/12/bits/chrono.h \
  /usr/include/c++/12/ratio /usr/include/c++/12/limits \
  /usr/include/c++/12/ctime /usr/include/c++/12/bits/parse_numbers.h \
- /usr/include/c++/12/bits/unique_lock.h
+ /usr/include/c++/12/bits/unique_lock.h /usr/include/c++/12/iostream \
+ /usr/include/c++/12/istream /usr/include/c++/12/bits/istream.tcc

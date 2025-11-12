@@ -1,0 +1,653 @@
+#define P_NAME  "COMMAND_SERVER"
+
+#include <arpa/inet.h>
+#include <netinet/tcp.h> // TCP_KEEPALIVE 옵션용
+
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include <regex>
+#include <atomic>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <chrono>
+
+#include "common.h"
+#include "command_server.h"
+
+#include "rb_core/system.h"
+#include "rb_motion/motion.h"
+
+#define ADD_CMD_HANDLER(name, ...) \
+    { name, [](const std::vector<std::string>& a) -> int { \
+        std::cout << "[SCS] Executing command: " << name << std::endl; \
+        __VA_ARGS__; \
+    }}
+
+#define MAX_CLIENTS 5
+#define MAX_EVENTS 64
+#define EPOLL_TIMEOUT_MS 100 // epoll_wait timeout (ms)
+
+namespace rb_socket_command_server {
+    namespace {
+        std::atomic<bool> running(false);
+        int listen_port = 0;
+        int event_fd = -1;
+        pthread_t server_thread;
+
+        struct ClientInfo {
+            int fd;
+            std::string ip;
+            std::string buffer; // partial recv buffer
+        };
+        std::unordered_map<int, ClientInfo> clients;
+
+        std::mutex clients_mutex;
+
+        // =============================
+        // 🔹 Non-blocking 설정
+        // =============================
+        static int set_nonblocking(int fd) {
+            int flags = fcntl(fd, F_GETFL, 0);
+            if (flags == -1) return -1;
+            return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        }
+
+        // =============================
+        // 🔹 TCP KeepAlive 설정 추가
+        // =============================
+        void enable_tcp_keepalive(int sockfd) {
+            int optval;
+            socklen_t optlen = sizeof(optval);
+
+            // 기본 keepalive 활성화
+            optval = 1;
+            if (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) == -1) {
+                perror("setsockopt(SO_KEEPALIVE)");
+            }
+
+#ifdef TCP_KEEPIDLE
+            // 10초 동안 트래픽 없으면 keepalive 시작
+            optval = 10;
+            if (setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPIDLE, &optval, optlen) == -1) {
+                perror("setsockopt(TCP_KEEPIDLE)");
+            }
+#endif
+
+#ifdef TCP_KEEPINTVL
+            // 실패한 keepalive 재시도 간격 5초
+            optval = 5;
+            if (setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPINTVL, &optval, optlen) == -1) {
+                perror("setsockopt(TCP_KEEPINTVL)");
+            }
+#endif
+
+#ifdef TCP_KEEPCNT
+            // 최대 3번 시도 후 연결 끊음
+            optval = 3;
+            if (setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPCNT, &optval, optlen) == -1) {
+                perror("setsockopt(TCP_KEEPCNT)");
+            }
+#endif
+        }
+
+        // =============================
+        // 🔹 클라이언트 종료 처리
+        // =============================
+        void close_client(int epfd, int fd) {
+            std::cout << "[SCS] Closing client fd: " << fd << std::endl;
+            epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr);
+            close(fd);
+            std::lock_guard<std::mutex> lk(clients_mutex);
+            clients.erase(fd);
+        }
+
+        // =============================
+        // 🔹 명령 처리
+        // =============================
+        static void parse_command(const std::string &input, std::string &func_name, std::vector<std::string> &args) {
+            func_name.clear();
+            args.clear();
+
+            std::string cmd = input;
+            cmd.erase(std::remove_if(cmd.begin(), cmd.end(), ::isspace), cmd.end());
+
+            auto open = cmd.find('(');
+            auto close = cmd.find(')');
+            if (open == std::string::npos || close == std::string::npos || close <= open) {
+                func_name = cmd;
+                return;
+            }
+
+            func_name = cmd.substr(0, open);
+            std::string arg_str = cmd.substr(open + 1, close - open - 1);
+
+            std::stringstream ss(arg_str);
+            std::string arg;
+            while (std::getline(ss, arg, ',')) {
+                args.push_back(arg);
+            }
+        }
+
+        // 🔹 디스패처: 함수명 → 실제 동작
+        static int execute_command(const std::string &func, const std::vector<std::string> &args) {
+            static const std::unordered_map<std::string, std::function<int(const std::vector<std::string>&)>> dispatch = {
+                // -----------------------------------------------------------------------
+                // BOX
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_side_dout", {
+                    if (a.size() == 2){
+                        return rb_system::Set_Digital_Output(std::stoi(a[0]), std::stoi(a[1]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_side_aout", {
+                    if (a.size() == 2){
+                        return rb_system::Set_Analog_Output(std::stoi(a[0]), std::stof(a[1]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                // -----------------------------------------------------------------------
+                // Servo
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_powercontrol", {
+                    if (a.size() == 1){
+                        int input_val = std::stoi(a[0]);
+                        int return_val = 0;
+                        if(input_val == 1){
+                            return_val = rb_system::Set_Power(rb_system::PowerOption::On, false);
+                        }else{
+                            return_val = rb_system::Set_Power(rb_system::PowerOption::Off, false);
+                        }
+                        return return_val;
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_servocontrol", {
+                    if (a.size() == 1){
+                        return rb_system::Set_Servo(std::stoi(a[0]), 1);
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_referencecontrol", {
+                    if (a.size() == 1){
+                        return rb_system::Set_ReferenceOnOff(std::stoi(a[0]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+
+                // -----------------------------------------------------------------------
+                // Flow
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_speedbar", {
+                    if (a.size() == 1){
+                        return rb_system::Set_MoveSpeedBar(std::stof(a[0]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_pause", {
+                    if (a.size() == 0){
+                        return rb_system::Call_MovePause();
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_resume", {
+                    if (a.size() == 0){
+                        return rb_system::Call_MoveResume();
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_reset_outcoll", {
+                    if (a.size() == 0){
+                        return rb_system::Call_Reset_Out_Coll();
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                // -----------------------------------------------------------------------
+                // Set Call
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("set_toollist_num", {
+                    if (a.size() == 1){
+                        return rb_system::Change_Tool_Number(std::stoi(a[0]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_userframe_num", {
+                    if (a.size() == 1){
+                        return rb_system::Change_UserFrame_Number(std::stoi(a[0]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_shift", {
+                    if (a.size() == (NO_OF_JOINT + 4)){
+                        int shift_no = std::stoi(a[0]);
+                        int shift_mode = std::stoi(a[1]);
+                        TARGET_INPUT shift_input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            shift_input.target_value[i] = std::stof(a[i + 2]);
+                        }
+                        shift_input.target_frame  = std::stoi(a[a.size() - 2]);
+                        shift_input.target_unit   = std::stoi(a[a.size() - 1]);
+                        return rb_motion::Set_Motion_Shift(shift_no, shift_mode, shift_input);
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_out_collision_para", {
+                    if (a.size() == 3){
+                        return rb_system::Set_Out_Coll_Para(std::stoi(a[0]), std::stoi(a[1]), std::stof(a[2]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_self_collision_para", {
+                    if (a.size() == 3){
+                        return rb_system::Set_Self_Coll_Para(std::stoi(a[0]), std::stof(a[1]), std::stof(a[2]));
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_joint_impedance", {
+                    if (a.size() == (1 + NO_OF_JOINT * 2)){
+                        int onoff = std::stoi(a[0]);
+                        std::array<float, NO_OF_JOINT> stiffness;
+                        std::array<float, NO_OF_JOINT> torqelimit;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            stiffness[i] = std::stof(a[i + 1]);
+                            torqelimit[i] = std::stof(a[i + 1 + NO_OF_JOINT]);
+                        }
+                        if(onoff == 1){
+                            return rb_system::Set_Joint_Impedance_On(stiffness, torqelimit);
+                        }else{
+                            return rb_system::Set_Joint_Impedance_Off();
+                        }
+                    }else if(a.size() == 3){
+                        int onoff = std::stoi(a[0]);
+                        std::array<float, NO_OF_JOINT> arr_stiffness;
+                        std::array<float, NO_OF_JOINT> arr_torqelimit;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            arr_stiffness[i] = std::stof(a[1]);
+                            arr_torqelimit[i] = std::stof(a[2]);
+                        }
+                        if(onoff == 1){
+                            return rb_system::Set_Joint_Impedance_On(arr_stiffness, arr_torqelimit);
+                        }else{
+                            return rb_system::Set_Joint_Impedance_Off();
+                        }
+                    }else{
+                        return rb_system::Set_Joint_Impedance_Off();
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("set_freedrive", {
+                    if (a.size() == 2){
+                        int onoff = std::stoi(a[0]);
+                        float sensitivity = std::stof(a[1]);
+                        return rb_system::Set_Free_Drive_Mode(onoff, sensitivity);
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                // -----------------------------------------------------------------------
+                // Move Call
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_move_j", {
+                    if (a.size() == (NO_OF_JOINT + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = std::stoi(a[NO_OF_JOINT + 0]);
+                        input.target_unit   = 0;
+
+                        int spd_mode        = std::stoi(a[NO_OF_JOINT + 1]);
+                        float vel_para      = std::stof(a[NO_OF_JOINT + 2]);
+                        float acc_para      = std::stof(a[NO_OF_JOINT + 3]);
+
+                        return rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+                    }else if(a.size() == (NO_OF_JOINT + 2)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_JOINT; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = FRAME_JOINT;
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = std::stof(a[NO_OF_JOINT]);
+                        float acc_para = std::stof(a[NO_OF_JOINT + 1]);
+                        return rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }),
+                ADD_CMD_HANDLER("call_move_l", {
+                    if (a.size() == (NO_OF_CARTE + 4)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = std::stoi(a[NO_OF_CARTE + 0]);
+                        input.target_unit   = 0;
+
+                        int spd_mode        = std::stoi(a[NO_OF_CARTE + 1]);
+                        float vel_para      = std::stof(a[NO_OF_CARTE + 2]);
+                        float acc_para      = std::stof(a[NO_OF_CARTE + 3]);
+
+                        return rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+                    }else if(a.size() == (NO_OF_CARTE + 2)){
+                        TARGET_INPUT input;
+                        for (size_t i = 0; i < NO_OF_CARTE; i++) {
+                            input.target_value[i] = std::stof(a[i]);
+                        }
+                        input.target_frame  = FRAME_GLOBAL;
+                        input.target_unit   = 0;
+
+                        int spd_mode = 0;
+                        float vel_para = std::stof(a[NO_OF_CARTE]);
+                        float acc_para = std::stof(a[NO_OF_CARTE + 1]);
+                        return rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+                    }
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                })
+            };
+
+            auto it = dispatch.find(func);
+            if (it != dispatch.end()) {
+                std::cout<<"[SCS] Found command: " << func << "\n";
+                try {
+                    return it->second(args);
+                } catch (const std::exception &e) {
+                    std::cerr << "[SCS] Exception while executing '" << func << "': " << e.what() << "\n";
+                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                }
+            } else {
+                std::cerr << "[SCS] Unknown command: " << func << "\n";
+                return MSG_NOT_VALID_COMMAND_FORMAT;
+            }
+        }
+        void parse_and_execute(const std::string &cmd, int client_fd) {
+            std::string func;
+            std::vector<std::string> args;
+            parse_command(cmd, func, args);
+
+            int ret = execute_command(func, args);
+
+            std::string response = "return[SCS][" + std::to_string(ret) + "]\n";
+
+            send(client_fd, response.c_str(), response.size(), 0);
+        }
+
+        // =============================
+        // 🔹 클라이언트 데이터 처리
+        // =============================
+        void handle_client_data(int epfd, int fd) {
+            char buf[512];
+            int n = read(fd, buf, sizeof(buf));
+            if (n <= 0) {
+                if (n == 0 || (errno != EAGAIN && errno != EWOULDBLOCK)) {
+                    std::cout << "[SCS] Client disconnected (FD=" << fd << ")" << std::endl;
+                    close_client(epfd, fd);
+                }
+                return;
+            }
+
+            std::lock_guard<std::mutex> lk(clients_mutex);
+            auto &info = clients[fd];
+            info.buffer.append(buf, n);
+
+            size_t start = 0;
+            int paren_level = 0;
+
+            for (size_t i = 0; i < info.buffer.size(); ++i) {
+                char c = info.buffer[i];
+
+                // 공백, 탭 무시
+                if (c == ' ' || c == '\t') continue;
+
+                // 괄호 레벨 계산
+                if (c == '(') paren_level++;
+                else if (c == ')') paren_level--;
+
+                // 명령 종료 조건: 괄호가 닫히거나 종료 문자 발견
+                bool end_of_command = false;
+                if (paren_level == 0) {
+                    if (c == ')' || c == '\n' || c == '\r' || c == '\0') {
+                        end_of_command = true;
+                    }
+                }
+
+                if (end_of_command) {
+                    // 명령어 추출
+                    std::string cmd = info.buffer.substr(start, i - start + 1);
+
+                    // 앞뒤 공백, 개행, 널 제거
+                    size_t first = cmd.find_first_not_of(" \r\n\t\0");
+                    size_t last = cmd.find_last_not_of(" \r\n\t\0");
+                    if (first != std::string::npos && last != std::string::npos)
+                        cmd = cmd.substr(first, last - first + 1);
+                    else
+                        cmd.clear(); // 전부 공백이면 빈 문자열
+
+                    if (!cmd.empty()) {
+                        std::cout << "[SCS] Executing raw: " << cmd << std::endl;
+                        parse_and_execute(cmd, fd);
+                    }
+
+                    start = i + 1; // 다음 명령 시작 위치
+                }
+            }
+
+            // 처리된 부분은 버퍼에서 제거
+            if (start > 0) {
+                info.buffer.erase(0, start);
+            }
+        }
+
+
+
+
+
+        // =============================
+        // 🔹 서버 스레드 본체
+        // =============================
+        void *thread_asciiserver(void *) {
+            int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+            if (listen_fd < 0) {
+                perror("socket");
+                return nullptr;
+            }
+
+            int opt = 1;
+            setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+            sockaddr_in addr{};
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = INADDR_ANY;
+            addr.sin_port = htons(listen_port);
+
+            if (bind(listen_fd, (sockaddr *)&addr, sizeof(addr)) < 0) {
+                perror("bind");
+                close(listen_fd);
+                return nullptr;
+            }
+
+            if (listen(listen_fd, MAX_CLIENTS) < 0) {
+                perror("listen");
+                close(listen_fd);
+                return nullptr;
+            }
+
+            set_nonblocking(listen_fd);
+            event_fd = eventfd(0, EFD_NONBLOCK);
+
+            int epfd = epoll_create1(0);
+            if (epfd == -1) {
+                perror("epoll_create1");
+                close(listen_fd);
+                return nullptr;
+            }
+
+            // epoll 등록
+            {
+                epoll_event ev{};
+                ev.events = EPOLLIN;
+                ev.data.fd = listen_fd;
+                epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &ev);
+            }
+            {
+                epoll_event ev{};
+                ev.events = EPOLLIN;
+                ev.data.fd = event_fd;
+                epoll_ctl(epfd, EPOLL_CTL_ADD, event_fd, &ev);
+            }
+
+            std::vector<epoll_event> events(MAX_EVENTS);
+
+            std::cout << "[SCS] TCP Server started on port " << listen_port << std::endl;
+
+            // ----------------------------
+            // 메인 루프
+            // ----------------------------
+            while (running.load()) {
+                int nfds = epoll_wait(epfd, events.data(), MAX_EVENTS, EPOLL_TIMEOUT_MS);
+                if (nfds == -1) {
+                    if (errno == EINTR) continue;
+                    perror("epoll_wait");
+                    break;
+                }
+
+                for (int i = 0; i < nfds; ++i) {
+                    int fd = events[i].data.fd;
+                    uint32_t evt = events[i].events;
+
+                    // eventfd → 종료 이벤트
+                    if (fd == event_fd) {
+                        uint64_t v;
+                        read(event_fd, &v, sizeof(v));
+                        running.store(false);
+                        break;
+                    }
+
+                    // 새 클라이언트 연결
+                    if (fd == listen_fd) {
+                        while (true) {
+                            sockaddr_in caddr{};
+                            socklen_t clen = sizeof(caddr);
+                            int cfd = accept(listen_fd, (sockaddr *)&caddr, &clen);
+                            if (cfd == -1) {
+                                if (errno == EAGAIN || errno == EWOULDBLOCK)
+                                    break;
+                                perror("accept");
+                                break;
+                            }
+
+                            set_nonblocking(cfd);
+                            enable_tcp_keepalive(cfd); // ✅ KeepAlive 추가
+
+                            char ipbuf[INET_ADDRSTRLEN];
+                            inet_ntop(AF_INET, &caddr.sin_addr, ipbuf, sizeof(ipbuf));
+
+                            epoll_event cev{};
+                            cev.events = EPOLLIN | EPOLLRDHUP;
+                            cev.data.fd = cfd;
+                            epoll_ctl(epfd, EPOLL_CTL_ADD, cfd, &cev);
+
+                            {
+                                std::lock_guard<std::mutex> lk(clients_mutex);
+                                clients.emplace(cfd, ClientInfo{cfd, ipbuf, ""});
+                            }
+
+                            std::cout << "[SCS] Client connected: " << ipbuf << " FD=" << cfd << std::endl;
+                        }
+                        continue;
+                    }
+
+                    // 클라이언트 종료 이벤트
+                    if (evt & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) {
+                        close_client(epfd, fd);
+                        continue;
+                    }
+
+                    // 데이터 수신
+                    if (evt & EPOLLIN) {
+                        // std::cout<<"handle_client_data called"<<std::endl;
+                        handle_client_data(epfd, fd);
+                    }
+                }
+            }
+
+            // ----------------------------
+            // 종료 처리
+            // ----------------------------
+            std::cout << "[SCS] Shutting down..." << std::endl;
+            {
+                std::lock_guard<std::mutex> lk(clients_mutex);
+                for (auto &p : clients) {
+                    epoll_ctl(epfd, EPOLL_CTL_DEL, p.first, nullptr);
+                    close(p.first);
+                }
+                clients.clear();
+            }
+
+            close(event_fd);
+            close(listen_fd);
+            close(epfd);
+
+            std::cout << "[SCS] Server stopped." << std::endl;
+            return nullptr;
+        } // thread_asciiserver
+    } // namespace
+
+    // =============================
+    // 🔹 서버 초기화/종료 API
+    // =============================
+    bool initialize(std::string domain, int th_cpu, int port_no) {
+        running.store(true);
+        listen_port = port_no;
+        if (rb_common::thread_create(thread_asciiserver, th_cpu, ("RB_" + domain + "_SCS"), server_thread, NULL) != 0) {
+            running.store(false);
+            return false;
+        }
+        return true;
+    }
+
+    void shutdown() {
+        running.store(false);
+        if (event_fd != -1) {
+            uint64_t v = 1;
+            write(event_fd, &v, sizeof(v));
+        }
+        pthread_join(server_thread, nullptr);
+    }
+
+    void broadcast(const std::string& message) {
+        std::lock_guard<std::mutex> lk(clients_mutex);
+
+        if (clients.empty()) {
+            std::cout << "[SCS] Broadcast skipped (no clients)" << std::endl;
+            return;
+        }
+
+        std::string msg = message;
+        if (msg.back() != '\n') msg += "\n";  // 클라이언트에서 읽기 편하게 개행 추가
+
+        for (auto it = clients.begin(); it != clients.end();) {
+            int fd = it->first;
+            ssize_t sent = send(fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
+            if (sent == -1) {
+                if (errno == EPIPE || errno == ECONNRESET) {
+                    std::cerr << "[SCS] Removing dead client FD=" << fd << std::endl;
+                    close(fd);
+                    it = clients.erase(it);
+                    continue;
+                }
+            }
+            ++it;
+        }
+
+        std::cout << "[SCS] Broadcasted to " << clients.size() << " clients: " << message << std::endl;
+    }
+} // namespace rb_socket_command_server

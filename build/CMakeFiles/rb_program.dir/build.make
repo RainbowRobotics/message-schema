@@ -489,10 +489,38 @@ CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.s: cmake_for
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.cpp -o CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.s
 
+CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: CMakeFiles/rb_program.dir/flags.make
+CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: /root/Desktop/test_project/rb_service/socket_server/command_server.cpp
+CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o -c /root/Desktop/test_project/rb_service/socket_server/command_server.cpp
+
+CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Desktop/test_project/rb_service/socket_server/command_server.cpp > CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.i
+
+CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_service/socket_server/command_server.cpp -o CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.s
+
+CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: CMakeFiles/rb_program.dir/flags.make
+CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: /root/Desktop/test_project/rb_service/socket_server/data_server.cpp
+CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o -MF CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o.d -o CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o -c /root/Desktop/test_project/rb_service/socket_server/data_server.cpp
+
+CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Desktop/test_project/rb_service/socket_server/data_server.cpp > CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.i
+
+CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Desktop/test_project/rb_service/socket_server/data_server.cpp -o CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.s
+
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: CMakeFiles/rb_program.dir/flags.make
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: /root/Desktop/test_project/rb_motion/rrbdl.cpp
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o: CMakeFiles/rb_program.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o -MF CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o.d -o CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o -c /root/Desktop/test_project/rb_motion/rrbdl.cpp
 
 CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.i: cmake_force
@@ -535,6 +563,8 @@ rb_program_OBJECTS = \
 "CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o" \
+"CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o" \
+"CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o" \
 "CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o"
 
 # External object files for target rb_program
@@ -570,6 +600,8 @@ rb_program: CMakeFiles/rb_program.dir/rb_motion/types/move_speed_l.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o
+rb_program: CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o
+rb_program: CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o
 rb_program: CMakeFiles/rb_program.dir/rb_motion/rrbdl.cpp.o
 rb_program: CMakeFiles/rb_program.dir/build.make
 rb_program: /usr/xenomai/lib/xenomai/bootstrap.o
@@ -681,7 +713,7 @@ rb_program: /usr/lib/x86_64-linux-gnu/libabsl_log_severity.so
 rb_program: /usr/local/lib/libzenohc.so
 rb_program: /usr/local/lib/libflatbuffers.a
 rb_program: CMakeFiles/rb_program.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Linking CXX executable rb_program"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/Desktop/test_project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Linking CXX executable rb_program"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/rb_program.dir/link.txt --verbose=$(VERBOSE)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Stripping binary to reduce size"
 	/usr/bin/strip /root/Desktop/test_project/build/rb_program

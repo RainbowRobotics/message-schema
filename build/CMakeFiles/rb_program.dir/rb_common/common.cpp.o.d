@@ -569,4 +569,5 @@ CMakeFiles/rb_program.dir/rb_common/common.cpp.o: \
  /usr/local/include/rbdl/rbdl_utils.h /usr/include/eigen3/Eigen/Dense \
  /root/Desktop/test_project/rb_common/message.h \
  /root/Desktop/test_project/rb_common/dof.h \
- /root/Desktop/test_project/./rb_ipc/ipc.h
+ /root/Desktop/test_project/./rb_ipc/ipc.h \
+ /root/Desktop/test_project/./rb_service/socket_server/command_server.h

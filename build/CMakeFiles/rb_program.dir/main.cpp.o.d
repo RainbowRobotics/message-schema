@@ -508,4 +508,6 @@ CMakeFiles/rb_program.dir/main.cpp.o: /root/Desktop/test_project/main.cpp \
  /root/Desktop/test_project/rb_service/shareddata.h \
  /root/Desktop/test_project/rb_service/joystick/joystick.h \
  /root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.h \
- /root/Desktop/test_project/rb_service/shareddata.h
+ /root/Desktop/test_project/rb_service/shareddata.h \
+ /root/Desktop/test_project/rb_service/socket_server/command_server.h \
+ /root/Desktop/test_project/rb_service/socket_server/data_server.h

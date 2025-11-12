@@ -87,6 +87,7 @@
         "typeindex": "cpp",
         "any": "cpp",
         "ranges": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "regex": "cpp"
     }
 }

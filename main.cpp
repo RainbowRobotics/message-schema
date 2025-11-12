@@ -12,6 +12,8 @@
 #include "rb_service/shareddata.h"
 #include "rb_service/joystick/joystick.h"
 #include "rb_service/mbus_server/mbustcp_server.h"
+#include "rb_service/socket_server/command_server.h"
+#include "rb_service/socket_server/data_server.h"
 
 extern bool is_save;
 int main() {
@@ -56,6 +58,15 @@ int main() {
 
     if(!rb_mbus_server::initialize(SYSTEM_NAME, 3, 502)){
         LOG_ERROR("FAIL to initialize rb_mbus_server");
+        return 0;
+    }std::this_thread::sleep_for(0.5s);
+
+    if(!rb_socket_command_server::initialize(SYSTEM_NAME, 3, 5000)){
+        LOG_ERROR("FAIL to initialize rb_scs_server");
+        return 0;
+    }std::this_thread::sleep_for(0.5s);
+    if(!rb_socket_data_server::initialize(SYSTEM_NAME, 3, 5001)){
+        LOG_ERROR("FAIL to initialize rb_sds_server");
         return 0;
     }std::this_thread::sleep_for(0.5s);
 

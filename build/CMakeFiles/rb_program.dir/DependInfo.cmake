@@ -39,6 +39,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/root/Desktop/test_project/rb_service/joystick/joystick.cpp" "CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_service/joystick/joystick.cpp.o.d"
   "/root/Desktop/test_project/rb_service/mbus_server/mbustcp_server.cpp" "CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_service/mbus_server/mbustcp_server.cpp.o.d"
   "/root/Desktop/test_project/rb_service/shareddata.cpp" "CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_service/shareddata.cpp.o.d"
+  "/root/Desktop/test_project/rb_service/socket_server/command_server.cpp" "CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_service/socket_server/command_server.cpp.o.d"
+  "/root/Desktop/test_project/rb_service/socket_server/data_server.cpp" "CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o" "gcc" "CMakeFiles/rb_program.dir/rb_service/socket_server/data_server.cpp.o.d"
   )
 
 # Targets to which this target links.

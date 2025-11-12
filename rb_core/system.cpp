@@ -57,10 +57,12 @@ namespace rb_system {
         float                       parameter_self_coll_dist_ext = 0;
 
         // Collision Detection
+        bool                        flag_joint_impedance_mode = false;
         bool                        flag_collision_out_occur = false;
         VectorJd                    torque_esetimated = VectorJd::Zero(NO_OF_JOINT, 1);
         VectorJd                    torque_delta_lpf = VectorJd::Zero(NO_OF_JOINT, 1);
         std::vector<rb_math::sloper_f> sloper_delta_torque(NO_OF_JOINT, rb_math::sloper_f(0, 0.04, 0.04));
+        int                         torque_limit_A[NO_OF_JOINT];
 
         // Delta Watt
         double                      delta_Watt_lpf_dc_and_esti = 0.;
@@ -75,6 +77,7 @@ namespace rb_system {
         VectorJd                    output_lpf_q_vel = VectorJd::Zero(NO_OF_JOINT, 1);
         VectorJd                    output_lpf_q_vel_old = VectorJd::Zero(NO_OF_JOINT, 1);
         VectorJd                    output_lpf_q_acc = VectorJd::Zero(NO_OF_JOINT, 1);
+
 
 
         std::mutex                  power_mutex;
@@ -364,7 +367,7 @@ namespace rb_system {
             }else{
                 if(flag_direct_teaching != t_flag){
                     for(int i = 0; i < NO_OF_JOINT; i++){
-                        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdMakeErrorSumZero());
+                        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdMakeErrorSumZero(0));
                     }
                     LOG_INFO("STOP DT Mode");
                 }
@@ -546,7 +549,7 @@ namespace rb_system {
                         LOG_ERROR("Motor Tmp Error: " + std::to_string(i));
                         is_there_critical_err_in_motor = true;
                     }else if(m_infos.encoder_deg_error > 12){
-                        if(flag_reference_onoff){
+                        if(flag_reference_onoff && flag_joint_impedance_mode == false){
                             MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_MAT_0 + i);
                             LOG_ERROR("Motor Mat Error: " + std::to_string(i));
                             is_there_critical_err_in_motor = true;
@@ -805,6 +808,7 @@ namespace rb_system {
             setting_mot.para_limit_angleDeg_Up = parameter_robot.modules_range_up[i];
             setting_mot.para_limit_speedDeg = setting_mot.para_hwmax_vel;
             setting_mot.para_limit_torqueNm = setting_mot.para_hwmax_torque_momt;
+            setting_mot.para_limit_current_mA = module_INFO.max_Cur_mA;
 
             setting_mot.para_temperature_esti[0] = module_INFO.temperature_esti[0];
             setting_mot.para_temperature_esti[1] = module_INFO.temperature_esti[1];
@@ -816,6 +820,10 @@ namespace rb_system {
             setting_mot.para_shake_pulse = module_INFO.shake_pulse;
             
             _gv_Handler_Motor[i]->Set_Parameters(setting_mot);
+        }
+
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            torque_limit_A[i] = -1;
         }
 
         Config_TimeScaler(SystemTimeScaler::SPEEDBAR, 1.0, 0.99);//constant alpha
@@ -1125,6 +1133,94 @@ namespace rb_system {
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
     }
+
+    int Set_Joint_Impedance_On(std::array<float, NO_OF_JOINT> rate_gain, std::array<float, NO_OF_JOINT> rate_torque){
+        int target_P[NO_OF_JOINT];
+        int target_I[NO_OF_JOINT];
+        int target_D[NO_OF_JOINT];
+        int target_A[NO_OF_JOINT];
+
+        flag_joint_impedance_mode = true;
+
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            rate_gain[i] = rb_math::saturation_L_and_U(rate_gain[i], 0.0, 1.0);
+            rate_torque[i] = rb_math::saturation_L_and_U(rate_torque[i], 0.0, 1.0);
+
+            double gain_ori = rate_gain[i];
+            double gain_double = gain_ori * gain_ori;
+
+            mINFO temp_minfos = _gv_Handler_Motor[i]->Get_Infos();
+            mPARA temp_mpara = _gv_Handler_Motor[i]->Get_Parameters();
+            target_P[i] = ((float)temp_minfos.gain_position_P) * gain_double;
+            target_I[i] = ((float)temp_minfos.gain_position_I) * gain_double;
+            target_D[i] = ((float)temp_minfos.gain_position_D) * (0.1 + 0.9 * gain_ori);
+            target_P[i] = rb_math::saturation_Low(target_P[i], 1);
+
+            target_A[i] = temp_mpara.para_limit_current_mA * 0.001 * rate_torque[i];
+            target_A[i] = rb_math::saturation_Low(target_A[i], 1);
+
+            std::cout<<"Impedance Para: "<<i<<" : "<<target_P[i]<<", "<<target_I[i]<<", "<<target_D[i]<<", "<<target_A[i]<<std::endl;
+        }
+
+        // Step1: Blind Error
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdBlindError(true, true));
+            std::this_thread::sleep_for(2ms);
+        }
+        // Step2: Set Temporary PID and torque limit
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Temporary_Gain_Position(1, target_P[i], target_I[i], target_D[i]));
+            torque_limit_A[i] = target_A[i];
+            std::this_thread::sleep_for(2ms);
+        }
+        return MSG_OK;
+    }
+    int Set_Joint_Impedance_Off(){
+        if(flag_joint_impedance_mode == false){
+            return MSG_OK;
+        }
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            //----------------------------
+            mINFO temp_motor_info = _gv_Handler_Motor[i]->Get_Infos();
+            double enc_deg   = temp_motor_info.encoder_deg;
+            
+            rb_motion::Set_Motion_q(i, enc_deg);//impedance off
+            rb_motion::Set_Wrapper_q(i, enc_deg);
+
+            output_lpf_q_input(i) = enc_deg;
+            output_lpf_q_ang(i) = enc_deg;
+            output_lpf_q_ang_old(i) = enc_deg;
+
+            //----------------------------
+
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdMakeErrorSumZero(0));
+            std::this_thread::sleep_for(2ms);
+        }
+        
+        // Recover PID Gain and TQ bound
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Temporary_Gain_Position(0, 0, 0, 0));
+            torque_limit_A[i] = -1;
+            std::this_thread::sleep_for(2ms);
+        }
+
+        // Reocver Blind Mode
+        for(int i = 0; i < NO_OF_JOINT; ++i){
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdBlindError(false, false));
+            std::this_thread::sleep_for(2ms);
+        }
+        flag_joint_impedance_mode = false;
+        return MSG_OK;
+    }
+    int Set_Free_Drive_Mode(int onoff, float sensitivity){
+        // TODO: 실제 구현 필요...임시 코드
+        if(onoff == 1){
+            flag_direct_teaching = true;
+        }else{
+            flag_direct_teaching = false;
+        }
+        return MSG_OK;
+    }
     
     std::tuple<int, float, float, float> Get_Gravity_Para(){
         return {parameter_gravity_mode, ((float)parameter_gravity_direction(0)), ((float)parameter_gravity_direction(1)), ((float)parameter_gravity_direction(2))};
@@ -1155,8 +1251,9 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
-    void Set_MoveSpeedBar(double alpha){
+    int Set_MoveSpeedBar(double alpha){
         _sys_timescale[(int)SystemTimeScaler::SPEEDBAR].input = rb_math::saturation_L_and_U(alpha, 0.0, 1.0);
+        return MSG_OK;
     }
 
     double Get_MoveSpeedBar(){
@@ -1191,15 +1288,16 @@ namespace rb_system {
         return flag_is_pause;
     }
 
-    void Call_MoveBreak(double t_time){
+    int Call_MoveBreak(double t_time){
         if(rb_motion::Get_Is_Motion_Idle()){
-            return;
+            return MSG_OK;
         }
         if(!flag_is_break){
             LOG_INFO("Break Called");
         }
         _sys_timescale[(int)SystemTimeScaler::BREAK].lpf_alpha = RT_PERIOD_SEC / rb_math::saturation_Low(t_time, 0.01);
         flag_is_break = true;
+        return MSG_OK;
     }
 
     void Reset_MoveBreak(){
@@ -1347,19 +1445,33 @@ namespace rb_system {
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
     }
     
-    int Set_Digital_Output(unsigned int p_num, unsigned int value){
+    int Set_Digital_Output(int p_num, unsigned int value){
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
-        _gv_Handler_Side->Set_Dout(p_num, value);
+
+        if(p_num < 0){
+            for(unsigned int i = 0; i < NO_OF_DOUT; ++i){
+                _gv_Handler_Side->Set_Dout(i, value);
+            }
+        }else{
+            _gv_Handler_Side->Set_Dout(p_num, value);
+        }
         return MSG_OK;
     }
 
-    int Set_Analog_Output(unsigned int p_num, float value){
+    int Set_Analog_Output(int p_num, float value){
         if(p_num >= NO_OF_AOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
-        _gv_Handler_Side->Set_Aout(p_num, value);
+
+        if(p_num < 0){
+            for(unsigned int i = 0; i < NO_OF_AOUT; ++i){
+                _gv_Handler_Side->Set_Aout(i, value);
+            }
+        }else{
+            _gv_Handler_Side->Set_Aout(p_num, value);
+        }
         return MSG_OK;
     }
 
@@ -1406,6 +1518,7 @@ namespace rb_system {
 
         {// Do Version Check
             for(int i = 0; i < NO_OF_JOINT; ++i){
+                std::this_thread::sleep_for(3ms);
                 _gv_Handler_Motor[i]->Set_Version(-1);
                 _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdRequestVersion());
             }
@@ -1414,8 +1527,18 @@ namespace rb_system {
 
             _gv_Handler_Toolflange->Set_Version(-1);
             _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdRequestVersion());
+            std::this_thread::sleep_for(15ms);
 
-            std::this_thread::sleep_for(30ms);
+            for(int i = 0; i < NO_OF_JOINT; ++i){
+                std::this_thread::sleep_for(3ms);
+                _gv_Handler_Motor[i]->Clear_Gain_Position();
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->Cmd_Ask_Gain_Position());
+            }
+            std::this_thread::sleep_for(15ms);
+            for(int i = 0; i < NO_OF_JOINT; ++i){
+                std::this_thread::sleep_for(3ms);
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdAdminMode(true));
+            }
 
             for(int i = 0; i < NO_OF_JOINT; ++i){
                 int m_version = _gv_Handler_Motor[i]->Get_Infos().firmware_version;
@@ -1458,12 +1581,21 @@ namespace rb_system {
                     LOG_ERROR("Motor Type Not Math: " + std::to_string(i) + "[" + std::to_string(tMotor.encoder_deg) + "/" + std::to_string(parameter_robot.modules_range_low[i]) + "]");
                     return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_ANG_LIMIT_DW_0 + i);
                 }
+                if(tMotor.gain_position_flag == true){
+                    LOG_INFO("Motor PGain: " + std::to_string(i) + " : " + std::to_string(tMotor.gain_position_P) + "/" + std::to_string(tMotor.gain_position_I) + "/" + std::to_string(tMotor.gain_position_D));
+                }else{
+                    LOG_ERROR("Motor PGain: " + std::to_string(i) + " : Not Received");
+                    return MESSAGE(MSG_LEVEL_ERRR, MSG_JOINT_ERR_CORE_PARAMETER_NOT_RECEIVED_0 + i);
+                }
             }
         }
 
         Set_Servo_State(ServoState::DEVCHECK);
         //----------------------------------------------------------------------
         // do or check somthing
+        {
+            ;
+        }
         Set_Servo_State(ServoState::PARACHECK);
         //----------------------------------------------------------------------
         // turn on motor driver
@@ -1675,9 +1807,9 @@ namespace rb_system {
                 double enc_deg   = temp_motor_info.encoder_deg;
                 double torque_Nm = temp_motor_info.torque_Nm;
 
-                _gv_Handler_Motor[i]->Set_Last_Reference(enc_deg, torque_Nm, 1.0, 1.0);
+                _gv_Handler_Motor[i]->Set_Last_Reference(enc_deg, torque_Nm, 1.0, 1.0, -1);
                 
-                rb_motion::Set_Motion_q(i, enc_deg);
+                rb_motion::Set_Motion_q(i, enc_deg);//ref on/off
                 rb_motion::Set_Wrapper_q(i, enc_deg);
 
                 output_lpf_q_input(i) = enc_deg;
@@ -1773,7 +1905,7 @@ namespace rb_system {
 
                 for(int i = 0; i < NO_OF_JOINT; i++){
                     double forced_angle = output_lpf_q_input(i);
-                    rb_motion::Set_Motion_q(i, forced_angle);
+                    rb_motion::Set_Motion_q(i, forced_angle);//self coll
                     rb_motion::Set_Wrapper_q(i, forced_angle);
 
                     mot_q_ang(i) = forced_angle;
@@ -1824,7 +1956,7 @@ namespace rb_system {
 
             for(int i = 0; i < NO_OF_JOINT; i++){
                 double forced_angle = output_lpf_q_input(i);
-                rb_motion::Set_Motion_q(i, forced_angle);
+                rb_motion::Set_Motion_q(i, forced_angle);//speed error
                 rb_motion::Set_Wrapper_q(i, forced_angle);
 
                 mot_q_ang(i) = forced_angle;
@@ -1869,7 +2001,7 @@ namespace rb_system {
                 mINFO temp_motor_info = _gv_Handler_Motor[i]->Get_Infos();
                 double enc_deg   = temp_motor_info.encoder_deg;
                 
-                rb_motion::Set_Motion_q(i, enc_deg);
+                rb_motion::Set_Motion_q(i, enc_deg);//direc teaching
                 rb_motion::Set_Wrapper_q(i, enc_deg);
 
                 mot_q_ang(i) = enc_deg;
@@ -1886,14 +2018,20 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         // Calc Dynamics
         // -------------------------------------------------------------------------
-        RBDLrobot robot_for_dynamics;
-        
+        RBDLrobot robot_for_dynamics;    
         robot_for_dynamics.Init_Robot(Get_CurrentRobotParameter(), Get_CurrentTcpParameter(), rb_system::Get_CurrentGravityParameter());
-        
-        // VectorJd t_torque_ID = robot_for_dynamics.Calc_InverseDynamics(wrap_q_ang, wrap_q_vel, wrap_q_acc);
-        VectorJd t_torque_ID = robot_for_dynamics.Calc_InverseDynamics(output_lpf_q_ang, output_lpf_q_vel, output_lpf_q_acc);
-
-        
+    
+        VectorJd t_torque_ID;
+        if(flag_joint_impedance_mode && flag_direct_teaching == false){
+            VectorJd                    temp_q_ang = VectorJd::Zero(NO_OF_JOINT, 1);
+            VectorJd                    temp_q_vel = VectorJd::Zero(NO_OF_JOINT, 1);
+            for(int i = 0; i < NO_OF_JOINT; i++){
+                temp_q_ang(i) = _gv_Handler_Motor[i]->Get_Infos().encoder_deg;
+            }
+            t_torque_ID = robot_for_dynamics.Calc_InverseDynamics(temp_q_ang, temp_q_vel, output_lpf_q_acc);
+        }else{
+            t_torque_ID = robot_for_dynamics.Calc_InverseDynamics(output_lpf_q_ang, output_lpf_q_vel, output_lpf_q_acc);        
+        }
 
         VectorJd t_torque_FF = VectorJd::Zero(NO_OF_JOINT, 1);
         VectorJd t_torque_Meas = VectorJd::Zero(NO_OF_JOINT, 1);
@@ -1960,7 +2098,7 @@ namespace rb_system {
         // Collision Detection
         // -------------------------------------------------------------------------
         bool is_over_torque = RT_Collision_Checker(t_torque_Esti, t_torque_Meas, t_torque_Limit);
-        if(flag_reference_onoff && flag_direct_teaching == false && parameter_out_coll_onoff){
+        if(flag_reference_onoff && flag_direct_teaching == false && parameter_out_coll_onoff && flag_joint_impedance_mode == false){
             flag_collision_out_occur |= is_over_torque;
         }else{
             torque_delta_lpf = VectorJd::Zero(NO_OF_JOINT, 1);
@@ -1992,7 +2130,7 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         if(flag_reference_onoff){
             for(int i = 0; i < NO_OF_JOINT; ++i){
-                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdControl(output_lpf_q_ang(i), t_torque_Esti(i), fb_gain, ff_gain));
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Motor[i]->CmdControl(output_lpf_q_ang(i), t_torque_Esti(i), fb_gain, ff_gain, torque_limit_A[i]));
             }
         }
         // -------------------------------------------------------------------------

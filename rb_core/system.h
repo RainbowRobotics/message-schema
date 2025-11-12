@@ -172,11 +172,15 @@ namespace rb_system {
 
     std::array<float, NO_OF_JOINT>  Get_Direct_Teaching_Sensitivity();
     int                             Save_Direct_Teaching_Sensitivity(std::array<float, NO_OF_JOINT> f_targets);
+
+    int                             Set_Joint_Impedance_On(std::array<float, NO_OF_JOINT> rate_gain, std::array<float, NO_OF_JOINT> rate_torque);
+    int                             Set_Joint_Impedance_Off();
+    int                             Set_Free_Drive_Mode(int onoff, float sensitivity);
     
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
-    void            Set_MoveSpeedBar(double alpha);
+    int             Set_MoveSpeedBar(double alpha);
     double          Get_MoveSpeedBar();
     
     void            Set_MoveUserSpeedBar(double alpha);
@@ -186,7 +190,7 @@ namespace rb_system {
     int             Call_MoveResume();
     int             Get_MovePauseState();
 
-    void            Call_MoveBreak(double t_time);
+    int             Call_MoveBreak(double t_time);
     void            Reset_MoveBreak();
 
     // ---------------------------------------------------------------
@@ -211,8 +215,8 @@ namespace rb_system {
     std::array<uint8_t, NO_OF_DIN>      Get_Box_FilterCount_Din();
     int                                 Save_Box_FilterCount_Din(unsigned int p_num, unsigned int f_cnt);
 
-    int                                 Set_Digital_Output(unsigned int p_num, unsigned int value);
-    int                                 Set_Analog_Output(unsigned int p_num, float value);
+    int                                 Set_Digital_Output(int p_num, unsigned int value);
+    int                                 Set_Analog_Output(int p_num, float value);
     
 
     // ---------------------------------------------------------------

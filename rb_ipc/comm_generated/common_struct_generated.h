@@ -33,6 +33,8 @@ struct Vec3f;
 
 struct Mat3f;
 
+struct FloatArray32;
+
 struct MoveInput_Target;
 struct MoveInput_TargetBuilder;
 struct MoveInput_TargetT;
@@ -197,6 +199,23 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Mat3f FLATBUFFERS_FINAL_CLASS {
   }
 };
 FLATBUFFERS_STRUCT_END(Mat3f, 36);
+
+FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) FloatArray32 FLATBUFFERS_FINAL_CLASS {
+ private:
+  float arr_[32];
+
+ public:
+  FloatArray32()
+      : arr_() {
+  }
+  FloatArray32(::flatbuffers::span<const float, 32> _arr) {
+    ::flatbuffers::CastToArray(arr_).CopyFromSpan(_arr);
+  }
+  const ::flatbuffers::Array<float, 32> *arr() const {
+    return &::flatbuffers::CastToArray(arr_);
+  }
+};
+FLATBUFFERS_STRUCT_END(FloatArray32, 128);
 
 struct MoveInput_TargetT : public ::flatbuffers::NativeTable {
   typedef MoveInput_Target TableType;

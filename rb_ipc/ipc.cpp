@@ -19,6 +19,7 @@
 #include "comm_generated/func_arm_generated.h"
 #include "comm_generated/func_box_generated.h"
 #include "comm_generated/func_set_generated.h"
+#include "comm_generated/func_get_generated.h"
 
 //---------------------------------------------------
 #include "rb_core/system.h"
@@ -35,6 +36,35 @@
 // using helloworld::HelloRequest;
 // using helloworld::HelloReply;
 //---------------------------------------------------
+
+// #define ADD_SERVE_SIMPLE(CMD_NAME, func_req, func_resp, func_body) \
+//     session.Serve<func_req, func_resp>( \
+//         CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+//             std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
+//             int return_int = MSG_OK; \
+//             func_body \
+//             return IPC::CreateResponse_Functions(fbb, return_int); \
+//         } \
+//     )
+
+#define ADD_SERVE_SIMPLE(CMD_NAME, func_req, func_resp, ...) \
+    session.Serve<func_req, func_resp>( \
+        CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+            std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
+            int return_int = MSG_OK; \
+            __VA_ARGS__; \
+            return IPC::CreateResponse_Functions(fbb, return_int); \
+        } \
+    );
+
+#define ADD_SERVE_BLANK(CMD_NAME, func_req, func_resp, ...) \
+    session.Serve<func_req, func_resp>( \
+        CMD_NAME, [](flatbuffers::FlatBufferBuilder& fbb, const func_req* req) { \
+            std::cout << "[IPC] Function call: " << CMD_NAME << std::endl; \
+            __VA_ARGS__; \
+        } \
+    );
+
 namespace rb_ipc {
     namespace {
         pthread_t hThread_ipccomm_rx;
@@ -80,608 +110,514 @@ namespace rb_ipc {
             // -----------------------------------------------------------------------
             // Arm
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_Save_Collision_Parameter, IPC::Response_Functions>(
-                "save_collision_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_Collision_Parameter* req) {
-                    std::cout<<"Function call: "<<"save_collision_parameter"<<std::endl;
-                    int p_onoff = req->onoff();
-                    int p_react = req->react();
-                    float p_th = req->threshold();
-                    int return_val = rb_system::Save_Out_Coll_Para(p_onoff, p_react, p_th);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_SelfColl_Parameter, IPC::Response_Functions>(
-                "save_selfcoll_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_SelfColl_Parameter* req) {
-                    std::cout<<"Function call: "<<"save_selfcoll_parameter"<<std::endl;
-                    int p_mode = req->mode();
-                    float p_int = req->dist_internal();
-                    float p_ext = req->dist_external();
-                    int return_val = rb_system::Save_Self_Coll_Para(p_mode, p_int, p_ext);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_Gravity_Parameter, IPC::Response_Functions>(
-                "save_gravity_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_Gravity_Parameter* req) {
-                    std::cout<<"Function call: "<<"save_gravity_parameter"<<std::endl;
-                    int p_mode = req->mode();
-                    float p_gx = req->gx();
-                    float p_gy = req->gy();
-                    float p_gz = req->gz();
-                    int return_val = rb_system::Save_Gravity_Para(p_mode, p_gx, p_gy, p_gz);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_Direct_Teach_Sensitivity, IPC::Response_Functions>(
-                "save_direct_teach_sensitivity", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_Direct_Teach_Sensitivity* req) {
-                    std::cout<<"Function call: "<<"save_direct_teach_sensitivity"<<std::endl;
-
-                    std::array<float, NO_OF_JOINT> input;
-                    auto arr = req->sensitivity()->f();
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        input[i] = arr->Get(i);
-                    }
-                    int return_val = rb_system::Save_Direct_Teaching_Sensitivity(input);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_Tool_List_Para, IPC::Response_Functions>(
-                "save_tool_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_Tool_List_Para* req) {
-                    std::cout<<"Function call: "<<"save_tool_parameter"<<std::endl;
-
-                    int tar_no = req->tool_no();
-                    TCP_CONFIG tar_conf;
-                    tar_conf.tool_name = req->tool_name()->c_str();
-                    tar_conf.tcp_offset = Eigen::Vector3d(req->tcp_x(), req->tcp_y(), req->tcp_z());
-                    tar_conf.tcp_rotation = rb_math::RPY_to_R(req->tcp_rx(), req->tcp_ry(), req->tcp_rz());
-                    tar_conf.com_mass = req->mass_m();
-                    tar_conf.com_offset = Eigen::Vector3d(req->mass_x(), req->mass_y(), req->mass_z());
-                    tar_conf.box_type = req->box_type();
-                    tar_conf.box_parameter[0] = req->box_para_0();
-                    tar_conf.box_parameter[1] = req->box_para_1();
-                    tar_conf.box_parameter[2] = req->box_para_2();
-                    tar_conf.box_parameter[3] = req->box_para_3();
-                    tar_conf.box_parameter[4] = req->box_para_4();
-                    tar_conf.box_parameter[5] = req->box_para_5();
-                    tar_conf.box_parameter[6] = req->box_para_6();
-                    tar_conf.box_parameter[7] = req->box_para_7();
-                    tar_conf.box_parameter[8] = req->box_para_8();
-                    int return_val = rb_system::Save_TcpParameter(tar_no, tar_conf);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+            ADD_SERVE_SIMPLE("save_collision_parameter", IPC::Request_Save_Collision_Parameter, IPC::Response_Functions, {
+                int p_onoff = req->onoff();
+                int p_react = req->react();
+                float p_th = req->threshold();
+                return_int = rb_system::Save_Out_Coll_Para(p_onoff, p_react, p_th);
+            });
+            ADD_SERVE_SIMPLE("save_selfcoll_parameter", IPC::Request_Save_SelfColl_Parameter, IPC::Response_Functions, {
+                int p_mode = req->mode();
+                float p_int = req->dist_internal();
+                float p_ext = req->dist_external();
+                return_int = rb_system::Save_Self_Coll_Para(p_mode, p_int, p_ext);
+            });
+            ADD_SERVE_SIMPLE("save_gravity_parameter", IPC::Request_Save_Gravity_Parameter, IPC::Response_Functions, {
+                int p_mode = req->mode();
+                float p_gx = req->gx();
+                float p_gy = req->gy();
+                float p_gz = req->gz();
+                return_int = rb_system::Save_Gravity_Para(p_mode, p_gx, p_gy, p_gz);
+            });
+            ADD_SERVE_SIMPLE("save_direct_teach_sensitivity", IPC::Request_Save_Direct_Teach_Sensitivity, IPC::Response_Functions, {
+                std::array<float, NO_OF_JOINT> temp_input;
+                auto arr = req->sensitivity()->f();
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    temp_input[i] = arr->Get(i);
+                }
+                return_int = rb_system::Save_Direct_Teaching_Sensitivity(temp_input);
+            });
+            ADD_SERVE_SIMPLE("save_tool_parameter", IPC::Request_Save_Tool_List_Para, IPC::Response_Functions, {
+                int tar_no = req->tool_no();
+                TCP_CONFIG tar_conf;
+                tar_conf.tool_name = req->tool_name()->c_str();
+                tar_conf.tcp_offset = Eigen::Vector3d(req->tcp_x(), req->tcp_y(), req->tcp_z());
+                tar_conf.tcp_rotation = rb_math::RPY_to_R(req->tcp_rx(), req->tcp_ry(), req->tcp_rz());
+                tar_conf.com_mass = req->mass_m();
+                tar_conf.com_offset = Eigen::Vector3d(req->mass_x(), req->mass_y(), req->mass_z());
+                tar_conf.box_type = req->box_type();
+                tar_conf.box_parameter[0] = req->box_para_0();
+                tar_conf.box_parameter[1] = req->box_para_1();
+                tar_conf.box_parameter[2] = req->box_para_2();
+                tar_conf.box_parameter[3] = req->box_para_3();
+                tar_conf.box_parameter[4] = req->box_para_4();
+                tar_conf.box_parameter[5] = req->box_para_5();              
+                tar_conf.box_parameter[6] = req->box_para_6();
+                tar_conf.box_parameter[7] = req->box_para_7();
+                tar_conf.box_parameter[8] = req->box_para_8();
+                return_int = rb_system::Save_TcpParameter(tar_no, tar_conf);
+            });
             // -----------------------------------------------------------------------
             // BOX
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_Save_User_Frame, IPC::Response_Functions>(
-                "save_user_frame_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_User_Frame* req) {
-                    std::cout<<"Function call: "<<"save_user_frame_parameter"<<std::endl;
-
-                    int tar_no = req->userf_no();
-                    USERF_CONFIG tar_conf;
-                    tar_conf.userf_name = req->userf_name()->c_str();
-                    tar_conf.userf_offset = Eigen::Vector3d(req->userf_x(), req->userf_y(), req->userf_z());
-                    tar_conf.userf_rotation = rb_math::RPY_to_R(req->userf_rx(), req->userf_ry(), req->userf_rz());
-
-                    int return_val = rb_system::Save_UserFrameParameter(tar_no, tar_conf);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_Area_Para, IPC::Response_Functions>(
-                "save_area_parameter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_Area_Para* req) {
-                    std::cout<<"Function call: "<<"save_area_parameter"<<std::endl;
-
-                    int tar_no = req->area_no();
-                    AREA_CONFIG tar_conf;
-                    tar_conf.area_name = req->area_name()->c_str();
-                    tar_conf.area_type = req->area_type();
-
-
-                    tar_conf.area_offset = Eigen::Vector3d(req->area_x(), req->area_y(), req->area_z());
-                    tar_conf.area_rotation = rb_math::RPY_to_R(req->area_rx(), req->area_ry(), req->area_rz());
-                    tar_conf.area_parameter[0] = req->area_para_0();
-                    tar_conf.area_parameter[1] = req->area_para_1();
-                    tar_conf.area_parameter[2] = req->area_para_2();
-                    int return_val = rb_system::Save_AreaParameter(tar_no, tar_conf);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_SideDout_SpecialFunc, IPC::Response_Functions>(
-                "save_side_dout_function", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_SideDout_SpecialFunc* req) {
-                    std::cout<<"Function call: "<<"save_side_dout_function"<<std::endl;
-                    int p_num = req->port_num();
-                    int function_no = req->desired_function();
-                    int return_val = rb_system::Save_Box_Special_Dout(p_num, function_no);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_SideDin_SpecialFunc, IPC::Response_Functions>(
-                "save_side_din_function", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_SideDin_SpecialFunc* req) {
-                    std::cout<<"Function call: "<<"save_side_din_function"<<std::endl;
-                    int p_num = req->port_num();
-                    int function_no = req->desired_function();
-                    int return_val = rb_system::Save_Box_Special_Din(p_num, function_no);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Save_SideDin_FilterCount, IPC::Response_Functions>(
-                "save_side_din_filter", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Save_SideDin_FilterCount* req) {
-                    std::cout<<"Function call: "<<"save_side_din_filter"<<std::endl;
-                    int p_num = req->port_num();
-                    int filter_count = req->desired_count();
-                    int return_val = rb_system::Save_Box_FilterCount_Din(p_num, filter_count);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_SideDout_General, IPC::Response_Functions>(
-                "call_side_dout", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_SideDout_General* req) {
-                    std::cout<<"Function call: "<<"call_side_dout"<<std::endl;
-                    int p_num = req->port_num();
-                    int value = req->desired_out();
-                    int return_val = rb_system::Set_Digital_Output(p_num, value);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_SideAout_General, IPC::Response_Functions>(
-                "call_side_aout", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_SideAout_General* req) {
-                    std::cout<<"Function call: "<<"call_side_aout"<<std::endl;
-                    int p_num = req->port_num();
-                    float value = req->desired_voltage();
-                    int return_val = rb_system::Set_Analog_Output(p_num, value);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+            ADD_SERVE_SIMPLE("save_user_frame_parameter", IPC::Request_Save_User_Frame, IPC::Response_Functions, {
+                USERF_CONFIG tar_conf;
+                tar_conf.userf_name = req->userf_name()->c_str();
+                tar_conf.userf_offset = Eigen::Vector3d(req->userf_x(), req->userf_y(), req->userf_z());
+                tar_conf.userf_rotation = rb_math::RPY_to_R(req->userf_rx(), req->userf_ry(), req->userf_rz());
+                return_int = rb_system::Save_UserFrameParameter(req->userf_no(), tar_conf);
+            });
+            ADD_SERVE_SIMPLE("save_area_parameter", IPC::Request_Save_Area_Para, IPC::Response_Functions, {
+                AREA_CONFIG tar_conf;
+                tar_conf.area_name = req->area_name()->c_str();
+                tar_conf.area_type = req->area_type();          
+                tar_conf.area_offset = Eigen::Vector3d(req->area_x(), req->area_y(), req->area_z());
+                tar_conf.area_rotation = rb_math::RPY_to_R(req->area_rx(), req->area_ry(), req->area_rz());
+                tar_conf.area_parameter[0] = req->area_para_0();
+                tar_conf.area_parameter[1] = req->area_para_1();
+                tar_conf.area_parameter[2] = req->area_para_2();
+                return_int = rb_system::Save_AreaParameter(req->area_no(), tar_conf);
+            });
+            ADD_SERVE_SIMPLE("save_side_dout_function", IPC::Request_Save_SideDout_SpecialFunc, IPC::Response_Functions, {
+                return_int = rb_system::Save_Box_Special_Dout(req->port_num(), req->desired_function());
+            });
+            ADD_SERVE_SIMPLE("save_side_din_function", IPC::Request_Save_SideDin_SpecialFunc, IPC::Response_Functions, {
+                return_int = rb_system::Save_Box_Special_Din(req->port_num(), req->desired_function());
+            });
+            ADD_SERVE_SIMPLE("save_side_din_filter", IPC::Request_Save_SideDin_FilterCount, IPC::Response_Functions, {
+                return_int = rb_system::Save_Box_FilterCount_Din(req->port_num(), req->desired_count());
+            });
+            ADD_SERVE_SIMPLE("call_side_dout", IPC::Request_SideDout_General, IPC::Response_Functions, {
+                return_int = rb_system::Set_Digital_Output(req->port_num(), req->desired_out());
+            });
+            ADD_SERVE_SIMPLE("call_side_aout", IPC::Request_SideAout_General, IPC::Response_Functions, {
+                return_int = rb_system::Set_Analog_Output(req->port_num(), req->desired_voltage());
+            });
             // -----------------------------------------------------------------------
             // Servo
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_PowerControl, IPC::Response_Functions>(
-                "call_powercontrol", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_PowerControl* req) {
-                    
-                    int input_val = req->power_option();
-                    std::cout<<"Function call: "<<"call_powercontrol: "<<input_val<<std::endl;
-                    int return_val = 0;
-                    if(input_val == 1){
-                        return_val = rb_system::Set_Power(rb_system::PowerOption::On, false);
-                    }else{
-                        return_val = rb_system::Set_Power(rb_system::PowerOption::Off, false);
-                    }
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_ServoControl, IPC::Response_Functions>(
-                "call_servocontrol", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_ServoControl* req) {
-                    std::cout<<"Function call: "<<"call_servocontrol"<<std::endl;
-                    int input_val = req->servo_option();
-                    int return_val = rb_system::Set_Servo(input_val, 1);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_ReferenceControl, IPC::Response_Functions>(
-                "call_referencecontrol", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_ReferenceControl* req) {
-                    std::cout<<"Function call: "<<"call_referencecontrol"<<std::endl;
-                    int input_val = req->refcontrol_option();
-                    int return_val = rb_system::Set_ReferenceOnOff(input_val);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+            ADD_SERVE_SIMPLE("call_powercontrol", IPC::Request_PowerControl, IPC::Response_Functions, {
+                if(req->power_option() == 1){
+                    return_int = rb_system::Set_Power(rb_system::PowerOption::On, false);
+                }else{
+                    return_int = rb_system::Set_Power(rb_system::PowerOption::Off, false);
+                }
+            });
+            ADD_SERVE_SIMPLE("call_servocontrol", IPC::Request_ServoControl, IPC::Response_Functions, {
+                return_int = rb_system::Set_Servo(req->servo_option(), 1);
+            });
+            ADD_SERVE_SIMPLE("call_referencecontrol", IPC::Request_ReferenceControl, IPC::Response_Functions, {
+                return_int = rb_system::Set_ReferenceOnOff(req->refcontrol_option());
+            });
             // -----------------------------------------------------------------------
             // Flow
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_MotionSpeedBar, IPC::Response_Functions>(
-                "call_speedbar", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_MotionSpeedBar* req) {
-                    
-                    float input_val = req->alpha();
-                    std::cout<<"Function call: "<<"call_speedbar: "<<input_val<<std::endl;
-                    rb_system::Set_MoveSpeedBar(input_val);
-                    int return_val = 0;
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_MotionPause, IPC::Response_Functions>(
-                "call_pause", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_MotionPause* req) {
-                    std::cout<<"Function call: "<<"call_pause"<<std::endl;
-                    int return_val = rb_system::Call_MovePause();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_MotionResume, IPC::Response_Functions>(
-                "call_resume", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_MotionResume* req) {
-                    std::cout<<"Function call: "<<"call_resume"<<std::endl;
-                    int return_val = rb_system::Call_MoveResume();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_MotionResetOutColl, IPC::Response_Functions>(
-                "call_reset_outcoll", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_MotionResetOutColl* req) {
-                    std::cout<<"Function call: "<<"call_reset_outcoll"<<std::endl;
-                    int return_val = rb_system::Call_Reset_Out_Coll();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+            ADD_SERVE_SIMPLE("call_speedbar", IPC::Request_MotionSpeedBar, IPC::Response_Functions, {
+                return_int = rb_system::Set_MoveSpeedBar(req->alpha());
+            });
+            ADD_SERVE_SIMPLE("call_pause", IPC::Request_MotionPause, IPC::Response_Functions, {
+                return_int = rb_system::Call_MovePause();
+            });
+            ADD_SERVE_SIMPLE("call_resume", IPC::Request_MotionResume, IPC::Response_Functions, {
+                return_int = rb_system::Call_MoveResume();
+            });
+            ADD_SERVE_SIMPLE("call_reset_outcoll", IPC::Request_MotionResetOutColl, IPC::Response_Functions, {
+                return_int = rb_system::Call_Reset_Out_Coll();
+            });
             
             // -----------------------------------------------------------------------
             // Config call
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_CallWhoAmI, IPC::Response_CallWhoamI>(
-                "call_whoami", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_CallWhoAmI* req) {
-                    std::cout<<"Function call: "<<"call_whoami"<<std::endl;
+            ADD_SERVE_BLANK("call_whoami", IPC::Request_CallWhoAmI, IPC::Response_CallWhoamI, {
+                auto [ts_category, ts_model, ts_version, ts_alias] = rb_system::Get_System_Basic_Info();
 
-                    auto [ts_category, ts_model, ts_version, ts_alias] = rb_system::Get_System_Basic_Info();
+                IPC::Response_CallWhoamIT who_am_i_T;
+                who_am_i_T.category = ts_category;
+                who_am_i_T.model = ts_model;
+                who_am_i_T.version = ts_version;
+                who_am_i_T.alias = ts_alias;
+                return IPC::Response_CallWhoamI::Pack(fbb, &who_am_i_T);
+            });
+            ADD_SERVE_BLANK("call_config_controlbox", IPC::Request_CallConfigControlBox, IPC::Response_CallConfigControlBox, {
+                IPC::Response_CallConfigControlBoxT cbox_T; 
+                cbox_T.dout_special_func = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Box_Special_Dout());
+                cbox_T.din_special_func = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_Special_Din());
+                cbox_T.din_filter_count = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_FilterCount_Din());         
 
-                    IPC::Response_CallWhoamIT who_am_i_T;
-                    who_am_i_T.category = ts_category;
-                    who_am_i_T.model = ts_model;
-                    who_am_i_T.version = ts_version;
-                    who_am_i_T.alias = ts_alias;
-                    return IPC::Response_CallWhoamI::Pack(fbb, &who_am_i_T);
-                });
-            session.Serve<IPC::Request_CallConfigControlBox, IPC::Response_CallConfigControlBox>(
-                "call_config_controlbox", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_CallConfigControlBox* req) {
-                    std::cout<<"Function call: "<<"call_config_controlbox"<<std::endl;
-                    IPC::Response_CallConfigControlBoxT cbox_T;
-                            
-                    cbox_T.dout_special_func = std::make_unique<IPC::N_DOUT_u>(rb_system::Get_Box_Special_Dout());
-                    cbox_T.din_special_func = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_Special_Din());
-                    cbox_T.din_filter_count = std::make_unique<IPC::N_DIN_u>(rb_system::Get_Box_FilterCount_Din());
+                for (int i = 0; i < NO_OF_AREA; ++i) {
+                    AREA_CONFIG src = rb_system::Get_DesiredAreaParameter(i);
 
-                    for (int i = 0; i < NO_OF_AREA; ++i) {
-                        AREA_CONFIG src = rb_system::Get_DesiredAreaParameter(i);
+                    auto areaT = std::make_unique<IPC::ST_Config_AreaT>();
+                    areaT->area_name = src.area_name;
+                    areaT->area_type = static_cast<int>(src.area_type);
+                    {
+                        std::array<float, 3> arr = {
+                            static_cast<float>(src.area_offset.x()),
+                            static_cast<float>(src.area_offset.y()),
+                            static_cast<float>(src.area_offset.z())
+                        };
+                        areaT->area_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    {
+                        Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.area_rotation);
+                        std::array<float, 3> arr = {
+                            static_cast<float>(temp_euler.x()),
+                            static_cast<float>(temp_euler.y()),
+                            static_cast<float>(temp_euler.z())
+                        };
+                        areaT->area_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    {
+                        std::array<float, 3> arr = {
+                            static_cast<float>(src.area_parameter[0]),
+                            static_cast<float>(src.area_parameter[1]),
+                            static_cast<float>(src.area_parameter[2])
+                        };
+                        areaT->area_para = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    switch (i) {
+                        case 0: cbox_T.area_configs_0 = std::move(areaT); break;
+                        case 1: cbox_T.area_configs_1 = std::move(areaT); break;
+                        case 2: cbox_T.area_configs_2 = std::move(areaT); break;
+                        case 3: cbox_T.area_configs_3 = std::move(areaT); break;
+                        case 4: cbox_T.area_configs_4 = std::move(areaT); break;
+                        case 5: cbox_T.area_configs_5 = std::move(areaT); break;
+                        case 6: cbox_T.area_configs_6 = std::move(areaT); break;
+                        case 7: cbox_T.area_configs_7 = std::move(areaT); break;
+                    }
+                }
 
-                        auto areaT = std::make_unique<IPC::ST_Config_AreaT>();
-                        areaT->area_name = src.area_name;
-                        areaT->area_type = static_cast<int>(src.area_type);
-                        {
-                            std::array<float, 3> arr = {
-                                static_cast<float>(src.area_offset.x()),
-                                static_cast<float>(src.area_offset.y()),
-                                static_cast<float>(src.area_offset.z())
-                            };
-                            areaT->area_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        {
-                            Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.area_rotation);
-                            std::array<float, 3> arr = {
-                                static_cast<float>(temp_euler.x()),
-                                static_cast<float>(temp_euler.y()),
-                                static_cast<float>(temp_euler.z())
-                            };
-                            areaT->area_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        {
-                            std::array<float, 3> arr = {
-                                static_cast<float>(src.area_parameter[0]),
-                                static_cast<float>(src.area_parameter[1]),
-                                static_cast<float>(src.area_parameter[2])
-                            };
-                            areaT->area_para = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        switch (i) {
-                            case 0: cbox_T.area_configs_0 = std::move(areaT); break;
-                            case 1: cbox_T.area_configs_1 = std::move(areaT); break;
-                            case 2: cbox_T.area_configs_2 = std::move(areaT); break;
-                            case 3: cbox_T.area_configs_3 = std::move(areaT); break;
-                            case 4: cbox_T.area_configs_4 = std::move(areaT); break;
-                            case 5: cbox_T.area_configs_5 = std::move(areaT); break;
-                            case 6: cbox_T.area_configs_6 = std::move(areaT); break;
-                            case 7: cbox_T.area_configs_7 = std::move(areaT); break;
-                        }
+                for (int i = 0; i < NO_OF_USERF; ++i) {
+                    USERF_CONFIG src = rb_system::Get_DesiredUserFrameParameter(i);
+
+                    auto userfT = std::make_unique<IPC::ST_Config_UserFrameT>();
+                    userfT->userf_name = src.userf_name;
+                    {
+                        std::array<float, 3> arr = {
+                            static_cast<float>(src.userf_offset.x()),
+                            static_cast<float>(src.userf_offset.y()),
+                            static_cast<float>(src.userf_offset.z())
+                        };
+                        userfT->userf_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    {
+                        Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.userf_rotation);
+                        std::array<float, 3> arr = {
+                            static_cast<float>(temp_euler.x()),
+                            static_cast<float>(temp_euler.y()),
+                            static_cast<float>(temp_euler.z())
+                        };
+                        userfT->userf_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    switch (i) {
+                        case 0: cbox_T.user_frame_0 = std::move(userfT); break;
+                        case 1: cbox_T.user_frame_1 = std::move(userfT); break;
+                        case 2: cbox_T.user_frame_2 = std::move(userfT); break;
+                        case 3: cbox_T.user_frame_3 = std::move(userfT); break;
+                        case 4: cbox_T.user_frame_4 = std::move(userfT); break;
+                        case 5: cbox_T.user_frame_5 = std::move(userfT); break;
+                        case 6: cbox_T.user_frame_6 = std::move(userfT); break;
+                        case 7: cbox_T.user_frame_7 = std::move(userfT); break;
+                    }
+                }
+
+                return IPC::Response_CallConfigControlBox::Pack(fbb, &cbox_T);
+            });
+            ADD_SERVE_BLANK("call_config_robotarm", IPC::Request_CallConfigRobotArm, IPC::Response_CallConfigRobotArm, {
+                IPC::Response_CallConfigRobotArmT robot_T;
+
+                auto [t_oc_onoff, t_oc_react, t_oc_limit] = rb_system::Get_Out_Coll_Para();
+                robot_T.out_coll_onoff = static_cast<uint8_t>(t_oc_onoff);
+                robot_T.out_coll_react = static_cast<uint8_t>(t_oc_react);
+                robot_T.out_coll_limit = t_oc_limit;
+
+                auto [t_sc_mode, t_sc_dist_int, t_sc_dist_ext] = rb_system::Get_Self_Coll_Para();
+                robot_T.self_coll_mode = t_sc_mode;
+                robot_T.self_coll_distance_inter = t_sc_dist_int;
+                robot_T.self_coll_distance_exter = t_sc_dist_ext;
+
+                auto [t_gv_mode, t_gv_gx, t_gv_gy, t_gv_gz] = rb_system::Get_Gravity_Para();
+                robot_T.gravity_mode = t_gv_mode;
+                robot_T.gravity_gx = t_gv_gx;
+                robot_T.gravity_gy = t_gv_gy;
+                robot_T.gravity_gz = t_gv_gz;
+
+                robot_T.direct_teaching_sensitivity = std::make_unique<IPC::N_JOINT_f>(rb_system::Get_Direct_Teaching_Sensitivity());
+
+                return IPC::Response_CallConfigRobotArm::Pack(fbb, &robot_T);
+            });
+            ADD_SERVE_BLANK("call_config_toollist", IPC::Request_CallConfigToolList, IPC::Response_CallConfigToolList, {
+                IPC::Response_CallConfigToolListT tool_list_T;
+                for (int i = 0; i < 8; i++) {
+                    TCP_CONFIG src = rb_system::Get_DesiredTcpParameter(i);
+
+                    auto toolT = std::make_unique<IPC::ST_Tool_ParaT>();
+                    toolT->tool_name = src.tool_name;
+                    toolT->com_mass  = static_cast<float>(src.com_mass);
+
+                    {
+                        std::array<float, 3> arr = {
+                            static_cast<float>(src.com_offset.x()),
+                            static_cast<float>(src.com_offset.y()),
+                            static_cast<float>(src.com_offset.z())
+                        };
+                        toolT->com_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    {
+                        std::array<float, 3> arr = {
+                            static_cast<float>(src.tcp_offset.x()),
+                            static_cast<float>(src.tcp_offset.y()),
+                            static_cast<float>(src.tcp_offset.z())
+                        };
+                        toolT->tcp_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
+                    }
+                    {
+                        Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.tcp_rotation);
+                        std::array<float, 3> arr = {
+                            static_cast<float>(temp_euler.x()),
+                            static_cast<float>(temp_euler.y()),
+                            static_cast<float>(temp_euler.z())
+                        };
+                        toolT->tcp_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
                     }
 
-                    for (int i = 0; i < NO_OF_USERF; ++i) {
-                        USERF_CONFIG src = rb_system::Get_DesiredUserFrameParameter(i);
 
-                        auto userfT = std::make_unique<IPC::ST_Config_UserFrameT>();
-                        userfT->userf_name = src.userf_name;
-                        {
-                            std::array<float, 3> arr = {
-                                static_cast<float>(src.userf_offset.x()),
-                                static_cast<float>(src.userf_offset.y()),
-                                static_cast<float>(src.userf_offset.z())
-                            };
-                            userfT->userf_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        {
-                            Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.userf_rotation);
-                            std::array<float, 3> arr = {
-                                static_cast<float>(temp_euler.x()),
-                                static_cast<float>(temp_euler.y()),
-                                static_cast<float>(temp_euler.z())
-                            };
-                            userfT->userf_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        switch (i) {
-                            case 0: cbox_T.user_frame_0 = std::move(userfT); break;
-                            case 1: cbox_T.user_frame_1 = std::move(userfT); break;
-                            case 2: cbox_T.user_frame_2 = std::move(userfT); break;
-                            case 3: cbox_T.user_frame_3 = std::move(userfT); break;
-                            case 4: cbox_T.user_frame_4 = std::move(userfT); break;
-                            case 5: cbox_T.user_frame_5 = std::move(userfT); break;
-                            case 6: cbox_T.user_frame_6 = std::move(userfT); break;
-                            case 7: cbox_T.user_frame_7 = std::move(userfT); break;
-                        }
+                    toolT->box_type = src.box_type;
+                    {
+                        std::array<float, 9> barr;
+                        for (int j = 0; j < 9; ++j) barr[j] = src.box_parameter[j];
+                        toolT->box_parameter = std::make_unique<IPC::ST_Box_Para>(::flatbuffers::span<const float, 9>(barr.data(), 9));
                     }
 
-                    return IPC::Response_CallConfigControlBox::Pack(fbb, &cbox_T);
-                });
-            session.Serve<IPC::Request_CallConfigRobotArm, IPC::Response_CallConfigRobotArm>(
-                "call_config_robotarm", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_CallConfigRobotArm* req) {
-                    std::cout<<"Function call: "<<"call_config_robotarm"<<std::endl;
-                    IPC::Response_CallConfigRobotArmT robot_T;
-
-                    auto [t_oc_onoff, t_oc_react, t_oc_limit] = rb_system::Get_Out_Coll_Para();
-                    robot_T.out_coll_onoff = static_cast<uint8_t>(t_oc_onoff);
-                    robot_T.out_coll_react = static_cast<uint8_t>(t_oc_react);
-                    robot_T.out_coll_limit = t_oc_limit;
-
-                    auto [t_sc_mode, t_sc_dist_int, t_sc_dist_ext] = rb_system::Get_Self_Coll_Para();
-                    robot_T.self_coll_mode = t_sc_mode;
-                    robot_T.self_coll_distance_inter = t_sc_dist_int;
-                    robot_T.self_coll_distance_exter = t_sc_dist_ext;
-
-                    auto [t_gv_mode, t_gv_gx, t_gv_gy, t_gv_gz] = rb_system::Get_Gravity_Para();
-                    robot_T.gravity_mode = t_gv_mode;
-                    robot_T.gravity_gx = t_gv_gx;
-                    robot_T.gravity_gy = t_gv_gy;
-                    robot_T.gravity_gz = t_gv_gz;
-
-                    robot_T.direct_teaching_sensitivity = std::make_unique<IPC::N_JOINT_f>(rb_system::Get_Direct_Teaching_Sensitivity());
-
-                    return IPC::Response_CallConfigRobotArm::Pack(fbb, &robot_T);
-                });
-            session.Serve<IPC::Request_CallConfigToolList, IPC::Response_CallConfigToolList>(
-                "call_config_toollist", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_CallConfigToolList* req) {
-                    std::cout<<"Function call: "<<"call_config_toollist"<<std::endl;
-
-                    IPC::Response_CallConfigToolListT tool_list_T;
-                    for (int i = 0; i < 8; i++) {
-                        TCP_CONFIG src = rb_system::Get_DesiredTcpParameter(i);
-
-                        auto toolT = std::make_unique<IPC::ST_Tool_ParaT>();
-                        toolT->tool_name = src.tool_name;
-                        toolT->com_mass  = static_cast<float>(src.com_mass);
-
-                        {
-                            std::array<float, 3> arr = {
-                                static_cast<float>(src.com_offset.x()),
-                                static_cast<float>(src.com_offset.y()),
-                                static_cast<float>(src.com_offset.z())
-                            };
-                            toolT->com_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        {
-                            std::array<float, 3> arr = {
-                                static_cast<float>(src.tcp_offset.x()),
-                                static_cast<float>(src.tcp_offset.y()),
-                                static_cast<float>(src.tcp_offset.z())
-                            };
-                            toolT->tcp_offset = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-                        {
-                            Eigen::Vector3d temp_euler = rb_math::R_to_RPY(src.tcp_rotation);
-                            std::array<float, 3> arr = {
-                                static_cast<float>(temp_euler.x()),
-                                static_cast<float>(temp_euler.y()),
-                                static_cast<float>(temp_euler.z())
-                            };
-                            toolT->tcp_euler = std::make_unique<IPC::Vec3f>(::flatbuffers::span<const float, 3>(arr.data(), 3));
-                        }
-
-
-                        toolT->box_type = src.box_type;
-                        {
-                            std::array<float, 9> barr;
-                            for (int j = 0; j < 9; ++j) barr[j] = src.box_parameter[j];
-                            toolT->box_parameter = std::make_unique<IPC::ST_Box_Para>(::flatbuffers::span<const float, 9>(barr.data(), 9));
-                        }
-
-                        // configs_0 ~ configs_7에 넣기
-                        switch (i) {
-                            case 0: tool_list_T.t_configs_0 = std::move(toolT); break;
-                            case 1: tool_list_T.t_configs_1 = std::move(toolT); break;
-                            case 2: tool_list_T.t_configs_2 = std::move(toolT); break;
-                            case 3: tool_list_T.t_configs_3 = std::move(toolT); break;
-                            case 4: tool_list_T.t_configs_4 = std::move(toolT); break;
-                            case 5: tool_list_T.t_configs_5 = std::move(toolT); break;
-                            case 6: tool_list_T.t_configs_6 = std::move(toolT); break;
-                            case 7: tool_list_T.t_configs_7 = std::move(toolT); break;
-                        }
+                    // configs_0 ~ configs_7에 넣기
+                    switch (i) {
+                        case 0: tool_list_T.t_configs_0 = std::move(toolT); break;
+                        case 1: tool_list_T.t_configs_1 = std::move(toolT); break;
+                        case 2: tool_list_T.t_configs_2 = std::move(toolT); break;
+                        case 3: tool_list_T.t_configs_3 = std::move(toolT); break;
+                        case 4: tool_list_T.t_configs_4 = std::move(toolT); break;
+                        case 5: tool_list_T.t_configs_5 = std::move(toolT); break;
+                        case 6: tool_list_T.t_configs_6 = std::move(toolT); break;
+                        case 7: tool_list_T.t_configs_7 = std::move(toolT); break;
                     }
-                    return IPC::Response_CallConfigToolList::Pack(fbb, &tool_list_T);
-                });
-            
+                }
+                return IPC::Response_CallConfigToolList::Pack(fbb, &tool_list_T);
+            });
             // -----------------------------------------------------------------------
             // Set Call
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_Set_Tool_List, IPC::Response_Functions>(
-                "set_toollist_num", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Set_Tool_List* req) {
-                    std::cout<<"Function call: "<<"set_toollist_num"<<std::endl;
-                    int return_val = rb_system::Change_Tool_Number(req->target_tool_num());
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Set_User_Frame, IPC::Response_Functions>(
-                "set_userframe_num", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Set_User_Frame* req) {
-                    std::cout<<"Function call: "<<"set_userframe_num"<<std::endl;
-                    int return_val = rb_system::Change_UserFrame_Number(req->user_frame_num());
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Set_Shift, IPC::Response_Functions>(
-                "set_shift", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Set_Shift* req) {
-                    std::cout<<"Function call: "<<"set_shift"<<std::endl;
-                    int shift_no = req->shift_no();
-                    int shift_mode = req->shift_mode();
-                    TARGET_INPUT shift_input;
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        shift_input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    shift_input.target_frame  = req->target()->tar_frame();
-                    shift_input.target_unit   = req->target()->tar_unit();
+            ADD_SERVE_SIMPLE("set_toollist_num", IPC::Request_Set_Tool_List, IPC::Response_Functions, {
+                return_int = rb_system::Change_Tool_Number(req->target_tool_num());
+            });
+            ADD_SERVE_SIMPLE("set_userframe_num", IPC::Request_Set_User_Frame, IPC::Response_Functions, {
+                return_int = rb_system::Change_UserFrame_Number(req->user_frame_num());
+            });
+            ADD_SERVE_SIMPLE("set_shift", IPC::Request_Set_Shift, IPC::Response_Functions, {
+                TARGET_INPUT shift_input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    shift_input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                shift_input.target_frame  = req->target()->tar_frame();
+                shift_input.target_unit   = req->target()->tar_unit();
+                return_int = rb_motion::Set_Motion_Shift(req->shift_no(), req->shift_mode(), shift_input);
+            });
+            ADD_SERVE_SIMPLE("set_out_collision_para", IPC::Request_Set_Out_Collision_Para, IPC::Response_Functions, {
+                return_int = rb_system::Set_Out_Coll_Para(req->onoff(), req->react_mode(), req->threshold());
+            });
+            ADD_SERVE_SIMPLE("set_self_collision_para", IPC::Request_Set_Self_Collision_Para, IPC::Response_Functions, {
+                return_int = rb_system::Set_Self_Coll_Para(req->mode(), req->dist_int(), req->dist_ext());
+            });
+            ADD_SERVE_SIMPLE("set_joint_impedance", IPC::Request_Set_Joint_Impedance, IPC::Response_Functions, {
+                int onoff = req->onoff();
+                std::array<float, NO_OF_JOINT> stiffness;
+                std::array<float, NO_OF_JOINT> torqelimit;
+                auto arr_stiffness = req->stiffness()->f();
+                auto arr_torqelimit = req->torquelimit()->f();
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    stiffness[i] = arr_stiffness->Get(i);
+                    torqelimit[i] = arr_torqelimit->Get(i);
+                }
+                if(req->onoff() == 1){
+                    return_int = rb_system::Set_Joint_Impedance_On(stiffness, torqelimit);
+                }else{
+                    return_int = rb_system::Set_Joint_Impedance_Off();
+                }
+            });
+            ADD_SERVE_SIMPLE("set_freedrive", IPC::Request_Set_Free_Drive, IPC::Response_Functions, {
+                return_int = rb_system::Set_Free_Drive_Mode(req->onoff(), req->sensitivity());
+            });
+            // -----------------------------------------------------------------------
+            // Get Call
+            // -----------------------------------------------------------------------
+            ADD_SERVE_BLANK("get_core_data", IPC::Request_Get_Core_Data, IPC::Response_Get_Core_Data, {
 
-                    int return_val = rb_motion::Set_Motion_Shift(shift_no, shift_mode, shift_input);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Set_Out_Collision_Para, IPC::Response_Functions>(
-                "set_out_collision_para", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Set_Out_Collision_Para* req) {
-                    std::cout<<"Function call: "<<"set_out_collision_para"<<std::endl;
-                    int return_val = rb_system::Set_Out_Coll_Para(req->onoff(), req->react_mode(), req->threshold());
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Set_Self_Collision_Para, IPC::Response_Functions>(
-                "set_self_collision_para", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Set_Self_Collision_Para* req) {
-                    std::cout<<"Function call: "<<"set_self_collision_para"<<std::endl;
-                    int return_val = rb_system::Set_Self_Coll_Para(req->mode(), req->dist_int(), req->dist_ext());
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+                int req_option = req->option();
+                std::string req_name = req->name()->c_str();
+
+                int return_valid = 0;
+                std::array<float, 32> return_arr;
+                for(int i=0; i<32; i++){
+                    return_arr[i] = 0.0f;
+                }
+
+                if(req_name == "RB_JOINT_REF"){
+                    for(int i = 0; i < NO_OF_JOINT; i++){
+                        return_arr[i] = rb_motion::Get_Wrapper_J()[i];
+                    }
+                    return_valid = 1;
+                }else if(req_name == "RB_JOINT_ENC"){
+                    for(int i = 0; i < NO_OF_JOINT; i++){
+                        return_arr[i] = rb_system::Get_Motor_Encoder()[i];
+                    }
+                    return_valid = 1;
+                }else if(req_name == "RB_POINT_REF"){
+                    for(int i = 0; i< NO_OF_CARTE; i++){
+                        return_arr[i] = rb_motion::Get_Wrapper_X()[i];
+                    }
+                    return_valid = 1;
+                }else if(req_name == "RB_POINT_ENC"){
+                    for(int i = 0; i< NO_OF_CARTE; i++){
+                        return_arr[i] = rb_motion::Get_Wrapper_X()[i];
+                    }
+                    return_valid = 1;
+                }
+
+                IPC::Response_Get_Core_DataT core_data_T;
+                core_data_T.valid = return_valid;
+                core_data_T.payload = std::make_unique<IPC::FloatArray32>(::flatbuffers::span<const float, 32>(return_arr.data(), 32));
+                return IPC::Response_Get_Core_Data::Pack(fbb, &core_data_T);
+            });
+
             // -----------------------------------------------------------------------
             // Move Call
             // -----------------------------------------------------------------------
-            session.Serve<IPC::Request_Move_SmoothJogJ, IPC::Response_Functions>(
-                "call_smoothjog_j", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_SmoothJogJ* req) {
-                    std::cout<<"Function call: "<<"call_smoothjog_j"<<std::endl;
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
-                    int return_val = rb_motion::Start_Motion_SPEED_J(input, 0.5);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_SmoothJogL, IPC::Response_Functions>(
-                "call_smoothjog_l", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_SmoothJogL* req) {
-                    std::cout<<"Function call: "<<"call_smoothjog_l"<<std::endl;
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_CARTE; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
-                    int return_val = rb_motion::Start_Motion_SPEED_L(input, 0.001);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_SmoothJogStop, IPC::Response_Functions>(
-                "call_smoothjog_stop", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_SmoothJogStop* req) {
-                    float input_val = req->stoptime();
-                    std::cout<<"Function call: "<<"call_smoothjog_stop "<<input_val<<std::endl;
-                    rb_system::Call_MoveBreak(input_val);
-                    int return_val = 0;
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_TickJogJ, IPC::Response_Functions>(
-                "call_tickjog_j", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_TickJogJ* req) {
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
+            ADD_SERVE_SIMPLE("call_smoothjog_j", IPC::Request_Move_SmoothJogJ, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+                return_int = rb_motion::Start_Motion_SPEED_J(input, 0.5);
+            });
+            ADD_SERVE_SIMPLE("call_smoothjog_l", IPC::Request_Move_SmoothJogL, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+                return_int = rb_motion::Start_Motion_SPEED_L(input, 0.001);
+            });
+            ADD_SERVE_SIMPLE("call_smoothjog_stop", IPC::Request_Move_SmoothJogStop, IPC::Response_Functions, {
+                return_int = rb_system::Call_MoveBreak(req->stoptime());
+            });
+            ADD_SERVE_SIMPLE("call_tickjog_j", IPC::Request_Move_TickJogJ, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
 
-                    int spd_mode        = req->speed()->spd_mode();
-                    float vel_para      = req->speed()->spd_vel_para();
-                    float acc_para      = req->speed()->spd_acc_para();
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
 
-                    auto [return_val, tTar] = rb_motion::Calc_J_Relative(input);
-                    if(return_val == MSG_OK){
-                        return_val = rb_motion::Start_Motion_J(tTar, vel_para, acc_para, spd_mode);
-                    }
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_TickJogL, IPC::Response_Functions>(
-                "call_tickjog_l", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_TickJogL* req) {
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_CARTE; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
+                auto [return_val, tTar] = rb_motion::Calc_J_Relative(input);
+                if(return_val == MSG_OK){
+                    return_int = rb_motion::Start_Motion_J(tTar, vel_para, acc_para, spd_mode);
+                }else{
+                    return_int = return_val;
+                }
+            });
+            ADD_SERVE_SIMPLE("call_tickjog_l", IPC::Request_Move_TickJogL, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
 
-                    int spd_mode        = req->speed()->spd_mode();
-                    float vel_para      = req->speed()->spd_vel_para();
-                    float acc_para      = req->speed()->spd_acc_para();
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+                auto [return_val, tTar] = rb_motion::Calc_L_Relative(input);
+                if(return_val == MSG_OK){
+                    return_int = rb_motion::Start_Motion_L(tTar, vel_para, acc_para, spd_mode);
+                }else{
+                    return_int = return_val;
+                }
+            });
+            ADD_SERVE_SIMPLE("call_move_j", IPC::Request_Move_J, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
 
-                    auto [return_val, tTar] = rb_motion::Calc_L_Relative(input);
-                    if(return_val == MSG_OK){
-                        return_val = rb_motion::Start_Motion_L(tTar, vel_para, acc_para, spd_mode);
-                    }
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
 
-            session.Serve<IPC::Request_Move_J, IPC::Response_Functions>(
-                "call_move_j", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_J* req) {
-                    std::cout<<"Function call: "<<"call_move_j"<<std::endl;
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
+                return_int = rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+            });
+            ADD_SERVE_SIMPLE("call_move_l", IPC::Request_Move_L, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
 
-                    int spd_mode        = req->speed()->spd_mode();
-                    float vel_para      = req->speed()->spd_vel_para();
-                    float acc_para      = req->speed()->spd_acc_para();
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+                return_int = rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+            });
 
-                    int return_val = rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_L, IPC::Response_Functions>(
-                "call_move_l", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_L* req) {
-                    std::cout<<"Function call: "<<"call_move_l"<<std::endl;
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_CARTE; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
-
-                    int spd_mode        = req->speed()->spd_mode();
-                    float vel_para      = req->speed()->spd_vel_para();
-                    float acc_para      = req->speed()->spd_acc_para();
-
-                    int return_val = rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_JB_CLR, IPC::Response_Functions>(
-                "call_move_jb_clr", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_JB_CLR* req) {
-                    std::cout<<"Function call: "<<"call_move_jb_clr"<<std::endl;
-                    int return_val = rb_motion::Start_Motion_JB_Clear();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_JB_ADD, IPC::Response_Functions>(
-                "call_move_jb_add", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_JB_ADD* req) {
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_JOINT; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
-
-                    int     spd_mode    = req->speed()->spd_mode();
-                    float   vel_para    = req->speed()->spd_vel_para();
-                    float   acc_para    = req->speed()->spd_acc_para();
-
-                    int     blend_type  = req->type()->pnt_type();
-                    float   blend_para  = req->type()->pnt_para();
-
-                    int return_val = rb_motion::Start_Motion_JB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_JB_RUN, IPC::Response_Functions>(
-                "call_move_jb_run", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_JB_RUN* req) {
-                    std::cout<<"Function call: "<<"call_move_jb_run"<<std::endl;
-                    int return_val = rb_motion::Start_Motion_JB();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_LB_CLR, IPC::Response_Functions>(
-                "call_move_lb_clr", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_LB_CLR* req) {
-                    std::cout<<"Function call: "<<"call_move_lb_clr"<<std::endl;
-                    int return_val = rb_motion::Start_Motion_LB_Clear();
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_LB_ADD, IPC::Response_Functions>(
-                "call_move_lb_add", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_LB_ADD* req) {
-                    TARGET_INPUT input;
-                    for (int i = 0; i < NO_OF_CARTE; i++) {
-                        input.target_value[i] = req->target()->tar_values()->f()->Get(i);
-                    }
-                    input.target_frame  = req->target()->tar_frame();
-                    input.target_unit   = req->target()->tar_unit();
-
-                    int spd_mode        = req->speed()->spd_mode();
-                    float vel_para      = req->speed()->spd_vel_para();
-                    float acc_para      = req->speed()->spd_acc_para();
-
-                    int pt_type         = req->type()->pnt_type();
-                    float blend_para    = req->type()->pnt_para();
-
-                    int return_val = rb_motion::Start_Motion_LB_Add(input, vel_para, acc_para, spd_mode, pt_type, blend_para);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
-            session.Serve<IPC::Request_Move_LB_RUN, IPC::Response_Functions>(
-                "call_move_lb_run", [](flatbuffers::FlatBufferBuilder& fbb, const IPC::Request_Move_LB_RUN* req) {
-                    std::cout<<"Function call: "<<"call_move_lb_run"<<std::endl;
-                    int ori_opt = req->orientation();
-                    int return_val = rb_motion::Start_Motion_LB(ori_opt, 10);
-                    return IPC::CreateResponse_Functions(fbb, return_val);
-                });
+            ADD_SERVE_SIMPLE("call_move_jb_clr", IPC::Request_Move_JB_CLR, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_JB_Clear();
+            });
+            ADD_SERVE_SIMPLE("call_move_jb_add", IPC::Request_Move_JB_ADD, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_JOINT; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+                int     spd_mode    = req->speed()->spd_mode();
+                float   vel_para    = req->speed()->spd_vel_para();
+                float   acc_para    = req->speed()->spd_acc_para();
+                int     blend_type  = req->type()->pnt_type();
+                float   blend_para  = req->type()->pnt_para();
+                return_int = rb_motion::Start_Motion_JB_Add(input, vel_para, acc_para, spd_mode, blend_type, blend_para);
+            });
+            ADD_SERVE_SIMPLE("call_move_jb_run", IPC::Request_Move_JB_RUN, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_JB();
+            });
+            ADD_SERVE_SIMPLE("call_move_lb_clr", IPC::Request_Move_LB_CLR, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_LB_Clear();
+            });
+            ADD_SERVE_SIMPLE("call_move_lb_add", IPC::Request_Move_LB_ADD, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+                int pt_type         = req->type()->pnt_type();
+                float blend_para    = req->type()->pnt_para();
+                return_int = rb_motion::Start_Motion_LB_Add(input, vel_para, acc_para, spd_mode, pt_type, blend_para);
+            });
+            ADD_SERVE_SIMPLE("call_move_lb_run", IPC::Request_Move_LB_RUN, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_LB(req->orientation(), 10);
+            });
+            
             while (true) {
                 std::this_thread::sleep_for(1s);
             }

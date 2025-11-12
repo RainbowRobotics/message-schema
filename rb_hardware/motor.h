@@ -61,6 +61,7 @@ struct mPARA{
     double          para_hwmax_torque_rept;
     double          para_hwmax_torque_momt;
 
+    double          para_limit_current_mA;
     double          para_limit_torqueNm;
     double          para_limit_speedDeg;
     double          para_limit_angleDeg_Low;
@@ -100,6 +101,15 @@ struct mINFO{
     int             stat_ram_dqp;
     int             stat_sensors;
 
+    unsigned char   gain_position_flag;
+    int             gain_position_P;
+    int             gain_position_I;
+    int             gain_position_D;
+
+    unsigned char   gain_current_flag;    
+    int             gain_current_P;
+    int             gain_current_I;
+
     bool            connection_flag;
     unsigned char   connection_timer;
 };
@@ -121,7 +131,8 @@ public:
     motor(int bno, int ch);
     ~motor();
 
-    void onCANMessage(int ch, int id, const unsigned char* data, int dlc) override;
+    void    onCANMessage(int ch, int id, const unsigned char* data, int dlc) override;
+
     void    Clear_States();
     mSTAT   Get_States();
 
@@ -136,19 +147,31 @@ public:
     bool    Set_ConnectionTimerUp(unsigned char up_cnt);
     bool    Get_ConnectionFlag();
 
-    void    Activation_Process_Start();
-    void    Activation_Process_Update(double current_angle);
-    std::tuple<double, double> Activation_Process_Stop();
+    void                        Activation_Process_Start();
+    void                        Activation_Process_Update(double current_angle);
+    std::tuple<double, double>  Activation_Process_Stop();
 
-    void Set_Last_Reference(double angle_deg, double torque_Nm, double fb_gain, double ff_gain);
+    void Set_Last_Reference(double angle_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A);
+
+    CAN_MSG CmdAdminMode(unsigned int onoff);
+    CAN_MSG CmdBlindError(unsigned char blind_big, unsigned char blind_inp);
+
+    void    Clear_Gain_Current();
+    CAN_MSG Cmd_Ask_Gain_Current();
+    CAN_MSG Cmd_Save_Gain_Current(unsigned int gain_P, unsigned int gain_I);
+
+    void    Clear_Gain_Position();
+    CAN_MSG Cmd_Temporary_Gain_Position(unsigned char set_mode, unsigned int gain_P, unsigned int gain_I, unsigned int gain_D);
+    CAN_MSG Cmd_Ask_Gain_Position();
+    CAN_MSG Cmd_Save_Gain_Posision(unsigned int gain_P, unsigned int gain_I, unsigned int gain_D);
 
     CAN_MSG CmdServoOn(double esti_torque_Nm);
     CAN_MSG CmdRequestVersion();
     CAN_MSG CmdRequestStatus();
     CAN_MSG CmdControl();
-    CAN_MSG CmdControl(double position_deg, double torque_Nm, double fb_gain, double ff_gain);
+    CAN_MSG CmdControl(double position_deg, double torque_Nm, double fb_gain, double ff_gain, int tq_limit_A);
 
-    CAN_MSG CmdMakeErrorSumZero();
+    CAN_MSG CmdMakeErrorSumZero(unsigned char mode);
 
     
 
@@ -163,6 +186,7 @@ private:
     double          last_ref_torque_Nm;
     double          last_ref_fb_gain;
     double          last_ref_ff_gain;
+    int             last_ref_tq_limit_A;
 
     bool            activating_flag;
     double          activating_start_angle;

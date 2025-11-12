@@ -1,6 +1,7 @@
 #include "zenoh_backend.h"
 #include <zenoh.h>
 #include <mutex>
+#include <iostream>
 
 namespace rb::io {
 

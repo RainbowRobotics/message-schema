@@ -120,6 +120,8 @@ add_executable(rb_program
     rb_service/shareddata.cpp
     rb_service/joystick/joystick.cpp
     rb_service/mbus_server/mbustcp_server.cpp
+    rb_service/socket_server/command_server.cpp
+    rb_service/socket_server/data_server.cpp
 
     rb_motion/rrbdl.cpp
 )

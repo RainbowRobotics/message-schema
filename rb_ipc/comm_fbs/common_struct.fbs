@@ -27,6 +27,9 @@ struct Vec3f {
 struct Mat3f {
   m:[float:9];
 }
+struct FloatArray32 {
+  arr:[float:32];
+}
 
 table MoveInput_Target {
     tar_values:     N_INPUT_f;

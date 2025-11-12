@@ -5,7 +5,7 @@ flatc --cpp --filename-suffix "_generated" --filename-ext "h" --gen-object-api -
 pmap -x 2504110
 ```
 
-
+echo -e "call_move_j(0,0,0,90,0,90,0,0.4,0.4)" | nc 127.0.0.1 5000
 
 ---
 

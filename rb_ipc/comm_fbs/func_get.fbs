@@ -1,0 +1,15 @@
+include "func_return.fbs";
+include "common_struct.fbs";
+
+namespace IPC;
+//--------------------------------------------------------------
+table Request_Get_Core_Data {
+    option      : int;
+    name        : string;
+}
+
+table Response_Get_Core_Data {
+    valid       : int;
+    payload     : FloatArray32;
+}
+//--------------------------------------------------------------

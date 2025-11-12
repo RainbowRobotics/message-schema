@@ -38,6 +38,14 @@ struct Request_Set_Self_Collision_Para;
 struct Request_Set_Self_Collision_ParaBuilder;
 struct Request_Set_Self_Collision_ParaT;
 
+struct Request_Set_Joint_Impedance;
+struct Request_Set_Joint_ImpedanceBuilder;
+struct Request_Set_Joint_ImpedanceT;
+
+struct Request_Set_Free_Drive;
+struct Request_Set_Free_DriveBuilder;
+struct Request_Set_Free_DriveT;
+
 struct Request_Set_Tool_ListT : public ::flatbuffers::NativeTable {
   typedef Request_Set_Tool_List TableType;
   int32_t target_tool_num = 0;
@@ -369,6 +377,147 @@ inline ::flatbuffers::Offset<Request_Set_Self_Collision_Para> CreateRequest_Set_
 
 ::flatbuffers::Offset<Request_Set_Self_Collision_Para> CreateRequest_Set_Self_Collision_Para(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Self_Collision_ParaT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Set_Joint_ImpedanceT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_Joint_Impedance TableType;
+  int32_t onoff = 0;
+  std::unique_ptr<IPC::N_JOINT_f> stiffness{};
+  std::unique_ptr<IPC::N_JOINT_f> torquelimit{};
+  Request_Set_Joint_ImpedanceT() = default;
+  Request_Set_Joint_ImpedanceT(const Request_Set_Joint_ImpedanceT &o);
+  Request_Set_Joint_ImpedanceT(Request_Set_Joint_ImpedanceT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Set_Joint_ImpedanceT &operator=(Request_Set_Joint_ImpedanceT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Set_Joint_Impedance FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_Joint_ImpedanceT NativeTableType;
+  typedef Request_Set_Joint_ImpedanceBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ONOFF = 4,
+    VT_STIFFNESS = 6,
+    VT_TORQUELIMIT = 8
+  };
+  int32_t onoff() const {
+    return GetField<int32_t>(VT_ONOFF, 0);
+  }
+  const IPC::N_JOINT_f *stiffness() const {
+    return GetStruct<const IPC::N_JOINT_f *>(VT_STIFFNESS);
+  }
+  const IPC::N_JOINT_f *torquelimit() const {
+    return GetStruct<const IPC::N_JOINT_f *>(VT_TORQUELIMIT);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_ONOFF, 4) &&
+           VerifyField<IPC::N_JOINT_f>(verifier, VT_STIFFNESS, 4) &&
+           VerifyField<IPC::N_JOINT_f>(verifier, VT_TORQUELIMIT, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_Joint_ImpedanceT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_Joint_ImpedanceT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_Joint_Impedance> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Joint_ImpedanceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_Joint_ImpedanceBuilder {
+  typedef Request_Set_Joint_Impedance Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_onoff(int32_t onoff) {
+    fbb_.AddElement<int32_t>(Request_Set_Joint_Impedance::VT_ONOFF, onoff, 0);
+  }
+  void add_stiffness(const IPC::N_JOINT_f *stiffness) {
+    fbb_.AddStruct(Request_Set_Joint_Impedance::VT_STIFFNESS, stiffness);
+  }
+  void add_torquelimit(const IPC::N_JOINT_f *torquelimit) {
+    fbb_.AddStruct(Request_Set_Joint_Impedance::VT_TORQUELIMIT, torquelimit);
+  }
+  explicit Request_Set_Joint_ImpedanceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_Joint_Impedance> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_Joint_Impedance>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_Joint_Impedance> CreateRequest_Set_Joint_Impedance(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t onoff = 0,
+    const IPC::N_JOINT_f *stiffness = nullptr,
+    const IPC::N_JOINT_f *torquelimit = nullptr) {
+  Request_Set_Joint_ImpedanceBuilder builder_(_fbb);
+  builder_.add_torquelimit(torquelimit);
+  builder_.add_stiffness(stiffness);
+  builder_.add_onoff(onoff);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_Joint_Impedance> CreateRequest_Set_Joint_Impedance(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Joint_ImpedanceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Set_Free_DriveT : public ::flatbuffers::NativeTable {
+  typedef Request_Set_Free_Drive TableType;
+  int32_t onoff = 0;
+  float sensitivity = 0.0f;
+};
+
+struct Request_Set_Free_Drive FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Set_Free_DriveT NativeTableType;
+  typedef Request_Set_Free_DriveBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ONOFF = 4,
+    VT_SENSITIVITY = 6
+  };
+  int32_t onoff() const {
+    return GetField<int32_t>(VT_ONOFF, 0);
+  }
+  float sensitivity() const {
+    return GetField<float>(VT_SENSITIVITY, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_ONOFF, 4) &&
+           VerifyField<float>(verifier, VT_SENSITIVITY, 4) &&
+           verifier.EndTable();
+  }
+  Request_Set_Free_DriveT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Set_Free_DriveT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Set_Free_Drive> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Free_DriveT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Set_Free_DriveBuilder {
+  typedef Request_Set_Free_Drive Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_onoff(int32_t onoff) {
+    fbb_.AddElement<int32_t>(Request_Set_Free_Drive::VT_ONOFF, onoff, 0);
+  }
+  void add_sensitivity(float sensitivity) {
+    fbb_.AddElement<float>(Request_Set_Free_Drive::VT_SENSITIVITY, sensitivity, 0.0f);
+  }
+  explicit Request_Set_Free_DriveBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Set_Free_Drive> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Set_Free_Drive>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Drive(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t onoff = 0,
+    float sensitivity = 0.0f) {
+  Request_Set_Free_DriveBuilder builder_(_fbb);
+  builder_.add_sensitivity(sensitivity);
+  builder_.add_onoff(onoff);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Drive(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Free_DriveT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Set_Tool_ListT *Request_Set_Tool_List::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_Set_Tool_ListT>(new Request_Set_Tool_ListT());
   UnPackTo(_o.get(), _resolver);
@@ -528,6 +677,80 @@ inline ::flatbuffers::Offset<Request_Set_Self_Collision_Para> CreateRequest_Set_
       _mode,
       _dist_int,
       _dist_ext);
+}
+
+inline Request_Set_Joint_ImpedanceT::Request_Set_Joint_ImpedanceT(const Request_Set_Joint_ImpedanceT &o)
+      : onoff(o.onoff),
+        stiffness((o.stiffness) ? new IPC::N_JOINT_f(*o.stiffness) : nullptr),
+        torquelimit((o.torquelimit) ? new IPC::N_JOINT_f(*o.torquelimit) : nullptr) {
+}
+
+inline Request_Set_Joint_ImpedanceT &Request_Set_Joint_ImpedanceT::operator=(Request_Set_Joint_ImpedanceT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(onoff, o.onoff);
+  std::swap(stiffness, o.stiffness);
+  std::swap(torquelimit, o.torquelimit);
+  return *this;
+}
+
+inline Request_Set_Joint_ImpedanceT *Request_Set_Joint_Impedance::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_Joint_ImpedanceT>(new Request_Set_Joint_ImpedanceT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_Joint_Impedance::UnPackTo(Request_Set_Joint_ImpedanceT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = onoff(); _o->onoff = _e; }
+  { auto _e = stiffness(); if (_e) _o->stiffness = std::unique_ptr<IPC::N_JOINT_f>(new IPC::N_JOINT_f(*_e)); }
+  { auto _e = torquelimit(); if (_e) _o->torquelimit = std::unique_ptr<IPC::N_JOINT_f>(new IPC::N_JOINT_f(*_e)); }
+}
+
+inline ::flatbuffers::Offset<Request_Set_Joint_Impedance> Request_Set_Joint_Impedance::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Joint_ImpedanceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_Joint_Impedance(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_Joint_Impedance> CreateRequest_Set_Joint_Impedance(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Joint_ImpedanceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_Joint_ImpedanceT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _onoff = _o->onoff;
+  auto _stiffness = _o->stiffness ? _o->stiffness.get() : nullptr;
+  auto _torquelimit = _o->torquelimit ? _o->torquelimit.get() : nullptr;
+  return IPC::CreateRequest_Set_Joint_Impedance(
+      _fbb,
+      _onoff,
+      _stiffness,
+      _torquelimit);
+}
+
+inline Request_Set_Free_DriveT *Request_Set_Free_Drive::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Set_Free_DriveT>(new Request_Set_Free_DriveT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Set_Free_Drive::UnPackTo(Request_Set_Free_DriveT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = onoff(); _o->onoff = _e; }
+  { auto _e = sensitivity(); _o->sensitivity = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Set_Free_Drive> Request_Set_Free_Drive::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Free_DriveT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Set_Free_Drive(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Set_Free_Drive> CreateRequest_Set_Free_Drive(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Set_Free_DriveT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Set_Free_DriveT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _onoff = _o->onoff;
+  auto _sensitivity = _o->sensitivity;
+  return IPC::CreateRequest_Set_Free_Drive(
+      _fbb,
+      _onoff,
+      _sensitivity);
 }
 
 }  // namespace IPC

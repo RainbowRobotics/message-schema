@@ -14,6 +14,7 @@
 
 // #include "utils/magic_enum/magic_enum.hpp"
 #include "rb_ipc/ipc.h"
+#include "rb_service/socket_server/command_server.h"
 
 #define P_NAME "common"
 
@@ -232,8 +233,10 @@ int shot_message(int message_level, int message_code, std::string str_pname) {
 
   if (message_level == MSG_LEVEL_WARN) {
     rb_common::log_push(LogLevel::Warning, happend_str, str_pname);
+    rb_socket_command_server::broadcast("warn[MSG][" + std::to_string(message_code) + "]");
   } else if (message_level == MSG_LEVEL_ERRR) {
     rb_common::log_push(LogLevel::Error, happend_str, str_pname);
+    rb_socket_command_server::broadcast("error[MSG][" + std::to_string(message_code) + "]");
   } else {
     rb_common::log_push(LogLevel::Msg, happend_str, str_pname);
   }
