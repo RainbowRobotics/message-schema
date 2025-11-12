@@ -1,8 +1,16 @@
-from rb_database.mongo_db import get_db
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import to_json
+from rb_database.mongo_db import (
+    get_db,
+)
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    to_json,
+)
 
-from .info_module import InfoService
+from .info_module import (
+    InfoService,
+)
 
 info_service = InfoService()
 info_socket_router = RbSocketIORouter()

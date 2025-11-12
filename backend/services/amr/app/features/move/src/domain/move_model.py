@@ -2,10 +2,20 @@
 [AMR 이동 모델]
 """
 import uuid
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import (
+    dataclass,
+    field,
+)
+from datetime import (
+    UTC,
+    datetime,
+)
 from enum import Enum
 from typing import Any
+
+from rb_utils.service_exception import (
+    ServiceException,
+)
 
 from app.features.move.schema.move_api import (
     Request_Move_CircularPD,
@@ -15,7 +25,6 @@ from app.features.move.schema.move_api import (
     Request_Move_TargetPD,
     Request_Move_XLinearPD,
 )
-from rb_utils.service_exception import ServiceException
 
 
 # === Enums ==========================================================
@@ -106,6 +115,7 @@ class MoveModel:
     remaining_time: float | None = None
     goal_name: str | None = None
     bat_percent: int | None = None
+    map_name: str | None = None
 
     def set_move_goal(self, req: Request_Move_GoalPD):
         """

@@ -1,8 +1,12 @@
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import (
+    Awaitable,
+)
 from typing import Any
 
-from rb_modules.log import rb_log
+from rb_modules.log import (
+    rb_log,
+)
 
 _running: set[asyncio.Task] = set()
 

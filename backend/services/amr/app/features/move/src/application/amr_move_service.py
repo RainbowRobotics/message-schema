@@ -3,34 +3,64 @@
 """
 import asyncio
 import json
-from collections import defaultdict
-from datetime import UTC, datetime
+from collections import (
+    defaultdict,
+)
+from contextlib import (
+    suppress,
+)
+from datetime import (
+    UTC,
+    datetime,
+)
+from pathlib import Path
 from functools import wraps
 from typing import Any
-
+import os
+from fastapi import HTTPException, BackgroundTasks
+from fastapi.responses import FileResponse, JSONResponse
 import rb_database.mongo_db as mongo_db
-from app.features.move.schema.move_api import (
-  Request_Move_GoalPD,
-  Request_Move_JogPD,
-  Request_Move_TargetPD,
-  RequestAmrMoveArchiveLogPD,
-  RequestAmrMoveExportLogPD,
-  RequestAmrMoveLogsPD,
-  Response_Move_GoalPD,
-  Response_Move_LogsPD,
-  Response_Move_PausePD,
-  Response_Move_ResumePD,
-  Response_Move_StopPD,
-  Response_Move_TargetPD,
+from rb_modules.log import (
+    rb_log,
 )
-from app.features.move.src.adapters.output.mongo import MoveMongoDatabaseAdapter
-from app.features.move.src.adapters.output.zenoh import SlamnavZenohAdapter
-from app.features.move.src.domain.move_model import MoveModel, MoveStatus
-from app.socket.socket_client import socket_client
-from fastapi.responses import JSONResponse
-from rb_modules.log import rb_log
-from rb_utils.date import convert_dt
-from rb_utils.service_exception import ServiceException
+from rb_utils.date import (
+    convert_dt,
+)
+from rb_utils.service_exception import (
+    ServiceException,
+)
+from app.features.move.src.adapters.output.smtplib import (
+    MoveSmtpLibEmailAdapter,
+)
+
+from app.features.move.schema.move_api import (
+    Request_Move_GoalPD,
+    Request_Move_JogPD,
+    Request_Move_TargetPD,
+    RequestAmrMoveArchiveLogPD,
+    RequestAmrMoveExportLogPD,
+    RequestAmrMoveLogsPD,
+    Response_Move_GoalPD,
+    Response_Move_LogsPD,
+    Response_Move_PausePD,
+    Response_Move_ResumePD,
+    Response_Move_StopPD,
+    Response_Move_TargetPD,
+)
+from app.features.move.src.adapters.output.mongo import (
+    MoveMongoDatabaseAdapter,
+)
+from app.features.move.src.adapters.output.zenoh import (
+    SlamnavZenohAdapter,
+)
+from app.features.move.src.domain.move_model import (
+    MoveModel,
+    MoveStatus,
+)
+from app.socket.socket_client import (
+    socket_client,
+)
+
 
 def handle_move_error(fn):
     @wraps(fn)
@@ -61,6 +91,7 @@ class AmrMoveService:
     def __init__(self):
         self.database_port = MoveMongoDatabaseAdapter()
         self.slamnav_port = SlamnavZenohAdapter()
+        self.email_port = MoveSmtpLibEmailAdapter()
         self._locks = defaultdict(asyncio.Lock)
 
     async def move_state_change(self, topic:str, obj:dict):
@@ -196,10 +227,8 @@ class AmrMoveService:
         model.set_move_stop()
 
         # 2) DB 저장
-        try:
+        with suppress(Exception):  # pylint: disable=broad-exception-caught  # 필요하면 유지
             await self.database_port.upsert(model.to_dict())
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
 
         # 3) 요청 검사
         model.check_variables()
@@ -214,7 +243,7 @@ class AmrMoveService:
             await self.database_port.upsert(model.to_dict())
         except Exception as e:  # pylint: disable=broad-exception-caught
             print("[moveStop] DB Exception : ", e)
-        return model.to_dict()  
+        return model.to_dict()
 
     @handle_move_error
     async def move_pause(self, model: MoveModel | None = None) -> Response_Move_PausePD:
@@ -336,36 +365,72 @@ class AmrMoveService:
 
 
 
-    async def export_logs(self, request: RequestAmrMoveExportLogPD):
+    async def export_logs(self, request: RequestAmrMoveExportLogPD, background_tasks: BackgroundTasks):
         """
         [AMR 이동 로그 내보내기]
         """
         rb_log.info(f"[amr_move_service] exportLogs : {request.model_dump()}")
         try:
             # 1) 요청 검사
-            if request.startDt is None:
-                request.startDt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
-            if request.endDt is None:
-                request.endDt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
-            request.startDt = convert_dt(request.startDt, "UTC", "UTC")
-            request.endDt = convert_dt(request.endDt, "UTC", "UTC")
+            if request.start_dt is None:
+                request.start_dt = convert_dt(datetime(2025, 1, 1), "Asia/Seoul", "UTC")
+            if request.end_dt is None:
+                request.end_dt = convert_dt(datetime.now(UTC), "Asia/Seoul", "UTC")
+            request.start_dt = convert_dt(request.start_dt, "UTC", "UTC")
+            request.end_dt = convert_dt(request.end_dt, "UTC", "UTC")
 
-            # if request.startDt > request.endDt:
-            #     raise ServiceException("시작 날짜가 종료 날짜보다 큽니다", status_code=400)
-            # if request.startDt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
-            #     raise ServiceException("시작 날짜가 2025년 1월 1일 이전입니다", status_code=400)
-            # if request.endDt > datetime.now(UTC):
-            #     raise ServiceException("종료 날짜가 오늘 이후입니다", status_code=400)
+            if request.start_dt > request.end_dt:
+                raise ServiceException("시작 날짜가 종료 날짜보다 큽니다", status_code=400)
+            if request.start_dt < convert_dt(datetime(2025, 1, 1), "UTC", "UTC"):
+                raise ServiceException("시작 날짜가 2025년 1월 1일 이전입니다", status_code=400)
+            if request.end_dt > datetime.now(UTC):
+                raise ServiceException("종료 날짜가 오늘 이후입니다", status_code=400)
 
-            # # 2) 파일 검사 및 임시파일 저장
-            # result = await self.database_port.export_logs(start_utc=request.start_dt, end_utc=request.end_dt, filename=request.filename, filters=request.filters)
-            # print(f"[exportLogs] result: {result}")
+            # 2) 파일 검사 및 임시파일 저장
+            result = await self.database_port.export_logs(options=request.model_dump(exclude_none=True))
+            print(f"[exportLogs] result: {result}")
+            # return result
 
-            # # 3) 파일 내보내기 및 반환
-            # if request.method == "mail" or request.method == "stream":
-            #     pass
-            # else:
-            #     raise ServiceException("내보내기 방식 오류: 지원하지 않는 방식", status_code=400)
+            file_path = result["file"]
+            p = Path(file_path)
+            if not p.exists():
+                raise HTTPException(status_code=500, detail="내보내기 파일 생성 실패")
+
+            download_name = request.filename or p.name
+            if not download_name.endswith(".ndjson.gz"):
+                download_name += ".ndjson.gz"
+            download_name = os.path.basename(download_name)  # 디렉터리 traversal 방지
+
+            # 2) 파일 내보내는 방법 분기
+            if request.method == "email":
+                if not request.email:
+                    raise HTTPException(status_code=400, detail="email 필드가 필요합니다 (method=email)")
+                # 백그라운드 메일 발송 트리거
+                background_tasks.add_task(self.email_port.send_export_email, request.email, str(p), download_name)
+                # await self.email_port.send_export_email(request.email, str(p), download_name)
+                return {
+                    "ok": True,
+                    "message": "메일 발송 요청 완료",
+                    "estimatedDocs": result.get("estimatedDocs"),
+                    "archivedDocs": result.get("archivedDocs"),
+                    # "filename": download_name,
+                    "size": result.get("size"),
+                }
+            elif request.method == "file":
+                # NDJSON + gzip
+                headers = {
+                    # 내용은 NDJSON, 전송은 gzip
+                    "Content-Type": "application/gzip",
+                }
+                # FileResponse는 알아서 async로 처리됨
+                return FileResponse(
+                    path=str(p),
+                    media_type="application/gzip",
+                    filename=download_name,     # Content-Disposition 세팅
+                    headers=headers,
+                )
+            else:
+                raise HTTPException(status_code=400, detail="내보내기 방식 오류: 지원하지 않는 방식")
         except ServiceException as e:
             print(f"[exportLogs] ServiceException : {e.message}, {e.status_code}")
             raise e

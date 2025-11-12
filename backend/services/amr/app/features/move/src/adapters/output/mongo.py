@@ -2,17 +2,35 @@
 [Move MongoDB 어댑터]
 """
 import math
-from datetime import UTC, date, datetime
-from typing import Any
-
+from datetime import (
+    UTC,
+    date,
+    datetime,
+)
 import rb_database.mongo_db as mongo_db
-from motor.motor_asyncio import AsyncIOMotorCollection
-from pymongo import ASCENDING, DESCENDING
-from rb_modules.log import rb_log
-from rb_utils.date import convert_dt
-from rb_utils.pagination import LogsResponse
-from rb_utils.service_exception import ServiceException
-from app.features.move.src.port.database_output import MoveDatabasePort
+from motor.motor_asyncio import (
+    AsyncIOMotorCollection,
+)
+from pymongo import (
+    ASCENDING,
+    DESCENDING,
+)
+from rb_modules.log import (
+    rb_log,
+)
+from rb_utils.date import (
+    convert_dt,
+)
+from rb_utils.pagination import (
+    LogsResponse,
+)
+from rb_utils.service_exception import (
+    ServiceException,
+)
+
+from app.features.move.src.port.database_output import (
+    MoveDatabasePort,
+)
 
 
 class MoveMongoDatabaseAdapter(MoveDatabasePort):
@@ -29,7 +47,7 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
 
             # 2) 인덱스 생성(이미 존재하면 패스)
             await mongo_db.ensure_index(mongo_db.db, self.name, [("message", "text"),("result", "text"),("status", "text"),
-            ("method", "text"),("id", "text"),("goalId", "text"),("command", "text"),
+            ("method", "text"),("id", "text"),("goalId", "text"),("command", "text"),("mapName", "text"),
             ("direction", "text"),("createdAt", -1)], name="move_index")
             await mongo_db.ensure_index(mongo_db.db, self.name, [("createdAt", 1)], name="createdAt_1")
 
@@ -96,7 +114,7 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
         """
         [Move DB 조회 및 페이지네이션]
         - options:
-            - filter: dict              # Mongo 조건식
+            - filters: dict              # Mongo 조건식
             - searchText: str           # $text 검색어 (텍스트 인덱스 필요)
             - fields: dict              # projection 예) {"_id":0, "contents":1}
             - sort: str                 # 정렬 필드 (기본: createdAt)
@@ -239,16 +257,75 @@ class MoveMongoDatabaseAdapter(MoveDatabasePort):
         )
         print(f"[migrate] createdAt strings→Date matched={res.matched_count} modified={res.modified_count}")
 
-    async def export_logs(self, start_dt: datetime | date, end_dt: datetime | date, filename: str, filters: str | dict[str, Any] | None = None) -> dict:
+    async def export_logs(self, options: dict) -> dict:
+        """
+        [Move DB 로그 내보내기]
+        - options:
+            - start_dt: datetime | date # 내보내기 기준 시작 날짜(해당날짜기준부터 내보냅니다)
+            - end_dt: datetime | date   # 내보내기 기준 종료 날짜(해당날짜기준까지 내보냅니다)
+            - filters: dict            # Mongo 조건식
+            - filename: str             # 내보내기 파일명(확장자는 gz로 고정됩니다)
+            - search_text: str           # $text 검색어 (텍스트 인덱스 필요)
+            - fields: dict              # projection 예) {"_id":0, "contents":1}
+            - sort: str                 # 정렬 필드 (기본: createdAt)
+            - order: str                # "desc"(기본) | "asc"
+        """
         try:
-            # tz_name = "Asia/Seoul"
-            # out_dir = "/data/amr/archive/move"
-            print(f"[exportLogs] start_dt: {start_dt}, end_dt: {end_dt}, filename: {filename}, filters: {filters}")
+            # 1) DB 세팅
+            await self.check_db()
+            col = mongo_db.db[self.name]
+            tz_name = "Asia/Seoul"
+            out_dir = "/data/amr/export/move"
+
+            rb_log.info(f"[AmrMove] getLogs : {options}")
+
+            # 2) 옵션 파싱
+            filters = dict(options.get("filters") or {})
+            search_text = options.get("search_text")
+            fields = dict(options.get("fields") or {})
+            sort   = options.get("sort", "createdAt")
+            order  = DESCENDING if str(options.get("order", "desc")).lower() == "desc" else ASCENDING
+            start_utc = convert_dt(local=options.get("start_dt"), in_tz=tz_name, out_tz="UTC") if options.get("start_dt") else None
+            end_utc = convert_dt(local=options.get("end_dt"), in_tz=tz_name, out_tz="UTC") if options.get("end_dt") else None
+            filename = options.get("filename")
+
+            print(f"[exportLogs] start_utc: {start_utc}, end_utc: {end_utc}, filename: {filename}, filters: {filters}, search_text: {search_text}, fields: {fields}, sort: {sort}, order: {order}")
+
+            # 3) 내보내기 실행
+            results = await mongo_db.export_collection(
+                col=col,
+                start_utc=start_utc,
+                end_utc=end_utc,
+                out_dir=out_dir,
+                file_name=filename,
+                filters=filters,
+                search_text=search_text,
+                fields=fields,
+                sort=sort,
+                order=order
+            )
+
+            print(f"[exportLogs] results: {results}")
+            return {
+                "estimatedDocs": results.get("estimatedDocs"),
+                "archivedDocs": results.get("archivedDocs"),
+                "file": results.get("file"),
+                "size": results.get("size"),
+                "error": results.get("error"),
+                "meta": {
+                    "start_utc": start_utc,
+                    "end_utc": end_utc,
+                    "filters": filters,
+                    "searchText": search_text,
+                    "filename": filename,
+                    "fields": fields,
+                    "sort": sort,
+                    "order": order,
+                }
+            }
         except ServiceException as e:
             print(f"[exportLogs] ServiceException: {e}")
             raise e
         except Exception as e:
             rb_log.error(f"[MoveMongo] Export Logs Error : {e}")
             raise ServiceException("DB 로그 내보내기 실패", status_code=500) from e
-
-

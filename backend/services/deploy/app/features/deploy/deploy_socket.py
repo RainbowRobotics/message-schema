@@ -1,7 +1,14 @@
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import t_to_dict, to_json
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    t_to_dict,
+    to_json,
+)
 
-from .deploy_module import DeployService
+from .deploy_module import (
+    DeployService,
+)
 
 deploy_socket_router = RbSocketIORouter()
 deploy_service = DeployService()

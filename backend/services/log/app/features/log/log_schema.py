@@ -1,5 +1,10 @@
-from pydantic import BaseModel, Field
-from rb_database.schema import PyObjectId
+from pydantic import (
+    BaseModel,
+    Field,
+)
+from rb_database.schema import (
+    PyObjectId,
+)
 
 
 class RealTimeLogItem(BaseModel):

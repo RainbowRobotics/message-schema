@@ -1,0 +1,17 @@
+namespace IPC;
+
+table Email_Attachment {
+    file_name: string;
+    file_content: bytes;
+    file_type: string;
+}
+
+table Send_Email {
+    from_email: string;
+    to_email: string;
+    subject: string;
+    body: string;
+    attachment: [Email_Attachment];
+}
+
+root_type Send_Email;

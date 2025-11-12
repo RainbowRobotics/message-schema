@@ -1,5 +1,9 @@
-from app.features.deploy.deploy_module import DeployService
-from app.features.deploy.deploy_schema import DeployProgressSchemaPD
+from app.features.deploy.deploy_module import (
+    DeployService,
+)
+from app.features.deploy.deploy_schema import (
+    DeployProgressSchemaPD,
+)
 from fastapi import APIRouter
 
 deploy_service = DeployService()

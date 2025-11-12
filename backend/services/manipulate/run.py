@@ -3,7 +3,10 @@ import sys
 
 from app.main import app
 from dotenv import load_dotenv
-from uvicorn import Config, Server
+from uvicorn import (
+    Config,
+    Server,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

@@ -2,7 +2,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from app.features.whoami.whoami_schema import Response_CallWhoamIPD
+from app.features.whoami.whoami_schema import (
+    Response_CallWhoamIPD,
+)
 
 
 class Request_System_StatePD(BaseModel):

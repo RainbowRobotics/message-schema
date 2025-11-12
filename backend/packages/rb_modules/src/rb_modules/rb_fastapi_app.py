@@ -1,20 +1,54 @@
 import asyncio
 import contextlib
-from collections.abc import Callable, Sequence
-from contextlib import asynccontextmanager
-from importlib.resources import as_file, files
+from collections.abc import (
+    Callable,
+    Sequence,
+)
+from contextlib import (
+    asynccontextmanager,
+)
+from importlib.resources import (
+    as_file,
+    files,
+)
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import FileResponse, JSONResponse
-from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings
-from rb_database.mongo_db import close_db, init_db
-from rb_socketio import RBSocketIONsClient, RbSocketIORouter
-from rb_zenoh.exeption import register_zenoh_exception_handlers
-from rb_zenoh.router import ZenohRouter
+from fastapi import (
+    APIRouter,
+    FastAPI,
+    Request,
+)
+from fastapi.middleware.cors import (
+    CORSMiddleware,
+)
+from fastapi.openapi.docs import (
+    get_swagger_ui_html,
+)
+from fastapi.responses import (
+    FileResponse,
+    JSONResponse,
+)
+from pydantic import (
+    Field,
+    model_validator,
+)
+from pydantic_settings import (
+    BaseSettings,
+)
+from rb_database.mongo_db import (
+    close_db,
+    init_db,
+)
+from rb_socketio import (
+    RBSocketIONsClient,
+    RbSocketIORouter,
+)
+from rb_zenoh.exeption import (
+    register_zenoh_exception_handlers,
+)
+from rb_zenoh.router import (
+    ZenohRouter,
+)
 
 from .log import rb_log
 

@@ -1,7 +1,10 @@
 import asyncio
 import functools
 
-from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
+from rb_zenoh.exeption import (
+    ZenohNoReply,
+    ZenohTransportError,
+)
 
 from .log import rb_log
 

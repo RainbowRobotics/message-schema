@@ -1,5 +1,9 @@
-from rb_modules.log import rb_log
-from rb_socketio import RBSocketIONsClient
+from rb_modules.log import (
+    rb_log,
+)
+from rb_socketio import (
+    RBSocketIONsClient,
+)
 
 socket_client = RBSocketIONsClient(
     "deploy",

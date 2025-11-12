@@ -1,10 +1,20 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
-from rb_schemas.base import Response_ReturnValuePD
+from fastapi import (
+    APIRouter,
+    Query,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
+)
 
-from .config_module import ConfigService
-from .config_schema import Request_Change_SpeedbarPD, Response_SpeedBarPD
+from .config_module import (
+    ConfigService,
+)
+from .config_schema import (
+    Request_Change_SpeedbarPD,
+    Response_SpeedBarPD,
+)
 
 config_router = APIRouter(tags=["Config"])
 

@@ -1,7 +1,13 @@
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import to_json
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    to_json,
+)
 
-from .state_module import StateService
+from .state_module import (
+    StateService,
+)
 
 state_service = StateService()
 state_socket_router = RbSocketIORouter()

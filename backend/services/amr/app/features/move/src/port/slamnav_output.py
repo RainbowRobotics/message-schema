@@ -1,13 +1,18 @@
-from typing import Protocol, runtime_checkable
+from typing import (
+    Protocol,
+    runtime_checkable,
+)
 
 from app.features.move.schema.move import (
-  MoveGoalResponse,
-  MovePauseResponse,
-  MoveResumeResponse,
-  MoveStopResponse,
-  MoveTargetResponse,
+    MoveGoalResponse,
+    MovePauseResponse,
+    MoveResumeResponse,
+    MoveStopResponse,
+    MoveTargetResponse,
 )
-from app.features.move.src.domain.move_model import MoveModel
+from app.features.move.src.domain.move_model import (
+    MoveModel,
+)
 
 
 @runtime_checkable

@@ -1,5 +1,7 @@
 from fastapi import APIRouter
-from rb_zenoh.client import ZenohClient
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
 amr_control_router = APIRouter(tags=["AMR 제어"])
 zenoh_client = ZenohClient()

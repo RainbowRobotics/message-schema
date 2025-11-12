@@ -1,7 +1,9 @@
 from typing import Annotated
 
 from bson import ObjectId
-from pydantic import BeforeValidator
+from pydantic import (
+    BeforeValidator,
+)
 
 
 def objectid_to_str(v):

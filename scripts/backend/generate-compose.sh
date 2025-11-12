@@ -60,6 +60,7 @@ for dir in "$BE/services"/*; do
       - ./packages:/app/backend/packages
       - ./schemas:/app/backend/schemas
       - ./temp-data:/app/data
+      - /data:/data
 
 EOF
 
@@ -84,6 +85,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
+      - /data:/data
 
 EOF
 
@@ -108,6 +110,7 @@ EOF
     volumes:
       - ./services/${NAME}/${NAME}.arm64.bin:/${NAME}.arm64.bin
       - ./services/${NAME}/${NAME}.amd64.bin:/${NAME}.amd64.bin
+      - /data:/data
 
 EOF
 done
@@ -133,7 +136,7 @@ for FD in 3 4 5; do
     ports:
       - "3000:3000"
     networks: [rb_net]
-      
+
   zenoh-router:
     build:
       context: ../zenoh-router

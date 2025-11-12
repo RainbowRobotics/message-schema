@@ -1,6 +1,12 @@
-from rb_flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
-from rb_flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
-from rb_zenoh.client import ZenohClient
+from rb_flat_buffers.IPC.Request_CallWhoAmI import (
+    Request_CallWhoAmIT,
+)
+from rb_flat_buffers.IPC.Response_CallWhoamI import (
+    Response_CallWhoamIT,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
 zenoh_client = ZenohClient()
 

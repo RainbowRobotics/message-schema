@@ -4,7 +4,9 @@ import re
 
 import socketio
 
-from .socket_client_router import RbSocketIORouter
+from .socket_client_router import (
+    RbSocketIORouter,
+)
 
 
 class RBSocketIONsClient(socketio.AsyncClient):

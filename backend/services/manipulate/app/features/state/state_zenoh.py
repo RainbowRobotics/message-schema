@@ -1,7 +1,15 @@
-from app.socket.socket_client import socket_client
-from rb_flat_buffers.IPC.State_Core import State_CoreT
-from rb_utils.asyncio_helper import fire_and_log
-from rb_zenoh.router import ZenohRouter
+from app.socket.socket_client import (
+    socket_client,
+)
+from rb_flat_buffers.IPC.State_Core import (
+    State_CoreT,
+)
+from rb_utils.asyncio_helper import (
+    fire_and_log,
+)
+from rb_zenoh.router import (
+    ZenohRouter,
+)
 
 zenoh_state_router = ZenohRouter()
 

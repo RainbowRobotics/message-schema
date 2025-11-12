@@ -1,4 +1,6 @@
-from rb_socketio import RBSocketIONsClient
+from rb_socketio import (
+    RBSocketIONsClient,
+)
 
 socket_client = RBSocketIONsClient(
     "amr",

@@ -1,7 +1,14 @@
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import t_to_dict, to_json
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    t_to_dict,
+    to_json,
+)
 
-from .io_module import IoService
+from .io_module import (
+    IoService,
+)
 
 io_socket_router = RbSocketIORouter()
 io_service = IoService()

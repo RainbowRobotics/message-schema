@@ -1,9 +1,18 @@
 from rb_database import get_db
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import t_to_dict, to_json
-from rb_zenoh.client import ZenohClient
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    t_to_dict,
+    to_json,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
-from .program_module import ProgramService
+from .program_module import (
+    ProgramService,
+)
 
 program_socket_router = RbSocketIORouter()
 zenoh_client = ZenohClient()

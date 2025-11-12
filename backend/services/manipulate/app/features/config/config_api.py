@@ -1,8 +1,14 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
-from rb_schemas.base import Response_ReturnValuePD
+from fastapi.responses import (
+    JSONResponse,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
+)
 
-from .config_module import ConfigService
+from .config_module import (
+    ConfigService,
+)
 from .config_schema import (
     Request_Save_Area_ParameterPD,
     Request_Save_Collision_ParameterPD,

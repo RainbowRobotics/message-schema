@@ -95,8 +95,15 @@ class State_Change_Move(object):
         return o == 0
 
     # State_Change_Move
-    def Vel(self, j: int):
+    def MapName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # State_Change_Move
+    def Vel(self, j: int):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             a = self._tab.Vector(o)
             return self._tab.Get(flatbuffers.number_types.Float64Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 8))
@@ -104,102 +111,102 @@ class State_Change_Move(object):
 
     # State_Change_Move
     def VelAsNumpy(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Float64Flags, o)
         return 0
 
     # State_Change_Move
     def VelLength(self) -> int:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # State_Change_Move
     def VelIsNone(self) -> bool:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         return o == 0
 
     # State_Change_Move
     def GoalId(self) -> Optional[str]:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # State_Change_Move
-    def GoalName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # State_Change_Move
-    def Method(self) -> Optional[str]:
+    def GoalName(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # State_Change_Move
-    def Direction(self) -> Optional[str]:
+    def Method(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # State_Change_Move
-    def Preset(self):
+    def Direction(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # State_Change_Move
+    def Preset(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # State_Change_Move
     def Result(self) -> Optional[str]:
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # State_Change_Move
-    def Message(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # State_Change_Move
-    def RemainingDist(self):
+    def Message(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+            return self._tab.String(o + self._tab.Pos)
+        return None
 
     # State_Change_Move
-    def Target(self):
+    def RemainingDist(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # State_Change_Move
-    def Speed(self):
+    def Target(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
     # State_Change_Move
-    def BatPercent(self):
+    def Speed(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # State_Change_Move
+    def BatPercent(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
 def State_Change_MoveStart(builder: flatbuffers.Builder):
-    builder.StartObject(16)
+    builder.StartObject(17)
 
 def Start(builder: flatbuffers.Builder):
     State_Change_MoveStart(builder)
@@ -240,8 +247,14 @@ def State_Change_MoveStartGoalPoseVector(builder, numElems: int) -> int:
 def StartGoalPoseVector(builder, numElems: int) -> int:
     return State_Change_MoveStartGoalPoseVector(builder, numElems)
 
+def State_Change_MoveAddMapName(builder: flatbuffers.Builder, mapName: int):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(mapName), 0)
+
+def AddMapName(builder: flatbuffers.Builder, mapName: int):
+    State_Change_MoveAddMapName(builder, mapName)
+
 def State_Change_MoveAddVel(builder: flatbuffers.Builder, vel: int):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(vel), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(vel), 0)
 
 def AddVel(builder: flatbuffers.Builder, vel: int):
     State_Change_MoveAddVel(builder, vel)
@@ -253,67 +266,67 @@ def StartVelVector(builder, numElems: int) -> int:
     return State_Change_MoveStartVelVector(builder, numElems)
 
 def State_Change_MoveAddGoalId(builder: flatbuffers.Builder, goalId: int):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(goalId), 0)
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(goalId), 0)
 
 def AddGoalId(builder: flatbuffers.Builder, goalId: int):
     State_Change_MoveAddGoalId(builder, goalId)
 
 def State_Change_MoveAddGoalName(builder: flatbuffers.Builder, goalName: int):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(goalName), 0)
+    builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(goalName), 0)
 
 def AddGoalName(builder: flatbuffers.Builder, goalName: int):
     State_Change_MoveAddGoalName(builder, goalName)
 
 def State_Change_MoveAddMethod(builder: flatbuffers.Builder, method: int):
-    builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(method), 0)
+    builder.PrependUOffsetTRelativeSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(method), 0)
 
 def AddMethod(builder: flatbuffers.Builder, method: int):
     State_Change_MoveAddMethod(builder, method)
 
 def State_Change_MoveAddDirection(builder: flatbuffers.Builder, direction: int):
-    builder.PrependUOffsetTRelativeSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(direction), 0)
+    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(direction), 0)
 
 def AddDirection(builder: flatbuffers.Builder, direction: int):
     State_Change_MoveAddDirection(builder, direction)
 
 def State_Change_MoveAddPreset(builder: flatbuffers.Builder, preset: int):
-    builder.PrependInt32Slot(9, preset, 0)
+    builder.PrependInt32Slot(10, preset, 0)
 
 def AddPreset(builder: flatbuffers.Builder, preset: int):
     State_Change_MoveAddPreset(builder, preset)
 
 def State_Change_MoveAddResult(builder: flatbuffers.Builder, result: int):
-    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(result), 0)
 
 def AddResult(builder: flatbuffers.Builder, result: int):
     State_Change_MoveAddResult(builder, result)
 
 def State_Change_MoveAddMessage(builder: flatbuffers.Builder, message: int):
-    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(message), 0)
 
 def AddMessage(builder: flatbuffers.Builder, message: int):
     State_Change_MoveAddMessage(builder, message)
 
 def State_Change_MoveAddRemainingDist(builder: flatbuffers.Builder, remainingDist: float):
-    builder.PrependFloat64Slot(12, remainingDist, 0.0)
+    builder.PrependFloat64Slot(13, remainingDist, 0.0)
 
 def AddRemainingDist(builder: flatbuffers.Builder, remainingDist: float):
     State_Change_MoveAddRemainingDist(builder, remainingDist)
 
 def State_Change_MoveAddTarget(builder: flatbuffers.Builder, target: float):
-    builder.PrependFloat64Slot(13, target, 0.0)
+    builder.PrependFloat64Slot(14, target, 0.0)
 
 def AddTarget(builder: flatbuffers.Builder, target: float):
     State_Change_MoveAddTarget(builder, target)
 
 def State_Change_MoveAddSpeed(builder: flatbuffers.Builder, speed: float):
-    builder.PrependFloat64Slot(14, speed, 0.0)
+    builder.PrependFloat64Slot(15, speed, 0.0)
 
 def AddSpeed(builder: flatbuffers.Builder, speed: float):
     State_Change_MoveAddSpeed(builder, speed)
 
 def State_Change_MoveAddBatPercent(builder: flatbuffers.Builder, batPercent: int):
-    builder.PrependInt32Slot(15, batPercent, 0)
+    builder.PrependInt32Slot(16, batPercent, 0)
 
 def AddBatPercent(builder: flatbuffers.Builder, batPercent: int):
     State_Change_MoveAddBatPercent(builder, batPercent)
@@ -338,6 +351,7 @@ class State_Change_MoveT(object):
         command = None,
         curPose = None,
         goalPose = None,
+        mapName = None,
         vel = None,
         goalId = None,
         goalName = None,
@@ -355,6 +369,7 @@ class State_Change_MoveT(object):
         self.command = command  # type: Optional[str]
         self.curPose = curPose  # type: Optional[List[float]]
         self.goalPose = goalPose  # type: Optional[List[float]]
+        self.mapName = mapName  # type: Optional[str]
         self.vel = vel  # type: Optional[List[float]]
         self.goalId = goalId  # type: Optional[str]
         self.goalName = goalName  # type: Optional[str]
@@ -405,6 +420,7 @@ class State_Change_MoveT(object):
                     self.goalPose.append(stateChangeMove.GoalPose(i))
             else:
                 self.goalPose = stateChangeMove.GoalPoseAsNumpy()
+        self.mapName = stateChangeMove.MapName()
         if not stateChangeMove.VelIsNone():
             if np is None:
                 self.vel = []
@@ -446,6 +462,8 @@ class State_Change_MoveT(object):
                 for i in reversed(range(len(self.goalPose))):
                     builder.PrependFloat64(self.goalPose[i])
                 goalPose = builder.EndVector()
+        if self.mapName is not None:
+            mapName = builder.CreateString(self.mapName)
         if self.vel is not None:
             if np is not None and type(self.vel) is np.ndarray:
                 vel = builder.CreateNumpyVector(self.vel)
@@ -475,6 +493,8 @@ class State_Change_MoveT(object):
             State_Change_MoveAddCurPose(builder, curPose)
         if self.goalPose is not None:
             State_Change_MoveAddGoalPose(builder, goalPose)
+        if self.mapName is not None:
+            State_Change_MoveAddMapName(builder, mapName)
         if self.vel is not None:
             State_Change_MoveAddVel(builder, vel)
         if self.goalId is not None:

@@ -1,19 +1,52 @@
-from app.features.gateway.amr_zenoh import zenoh_client
-from app.features.move.src.domain.move_model import MoveModel
-from app.features.move.src.port.slamnav_output import SlamnavPort
-from rb_flat_buffers.SLAMNAV.Request_Move_Goal import Request_Move_GoalT
-from rb_flat_buffers.SLAMNAV.Request_Move_Jog import Request_Move_JogT
-from rb_flat_buffers.SLAMNAV.Request_Move_Pause import Request_Move_PauseT
-from rb_flat_buffers.SLAMNAV.Request_Move_Resume import Request_Move_ResumeT
-from rb_flat_buffers.SLAMNAV.Request_Move_Stop import Request_Move_StopT
-from rb_flat_buffers.SLAMNAV.Request_Move_Target import Request_Move_TargetT
-from rb_flat_buffers.SLAMNAV.Response_Move_Goal import Response_Move_GoalT
-from rb_flat_buffers.SLAMNAV.Response_Move_Pause import Response_Move_PauseT
-from rb_flat_buffers.SLAMNAV.Response_Move_Resume import Response_Move_ResumeT
-from rb_flat_buffers.SLAMNAV.Response_Move_Stop import Response_Move_StopT
-from rb_flat_buffers.SLAMNAV.Response_Move_Target import Response_Move_TargetT
-from rb_flat_buffers.SLAMNAV.State_Change_Move import State_Change_MoveT
-from rb_utils.parser import t_to_dict
+from rb_flat_buffers.SLAMNAV.Request_Move_Goal import (
+    Request_Move_GoalT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_Jog import (
+    Request_Move_JogT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_Pause import (
+    Request_Move_PauseT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_Resume import (
+    Request_Move_ResumeT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_Stop import (
+    Request_Move_StopT,
+)
+from rb_flat_buffers.SLAMNAV.Request_Move_Target import (
+    Request_Move_TargetT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Goal import (
+    Response_Move_GoalT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Pause import (
+    Response_Move_PauseT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Resume import (
+    Response_Move_ResumeT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Stop import (
+    Response_Move_StopT,
+)
+from rb_flat_buffers.SLAMNAV.Response_Move_Target import (
+    Response_Move_TargetT,
+)
+from rb_flat_buffers.SLAMNAV.State_Change_Move import (
+    State_Change_MoveT,
+)
+from rb_utils.parser import (
+    t_to_dict,
+)
+
+from app.features.gateway.amr_zenoh import (
+    zenoh_client,
+)
+from app.features.move.src.domain.move_model import (
+    MoveModel,
+)
+from app.features.move.src.port.slamnav_output import (
+    SlamnavPort,
+)
 
 
 class SlamnavZenohAdapter(SlamnavPort):
@@ -27,22 +60,22 @@ class SlamnavZenohAdapter(SlamnavPort):
         - State_Change_MoveT 객체 반환
         """
         return State_Change_MoveT(
-            id=dt.get("id", None),
-            command=dt.get("command", None),
-            curPose=dt.get("curPose", None),
-            goalPose=dt.get("goalPose", None),
-            vel=dt.get("vel", None),
-            goalId=dt.get("goalId", None),
-            goalName=dt.get("goalName", None),
-            method=dt.get("method", None),
-            direction=dt.get("direction", None),
-            preset=dt.get("preset", None),
-            result=dt.get("result", None),
-            message=dt.get("message", None),
-            remainingDist=dt.get("remainingDist", None),
-            target=dt.get("target", None),
-            speed=dt.get("speed", None),
-            batPercent=dt.get("batPercent", None),
+            id=dt.get("id"),
+            command=dt.get("command"),
+            curPose=dt.get("curPose"),
+            goalPose=dt.get("goalPose"),
+            vel=dt.get("vel"),
+            goalId=dt.get("goalId"),
+            goalName=dt.get("goalName"),
+            method=dt.get("method"),
+            direction=dt.get("direction"),
+            preset=dt.get("preset"),
+            result=dt.get("result"),
+            message=dt.get("message"),
+            remainingDist=dt.get("remainingDist"),
+            target=dt.get("target"),
+            speed=dt.get("speed"),
+            batPercent=dt.get("batPercent"),
         )
 
     async def send_move_goal(self, model: MoveModel) -> State_Change_MoveT:

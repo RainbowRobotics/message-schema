@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from rb_schemas.base import Vec3fPD
+from rb_schemas.base import (
+    Vec3fPD,
+)
 
 
 class ST_Box_ParaPD(BaseModel):

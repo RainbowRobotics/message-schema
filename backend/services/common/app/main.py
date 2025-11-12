@@ -1,21 +1,58 @@
-from rb_modules.rb_fastapi_app import AppSettings, create_app
+from rb_modules.rb_fastapi_app import (
+    AppSettings,
+    create_app,
+)
 
-from app.features.config.config_api import config_router
-from app.features.config.config_module import ConfigService
-from app.features.config.config_socket import config_socket_router
-from app.features.info.info_api import info_router
-from app.features.info.info_socket import info_socket_router
-from app.features.program.program_api import program_router
-from app.features.program.program_module import ProgramService
-from app.features.program.program_zenoh import zenoh_program_router
-from app.features.state.state_api import state_router
-from app.features.state.state_module import StateService
-from app.features.state.state_socket import state_socket_router
-from app.features.state.state_zenoh import zenoh_state_router
-from app.features.whoami.whoami_api import whoami_router
-from app.features.whoami.whoami_socket import whoami_socket_router
-from app.socket.socket_client import socket_client
-from app.socket.socket_server import RelayNS, app_with_sio, sio
+from app.features.config.config_api import (
+    config_router,
+)
+from app.features.config.config_module import (
+    ConfigService,
+)
+from app.features.config.config_socket import (
+    config_socket_router,
+)
+from app.features.info.info_api import (
+    info_router,
+)
+from app.features.info.info_socket import (
+    info_socket_router,
+)
+from app.features.program.program_api import (
+    program_router,
+)
+from app.features.program.program_module import (
+    ProgramService,
+)
+from app.features.program.program_zenoh import (
+    zenoh_program_router,
+)
+from app.features.state.state_api import (
+    state_router,
+)
+from app.features.state.state_module import (
+    StateService,
+)
+from app.features.state.state_socket import (
+    state_socket_router,
+)
+from app.features.state.state_zenoh import (
+    zenoh_state_router,
+)
+from app.features.whoami.whoami_api import (
+    whoami_router,
+)
+from app.features.whoami.whoami_socket import (
+    whoami_socket_router,
+)
+from app.socket.socket_client import (
+    socket_client,
+)
+from app.socket.socket_server import (
+    RelayNS,
+    app_with_sio,
+    sio,
+)
 
 setting = AppSettings()
 

@@ -2,11 +2,17 @@ import asyncio
 import time
 from typing import Any
 
-from rb_socketio import RbSocketIORouter
+from rb_socketio import (
+    RbSocketIORouter,
+)
 
-from app.socket.socket_client import socket_client
+from app.socket.socket_client import (
+    socket_client,
+)
 
-from .whoami_module import WhoamiService
+from .whoami_module import (
+    WhoamiService,
+)
 
 whoami_socket_router = RbSocketIORouter()
 whoamiService = WhoamiService()

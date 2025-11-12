@@ -1,10 +1,19 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
-from rb_schemas.base import Response_ReturnValuePD
-from rb_zenoh.exeption import JSONResponse
+from fastapi import (
+    APIRouter,
+    Query,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
+)
+from rb_zenoh.exeption import (
+    JSONResponse,
+)
 
-from .state_module import StateService
+from .state_module import (
+    StateService,
+)
 from .state_schema import (
     AllSwConnectStateResponsePD,
     PowerControlRequestPD,

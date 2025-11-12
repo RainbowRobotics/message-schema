@@ -1,10 +1,20 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
-from rb_flat_buffers.IPC.State_Core import State_CoreT
-from rb_schemas.base import Response_ReturnValuePD
-from rb_zenoh.client import ZenohClient
+from fastapi.responses import (
+    JSONResponse,
+)
+from rb_flat_buffers.IPC.State_Core import (
+    State_CoreT,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
-from .state_module import StateService
+from .state_module import (
+    StateService,
+)
 from .state_schema import (
     PowerControlRequestPD,
     PowerControlResponsePD,

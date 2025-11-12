@@ -1,4 +1,6 @@
-from psutil import net_io_counters
+from psutil import (
+    net_io_counters,
+)
 
 
 def test_utils():

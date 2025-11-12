@@ -1,7 +1,16 @@
 import json
-from contextlib import AbstractContextManager, contextmanager, suppress
-from dataclasses import dataclass
-from importlib.resources import as_file, files
+from contextlib import (
+    AbstractContextManager,
+    contextmanager,
+    suppress,
+)
+from dataclasses import (
+    dataclass,
+)
+from importlib.resources import (
+    as_file,
+    files,
+)
 from pathlib import Path
 from typing import Any, cast
 

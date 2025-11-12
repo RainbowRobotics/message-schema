@@ -1,7 +1,10 @@
 """
 [페이지네이션 응답 타입]
 """
-from typing import Literal, TypedDict
+from typing import (
+    Literal,
+    TypedDict,
+)
 
 
 class PageInfo(TypedDict):

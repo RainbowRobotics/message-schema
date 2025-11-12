@@ -1,10 +1,23 @@
-from rb_modules.rb_fastapi_app import AppSettings, create_app
+from rb_modules.rb_fastapi_app import (
+    AppSettings,
+    create_app,
+)
 
-from app.features.deploy.deploy_api import deploy_router
-from app.features.deploy.deploy_socket import deploy_socket_router
-from app.features.file.file_api import file_router
-from app.features.file.file_socket import file_socket_router
-from app.socket.socket_client import socket_client
+from app.features.deploy.deploy_api import (
+    deploy_router,
+)
+from app.features.deploy.deploy_socket import (
+    deploy_socket_router,
+)
+from app.features.file.file_api import (
+    file_router,
+)
+from app.features.file.file_socket import (
+    file_socket_router,
+)
+from app.socket.socket_client import (
+    socket_client,
+)
 
 setting = AppSettings()
 setting.no_init_db = True

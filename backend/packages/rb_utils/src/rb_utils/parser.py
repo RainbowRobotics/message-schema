@@ -2,7 +2,9 @@
 [파서 유틸리티]
 """
 import json
-from collections.abc import Mapping
+from collections.abc import (
+    Mapping,
+)
 from datetime import datetime
 from typing import Any
 

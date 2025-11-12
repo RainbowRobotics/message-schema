@@ -2,29 +2,65 @@ import asyncio
 import time
 
 import psutil
-from fastapi import HTTPException
+from fastapi import (
+    HTTPException,
+)
 from rb_database import get_db
-from rb_flat_buffers.IPC.Request_CallWhoAmI import Request_CallWhoAmIT
+from rb_flat_buffers.IPC.Request_CallWhoAmI import (
+    Request_CallWhoAmIT,
+)
 from rb_flat_buffers.IPC.Request_PowerControl import (
     Request_PowerControlT,
 )
-from rb_flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
-from rb_flat_buffers.IPC.Response_CallWhoamI import Response_CallWhoamIT
-from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_flat_buffers.IPC.State_Core import State_CoreT
-from rb_modules.log import rb_log
-from rb_resources.file import read_json_file
-from rb_utils.asyncio_helper import fire_and_log
-from rb_utils.helper import get_current_ip
-from rb_utils.parser import t_to_dict
-from rb_zenoh.client import ZenohClient
-from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
+from rb_flat_buffers.IPC.Request_ServoControl import (
+    Request_ServoControlT,
+)
+from rb_flat_buffers.IPC.Response_CallWhoamI import (
+    Response_CallWhoamIT,
+)
+from rb_flat_buffers.IPC.Response_Functions import (
+    Response_FunctionsT,
+)
+from rb_flat_buffers.IPC.State_Core import (
+    State_CoreT,
+)
+from rb_modules.log import (
+    rb_log,
+)
+from rb_resources.file import (
+    read_json_file,
+)
+from rb_utils.asyncio_helper import (
+    fire_and_log,
+)
+from rb_utils.helper import (
+    get_current_ip,
+)
+from rb_utils.parser import (
+    t_to_dict,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
+from rb_zenoh.exeption import (
+    ZenohNoReply,
+    ZenohReplyError,
+    ZenohTransportError,
+)
 
-from app.features.info.info_module import InfoService
-from app.features.program.program_module import ProgramService
-from app.socket.socket_client import socket_client
+from app.features.info.info_module import (
+    InfoService,
+)
+from app.features.program.program_module import (
+    ProgramService,
+)
+from app.socket.socket_client import (
+    socket_client,
+)
 
-from .state_schema import StateMessageItemPD
+from .state_schema import (
+    StateMessageItemPD,
+)
 
 program_service = ProgramService()
 info_service = InfoService()

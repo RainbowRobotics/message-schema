@@ -1,8 +1,15 @@
 from fastapi import APIRouter
-from rb_database.mongo_db import MongoDB
+from rb_database.mongo_db import (
+    MongoDB,
+)
 
-from .info_module import InfoService
-from .info_schema import Response_RobotURDFLinkMapPD, RobotInfoResponse
+from .info_module import (
+    InfoService,
+)
+from .info_schema import (
+    Response_RobotURDFLinkMapPD,
+    RobotInfoResponse,
+)
 
 info_service = InfoService()
 info_router = APIRouter(tags=["Info"])

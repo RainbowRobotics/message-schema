@@ -1,15 +1,27 @@
-from __future__ import annotations
+from __future__ import (
+    annotations,
+)
 
 import asyncio
 import contextlib
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import (
+    Callable,
+)
+from dataclasses import (
+    dataclass,
+)
 from typing import Any
 
-from flatbuffers.table import Table
+from flatbuffers.table import (
+    Table,
+)
 
-from .client import ZenohClient
-from .schema import SubscribeOptions
+from .client import (
+    ZenohClient,
+)
+from .schema import (
+    SubscribeOptions,
+)
 
 
 @dataclass(slots=True)

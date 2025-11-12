@@ -5,19 +5,47 @@ import asyncio
 import gzip
 import os
 import time
-from collections.abc import Sequence
-from datetime import UTC, date, datetime, timedelta
-from typing import Annotated, Any
+from collections.abc import (
+    Sequence,
+)
+from datetime import (
+    UTC,
+    date,
+    datetime,
+    timedelta,
+)
+from typing import (
+    Annotated,
+    Any,
+)
 from zoneinfo import ZoneInfo
 
 from bson import json_util
-from fastapi import Depends, FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure, PyMongoError
-from rb_modules.log import rb_log
-from rb_utils.date import get_current_dt_yyyymmddhhmmss
-from rb_utils.parser import _normalize_filter
+from fastapi import (
+    Depends,
+    FastAPI,
+)
+from motor.motor_asyncio import (
+    AsyncIOMotorClient,
+    AsyncIOMotorCollection,
+    AsyncIOMotorDatabase,
+)
+from pymongo import (
+    MongoClient,
+)
+from pymongo.errors import (
+    OperationFailure,
+    PyMongoError,
+)
+from rb_modules.log import (
+    rb_log,
+)
+from rb_utils.date import (
+    get_current_dt_yyyymmddhhmmss,
+)
+from rb_utils.parser import (
+    _normalize_filter,
+)
 
 client: AsyncIOMotorClient | None = None
 py_mongo_client: MongoClient | None = None
@@ -337,7 +365,7 @@ async def archive_collection(
     - DB 내 저장된 데이터의 timezone은 UTC이지만 저장되는 데이터는 KST 기준으로 자름
         - cutoff_utc : 아카이브 할 날짜 기준 UTC(해당날짜 이전의 로그를 전부 아카이브 + 삭제)
         - out_dir : 저장디렉토리. /data/{server}/archive/{service}로 통일
-        - filters : 검색 필터. 
+        - filters : 검색 필터.
     """
     pipeline = [
         {"$match": {"createdAt": {"$lt": cutoff_utc}}},
@@ -455,7 +483,11 @@ async def export_collection(
     out_dir: str | None = None,
     file_name: str | None = None,
     filters: str | dict[str, Any] | None = None,
-    ) -> list[dict]:
+    fields: dict[str, Any] | None = None,
+    search_text: str | None = None,
+    sort: list[tuple[str, int]] | None = None,
+    order: str | None = None,
+) -> dict:
     """
     [필터 아카이브]
     - 외부적으로도 사용
@@ -466,125 +498,94 @@ async def export_collection(
         - filters : 검색 필터. 각 컬럼의 검색어라던가 날짜시간 등
     """
     # 1) 필터 파싱
-    extra = _normalize_filter(filters)
+    filters = _normalize_filter(filters)
     tz_name = "Asia/Seoul"
 
-    # 2) 파이프라인 정의
-    created_cond: dict = {}
-    match_cond: dict = {**extra}
-    pipeline = []
+    # 2) 조회 조건 구성
+    created_cond: dict[str, Any] = {}
     if start_utc is not None:
         created_cond["$gte"] = start_utc
     if end_utc is not None:
-        created_cond["$lt"]  = end_utc
+        created_cond["$lt"] = end_utc
+
+    # 3) 필드 세팅(_id 제외하는 것 일괄로 추가)
+    fields = {**fields, "_id": 0}
+
+    # 4) 텍스트 검색(q) -> checkDB에서 등록한 인덱스안에서 검색
+    if search_text:
+        filters["$text"] = {"$search": search_text}
+
+    # 5) 정렬: 안정 정렬을 위해 보조키로 _id도 포함
+    sort_spec = [(sort, order)]
+    if sort != "_id":
+        sort_spec.append(("_id", order))
 
     if created_cond:
-        match_cond["createdAt"] = created_cond
-
-    if match_cond:
-        pipeline.append({"$match": match_cond})
-    pipeline.append({"$project": {
-        "_id": 0,
-        "day": {
-            "$dateToString": {
-                "date": "$createdAt",
-                "timezone": tz_name,
-                "format": "%Y-%m-%d"
-            }
-        }
-    }})
-    pipeline.append({"$group": {"_id": "$day", "count": {"$sum": 1}}})
-    pipeline.append({"$sort": {"_id": 1}})
+        filters["createdAt"] = created_cond
 
     # 3) 경로 생성
     os.makedirs(out_dir, exist_ok=True)
 
     # 4) 파일 이름 결정
-    if file_name is None or file_name == "":
-        file_name = f"{get_current_dt_yyyymmddhhmmss(tz_name)}.ndjson.gz"
+    if not file_name:
+        file_name = get_current_dt_yyyymmddhhmmss(tz_name)
+    if not file_name.endswith(".ndjson.gz"):
+        file_name = f"{file_name}.ndjson.gz"
 
-    # 4) 데이터 조회 (필터에 맞는 데이터를 추출)
-    day_rows = await col.aggregate(pipeline, allowDiskUse=True).to_list(length=None)
-    if not day_rows:
-        return []
+    tmp_path = os.path.join(out_dir, f"{file_name}.tmp")
+    final_path = os.path.join(out_dir, file_name)
 
-
-    # 5) 인덱스 힌트 (createdAt 기반)
-    hint_opt = None
-    try:
-        idxinfo = await col.index_information()
-        if "createdAt_1" in idxinfo:
-            hint_opt = "createdAt_1"
-    except PyMongoError as e:
-        rb_log.error(f"[export_collection] index_information failed: {e}")
-
-
+    # 5) 데이터 예상 조회
     results: list[dict] = []
-    for row in day_rows:
-        day = row["_id"]        # 'YYYY-MM-DD'
-        count_est = int(row.get("count", 0))
+    archived_count = 0
+    gz_bytes = 0
+    count_est = await col.count_documents(filters)
+    print(f"[export_collection] count_est: {count_est}")
+    if count_est == 0:
+        return [{
+            "estimatedDocs": 0,
+            "archivedDocs": 0,
+            "file": None,
+            "size": None,
+        }]
 
-        y, m, d = map(int, day.split("-"))
-        start_kst = datetime(y, m, d, 0, 0, 0, tzinfo=ZoneInfo(tz_name))
-        end_kst   = start_kst + timedelta(days=1)
-        start_utc = start_kst.astimezone(UTC)
-        end_utc   = end_kst.astimezone(UTC)
+    # 6) 데이터 조회 및 반환
+    try:
+        cursor = col.find(filters,fields).sort(sort_spec)
+        with gzip.open(tmp_path, mode="wt", encoding="utf-8") as gz:
+            async for doc in cursor:
+                gz.write(json_util.dumps(doc))
+                gz.write("\n")
+                archived_count += 1
+        print(f"[export_collection] archived_count: {archived_count}")
+        gz_bytes = os.path.getsize(tmp_path)
+        os.replace(tmp_path, final_path)
 
-        fname = f"{day}.ndjson.gz"
-        tmp_path = os.path.join(out_dir, fname + ".tmp")
-        final_path = os.path.join(out_dir, fname)
-
-        archived_count = 0
-        gz_bytes = 0
-        deleted_count = 0
-
-        day_filter = {"createdAt": {"$gte": start_utc, "$lt": end_utc}, **extra}
-
-        try:
-            cursor = col.find(
-                day_filter,
-                projection=None,
-                batch_size=10_000,
-                sort=[("_id", 1)],
-                hint=hint_opt
-            )
-
-            print("path : ", tmp_path, final_path)
-            with gzip.open(tmp_path, mode="wt", encoding="utf-8") as gz:
-                async for doc in cursor:
-                    gz.write(json_util.dumps(doc))
-                    gz.write("\n")
-                    archived_count += 1
-
-            gz_bytes = os.path.getsize(tmp_path)
-            os.replace(tmp_path, final_path)
-
-        except PyMongoError as e:
-            try:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-            except OSError:
-                pass
-            results.append({
-                "day": day,
-                "estimatedDocs": count_est,
-                "archivedDocs": archived_count,
-                "deletedDocs": deleted_count,
-                "file": None,
-                "size": None,
-                "error": repr(e)
-            })
-            continue
-
-        results.append({
-            "day": day,
+        return {
             "estimatedDocs": count_est,
             "archivedDocs": archived_count,
             "file": final_path if archived_count > 0 else None,
             "size": gz_bytes if archived_count > 0 else None,
-        })
+            "error": None,
+        }
 
-    return results
+    except PyMongoError as e:
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
+        print("ERRORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+        print(f"[export_collection] error: {e}")
+        results.append({
+            "estimatedDocs": count_est,
+            "archivedDocs": archived_count,
+            "file": None,
+            "size": None,
+            "error": repr(e),
+        })
+        return results
+
 
 
 

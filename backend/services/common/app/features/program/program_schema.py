@@ -1,15 +1,32 @@
 # mypy: disable-error-code=misc
-from __future__ import annotations
+from __future__ import (
+    annotations,
+)
 
-from datetime import UTC, datetime
+from datetime import (
+    UTC,
+    datetime,
+)
 from enum import Enum
 from typing import Literal
 
 from bson import ObjectId
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from rb_database import PyObjectId
-from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
-from rb_schemas.utility import Omit, Pick
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+)
+from rb_database import (
+    PyObjectId,
+)
+from rb_flow_manager.schema import (
+    RB_Flow_Manager_ProgramState,
+)
+from rb_schemas.utility import (
+    Omit,
+    Pick,
+)
 
 
 class Step_Base(BaseModel):

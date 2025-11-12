@@ -108,6 +108,7 @@ table State_Change_Move {
     command: string;
     cur_pose: [double];
     goal_pose: [double];
+    map_name: string;
     vel: [double];
     goal_id: string;
     goal_name: string;

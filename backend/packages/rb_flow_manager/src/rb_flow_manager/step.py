@@ -1,13 +1,26 @@
 import uuid
-from collections.abc import Callable
-from multiprocessing import Event
+from collections.abc import (
+    Callable,
+)
+from multiprocessing import (
+    Event,
+)
 
-from rb_schemas.sdk import FlowManagerArgs
+from rb_schemas.sdk import (
+    FlowManagerArgs,
+)
 
-from rb_flow_manager.utils import call_with_matching_args, safe_eval_expr
+from rb_flow_manager.utils import (
+    call_with_matching_args,
+    safe_eval_expr,
+)
 
-from .context import ExecutionContext
-from .exception import StopExecution
+from .context import (
+    ExecutionContext,
+)
+from .exception import (
+    StopExecution,
+)
 
 
 class Step:

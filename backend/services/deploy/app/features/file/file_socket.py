@@ -1,7 +1,14 @@
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import t_to_dict, to_json
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    t_to_dict,
+    to_json,
+)
 
-from .file_module import FileService
+from .file_module import (
+    FileService,
+)
 
 file_socket_router = RbSocketIORouter()
 file_service = FileService()

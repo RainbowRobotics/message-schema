@@ -1,7 +1,14 @@
-from rb_socketio import RbSocketIORouter
-from rb_utils.parser import t_to_dict, to_json
+from rb_socketio import (
+    RbSocketIORouter,
+)
+from rb_utils.parser import (
+    t_to_dict,
+    to_json,
+)
 
-from .program_module import ProgramService
+from .program_module import (
+    ProgramService,
+)
 
 program_socket_router = RbSocketIORouter()
 program_service = ProgramService()

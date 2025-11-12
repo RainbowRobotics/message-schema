@@ -2,7 +2,9 @@
 import os
 import sys
 
-from PyInstaller.__main__ import run as pyinstaller_run
+from PyInstaller.__main__ import (
+    run as pyinstaller_run,
+)
 
 
 def main():

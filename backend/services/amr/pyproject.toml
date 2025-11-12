@@ -32,6 +32,3 @@ rb_modules = { workspace = true }
 rb_schemas = { workspace = true }
 rb_resources = { workspace = true }
 rb_database = { workspace = true }
-
-[tool.ruff]
-line-length = 120

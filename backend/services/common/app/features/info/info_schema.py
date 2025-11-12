@@ -1,6 +1,12 @@
-from typing import Annotated, Literal
+from typing import (
+    Annotated,
+    Literal,
+)
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 
 class RobotModelInfo(BaseModel):

@@ -1,9 +1,18 @@
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
-from rb_schemas.base import Response_ReturnValuePD
+from fastapi.responses import (
+    JSONResponse,
+)
+from rb_schemas.base import (
+    Response_ReturnValuePD,
+)
 
-from .io_module import IoService
-from .io_schema import Request_SideAout_GeneralPD, Request_SideDout_GeneralPD
+from .io_module import (
+    IoService,
+)
+from .io_schema import (
+    Request_SideAout_GeneralPD,
+    Request_SideDout_GeneralPD,
+)
 
 io_router = APIRouter(tags=["IO"])
 io_service = IoService()

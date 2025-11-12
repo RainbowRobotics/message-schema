@@ -1,8 +1,15 @@
 """
 [AMR 이동 데이터베이스 아웃풋 포트]
 """
-from datetime import date, datetime
-from typing import Any, Protocol, runtime_checkable
+from datetime import (
+    date,
+    datetime,
+)
+from typing import (
+    Protocol,
+    runtime_checkable,
+)
+
 
 @runtime_checkable
 class MoveDatabasePort(Protocol):
@@ -16,5 +23,4 @@ class MoveDatabasePort(Protocol):
     async def get_logs(self, options: dict) -> dict: ...
     async def delete_logs(self, options: dict) -> dict: ...
     async def archive_logs(self, cutoff_utc: datetime | date, dry_run: bool) -> dict: ...
-    async def export_logs(self, start_dt: datetime | date, end_dt: datetime | date, filename: str, filters: str | dict[str, Any] | None = None) -> dict: ...
-
+    async def export_logs(self, options: dict) -> dict: ...

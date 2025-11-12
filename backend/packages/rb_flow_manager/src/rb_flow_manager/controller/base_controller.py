@@ -1,5 +1,10 @@
-from abc import ABC, abstractmethod
-from collections.abc import MutableMapping
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from collections.abc import (
+    MutableMapping,
+)
 from typing import Any
 
 

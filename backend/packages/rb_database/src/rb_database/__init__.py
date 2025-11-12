@@ -1,6 +1,13 @@
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from motor.motor_asyncio import (
+    AsyncIOMotorDatabase,
+)
 
-from .mongo_db import MongoDB, close_db, get_db, init_db
+from .mongo_db import (
+    MongoDB,
+    close_db,
+    get_db,
+    init_db,
+)
 from .schema import PyObjectId
 
 __all__ = [

@@ -1,9 +1,21 @@
-from app.features.program.program_module import ProgramService
-from rb_flat_buffers.IPC.Request_PowerControl import Request_PowerControlT
-from rb_flat_buffers.IPC.Request_ReferenceControl import Request_ReferenceControlT
-from rb_flat_buffers.IPC.Request_ServoControl import Request_ServoControlT
-from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
-from rb_zenoh.client import ZenohClient
+from app.features.program.program_module import (
+    ProgramService,
+)
+from rb_flat_buffers.IPC.Request_PowerControl import (
+    Request_PowerControlT,
+)
+from rb_flat_buffers.IPC.Request_ReferenceControl import (
+    Request_ReferenceControlT,
+)
+from rb_flat_buffers.IPC.Request_ServoControl import (
+    Request_ServoControlT,
+)
+from rb_flat_buffers.IPC.Response_Functions import (
+    Response_FunctionsT,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
 program_service = ProgramService()
 

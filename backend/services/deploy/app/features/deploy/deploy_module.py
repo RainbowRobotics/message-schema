@@ -1,12 +1,24 @@
 import os
 
-from app.socket.socket_client import socket_client
-from rb_flat_buffers.deploy.Response_Deploy_Progress import Response_Deploy_ProgressT
-from rb_modules.log import rb_log
-from rb_utils.asyncio_helper import fire_and_log
-from rb_zenoh.client import ZenohClient
+from app.socket.socket_client import (
+    socket_client,
+)
+from rb_flat_buffers.deploy.Response_Deploy_Progress import (
+    Response_Deploy_ProgressT,
+)
+from rb_modules.log import (
+    rb_log,
+)
+from rb_utils.asyncio_helper import (
+    fire_and_log,
+)
+from rb_zenoh.client import (
+    ZenohClient,
+)
 
-from .deploy_schema import DeployProgressSchemaPD
+from .deploy_schema import (
+    DeployProgressSchemaPD,
+)
 
 zenoh_client = ZenohClient()
 

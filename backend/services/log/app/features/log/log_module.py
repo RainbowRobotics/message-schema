@@ -1,21 +1,40 @@
 import csv
 import io
-from datetime import UTC, datetime, timedelta
+from datetime import (
+    UTC,
+    datetime,
+    timedelta,
+)
 from typing import Any
 
-from app.socket.socket_client import socket_client
-from fastapi.responses import StreamingResponse
+from app.socket.socket_client import (
+    socket_client,
+)
+from fastapi.responses import (
+    StreamingResponse,
+)
 from pymongo import DESCENDING
-from rb_database.mongo_db import MongoDB
+from rb_database.mongo_db import (
+    MongoDB,
+)
 from rb_database.utils import (
     make_check_date_range_query,
     make_check_include_query,
     make_check_search_text_query,
 )
-from rb_modules.log import rb_log
-from rb_utils.asyncio_helper import fire_and_log
-from rb_utils.file import content_disposition_header, sanitize_filename
-from rb_utils.parser import t_to_dict
+from rb_modules.log import (
+    rb_log,
+)
+from rb_utils.asyncio_helper import (
+    fire_and_log,
+)
+from rb_utils.file import (
+    content_disposition_header,
+    sanitize_filename,
+)
+from rb_utils.parser import (
+    t_to_dict,
+)
 
 from .log_schema import (
     LogItem,

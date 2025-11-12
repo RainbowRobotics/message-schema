@@ -1,10 +1,18 @@
 import asyncio
 
-from motor.motor_asyncio import AsyncIOMotorCollection
-from rb_database.mongo_db import MongoDB
-from rb_resources.file import read_json_file
+from motor.motor_asyncio import (
+    AsyncIOMotorCollection,
+)
+from rb_database.mongo_db import (
+    MongoDB,
+)
+from rb_resources.file import (
+    read_json_file,
+)
 
-from .info_schema import RobotInfo
+from .info_schema import (
+    RobotInfo,
+)
 
 
 class InfoService:
