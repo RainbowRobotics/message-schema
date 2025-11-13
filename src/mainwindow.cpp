@@ -560,6 +560,7 @@ void MainWindow::init_modules()
         SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
         SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
         SAFETY::instance()->init();
+        SAFETY::instance()->start();
     }
 
     // Task
@@ -4430,23 +4431,36 @@ void MainWindow::plot_obs()
         // debug
         if(ui->ckb_PlotObs->isChecked())
         {
-            cv::Mat dyn_map, static_map;
+            if(ui->ckb_PlotSafetyObs->isChecked())
+            {
+                cv::Mat safety_map = SAFETY::instance()->get_safety_map().clone();
+                if(!safety_map.empty())
+                {
+                    ui->lb_Screen6->setAlignment(Qt::AlignCenter);
+                    QImage img(safety_map.data, safety_map.cols, safety_map.rows, safety_map.step, QImage::Format_BGR888);
+                    QPixmap _safety_map = QPixmap::fromImage(img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                    ui->lb_Screen6->setPixmap(_safety_map);
+                }
+            }
+            else
+            {
+                cv::Mat static_map;
+                cv::cvtColor(OBSMAP::instance()->get_static_map(), static_map, cv::COLOR_GRAY2BGR);
+                OBSMAP::instance()->draw_robot_outline(static_map);
+                QImage static_map_img(static_map.data, static_map.cols, static_map.rows, static_map.step, QImage::Format_BGR888);
+
+                ui->lb_Screen6->setAlignment(Qt::AlignCenter);
+                QPixmap _static_map  = QPixmap::fromImage(static_map_img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                ui->lb_Screen6->setPixmap(_static_map);
+            }
+
+            cv::Mat dyn_map;
             cv::cvtColor(OBSMAP::instance()->get_dyn_map(), dyn_map, cv::COLOR_GRAY2BGR);
-            cv::cvtColor( OBSMAP::instance()->get_static_map(), static_map, cv::COLOR_GRAY2BGR);
-
             OBSMAP::instance()->draw_robot_outline(dyn_map);
-            OBSMAP::instance()->draw_robot_outline(static_map);
-
             QImage dyn_map_img(dyn_map.data, dyn_map.cols, dyn_map.rows, dyn_map.step, QImage::Format_BGR888);
-            QImage static_map_img(static_map.data, static_map.cols, static_map.rows, static_map.step, QImage::Format_BGR888);
 
-            ui->lb_Screen6->setAlignment(Qt::AlignCenter);
             ui->lb_Screen7->setAlignment(Qt::AlignCenter);
-
-            QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            QPixmap _static_map  = QPixmap::fromImage(static_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-            ui->lb_Screen6->setPixmap(_static_map);
+            QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
             ui->lb_Screen7->setPixmap(_dyn_map);
         }
     }

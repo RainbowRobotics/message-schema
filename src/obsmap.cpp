@@ -213,6 +213,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
     // prepare
     cv::Mat _wall_map(h, w, CV_8U, cv::Scalar(0));
+    cv::Mat _static_map(h, w, CV_8U, cv::Scalar(0));
     std::vector<Eigen::Vector3d> _obs_pts;
     std::vector<Eigen::Vector3d> _vir_pts;
 
@@ -246,6 +247,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
         }
 
         _wall_map.ptr<uchar>(v)[u] = 255;
+        _static_map.ptr<uchar>(v)[u] = 255;
         _obs_pts.push_back(P);
     }
 
@@ -291,6 +293,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
                         }
 
                         _wall_map.ptr<uchar>(v)[u] = 255;
+                        _static_map.ptr<uchar>(v)[u] = 255;
                         _vir_pts.push_back(P);
                     }
                 }
@@ -300,6 +303,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
 
     map_tf = cur_tf;
     wall_map = _wall_map;
+    static_map = _static_map;
     obs_pts = _obs_pts;
     vir_pts = _vir_pts;
 

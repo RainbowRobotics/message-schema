@@ -50,12 +50,17 @@ public:
     void set_mobile_module(MOBILE* _mobile);
     void set_unimap_module(UNIMAP* _unimap);
 
+    cv::Mat get_safety_map();
+
+    std::vector<Eigen::Matrix4d> calc_trajectory(Eigen::Vector3d cur_vel, double dt, double predict_t, Eigen::Matrix4d _cur_tf);
+
+
 private:
     explicit SAFETY(QObject *parent = nullptr);
     ~SAFETY();
 
     // mutex
-    std::recursive_mutex mtx;
+    std::shared_mutex mtx;
 
     // other modules
     CONFIG* config;
@@ -65,6 +70,8 @@ private:
     OBSMAP* obsmap;
     LOCALIZATION* loc;
     
+    // grid map
+    cv::Mat safety_map;
     
     // control loop
     std::atomic<bool> safety_flag = {false};
