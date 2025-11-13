@@ -904,22 +904,34 @@ namespace rb_motion {
         return MSG_OK;
     }
 
-    int Start_Motion_XB_Add(TARGET_INPUT tar, double g_vel_alpha, double g_acc_alpha, int blend_option, double blend_parameter, int xb_move_type){
-        g_vel_alpha = rb_math::saturation_Up(g_vel_alpha, 1.0);
-        g_acc_alpha = rb_math::saturation_Up(g_acc_alpha, 1.0);
-
+    int Start_Motion_XB_Add(TARGET_INPUT tar, double g_vel_para, double g_acc_para, int mode, int blend_option, double blend_parameter, int xb_move_type){
         if(xb_move_type == 1){
             ;// Move Type : Linear
-            return Start_Motion_XB_Add_L(tar, g_vel_alpha, g_acc_alpha, blend_option, blend_parameter);
+            return Start_Motion_XB_Add_L(tar, g_vel_para, g_acc_para, mode, blend_option, blend_parameter);
         }else{
             ;// Move Type : Joint
-            return Start_Motion_XB_Add_J(tar, g_vel_alpha, g_acc_alpha, blend_option, blend_parameter);
+            return Start_Motion_XB_Add_J(tar, g_vel_para, g_acc_para, mode, blend_option, blend_parameter);
         }
     }
 
-    int Start_Motion_XB_Add_J(TARGET_INPUT tar, double j_vel_alpha, double j_acc_alpha, int blend_option, double blend_parameter){
-        VectorJd j_vel = rb_system::Get_Motor_HwMax_Vel() * rb_math::saturation_Up(j_vel_alpha, 1.0);
-        VectorJd j_acc = rb_system::Get_Motor_HwMax_Acc() * rb_math::saturation_Up(j_acc_alpha, 1.0);
+    int Start_Motion_XB_Add_J(TARGET_INPUT tar, double j_vel_para, double j_acc_para, int mode, int blend_option, double blend_parameter){
+        // mode
+        // 0 : %
+        // 1 : deg/s
+
+        VectorJd j_vel = VectorJd::Zero(NO_OF_JOINT, 1);
+        VectorJd j_acc = VectorJd::Zero(NO_OF_JOINT, 1);
+        if(mode == 0){
+            j_vel_para = rb_math::saturation_Up(j_vel_para, 1.0);
+            j_acc_para = rb_math::saturation_Up(j_acc_para, 1.0);
+            j_vel = rb_system::Get_Motor_HwMax_Vel() * j_vel_para;
+            j_acc = rb_system::Get_Motor_HwMax_Acc() * j_acc_para;
+        }else{
+            for(int k = 0; k < NO_OF_JOINT; ++k){
+                j_vel(k) = j_vel_para;
+                j_acc(k) = j_acc_para;
+            }
+        }
         return Start_Motion_XB_Add_J(tar, j_vel, j_acc, blend_option, blend_parameter);
     }
 
@@ -944,14 +956,33 @@ namespace rb_motion {
         return MSG_OK;
     }
 
-    int Start_Motion_XB_Add_L(TARGET_INPUT tar, double l_vel_alpha, double l_acc_alpha, int blend_option, double blend_parameter){
-        l_vel_alpha = rb_math::saturation_Up(l_vel_alpha, 1.0);
-        l_acc_alpha = rb_math::saturation_Up(l_acc_alpha, 1.0);
-        double t_pos_vel = l_vel_alpha * rb_system::Get_CurrentRobotParameter().arm_max_pos_vel;
-        double t_pos_acc = l_acc_alpha * rb_system::Get_CurrentRobotParameter().arm_max_pos_acc;
-        double t_rot_vel = l_vel_alpha * rb_system::Get_CurrentRobotParameter().arm_max_rot_vel;
-        double t_rot_acc = l_acc_alpha * rb_system::Get_CurrentRobotParameter().arm_max_rot_acc;
+    int Start_Motion_XB_Add_L(TARGET_INPUT tar, double l_vel_para, double l_acc_para, int mode, int blend_option, double blend_parameter){
+        // mode
+        // 0 : %
+        // 1 : mm/s
 
+        double t_pos_vel = 0;
+        double t_pos_acc = 0;
+        double t_rot_vel = 0;
+        double t_rot_acc = 0;
+        if(mode == 0){
+            l_vel_para = rb_math::saturation_Up(l_vel_para, 1.0);
+            l_acc_para = rb_math::saturation_Up(l_acc_para, 1.0);
+
+            t_pos_vel = l_vel_para * rb_system::Get_CurrentRobotParameter().arm_max_pos_vel;
+            t_pos_acc = l_acc_para * rb_system::Get_CurrentRobotParameter().arm_max_pos_acc;
+            t_rot_vel = l_vel_para * rb_system::Get_CurrentRobotParameter().arm_max_rot_vel;
+            t_rot_acc = l_acc_para * rb_system::Get_CurrentRobotParameter().arm_max_rot_acc;
+        }else{
+            double l_vel_alpha = l_vel_para / rb_system::Get_CurrentRobotParameter().arm_max_pos_vel;
+            double l_acc_alpha = l_acc_para / rb_system::Get_CurrentRobotParameter().arm_max_pos_acc; 
+            l_vel_alpha = rb_math::saturation_Up(l_vel_alpha, 1.0);
+            l_acc_alpha = rb_math::saturation_Up(l_acc_alpha, 1.0);
+            t_pos_vel = l_vel_para;
+            t_pos_acc = l_acc_para;
+            t_rot_vel = l_vel_alpha * rb_system::Get_CurrentRobotParameter().arm_max_rot_vel;
+            t_rot_acc = l_acc_alpha * rb_system::Get_CurrentRobotParameter().arm_max_rot_acc;
+        }
         return Start_Motion_XB_Add_L(tar, t_pos_vel, t_pos_acc, t_rot_vel, t_rot_acc, blend_option, blend_parameter);
     }
 

@@ -98,6 +98,12 @@ struct AREA_CONFIG{
     // 3 : Box
 };
 
+struct GET_SYSTEM_DATA_RET{
+    int validity;
+    float payload[32];
+    int payload_length;
+};
+
 namespace rb_system {
     bool initialize(std::string domain, int th_cpu);
 
@@ -240,6 +246,8 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // State / Flags
     // ---------------------------------------------------------------
+
+    GET_SYSTEM_DATA_RET Get_System_Data(int option, std::string data_name);
 
     bool            Get_Is_Idle();
     int             Get_Flag_Direct_Teaching();

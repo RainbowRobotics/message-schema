@@ -44,6 +44,7 @@ namespace rb_system {
         // system flag
         bool                        flag_reference_onoff = false;
         bool                        flag_direct_teaching = false;
+        bool                        flag_sw_switch_free_drive = false;   
 
         // Connection Detector
         bool                        flag_connection_components[NO_OF_JOINT + 2];
@@ -1213,11 +1214,10 @@ namespace rb_system {
         return MSG_OK;
     }
     int Set_Free_Drive_Mode(int onoff, float sensitivity){
-        // TODO: 실제 구현 필요...임시 코드
         if(onoff == 1){
-            flag_direct_teaching = true;
+            flag_sw_switch_free_drive = true;
         }else{
-            flag_direct_teaching = false;
+            flag_sw_switch_free_drive = false;
         }
         return MSG_OK;
     }
@@ -1837,6 +1837,44 @@ namespace rb_system {
     // State / Flags
     // ---------------------------------------------------------------
 
+    GET_SYSTEM_DATA_RET Get_System_Data(int option, std::string data_name){
+        GET_SYSTEM_DATA_RET ret;
+        ret.validity = 0;
+        ret.payload_length = 0;
+        for(int i = 0; i < 32; ++i){
+            ret.payload[i] = 0.0;
+        }
+
+        (void)option;
+        if(data_name == "RB_JOINT_REF"){
+            for(int i = 0; i < NO_OF_JOINT; i++){
+                ret.payload[i] = rb_motion::Get_Wrapper_J()[i];
+            }
+            ret.payload_length = NO_OF_JOINT;
+            ret.validity = 1;
+        }else if(data_name == "RB_JOINT_ENC"){
+            for(int i = 0; i < NO_OF_JOINT; i++){
+                ret.payload[i] = rb_system::Get_Motor_Encoder()[i];
+            }
+            ret.payload_length = NO_OF_JOINT;
+            ret.validity = 1;
+        }else if(data_name == "RB_POINT_REF"){
+            for(int i = 0; i< NO_OF_CARTE; i++){
+                ret.payload[i] = rb_motion::Get_Wrapper_X()[i];
+            }
+            ret.payload_length = NO_OF_CARTE;
+            ret.validity = 1;
+        }else if(data_name == "RB_POINT_ENC"){
+            for(int i = 0; i< NO_OF_CARTE; i++){
+                ret.payload[i] = rb_motion::Get_Wrapper_X()[i];
+            }
+            ret.payload_length = NO_OF_CARTE;
+            ret.validity = 1;
+        }
+
+        return ret;
+    }
+
     bool Get_Is_Idle(){
         return (flag_direct_teaching == false && rb_motion::Get_Is_Idle());
     }
@@ -1984,12 +2022,17 @@ namespace rb_system {
         // -------------------------------------------------------------------------
         double tfb_slope = sloper_tfb_button.Update(((float)_gv_Handler_Toolflange->Get_State().button));
         if(flag_reference_onoff && rb_motion::Get_Is_Idle()){
-            if(tfb_slope > 0.001){
+            if(flag_sw_switch_free_drive){
                 Set_Direct_Teaching_Flag(true);
             }else{
-                Set_Direct_Teaching_Flag(false);
+                if(tfb_slope > 0.001){
+                    Set_Direct_Teaching_Flag(true);
+                }else{
+                    Set_Direct_Teaching_Flag(false);
+                }
             }
         }else{
+            flag_sw_switch_free_drive =  false;
             Set_Direct_Teaching_Flag(false);
         }
 

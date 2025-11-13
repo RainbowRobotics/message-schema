@@ -10,6 +10,9 @@ table Request_Get_Core_Data {
 
 table Response_Get_Core_Data {
     valid       : int;
-    payload     : FloatArray32;
+    type        : int;//0=number, 1=array, 2=string,
+    payload_num : float;
+    payload_arr : FloatArray32;
+    payload_str : string;
 }
 //--------------------------------------------------------------

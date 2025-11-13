@@ -54,10 +54,10 @@ namespace rb_motion {
     int         Start_Motion_LB(int rot_mode, int filter_window);
 
     int         Start_Motion_XB_Clear();
-    int         Start_Motion_XB_Add(TARGET_INPUT tar, double g_vel_alpha, double g_acc_alpha, int blend_option, double blend_parameter, int xb_move_type);
-    int         Start_Motion_XB_Add_J(TARGET_INPUT tar, double j_vel_alpha, double j_acc_alpha, int blend_option, double blend_parameter);
+    int         Start_Motion_XB_Add(TARGET_INPUT tar, double g_vel_para, double g_acc_para, int mode, int blend_option, double blend_parameter, int xb_move_type);
+    int         Start_Motion_XB_Add_J(TARGET_INPUT tar, double j_vel_para, double j_acc_para, int mode, int blend_option, double blend_parameter);
     int         Start_Motion_XB_Add_J(TARGET_INPUT tar, VectorJd j_vel, VectorJd j_acc, int blend_option, double blend_parameter);
-    int         Start_Motion_XB_Add_L(TARGET_INPUT tar, double l_vel_alpha, double l_acc_alpha, int blend_option, double blend_parameter);
+    int         Start_Motion_XB_Add_L(TARGET_INPUT tar, double l_vel_para, double l_acc_para, int mode, int blend_option, double blend_parameter);
     int         Start_Motion_XB_Add_L(TARGET_INPUT tar, double p_vel, double p_acc, double o_vel, double o_acc, int blend_option, double blend_parameter);
     int         Start_Motion_XB(int mode);
 

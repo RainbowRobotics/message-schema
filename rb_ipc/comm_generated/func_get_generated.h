@@ -104,7 +104,10 @@ inline ::flatbuffers::Offset<Request_Get_Core_Data> CreateRequest_Get_Core_DataD
 struct Response_Get_Core_DataT : public ::flatbuffers::NativeTable {
   typedef Response_Get_Core_Data TableType;
   int32_t valid = 0;
-  std::unique_ptr<IPC::FloatArray32> payload{};
+  int32_t type = 0;
+  float payload_num = 0.0f;
+  std::unique_ptr<IPC::FloatArray32> payload_arr{};
+  std::string payload_str{};
   Response_Get_Core_DataT() = default;
   Response_Get_Core_DataT(const Response_Get_Core_DataT &o);
   Response_Get_Core_DataT(Response_Get_Core_DataT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -116,18 +119,34 @@ struct Response_Get_Core_Data FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   typedef Response_Get_Core_DataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VALID = 4,
-    VT_PAYLOAD = 6
+    VT_TYPE = 6,
+    VT_PAYLOAD_NUM = 8,
+    VT_PAYLOAD_ARR = 10,
+    VT_PAYLOAD_STR = 12
   };
   int32_t valid() const {
     return GetField<int32_t>(VT_VALID, 0);
   }
-  const IPC::FloatArray32 *payload() const {
-    return GetStruct<const IPC::FloatArray32 *>(VT_PAYLOAD);
+  int32_t type() const {
+    return GetField<int32_t>(VT_TYPE, 0);
+  }
+  float payload_num() const {
+    return GetField<float>(VT_PAYLOAD_NUM, 0.0f);
+  }
+  const IPC::FloatArray32 *payload_arr() const {
+    return GetStruct<const IPC::FloatArray32 *>(VT_PAYLOAD_ARR);
+  }
+  const ::flatbuffers::String *payload_str() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_PAYLOAD_STR);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_VALID, 4) &&
-           VerifyField<IPC::FloatArray32>(verifier, VT_PAYLOAD, 4) &&
+           VerifyField<int32_t>(verifier, VT_TYPE, 4) &&
+           VerifyField<float>(verifier, VT_PAYLOAD_NUM, 4) &&
+           VerifyField<IPC::FloatArray32>(verifier, VT_PAYLOAD_ARR, 4) &&
+           VerifyOffset(verifier, VT_PAYLOAD_STR) &&
+           verifier.VerifyString(payload_str()) &&
            verifier.EndTable();
   }
   Response_Get_Core_DataT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -142,8 +161,17 @@ struct Response_Get_Core_DataBuilder {
   void add_valid(int32_t valid) {
     fbb_.AddElement<int32_t>(Response_Get_Core_Data::VT_VALID, valid, 0);
   }
-  void add_payload(const IPC::FloatArray32 *payload) {
-    fbb_.AddStruct(Response_Get_Core_Data::VT_PAYLOAD, payload);
+  void add_type(int32_t type) {
+    fbb_.AddElement<int32_t>(Response_Get_Core_Data::VT_TYPE, type, 0);
+  }
+  void add_payload_num(float payload_num) {
+    fbb_.AddElement<float>(Response_Get_Core_Data::VT_PAYLOAD_NUM, payload_num, 0.0f);
+  }
+  void add_payload_arr(const IPC::FloatArray32 *payload_arr) {
+    fbb_.AddStruct(Response_Get_Core_Data::VT_PAYLOAD_ARR, payload_arr);
+  }
+  void add_payload_str(::flatbuffers::Offset<::flatbuffers::String> payload_str) {
+    fbb_.AddOffset(Response_Get_Core_Data::VT_PAYLOAD_STR, payload_str);
   }
   explicit Response_Get_Core_DataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -159,11 +187,34 @@ struct Response_Get_Core_DataBuilder {
 inline ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Data(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t valid = 0,
-    const IPC::FloatArray32 *payload = nullptr) {
+    int32_t type = 0,
+    float payload_num = 0.0f,
+    const IPC::FloatArray32 *payload_arr = nullptr,
+    ::flatbuffers::Offset<::flatbuffers::String> payload_str = 0) {
   Response_Get_Core_DataBuilder builder_(_fbb);
-  builder_.add_payload(payload);
+  builder_.add_payload_str(payload_str);
+  builder_.add_payload_arr(payload_arr);
+  builder_.add_payload_num(payload_num);
+  builder_.add_type(type);
   builder_.add_valid(valid);
   return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_DataDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t valid = 0,
+    int32_t type = 0,
+    float payload_num = 0.0f,
+    const IPC::FloatArray32 *payload_arr = nullptr,
+    const char *payload_str = nullptr) {
+  auto payload_str__ = payload_str ? _fbb.CreateString(payload_str) : 0;
+  return IPC::CreateResponse_Get_Core_Data(
+      _fbb,
+      valid,
+      type,
+      payload_num,
+      payload_arr,
+      payload_str__);
 }
 
 ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Data(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Core_DataT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -199,12 +250,18 @@ inline ::flatbuffers::Offset<Request_Get_Core_Data> CreateRequest_Get_Core_Data(
 
 inline Response_Get_Core_DataT::Response_Get_Core_DataT(const Response_Get_Core_DataT &o)
       : valid(o.valid),
-        payload((o.payload) ? new IPC::FloatArray32(*o.payload) : nullptr) {
+        type(o.type),
+        payload_num(o.payload_num),
+        payload_arr((o.payload_arr) ? new IPC::FloatArray32(*o.payload_arr) : nullptr),
+        payload_str(o.payload_str) {
 }
 
 inline Response_Get_Core_DataT &Response_Get_Core_DataT::operator=(Response_Get_Core_DataT o) FLATBUFFERS_NOEXCEPT {
   std::swap(valid, o.valid);
-  std::swap(payload, o.payload);
+  std::swap(type, o.type);
+  std::swap(payload_num, o.payload_num);
+  std::swap(payload_arr, o.payload_arr);
+  std::swap(payload_str, o.payload_str);
   return *this;
 }
 
@@ -218,7 +275,10 @@ inline void Response_Get_Core_Data::UnPackTo(Response_Get_Core_DataT *_o, const 
   (void)_o;
   (void)_resolver;
   { auto _e = valid(); _o->valid = _e; }
-  { auto _e = payload(); if (_e) _o->payload = std::unique_ptr<IPC::FloatArray32>(new IPC::FloatArray32(*_e)); }
+  { auto _e = type(); _o->type = _e; }
+  { auto _e = payload_num(); _o->payload_num = _e; }
+  { auto _e = payload_arr(); if (_e) _o->payload_arr = std::unique_ptr<IPC::FloatArray32>(new IPC::FloatArray32(*_e)); }
+  { auto _e = payload_str(); if (_e) _o->payload_str = _e->str(); }
 }
 
 inline ::flatbuffers::Offset<Response_Get_Core_Data> Response_Get_Core_Data::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Response_Get_Core_DataT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -230,11 +290,17 @@ inline ::flatbuffers::Offset<Response_Get_Core_Data> CreateResponse_Get_Core_Dat
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Response_Get_Core_DataT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _valid = _o->valid;
-  auto _payload = _o->payload ? _o->payload.get() : nullptr;
+  auto _type = _o->type;
+  auto _payload_num = _o->payload_num;
+  auto _payload_arr = _o->payload_arr ? _o->payload_arr.get() : nullptr;
+  auto _payload_str = _o->payload_str.empty() ? 0 : _fbb.CreateString(_o->payload_str);
   return IPC::CreateResponse_Get_Core_Data(
       _fbb,
       _valid,
-      _payload);
+      _type,
+      _payload_num,
+      _payload_arr,
+      _payload_str);
 }
 
 }  // namespace IPC

@@ -70,6 +70,18 @@ struct Request_Move_LB_RUN;
 struct Request_Move_LB_RUNBuilder;
 struct Request_Move_LB_RUNT;
 
+struct Request_Move_XB_CLR;
+struct Request_Move_XB_CLRBuilder;
+struct Request_Move_XB_CLRT;
+
+struct Request_Move_XB_ADD;
+struct Request_Move_XB_ADDBuilder;
+struct Request_Move_XB_ADDT;
+
+struct Request_Move_XB_RUN;
+struct Request_Move_XB_RUNBuilder;
+struct Request_Move_XB_RUNT;
+
 struct Request_Move_SmoothJogJT : public ::flatbuffers::NativeTable {
   typedef Request_Move_SmoothJogJ TableType;
   std::unique_ptr<IPC::MoveInput_TargetT> target{};
@@ -843,6 +855,189 @@ inline ::flatbuffers::Offset<Request_Move_LB_RUN> CreateRequest_Move_LB_RUN(
 
 ::flatbuffers::Offset<Request_Move_LB_RUN> CreateRequest_Move_LB_RUN(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_LB_RUNT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_Move_XB_CLRT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_XB_CLR TableType;
+};
+
+struct Request_Move_XB_CLR FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_XB_CLRT NativeTableType;
+  typedef Request_Move_XB_CLRBuilder Builder;
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+  Request_Move_XB_CLRT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_XB_CLRT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_XB_CLR> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_CLRT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_XB_CLRBuilder {
+  typedef Request_Move_XB_CLR Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit Request_Move_XB_CLRBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_XB_CLR> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_XB_CLR>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_XB_CLR> CreateRequest_Move_XB_CLR(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  Request_Move_XB_CLRBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_XB_CLR> CreateRequest_Move_XB_CLR(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_CLRT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Move_XB_ADDT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_XB_ADD TableType;
+  std::unique_ptr<IPC::MoveInput_TargetT> target{};
+  std::unique_ptr<IPC::MoveInput_SpeedT> speed{};
+  std::unique_ptr<IPC::MoveInput_TypeT> type{};
+  int32_t method = 0;
+  Request_Move_XB_ADDT() = default;
+  Request_Move_XB_ADDT(const Request_Move_XB_ADDT &o);
+  Request_Move_XB_ADDT(Request_Move_XB_ADDT&&) FLATBUFFERS_NOEXCEPT = default;
+  Request_Move_XB_ADDT &operator=(Request_Move_XB_ADDT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct Request_Move_XB_ADD FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_XB_ADDT NativeTableType;
+  typedef Request_Move_XB_ADDBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_SPEED = 6,
+    VT_TYPE = 8,
+    VT_METHOD = 10
+  };
+  const IPC::MoveInput_Target *target() const {
+    return GetPointer<const IPC::MoveInput_Target *>(VT_TARGET);
+  }
+  const IPC::MoveInput_Speed *speed() const {
+    return GetPointer<const IPC::MoveInput_Speed *>(VT_SPEED);
+  }
+  const IPC::MoveInput_Type *type() const {
+    return GetPointer<const IPC::MoveInput_Type *>(VT_TYPE);
+  }
+  int32_t method() const {
+    return GetField<int32_t>(VT_METHOD, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyOffset(verifier, VT_SPEED) &&
+           verifier.VerifyTable(speed()) &&
+           VerifyOffset(verifier, VT_TYPE) &&
+           verifier.VerifyTable(type()) &&
+           VerifyField<int32_t>(verifier, VT_METHOD, 4) &&
+           verifier.EndTable();
+  }
+  Request_Move_XB_ADDT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_XB_ADDT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_XB_ADD> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_ADDT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_XB_ADDBuilder {
+  typedef Request_Move_XB_ADD Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<IPC::MoveInput_Target> target) {
+    fbb_.AddOffset(Request_Move_XB_ADD::VT_TARGET, target);
+  }
+  void add_speed(::flatbuffers::Offset<IPC::MoveInput_Speed> speed) {
+    fbb_.AddOffset(Request_Move_XB_ADD::VT_SPEED, speed);
+  }
+  void add_type(::flatbuffers::Offset<IPC::MoveInput_Type> type) {
+    fbb_.AddOffset(Request_Move_XB_ADD::VT_TYPE, type);
+  }
+  void add_method(int32_t method) {
+    fbb_.AddElement<int32_t>(Request_Move_XB_ADD::VT_METHOD, method, 0);
+  }
+  explicit Request_Move_XB_ADDBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_XB_ADD> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_XB_ADD>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_XB_ADD> CreateRequest_Move_XB_ADD(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<IPC::MoveInput_Target> target = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Speed> speed = 0,
+    ::flatbuffers::Offset<IPC::MoveInput_Type> type = 0,
+    int32_t method = 0) {
+  Request_Move_XB_ADDBuilder builder_(_fbb);
+  builder_.add_method(method);
+  builder_.add_type(type);
+  builder_.add_speed(speed);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_XB_ADD> CreateRequest_Move_XB_ADD(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_ADDT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_Move_XB_RUNT : public ::flatbuffers::NativeTable {
+  typedef Request_Move_XB_RUN TableType;
+  int32_t running_mode = 0;
+};
+
+struct Request_Move_XB_RUN FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_Move_XB_RUNT NativeTableType;
+  typedef Request_Move_XB_RUNBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RUNNING_MODE = 4
+  };
+  int32_t running_mode() const {
+    return GetField<int32_t>(VT_RUNNING_MODE, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_RUNNING_MODE, 4) &&
+           verifier.EndTable();
+  }
+  Request_Move_XB_RUNT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_Move_XB_RUNT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_Move_XB_RUN> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_RUNT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_Move_XB_RUNBuilder {
+  typedef Request_Move_XB_RUN Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_running_mode(int32_t running_mode) {
+    fbb_.AddElement<int32_t>(Request_Move_XB_RUN::VT_RUNNING_MODE, running_mode, 0);
+  }
+  explicit Request_Move_XB_RUNBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_Move_XB_RUN> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_Move_XB_RUN>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t running_mode = 0) {
+  Request_Move_XB_RUNBuilder builder_(_fbb);
+  builder_.add_running_mode(running_mode);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_RUNT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_Move_SmoothJogJT::Request_Move_SmoothJogJT(const Request_Move_SmoothJogJT &o)
       : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr) {
 }
@@ -1282,6 +1477,105 @@ inline ::flatbuffers::Offset<Request_Move_LB_RUN> CreateRequest_Move_LB_RUN(::fl
   return IPC::CreateRequest_Move_LB_RUN(
       _fbb,
       _orientation);
+}
+
+inline Request_Move_XB_CLRT *Request_Move_XB_CLR::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_XB_CLRT>(new Request_Move_XB_CLRT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_XB_CLR::UnPackTo(Request_Move_XB_CLRT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_CLR> Request_Move_XB_CLR::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_CLRT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_XB_CLR(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_CLR> CreateRequest_Move_XB_CLR(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_CLRT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_XB_CLRT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  return IPC::CreateRequest_Move_XB_CLR(
+      _fbb);
+}
+
+inline Request_Move_XB_ADDT::Request_Move_XB_ADDT(const Request_Move_XB_ADDT &o)
+      : target((o.target) ? new IPC::MoveInput_TargetT(*o.target) : nullptr),
+        speed((o.speed) ? new IPC::MoveInput_SpeedT(*o.speed) : nullptr),
+        type((o.type) ? new IPC::MoveInput_TypeT(*o.type) : nullptr),
+        method(o.method) {
+}
+
+inline Request_Move_XB_ADDT &Request_Move_XB_ADDT::operator=(Request_Move_XB_ADDT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(target, o.target);
+  std::swap(speed, o.speed);
+  std::swap(type, o.type);
+  std::swap(method, o.method);
+  return *this;
+}
+
+inline Request_Move_XB_ADDT *Request_Move_XB_ADD::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_XB_ADDT>(new Request_Move_XB_ADDT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_XB_ADD::UnPackTo(Request_Move_XB_ADDT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = target(); if (_e) { if(_o->target) { _e->UnPackTo(_o->target.get(), _resolver); } else { _o->target = std::unique_ptr<IPC::MoveInput_TargetT>(_e->UnPack(_resolver)); } } else if (_o->target) { _o->target.reset(); } }
+  { auto _e = speed(); if (_e) { if(_o->speed) { _e->UnPackTo(_o->speed.get(), _resolver); } else { _o->speed = std::unique_ptr<IPC::MoveInput_SpeedT>(_e->UnPack(_resolver)); } } else if (_o->speed) { _o->speed.reset(); } }
+  { auto _e = type(); if (_e) { if(_o->type) { _e->UnPackTo(_o->type.get(), _resolver); } else { _o->type = std::unique_ptr<IPC::MoveInput_TypeT>(_e->UnPack(_resolver)); } } else if (_o->type) { _o->type.reset(); } }
+  { auto _e = method(); _o->method = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_ADD> Request_Move_XB_ADD::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_ADDT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_XB_ADD(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_ADD> CreateRequest_Move_XB_ADD(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_ADDT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_XB_ADDT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _target = _o->target ? CreateMoveInput_Target(_fbb, _o->target.get(), _rehasher) : 0;
+  auto _speed = _o->speed ? CreateMoveInput_Speed(_fbb, _o->speed.get(), _rehasher) : 0;
+  auto _type = _o->type ? CreateMoveInput_Type(_fbb, _o->type.get(), _rehasher) : 0;
+  auto _method = _o->method;
+  return IPC::CreateRequest_Move_XB_ADD(
+      _fbb,
+      _target,
+      _speed,
+      _type,
+      _method);
+}
+
+inline Request_Move_XB_RUNT *Request_Move_XB_RUN::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_Move_XB_RUNT>(new Request_Move_XB_RUNT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_Move_XB_RUN::UnPackTo(Request_Move_XB_RUNT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = running_mode(); _o->running_mode = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_RUN> Request_Move_XB_RUN::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_RUNT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_Move_XB_RUN(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_Move_XB_RUN> CreateRequest_Move_XB_RUN(::flatbuffers::FlatBufferBuilder &_fbb, const Request_Move_XB_RUNT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_Move_XB_RUNT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _running_mode = _o->running_mode;
+  return IPC::CreateRequest_Move_XB_RUN(
+      _fbb,
+      _running_mode);
 }
 
 }  // namespace IPC

@@ -450,41 +450,25 @@ namespace rb_ipc {
             // Get Call
             // -----------------------------------------------------------------------
             ADD_SERVE_BLANK("get_core_data", IPC::Request_Get_Core_Data, IPC::Response_Get_Core_Data, {
-
-                int req_option = req->option();
-                std::string req_name = req->name()->c_str();
+                GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(req->option(), req->name()->c_str());
 
                 int return_valid = 0;
                 std::array<float, 32> return_arr;
-                for(int i=0; i<32; i++){
+                for(int i = 0; i < 32; i++){
                     return_arr[i] = 0.0f;
                 }
 
-                if(req_name == "RB_JOINT_REF"){
-                    for(int i = 0; i < NO_OF_JOINT; i++){
-                        return_arr[i] = rb_motion::Get_Wrapper_J()[i];
-                    }
+                if(sys_ret.validity == 1){
                     return_valid = 1;
-                }else if(req_name == "RB_JOINT_ENC"){
-                    for(int i = 0; i < NO_OF_JOINT; i++){
-                        return_arr[i] = rb_system::Get_Motor_Encoder()[i];
+                    for(int i = 0; i < sys_ret.payload_length; ++i){
+                        return_arr[i] = sys_ret.payload[i];
                     }
-                    return_valid = 1;
-                }else if(req_name == "RB_POINT_REF"){
-                    for(int i = 0; i< NO_OF_CARTE; i++){
-                        return_arr[i] = rb_motion::Get_Wrapper_X()[i];
-                    }
-                    return_valid = 1;
-                }else if(req_name == "RB_POINT_ENC"){
-                    for(int i = 0; i< NO_OF_CARTE; i++){
-                        return_arr[i] = rb_motion::Get_Wrapper_X()[i];
-                    }
-                    return_valid = 1;
                 }
 
                 IPC::Response_Get_Core_DataT core_data_T;
                 core_data_T.valid = return_valid;
-                core_data_T.payload = std::make_unique<IPC::FloatArray32>(::flatbuffers::span<const float, 32>(return_arr.data(), 32));
+                core_data_T.type = 1;
+                core_data_T.payload_arr = std::make_unique<IPC::FloatArray32>(::flatbuffers::span<const float, 32>(return_arr.data(), 32));
                 return IPC::Response_Get_Core_Data::Pack(fbb, &core_data_T);
             });
 
@@ -512,6 +496,7 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_smoothjog_stop", IPC::Request_Move_SmoothJogStop, IPC::Response_Functions, {
                 return_int = rb_system::Call_MoveBreak(req->stoptime());
             });
+
             ADD_SERVE_SIMPLE("call_tickjog_j", IPC::Request_Move_TickJogJ, IPC::Response_Functions, {
                 TARGET_INPUT input;
                 for (int i = 0; i < NO_OF_JOINT; i++) {
@@ -549,6 +534,7 @@ namespace rb_ipc {
                     return_int = return_val;
                 }
             });
+
             ADD_SERVE_SIMPLE("call_move_j", IPC::Request_Move_J, IPC::Response_Functions, {
                 TARGET_INPUT input;
                 for (int i = 0; i < NO_OF_JOINT; i++) {
@@ -597,6 +583,7 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_move_jb_run", IPC::Request_Move_JB_RUN, IPC::Response_Functions, {
                 return_int = rb_motion::Start_Motion_JB();
             });
+
             ADD_SERVE_SIMPLE("call_move_lb_clr", IPC::Request_Move_LB_CLR, IPC::Response_Functions, {
                 return_int = rb_motion::Start_Motion_LB_Clear();
             });
@@ -616,6 +603,28 @@ namespace rb_ipc {
             });
             ADD_SERVE_SIMPLE("call_move_lb_run", IPC::Request_Move_LB_RUN, IPC::Response_Functions, {
                 return_int = rb_motion::Start_Motion_LB(req->orientation(), 10);
+            });
+
+            ADD_SERVE_SIMPLE("call_move_xb_clr", IPC::Request_Move_XB_CLR, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_XB_Clear();
+            });
+             ADD_SERVE_SIMPLE("call_move_xb_add", IPC::Request_Move_XB_ADD, IPC::Response_Functions, {
+                TARGET_INPUT input;
+                for (int i = 0; i < NO_OF_CARTE; i++) {
+                    input.target_value[i] = req->target()->tar_values()->f()->Get(i);
+                }
+                input.target_frame  = req->target()->tar_frame();
+                input.target_unit   = req->target()->tar_unit();
+                int spd_mode        = req->speed()->spd_mode();
+                float vel_para      = req->speed()->spd_vel_para();
+                float acc_para      = req->speed()->spd_acc_para();
+                int pt_type         = req->type()->pnt_type();
+                float blend_para    = req->type()->pnt_para();
+                int move_method     = req->method();
+                return_int = rb_motion::Start_Motion_XB_Add(input, vel_para, acc_para, spd_mode, pt_type, blend_para, move_method);
+            });
+            ADD_SERVE_SIMPLE("call_move_xb_run", IPC::Request_Move_XB_RUN, IPC::Response_Functions, {
+                return_int = rb_motion::Start_Motion_XB(req->running_mode());
             });
             
             while (true) {

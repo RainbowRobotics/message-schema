@@ -25,8 +25,13 @@
 #include "rb_core/system.h"
 #include "rb_motion/motion.h"
 
+struct Command_Return{
+    int return_code;
+    std::string return_str;
+};
+
 #define ADD_CMD_HANDLER(name, ...) \
-    { name, [](const std::vector<std::string>& a) -> int { \
+    { name, [](const std::vector<std::string>& a) -> Command_Return { \
         std::cout << "[SCS] Executing command: " << name << std::endl; \
         __VA_ARGS__; \
     }}
@@ -37,6 +42,8 @@
 
 namespace rb_socket_command_server {
     namespace {
+        
+
         std::atomic<bool> running(false);
         int listen_port = 0;
         int event_fd = -1;
@@ -137,22 +144,22 @@ namespace rb_socket_command_server {
         }
 
         // 🔹 디스패처: 함수명 → 실제 동작
-        static int execute_command(const std::string &func, const std::vector<std::string> &args) {
-            static const std::unordered_map<std::string, std::function<int(const std::vector<std::string>&)>> dispatch = {
+        static Command_Return execute_command(const std::string &func, const std::vector<std::string> &args) {
+            static const std::unordered_map<std::string, std::function<Command_Return(const std::vector<std::string>&)>> dispatch = {
                 // -----------------------------------------------------------------------
                 // BOX
                 // -----------------------------------------------------------------------
                 ADD_CMD_HANDLER("call_side_dout", {
                     if (a.size() == 2){
-                        return rb_system::Set_Digital_Output(std::stoi(a[0]), std::stoi(a[1]));
+                        return {rb_system::Set_Digital_Output(std::stoi(a[0]), std::stoi(a[1])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_side_aout", {
                     if (a.size() == 2){
-                        return rb_system::Set_Analog_Output(std::stoi(a[0]), std::stof(a[1]));
+                        return {rb_system::Set_Analog_Output(std::stoi(a[0]), std::stof(a[1])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 // -----------------------------------------------------------------------
                 // Servo
@@ -166,21 +173,21 @@ namespace rb_socket_command_server {
                         }else{
                             return_val = rb_system::Set_Power(rb_system::PowerOption::Off, false);
                         }
-                        return return_val;
+                        return {return_val, ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_servocontrol", {
                     if (a.size() == 1){
-                        return rb_system::Set_Servo(std::stoi(a[0]), 1);
+                        return {rb_system::Set_Servo(std::stoi(a[0]), 1), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_referencecontrol", {
                     if (a.size() == 1){
-                        return rb_system::Set_ReferenceOnOff(std::stoi(a[0]));
+                        return {rb_system::Set_ReferenceOnOff(std::stoi(a[0])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
 
                 // -----------------------------------------------------------------------
@@ -188,42 +195,42 @@ namespace rb_socket_command_server {
                 // -----------------------------------------------------------------------
                 ADD_CMD_HANDLER("call_speedbar", {
                     if (a.size() == 1){
-                        return rb_system::Set_MoveSpeedBar(std::stof(a[0]));
+                        return {rb_system::Set_MoveSpeedBar(std::stof(a[0])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_pause", {
                     if (a.size() == 0){
-                        return rb_system::Call_MovePause();
+                        return {rb_system::Call_MovePause(), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_resume", {
                     if (a.size() == 0){
-                        return rb_system::Call_MoveResume();
+                        return {rb_system::Call_MoveResume(), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_reset_outcoll", {
                     if (a.size() == 0){
-                        return rb_system::Call_Reset_Out_Coll();
+                        return {rb_system::Call_Reset_Out_Coll(), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 // -----------------------------------------------------------------------
                 // Set Call
                 // -----------------------------------------------------------------------
                 ADD_CMD_HANDLER("set_toollist_num", {
                     if (a.size() == 1){
-                        return rb_system::Change_Tool_Number(std::stoi(a[0]));
+                        return {rb_system::Change_Tool_Number(std::stoi(a[0])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_userframe_num", {
                     if (a.size() == 1){
-                        return rb_system::Change_UserFrame_Number(std::stoi(a[0]));
+                        return {rb_system::Change_UserFrame_Number(std::stoi(a[0])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_shift", {
                     if (a.size() == (NO_OF_JOINT + 4)){
@@ -235,21 +242,21 @@ namespace rb_socket_command_server {
                         }
                         shift_input.target_frame  = std::stoi(a[a.size() - 2]);
                         shift_input.target_unit   = std::stoi(a[a.size() - 1]);
-                        return rb_motion::Set_Motion_Shift(shift_no, shift_mode, shift_input);
+                        return {rb_motion::Set_Motion_Shift(shift_no, shift_mode, shift_input), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_out_collision_para", {
                     if (a.size() == 3){
-                        return rb_system::Set_Out_Coll_Para(std::stoi(a[0]), std::stoi(a[1]), std::stof(a[2]));
+                        return {rb_system::Set_Out_Coll_Para(std::stoi(a[0]), std::stoi(a[1]), std::stof(a[2])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_self_collision_para", {
                     if (a.size() == 3){
-                        return rb_system::Set_Self_Coll_Para(std::stoi(a[0]), std::stof(a[1]), std::stof(a[2]));
+                        return {rb_system::Set_Self_Coll_Para(std::stoi(a[0]), std::stof(a[1]), std::stof(a[2])), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_joint_impedance", {
                     if (a.size() == (1 + NO_OF_JOINT * 2)){
@@ -261,9 +268,9 @@ namespace rb_socket_command_server {
                             torqelimit[i] = std::stof(a[i + 1 + NO_OF_JOINT]);
                         }
                         if(onoff == 1){
-                            return rb_system::Set_Joint_Impedance_On(stiffness, torqelimit);
+                            return {rb_system::Set_Joint_Impedance_On(stiffness, torqelimit), ""};
                         }else{
-                            return rb_system::Set_Joint_Impedance_Off();
+                            return {rb_system::Set_Joint_Impedance_Off(), ""};
                         }
                     }else if(a.size() == 3){
                         int onoff = std::stoi(a[0]);
@@ -274,22 +281,56 @@ namespace rb_socket_command_server {
                             arr_torqelimit[i] = std::stof(a[2]);
                         }
                         if(onoff == 1){
-                            return rb_system::Set_Joint_Impedance_On(arr_stiffness, arr_torqelimit);
+                            return {rb_system::Set_Joint_Impedance_On(arr_stiffness, arr_torqelimit), ""};
                         }else{
-                            return rb_system::Set_Joint_Impedance_Off();
+                            return {rb_system::Set_Joint_Impedance_Off(), ""};
                         }
                     }else{
-                        return rb_system::Set_Joint_Impedance_Off();
+                        return {rb_system::Set_Joint_Impedance_Off(), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("set_freedrive", {
-                    if (a.size() == 2){
-                        int onoff = std::stoi(a[0]);
-                        float sensitivity = std::stof(a[1]);
-                        return rb_system::Set_Free_Drive_Mode(onoff, sensitivity);
+                    if (a.size() == 1 || a.size() == 2){
+                        int input_onoff = std::stoi(a[0]);
+                        float input_sensitivity = 1.0f;
+                        if(a.size() == 2){
+                            input_sensitivity = std::stof(a[1]);
+                        }
+                        return {rb_system::Set_Free_Drive_Mode(input_onoff, input_sensitivity), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                // -----------------------------------------------------------------------
+                // Get Call
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("get_core_data", {
+                    if (a.size() == 1 || a.size() == 2){
+                        std::string input_name = "";
+                        int input_option = 0;
+                        if(a.size() == 1){
+                            input_name = a[0];
+                        }else{
+                            input_option = std::stoi(a[0]);
+                            input_name = a[1];
+                        }
+                        GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(input_option, input_name);
+                        if(sys_ret.validity == 1){
+                            // 성공
+                            std::string data_str = "";
+                            for(int i = 0; i < sys_ret.payload_length; ++i){
+                                data_str += std::to_string(sys_ret.payload[i]);;
+                                if(i != (sys_ret.payload_length -1)){
+                                    data_str += ",";
+                                }
+                            }
+                            return {-1, data_str}; // 성공 코드
+                        }else{
+                            // 실패
+                            return {-1, "UNKNOWN"}; // 실패 코드
+                        }
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 // -----------------------------------------------------------------------
                 // Move Call
@@ -307,7 +348,7 @@ namespace rb_socket_command_server {
                         float vel_para      = std::stof(a[NO_OF_JOINT + 2]);
                         float acc_para      = std::stof(a[NO_OF_JOINT + 3]);
 
-                        return rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+                        return {rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode), ""};
                     }else if(a.size() == (NO_OF_JOINT + 2)){
                         TARGET_INPUT input;
                         for (size_t i = 0; i < NO_OF_JOINT; i++) {
@@ -319,9 +360,9 @@ namespace rb_socket_command_server {
                         int spd_mode = 0;
                         float vel_para = std::stof(a[NO_OF_JOINT]);
                         float acc_para = std::stof(a[NO_OF_JOINT + 1]);
-                        return rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode);
+                        return {rb_motion::Start_Motion_J(input, vel_para, acc_para, spd_mode), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_move_l", {
                     if (a.size() == (NO_OF_CARTE + 4)){
@@ -336,7 +377,7 @@ namespace rb_socket_command_server {
                         float vel_para      = std::stof(a[NO_OF_CARTE + 2]);
                         float acc_para      = std::stof(a[NO_OF_CARTE + 3]);
 
-                        return rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+                        return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
                     }else if(a.size() == (NO_OF_CARTE + 2)){
                         TARGET_INPUT input;
                         for (size_t i = 0; i < NO_OF_CARTE; i++) {
@@ -348,9 +389,9 @@ namespace rb_socket_command_server {
                         int spd_mode = 0;
                         float vel_para = std::stof(a[NO_OF_CARTE]);
                         float acc_para = std::stof(a[NO_OF_CARTE + 1]);
-                        return rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode);
+                        return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
                     }
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 })
             };
 
@@ -361,11 +402,11 @@ namespace rb_socket_command_server {
                     return it->second(args);
                 } catch (const std::exception &e) {
                     std::cerr << "[SCS] Exception while executing '" << func << "': " << e.what() << "\n";
-                    return MSG_NOT_VALID_COMMAND_FORMAT;
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }
             } else {
                 std::cerr << "[SCS] Unknown command: " << func << "\n";
-                return MSG_NOT_VALID_COMMAND_FORMAT;
+                return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
             }
         }
         void parse_and_execute(const std::string &cmd, int client_fd) {
@@ -373,9 +414,14 @@ namespace rb_socket_command_server {
             std::vector<std::string> args;
             parse_command(cmd, func, args);
 
-            int ret = execute_command(func, args);
+            Command_Return ret = execute_command(func, args);
 
-            std::string response = "return[SCS][" + std::to_string(ret) + "]\n";
+            std::string response = "";
+            if(ret.return_code >= 0){
+                response = "return[SCS][" + std::to_string(ret.return_code) + "]\n";
+            }else{
+                response = "return[SCS][" + ret.return_str + "]\n";
+            }
 
             send(client_fd, response.c_str(), response.size(), 0);
         }
