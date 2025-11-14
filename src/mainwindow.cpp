@@ -402,7 +402,7 @@ void MainWindow::init_modules()
     // cam module init
     {
         //if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
-         if(CONFIG::instance()->get_use_cam())
+        if(CONFIG::instance()->get_use_cam())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
             CAM::instance()->set_logger_module(LOGGER::instance());
@@ -552,15 +552,14 @@ void MainWindow::init_modules()
     }
 
     // safety module init
+    if(CONFIG::instance()->get_use_monitoring_field())
     {
         SAFETY::instance()->set_config_module(CONFIG::instance());
         SAFETY::instance()->set_logger_module(LOGGER::instance());
         SAFETY::instance()->set_mobile_module(MOBILE::instance());
-        SAFETY::instance()->set_unimap_module(UNIMAP::instance());
         SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
-        SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
         SAFETY::instance()->init();
-        SAFETY::instance()->start();
+        SAFETY::instance()->open();
     }
 
     // Task
@@ -568,7 +567,6 @@ void MainWindow::init_modules()
         TASK::instance()->init();
         TASK::instance()->pause();
         TASK::instance()->cancel();
-
     }
 
     // start jog loop
@@ -4428,11 +4426,11 @@ void MainWindow::plot_obs()
         // point size
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
 
-        // debug
         if(ui->ckb_PlotObs->isChecked())
         {
             if(ui->ckb_PlotSafetyObs->isChecked())
             {
+                // for safety field
                 cv::Mat safety_map = SAFETY::instance()->get_safety_map().clone();
                 if(!safety_map.empty())
                 {
@@ -4441,6 +4439,26 @@ void MainWindow::plot_obs()
                     QPixmap _safety_map = QPixmap::fromImage(img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
                     ui->lb_Screen6->setPixmap(_safety_map);
                 }
+                std::vector<int> cols = SAFETY::instance()->get_field_collision();
+                QString info;
+
+                if(cols.empty())
+                {
+                    info = "Collision fields: none";
+                }
+                else
+                {
+                    info = "Collision fields: ";
+                    for(size_t i = 0; i < cols.size(); i++)
+                    {
+                        info += QString::number(cols[i]);
+                        if(i + 1 < cols.size())
+                        {
+                            info += ", ";
+                        }
+                    }
+                }
+                ui->lb_FieldInfo->setText(info);
             }
             else
             {

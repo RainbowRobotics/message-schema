@@ -296,12 +296,15 @@ public:
     QString get_map_path();
     void set_map_path(const QString& path);
 
-
     /***********************
      * safety monitoring
      ***********************/
-    int get_monitoring_field_count();                    
-    std::vector<MonitoringField> get_monitoring_field();
+    bool get_use_monitoring_field();
+    int get_monitoring_field_num();
+    std::vector<double> get_field_size_min_x();
+    std::vector<double> get_field_size_max_x();
+    std::vector<double> get_field_size_min_y();
+    std::vector<double> get_field_size_max_y();
     bool get_use_safety_cross_monitor();
     bool get_use_safety_speed_control();
     bool get_use_safety_obstacle_detect();
@@ -629,8 +632,12 @@ private:
     QString CHARGE_TYPE = "RAINBOW";
 
     // safety
-    int MONITORING_FIELD_COUNT = 0;
-    std::vector<MonitoringField> MONITORING_FIELD;
+    bool USE_MONITORING_FIELD = false;
+    int MONITORING_FIELD_NUM = 0;
+    std::vector<double> FIELD_SIZE_MIN_X;
+    std::vector<double> FIELD_SIZE_MAX_X;
+    std::vector<double> FIELD_SIZE_MIN_Y;
+    std::vector<double> FIELD_SIZE_MAX_Y;
     bool USE_SAFETY_CROSS_MONITOR = false;
     bool USE_SAFETY_SPEED_CONTROL = false;
     bool USE_SAFETY_OBSTACLE_DETECT = false;
