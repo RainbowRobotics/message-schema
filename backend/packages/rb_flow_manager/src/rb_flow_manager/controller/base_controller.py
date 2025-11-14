@@ -16,31 +16,31 @@ class BaseController(ABC):
 
     @abstractmethod
     def on_stop(self, process_id: str, step_id: str) -> None:
-        """강제 중지 시점에 호출"""
+        """각 Step이 Stop 될때 동작을 수행"""
 
     @abstractmethod
     def on_pause(self, process_id: str, step_id: str) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """각 Step이 Pause 될때 실제 동작을 수행"""
 
     @abstractmethod
     def on_resume(self, process_id: str, step_id: str) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """각 Step이 Resume 될때 실제 동작을 수행"""
 
     @abstractmethod
     def on_next(self, process_id: str, step_id: str) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """각 Step이 다음 Step으로 이동 할때 동작을 수행"""
+
+    @abstractmethod
+    def on_done(self, process_id: str, step_id: str) -> None:
+        """각 Step이 완료 되었을때 동작을 수행"""
 
     @abstractmethod
     def on_error(self, process_id: str, step_id: str, error: Exception) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """각 Step에서 Error 발생 시 동작을 수행"""
 
     @abstractmethod
-    def on_complete(self, process_id: str, step_id: str) -> None:
-        """각 Step에서 실제 동작을 수행"""
-
-    @abstractmethod
-    def on_process_complete(self, process_id: str) -> None:
-        """프로세스 완료 시점에 호출"""
+    def on_complete(self, process_id: str) -> None:
+        """스크립트/플로우 완료 시점에 동작을 수행"""
 
     @abstractmethod
     def on_close(self) -> None:
@@ -48,12 +48,12 @@ class BaseController(ABC):
 
     @abstractmethod
     def on_all_complete(self) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """모든 스크립트/플로우 완료 시점에 동작을 수행"""
 
     @abstractmethod
     def on_all_stop(self) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """모든 스크립트/플로우 Stop 시점에 동작을 수행"""
 
     @abstractmethod
     def on_all_pause(self) -> None:
-        """각 Step에서 실제 동작을 수행"""
+        """모든 스크립트/플로우 Pause 시점에 동작을 수행"""

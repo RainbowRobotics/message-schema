@@ -49,8 +49,8 @@ async def on_update_all_step_state(*, topic, mv, obj, attachment):
     opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_update_step_state(*, topic, mv, obj, attachment):
+    print("obj >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
     db = await get_db()
-    print("obj >>>", obj, flush=True)
     step_id = obj["stepId"]
     state = convert_state_to_string(obj["state"])
     return await program_service.update_step_state(

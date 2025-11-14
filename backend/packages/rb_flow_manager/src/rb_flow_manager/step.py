@@ -1,13 +1,14 @@
 import uuid
 from collections.abc import Callable
 from multiprocessing import Event
+from typing import Any
 
 from rb_schemas.sdk import FlowManagerArgs
-
-from rb_flow_manager.utils import call_with_matching_args, safe_eval_expr
+from rb_utils.flow_manager import call_with_matching_args, safe_eval_expr
 
 from .context import ExecutionContext
 from .exception import StopExecution
+from .utils import _resolve_arg_scope_value
 
 
 class Step:
@@ -17,16 +18,20 @@ class Step:
         self,
         step_id: str,
         name: str,
+        variable: dict[str, Any] | None = None,
         func: Callable | None = None,
+        done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
         *,
         func_name: str | None = None,
-        args: dict[str, str] | None = None,
+        args: dict[str, Any] | None = None,
     ):
         self._class_name = "Step"
         self.step_id = step_id
         self.name = name
+        self.variable = variable
         self.func_name = func_name
+        self.done_script = done_script
         self.children = children or []
         self.args = args or {}
 
@@ -40,8 +45,10 @@ class Step:
         return Step(
             step_id=str(d.get("stepId") or d.get("_id") or f"temp-{str(uuid.uuid4())}"),
             name=d["name"],
+            variable=d.get("variable"),
             func_name=d.get("funcName"),
             args=d.get("args") or {},
+            done_script=d.get("doneScript"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
         )
 
@@ -49,6 +56,7 @@ class Step:
         return {
             "stepId": self.step_id,
             "name": self.name,
+            "variable": self.variable,
             "funcName": self.func_name,
             "args": self.args,
             "method": "Step",
@@ -73,13 +81,20 @@ class Step:
             + f"{self._class_name}(\n"
             + _indent(f"step_id={repr(self.step_id)},", depth + 4)
             + "\n"
+            + (_indent(f"variable={repr(self.variable)},\n", depth + 4) if self.variable else "")
             + _indent(f"name={repr(self.name)},", depth + 4)
             + "\n"
             + _indent(f"func_name={repr(self.func_name)},", depth + 4)
             + "\n"
+            + _indent(f"args={repr(self.args)},", depth + 4)
+            + "\n"
+            + (
+                _indent(f"done_script={repr(self.done_script)},\n", depth + 4)
+                if self.done_script is not None
+                else ""
+            )
             + (" " * (depth + 4))
             + f"children={children_block},\n"
-            + _indent(f"args={repr(self.args)},", depth + 4)
             + "\n"
             + (" " * depth)
             + ")"
@@ -87,48 +102,99 @@ class Step:
 
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
+        done_called = False
+
+        ctx.push_args(self.args)
         ctx.emit_next(self.step_id)
         ctx.check_stop()
 
-        # func가 있으면 실행
-        fn = self.func
-        if fn is None and self.func_name:
-            fn = ctx.sdk_functions.get(self.func_name)
-            if fn is None:
-                raise StopExecution(f"unknown flow function: {self.func_name}")
+        try:
+            fn = self.func
+            func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
+            args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
 
-        if fn is not None:
-            done_event = Event()
+            if fn is None and func_name:
+                fn = ctx.sdk_functions.get(func_name)
+                if fn is None:
+                    raise StopExecution(f"unknown flow function: {func_name}")
 
-            def done():
-                ctx.emit_complete(self.step_id)
-                done_event.set()
+            if fn is not None:
+                done_event = Event()
 
-            flow_manager_args = FlowManagerArgs(ctx=ctx, done=done)
+                def done():
+                    nonlocal done_called
 
-            try:
-                eval_args = {
-                    k: safe_eval_expr(v, variables=ctx.variables) for k, v in self.args.items()
-                }
+                    if done_called:
+                        return
 
-                call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
-            except RuntimeError as e:
-                ctx.stop()
-                ctx.emit_error(self.step_id, e)
-                raise StopExecution(str(e)) from e
-            except Exception as e:  # noqa: BLE001
-                print(f"[{ctx.process_id}] Step '{self.name}' error: {e}")
-                ctx.stop()
-                ctx.emit_error(self.step_id, e)
-                raise StopExecution(str(e)) from e
+                    done_called = True
 
-            while not done_event.wait(timeout=0.01):
+                    if self.done_script is not None:
+                        if isinstance(self.done_script, str):
+                            safe_eval_expr(
+                                self.done_script,
+                                variables=ctx.variables,
+                                get_global_variable=ctx.get_global_variable,
+                            )
+                        else:
+                            self.done_script()
+
+                    ctx.emit_done(self.step_id)
+                    done_event.set()
+
+                flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args, done=done)
+
+                try:
+                    eval_args = {}
+
+                    print("[DEBUG] raw args in Step.execute:", self.args, flush=True)
+                    print("[DEBUG] resolved args in Step.execute:", args, flush=True)
+
+                    for k, v in args.items():
+                        eval_args[k] = safe_eval_expr(
+                            v, variables=ctx.variables, get_global_variable=ctx.get_global_variable
+                        )
+
+                    if self.variable:
+                        for k, v in self.variable.items():
+                            if isinstance(v, str):
+                                if v.startswith("$parent."):
+                                    attr = v[len("$parent.") :]
+                                    v = ctx.lookup(attr)
+                                elif v.startswith("$args."):
+                                    attr = v[len("$args.") :]
+                                    v = eval_args.get(attr)
+                                else:
+                                    v = safe_eval_expr(
+                                        v,
+                                        variables=ctx.variables,
+                                        get_global_variable=ctx.get_global_variable,
+                                    )
+
+                            self.variable[k] = v
+
+                        ctx.update_variables(self.variable)
+
+                    call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
+                except RuntimeError as e:
+                    ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                    ctx.stop()
+                    raise StopExecution(str(e)) from e
+                except Exception as e:  # noqa: BLE001
+                    ctx.emit_error(self.step_id, e)
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}")
+                    ctx.stop()
+                    raise StopExecution(str(e)) from e
+
+                while not done_event.wait(timeout=0.01):
+                    ctx.check_stop()
+
+            # 자식 노드들을 순차 실행
+            for child in self.children:
                 ctx.check_stop()
-
-        # 자식 노드들을 순차 실행
-        for child in self.children:
-            ctx.check_stop()
-            child.execute(ctx)
+                child.execute(ctx)
+        finally:
+            ctx.pop_args()
 
 
 class RepeatStep(Step):

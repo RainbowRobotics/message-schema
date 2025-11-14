@@ -9,6 +9,8 @@ from rb_flat_buffers.flow_manager.Request_Update_All_Step_State import (
     Request_Update_All_Step_StateT,
 )
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
+from rb_flat_buffers.IPC.Request_Get_Core_Data import Request_Get_Core_DataT
+from rb_flat_buffers.IPC.Response_Get_Core_Data import Response_Get_Core_DataT
 from rb_flow_manager.controller.base_controller import BaseController
 from rb_modules.log import rb_log
 from rb_zenoh.client import ZenohClient
@@ -36,6 +38,30 @@ class Zenoh_Controller(BaseController):
 
         # loop = asyncio.get_event_loop()
         # self._bg_task = loop.create_task(self._publish_executor_state())
+
+    def get_global_variable(self, robot_model: str, var_name: str) -> Any:
+        if self._zenoh_client is not None:
+            try:
+                req = Request_Get_Core_DataT()
+                req.option = 0
+                req.name = var_name
+
+                res = self._zenoh_client.query_one(
+                    f"{robot_model}/get_core_data",
+                    flatbuffer_req_obj=req,
+                    flatbuffer_res_T_class=Response_Get_Core_DataT,
+                    flatbuffer_buf_size=256,
+                )
+
+                dict_res = res["dict_payload"]
+
+                if dict_res is None or dict_res.get("valid") != 0:
+                    return None
+
+                return dict_res["payload"]
+            except Exception as e:
+                rb_log.error(f"Error getting global variable: {e}")
+                return None
 
     def on_start(self, process_id: str) -> None:
         if self._zenoh_client is not None:
@@ -66,11 +92,11 @@ class Zenoh_Controller(BaseController):
         rb_log.error(f"on_error >>> {process_id} {step_id} {error}")
         self.update_step_state(step_id, RB_Flow_Manager_ProgramState.ERROR)
 
-    def on_complete(self, process_id: str, step_id: str) -> None:
+    def on_done(self, process_id: str, step_id: str) -> None:
         rb_log.info(f"on_complete >>> {process_id} {step_id}")
         self.update_step_state(step_id, RB_Flow_Manager_ProgramState.COMPLETED)
 
-    def on_process_complete(self, process_id: str) -> None:
+    def on_complete(self, process_id: str) -> None:
         self.update_all_task_step_state(process_id, RB_Flow_Manager_ProgramState.IDLE)
 
     def on_close(self) -> None:

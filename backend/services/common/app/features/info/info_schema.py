@@ -15,6 +15,7 @@ class RobotInfo(BaseModel):
     serialNumber: str | None = ""
     robotModel: str | None = ""
     robotName: str | None = ""
+    programId: str | None = None
     components: list[str] | None = []
 
 

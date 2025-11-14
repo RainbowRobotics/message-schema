@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
-from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from rb_database import PyObjectId
 from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 from rb_schemas.utility import Omit, Pick
+
+
+class Request_Load_ProgramPD(BaseModel):
+    programId: str
 
 
 class Step_Base(BaseModel):
@@ -19,11 +22,13 @@ class Step_Base(BaseModel):
     programId: str
     syncStepIds: list[str] | None = Field(default=None)
     name: str
+    variable: dict[str, Any] | None = Field(default=None)
     method: str
-    args: dict[str, str] | None = Field(default=None)
+    args: dict[str, Any] | None = Field(default=None)
     func: str | None = Field(default=None)
     funcName: str | None = Field(default=None)
     summary: str | None = Field(default=None)
+    doneScript: str | None = Field(default=None)
     order: int
     color: str | None = Field(default=None)
     highlight: bool = Field(default=False)
@@ -38,35 +43,19 @@ class Step_Base(BaseModel):
     }
 
 
-class Temp_Step_Base(Step_Base):
-    realStepId: PyObjectId
-    isEditing: bool = Field(default=False)
-
-
 class Step_Tree_Base(Omit(Step_Base, "_id")):
     stepId: PyObjectId | None = Field(alias="_id", default=None)
     children: list[Step_Tree_Base] | None = Field(default=None)
 
 
-class Request_Create_StepPD(Omit(Temp_Step_Base, "_id", "stepId", "createdAt", "updatedAt")):
-    stepId: str | None = Field(
-        default=None,
-    )
-    programId: str | None = Field(
-        default=None,
-    )
-    taskId: str | None = Field(
-        default=None,
-    )
+class Request_Create_StepPD(Omit(Step_Base, "_id", "createdAt", "updatedAt")):
+    stepId: str
 
     @field_validator("stepId")
     def validate_object_id(cls, v: str | None) -> str | None:  # pylint: disable=no-self-argument
-        if v is None:
-            return v
-        if not ObjectId.is_valid(v):
-            raise ValueError(
-                "is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string"
-            )
+        if v is None or not isinstance(v, str):
+            raise ValueError("stepId must be a string or None")
+
         return v
 
 
@@ -113,6 +102,7 @@ class TaskExtension(str, Enum):
 class Task_Base(BaseModel):
     taskId: PyObjectId
     programId: str
+    parentTaskId: str | None = Field(default=None)
     robotModel: str
     type: TaskType = Field(default=TaskType.MAIN)
     scriptName: str
@@ -157,7 +147,6 @@ class Program_Base(BaseModel):
     programId: PyObjectId
     name: str
     repeatCnt: int = Field(default=1)
-    isTemp: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
@@ -171,6 +160,7 @@ class Request_Get_Program_ListPD(BaseModel):
 class Response_Get_ProgramPD(BaseModel):
     program: Program_Base
     tasks: list[Task_Base]
+    stepTree: list[Step_Tree_Base]
 
 
 class Create_Program_With_TaskPD(
@@ -248,10 +238,15 @@ class Response_Get_Script_ContextPD(BaseModel):
     context: str
 
 
+class Client_StepPD(Omit(Step_Tree_Base, "order", "createdAt", "updatedAt")):
+    stepId: str
+    children: list[Client_StepPD] | None = Field(default=None)
+
+
 class Client_Script_InfoPD(BaseModel):
     taskId: str
     repeatCount: int
-    steps: list[Step_Tree_Base]
+    steps: list[Client_StepPD]
 
 
 class Request_Preview_Start_ProgramPD(BaseModel):
@@ -264,4 +259,4 @@ class Request_Preview_Stop_ProgramPD(BaseModel):
 
 class Request_Get_Script_ContextPD(BaseModel):
     taskId: str
-    steps: list[Step_Tree_Base]
+    steps: list[Client_StepPD]

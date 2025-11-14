@@ -8,4 +8,5 @@ from typing import Any
 @dataclass
 class FlowManagerArgs:
     ctx: Any
+    args: dict[str, Any]
     done: Callable

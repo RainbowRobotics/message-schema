@@ -7,7 +7,9 @@ from multiprocessing import Queue
 from multiprocessing.synchronize import Event as EventType
 from typing import Any
 
+from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
+from rb_zenoh.client import ZenohClient
 
 from .exception import StopExecution
 from .schema import RB_Flow_Manager_ProgramState
@@ -33,19 +35,37 @@ class ExecutionContext:
         self.result_queue = result_queue
         self.variables: dict[str, Any] = {}
         self.sdk_functions: dict[str, Callable] = {}
+        self._arg_scope: list[dict[str, Any]] = []
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
 
-        self._make_zenoh_sdk_method_key_value_map()
+        self._zenoh_client = ZenohClient()
+
+        self._make_rb_sdk_method_key_value_map()
 
     def update_variables(self, variables: dict[str, Any]):
         self.variables.update(variables)
 
-    def _store_variables(self):
-        # TODO: zenoh publish or queryable variables
-        pass
+    def get_global_variable(self, var_name: str) -> Any:
+        robot_model = self.state_dict.get("robot_model", None)
+        category = self.state_dict.get("category", None)
 
-    def _make_zenoh_sdk_method_key_value_map(self):
-        sdk_list = [{"name": "rb_manipulate_sdk", "class": RBManipulateSDK}]
+        if category is None or robot_model is None:
+            return None
+
+        try:
+            if category == "manipulate":
+                fn = self.sdk_functions.get("rb_manipulate_sdk.get_variable")
+
+                return fn(robot_model, var_name) if fn is not None else None
+        except Exception as e:
+            print(f"[{self.process_id}] Error getting global variable: {e}", flush=True)
+            return None
+
+    def _make_rb_sdk_method_key_value_map(self):
+        sdk_list = [
+            {"name": "rb_base_sdk", "class": RBBaseSDK},
+            {"name": "rb_manipulate_sdk", "class": RBManipulateSDK},
+        ]
 
         for item in sdk_list:
             sdk = item["class"]()
@@ -57,6 +77,22 @@ class ExecutionContext:
             }
 
             self.sdk_functions.update(public_methods)
+
+    def push_args(self, mapping: dict[str, Any] | None):
+        self._arg_scope.append(mapping or {})
+
+    def pop_args(self):
+        if self._arg_scope:
+            self._arg_scope.pop()
+
+    def lookup(self, key: str) -> Any:
+        idx = len(self._arg_scope) - 2
+        while idx >= 0:
+            scope = self._arg_scope[idx]
+            if key in scope:
+                return scope[key]
+            idx -= 1
+        raise KeyError(f"parent pointer not found: {key}")
 
     def pause(self):
         """현재 스크립트를 일시정지"""
@@ -160,11 +196,11 @@ class ExecutionContext:
             }
         )
 
-    def emit_complete(self, step_id: str):
-        """complete 이벤트 발생"""
+    def emit_done(self, step_id: str):
+        """done 이벤트 발생"""
         self.result_queue.put(
             {
-                "type": "complete",
+                "type": "done",
                 "process_id": self.process_id,
                 "step_id": step_id,
                 "ts": time.time(),
@@ -182,7 +218,6 @@ class ExecutionContext:
 
     def close(self):
         """안전하게 close"""
-        self._store_variables()
         self._safe_close_sdk()
 
     def __del__(self):

@@ -10,6 +10,7 @@ from .program_schema import (
     Request_Create_ProgramPD,
     Request_Delete_StepsPD,
     Request_Get_Script_ContextPD,
+    Request_Load_ProgramPD,
     Request_Preview_Start_ProgramPD,
     Request_Preview_Stop_ProgramPD,
     Request_Program_ExecutionPD,
@@ -28,6 +29,12 @@ from .program_schema import (
 
 program_service = ProgramService()
 program_router = APIRouter(tags=["Program"])
+
+
+@program_router.post("/program/load", response_model=Response_Get_ProgramPD)
+async def load_program(request: Request_Load_ProgramPD, db: MongoDB):
+    res = await program_service.load_program(request=request, db=db)
+    return JSONResponse(res)
 
 
 @program_router.get("/program/{program_id}", response_model=Response_Get_ProgramPD)
@@ -101,8 +108,8 @@ async def get_executor_state():
 
 
 @program_router.post("/program/preview/start", response_model=Response_Script_ExecutionPD)
-async def preview_start_program(request: Request_Preview_Start_ProgramPD):
-    res = await program_service.preview_start_program(request=request)
+async def preview_start_program(request: Request_Preview_Start_ProgramPD, db: MongoDB):
+    res = await program_service.preview_start_program(request=request, db=db)
     return JSONResponse(res)
 
 

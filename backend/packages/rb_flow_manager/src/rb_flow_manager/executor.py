@@ -18,6 +18,21 @@ from .schema import RB_Flow_Manager_ProgramState
 from .step import Step
 
 
+def create_global_resolver(controller, robot_model):
+    """최상위 정의 — spawn/fork 모두 안전"""
+
+    def _resolver(var_name: str):
+        if (
+            controller is not None
+            and hasattr(controller, "get_global_variable")
+            and callable(controller.get_global_variable)
+        ):
+            return controller.get_global_variable(robot_model, var_name)
+        return None
+
+    return _resolver
+
+
 def _execute_tree_in_process(
     process_id: str,
     step: Step,
@@ -33,6 +48,7 @@ def _execute_tree_in_process(
     ctx: ExecutionContext | None = None
 
     try:
+
         state_dict["state"] = RB_Flow_Manager_ProgramState.RUNNING
         state_dict["current_step_id"] = step.step_id
         state_dict["current_step_name"] = step.name
@@ -108,8 +124,8 @@ class ScriptExecutor:
         on_next: Callable[[str, str], None] | None = None,
         on_error: Callable[[str, str, Exception], None] | None = None,
         on_close: Callable[[], None] | None = None,
+        on_done: Callable[[str], None] | None = None,
         on_complete: Callable[[str], None] | None = None,
-        on_process_complete: Callable[[str], None] | None = None,
         on_all_complete: Callable[[], None] | None = None,
         on_all_stop: Callable[[], None] | None = None,
         on_all_pause: Callable[[], None] | None = None,
@@ -123,8 +139,8 @@ class ScriptExecutor:
         self._on_next = on_next
         self._on_error = on_error
         self._on_close = on_close
+        self._on_done = on_done
         self._on_complete = on_complete
-        self._on_process_complete = on_process_complete
         self._on_all_complete = on_all_complete
         self._on_all_stop = on_all_stop
         self._on_all_pause = on_all_pause
@@ -146,7 +162,15 @@ class ScriptExecutor:
 
         self._start_monitor()
 
-    def start(self, process_id: str, step: Step, repeat_count: int = 1) -> bool:
+    def start(
+        self,
+        process_id: str,
+        step: Step,
+        repeat_count: int = 1,
+        *,
+        robot_model: str | None = None,
+        category: str | None = None,
+    ) -> bool:
         """스크립트 실행 시작"""
         if process_id in self.processes and self.processes[process_id].is_alive():
             print(f"Process {process_id} is already running")
@@ -167,6 +191,8 @@ class ScriptExecutor:
         self.state_dicts[process_id] = self.manager.dict()
         self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.IDLE
         self.state_dicts[process_id]["current_step_id"] = None
+        self.state_dicts[process_id]["robot_model"] = robot_model
+        self.state_dicts[process_id]["category"] = category
         self.completion_events[process_id] = Event()
 
         self.pause_events[process_id] = Event()
@@ -221,12 +247,12 @@ class ScriptExecutor:
                     if self.controller is not None:
                         self.controller.on_next(pid, step_id)
 
-                elif evt_type == "complete":
-                    if self._on_complete is not None:
-                        self._on_complete(pid)
+                elif evt_type == "done":
+                    if self._on_done is not None:
+                        self._on_done(pid)
 
                     if self.controller is not None:
-                        self.controller.on_complete(pid, step_id)
+                        self.controller.on_done(pid, step_id)
 
                 elif evt_type == "error":
                     err_repr = evt.get("error")
@@ -238,6 +264,9 @@ class ScriptExecutor:
 
                     if self.controller is not None:
                         self.controller.on_error(pid, step_id, RuntimeError(err_repr))
+
+                    self.stop_all()
+                    self._auto_cleanup()
 
                 elif evt_type == "pause":
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.PAUSED
@@ -294,11 +323,11 @@ class ScriptExecutor:
                     finished.append(pid)
 
             for pid in finished:
-                if self._on_process_complete is not None:
-                    self._on_process_complete(pid)
+                if self._on_complete is not None:
+                    self._on_complete(pid)
 
                 if self.controller is not None:
-                    self.controller.on_process_complete(pid)
+                    self.controller.on_complete(pid)
 
                 p = self.processes.pop(pid, None)
                 if p:
@@ -377,6 +406,7 @@ class ScriptExecutor:
             return False
 
         self.pause_events[process_id].set()
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.PAUSED
 
         step_id = self.state_dicts[process_id]["current_step_id"]
 
@@ -386,7 +416,20 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_pause(process_id, step_id)
 
-        print(f"Paused process: {process_id}")
+        print(f"Paused process: {process_id}", flush=True)
+
+        if all(
+            self.state_dicts[pid]["state"] == RB_Flow_Manager_ProgramState.PAUSED
+            for pid in self.processes
+        ):
+            if self._on_all_pause is not None:
+                self._on_all_pause()
+
+            if self.controller is not None:
+                self.controller.on_all_pause()
+
+            print("All processes paused", flush=True)
+
         return True
 
     def resume(self, process_id: str) -> bool:
@@ -402,6 +445,7 @@ class ScriptExecutor:
         self.resume_events[process_id].set()
 
         step_id = self.state_dicts[process_id]["current_step_id"]
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.RUNNING
 
         if self._on_resume is not None:
             self._on_resume(process_id, step_id)
@@ -409,7 +453,8 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_resume(process_id, step_id)
 
-        print(f"Resumed process: {process_id}")
+        print(f"Resumed process: {process_id}", flush=True)
+
         return True
 
     def stop(self, process_id: str) -> bool:
@@ -425,6 +470,7 @@ class ScriptExecutor:
         self.stop_events[process_id].set()
 
         step_id = self.state_dicts[process_id]["current_step_id"]
+        self.state_dicts[process_id]["state"] = RB_Flow_Manager_ProgramState.STOPPED
 
         if self._on_stop is not None:
             self._on_stop(process_id, step_id)
@@ -432,11 +478,22 @@ class ScriptExecutor:
         if self.controller is not None:
             self.controller.on_stop(process_id, step_id)
 
+        if all(
+            self.state_dicts[pid]["state"] == RB_Flow_Manager_ProgramState.STOPPED
+            for pid in self.processes
+        ):
+            if self._on_all_stop is not None:
+                self._on_all_stop()
+
+            if self.controller is not None:
+                self.controller.on_all_stop()
+
+            print("All processes stopped", flush=True)
+
         completed = self._wait_completion(process_id, timeout=2.0)
 
         if completed:
             print(f"Stopped softly process: {process_id}")
-            self._auto_cleanup()
             return True
 
         with contextlib.suppress(Exception):
@@ -446,7 +503,6 @@ class ScriptExecutor:
 
         if completed or not self.processes[process_id].is_alive():
             print(f"Stopped terminate process: {process_id}")
-            self._auto_cleanup()
             return True
 
         try:
@@ -464,7 +520,6 @@ class ScriptExecutor:
             self.completion_events[process_id].set()
 
         print(f"Stopped kill process: {process_id}")
-        self._auto_cleanup()
 
         return True
 
