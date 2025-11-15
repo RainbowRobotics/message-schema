@@ -8,6 +8,7 @@ const char* MODULE_NAME = "MAIN";
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
   , ui(new Ui::MainWindow)
+  , gamepad(nullptr)
 {
     ui->setupUi(this);
 
@@ -122,8 +123,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->ckb_PlotEnable,       SIGNAL(stateChanged(int)),            this, SLOT(vtk_viewer_update(int)));
 
     // annotation
-    connect(ui->bt_AddLink1, SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
-    connect(ui->bt_AddLink2, SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
+    connect(ui->bt_AddLink1,          SIGNAL(clicked()), this, SLOT(bt_AddLink1()));
+    connect(ui->bt_AddLink2,          SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
@@ -131,6 +132,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
     connect(ui->bt_QuickAddCloud,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
+    connect(ui->ckb_UseNodeSize,       SIGNAL(stateChanged(int)),    this, SLOT(topo_update()));
+    connect(ui->spb_NodeSizeX,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
+    connect(ui->spb_NodeSizeY,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
+    connect(ui->spb_NodeSizeZ,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
 
     // safety function
     connect(ui->bt_ClearMismatch,      SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
@@ -190,7 +195,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // ipv4
     getIPv4();
 
-    //
+    // gamepad
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadConnected, this, [this](int id){ init_gamepad(); });
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int id)
+    {
+        if(gamepad && gamepad->deviceId() == id)
+        {
+            gamepad->deleteLater();
+            gamepad = nullptr;
+        }
+
+        // reset
+        cur_lx = 0.0;
+        cur_ly = 0.0;
+        cur_rx = 0.0;
+        lb_pressed.store(false);
+        rb_pressed.store(false);
+        is_jog_pressed.store(false);
+        bt_JogReleased();
+    });
     init_gamepad();
 
     // plot timer (pcl-vtk viewr & Qlabel)
@@ -1067,6 +1090,11 @@ double MainWindow::apply_jog_acc(double cur_vel, double tgt_vel, double acc, dou
 
 void MainWindow::init_gamepad()
 {
+    if(gamepad)
+    {
+        return;
+    }
+
     QList<int> ids = QGamepadManager::instance()->connectedGamepads();
     if(ids.isEmpty())
     {
@@ -3140,9 +3168,34 @@ void MainWindow::plot_node()
             // std::cout << "1" << std::endl;
             if(ui->ckb_PlotNodes->isChecked())
             {
-                double x_min = CONFIG::instance()->get_robot_size_x_min(); double x_max = CONFIG::instance()->get_robot_size_x_max();
-                double y_min = CONFIG::instance()->get_robot_size_y_min(); double y_max = CONFIG::instance()->get_robot_size_y_max();
-                double z_min = CONFIG::instance()->get_robot_size_z_min(); double z_max = CONFIG::instance()->get_robot_size_z_max();
+                double x_min, x_max;
+                double y_min, y_max;
+                double z_min, z_max;
+
+                if(ui->ckb_UseNodeSize->isChecked())
+                {
+                    double node_size_x = ui->spb_NodeSizeX->value();
+                    double node_size_y = ui->spb_NodeSizeY->value();
+                    double node_size_z = ui->spb_NodeSizeZ->value();
+
+                    x_min = -node_size_x / 2.0;
+                    x_max =  node_size_x / 2.0;
+
+                    y_min = -node_size_y / 2.0;
+                    y_max =  node_size_y / 2.0;
+
+                    z_min = 0.0;
+                    z_max = node_size_z;
+                }
+                else
+                {
+                    x_min = CONFIG::instance()->get_robot_size_x_min();
+                    x_max = CONFIG::instance()->get_robot_size_x_max();
+                    y_min = CONFIG::instance()->get_robot_size_y_min();
+                    y_max = CONFIG::instance()->get_robot_size_y_max();
+                    z_min = CONFIG::instance()->get_robot_size_z_min();
+                    z_max = CONFIG::instance()->get_robot_size_z_max();
+                }
 
                 // draw nodes
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -3402,12 +3455,18 @@ void MainWindow::plot_pick()
             pcl_viewer->removeShape("sel_cur");
         }
 
+        double donut_radius = CONFIG::instance()->get_robot_radius();
+        if(ui->ckb_UseNodeSize->isChecked())
+        {
+            donut_radius = 0.8 * ui->spb_NodeSizeX->value();
+        }
+
         if(pick.pre_node != "")
         {
             NODE *node = UNIMAP::instance()->get_node_by_id(pick.pre_node);
             if(node != nullptr)
             {
-                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node->tf, 0.8, 0.8, 0.8);
+                pcl::PolygonMesh donut = make_donut(donut_radius, 0.05, node->tf, 0.8, 0.8, 0.8);
                 pcl_viewer->addPolygonMesh(donut, "sel_pre");
             }
         }
@@ -3417,7 +3476,7 @@ void MainWindow::plot_pick()
             NODE *node = UNIMAP::instance()->get_node_by_id(pick.cur_node);
             if(node != nullptr)
             {
-                pcl::PolygonMesh donut = make_donut(CONFIG::instance()->get_robot_radius(), 0.05, node->tf, 1.0, 1.0, 1.0);
+                pcl::PolygonMesh donut = make_donut(donut_radius, 0.05, node->tf, 1.0, 1.0, 1.0);
                 pcl_viewer->addPolygonMesh(donut, "sel_cur");
 
                 // plot text

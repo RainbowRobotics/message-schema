@@ -312,7 +312,7 @@ private:
     std::shared_mutex mtx;
 
     // Gamepad
-    QGamepad* gamepad;
+    QGamepad* gamepad = nullptr;;
 
     std::atomic<bool> lb_pressed = {false};
     std::atomic<bool> rb_pressed = {false};
