@@ -196,11 +196,10 @@
 	"DOCKING_X_OFFSET": "0.0",
     	"DOCKING_Y_OFFSET": "-0.007"
     },
-    "map": {
-        "MAP_PATH": "/home/juyeon/maps/251112_SEC"
-    },
     "safety": {
     	"USE_MONITORING_FIELD": true,
+    	"MONITORING_TRAJ_DT": "1.5",
+    	"MONITORING_PREDICT_T": "5.0",
         "MONITORING_FIELD_NUM": "4",
         "MONITORING_FIELDS": [
             {
@@ -228,6 +227,9 @@
                 "FIELD_SIZE_MAX_Y": "0.6"
             }
         ]
+    },
+    "map": {
+        "MAP_PATH": "/home/juyeon/maps/251112_SEC"
     }
 }
 

@@ -383,6 +383,8 @@ void CONFIG::load_safety_config(const QJsonObject &obj)
     check_and_set_bool(obj_safety, "USE_SAFETY_INTERLOCK", USE_SAFETY_INTERLOCK, "safety");
     check_and_set_bool(obj_safety, "USE_MONITORING_FIELD", USE_MONITORING_FIELD, "safety");
     check_and_set_int(obj_safety, "MONITORING_FIELD_NUM", MONITORING_FIELD_NUM, "safety");
+    check_and_set_double(obj_safety, "MONITORING_TRAJ_DT", MONITORING_TRAJ_DT, "safety");
+    check_and_set_double(obj_safety, "MONITORING_PREDICT_T", MONITORING_PREDICT_T, "safety");
     
     FIELD_SIZE_MIN_X.clear();
     FIELD_SIZE_MAX_X.clear();
@@ -1144,6 +1146,18 @@ int CONFIG::get_monitoring_field_num()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return MONITORING_FIELD_NUM;
+}
+
+double CONFIG::get_monitoring_traj_dt()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MONITORING_TRAJ_DT;
+}
+
+double CONFIG::get_monitoring_predict_t()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MONITORING_PREDICT_T;
 }
 
 std::vector<double> CONFIG::get_field_size_min_x()
@@ -2316,6 +2330,8 @@ QJsonObject CONFIG::set_default_safety_config()
     safety["USE_SAFETY_INTERLOCK"] =        USE_SAFETY_INTERLOCK; //QString(USE_SAFETY_INTERLOCK ? "true" : "false");
     safety["USE_MONITORING_FIELD"] =        USE_MONITORING_FIELD;
     safety["MONITORING_FIELD_NUM"] =        QString::number(MONITORING_FIELD_NUM);
+    safety["MONITORING_TRAJ_DT"] =          QString::number(MONITORING_TRAJ_DT);
+    safety["MONITORING_PREDICT_T"] =        QString::number(MONITORING_PREDICT_T);
     
     QJsonArray fields;
     for(int i = 0; i < MONITORING_FIELD_NUM; i++)

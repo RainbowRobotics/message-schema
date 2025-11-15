@@ -164,7 +164,7 @@ void SAFETY::safety_loop()
         }
 
         Eigen::Vector3d cur_vel = mobile->get_pose().vel;
-        std::vector<Eigen::Matrix4d> traj = calc_trajectory(cur_vel, 1, 5, Eigen::Matrix4d::Identity());
+        std::vector<Eigen::Matrix4d> traj = calc_trajectory(cur_vel, config->get_monitoring_traj_dt(), config->get_monitoring_predict_t(), Eigen::Matrix4d::Identity());
 
         for(size_t i = 0; i < traj.size(); i++)
         {

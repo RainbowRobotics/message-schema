@@ -301,6 +301,8 @@ public:
      ***********************/
     bool get_use_monitoring_field();
     int get_monitoring_field_num();
+    double get_monitoring_traj_dt();
+    double get_monitoring_predict_t();
     std::vector<double> get_field_size_min_x();
     std::vector<double> get_field_size_max_x();
     std::vector<double> get_field_size_min_y();
@@ -634,6 +636,8 @@ private:
     // safety
     bool USE_MONITORING_FIELD = false;
     int MONITORING_FIELD_NUM = 0;
+    double MONITORING_TRAJ_DT = 1.0;
+    double MONITORING_PREDICT_T = 5.0;
     std::vector<double> FIELD_SIZE_MIN_X;
     std::vector<double> FIELD_SIZE_MAX_X;
     std::vector<double> FIELD_SIZE_MIN_Y;
