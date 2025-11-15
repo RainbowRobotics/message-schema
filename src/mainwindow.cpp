@@ -402,7 +402,7 @@ void MainWindow::init_modules()
     // cam module init
     {
         //if(CONFIG::instance()->get_use_cam() || CONFIG::instance()->get_use_cam_rgb() || CONFIG::instance()->get_use_cam_depth())
-         if(CONFIG::instance()->get_use_cam())
+        if(CONFIG::instance()->get_use_cam())
         {
             CAM::instance()->set_config_module(CONFIG::instance());
             CAM::instance()->set_logger_module(LOGGER::instance());
@@ -552,14 +552,14 @@ void MainWindow::init_modules()
     }
 
     // safety module init
+    if(CONFIG::instance()->get_use_monitoring_field())
     {
         SAFETY::instance()->set_config_module(CONFIG::instance());
         SAFETY::instance()->set_logger_module(LOGGER::instance());
         SAFETY::instance()->set_mobile_module(MOBILE::instance());
-        SAFETY::instance()->set_unimap_module(UNIMAP::instance());
         SAFETY::instance()->set_obsmap_module(OBSMAP::instance());
-        SAFETY::instance()->set_localization_module(LOCALIZATION::instance());
         SAFETY::instance()->init();
+        SAFETY::instance()->open();
     }
 
     // Task
@@ -567,7 +567,6 @@ void MainWindow::init_modules()
         TASK::instance()->init();
         TASK::instance()->pause();
         TASK::instance()->cancel();
-
     }
 
     // start jog loop
@@ -4427,26 +4426,59 @@ void MainWindow::plot_obs()
         // point size
         pcl_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "obs_plot_pts");
 
-        // debug
         if(ui->ckb_PlotObs->isChecked())
         {
-            cv::Mat dyn_map, static_map;
+            if(ui->ckb_PlotSafetyObs->isChecked())
+            {
+                // for safety field
+                cv::Mat safety_map = SAFETY::instance()->get_safety_map().clone();
+                if(!safety_map.empty())
+                {
+                    ui->lb_Screen6->setAlignment(Qt::AlignCenter);
+                    QImage img(safety_map.data, safety_map.cols, safety_map.rows, safety_map.step, QImage::Format_BGR888);
+                    QPixmap _safety_map = QPixmap::fromImage(img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                    ui->lb_Screen6->setPixmap(_safety_map);
+                }
+                std::vector<int> cols = SAFETY::instance()->get_field_collision();
+                QString info;
+
+                if(cols.empty())
+                {
+                    info = "Collision fields: none";
+                }
+                else
+                {
+                    info = "Collision fields: ";
+                    for(size_t i = 0; i < cols.size(); i++)
+                    {
+                        info += QString::number(cols[i]);
+                        if(i + 1 < cols.size())
+                        {
+                            info += ", ";
+                        }
+                    }
+                }
+                ui->lb_FieldInfo->setText(info);
+            }
+            else
+            {
+                cv::Mat static_map;
+                cv::cvtColor(OBSMAP::instance()->get_static_map(), static_map, cv::COLOR_GRAY2BGR);
+                OBSMAP::instance()->draw_robot_outline(static_map);
+                QImage static_map_img(static_map.data, static_map.cols, static_map.rows, static_map.step, QImage::Format_BGR888);
+
+                ui->lb_Screen6->setAlignment(Qt::AlignCenter);
+                QPixmap _static_map  = QPixmap::fromImage(static_map_img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                ui->lb_Screen6->setPixmap(_static_map);
+            }
+
+            cv::Mat dyn_map;
             cv::cvtColor(OBSMAP::instance()->get_dyn_map(), dyn_map, cv::COLOR_GRAY2BGR);
-            cv::cvtColor( OBSMAP::instance()->get_static_map(), static_map, cv::COLOR_GRAY2BGR);
-
             OBSMAP::instance()->draw_robot_outline(dyn_map);
-            OBSMAP::instance()->draw_robot_outline(static_map);
-
             QImage dyn_map_img(dyn_map.data, dyn_map.cols, dyn_map.rows, dyn_map.step, QImage::Format_BGR888);
-            QImage static_map_img(static_map.data, static_map.cols, static_map.rows, static_map.step, QImage::Format_BGR888);
 
-            ui->lb_Screen6->setAlignment(Qt::AlignCenter);
             ui->lb_Screen7->setAlignment(Qt::AlignCenter);
-
-            QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen6->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            QPixmap _static_map  = QPixmap::fromImage(static_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-            ui->lb_Screen6->setPixmap(_static_map);
+            QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
             ui->lb_Screen7->setPixmap(_dyn_map);
         }
     }

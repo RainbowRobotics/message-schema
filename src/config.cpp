@@ -180,7 +180,7 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_RGB",    USE_CAM_RGB,   "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_DEPTH",  USE_CAM_DEPTH, "sensors");
-    check_and_set_bool(obj_sensors,   "USE_CAM_FILTER",  USE_CAM_FILTER, "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_FILTER", USE_CAM_FILTER, "sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
@@ -372,65 +372,66 @@ void CONFIG::load_docking_config(const QJsonObject &obj)
     check_and_set_double(obj_dock, "XNERGY_SET_CURRENT", XNERGY_SET_CURRENT, "docking");
 }
 
-
 void CONFIG::load_safety_config(const QJsonObject &obj)
 {
     QJsonObject obj_safety = obj["safety"].toObject();
     
-
     check_and_set_bool(obj_safety, "USE_SAFETY_CROSS_MONITOR", USE_SAFETY_CROSS_MONITOR, "safety");
     check_and_set_bool(obj_safety, "USE_SAFETY_SPEED_CONTROL", USE_SAFETY_SPEED_CONTROL, "safety");
     check_and_set_bool(obj_safety, "USE_SAFETY_OBSTACLE_DETECT", USE_SAFETY_OBSTACLE_DETECT, "safety");
     check_and_set_bool(obj_safety, "USE_SAFETY_BUMPER", USE_SAFETY_BUMPER, "safety");
     check_and_set_bool(obj_safety, "USE_SAFETY_INTERLOCK", USE_SAFETY_INTERLOCK, "safety");
-    check_and_set_int(obj_safety, "MONITORING_FIELD_COUNT", MONITORING_FIELD_COUNT, "safety");
+    check_and_set_bool(obj_safety, "USE_MONITORING_FIELD", USE_MONITORING_FIELD, "safety");
+    check_and_set_int(obj_safety, "MONITORING_FIELD_NUM", MONITORING_FIELD_NUM, "safety");
+    check_and_set_double(obj_safety, "MONITORING_TRAJ_DT", MONITORING_TRAJ_DT, "safety");
+    check_and_set_double(obj_safety, "MONITORING_PREDICT_T", MONITORING_PREDICT_T, "safety");
     
-    MONITORING_FIELD.clear();
-    MONITORING_FIELD.reserve(MONITORING_FIELD_COUNT);
-    
-    // JSON에서 monitoring field 배열 로드
+    FIELD_SIZE_MIN_X.clear();
+    FIELD_SIZE_MAX_X.clear();
+    FIELD_SIZE_MIN_Y.clear();
+    FIELD_SIZE_MAX_Y.clear();
+
     if(obj_safety.contains("MONITORING_FIELDS") && obj_safety["MONITORING_FIELDS"].isArray())
     {
         QJsonArray fields_array = obj_safety["MONITORING_FIELDS"].toArray();
 
-        // exception handling
-        if( fields_array.size() != MONITORING_FIELD_COUNT)
+        if(fields_array.size() < MONITORING_FIELD_NUM)
         {
-            //qDebug() << "[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()";
-            spdlog::info("[CONFIG] MONITORING_FIELD_COUNT is not equal to fields_array.size()");
+            spdlog::info("[CONFIG] MONITORING_FIELD_NUM is not equal to fields_array.size()");
             return;
         }
 
-        for(int i = 0; i < MONITORING_FIELD_COUNT; i++)
+        FIELD_SIZE_MIN_X.resize(MONITORING_FIELD_NUM);
+        FIELD_SIZE_MAX_X.resize(MONITORING_FIELD_NUM);
+        FIELD_SIZE_MIN_Y.resize(MONITORING_FIELD_NUM);
+        FIELD_SIZE_MAX_Y.resize(MONITORING_FIELD_NUM);
+
+        for(int i = 0; i < MONITORING_FIELD_NUM; i++)
         {
-            QJsonObject field_obj = fields_array[i].toObject();
-            MonitoringField field;
-            field.monitor_id = i;
-            field.min_x = field_obj["min_x"].toDouble();
-            field.max_x = field_obj["max_x"].toDouble();
-            field.min_y = field_obj["min_y"].toDouble();
-            field.max_y = field_obj["max_y"].toDouble();
-            field.is_blocked = field_obj["is_blocked"].toBool(false);
-        
-            MONITORING_FIELD.push_back(field);
+            if(!fields_array[i].isObject())
+            {
+                spdlog::warn("[CONFIG] MONITORING_FIELDS[{}] is not an object; set zeros", i);
+                FIELD_SIZE_MIN_X[i] = 0.0;
+                FIELD_SIZE_MAX_X[i] = 0.0;
+                FIELD_SIZE_MIN_Y[i] = 0.0;
+                FIELD_SIZE_MAX_Y[i] = 0.0;
+                continue;
+            }
+
+            QJsonObject obj_safety_field = fields_array[i].toObject();
+            check_and_set_double(obj_safety_field, "FIELD_SIZE_MIN_X", FIELD_SIZE_MIN_X[i], QString("safety.field[%1]").arg(i));
+            check_and_set_double(obj_safety_field, "FIELD_SIZE_MAX_X", FIELD_SIZE_MAX_X[i], QString("safety.field[%1]").arg(i));
+            check_and_set_double(obj_safety_field, "FIELD_SIZE_MIN_Y", FIELD_SIZE_MIN_Y[i], QString("safety.field[%1]").arg(i));
+            check_and_set_double(obj_safety_field, "FIELD_SIZE_MAX_Y", FIELD_SIZE_MAX_Y[i], QString("safety.field[%1]").arg(i));
         }
     }
     else
     {
-        // 기본값으로 초기화
-        for(int i = 0; i < MONITORING_FIELD_COUNT; i++)
-        {
-            MonitoringField field;
-            field.monitor_id = i;
-            field.min_x = 0.0;
-            field.max_x = 0.0;
-            field.min_y = 0.0;
-            field.max_y = 0.0;
-            field.is_blocked = false;
-            MONITORING_FIELD.push_back(field);
-        }
+        spdlog::warn("[CONFIG] MONITORING_FIELDS not found or not an array");
+        MONITORING_FIELD_NUM = 0;
     }
 }
+
 void CONFIG::load_qa_config(const QJsonObject &obj)
 {
     QJsonObject obj_qa = obj["qa"].toObject();
@@ -444,13 +445,6 @@ void CONFIG::load_update_config(const QJsonObject &obj)
     QJsonObject obj_update = obj["update"].toObject();
 
     check_and_set_bool(obj_update, "CONFIG", USE_CONFIG_UPDATE, "update");
-}
-
-std::vector<MonitoringField> CONFIG::get_monitoring_field()
-{
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    std::vector<MonitoringField> res = MONITORING_FIELD;
-    return res;
 }
 
 void CONFIG::load_map_config(const QJsonObject &obj)
@@ -1142,6 +1136,54 @@ bool CONFIG::get_use_safety_interlock()
     return USE_SAFETY_INTERLOCK;
 }
 
+bool CONFIG::get_use_monitoring_field()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return USE_MONITORING_FIELD;
+}
+
+int CONFIG::get_monitoring_field_num()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MONITORING_FIELD_NUM;
+}
+
+double CONFIG::get_monitoring_traj_dt()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MONITORING_TRAJ_DT;
+}
+
+double CONFIG::get_monitoring_predict_t()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return MONITORING_PREDICT_T;
+}
+
+std::vector<double> CONFIG::get_field_size_min_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return FIELD_SIZE_MIN_X;
+}
+
+std::vector<double> CONFIG::get_field_size_max_x()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return FIELD_SIZE_MAX_X;
+}
+
+std::vector<double> CONFIG::get_field_size_min_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return FIELD_SIZE_MIN_Y;
+}
+
+std::vector<double> CONFIG::get_field_size_max_y()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return FIELD_SIZE_MAX_Y;
+}
+
 QString CONFIG::get_robot_wheel_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -1716,7 +1758,6 @@ QString CONFIG::get_log_file_path()
     return LOG_FILE_PATH;
 }
 
-
 void CONFIG::set_spdlog_level()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -2287,21 +2328,23 @@ QJsonObject CONFIG::set_default_safety_config()
     safety["USE_SAFETY_OBSTACLE_DETECT"] =  USE_SAFETY_OBSTACLE_DETECT; //QString(USE_SAFETY_OBSTACLE_DETECT ? "true" : "false");
     safety["USE_SAFETY_BUMPER"] =           USE_SAFETY_BUMPER; //QString(USE_SAFETY_BUMPER ? "true" : "false");
     safety["USE_SAFETY_INTERLOCK"] =        USE_SAFETY_INTERLOCK; //QString(USE_SAFETY_INTERLOCK ? "true" : "false");
-    safety["MONITORING_FIELD_COUNT"] =      QString::number(MONITORING_FIELD_COUNT);
+    safety["USE_MONITORING_FIELD"] =        USE_MONITORING_FIELD;
+    safety["MONITORING_FIELD_NUM"] =        QString::number(MONITORING_FIELD_NUM);
+    safety["MONITORING_TRAJ_DT"] =          QString::number(MONITORING_TRAJ_DT);
+    safety["MONITORING_PREDICT_T"] =        QString::number(MONITORING_PREDICT_T);
     
     QJsonArray fields;
-    for (const auto& field : MONITORING_FIELD) 
+    for(int i = 0; i < MONITORING_FIELD_NUM; i++)
     {
-        QJsonObject fieldObj;
-        fieldObj["min_x"] = QString::number(field.min_x);
-        fieldObj["max_x"] = QString::number(field.max_x);
-        fieldObj["min_y"] = QString::number(field.min_y);
-        fieldObj["max_y"] = QString::number(field.max_y);
-        fieldObj["is_blocked"] = QString(field.is_blocked ? "true" : "false");
-        fields.append(fieldObj);
+        QJsonObject obj_field;
+        obj_field["FIELD_SIZE_MIN_X"] = QString::number(FIELD_SIZE_MIN_X[i]);
+        obj_field["FIELD_SIZE_MAX_X"] = QString::number(FIELD_SIZE_MAX_X[i]);
+        obj_field["FIELD_SIZE_MIN_Y"] = QString::number(FIELD_SIZE_MIN_Y[i]);
+        obj_field["FIELD_SIZE_MAX_Y"] = QString::number(FIELD_SIZE_MAX_Y[i]);
+        fields.append(obj_field);
     }
     safety["MONITORING_FIELDS"] = fields;
-    
+
     return safety;
 }
 

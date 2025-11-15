@@ -196,34 +196,40 @@
 	"DOCKING_X_OFFSET": "0.0",
     	"DOCKING_Y_OFFSET": "-0.007"
     },
-    "map": {
-        "MAP_PATH": "/data/maps/250804_unicos_update6_test"
-    },
     "safety": {
-        "MONITORING_FIELD_COUNT": "3",
+    	"USE_MONITORING_FIELD": true,
+    	"MONITORING_TRAJ_DT": "1.5",
+    	"MONITORING_PREDICT_T": "5.0",
+        "MONITORING_FIELD_NUM": "4",
         "MONITORING_FIELDS": [
             {
-                "min_x": -2.0,
-                "max_x": 2.0,
-                "min_y": -2.0,
-                "max_y": 2.0,
-                "is_blocked": false
+                "FIELD_SIZE_MIN_X": "0.3",
+                "FIELD_SIZE_MAX_X": "1.5",
+                "FIELD_SIZE_MIN_Y": "-0.45",
+                "FIELD_SIZE_MAX_Y": "0.45"
             },
             {
-                "min_x": -5.0,
-                "max_x": 5.0,
-                "min_y": -5.0,
-                "max_y": 5.0,
-                "is_blocked": false
+                "FIELD_SIZE_MIN_X": "0.2",
+                "FIELD_SIZE_MAX_X": "0.9",
+                "FIELD_SIZE_MIN_Y": "0.6",
+                "FIELD_SIZE_MAX_Y": "1.2"
             },
             {
-                "min_x": -10.0,
-                "max_x": 10.0,
-                "min_y": -10.0,
-                "max_y": 10.0,
-                "is_blocked": true
+                "FIELD_SIZE_MIN_X": "0.2",
+                "FIELD_SIZE_MAX_X": "0.9",
+                "FIELD_SIZE_MIN_Y": "-1.2",
+                "FIELD_SIZE_MAX_Y": "-0.6"
+            },
+            {
+                "FIELD_SIZE_MIN_X": "-1.2",
+                "FIELD_SIZE_MAX_X": "-0.2",
+                "FIELD_SIZE_MIN_Y": "-0.6",
+                "FIELD_SIZE_MAX_Y": "0.6"
             }
         ]
+    },
+    "map": {
+        "MAP_PATH": "/home/juyeon/maps/251112_SEC"
     }
 }
 
