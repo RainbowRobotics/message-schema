@@ -1,5 +1,10 @@
 #include "policy.h"
 
+namespace
+{
+    const char* MODULE_NAME = "POLICY";
+}
+
 POLICY* POLICY::instance(QObject* parent)
 {
     static POLICY* inst = nullptr;
@@ -151,6 +156,9 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
         return res;
     }
 
+    // wheel type guard
+    QString wheel_type = config->get_robot_wheel_type();
+
     size_t edge_cnt = path.node.size() - 1;
 
     // determine mode for each edge
@@ -167,6 +175,7 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
         DriveDir drive_dir = DriveDir::FORWARD;
         QString  drive_method = "PP";
 
+        // find matching link info
         for(size_t j = 0; j < links.size(); j++)
         {
             const LINK_INFO& link = links[j];
@@ -185,6 +194,25 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
                 break;
             }
         }
+
+        // guard
+        if(wheel_type == "DD" || wheel_type == "UNKNOWN")
+        {
+            if(drive_method != "PP")
+            {
+                log_info("WheelType = DD, edge {}->{} : {} -> PP (forced)", st_id.toStdString(), ed_id.toStdString(), drive_method.toStdString());
+            }
+            drive_method = "PP";
+        }
+        else if(wheel_type == "MECANUM")
+        {
+            if(drive_method == "SIDE")
+            {
+                log_info("WheelType = MECANUM, edge {}->{} : SIDE -> HPP (forced)", st_id.toStdString(), ed_id.toStdString());
+                drive_method = "HPP";
+            }
+        }
+
         dir.push_back(drive_dir);
         method.push_back(drive_method);
     }

@@ -52,8 +52,6 @@ public:
     std::vector<PATH> drive_policy(PATH path);
     void speed_policy(const PATH& path, std::vector<double>& ref_v);
 
-
-
 private:
     explicit POLICY(QObject *parent = nullptr);
     ~POLICY();
