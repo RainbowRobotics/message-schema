@@ -1073,7 +1073,7 @@ void LOCALIZATION::obs_loop()
     if(obsmap)
     {
         //printf("[LOCALIZATION] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
-        spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_map_max_z(),obsmap->get_obs_box_map_min_z(),obsmap->get_obs_box_map_range());
+        spdlog::info("[LOCALIZATION] total_get_obs_box_max_z: {}, total_get_obs_box_map_min_z: {}, total_get_obs_box_map_range: {}", obsmap->get_obs_box_max_z(),obsmap->get_obs_box_min_z(),obsmap->get_obs_box_range());
     }
 
     std::vector<Eigen::Vector3d> temp_pts;

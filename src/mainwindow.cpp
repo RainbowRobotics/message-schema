@@ -132,10 +132,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
     connect(ui->bt_QuickAddCloud,     SIGNAL(clicked()), this, SLOT(bt_QuickAddCloud()));
-    connect(ui->ckb_UseNodeSize,       SIGNAL(stateChanged(int)),    this, SLOT(topo_update()));
+    connect(ui->ckb_UseNodeSize,      SIGNAL(stateChanged(int)),    this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeX,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeY,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
     connect(ui->spb_NodeSizeZ,        SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
+    connect(ui->spb_NodeOpacity,      SIGNAL(valueChanged(double)), this, SLOT(topo_update()));
 
     // safety function
     connect(ui->bt_ClearMismatch,      SIGNAL(clicked()), this, SLOT(bt_ClearMismatch()));
@@ -1200,7 +1201,25 @@ void MainWindow::init_gamepad()
 
     connect(gamepad, &QGamepad::buttonAChanged, this, [this, eval_analog](double v)
     {
-        bt_MotorInit();
+        MOBILE_STATUS ms = MOBILE::instance()->get_status();
+        if(ms.t != 0)
+        {
+            if(CONFIG::instance() -> get_robot_wheel_type() == "MECANUM")
+            {
+                if(ms.status_m0 != 1 ||ms.status_m1 != 1 || ms.status_m2 != 1 || ms.status_m3 != 1)
+                {
+                    bt_MotorInit();
+                }
+            }
+            else
+            {
+                if(ms.status_m0 != 1 || ms.status_m1 != 1)
+                {
+                    bt_MotorInit();
+                }
+
+            }
+        }
     });
 
     connect(QGamepadManager::instance(), &QGamepadManager::gamepadDisconnected, this, [this](int)
@@ -3259,6 +3278,7 @@ void MainWindow::plot_node()
                                             y_min, y_max,
                                             z_min, z_max, 0.5, 1.0, 0.0, id.toStdString());
                         pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, ui->spb_NodeOpacity->value(), id.toStdString());
 
                         Eigen::Vector3d front_dot = R*Eigen::Vector3d(x_max - 0.05, 0, 0) + t;
                         pcl::PointXYZRGB pt;
@@ -4539,6 +4559,16 @@ void MainWindow::plot_obs()
             ui->lb_Screen7->setAlignment(Qt::AlignCenter);
             QPixmap _dyn_map = QPixmap::fromImage(dyn_map_img.copy()).scaled(ui->lb_Screen7->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
             ui->lb_Screen7->setPixmap(_dyn_map);
+        }
+
+        if(ui->ckb_ObsTest->isChecked())
+        {
+            OBSMAP::instance()->set_obs_box_xy(ui->spb_ObsTest1->value(), ui->spb_ObsTest2->value(),
+                                               ui->spb_ObsTest3->value(), ui->spb_ObsTest4->value());
+        }
+        else
+        {
+            OBSMAP::instance()->reset_obs_box();
         }
     }
 }

@@ -565,8 +565,16 @@ struct DATA_OBS_BOX
 {
     double time;
     QString command; // set, get
+
+    double obs_box_min_x;
+    double obs_box_max_x;
+
+    double obs_box_min_y;
+    double obs_box_max_y;
+
     double obs_box_min_z;
     double obs_box_max_z;
+
     double obs_box_map_range;
 
     QString result;
@@ -576,9 +584,18 @@ struct DATA_OBS_BOX
     {
         time = 0.0;
         command = "";
+
+        obs_box_min_x = 0.0;
+        obs_box_max_x = 0.0;
+
+        obs_box_min_y = 0.0;
+        obs_box_max_y = 0.0;
+
         obs_box_min_z = 0.0;
         obs_box_max_z = 0.0;
+
         obs_box_map_range = 0.0;
+
         result = "";
         message = "";
     }
@@ -587,9 +604,18 @@ struct DATA_OBS_BOX
     {
         time = p.time;
         command = p.command;
+
+        obs_box_min_x = p.obs_box_min_x;
+        obs_box_max_x = p.obs_box_max_x;
+
+        obs_box_min_y = p.obs_box_min_y;
+        obs_box_max_y = p.obs_box_max_y;
+
         obs_box_min_z = p.obs_box_min_z;
         obs_box_max_z = p.obs_box_max_z;
+
         obs_box_map_range = p.obs_box_map_range;
+
         result = p.result;
         message = p.message;
     }
@@ -598,9 +624,18 @@ struct DATA_OBS_BOX
     {
         time = p.time;
         command = p.command;
+
+        obs_box_min_x = p.obs_box_min_x;
+        obs_box_max_x = p.obs_box_max_x;
+
+        obs_box_min_y = p.obs_box_min_y;
+        obs_box_max_y = p.obs_box_max_y;
+
         obs_box_min_z = p.obs_box_min_z;
         obs_box_max_z = p.obs_box_max_z;
+
         obs_box_map_range = p.obs_box_map_range;
+
         result = p.result;
         message = p.message;
         return *this;

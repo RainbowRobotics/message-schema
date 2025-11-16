@@ -2318,8 +2318,8 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
 
     if(command == "setObsBox" && obsmap)
     {
-        obsmap->set_obs_box_z_values(msg.obs_box_min_z, msg.obs_box_max_z);
-        obsmap->set_obs_box_map_range(msg.obs_box_map_range);
+        obsmap->set_obs_box_z(msg.obs_box_min_z, msg.obs_box_max_z);
+        obsmap->set_obs_box_range(msg.obs_box_map_range);
         msg.result = "success";
         msg.message = QString("obs_box z values set: min_z=%1, max_z=%2, map_range=%3").arg(msg.obs_box_min_z).arg(msg.obs_box_max_z).arg(msg.obs_box_map_range);
         printf("[RRS] slot_obs_box_setting : setObsBox - success\n");
@@ -2328,7 +2328,7 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
         if (obsmap)
         {
             printf("[RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
-                   obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
+                   obsmap->get_obs_box_max_z(), obsmap->get_obs_box_min_z(), obsmap->get_obs_box_range());
         }
 
     }
@@ -2336,15 +2336,15 @@ void COMM_RRS::slot_obs_box_setting(DATA_OBS_BOX msg)
     {
         msg.result = "success";
         msg.message = "obs_box values return";
-        msg.obs_box_min_z = obsmap->get_obs_box_map_min_z() - config->get_obs_map_min_z();
-        msg.obs_box_max_z = obsmap->get_obs_box_map_max_z() - config->get_obs_map_max_z();
-        msg.obs_box_map_range = obsmap->get_obs_box_map_range() - config->get_obs_map_range();
+        msg.obs_box_min_z = obsmap->get_obs_box_min_z() - config->get_obs_map_min_z();
+        msg.obs_box_max_z = obsmap->get_obs_box_max_z() - config->get_obs_map_max_z();
+        msg.obs_box_map_range = obsmap->get_obs_box_range() - config->get_obs_map_range();
         printf("[RRS] slot_obs_box_setting : getObsBox - success\n");
         printf("[RRS] slot_obs_box_setting : obs_box_min_z: %.3f, obs_box_max_z: %.3f, obs_box_map_range: %.3f\n",msg.obs_box_min_z, msg.obs_box_max_z, msg.obs_box_map_range);
         if (obsmap)
         {
             printf("[RRS] total_get_obs_box_max_z: %.3f, total_get_obs_box_map_min_z: %.3f, total_get_obs_box_map_range: %.3f\n",
-                   obsmap->get_obs_box_map_max_z(), obsmap->get_obs_box_map_min_z(), obsmap->get_obs_box_map_range());
+                   obsmap->get_obs_box_max_z(), obsmap->get_obs_box_min_z(), obsmap->get_obs_box_range());
         }
 
     }

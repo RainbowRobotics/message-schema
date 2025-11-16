@@ -48,6 +48,8 @@ void OBSMAP::init()
     // init
     map_tf.setIdentity();
 
+    reset_obs_box();
+
     double obsmap_grid_size = config->get_obs_map_grid_size();
     if(obsmap_grid_size == 0)
     {
@@ -102,6 +104,8 @@ void OBSMAP::clear()
     dynamic_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     virtual_map = cv::Mat(h, w, CV_8U, cv::Scalar(0));
     map_tf = Eigen::Matrix4d::Identity();
+
+    reset_obs_box();
 }
 
 // util
@@ -135,35 +139,69 @@ void OBSMAP::set_unimap_module(UNIMAP* _unimap)
     unimap = _unimap;
 }
 
-void OBSMAP::set_obs_box_z_values(double _obs_box_min_z, double _obs_box_max_z)
+void OBSMAP::set_obs_box_xy(double min_x, double max_x, double min_y, double max_y)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    obs_box_min_z = _obs_box_min_z;
-    obs_box_max_z = _obs_box_max_z;
+    obs_box_min_x.store(min_x);
+    obs_box_max_x.store(max_x);
+    obs_box_min_y.store(min_y);
+    obs_box_max_y.store(max_y);
 }
 
-void OBSMAP::set_obs_box_map_range(double _obs_box_map_range)
+void OBSMAP::set_obs_box_z(double min_z, double max_z)
 {
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    obs_box_map_range = _obs_box_map_range;
+    obs_box_min_z.store(min_z);
+    obs_box_max_z.store(max_z);
 }
 
-double OBSMAP::get_obs_box_map_min_z()
+void OBSMAP::set_obs_box_range(double range)
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return config->get_obs_map_min_z() + obs_box_min_z;
+    obs_box_range.store(range);
 }
 
-double OBSMAP::get_obs_box_map_max_z()
+void OBSMAP::reset_obs_box()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return config->get_obs_map_max_z() + obs_box_max_z;
+    obs_box_min_x.store(config->get_robot_size_x_min());
+    obs_box_max_x.store(config->get_robot_size_x_max());
+    obs_box_min_y.store(config->get_robot_size_y_min());
+    obs_box_max_y.store(config->get_robot_size_y_max());
+    obs_box_min_z.store(config->get_robot_size_z_min());
+    obs_box_max_z.store(config->get_robot_size_z_max());
+    obs_box_range.store(config->get_obs_map_range());
 }
 
-double OBSMAP::get_obs_box_map_range()
+double OBSMAP::get_obs_box_min_x()
 {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return config->get_obs_map_range() + obs_box_map_range;
+     return config->get_robot_size_x_min() + obs_box_min_x.load();
+}
+
+double OBSMAP::get_obs_box_max_x()
+{
+    return config->get_robot_size_x_max() + obs_box_max_x.load();
+}
+
+double OBSMAP::get_obs_box_min_y()
+{
+     return config->get_robot_size_y_min() + obs_box_min_y.load();
+}
+
+double OBSMAP::get_obs_box_max_y()
+{
+    return config->get_robot_size_y_max() + obs_box_max_y.load();
+}
+
+double OBSMAP::get_obs_box_min_z()
+{
+     return config->get_obs_map_min_z() + obs_box_min_z.load();
+}
+
+double OBSMAP::get_obs_box_max_z()
+{
+    return config->get_obs_map_max_z() + obs_box_max_z.load();
+}
+
+double OBSMAP::get_obs_box_range()
+{
+    return config->get_obs_map_range() + obs_box_range.load();
 }
 
 void OBSMAP::set_vobs_list_robots(const std::vector<Eigen::Vector3d>& _vobs_r_list)
@@ -944,10 +982,15 @@ void OBSMAP::draw_robot(cv::Mat& img)
 void OBSMAP::draw_robot_outline(cv::Mat& img)
 {
     // draw rect
-    double x_min = config->get_robot_size_x_min();
-    double x_max = config->get_robot_size_x_max();
-    double y_min = config->get_robot_size_y_min();
-    double y_max = config->get_robot_size_y_max();
+    // double x_min = config->get_robot_size_x_min();
+    // double x_max = config->get_robot_size_x_max();
+    // double y_min = config->get_robot_size_y_min();
+    // double y_max = config->get_robot_size_y_max();
+
+    double x_min = obs_box_min_x.load();
+    double x_max = obs_box_max_x.load();
+    double y_min = obs_box_min_y.load();
+    double y_max = obs_box_max_y.load();
 
     Eigen::Vector3d P0(x_max, y_max, 0);
     Eigen::Vector3d P1(x_max, y_min, 0);
@@ -999,10 +1042,15 @@ int OBSMAP::is_tf_collision(const Eigen::Matrix4d& robot_tf, bool is_dyn, double
     }
 
     // robot pts
-    double x_min = config->get_robot_size_x_min() - margin_x;
-    double x_max = config->get_robot_size_x_max() + margin_x;
-    double y_min = config->get_robot_size_y_min() - margin_y;
-    double y_max = config->get_robot_size_y_max() + margin_y;
+    // double x_min = config->get_robot_size_x_min() - margin_x;
+    // double x_max = config->get_robot_size_x_max() + margin_x;
+    // double y_min = config->get_robot_size_y_min() - margin_y;
+    // double y_max = config->get_robot_size_y_max() + margin_y;
+
+    double x_min = obs_box_min_x.load() + margin_y;
+    double x_max = obs_box_max_x.load() - margin_y;
+    double y_min = obs_box_min_y.load() + margin_x;
+    double y_max = obs_box_max_y.load() - margin_x;
 
     Eigen::Vector3d P0(x_max, y_max, 0);
     Eigen::Vector3d P1(x_max, y_min, 0);

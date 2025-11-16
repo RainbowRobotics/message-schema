@@ -84,15 +84,21 @@ public:
     /***********************
      * set obs box values
      ***********************/
-    void set_obs_box_z_values(double _obs_box_min_z, double _obs_box_max_z);
-    void set_obs_box_map_range(double _obs_box_map_range);
+    void set_obs_box_xy(double min_x, double max_x, double min_y, double max_y);
+    void set_obs_box_z(double min_z, double max_z);
+    void set_obs_box_range(double range);
+    void reset_obs_box();
 
     /***********************
-     * get obs map z bounds
+     * get obs box values
      ***********************/
-    double get_obs_box_map_min_z();
-    double get_obs_box_map_max_z();
-    double get_obs_box_map_range();
+    double get_obs_box_min_x();
+    double get_obs_box_max_x();
+    double get_obs_box_min_y();
+    double get_obs_box_max_y();
+    double get_obs_box_min_z();
+    double get_obs_box_max_z();
+    double get_obs_box_range();
 
     /***********************
      * check collision
@@ -142,10 +148,14 @@ private:
     std::atomic<double> last_obs_update_time = {0.0};
     std::atomic<double> last_vobs_update_time = {0.0};
 
-    // obs box z values
-    double obs_box_min_z = 0.0;
-    double obs_box_max_z = 0.0;
-    double obs_box_map_range = 0.0;
+    // obs box
+    std::atomic<double> obs_box_min_x = {0.0};
+    std::atomic<double> obs_box_max_x = {0.0};
+    std::atomic<double> obs_box_min_y = {0.0};
+    std::atomic<double> obs_box_max_y = {0.0};
+    std::atomic<double> obs_box_min_z = {0.0};
+    std::atomic<double> obs_box_max_z = {0.0};
+    std::atomic<double> obs_box_range = {0.0};
 
     int w = 300;
     int h = 300;
