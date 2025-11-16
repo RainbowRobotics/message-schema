@@ -278,7 +278,7 @@ TIME_PTS CAM::filter_radius_outlier(const TIME_PTS &tp, double radius, int min_n
         std::vector<pcl::PointIndices> cluster_indices;
         pcl::EuclideanClusterExtraction<pcl::PointXYZ> extractor;
         extractor.setClusterTolerance((float)(radius * 1.5));
-        extractor.setMinClusterSize(20);
+        extractor.setMinClusterSize(config->get_cam_filter_cluster_min_size());
         extractor.setMaxClusterSize(500000);
         extractor.setSearchMethod(tree);
         extractor.setInputCloud(cloud_ror.makeShared());
@@ -351,7 +351,7 @@ void CAM::post_process_loop(int idx)
 
                         if(config->get_use_cam_filter())
                         {
-                            TIME_PTS filtered_tp = filter_radius_outlier(tp, 0.1, 5, true, true);
+                            TIME_PTS filtered_tp = filter_radius_outlier(tp, config->get_cam_filter_ror_radius(), config->get_cam_filter_ror_min_neighbors(), true, true);
                             std::lock_guard<std::mutex> lock(mtx);
                             cur_scan[idx] = filtered_tp;
                         }

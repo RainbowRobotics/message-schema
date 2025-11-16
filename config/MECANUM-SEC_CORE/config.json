@@ -196,6 +196,9 @@
         "USE_CAM_RGB": true,
         "USE_CAM_DEPTH": true,
         "USE_CAM_FILTER": true,
+        "CAM_FILTER_ROR_RADIUS": "0.1",
+        "CAM_FILTER_ROR_MIN_NEIGHBORS": "5",
+        "CAM_FILTER_CLUSTER_MIN_SIZE": "20",
         "USE_IMU": false,
         "USE_LIDAR_2D": true,
         "USE_LIDAR_3D": true

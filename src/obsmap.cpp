@@ -41,8 +41,6 @@ OBSMAP::~OBSMAP()
     }
 }
 
-
-
 void OBSMAP::init()
 {
     // init

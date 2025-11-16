@@ -180,7 +180,7 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_bool(obj_sensors,   "USE_CAM",        USE_CAM,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_RGB",    USE_CAM_RGB,   "sensors");
     check_and_set_bool(obj_sensors,   "USE_CAM_DEPTH",  USE_CAM_DEPTH, "sensors");
-    check_and_set_bool(obj_sensors,   "USE_CAM_FILTER", USE_CAM_FILTER, "sensors");
+    check_and_set_bool(obj_sensors,   "USE_CAM_FILTER", USE_CAM_FILTER,"sensors");
     check_and_set_bool(obj_sensors,   "USE_BQR",        USE_BQR,       "sensors");
     check_and_set_bool(obj_sensors,   "USE_IMU",        USE_IMU,       "sensors");
     check_and_set_int(obj_sensors,    "LIDAR_2D_NUM",   LIDAR_2D_NUM,  "sensors");
@@ -189,6 +189,10 @@ void CONFIG::load_sensors_config(const QJsonObject &obj)
     check_and_set_string(obj_sensors, "LIDAR_2D_TYPE",  LIDAR_2D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "LIDAR_3D_TYPE",  LIDAR_3D_TYPE, "sensors");
     check_and_set_string(obj_sensors, "CAM_TYPE",       CAM_TYPE,      "sensors");
+
+    check_and_set_double(obj_sensors, "CAM_FILTER_ROR_RADIUS",        CAM_FILTER_ROR_RADIUS,        "sensors");
+    check_and_set_int(obj_sensors,    "CAM_FILTER_ROR_MIN_NEIGHBORS", CAM_FILTER_ROR_MIN_NEIGHBORS, "sensors");
+    check_and_set_int(obj_sensors,    "CAM_FILTER_CLUSTER_MIN_SIZE",  CAM_FILTER_CLUSTER_MIN_SIZE,  "sensors");
 }
 
 void CONFIG::load_localization_config(const QJsonObject &obj)
@@ -1488,6 +1492,24 @@ bool CONFIG::get_use_cam_filter()
     return USE_CAM_FILTER;
 }
 
+double CONFIG::get_cam_filter_ror_radius()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_FILTER_ROR_RADIUS;
+}
+
+int CONFIG::get_cam_filter_ror_min_neighbors()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_FILTER_ROR_MIN_NEIGHBORS;
+}
+
+int CONFIG::get_cam_filter_cluster_min_size()
+{
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return CAM_FILTER_CLUSTER_MIN_SIZE;
+}
+
 QString CONFIG::get_cam_type()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
@@ -2137,6 +2159,11 @@ QJsonObject CONFIG::set_default_sensors_config()
     sensors["LIDAR_2D_TYPE"] =      QString(LIDAR_2D_TYPE);
     sensors["LIDAR_3D_TYPE"] =      QString(LIDAR_3D_TYPE);
     sensors["CAM_TYPE"] =           QString(CAM_TYPE);
+
+    sensors["CAM_FILTER_ROR_RADIUS"] = QString::number(CAM_FILTER_ROR_RADIUS);
+    sensors["CAM_FILTER_ROR_MIN_NEIGHBORS"] = QString::number(CAM_FILTER_ROR_MIN_NEIGHBORS);
+    sensors["CAM_FILTER_CLUSTER_MIN_SIZE"] = QString::number(CAM_FILTER_CLUSTER_MIN_SIZE);
+
     return sensors;
 }
 
