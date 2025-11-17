@@ -11,6 +11,17 @@ class InfoService:
     def __init__(self):
         self._cache_robot_info = {}
 
+    async def get_robot_category_list(self, *, db: MongoDB):
+        """robot_models.json 파일에서 모든 robot_model의 be_service를 중복 제거하여 리스트로 반환한다."""
+        pass
+
+    async def get_robot_component_list(self, *, be_service: str | None = None, db: MongoDB):
+        """
+        robot_models.json 파일에서 모든 robot_model을 조회하여 반환한다.
+        be_service가 있으면 be_service에 해당하는 모든 component를 조회하여 반환한다.
+        """
+        pass
+
     async def get_robot_info(self, *, db: MongoDB):
         robot_models = read_json_file("data", "robot_models.json")
 
