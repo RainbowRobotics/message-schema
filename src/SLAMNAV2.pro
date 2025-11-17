@@ -42,6 +42,9 @@ SOURCES += \
     ekf_3d.cpp \
     lidar/RP/rp_lidar.cpp \
     lidar/SICK/sick.cpp \
+    lidar/LAKI/LakiBeamHTTP.cpp \
+    lidar/LAKI/LakiBeamUDP.cpp \
+    lidar/LAKI/laki.cpp \
     lidar_2d.cpp \
     localization.cpp \
     main.cpp \
@@ -82,6 +85,9 @@ HEADERS += \
     ekf_3d.h \
     lidar/RP/rp_lidar.h \
     lidar/SICK/sick.h \
+    lidar/LAKI/LakiBeamHTTP.h \
+    lidar/LAKI/LakiBeamUDP.h \
+    lidar/LAKI/laki.h \
     lidar_2d.h \
     localization.h \
     mainwindow.h \

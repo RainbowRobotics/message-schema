@@ -23,6 +23,7 @@ LIDAR_2D::LIDAR_2D(QObject *parent) : QObject{parent},
     logger(nullptr),
     mobile(nullptr),
     sick(nullptr),
+    laki(nullptr),
     rp(nullptr)
 {
 
@@ -36,6 +37,11 @@ LIDAR_2D::~LIDAR_2D()
     if(sick != nullptr)
     {
         sick->close();
+    }
+
+    if(laki != nullptr)
+    {
+        laki->close();
     }
 
     if(rp != nullptr)
@@ -74,6 +80,23 @@ void LIDAR_2D::init()
             if(config)
             {
                 spdlog::info("[LIDAR_2D] try to open SICK 2D lidar");
+            }
+        }
+    }
+    else if(config->get_lidar_2d_type() == "LAKI")
+    {
+        if(!laki)
+        {
+            LAKI::instance(this);
+
+            laki = LAKI::instance();
+            laki->set_config_module(this->config);
+            laki->set_logger_module(this->logger);
+            laki->set_mobile_module(this->mobile);
+            laki->open();
+            if(config)
+            {
+                spdlog::info("[LIDAR_2D] try to open LAKI 2D lidar");
             }
         }
     }
@@ -167,6 +190,10 @@ RAW_FRAME LIDAR_2D::get_cur_raw(int idx)
     {
         res = sick->get_cur_raw(idx);
     }
+    else if(config->get_lidar_2d_type() == "LAKI" && laki != nullptr)
+    {
+        res = laki->get_cur_raw(idx);
+    }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
     {
         res = rp->get_cur_raw(idx);
@@ -188,6 +215,14 @@ QString LIDAR_2D::get_info_text()
         for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
         {
             res += sick->get_info_text(idx);
+            res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
+        }
+    }
+    else if(config->get_lidar_2d_type() == "LAKI" && laki != nullptr)
+    {
+        for(int idx = 0; idx < config->get_lidar_2d_num(); idx++)
+        {
+            res += laki->get_info_text(idx);
             res += QString("dq: %1\n\n").arg(deskewing_que[idx].unsafe_size());
         }
     }
@@ -234,6 +269,14 @@ void LIDAR_2D::set_sync_flag(bool flag)
             sick->set_is_sync(p, flag);
             //printf("[LIDAR_2D] set sick->is_sync = %d\n", flag);
             log_info("[LIDAR_2D] set sick->is_sync = {}", flag);
+        }
+    }
+    else if(config->get_lidar_2d_type() == "LAKI" && laki != nullptr)
+    {
+        for(int p = 0; p < lidar_num; p++)
+        {
+            laki->set_is_sync(p, flag);
+            log_info("[LIDAR_2D] set laki->is_sync = {}", flag);
         }
     }
     else if(config->get_lidar_2d_type() == "RP" && rp != nullptr)
@@ -320,6 +363,10 @@ void LIDAR_2D::deskewing_loop(int idx)
         if(config->get_lidar_2d_type() == "SICK")
         {
             is_try_pop = sick->try_pop_raw_que(idx, frm);
+        }
+        else if(config->get_lidar_2d_type() == "LAKI")
+        {
+            is_try_pop = laki->try_pop_raw_que(idx, frm);
         }
         else if(config->get_lidar_2d_type() == "RP")
         {
@@ -473,6 +520,10 @@ void LIDAR_2D::merge_loop()
             else if(config->get_lidar_2d_type() == "RP")
             {
                 is_ok = (rp->get_is_connected(0) && rp->get_is_connected(1));
+            }
+            else if(config->get_lidar_2d_type() == "LAKI")
+            {
+                is_ok = (laki->get_is_connected(0) && laki->get_is_connected(1));
             }
         }
 
