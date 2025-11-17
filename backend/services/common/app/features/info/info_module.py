@@ -39,6 +39,14 @@ class InfoService:
 
         return {"info": doc, "modelInfo": model_info}
 
+    def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+        """robot_info 컬렉션에 robot_info를 삽입한다."""
+        pass
+
+    def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+        """robot_info 컬렉션에 robot_info를 업데이트한다."""
+        pass
+
     async def get_cache_robot_info(self):
         return self._cache_robot_info
 
