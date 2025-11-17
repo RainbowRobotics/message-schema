@@ -215,7 +215,7 @@ void LAKI::grab_loop(int idx)
         }
 
         // Calculate scan time from interval
-        double scan_time = pack.interval * 1e-6; // microseconds to seconds
+        double scan_time = pack.interval * 1e-3; // interval is in milliseconds
         double time_increment = scan_time / num_scan_point;
 
         double t0 = lidar_t + offset_t[idx];
