@@ -12,13 +12,12 @@ from collections.abc import Callable
 from functools import partial
 
 # import flatbuffers
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 import flatbuffers
 import psutil
-from flatbuffers.table import Table
 from rb_utils.parser import t_to_dict
-from zenoh import (  # pylint: disable=no-name-in-module
+from zenoh import (
     Config,
     Encoding,
     QueryTarget,
@@ -26,7 +25,9 @@ from zenoh import (  # pylint: disable=no-name-in-module
     ZBytes,
     ZError,
 )
-from zenoh import open as zenoh_open  # pylint: disable=no-name-in-module
+from zenoh import (
+    open as zenoh_open,
+)
 
 from .exeption import ZenohNoReply, ZenohTransportError
 from .schema import CallbackEntry, OverflowPolicy, SubscribeOptions
@@ -38,8 +39,15 @@ os.environ.setdefault("RUST_LOG", "zenoh=info,zenoh_transport=info,zenoh_shm=inf
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
 if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True) # pyright: ignore[reportAttributeAccessIssue]
 
+
+class FBPackable(Protocol):
+    def Pack(self, builder: Any) -> Any: ...
+
+class FBRootReadable(Protocol):
+    @staticmethod
+    def InitFromPackedBuf(buf: bytes, pos: int = 0) -> Any: ...
 
 class ZenohClient:
     _instance = None
@@ -163,7 +171,7 @@ class ZenohClient:
         topic: str,
         *,
         payload: bytes | bytearray | memoryview | dict | None = None,
-        flatbuffer_req_obj: Table | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
         flatbuffer_buf_size: int | None = None,
     ):
         if self.session is None:
@@ -197,7 +205,7 @@ class ZenohClient:
         topic: str,
         callback: Callable[..., Any],
         *,
-        flatbuffer_obj_t: Table | None = None,
+        flatbuffer_obj_t: FBRootReadable | None = None,
         options: SubscribeOptions | None = None,
     ):
         """
@@ -235,7 +243,7 @@ class ZenohClient:
         self,
         topic: str,
         *,
-        flatbuffer_obj_t: Table | None = None,
+        flatbuffer_obj_t: FBRootReadable | None = None,
         timeout: float = 3.0,
         allow_self: bool = False,
         parse_obj: bool = True,
@@ -419,8 +427,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -538,8 +546,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -567,8 +575,8 @@ class ZenohClient:
         keyexpr: str,
         *,
         timeout: int = 3,
-        flatbuffer_req_obj: Table | None = None,
-        flatbuffer_res_T_class: type[Table] | None = None,
+        flatbuffer_req_obj: FBPackable | None = None,
+        flatbuffer_res_T_class:FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,
@@ -641,7 +649,7 @@ class ZenohClient:
             finally:
                 self._closing = False
 
-    def _make_on_sample(self, topic: str, flatbuffer_obj_t: Table | None = None):
+    def _make_on_sample(self, topic: str, flatbuffer_obj_t: FBRootReadable | None = None):
         def _on_sample(sample):
             if getattr(self, "_closing", False):
                 return
