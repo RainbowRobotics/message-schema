@@ -21,7 +21,6 @@ from rb_utils.parser import t_to_dict
 from zenoh import (  # pylint: disable=no-name-in-module
     Config,
     Encoding,
-    Queryable,
     QueryTarget,
     Session,
     ZBytes,
@@ -43,19 +42,14 @@ if hasattr(sys.stderr, "reconfigure"):
 
 
 class ZenohClient:
-    _instance: Any | None = None
+    _instance = None
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
-        pid = os.getpid()
         with cls._lock:
-            inst = getattr(cls, "_instance", None)
-            # 부모 프로세스가 만든 인스턴스를 자식이 재활용하려고 하면 새로 만든다
-            if inst is None or getattr(inst, "_owner_pid", None) != pid:
-                inst = super().__new__(cls)
-                inst._owner_pid = pid
-                cls._instance = inst
-            return inst
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self):
         if getattr(self, "_init_done", False):
@@ -95,7 +89,7 @@ class ZenohClient:
             # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
             conf.insert_json5(
                 "listen/endpoints",
-                '{ "peer": ["tcp/0.0.0.0:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
+                '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
             )
             conf.insert_json5("listen/exit_on_failure", "false")
             conf.insert_json5("connect/timeout_ms", '{ "peer": -1 }')
@@ -146,9 +140,6 @@ class ZenohClient:
     #     except Exception as e:
     #         print(f"🚫 zenoh publish failed: {e}")
 
-    def is_current_process_client(self) -> bool:
-        return self._owner_pid == os.getpid()
-
     def _estimate_initial_size(self, topic: str, fb_class_name: str, fields: dict) -> int:
         key = (topic, fb_class_name)
         stat = self._fb_stats.get(key)
@@ -195,7 +186,7 @@ class ZenohClient:
             elif isinstance(payload, dict):
                 payload = json.dumps(payload).encode("utf-8")
             else:
-                raise ValueError(f"Invalid payload type: {type(payload)}")
+                raise ValueError("invalid payload type")
 
         attachment = f"sender={self.sender};sender_id={self.sender_id}"
         if self.session is not None:
@@ -247,6 +238,7 @@ class ZenohClient:
         flatbuffer_obj_t: Table | None = None,
         timeout: float = 3.0,
         allow_self: bool = False,
+        parse_obj: bool = True,
     ) -> tuple[str, memoryview, dict[str, Any] | None, dict]:
         if self.session is None:
             self.connect()
@@ -279,8 +271,8 @@ class ZenohClient:
                 att_b = str(att).encode("utf-8", "ignore")
 
             sid = None
-            s = att_b.decode("utf-8", "ignore")
             try:
+                s = att_b.decode("utf-8", "ignore")
                 for seg in s.split(";"):
                     if seg.startswith("sender_id="):
                         sid = seg.split("=", 1)[1]
@@ -292,16 +284,18 @@ class ZenohClient:
                 return
 
             async def _handle():
-                parts = dict(seg.split("=", 1) for seg in s.split(";") if "=" in seg)
+                parts = dict(
+                    seg.split("=", 1)
+                    for seg in (s if "s" in locals() else att_b.decode("utf-8", "ignore")).split(
+                        ";"
+                    )
+                    if "=" in seg
+                )
                 obj = None
                 try:
                     if flatbuffer_obj_t is not None:
                         obj = await asyncio.to_thread(
-                            lambda: t_to_dict(
-                                flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0)
-                                if flatbuffer_obj_t is not None
-                                else None
-                            )
+                            lambda: t_to_dict(flatbuffer_obj_t.InitFromPackedBuf(bytes(mv), 0))
                         )
                 except Exception:
                     obj = None
@@ -397,10 +391,6 @@ class ZenohClient:
                     q.reply_del(q.key_expr)
                     return
                 data = _to_bytes(payload)
-
-                if data is None:
-                    data = b""
-
                 att = f"sender={self.sender};sender_id={self.sender_id}"
                 q.reply(
                     key_expr=q.key_expr,
@@ -411,11 +401,7 @@ class ZenohClient:
             except Exception as e:
                 q.reply_err(key_expr=q.key_expr, payload=ZBytes(str(e).encode("utf-8")))
 
-        qbl: Queryable | None = None
-
-        if self.session is not None:
-            qbl = self.session.declare_queryable(keyexpr, _handler)
-
+        qbl = cast(Session, self.session).declare_queryable(keyexpr, _handler)
         self._queryables[keyexpr] = qbl
         print(f"🛠️  queryable declared: {keyexpr}")
 
@@ -465,10 +451,10 @@ class ZenohClient:
 
         # dict_params = dict(params or {})
         # sel = Selector(keyexpr, dict_params)
-        if self.session is not None:
-            get_result = self.session.get(keyexpr, payload=payload, target=target, timeout=timeout)
-        else:
-            get_result = []
+
+        get_result = cast(Session, self.session).get(
+            keyexpr, payload=payload, target=target, timeout=timeout
+        )
 
         seen_any = False
 
@@ -483,13 +469,14 @@ class ZenohClient:
                         if isinstance(samp.payload, ZBytes)
                         else bytes(samp.payload)
                     )
-                    att = samp.attachment
+                    att_raw = samp.attachment
                     # enc = str(samp.encoding or "flatbuffer").lower()
 
-                    if isinstance(att, bytes | bytearray):
-                        att = att.decode("utf-8", "ignore")
-                    elif hasattr(att, "to_bytes") and att is not None:
-                        att = att.to_bytes().decode("utf-8", "ignore")
+                    att: str | None = None
+                    if isinstance(att_raw, bytes | bytearray):
+                        att = att_raw.decode("utf-8", "ignore")
+                    elif hasattr(att_raw, "to_bytes") and att_raw is not None:
+                        att = att_raw.to_bytes().decode("utf-8", "ignore")
 
                     att_dict = dict(
                         (k.strip(), v.strip())
@@ -743,7 +730,7 @@ class ZenohClient:
 
         async def _spawn_all():
             now = time.time()
-            tasks: list[asyncio.Future] = []
+            tasks: list[asyncio.Future[Any]] = []
 
             for e in entries:
                 opts = e.opts
@@ -787,15 +774,7 @@ class ZenohClient:
                         )
                         cb(**kwargs)
 
-                    if loop.is_closed():
-                        # 프로세스 내려가는 중이면 이 콜백은 그냥 버림
-                        return
-                    try:
-                        fut = loop.run_in_executor(None, _sync_call)
-                    except RuntimeError:
-                        return
-
-                    tasks.append(fut)
+                    tasks.append(loop.run_in_executor(None, _sync_call))
 
                 e.metrics["delivered"] += 1
                 e.metrics["last_ts"] = now
@@ -806,7 +785,6 @@ class ZenohClient:
                     exc = t.exception()
                     if exc:
                         print(f"[callback error:{topic}] {exc}", flush=True)
-                        raise RuntimeError(f"[callback error:{topic}] {exc}") from exc
 
                 for t in tasks:
                     if isinstance(t, asyncio.Task):
@@ -969,10 +947,10 @@ class ZenohClient:
 
                     kwargs = self._select_callback_kwargs(
                         e.callback,
-                        topic=it.get("topic") or "",
-                        mv=it.get("mv") or memoryview(b""),
-                        obj=it.get("obj") or {},
-                        attachment=it.get("attachment") or {},
+                        topic=it.get("topic"),
+                        mv=it.get("mv"),
+                        obj=it.get("obj"),
+                        attachment=it.get("attachment"),
                     )
 
                     if inspect.iscoroutinefunction(e.callback):

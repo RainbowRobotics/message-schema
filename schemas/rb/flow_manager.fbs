@@ -19,3 +19,7 @@ table Request_Update_All_Step_State {
   task_id: string;
   state: RB_Flow_Manager_ProgramState;
 }
+
+table Request_Update_Executor_State {
+  state: RB_Flow_Manager_ProgramState;
+}

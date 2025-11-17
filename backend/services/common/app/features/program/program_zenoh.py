@@ -3,12 +3,13 @@ from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Ma
 from rb_flat_buffers.flow_manager.Request_Update_All_Step_State import (
     Request_Update_All_Step_StateT,
 )
+from rb_flat_buffers.flow_manager.Request_Update_Executor_State import (
+    Request_Update_Executor_StateT,
+)
 from rb_flat_buffers.flow_manager.Request_Update_Step_State import Request_Update_Step_StateT
 from rb_utils.parser import t_to_dict, to_json
 from rb_zenoh.router import ZenohRouter
 from rb_zenoh.schema import SubscribeOptions
-
-from app.socket.socket_client import socket_client
 
 from .program_module import ProgramService
 from .program_schema import RB_Flow_Manager_ProgramState as RB_Flow_Manager_ProgramState_PB
@@ -72,9 +73,10 @@ def convert_state_to_string(state: RB_Flow_Manager_ProgramState) -> RB_Flow_Mana
 
 
 @zenoh_program_router.subscribe(
-    "rrs/executor/state", opts=SubscribeOptions(allowed_same_sender=True)
+    "rrs/executor/state",
+    flatbuffer_obj_t=Request_Update_Executor_StateT,
+    opts=SubscribeOptions(allowed_same_sender=True),
 )
 async def on_executor_state(*, topic, mv, obj, attachment):
-    print("obj >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
-
-    await socket_client.emit("executor/state", t_to_dict(mv))
+    print("on_executor_state >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
+    program_service.update_executor_state(state=obj["state"])
