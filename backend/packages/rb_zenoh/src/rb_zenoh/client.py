@@ -39,15 +39,17 @@ os.environ.setdefault("RUST_LOG", "zenoh=info,zenoh_transport=info,zenoh_shm=inf
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 
 if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(line_buffering=True) # pyright: ignore[reportAttributeAccessIssue]
+    sys.stderr.reconfigure(line_buffering=True)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 class FBPackable(Protocol):
     def Pack(self, builder: Any) -> Any: ...
 
+
 class FBRootReadable(Protocol):
     @staticmethod
     def InitFromPackedBuf(buf: bytes, pos: int = 0) -> Any: ...
+
 
 class ZenohClient:
     _instance = None
@@ -576,7 +578,7 @@ class ZenohClient:
         *,
         timeout: int = 3,
         flatbuffer_req_obj: FBPackable | None = None,
-        flatbuffer_res_T_class:FBRootReadable | None = None,
+        flatbuffer_res_T_class: FBRootReadable | None = None,
         flatbuffer_buf_size: int | None = None,
         target: QueryTarget | str = "BEST_MATCHING",
         payload: bytes | bytearray | memoryview | None = None,

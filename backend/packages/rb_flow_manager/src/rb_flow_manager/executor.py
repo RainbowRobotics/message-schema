@@ -237,10 +237,11 @@ class ScriptExecutor:
             except queue.Empty:
                 break
 
+            evt_type = evt.get("type")
+            pid = evt.get("process_id")
+            step_id = evt.get("step_id")
+
             try:
-                evt_type = evt.get("type")
-                pid = evt.get("process_id")
-                step_id = evt.get("step_id")
 
                 if evt_type == "next":
                     if self._on_next is not None:

@@ -1,6 +1,6 @@
 import asyncio
 import time
-from collections.abc import Mapping
+from collections.abc import MutableMapping
 from multiprocessing.managers import DictProxy, ListProxy
 from typing import Any
 
@@ -19,7 +19,7 @@ from rb_zenoh.client import ZenohClient
 class Zenoh_Controller(BaseController):
     def __init__(self):
         self._zenoh_client: ZenohClient | None = None
-        self._state_dicts: dict[str, Mapping[str, Any]] = {}
+        self._state_dicts: dict[str, MutableMapping[str, Any]] = {}
         self._bg_task: asyncio.Task | None = None
 
     def on_init(self, state_dicts):
@@ -86,7 +86,7 @@ class Zenoh_Controller(BaseController):
     def on_all_pause(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.PAUSED)
 
-    def update_step_state(self, step_id: str, state: RB_Flow_Manager_ProgramState) -> None:
+    def update_step_state(self, step_id: str, state: int) -> None:
         """Step 상태 업데이트"""
         try:
             if self._zenoh_client is not None:
@@ -101,7 +101,7 @@ class Zenoh_Controller(BaseController):
             print(f"Error updating step state: {e}")
             raise e
 
-    def update_all_task_step_state(self, task_id: str, state: RB_Flow_Manager_ProgramState) -> None:
+    def update_all_task_step_state(self, task_id: str, state: int) -> None:
         """Task의 모든 Step 상태 업데이트"""
         try:
             if self._zenoh_client is not None:
@@ -118,7 +118,7 @@ class Zenoh_Controller(BaseController):
             print(f"Error updating all task step state: {e}")
             raise e
 
-    def update_executor_state(self, state: RB_Flow_Manager_ProgramState) -> None:
+    def update_executor_state(self, state: int) -> None:
         """Executor 상태 업데이트"""
         try:
             if self._zenoh_client is not None:

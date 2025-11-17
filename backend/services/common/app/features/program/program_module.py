@@ -159,7 +159,7 @@ class ProgramService(BaseService):
 
     def convert_state_to_string(
         self,
-        state: RB_Flow_Manager_ProgramState_FB,
+        state: int,
     ) -> RB_Flow_Manager_ProgramState:
         return {
             RB_Flow_Manager_ProgramState_FB.IDLE: RB_Flow_Manager_ProgramState.IDLE,
@@ -174,7 +174,7 @@ class ProgramService(BaseService):
     def get_play_state(self):
         return self._play_state
 
-    def update_executor_state(self, state: RB_Flow_Manager_ProgramState) -> None:
+    def update_executor_state(self, state: int) -> None:
         str_state = self.convert_state_to_string(state)
 
         if (
