@@ -34,3 +34,8 @@ rb_schemas = { workspace = true }
 rb_resources = { workspace = true }
 rb_database = { workspace = true }
 rb_flow_manager = { workspace = true }
+
+[project.optional-dependencies]
+zenoh = [
+  "zenoh; sys_platform != 'win32'",
+]

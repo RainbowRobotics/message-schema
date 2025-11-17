@@ -152,15 +152,15 @@ def create_app(
     register_zenoh_exception_handlers(app)
 
     if zenoh_routers:
-        for zenoh_r in zenoh_routers:  # type: ZenohRouter
+        for zenoh_r in zenoh_routers:
             zenoh_router.include_router(zenoh_r)
 
     if api_routers:
-        for api_r in api_routers:  # type: APIRouter
+        for api_r in api_routers:
             app.include_router(api_r)
 
     if socket_routers:
-        for socket_r in socket_routers:  # type: RbSocketIORouter
+        for socket_r in socket_routers:
             if socket_client is not None:
                 socket_client.socket_include_router(socket_r)
 
