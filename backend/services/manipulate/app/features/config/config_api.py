@@ -14,6 +14,11 @@ from .config_schema import (
     Request_Save_SideDout_FunctionPD,
     Request_Save_Tool_List_ParameterPD,
     Request_Save_User_FramePD,
+    Request_Set_Free_DrivePD,
+    Request_Set_Joint_ImpedancePD,
+    Request_Set_Out_Collision_ParaPD,
+    Request_Set_Self_Collision_ParaPD,
+    Request_Set_ShiftPD,
     Request_Set_Tool_ListPD,
     Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
@@ -142,4 +147,34 @@ async def set_userframe_num(robot_model: str, *, request: Request_Set_User_Frame
 @config_router.post("/{robot_model}/save_gravity_parameter", response_model=Response_ReturnValuePD)
 async def save_gravity_parameter(robot_model: str, *, request: Request_Save_Gravity_ParameterPD):
     res = config_service.save_gravity_parameter(robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_shift", response_model=Response_ReturnValuePD)
+async def set_shift(robot_model: str, request: Request_Set_ShiftPD):
+    res = config_service.set_shift(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_out_collision_parameter", response_model=Response_ReturnValuePD)
+async def set_out_collision_parameter(robot_model: str, request: Request_Set_Out_Collision_ParaPD):
+    res = config_service.set_out_collision_parameter(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_self_collision_parameter", response_model=Response_ReturnValuePD)
+async def set_self_collision_parameter(robot_model: str, request: Request_Set_Self_Collision_ParaPD):
+    res = config_service.set_self_collision_parameter(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_joint_impedance", response_model=Response_ReturnValuePD)
+async def set_joint_impedance(robot_model: str, request: Request_Set_Joint_ImpedancePD):
+    res = config_service.set_joint_impedance(robot_model=robot_model, request=request)
+    return JSONResponse(res)
+
+
+@config_router.post("/{robot_model}/set_free_drive", response_model=Response_ReturnValuePD)
+async def set_free_drive(robot_model: str, request: Request_Set_Free_DrivePD):
+    res = config_service.set_free_drive(robot_model=robot_model, request=request)
     return JSONResponse(res)

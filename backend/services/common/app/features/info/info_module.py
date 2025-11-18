@@ -3,8 +3,9 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rb_database.mongo_db import MongoDB
 from rb_resources.file import read_json_file
+from rb_utils.parser import t_to_dict
 
-from .info_schema import RobotInfo
+from .info_schema import Request_Create_Robot_InfoPD, RobotInfo
 
 
 class InfoService:
@@ -62,13 +63,18 @@ class InfoService:
 
         return {"info": doc, "modelInfo": model_info}
 
-    async def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+    async def insert_robot_info(self, *, db: MongoDB, request: Request_Create_Robot_InfoPD):
         """robot_info 컬렉션에 robot_info를 삽입한다."""
 
-        collection = db["robot_info"]
+        robot_info_col = db["robot_info"]
 
-        robot_info_dict = robot_info.model_dump()
-        await collection.insert_one(robot_info_dict)
+        robot_info_dict = request.model_dump() if hasattr(request, "model_dump") else t_to_dict(request)
+        res = await robot_info_col.insert_one(robot_info_dict)
+        
+        robot_info_doc = await robot_info_col.find_one({"_id": res.inserted_id}, {"_id": 0})
+
+        return robot_info_doc
+
 
     async def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
         """robot_info 컬렉션에 robot_info를 업데이트한다."""
