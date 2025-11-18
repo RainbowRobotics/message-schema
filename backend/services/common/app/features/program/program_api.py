@@ -16,15 +16,18 @@ from .program_schema import (
     Request_Program_ExecutionPD,
     Request_Tasks_ExecutionPD,
     Request_Update_ProgramPD,
+    Response_Create_Program_And_TasksPD,
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
     Response_Get_ProgramPD,
     Response_Get_Script_ContextPD,
     Response_Get_StepListPD,
+    Response_Get_Task_ListPD,
     Response_Script_ExecutionPD,
-    Response_Upsert_Program_And_TasksPD,
+    Response_Update_ProgramPD,
     Response_Upsert_StepsPD,
     Step_Base,
+    Task_Base,
 )
 
 program_service = ProgramService()
@@ -51,15 +54,15 @@ async def get_program_list(
     return JSONResponse(res)
 
 
-@program_router.post("/program/create", response_model=Response_Upsert_Program_And_TasksPD)
+@program_router.post("/program/create", response_model=Response_Create_Program_And_TasksPD)
 async def create_program_and_tasks(request: Request_Create_ProgramPD, db: MongoDB):
     res = await program_service.create_program_and_tasks(request=request, db=db)
     return JSONResponse(res)
 
 
-@program_router.put("/program/edit", response_model=Response_Upsert_Program_And_TasksPD)
-async def update_program_and_tasks(request: Request_Update_ProgramPD, db: MongoDB):
-    res = await program_service.update_program_and_tasks(request=request, db=db)
+@program_router.put("/program/edit", response_model=Response_Update_ProgramPD)
+async def update_program(request: Request_Update_ProgramPD, db: MongoDB):
+    res = await program_service.update_program(request=request, db=db)
     return JSONResponse(res)
 
 
@@ -68,6 +71,26 @@ async def update_program_and_tasks(request: Request_Update_ProgramPD, db: MongoD
 )
 async def delete_program(program_id: str, db: MongoDB):
     res = await program_service.delete_program(program_id=program_id, db=db)
+    return JSONResponse(res)
+
+
+@program_router.get("/program/main-tasks/{program_id}", response_model=Response_Get_Task_ListPD)
+async def get_main_task_list(program_id: str, db: MongoDB):
+    res = await program_service.get_main_task_list(program_id=program_id, db=db)
+    return JSONResponse(res)
+
+
+@program_router.get(
+    "/program/sub-tasks/{program_id}/{task_id}", response_model=Response_Get_Task_ListPD
+)
+async def get_sub_task_list(program_id: str, task_id: str, db: MongoDB):
+    res = await program_service.get_sub_task_list(program_id=program_id, task_id=task_id, db=db)
+    return JSONResponse(res)
+
+
+@program_router.get("/program/task/{task_id}", response_model=Task_Base)
+async def get_task_info(task_id: str, db: MongoDB):
+    res = await program_service.get_task_info(task_id=task_id, db=db)
     return JSONResponse(res)
 
 
@@ -83,7 +106,7 @@ async def get_step_list(task_id: str, db: MongoDB):
     return JSONResponse(res)
 
 
-@program_router.post("/program/tasks/upsert", response_model=Response_Upsert_StepsPD)
+@program_router.post("/program/steps/upsert", response_model=Response_Upsert_StepsPD)
 async def create_or_update_steps(request: Request_Create_Multiple_StepPD, db: MongoDB):
     res = await program_service.upsert_steps(request=request, db=db)
     return JSONResponse(res)

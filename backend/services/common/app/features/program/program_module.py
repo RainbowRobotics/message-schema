@@ -35,6 +35,7 @@ from rb_utils.parser import t_to_dict
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohReplyError, ZenohTransportError
 
+from app.features.info.info_module import InfoService
 from app.features.info.info_schema import RobotInfo
 from app.socket.socket_client import socket_client
 
@@ -54,11 +55,12 @@ from .program_schema import (
     Request_Update_Multiple_TaskPD,
     Request_Update_ProgramPD,
     Request_Update_StepStatePD,
-    Request_Update_TaskPD,
     TaskType,
 )
 
 zenoh_client = ZenohClient()
+
+info_service = InfoService()
 
 
 class ProgramService(BaseService):
@@ -326,18 +328,22 @@ class ProgramService(BaseService):
         record_find_task_ids: set[str] = set()
         record_find_program_ids: set[str] = set()
         for s in raw_steps:
-            tid, pid = s.get("taskId"), s.get("programId")
+            tid, pid, children = s.get("taskId"), s.get("programId"), s.get("children")
 
             if tid and tid not in record_find_task_ids:
                 doc = await tasks_col.find_one({"_id": ObjectId(tid)})
                 if not doc:
                     raise HTTPException(400, f"Invalid taskId: {tid}")
                 record_find_task_ids.add(tid)
+
             if pid and pid not in record_find_program_ids:
                 doc = await program_col.find_one({"_id": ObjectId(pid)})
                 if not doc:
                     raise HTTPException(400, f"Invalid programId: {pid}")
                 record_find_program_ids.add(pid)
+
+            if children:
+                raise HTTPException(400, "Children is not allowed in upsert steps")
 
         local_to_oid: dict[str, ObjectId] = {}
         prepped_steps: list[dict] = []
@@ -703,6 +709,37 @@ class ProgramService(BaseService):
             "context": codecs.decode(script_context, "unicode_escape"),
         }
 
+    async def get_main_task_list(self, *, program_id: str, db: MongoDB):
+        """
+        Task 목록을 조회하는 함수.
+        """
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find({"programId": program_id, "type": TaskType.MAIN}).to_list(
+            length=None
+        )
+        return tasks_docs
+
+    async def get_sub_task_list(self, *, program_id: str, task_id: str, db: MongoDB):
+        """
+        Sub Task 목록을 조회하는 함수.
+        """
+
+        tasks_col = db["tasks"]
+        tasks_docs = await tasks_col.find(
+            {"programId": program_id, "type": TaskType.SUB, "parentTaskId": task_id}
+        ).to_list(length=None)
+        return tasks_docs
+
+    async def get_task_info(self, *, task_id: str, db: MongoDB):
+        """
+        Task 정보를 조회하는 함수.
+        """
+
+        tasks_col = db["tasks"]
+        task_doc = await tasks_col.find_one({"_id": ObjectId(task_id)})
+        return task_doc
+
     async def create_tasks(self, *, request: Request_Create_Multiple_TaskPD, db: MongoDB):
         """
         Task들을 생성하는 함수.
@@ -904,10 +941,19 @@ class ProgramService(BaseService):
             now = datetime.now(UTC)
 
             program_doc = {
-                **t_to_dict(request.program),
+                **t_to_dict(request),
                 "createdAt": now.isoformat(),
                 "updatedAt": now.isoformat(),
             }
+
+            robot_info = await info_service.get_robot_info(db=db)
+
+            components = robot_info["info"]["components"]
+
+            if components is None or len(components) == 0:
+                raise HTTPException(
+                    status_code=400, detail="Please enter your robot information first."
+                )
 
             program_col = db["programs"]
 
@@ -924,21 +970,24 @@ class ProgramService(BaseService):
                 find_program_doc["programId"] = str(program_res.inserted_id)
                 find_program_doc.pop("_id", None)
 
-            for task in request.tasks:
-                task.programId = str(program_res.inserted_id)
-                task.name = f'{task.robotModel}_{program_doc["name"]}'
-                task.scriptName = task.name
-                task.scriptPath = ""
-                task.createdAt = now.isoformat()
-                task.updatedAt = now.isoformat()
+            tasks = []
+
+            for component in components:
+                name = f'{component}_{program_doc["name"]}'
+                task = Request_Create_TaskPD(
+                    programId=str(program_res.inserted_id),
+                    robotModel=component,
+                    name=name,
+                    scriptName=name,
+                    scriptPath="",
+                    createdAt=now.isoformat(),
+                    updatedAt=now.isoformat(),
+                )
+
+                tasks.append(task)
 
             tasks_res = await self.create_tasks(
-                request=Request_Create_Multiple_TaskPD(
-                    tasks=[
-                        Request_Create_TaskPD(**t.model_dump(exclude_none=True))
-                        for t in request.tasks
-                    ]
-                ),
+                request=Request_Create_Multiple_TaskPD(tasks=tasks),
                 db=db,
             )
 
@@ -951,7 +1000,7 @@ class ProgramService(BaseService):
             "tasks": tasks_res,
         }
 
-    async def update_program_and_tasks(self, *, request: Request_Update_ProgramPD, db: MongoDB):
+    async def update_program(self, *, request: Request_Update_ProgramPD, db: MongoDB):
         """
         Program과 Task를 동시에 업데이트하는 함수.
         """
@@ -961,12 +1010,12 @@ class ProgramService(BaseService):
 
             program_doc = (
                 {
-                    **request.program.model_dump(exclude_none=True, exclude_unset=True),
+                    **request.model_dump(exclude_none=True, exclude_unset=True),
                     "updatedAt": now.isoformat(),
                 }
-                if hasattr(request.program, "model_dump")
+                if hasattr(request, "model_dump")
                 else {
-                    **t_to_dict(request.program),
+                    **t_to_dict(request),
                     "updatedAt": now.isoformat(),
                 }
             )
@@ -986,24 +1035,8 @@ class ProgramService(BaseService):
 
             program_res["programId"] = str(program_res.pop("_id"))
 
-            for task in request.tasks:
-                task.programId = str(program_res["programId"])
-                task.name = f'{task.robotModel}_{program_res["name"]}'
-                task.scriptName = task.name
-
-            tasks_res = await self.update_tasks(
-                request=Request_Update_Multiple_TaskPD(
-                    tasks=[
-                        Request_Update_TaskPD(**t.model_dump(exclude_none=True, exclude_unset=True))
-                        for t in request.tasks
-                    ]
-                ),
-                db=db,
-            )
-
             return {
                 "program": program_res,
-                "tasks": tasks_res["tasks"],
             }
         except Exception as e:
             raise e

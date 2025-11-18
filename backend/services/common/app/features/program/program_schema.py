@@ -191,28 +191,24 @@ class Update_Program_With_TaskPD(
     model_config = ConfigDict(extra="allow")
 
 
-class Update_ProgramPD(Omit(Program_Base, "state", "createdAt", "updatedAt")):
-    pass
-
-
-class Create_ProgramPD(Omit(Program_Base, "_id", "programId", "state", "createdAt", "updatedAt")):
+class Request_Create_ProgramPD(
+    Omit(Program_Base, "_id", "programId", "state", "createdAt", "updatedAt")
+):
     name: str | None = Field(default=None)
     repeatCnt: int | None = Field(default=None)
 
 
-class Request_Create_ProgramPD(BaseModel):
-    program: Create_ProgramPD
-    tasks: list[Create_Program_With_TaskPD] = Field(default_factory=list)
+class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt", "updatedAt")):
+    pass
 
 
-class Request_Update_ProgramPD(BaseModel):
-    program: Update_ProgramPD
-    tasks: list[Update_Program_With_TaskPD] = Field(default_factory=list)
-
-
-class Response_Upsert_Program_And_TasksPD(BaseModel):
+class Response_Create_Program_And_TasksPD(BaseModel):
     program: Program_Base
     tasks: list[Task_Base]
+
+
+class Response_Update_ProgramPD(BaseModel):
+    program: Program_Base
 
 
 class Response_Delete_Program_And_TasksPD(BaseModel):
@@ -228,6 +224,10 @@ class Request_Program_ExecutionPD(BaseModel):
 class Request_Tasks_ExecutionPD(BaseModel):
     taskIds: list[str]
     repeatCount: int | None = Field(default=None)
+
+
+class Response_Get_Task_ListPD(BaseModel):
+    tasks: list[Task_Base]
 
 
 class Response_Script_ExecutionPD(BaseModel):
