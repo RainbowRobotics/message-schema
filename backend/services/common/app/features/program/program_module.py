@@ -720,15 +720,19 @@ class ProgramService(BaseService):
         )
         return tasks_docs
 
-    async def get_sub_task_list(self, *, program_id: str, task_id: str, db: MongoDB):
+    async def get_sub_task_list(self, *, program_id: str, parent_task_id: str, db: MongoDB):
         """
         Sub Task 목록을 조회하는 함수.
         """
 
         tasks_col = db["tasks"]
-        tasks_docs = await tasks_col.find(
-            {"programId": program_id, "type": TaskType.SUB, "parentTaskId": task_id}
-        ).to_list(length=None)
+        tasks_docs = (
+            await tasks_col.find(
+                {"programId": program_id, "type": TaskType.SUB, "parentTaskId": parent_task_id}
+            )
+            .sort("order", 1)
+            .to_list(length=None)
+        )
         return tasks_docs
 
     async def get_task_info(self, *, task_id: str, db: MongoDB):

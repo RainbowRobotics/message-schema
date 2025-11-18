@@ -37,7 +37,9 @@ class InfoService:
         for model_details in robot_models.values():
             model_service = model_details.get("be_service")
 
-            if be_service is None or (model_service and model_service.casefold() == be_service.casefold()):
+            if be_service is None or (
+                model_service and model_service.casefold() == be_service.casefold()
+            ):
                 components = model_details.get("components", [])
                 all_components.update(components)
 
@@ -62,7 +64,7 @@ class InfoService:
 
     async def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
         """robot_info 컬렉션에 robot_info를 삽입한다."""
-        
+
         collection = db["robot_info"]
 
         robot_info_dict = robot_info.model_dump()
@@ -70,10 +72,10 @@ class InfoService:
 
     async def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
         """robot_info 컬렉션에 robot_info를 업데이트한다."""
-        
+
         collection = db["robot_info"]
         robot_info_dict = robot_info.model_dump()
-        
+
         await collection.update_one({}, {"$set": robot_info_dict}, upsert=True)
 
     async def get_cache_robot_info(self):
