@@ -47,7 +47,7 @@ class RobotInfoResponse(BaseModel):
 class Response_RobotURDFLinkMapPD(BaseModel):
     urdfFileName: str
     components: dict[str, ST_URDF_Link_Map_ComponentPD]
-    
 
-class Request_Create_Robot_InfoPD(Omit(RobotInfo, "components")):
+
+class Request_Upsert_Robot_InfoPD(Omit(RobotInfo, "components")):
     pass

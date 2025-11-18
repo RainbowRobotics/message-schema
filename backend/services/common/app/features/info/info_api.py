@@ -4,7 +4,7 @@ from rb_database.mongo_db import MongoDB
 
 from .info_module import InfoService
 from .info_schema import (
-    Request_Create_Robot_InfoPD,
+    Request_Upsert_Robot_InfoPD,
     Response_RobotURDFLinkMapPD,
     RobotInfo,
     RobotInfoResponse,
@@ -34,12 +34,7 @@ async def get_robot_component_list(db: MongoDB, be_service: str | None = None):
     return await info_service.get_robot_component_list(db=db, be_service=be_service)
 
 
-@info_router.post("/robot-info", response_model=list[str])
-async def insert_robot_info(db: MongoDB, request: Request_Create_Robot_InfoPD):
-    res = await info_service.insert_robot_info(db=db, request=request)
+@info_router.post("/robot-info", response_model=RobotInfo)
+async def upsert_robot_info(db: MongoDB, request: Request_Upsert_Robot_InfoPD):
+    res = await info_service.upsert_robot_info(db=db, request=request)
     return JSONResponse(content=res)
-
-
-@info_router.put("/robot-info", response_model=list[str])
-async def update_robot_info(db: MongoDB, robot_info: RobotInfo):
-    return await info_service.update_robot_info(db=db, robot_info=robot_info)

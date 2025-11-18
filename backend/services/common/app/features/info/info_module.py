@@ -1,11 +1,12 @@
 import asyncio
 
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo import ReturnDocument
 from rb_database.mongo_db import MongoDB
 from rb_resources.file import read_json_file
 from rb_utils.parser import t_to_dict
 
-from .info_schema import Request_Create_Robot_InfoPD, RobotInfo
+from .info_schema import Request_Upsert_Robot_InfoPD, RobotInfo
 
 
 class InfoService:
@@ -63,26 +64,48 @@ class InfoService:
 
         return {"info": doc, "modelInfo": model_info}
 
-    async def insert_robot_info(self, *, db: MongoDB, request: Request_Create_Robot_InfoPD):
-        """robot_info 컬렉션에 robot_info를 삽입한다."""
-
+    async def upsert_robot_info(self, *, db: MongoDB, request: Request_Upsert_Robot_InfoPD):
         robot_info_col = db["robot_info"]
 
-        robot_info_dict = request.model_dump() if hasattr(request, "model_dump") else t_to_dict(request)
-        res = await robot_info_col.insert_one(robot_info_dict)
-        
-        robot_info_doc = await robot_info_col.find_one({"_id": res.inserted_id}, {"_id": 0})
+        existing = await robot_info_col.find_one({})
 
-        return robot_info_doc
+        print("existing >>>>", existing, flush=True)
 
+        if existing is None:
+            # === INSERT ===
+            insert_doc = RobotInfo.model_validate(t_to_dict(request)).model_dump(
+                exclude_none=True,
+            )
 
-    async def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
-        """robot_info 컬렉션에 robot_info를 업데이트한다."""
+            res = await robot_info_col.find_one_and_update(
+                {},
+                {"$set": insert_doc},
+                upsert=True,
+                return_document=ReturnDocument.AFTER,
+            )
 
-        collection = db["robot_info"]
-        robot_info_dict = robot_info.model_dump()
+        else:
+            # === UPDATE ===
+            patch_doc = (
+                request.model_dump(exclude_none=True, exclude_unset=True)
+                if hasattr(request, "model_dump")
+                else t_to_dict(request)
+            )
 
-        await collection.update_one({}, {"$set": robot_info_dict}, upsert=True)
+            print("patch_doc >>>>", patch_doc, flush=True)
+
+            # patch_doc 에 들어있는 필드만 업데이트됨
+            # 기존 DB 값은 손대지 않는다.
+            res = await robot_info_col.find_one_and_update(
+                {"_id": existing["_id"]},
+                {"$set": patch_doc},
+                return_document=ReturnDocument.AFTER,
+            )
+
+        if res:
+            res.pop("_id", None)
+
+        return res
 
     async def get_cache_robot_info(self):
         return self._cache_robot_info
