@@ -67,9 +67,13 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_SideAout_GeneralT(object):
 
     # Request_SideAout_GeneralT
-    def __init__(self):
-        self.portNum = 0  # type: int
-        self.desiredVoltage = 0.0  # type: float
+    def __init__(
+        self,
+        portNum = 0,
+        desiredVoltage = 0.0,
+    ):
+        self.portNum = portNum  # type: int
+        self.desiredVoltage = desiredVoltage  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

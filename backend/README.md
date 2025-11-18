@@ -121,7 +121,7 @@ docker --version
 > git clone 받고 초기에 한번만 하면 됩니다.
 
 ```bash
-bash script/backend/init-project.sh
+bash scripts/backend/init-project.sh
 ```
 
 ## 5. Backend 프로젝트 명령어 확인 방법

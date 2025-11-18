@@ -74,7 +74,7 @@ class RBBaseSDK:
             return functools.wraps(fn)(_async_wrapper)
         return functools.wraps(fn)(_sync_wrapper)
 
-    def __new__(cls: type[T]) -> T:
+    def __new__(cls) -> "RBBaseSDK":
         pid = os.getpid()
         key = (pid, cls)
 
@@ -83,7 +83,7 @@ class RBBaseSDK:
                 instance = super().__new__(cls)
                 cls._instances[key] = instance
                 instance._initialized = False
-            return instance
+            return cls._instances[key]
 
     def __init__(self):
         # 이미 초기화 됐으면 스킵

@@ -17,6 +17,9 @@ from pymongo.errors import PyMongoError
 from pymongo.operations import UpdateOne
 from rb_database import MongoDB, get_db
 from rb_database.utils import make_check_include_query, make_check_search_text_query
+from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import (
+    RB_Flow_Manager_ProgramState as RB_Flow_Manager_ProgramState_FB,
+)
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
@@ -60,6 +63,8 @@ zenoh_client = ZenohClient()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
+        # multiprocessing.set_start_method("spawn", force=True)
+
         zenoh_controller = Zenoh_Controller()
 
         self._robot_models = read_json_file("data", "robot_models.json")
@@ -113,7 +118,10 @@ class ProgramService(BaseService):
         return {
             "manipulateReturnValue": (
                 res_manipulate_resume_or_pause["dict_payload"]["returnValue"]
-                if res_manipulate_resume_or_pause
+                if (
+                    res_manipulate_resume_or_pause
+                    and res_manipulate_resume_or_pause.get("dict_payload")
+                )
                 else None
             ),
         }
@@ -149,8 +157,41 @@ class ProgramService(BaseService):
     #     except Exception as e:
     #         raise e
 
+    def convert_state_to_string(
+        self,
+        state: int,
+    ) -> RB_Flow_Manager_ProgramState:
+        return {
+            RB_Flow_Manager_ProgramState_FB.IDLE: RB_Flow_Manager_ProgramState.IDLE,
+            RB_Flow_Manager_ProgramState_FB.RUNNING: RB_Flow_Manager_ProgramState.RUNNING,
+            RB_Flow_Manager_ProgramState_FB.PAUSED: RB_Flow_Manager_ProgramState.PAUSED,
+            RB_Flow_Manager_ProgramState_FB.STOPPED: RB_Flow_Manager_ProgramState.STOPPED,
+            RB_Flow_Manager_ProgramState_FB.WAITING: RB_Flow_Manager_ProgramState.WAITING,
+            RB_Flow_Manager_ProgramState_FB.ERROR: RB_Flow_Manager_ProgramState.ERROR,
+            RB_Flow_Manager_ProgramState_FB.COMPLETED: RB_Flow_Manager_ProgramState.COMPLETED,
+        }[state]
+
     def get_play_state(self):
         return self._play_state
+
+    def update_executor_state(self, state: int) -> None:
+        str_state = self.convert_state_to_string(state)
+
+        if (
+            str_state == RB_Flow_Manager_ProgramState.RUNNING
+            or str_state == RB_Flow_Manager_ProgramState.WAITING
+        ):
+            self._play_state = "play"
+        elif str_state == RB_Flow_Manager_ProgramState.PAUSED:
+            self._play_state = "pause"
+        elif (
+            str_state == RB_Flow_Manager_ProgramState.STOPPED
+            or str_state == RB_Flow_Manager_ProgramState.ERROR
+            or str_state == RB_Flow_Manager_ProgramState.IDLE
+        ):
+            self._play_state = "stop"
+
+        fire_and_log(socket_client.emit("program/play_state", {"playState": self._play_state}))
 
     async def load_program(self, *, request: Request_Load_ProgramPD, db: MongoDB):
         """
@@ -444,21 +485,6 @@ class ProgramService(BaseService):
         state = request_dict["state"]
 
         steps_col = db["steps"]
-
-        if state == RB_Flow_Manager_ProgramState.RUNNING:
-            self._play_state = "play"
-        elif state == RB_Flow_Manager_ProgramState.PAUSED:
-            self._play_state = "pause"
-        elif (
-            state == RB_Flow_Manager_ProgramState.STOPPED
-            or state == RB_Flow_Manager_ProgramState.ERROR
-            or state == RB_Flow_Manager_ProgramState.COMPLETED
-        ):
-            self._play_state = "stop"
-
-        print("self._play_state >>>", self._play_state, flush=True)
-
-        fire_and_log(socket_client.emit("program/play_state", {"playState": self._play_state}))
 
         if not ObjectId.is_valid(step_id):
             return

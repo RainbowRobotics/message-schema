@@ -9,7 +9,6 @@ from typing import Any
 
 from rb_sdk.base import RBBaseSDK
 from rb_sdk.manipulate import RBManipulateSDK
-from rb_zenoh.client import ZenohClient
 
 from .exception import StopExecution
 from .schema import RB_Flow_Manager_ProgramState
@@ -37,8 +36,6 @@ class ExecutionContext:
         self.sdk_functions: dict[str, Callable] = {}
         self._arg_scope: list[dict[str, Any]] = []
         self.data: dict[str, Any] = {}  # 사용자 정의 데이터 저장소
-
-        self._zenoh_client = ZenohClient()
 
         self._make_rb_sdk_method_key_value_map()
 

@@ -115,12 +115,19 @@ except:
 class Response_Get_Core_DataT(object):
 
     # Response_Get_Core_DataT
-    def __init__(self):
-        self.valid = 0  # type: int
-        self.type = 0  # type: int
-        self.payloadNum = 0.0  # type: float
-        self.payloadArr = None  # type: Optional[FloatArray32T]
-        self.payloadStr = None  # type: str
+    def __init__(
+        self,
+        valid = 0,
+        type = 0,
+        payloadNum = 0.0,
+        payloadArr = None,
+        payloadStr = None,
+    ):
+        self.valid = valid  # type: int
+        self.type = type  # type: int
+        self.payloadNum = payloadNum  # type: float
+        self.payloadArr = payloadArr  # type: Optional[FloatArray32T]
+        self.payloadStr = payloadStr  # type: Optional[str]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

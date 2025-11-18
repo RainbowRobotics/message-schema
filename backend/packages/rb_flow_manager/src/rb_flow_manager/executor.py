@@ -160,8 +160,6 @@ class ScriptExecutor:
 
         # self._zenoh_client = zenoh_client
 
-        self._start_monitor()
-
     def start(
         self,
         process_id: str,
@@ -175,6 +173,10 @@ class ScriptExecutor:
         if process_id in self.processes and self.processes[process_id].is_alive():
             print(f"Process {process_id} is already running")
             return False
+
+        if self._monitor_thread is None or not self._monitor_thread.is_alive():
+            self._stop_monitor.clear()  # 혹시라도 눌려 있을 수 있으니 초기화
+            self._start_monitor()
 
         if self._on_init is not None:
             self._on_init(self.state_dicts)
@@ -235,10 +237,11 @@ class ScriptExecutor:
             except queue.Empty:
                 break
 
+            evt_type = evt.get("type")
+            pid = evt.get("process_id")
+            step_id = evt.get("step_id")
+
             try:
-                evt_type = evt.get("type")
-                pid = evt.get("process_id")
-                step_id = evt.get("step_id")
 
                 if evt_type == "next":
                     if self._on_next is not None:
@@ -259,14 +262,13 @@ class ScriptExecutor:
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.ERROR
 
                     if self._on_error is not None:
-                        self.stop_all()
                         self._on_error(pid, step_id, RuntimeError(err_repr))
 
                     if self.controller is not None:
                         self.controller.on_error(pid, step_id, RuntimeError(err_repr))
 
                     self.stop_all()
-                    self._auto_cleanup()
+                    break
 
                 elif evt_type == "pause":
                     self.state_dicts[pid]["state"] = RB_Flow_Manager_ProgramState.PAUSED
@@ -341,6 +343,9 @@ class ScriptExecutor:
             if not self.processes:
                 if self._on_all_complete is not None:
                     self._on_all_complete()
+
+                if self.controller is not None:
+                    self.controller.on_all_complete()
 
                 self._auto_cleanup()
                 break

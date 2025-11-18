@@ -11,6 +11,37 @@ class InfoService:
     def __init__(self):
         self._cache_robot_info = {}
 
+    async def get_robot_category_list(self, *, db: MongoDB):
+        """robot_models.json 파일에서 모든 robot_model의 be_service를 중복 제거하여 리스트로 반환한다."""
+
+        robot_models = read_json_file("data", "robot_models.json")
+
+        be_services = set()
+        for model_details in robot_models.values():
+            be_service = model_details.get("be_service")
+            if be_service:
+                be_services.add(be_service)
+
+        return list(be_services)
+        # pass
+
+    async def get_robot_component_list(self, *, be_service: str | None = None, db: MongoDB):
+        """
+        robot_models.json 파일에서 모든 robot_model을 조회하여 반환한다.
+        be_service가 있으면 be_service에 해당하는 모든 component를 조회하여 반환한다.
+        """
+
+        robot_models = read_json_file("data", "robot_models.json")
+        all_components = set()
+
+        for model_details in robot_models.values():
+            if be_service is None or model_details.get("be_service") == be_service:
+                components = model_details.get("components", [])
+                all_components.update(components)
+
+        return list(all_components)
+        # pass
+
     async def get_robot_info(self, *, db: MongoDB):
         robot_models = read_json_file("data", "robot_models.json")
 
@@ -27,6 +58,14 @@ class InfoService:
         model_info = robot_models.get(robot_model_key)
 
         return {"info": doc, "modelInfo": model_info}
+
+    def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+        """robot_info 컬렉션에 robot_info를 삽입한다."""
+        pass
+
+    def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+        """robot_info 컬렉션에 robot_info를 업데이트한다."""
+        pass
 
     async def get_cache_robot_info(self):
         return self._cache_robot_info
