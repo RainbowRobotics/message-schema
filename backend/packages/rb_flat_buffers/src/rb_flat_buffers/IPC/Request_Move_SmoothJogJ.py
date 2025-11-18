@@ -63,8 +63,11 @@ except:
 class Request_Move_SmoothJogJT(object):
 
     # Request_Move_SmoothJogJT
-    def __init__(self):
-        self.target = None  # type: Optional[MoveInput_TargetT]
+    def __init__(
+        self,
+        target = None,
+    ):
+        self.target = target  # type: Optional[MoveInput_TargetT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

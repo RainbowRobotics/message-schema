@@ -3,9 +3,7 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
-import flatbuffers
 import typing
-from rb_flat_buffers.deploy.Response_Deploy_Progress import Response_Deploy_Progress
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -28,6 +26,15 @@ class Response_Deploy_ProgressT(object):
   percentage: int
   serviceName: str | None
   result: str | None
+  def __init__(
+    self,
+    swName: str | None = ...,
+    mode: str | None = ...,
+    tag: str | None = ...,
+    percentage: int = ...,
+    serviceName: str | None = ...,
+    result: str | None = ...,
+  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Response_Deploy_ProgressT: ...
   @classmethod

@@ -1,4 +1,4 @@
-PY ?= python3
+PY ?= python
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 

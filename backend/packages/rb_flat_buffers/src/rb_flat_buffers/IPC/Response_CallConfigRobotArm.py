@@ -193,18 +193,31 @@ except:
 class Response_CallConfigRobotArmT(object):
 
     # Response_CallConfigRobotArmT
-    def __init__(self):
-        self.outCollOnoff = 0  # type: int
-        self.outCollReact = 0  # type: int
-        self.outCollLimit = 0.0  # type: float
-        self.selfCollMode = 0  # type: int
-        self.selfCollDistanceInter = 0.0  # type: float
-        self.selfCollDistanceExter = 0.0  # type: float
-        self.gravityMode = 0  # type: int
-        self.gravityGx = 0.0  # type: float
-        self.gravityGy = 0.0  # type: float
-        self.gravityGz = 0.0  # type: float
-        self.directTeachingSensitivity = None  # type: Optional[N_JOINT_fT]
+    def __init__(
+        self,
+        outCollOnoff = 0,
+        outCollReact = 0,
+        outCollLimit = 0.0,
+        selfCollMode = 0,
+        selfCollDistanceInter = 0.0,
+        selfCollDistanceExter = 0.0,
+        gravityMode = 0,
+        gravityGx = 0.0,
+        gravityGy = 0.0,
+        gravityGz = 0.0,
+        directTeachingSensitivity = None,
+    ):
+        self.outCollOnoff = outCollOnoff  # type: int
+        self.outCollReact = outCollReact  # type: int
+        self.outCollLimit = outCollLimit  # type: float
+        self.selfCollMode = selfCollMode  # type: int
+        self.selfCollDistanceInter = selfCollDistanceInter  # type: float
+        self.selfCollDistanceExter = selfCollDistanceExter  # type: float
+        self.gravityMode = gravityMode  # type: int
+        self.gravityGx = gravityGx  # type: float
+        self.gravityGy = gravityGy  # type: float
+        self.gravityGz = gravityGz  # type: float
+        self.directTeachingSensitivity = directTeachingSensitivity  # type: Optional[N_JOINT_fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

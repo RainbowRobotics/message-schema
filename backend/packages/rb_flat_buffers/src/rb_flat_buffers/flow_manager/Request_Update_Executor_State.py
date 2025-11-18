@@ -54,8 +54,11 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Update_Executor_StateT(object):
 
     # Request_Update_Executor_StateT
-    def __init__(self):
-        self.state = 0  # type: int
+    def __init__(
+        self,
+        state = 0,
+    ):
+        self.state = state  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
