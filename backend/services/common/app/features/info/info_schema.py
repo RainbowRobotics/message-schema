@@ -14,11 +14,11 @@ class RobotModelInfo(BaseModel):
 
 
 class RobotInfo(BaseModel):
-    serialNumber: str | None = ""
-    robotModel: str | None = ""
-    robotName: str | None = ""
-    programId: str | None = None
-    components: list[str] | None = []
+    serialNumber: str | None = Field(default=None)
+    robotModel: str | None = Field(default="")
+    robotName: str | None = Field(default=None)
+    programId: str | None = Field(default=None)
+    components: list[str] | None = Field(default=[])
 
 
 class URDFLinkMapArray(BaseModel):
@@ -50,4 +50,4 @@ class Response_RobotURDFLinkMapPD(BaseModel):
 
 
 class Request_Upsert_Robot_InfoPD(Omit(RobotInfo, "components")):
-    pass
+    robotModel: str | None = Field(default=None)

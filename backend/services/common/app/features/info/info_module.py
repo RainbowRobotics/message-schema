@@ -1,5 +1,6 @@
 import asyncio
 
+from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo import ReturnDocument
 from rb_database.mongo_db import MongoDB
@@ -69,13 +70,23 @@ class InfoService:
 
         existing = await robot_info_col.find_one({})
 
-        print("existing >>>>", existing, flush=True)
-
         if existing is None:
             # === INSERT ===
             insert_doc = RobotInfo.model_validate(t_to_dict(request)).model_dump(
                 exclude_none=True,
             )
+
+            if not insert_doc["robotModel"]:
+                raise HTTPException(400, "robotModel is required")
+
+            robot_models = read_json_file("data", "robot_models.json")
+
+            model_info = robot_models.get(insert_doc["robotModel"])
+
+            if not model_info:
+                raise HTTPException(400, "Invalid robotModel")
+
+            insert_doc["components"] = model_info["components"]
 
             res = await robot_info_col.find_one_and_update(
                 {},
@@ -92,7 +103,15 @@ class InfoService:
                 else t_to_dict(request)
             )
 
-            print("patch_doc >>>>", patch_doc, flush=True)
+            if patch_doc.get("robotModel"):
+                robot_models = read_json_file("data", "robot_models.json")
+
+                model_info = robot_models.get(patch_doc["robotModel"])
+
+                if not model_info:
+                    raise HTTPException(400, "Invalid robotModel")
+
+                patch_doc["components"] = model_info["components"]
 
             # patch_doc 에 들어있는 필드만 업데이트됨
             # 기존 DB 값은 손대지 않는다.
