@@ -38,7 +38,7 @@ class InfoService:
             model_service = model_details.get("be_service")
 
             if be_service is None or (
-                model_service and model_service.casefold() == be_service.casefold()
+                model_service and be_service.casefold() in model_service.casefold()
             ):
                 components = model_details.get("components", [])
                 all_components.update(components)
