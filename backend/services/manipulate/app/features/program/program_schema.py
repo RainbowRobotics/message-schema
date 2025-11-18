@@ -81,6 +81,7 @@ class Request_MoveLBAddPD(BaseModel):
 class Request_MoveLBRunPD(BaseModel):
     orientation: int
 
+
 class Request_MoveXBAddPD(BaseModel):
     target: MoveInputTarget
     speed: MoveInputSpeed
@@ -90,3 +91,5 @@ class Request_MoveXBAddPD(BaseModel):
 
 class Request_MoveXBRunPD(BaseModel):
     running_mode: int
+
+

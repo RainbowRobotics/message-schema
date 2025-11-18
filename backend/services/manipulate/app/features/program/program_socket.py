@@ -170,3 +170,5 @@ async def on_call_move_xb_run(data, robot_model: str):
     dict_data = t_to_dict(data)
     res = await program_service.call_move_xb_run(robot_model=robot_model, request=dict_data)
     return to_json(res)
+
+

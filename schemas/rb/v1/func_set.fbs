@@ -28,3 +28,14 @@ table Request_Set_Self_Collision_Para {
   dist_int:     float;
   dist_ext:     float;
 }
+
+table Request_Set_Joint_Impedance {
+  onoff:        int;
+  stiffness:    N_JOINT_f;
+  torquelimit:  N_JOINT_f;
+}
+
+table Request_Set_Free_Drive {
+  onoff:        int;
+  sensitivity:  float;
+}

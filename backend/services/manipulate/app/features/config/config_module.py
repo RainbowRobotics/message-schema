@@ -1,4 +1,6 @@
 from app.socket.socket_client import socket_client
+from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
+from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
 from rb_flat_buffers.IPC.N_JOINT_f import N_JOINT_fT
 from rb_flat_buffers.IPC.Request_CallConfigControlBox import Request_CallConfigControlBoxT
 from rb_flat_buffers.IPC.Request_CallConfigRobotArm import Request_CallConfigRobotArmT
@@ -15,6 +17,11 @@ from rb_flat_buffers.IPC.Request_Save_SideDin_SpecialFunc import Request_Save_Si
 from rb_flat_buffers.IPC.Request_Save_SideDout_SpecialFunc import Request_Save_SideDout_SpecialFuncT
 from rb_flat_buffers.IPC.Request_Save_Tool_List_Para import Request_Save_Tool_List_ParaT
 from rb_flat_buffers.IPC.Request_Save_User_Frame import Request_Save_User_FrameT
+from rb_flat_buffers.IPC.Request_Set_Free_Drive import Request_Set_Free_DriveT
+from rb_flat_buffers.IPC.Request_Set_Joint_Impedance import Request_Set_Joint_ImpedanceT
+from rb_flat_buffers.IPC.Request_Set_Out_Collision_Para import Request_Set_Out_Collision_ParaT
+from rb_flat_buffers.IPC.Request_Set_Self_Collision_Para import Request_Set_Self_Collision_ParaT
+from rb_flat_buffers.IPC.Request_Set_Shift import Request_Set_ShiftT
 from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_ListT
 from rb_flat_buffers.IPC.Request_Set_User_Frame import Request_Set_User_FrameT
 from rb_flat_buffers.IPC.Response_CallConfigControlBox import Response_CallConfigControlBoxT
@@ -37,6 +44,11 @@ from .config_schema import (
     Request_Save_SideDout_FunctionPD,
     Request_Save_Tool_List_ParameterPD,
     Request_Save_User_FramePD,
+    Request_Set_Free_DrivePD,
+    Request_Set_Joint_ImpedancePD,
+    Request_Set_Out_Collision_ParaPD,
+    Request_Set_Self_Collision_ParaPD,
+    Request_Set_ShiftPD,
     Request_Set_Tool_ListPD,
     Request_Set_User_FramePD,
     Response_CallConfigControlBoxPD,
@@ -396,3 +408,100 @@ class ConfigService(BaseService):
 
     def call_reset_outcoll(self, robot_model: str):
         pass
+
+
+    def set_shift(self, *, robot_model: str, request: Request_Set_ShiftPD):
+        target = t_to_dict(request.target)
+
+        req = Request_Set_ShiftT()
+
+        req.shiftNo = request.shift_no
+        req.shiftMode = request.shift_mode
+        req.target = MoveInput_TargetT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        req.target.tarValues = ni
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_shift",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+    
+    def set_out_collision_parameter(self, *, robot_model: str, request: Request_Set_Out_Collision_ParaPD):
+        req = Request_Set_Out_Collision_ParaT()
+
+        req.onoff = request.onoff
+        req.reactMode = request.react_mode
+        req.threshold = request.threshold
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_out_collision_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+
+    def set_self_collision_parameter(self, *, robot_model: str, request: Request_Set_Self_Collision_ParaPD):
+        req = Request_Set_Self_Collision_ParaT()
+
+        req.mode = request.mode
+        req.distInt = request.dist_int
+        req.distExt = request.dist_ext
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_self_collision_parameter",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+
+    def set_joint_impedance(self, *, robot_model: str, request: Request_Set_Joint_ImpedancePD):
+        req = Request_Set_Joint_ImpedanceT()
+
+        req.onoff = request.onoff
+
+        req.stiffness = N_JOINT_fT()
+        req.stiffness.f = request.stiffness.f
+        
+        req.torquelimit = N_JOINT_fT()
+        req.torquelimit.f = request.torquelimit.f
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_joint_impedance",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+
+
+    def set_free_drive(self, *, robot_model: str, request: Request_Set_Free_DrivePD):
+        req = Request_Set_Free_DriveT()
+
+        req.onoff = request.onoff
+        req.sensitivity = request.sensitivity
+
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/set_shift",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]

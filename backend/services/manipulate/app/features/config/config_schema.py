@@ -1,5 +1,14 @@
 from pydantic import BaseModel
-from rb_schemas.base import Vec3fPD
+from rb_schemas.base import (
+    NJointfPD,
+    Vec3fPD,
+)
+
+
+class MoveInputTarget(BaseModel):
+    tar_values: list[float]
+    tar_frame: int
+    tar_unit: int
 
 
 class ST_Box_ParaPD(BaseModel):
@@ -176,3 +185,32 @@ class Request_Save_Gravity_ParameterPD(BaseModel):
     gx: float
     gy: float
     gz: float
+
+
+class Request_Set_ShiftPD(BaseModel):
+    shift_no: int
+    shift_mode: int
+    target: MoveInputTarget
+
+
+class Request_Set_Out_Collision_ParaPD(BaseModel):
+    onoff: int
+    react_mode: int
+    threshold: float
+
+
+class Request_Set_Self_Collision_ParaPD(BaseModel):
+    mode: int
+    dist_int: float
+    dist_ext: float
+
+
+class Request_Set_Joint_ImpedancePD(BaseModel):
+    onoff: int
+    stiffness: NJointfPD
+    torquelimit: NJointfPD
+
+
+class Request_Set_Free_DrivePD(BaseModel):
+    onoff: int
+    sensitivity: float

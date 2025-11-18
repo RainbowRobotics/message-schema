@@ -1,6 +1,8 @@
+# mypy: disable-error-code=misc
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
+from rb_schemas.utility import Omit
 
 
 class RobotModelInfo(BaseModel):
@@ -45,3 +47,7 @@ class RobotInfoResponse(BaseModel):
 class Response_RobotURDFLinkMapPD(BaseModel):
     urdfFileName: str
     components: dict[str, ST_URDF_Link_Map_ComponentPD]
+    
+
+class Request_Create_Robot_InfoPD(Omit(RobotInfo, "components")):
+    pass

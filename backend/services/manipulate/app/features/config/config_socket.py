@@ -125,3 +125,44 @@ def on_save_gravity_parameter(data, robot_model: str):
 
     res = config_service.save_gravity_parameter(robot_model, request=dict_data)
     return to_json(res)
+
+
+
+@config_socket_router.on("{robot_model}/set_shift")
+async def on_set_shift(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_out_collision_parameter")
+async def on_set_out_collision_parameter(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_self_collision_parameter")
+async def on_set_self_collision_parameter(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_joint_impedance")
+async def on_set_joint_impedance(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+
+@config_socket_router.on("{robot_model}/set_free_drive")
+async def on_set_free_drive(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    
+    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    return to_json(res)
