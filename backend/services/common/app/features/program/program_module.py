@@ -718,7 +718,13 @@ class ProgramService(BaseService):
         tasks_docs = await tasks_col.find({"programId": program_id, "type": TaskType.MAIN}).to_list(
             length=None
         )
-        return tasks_docs
+
+        for doc in tasks_docs:
+            doc["taskId"] = str(doc.pop("_id"))
+
+        return {
+            "tasks": tasks_docs,
+        }
 
     async def get_sub_task_list(self, *, program_id: str, parent_task_id: str, db: MongoDB):
         """
@@ -733,7 +739,13 @@ class ProgramService(BaseService):
             .sort("order", 1)
             .to_list(length=None)
         )
-        return tasks_docs
+
+        for doc in tasks_docs:
+            doc["taskId"] = str(doc.pop("_id"))
+
+        return {
+            "tasks": tasks_docs,
+        }
 
     async def get_task_info(self, *, task_id: str, db: MongoDB):
         """
@@ -903,7 +915,7 @@ class ProgramService(BaseService):
 
         return {
             "program": program_doc,
-            "tasks": tasks_docs,
+            "mainTasks": tasks_docs,
         }
 
     async def get_program_list(
@@ -944,11 +956,7 @@ class ProgramService(BaseService):
         try:
             now = datetime.now(UTC)
 
-            program_doc = {
-                **t_to_dict(request),
-                "createdAt": now.isoformat(),
-                "updatedAt": now.isoformat(),
-            }
+            program_doc = Request_Create_ProgramPD.model_validate(t_to_dict(request)).model_dump()
 
             robot_info = await info_service.get_robot_info(db=db)
 
@@ -1012,17 +1020,10 @@ class ProgramService(BaseService):
         try:
             now = datetime.now(UTC)
 
-            program_doc = (
-                {
-                    **request.model_dump(exclude_none=True, exclude_unset=True),
-                    "updatedAt": now.isoformat(),
-                }
-                if hasattr(request, "model_dump")
-                else {
-                    **t_to_dict(request),
-                    "updatedAt": now.isoformat(),
-                }
+            program_doc = Request_Update_ProgramPD.model_validate(t_to_dict(request)).model_dump(
+                exclude_none=True, exclude_unset=True
             )
+            program_doc["updatedAt"] = now.isoformat()
 
             col = db["programs"]
 

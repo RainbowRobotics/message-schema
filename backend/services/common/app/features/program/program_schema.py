@@ -144,8 +144,8 @@ class Response_Delete_TasksPD(BaseModel):
 
 
 class Program_Base(BaseModel):
-    programId: PyObjectId
-    name: str
+    programId: str | None = Field(default=None)
+    name: str | None = Field(default=None)
     repeatCnt: int = Field(default=1)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
@@ -159,8 +159,7 @@ class Request_Get_Program_ListPD(BaseModel):
 
 class Response_Get_ProgramPD(BaseModel):
     program: Program_Base
-    tasks: list[Task_Base]
-    stepTree: list[Step_Tree_Base]
+    mainTasks: list[Task_Base]
 
 
 class Create_Program_With_TaskPD(
@@ -191,14 +190,11 @@ class Update_Program_With_TaskPD(
     model_config = ConfigDict(extra="allow")
 
 
-class Request_Create_ProgramPD(
-    Omit(Program_Base, "_id", "programId", "state", "createdAt", "updatedAt")
-):
-    name: str | None = Field(default=None)
-    repeatCnt: int | None = Field(default=None)
+class Request_Create_ProgramPD(Omit(Program_Base, "_id")):
+    pass
 
 
-class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt", "updatedAt")):
+class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt")):
     pass
 
 
