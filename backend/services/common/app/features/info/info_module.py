@@ -35,12 +35,13 @@ class InfoService:
         all_components = set()
 
         for model_details in robot_models.values():
-            if be_service is None or model_details.get("be_service") == be_service:
+            model_service = model_details.get("be_service")
+
+            if be_service is None or (model_service and model_service.casefold() == be_service.casefold()):
                 components = model_details.get("components", [])
                 all_components.update(components)
 
         return list(all_components)
-        # pass
 
     async def get_robot_info(self, *, db: MongoDB):
         robot_models = read_json_file("data", "robot_models.json")
@@ -59,13 +60,21 @@ class InfoService:
 
         return {"info": doc, "modelInfo": model_info}
 
-    def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+    async def insert_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
         """robot_info 컬렉션에 robot_info를 삽입한다."""
-        pass
+        
+        collection = db["robot_info"]
 
-    def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
+        robot_info_dict = robot_info.model_dump()
+        await collection.insert_one(robot_info_dict)
+
+    async def update_robot_info(self, *, db: MongoDB, robot_info: RobotInfo):
         """robot_info 컬렉션에 robot_info를 업데이트한다."""
-        pass
+        
+        collection = db["robot_info"]
+        robot_info_dict = robot_info.model_dump()
+        
+        await collection.update_one({}, {"$set": robot_info_dict}, upsert=True)
 
     async def get_cache_robot_info(self):
         return self._cache_robot_info
