@@ -16,3 +16,13 @@ async def get_robot_info(db: MongoDB):
 @info_router.get("/{robot_model}/robot-urdf-link-map", response_model=Response_RobotURDFLinkMapPD)
 async def get_robot_urdf_link_map(robot_model: str):
     return await info_service.get_robot_urdf_link_map(robot_model=robot_model)
+
+
+@info_router.get("/robot-category-list", response_model=list[str])
+async def get_robot_category_list(db: MongoDB):
+    return await info_service.get_robot_category_list(db=db)
+
+
+@info_router.get("/robot-component-list", response_model=list[str])
+async def get_robot_component_list(db: MongoDB, be_service: str | None = None):
+    return await info_service.get_robot_component_list(db=db, be_service=be_service)
