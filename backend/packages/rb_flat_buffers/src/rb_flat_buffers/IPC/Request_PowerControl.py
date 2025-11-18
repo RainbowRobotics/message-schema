@@ -4,6 +4,8 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
+from flatbuffers import encode
+from flatbuffers import number_types
 from typing import Any
 np = import_numpy()
 
@@ -32,8 +34,22 @@ class Request_PowerControl(object):
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
+    # Request_PowerControl
+    def Stoptime(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Request_PowerControl
+    def SyncServo(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
 def Request_PowerControlStart(builder: flatbuffers.Builder):
-    builder.StartObject(1)
+    builder.StartObject(3)
 
 def Start(builder: flatbuffers.Builder):
     Request_PowerControlStart(builder)
@@ -43,6 +59,18 @@ def Request_PowerControlAddPowerOption(builder: flatbuffers.Builder, powerOption
 
 def AddPowerOption(builder: flatbuffers.Builder, powerOption: int):
     Request_PowerControlAddPowerOption(builder, powerOption)
+
+def Request_PowerControlAddStoptime(builder: flatbuffers.Builder, stoptime: float):
+    builder.PrependFloat32Slot(1, stoptime, 0.0)
+
+def AddStoptime(builder: flatbuffers.Builder, stoptime: float):
+    Request_PowerControlAddStoptime(builder, stoptime)
+
+def Request_PowerControlAddSyncServo(builder: flatbuffers.Builder, syncServo: bool):
+    builder.PrependBoolSlot(2, syncServo, 0)
+
+def AddSyncServo(builder: flatbuffers.Builder, syncServo: bool):
+    Request_PowerControlAddSyncServo(builder, syncServo)
 
 def Request_PowerControlEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -57,8 +85,12 @@ class Request_PowerControlT(object):
     def __init__(
         self,
         powerOption = 0,
+        stoptime = 0.0,
+        syncServo = False,
     ):
         self.powerOption = powerOption  # type: int
+        self.stoptime = stoptime  # type: float
+        self.syncServo = syncServo  # type: bool
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -82,10 +114,14 @@ class Request_PowerControlT(object):
         if requestPowerControl is None:
             return
         self.powerOption = requestPowerControl.PowerOption()
+        self.stoptime = requestPowerControl.Stoptime()
+        self.syncServo = requestPowerControl.SyncServo()
 
     # Request_PowerControlT
     def Pack(self, builder):
         Request_PowerControlStart(builder)
         Request_PowerControlAddPowerOption(builder, self.powerOption)
+        Request_PowerControlAddStoptime(builder, self.stoptime)
+        Request_PowerControlAddSyncServo(builder, self.syncServo)
         requestPowerControl = Request_PowerControlEnd(builder)
         return requestPowerControl
