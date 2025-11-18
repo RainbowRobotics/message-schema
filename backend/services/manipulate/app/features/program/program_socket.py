@@ -152,3 +152,21 @@ async def on_call_move_lb_run(data, robot_model: str):
     dict_data = t_to_dict(data)
     res = await program_service.call_move_lb_run(robot_model=robot_model, request=dict_data)
     return to_json(res)
+
+@program_socket_router.on("{robot_model}/call_move_xb_clr")
+async def on_call_move_xb_clr(data, robot_model: str):
+    res = await program_service.call_move_xb_clr(robot_model=robot_model)
+
+    return to_json(res)
+
+@program_socket_router.on("{robot_model}/call_move_xb_add")
+async def on_call_move_xb_add(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    res = await program_service.call_move_xb_add(robot_model=robot_model, request=dict_data)
+    return to_json(res)
+
+@program_socket_router.on("{robot_model}/call_move_xb_run")
+async def on_call_move_xb_run(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    res = await program_service.call_move_xb_run(robot_model=robot_model, request=dict_data)
+    return to_json(res)

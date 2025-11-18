@@ -66,3 +66,17 @@ table Request_Move_LB_RUN {
     orientation:    int;
 }
 //---------------------------------------------------------------
+// Move XB
+//---------------------------------------------------------------
+table Request_Move_XB_CLR {
+}
+table Request_Move_XB_ADD {
+    target:         MoveInput_Target;
+    speed:          MoveInput_Speed;
+    type:           MoveInput_Type;
+    method:         int;
+}
+table Request_Move_XB_RUN {
+    running_mode:   int;
+}
+//---------------------------------------------------------------

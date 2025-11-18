@@ -18,6 +18,9 @@ from rb_flat_buffers.IPC.Request_Move_SmoothJogL import Request_Move_SmoothJogLT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Request_Move_TickJogJ import Request_Move_TickJogJT
 from rb_flat_buffers.IPC.Request_Move_TickJogL import Request_Move_TickJogLT
+from rb_flat_buffers.IPC.Request_Move_XB_ADD import Request_Move_XB_ADDT
+from rb_flat_buffers.IPC.Request_Move_XB_CLR import Request_Move_XB_CLRT
+from rb_flat_buffers.IPC.Request_Move_XB_RUN import Request_Move_XB_RUNT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
 from rb_modules.service import BaseService
 from rb_utils.parser import t_to_dict
@@ -29,6 +32,8 @@ from .program_schema import (
     Request_MoveLBRunPD,
     Request_MoveTickJogJPD,
     Request_MoveTickJogLPD,
+    Request_MoveXBAddPD,
+    Request_MoveXBRunPD,
 )
 
 zenoh_client = ZenohClient()
@@ -364,6 +369,68 @@ class ProgramService(BaseService):
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_move_lb_run",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        return res["dict_payload"]
+
+    def call_move_xb_clr(self, *, robot_model: str):
+        req = Request_Move_XB_CLRT()
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_clr",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=8,
+        )
+
+        return res["dict_payload"]
+    
+    def call_move_xb_add(self, *, robot_model: str, request: Request_MoveXBAddPD):
+        target = t_to_dict(request.target)
+        speed = t_to_dict(request.speed)
+        type = t_to_dict(request.type)
+
+        req = Request_Move_XB_ADDT()
+        req.target = MoveInput_TargetT()
+        req.speed = MoveInput_SpeedT()
+        req.type = MoveInput_TypeT()
+
+        ni = N_INPUT_fT()
+        ni.f = target["tar_values"]
+
+        req.target.tarValues = ni
+        req.target.tarFrame = target["tar_frame"]
+        req.target.tarUnit = target["tar_unit"]
+
+        req.speed.spdMode = speed["spd_mode"]
+        req.speed.spdVelPara = speed["spd_vel_para"]
+        req.speed.spdAccPara = speed["spd_acc_para"]
+
+        req.type.pntType = type["pnt_type"]
+        req.type.pntPara = type["pnt_para"]
+
+        req.method = request.method
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_add",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=256,
+        )
+
+        return res["dict_payload"]
+    
+    def call_move_xb_run(self, *, robot_model: str, request: Request_MoveXBRunPD):
+        running_mode = t_to_dict(request.running_mode)
+
+        req = Request_Move_XB_RUNT()
+        req.runningMode = running_mode
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_move_xb_run",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,
