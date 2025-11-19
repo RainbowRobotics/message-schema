@@ -156,13 +156,13 @@ async def set_shift(robot_model: str, request: Request_Set_ShiftPD):
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_out_collision_parameter", response_model=Response_ReturnValuePD)
+@config_router.post("/{robot_model}/set_out_collision_para", response_model=Response_ReturnValuePD)
 async def set_out_collision_parameter(robot_model: str, request: Request_Set_Out_Collision_ParaPD):
     res = config_service.set_out_collision_parameter(robot_model=robot_model, request=request)
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_self_collision_parameter", response_model=Response_ReturnValuePD)
+@config_router.post("/{robot_model}/set_self_collision_para", response_model=Response_ReturnValuePD)
 async def set_self_collision_parameter(robot_model: str, request: Request_Set_Self_Collision_ParaPD):
     res = config_service.set_self_collision_parameter(robot_model=robot_model, request=request)
     return JSONResponse(res)
@@ -174,7 +174,7 @@ async def set_joint_impedance(robot_model: str, request: Request_Set_Joint_Imped
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_free_drive", response_model=Response_ReturnValuePD)
-async def set_free_drive(robot_model: str, request: Request_Set_Free_DrivePD):
-    res = config_service.set_free_drive(robot_model=robot_model, request=request)
+@config_router.post("/{robot_model}/set_freedrive", response_model=Response_ReturnValuePD)
+async def set_freedrive(robot_model: str, request: Request_Set_Free_DrivePD):
+    res = config_service.set_freedrive(robot_model=robot_model, request=request)
     return JSONResponse(res)
