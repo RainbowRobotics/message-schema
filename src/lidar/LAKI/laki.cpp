@@ -167,6 +167,14 @@ void LAKI::grab_loop(int idx)
 
     is_connected[idx] = true;
     printf("[LAKI] start grab loop, %d\n", idx);
+    
+    // Reset timestamp tracking for this lidar index
+    static bool first_run[2] = {true, true};
+    if(first_run[idx])
+    {
+        log_info("LAKI[{}] grab_loop started, resetting timestamp tracking", idx);
+        first_run[idx] = false;
+    }
 
     while(grab_flag[idx])
     {
@@ -186,9 +194,8 @@ void LAKI::grab_loop(int idx)
 
         // time sync
         double pc_t = get_time();
-        // Convert timestamp from microseconds to seconds
-        double lidar_t = pack.dotcloud[0].timestamp * 1e-6;
-        log_debug("lidar: {}, pc_t: {}, lidar_t: {}", idx, pc_t, lidar_t);
+        // LAKI timestamp is in microseconds (NOT milliseconds like SICK)
+        double lidar_t = pack.dotcloud[0].timestamp * 1e-6; // microseconds to seconds
 
         if(is_sync[idx])
         {
@@ -210,7 +217,7 @@ void LAKI::grab_loop(int idx)
         int num_scan_point = pack.maxdots;
         if(num_scan_point <= 0)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 
@@ -254,16 +261,35 @@ void LAKI::grab_loop(int idx)
         // check
         if(idx0 == -1 || idx1 == -1 || idx0 == idx1)
         {
-            log_warn("lidar: {}, invalid mobile poses, pose_storage.size(): {}", idx, pose_storage.size());
-            if (!pose_storage.empty()) 
+            static int warn_count = 0;
+            static int last_logged_count = 0;
+            warn_count++;
+            
+            // Only log every 100 times or first 5 times to reduce spam
+            if(warn_count <= 5 || warn_count - last_logged_count >= 100)
             {
-                log_warn("  pose_storage time range: [{}, {}]", pose_storage.front().t, pose_storage.back().t);
-            } 
-            else 
-            {
-                log_warn("  pose_storage is empty");
+                last_logged_count = warn_count;
+                
+                log_warn("lidar: {}, invalid mobile poses [count: {}], pose_storage.size(): {}", idx, warn_count, pose_storage.size());
+                if (!pose_storage.empty()) 
+                {
+                    log_warn("  pose_storage time range: [{:.6f}, {:.6f}], span: {:.6f}s", 
+                             pose_storage.front().t, pose_storage.back().t, 
+                             pose_storage.back().t - pose_storage.front().t);
+                    
+                    double diff_t0_front = t0 - pose_storage.front().t;
+                    double diff_t0_back = t0 - pose_storage.back().t;
+                    
+                    log_warn("  t0 diff: front={:.6f}s, back={:.6f}s", diff_t0_front, diff_t0_back);
+                } 
+                log_warn("  t0: {:.6f}, t1: {:.6f}, time_span: {:.6f}s", t0, t1, t1 - t0);
+                log_warn("  idx0: {}, idx1: {}", idx0, idx1);
+                
+                if(idx0 == -1) log_warn("  -> idx0 not found (no pose before t0)");
+                if(idx1 == -1) log_warn("  -> idx1 not found (no pose after t1)");
+                if(idx0 == idx1 && idx0 != -1) log_warn("  -> idx0 == idx1 (poses too close)");
             }
-            log_warn("  t0: {}, t1: {}, idx0: {}, idx1: {}", t0, t1, idx0, idx1);
+            
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
@@ -272,16 +298,32 @@ void LAKI::grab_loop(int idx)
         std::vector<double> times;
         std::vector<double> reflects;
         std::vector<Eigen::Vector3d> pts;
+        
+        // Reserve space to avoid reallocation
+        times.reserve(num_scan_point / 2);
+        reflects.reserve(num_scan_point / 2);
+        pts.reserve(num_scan_point / 2);
 
-        double x_min = config->get_robot_size_x_min(); double x_max = config->get_robot_size_x_max();
-        double y_min = config->get_robot_size_y_min(); double y_max = config->get_robot_size_y_max();
+        // Cache config values (avoid repeated function calls)
+        const double x_min = config->get_robot_size_x_min();
+        const double x_max = config->get_robot_size_x_max();
+        const double y_min = config->get_robot_size_y_min();
+        const double y_max = config->get_robot_size_y_max();
+        const double min_range = config->get_lidar_2d_min_range();
+        const double max_range = config->get_lidar_2d_max_range();
+        
+        // Pre-extract rotation matrix components for faster computation
+        const double r00 = R_(0,0), r01 = R_(0,1), r02 = R_(0,2);
+        const double r10 = R_(1,0), r11 = R_(1,1), r12 = R_(1,2);
+        const double r20 = R_(2,0), r21 = R_(2,1), r22 = R_(2,2);
+        const double tx = t_(0), ty = t_(1), tz = t_(2);
 
         // parsing LAKI point cloud data
         for(int p = 0; p < num_scan_point; p++)
         {
             // dist filter (LAKI distance is in mm)
-            double dist = pack.dotcloud[p].distance / 1000.0; // mm to meter
-            if(dist < config->get_lidar_2d_min_range() || dist > config->get_lidar_2d_max_range())
+            const double dist = pack.dotcloud[p].distance * 0.001; // mm to meter (faster than division)
+            if(dist < min_range || dist > max_range)
             {
                 continue;
             }
@@ -289,47 +331,33 @@ void LAKI::grab_loop(int idx)
             // angle filter (LAKI angle is in 0.01 degree units, 0-36000)
             double deg = pack.dotcloud[p].angle * 0.01; // convert to degrees
             
-            // Debug: Log first few points to check angle orientation
-            if(p < 5 && cur_pts_num[idx] == 0)
-            {
-                log_debug("LAKI[{}] point {}: raw_angle={}, deg={}, dist={}", 
-                         idx, p, pack.dotcloud[p].angle, deg, dist);
-            }
-            
             // LAKI coordinate system: 0 degree is forward, increases counter-clockwise
             // Convert to standard coordinate: -180 to 180 range
             if(deg > 180.0)
             {
-                deg = deg - 360.0;
+                deg -= 360.0;
             }
+
+            const double rad = deg * D2R;
+            const double x = dist * std::cos(rad);
+            const double y = dist * std::sin(rad);
             
-            // Apply angle filter (same as SICK range after conversion)
-            //if((deg < -47.5 + angle_offset) || (deg > 227.5 - angle_offset))
-            //{
-            //    continue;
-            //}
-
-            double x = dist * std::cos(deg*D2R);
-            double y = dist * std::sin(deg*D2R);
-            if(!isfinite(x) || !isfinite(y))
+            // Fast transform: P = R * _P + t (unrolled matrix multiplication)
+            const double Px = r00 * x + r01 * y + tx;
+            const double Py = r10 * x + r11 * y + ty;
+            const double Pz = r20 * x + r21 * y + tz;
+            
+            // Robot body filter
+            if(Px > x_min && Px < x_max && Py > y_min && Py < y_max)
             {
                 continue;
             }
 
-            Eigen::Vector3d _P = Eigen::Vector3d(x, y, 0);
-            Eigen::Vector3d P = R_ * _P + t_;
-            if(P[0] > x_min && P[0] < x_max &&
-               P[1] > y_min && P[1] < y_max)
-            {
-                continue;
-            }
-
-            double t = t0 + time_increment*p;
-            double rssi = pack.dotcloud[p].rssi;
+            const double t = t0 + time_increment * p;
 
             times.push_back(t);
-            reflects.push_back(rssi);
-            pts.push_back(P);
+            reflects.push_back(pack.dotcloud[p].rssi);
+            pts.emplace_back(Px, Py, Pz);
         }
 
         cur_pts_num[idx] = (int)pts.size();
@@ -338,7 +366,6 @@ void LAKI::grab_loop(int idx)
         MOBILE_POSE mo;
         mo.t = t0;
         mo.pose = pose_storage[idx0].pose;
-        log_debug("front lidar t:{}, pose:{:.3f}, {:.3f}, {:.3f}", mo.t, mo.pose[0], mo.pose[1], mo.pose[2]*R2D);
 
         RAW_FRAME frm;
         frm.t0 = t0;
@@ -361,8 +388,6 @@ void LAKI::grab_loop(int idx)
             RAW_FRAME tmp;
             raw_que[idx].try_pop(tmp);
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     log_info("stop grab loop: {}", idx);
