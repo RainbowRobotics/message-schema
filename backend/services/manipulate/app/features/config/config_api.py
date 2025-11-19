@@ -40,9 +40,9 @@ async def config_toollist(robot_model: str):
     return JSONResponse(res)
 
 
-@config_router.post("/{robot_model}/set_toolist_num", response_model=Response_ReturnValuePD)
+@config_router.post("/{robot_model}/set_toollist_num", response_model=Response_ReturnValuePD)
 async def change_toollist(robot_model: str, *, request: Request_Set_Tool_ListPD):
-    res = config_service.set_toolist_num(robot_model, request=request)
+    res = config_service.set_toollist_num(robot_model, request=request)
     return JSONResponse(res)
 
 
