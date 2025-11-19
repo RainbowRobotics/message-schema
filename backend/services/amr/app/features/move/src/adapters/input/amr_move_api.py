@@ -1,9 +1,9 @@
 """
 [AMR 이동 API 어댑터]
 """
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from fastapi.responses import FileResponse
-from pathlib import Path
+
+from fastapi import APIRouter, BackgroundTasks
+
 from app.features.move.schema.move_api import (
     Request_Move_GoalPD,
     Request_Move_JogPD,
@@ -21,8 +21,7 @@ from app.features.move.schema.move_api import (
 from app.features.move.src.application.amr_move_service import (
     AmrMoveService,
 )
-from rb_utils.file import sanitize_filename
-import os
+
 amr_move_router = APIRouter(
     tags=["AMR 이동"],
     prefix="/slamnav/move",

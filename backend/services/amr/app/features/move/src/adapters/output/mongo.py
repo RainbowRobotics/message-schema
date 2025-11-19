@@ -7,6 +7,7 @@ from datetime import (
     date,
     datetime,
 )
+
 import rb_database.mongo_db as mongo_db
 from motor.motor_asyncio import (
     AsyncIOMotorCollection,

@@ -1,17 +1,13 @@
+include "common_file.fbs";
+
 namespace IPC;
 
-table Email_Attachment {
-    file_name: string;
-    file_content: bytes;
-    file_type: string;
-}
-
-table Send_Email {
+table EmailMessage {
     from_email: string;
     to_email: string;
     subject: string;
     body: string;
-    attachment: [Email_Attachment];
+    attachment: [FileMessage];
 }
 
-root_type Send_Email;
+root_type EmailMessage;

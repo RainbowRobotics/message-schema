@@ -12,6 +12,9 @@ from app.features.config.config_module import (
 from app.features.config.config_socket import (
     config_socket_router,
 )
+from app.features.email.adapter.input.email_api import (
+    email_router,
+)
 from app.features.info.info_api import (
     info_router,
 )
@@ -74,7 +77,7 @@ app = create_app(
         state_socket_router,
         info_socket_router,
     ],
-    api_routers=[state_router, config_router, whoami_router, info_router, program_router],
+    api_routers=[state_router, config_router, whoami_router, info_router, program_router, email_router],
     bg_tasks=[
         state_service.repeat_get_system_state,
         config_service.repeat_get_all_speedbar,

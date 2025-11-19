@@ -3,6 +3,7 @@
 """
 import asyncio
 import json
+import os
 from collections import (
     defaultdict,
 )
@@ -13,13 +14,13 @@ from datetime import (
     UTC,
     datetime,
 )
-from pathlib import Path
 from functools import wraps
+from pathlib import Path
 from typing import Any
-import os
-from fastapi import HTTPException, BackgroundTasks
-from fastapi.responses import FileResponse, JSONResponse
+
 import rb_database.mongo_db as mongo_db
+from fastapi import BackgroundTasks, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 from rb_modules.log import (
     rb_log,
 )
@@ -28,9 +29,6 @@ from rb_utils.date import (
 )
 from rb_utils.service_exception import (
     ServiceException,
-)
-from app.features.move.src.adapters.output.smtplib import (
-    MoveSmtpLibEmailAdapter,
 )
 
 from app.features.move.schema.move_api import (
@@ -49,6 +47,9 @@ from app.features.move.schema.move_api import (
 )
 from app.features.move.src.adapters.output.mongo import (
     MoveMongoDatabaseAdapter,
+)
+from app.features.move.src.adapters.output.smtplib import (
+    MoveSmtpLibEmailAdapter,
 )
 from app.features.move.src.adapters.output.zenoh import (
     SlamnavZenohAdapter,

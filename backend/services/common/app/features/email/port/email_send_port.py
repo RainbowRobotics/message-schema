@@ -5,9 +5,11 @@ from typing import (
     Protocol,
     runtime_checkable,
 )
+
 from app.features.email.domain.email import (
     EmailModel,
 )
+
 
 @runtime_checkable
 class EmailSendPort(Protocol):
