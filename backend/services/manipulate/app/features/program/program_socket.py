@@ -21,6 +21,13 @@ async def on_call_pause(data, robot_model: str):
     return to_json(res)
 
 
+@program_socket_router.on("{robot_model}/call_halt")
+async def on_call_halt(data, robot_model: str):
+    res = await program_service.call_halt(robot_model=robot_model)
+
+    return to_json(res)
+
+
 @program_socket_router.on("{robot_model}/call_speedbar")
 async def on_call_speedbar(data, robot_model: str):
     dict_data = t_to_dict(data)

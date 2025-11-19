@@ -24,3 +24,10 @@ class Request_Save_SideDout_SpecialFuncPD(BaseModel):
 class Request_Save_SideDin_FilterCountPD(BaseModel):
     port_num: int
     desired_count: int
+
+class Request_Flange_PowerPD(BaseModel):
+    desired_voltage: int
+
+class Request_Flange_Digital_OutPD(BaseModel):
+    port_num: int
+    desired_out: int

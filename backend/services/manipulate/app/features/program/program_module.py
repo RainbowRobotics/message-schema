@@ -3,6 +3,7 @@ from rb_flat_buffers.IPC.MoveInput_Speed import MoveInput_SpeedT
 from rb_flat_buffers.IPC.MoveInput_Target import MoveInput_TargetT
 from rb_flat_buffers.IPC.MoveInput_Type import MoveInput_TypeT
 from rb_flat_buffers.IPC.N_INPUT_f import N_INPUT_fT
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_MotionSpeedBar import Request_MotionSpeedBarT
 from rb_flat_buffers.IPC.Request_Move_J import Request_Move_JT
@@ -60,6 +61,18 @@ class ProgramService(BaseService):
 
         res = zenoh_client.query_one(
             f"{robot_model}/call_pause",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+
+        return res["dict_payload"]
+
+    async def call_halt(self, *, robot_model: str):
+        req = Request_MotionHaltT()
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_halt",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=2,
