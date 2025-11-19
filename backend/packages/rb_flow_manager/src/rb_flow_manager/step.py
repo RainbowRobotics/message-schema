@@ -19,6 +19,7 @@ class Step:
         step_id: str,
         name: str,
         variable: dict[str, Any] | None = None,
+        disabled: bool | None = None,
         func: Callable | None = None,
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
@@ -30,6 +31,7 @@ class Step:
         self.step_id = step_id
         self.name = name
         self.variable = variable
+        self.disabled = disabled
         self.func_name = func_name
         self.done_script = done_script
         self.children = children or []
@@ -47,6 +49,7 @@ class Step:
             name=d["name"],
             variable=d.get("variable"),
             func_name=d.get("funcName"),
+            disabled=d.get("disabled"),
             args=d.get("args") or {},
             done_script=d.get("doneScript"),
             children=[Step.from_dict(child) for child in (d.get("children") or [])],
@@ -56,6 +59,7 @@ class Step:
         return {
             "stepId": self.step_id,
             "name": self.name,
+            "disabled": self.disabled,
             "variable": self.variable,
             "funcName": self.func_name,
             "args": self.args,
@@ -68,6 +72,13 @@ class Step:
             pad = " " * n
             return "\n".join(pad + line if line else line for line in s.splitlines())
 
+        def format_dict(d: dict, indent: int) -> str:
+            pad = " " * 4
+            items = []
+            for k, v in d.items():
+                items.append(f"{pad}{repr(k)}: {repr(v)},")
+            return "{\n" + "\n".join(items) + "\n" + " " + "}"
+
         if self.children:
             inner_steps = [child.to_py_string(depth + 8) for child in self.children]
             inner_src = ",\n".join(inner_steps)
@@ -76,18 +87,32 @@ class Step:
         else:
             children_block = "[]"
 
+        variable_block = ""
+        if self.variable:
+            v = format_dict(self.variable, depth)
+            variable_block = _indent(f"variable={v},\n\n", depth + 4)
+
+        # args block
+        args_block = ""
+        if self.args:
+            a = format_dict(self.args, depth + 4)
+            args_block = _indent(f"args={a},\n\n", depth + 4)
+
         return (
             (" " * depth)
             + f"{self._class_name}(\n"
             + _indent(f"step_id={repr(self.step_id)},", depth + 4)
             + "\n"
-            + (_indent(f"variable={repr(self.variable)},\n", depth + 4) if self.variable else "")
+            + variable_block
             + _indent(f"name={repr(self.name)},", depth + 4)
             + "\n"
-            + _indent(f"func_name={repr(self.func_name)},", depth + 4)
-            + "\n"
-            + _indent(f"args={repr(self.args)},", depth + 4)
-            + "\n"
+            + (_indent(f"disabled={repr(self.disabled)},\n\n", depth + 4) if self.disabled else "")
+            + (
+                _indent(f"func_name={repr(self.func_name)},\n\n", depth + 4)
+                if self.func_name
+                else ""
+            )
+            + args_block
             + (
                 _indent(f"done_script={repr(self.done_script)},\n", depth + 4)
                 if self.done_script is not None
@@ -95,13 +120,13 @@ class Step:
             )
             + (" " * (depth + 4))
             + f"children={children_block},\n"
-            + "\n"
             + (" " * depth)
             + ")"
         )
 
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
+
         done_called = False
 
         ctx.push_args(self.args)
@@ -113,12 +138,12 @@ class Step:
             func_name = _resolve_arg_scope_value(self.func_name, ctx) if self.func_name else None
             args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
 
-            if fn is None and func_name:
+            if fn is None and func_name and not self.disabled:
                 fn = ctx.sdk_functions.get(func_name)
                 if fn is None:
                     raise StopExecution(f"unknown flow function: {func_name}")
 
-            if fn is not None:
+            if fn is not None and not self.disabled:
                 done_event = Event()
 
                 def done():

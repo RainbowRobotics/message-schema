@@ -64,10 +64,6 @@ def _execute_tree_in_process(
             stop_event=stop_event,
         )
 
-        print(f"Executing tree in process: {process_id}")
-        print(f"Step: {step.name}")
-        print(f"Repeat count: {repeat_count}")
-
         if repeat_count > 0:
             for i in range(repeat_count):
                 state_dict["current_repeat"] = i + 1

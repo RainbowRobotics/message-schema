@@ -760,7 +760,6 @@ class ProgramService(BaseService):
         """
         Task들을 생성하는 함수.
         """
-
         try:
             tasks_col = db["tasks"]
             program_col = db["programs"]
@@ -799,7 +798,10 @@ class ProgramService(BaseService):
                 raise HTTPException(
                     status_code=409, detail=f"Already exists scriptName: {exist_names}"
                 )
+        except Exception as e:
+            raise e
 
+        try:
             res = await tasks_col.insert_many(tasks)
 
             for task, inserted_id in zip(tasks, res.inserted_ids, strict=False):
@@ -812,9 +814,10 @@ class ProgramService(BaseService):
 
             return tasks
         except Exception as e:
-            await tasks_col.delete_many(
-                {"_id": {"$in": [ObjectId(task["taskId"]) for task in tasks]}}
-            )
+            if tasks:
+                await tasks_col.delete_many(
+                    {"_id": {"$in": [ObjectId(task.get("taskId")) for task in tasks]}}
+                )
             raise e
 
     async def update_tasks(self, *, request: Request_Update_Multiple_TaskPD, db: MongoDB):
@@ -899,23 +902,47 @@ class ProgramService(BaseService):
 
         program_col = db["programs"]
         tasks_col = db["tasks"]
+        steps_col = db["steps"]
+        robot_info_col = db["robot_info"]
+
         program_doc = await program_col.find_one({"_id": ObjectId(program_id)})
 
         if not program_doc:
-            raise HTTPException(status_code=400, detail="Program not found")
+            robot_info_doc = await robot_info_col.find_one({})
+
+            if robot_info_doc:
+                await robot_info_col.update_one(
+                    {"programId": program_id}, {"$set": {"programId": None}}
+                )
+
+            program_doc = dict(RobotInfo(programId=program_id))
+
+            return {
+                "program": None,
+                "mainTasks": None,
+                "allSteps": None,
+            }
 
         program_doc["programId"] = str(program_doc.pop("_id"))
 
-        tasks_docs = await tasks_col.find({"programId": program_id, "type": TaskType.MAIN}).to_list(
-            length=None
-        )
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
 
         for doc in tasks_docs:
             doc["taskId"] = str(doc.pop("_id"))
 
+        main_tasks_docs = [doc for doc in tasks_docs if doc["type"] == TaskType.MAIN]
+
+        all_steps: dict[str, list[dict]] = {}
+
+        for doc in tasks_docs:
+            steps_docs = await steps_col.find({"taskId": doc["taskId"]}).to_list(length=None)
+            steps_tree = self.build_step_tree(steps_docs)
+            all_steps[doc["taskId"]] = steps_tree
+
         return {
             "program": program_doc,
-            "mainTasks": tasks_docs,
+            "mainTasks": main_tasks_docs,
+            "allSteps": all_steps,
         }
 
     async def get_program_list(
@@ -953,26 +980,27 @@ class ProgramService(BaseService):
         Program과 Task를 동시에 생성하는 함수.
         """
 
+        now = datetime.now(UTC)
+
+        program_doc = Request_Create_ProgramPD.model_validate(t_to_dict(request)).model_dump()
+
+        robot_info = await info_service.get_robot_info(db=db)
+
+        components = robot_info["info"]["components"]
+
+        if components is None or len(components) == 0:
+            raise HTTPException(
+                status_code=400, detail="Please enter your robot information first."
+            )
+
+        program_col = db["programs"]
+
+        find_doc = await program_col.find_one({"name": program_doc["name"]})
+
+        if find_doc:
+            raise HTTPException(status_code=400, detail="Program already exists")
+
         try:
-            now = datetime.now(UTC)
-
-            program_doc = Request_Create_ProgramPD.model_validate(t_to_dict(request)).model_dump()
-
-            robot_info = await info_service.get_robot_info(db=db)
-
-            components = robot_info["info"]["components"]
-
-            if components is None or len(components) == 0:
-                raise HTTPException(
-                    status_code=400, detail="Please enter your robot information first."
-                )
-
-            program_col = db["programs"]
-
-            find_doc = await program_col.find_one({"name": program_doc["name"]})
-
-            if find_doc:
-                raise HTTPException(status_code=400, detail="Program already exists")
 
             program_res = await program_col.insert_one(program_doc)
 
@@ -1003,14 +1031,22 @@ class ProgramService(BaseService):
                 db=db,
             )
 
-        except Exception as e:
-            await program_col.delete_one({"_id": program_res.inserted_id})
-            raise e
+            all_steps: dict[str, list[dict]] = {}
 
-        return {
-            "program": find_program_doc,
-            "tasks": tasks_res,
-        }
+            for task in tasks_res:
+                all_steps[task["taskId"]] = []
+
+            return {
+                "program": find_program_doc,
+                "mainTasks": [task for task in tasks_res if task["type"] == TaskType.MAIN],
+                "allSteps": all_steps,
+            }
+
+        except Exception as e:
+            if program_res:
+                await program_col.delete_one({"_id": program_res.inserted_id})
+
+            raise e
 
     async def update_program(self, *, request: Request_Update_ProgramPD, db: MongoDB):
         """

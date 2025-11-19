@@ -81,10 +81,12 @@ async def get_main_task_list(program_id: str, db: MongoDB):
 
 
 @program_router.get(
-    "/program/sub-tasks/{program_id}/{task_id}", response_model=Response_Get_Task_ListPD
+    "/program/sub-tasks/{program_id}/{parent_task_id}", response_model=Response_Get_Task_ListPD
 )
-async def get_sub_task_list(program_id: str, task_id: str, db: MongoDB):
-    res = await program_service.get_sub_task_list(program_id=program_id, task_id=task_id, db=db)
+async def get_sub_task_list(program_id: str, parent_task_id: str, db: MongoDB):
+    res = await program_service.get_sub_task_list(
+        program_id=program_id, parent_task_id=parent_task_id, db=db
+    )
     return JSONResponse(res)
 
 

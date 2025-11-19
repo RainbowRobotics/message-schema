@@ -158,8 +158,9 @@ class Request_Get_Program_ListPD(BaseModel):
 
 
 class Response_Get_ProgramPD(BaseModel):
-    program: Program_Base
-    mainTasks: list[Task_Base]
+    program: Program_Base | None
+    mainTasks: list[Task_Base] | None
+    allSteps: dict[str, list[Step_Tree_Base]] | None
 
 
 class Create_Program_With_TaskPD(
@@ -200,7 +201,8 @@ class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt")):
 
 class Response_Create_Program_And_TasksPD(BaseModel):
     program: Program_Base
-    tasks: list[Task_Base]
+    mainTasks: list[Task_Base]
+    allSteps: dict[str, list[Step_Tree_Base]]
 
 
 class Response_Update_ProgramPD(BaseModel):
