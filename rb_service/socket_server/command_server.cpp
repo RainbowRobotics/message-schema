@@ -151,13 +151,28 @@ namespace rb_socket_command_server {
                 // -----------------------------------------------------------------------
                 ADD_CMD_HANDLER("call_side_dout", {
                     if (a.size() == 2){
-                        return {rb_system::Set_Digital_Output(std::stoi(a[0]), std::stoi(a[1])), ""};
+                        return {rb_system::Set_Box_Digital_Output(std::stoi(a[0]), std::stoi(a[1])), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
                 ADD_CMD_HANDLER("call_side_aout", {
                     if (a.size() == 2){
-                        return {rb_system::Set_Analog_Output(std::stoi(a[0]), std::stof(a[1])), ""};
+                        return {rb_system::Set_Box_Analog_Output(std::stoi(a[0]), std::stof(a[1])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                // -----------------------------------------------------------------------
+                // Flage
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("call_flange_power", {
+                    if (a.size() == 1){
+                        return {rb_system::Set_Flange_Power(std::stoi(a[0])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_flange_dout", {
+                    if (a.size() == 2){
+                        return {rb_system::Set_Flange_Digital_Output(std::stoi(a[0]), std::stoi(a[1])), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
@@ -214,6 +229,12 @@ namespace rb_socket_command_server {
                 ADD_CMD_HANDLER("call_reset_outcoll", {
                     if (a.size() == 0){
                         return {rb_system::Call_Reset_Out_Coll(), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_halt", {
+                    if (a.size() == 0){
+                        return {rb_system::Call_Halt(), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
@@ -315,15 +336,22 @@ namespace rb_socket_command_server {
                             input_name = a[1];
                         }
                         GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(input_option, input_name);
-                        if(sys_ret.validity == 1){
+                        if(sys_ret.type != GET_SYS_DATA_NO_EXIST){
                             // 성공
                             std::string data_str = "";
-                            for(int i = 0; i < sys_ret.payload_length; ++i){
-                                data_str += std::to_string(sys_ret.payload[i]);;
-                                if(i != (sys_ret.payload_length -1)){
-                                    data_str += ",";
+                            if(sys_ret.type == GET_SYS_DATA_NUMBER){
+                                data_str = std::to_string(sys_ret.payload_num);
+                            }else if(sys_ret.type == GET_SYS_DATA_ARRAY){
+                                for(int i = 0; i < sys_ret.payload_arr_length; ++i){
+                                    data_str += std::to_string(sys_ret.payload_arr[i]);;
+                                    if(i != (sys_ret.payload_arr_length -1)){
+                                        data_str += ",";
+                                    }
                                 }
+                            }else if(sys_ret.type == GET_SYS_DATA_STRING){
+                                data_str = sys_ret.payload_str;
                             }
+                            
                             return {-1, data_str}; // 성공 코드
                         }else{
                             // 실패
@@ -390,6 +418,15 @@ namespace rb_socket_command_server {
                         float vel_para = std::stof(a[NO_OF_CARTE]);
                         float acc_para = std::stof(a[NO_OF_CARTE + 1]);
                         return {rb_motion::Start_Motion_L(input, vel_para, acc_para, spd_mode), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                // -----------------------------------------------------------------------
+                // Just for Testing
+                // -----------------------------------------------------------------------
+                ADD_CMD_HANDLER("testtesttest", {
+                    if (a.size() == 0){
+                        return {rb_system::TestTestTest(), ""};
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 })

@@ -674,7 +674,7 @@ namespace rb_system {
                 }
 
                 if(temp_out >= 0){
-                    Set_Digital_Output(i, temp_out);
+                    Set_Box_Digital_Output(i, temp_out);
                 }
             }
 
@@ -1251,6 +1251,17 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
+    int Call_Halt(){
+        rb_motion::Set_Motion_Mode(rb_motion::MotionMode::MOVE_NONE);
+        flag_collision_out_occur = false;
+        flag_collision_self_occur = false;
+        flag_is_break = false;
+        flag_is_pause = false;
+        flag_direct_teaching = false;
+        flag_joint_impedance_mode = false;
+        flag_sw_switch_free_drive = false;
+        return MSG_OK;
+    }
     int Set_MoveSpeedBar(double alpha){
         _sys_timescale[(int)SystemTimeScaler::SPEEDBAR].input = rb_math::saturation_L_and_U(alpha, 0.0, 1.0);
         return MSG_OK;
@@ -1445,7 +1456,7 @@ namespace rb_system {
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
     }
     
-    int Set_Digital_Output(int p_num, unsigned int value){
+    int Set_Box_Digital_Output(int p_num, unsigned int value){
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
@@ -1459,8 +1470,7 @@ namespace rb_system {
         }
         return MSG_OK;
     }
-
-    int Set_Analog_Output(int p_num, float value){
+    int Set_Box_Analog_Output(int p_num, float value){
         if(p_num >= NO_OF_AOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
         }
@@ -1471,6 +1481,39 @@ namespace rb_system {
             }
         }else{
             _gv_Handler_Side->Set_Aout(p_num, value);
+        }
+        return MSG_OK;
+    }
+
+    int Set_Flange_Power(int desired_voltage){
+        if(desired_voltage > 0 && desired_voltage != 12 && desired_voltage != 24){
+            return MSG_DESIRED_VALUE_IS_OVER_BOUND;
+        }
+
+        if(!flag_connection_components[NO_OF_JOINT]){
+            return MSG_SYSTEM_THIS_FUNC_IS_AVAIL_WHEN_POWER_ENGAGED;
+        }
+
+        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdPowerControl(24));
+        return MSG_OK;
+    }
+    int Set_Flange_Digital_Output(int p_num, int value){
+        if(p_num >= TFB_NUM_DOUT){
+            return MSG_DESIRED_PORT_IS_OVER_BOUND;
+        }
+
+        if(!flag_connection_components[NO_OF_JOINT]){
+            return MSG_SYSTEM_THIS_FUNC_IS_AVAIL_WHEN_POWER_ENGAGED;
+        }
+
+        if(value > 0 && value != 1) value = 0;
+
+        if(p_num < 0){
+            for(unsigned int i = 0; i < TFB_NUM_DOUT; ++i){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdDigitalOutput_Single(i, value));
+            }
+        }else{
+            _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdDigitalOutput_Single(p_num, value));
         }
         return MSG_OK;
     }
@@ -1839,37 +1882,39 @@ namespace rb_system {
 
     GET_SYSTEM_DATA_RET Get_System_Data(int option, std::string data_name){
         GET_SYSTEM_DATA_RET ret;
-        ret.validity = 0;
-        ret.payload_length = 0;
+        ret.type = GET_SYS_DATA_NO_EXIST;
+        ret.payload_num = 0;
+        ret.payload_arr_length = 0;
         for(int i = 0; i < 32; ++i){
-            ret.payload[i] = 0.0;
+            ret.payload_arr[i] = 0.0;
         }
+        ret.payload_str = "";
 
         (void)option;
         if(data_name == "RB_JOINT_REF"){
             for(int i = 0; i < NO_OF_JOINT; i++){
-                ret.payload[i] = rb_motion::Get_Wrapper_J()[i];
+                ret.payload_arr[i] = rb_motion::Get_Wrapper_J()[i];
             }
-            ret.payload_length = NO_OF_JOINT;
-            ret.validity = 1;
+            ret.payload_arr_length = NO_OF_JOINT;
+            ret.type = GET_SYS_DATA_ARRAY;
         }else if(data_name == "RB_JOINT_ENC"){
             for(int i = 0; i < NO_OF_JOINT; i++){
-                ret.payload[i] = rb_system::Get_Motor_Encoder()[i];
+                ret.payload_arr[i] = rb_system::Get_Motor_Encoder()[i];
             }
-            ret.payload_length = NO_OF_JOINT;
-            ret.validity = 1;
+            ret.payload_arr_length = NO_OF_JOINT;
+            ret.type = GET_SYS_DATA_ARRAY;
         }else if(data_name == "RB_POINT_REF"){
             for(int i = 0; i< NO_OF_CARTE; i++){
-                ret.payload[i] = rb_motion::Get_Wrapper_X()[i];
+                ret.payload_arr[i] = rb_motion::Get_Wrapper_X()[i];
             }
-            ret.payload_length = NO_OF_CARTE;
-            ret.validity = 1;
+            ret.payload_arr_length = NO_OF_CARTE;
+            ret.type = GET_SYS_DATA_ARRAY;
         }else if(data_name == "RB_POINT_ENC"){
             for(int i = 0; i< NO_OF_CARTE; i++){
-                ret.payload[i] = rb_motion::Get_Wrapper_X()[i];
+                ret.payload_arr[i] = rb_motion::Get_Wrapper_X()[i];
             }
-            ret.payload_length = NO_OF_CARTE;
-            ret.validity = 1;
+            ret.payload_arr_length = NO_OF_CARTE;
+            ret.type = GET_SYS_DATA_ARRAY;
         }
 
         return ret;
@@ -2186,7 +2231,26 @@ namespace rb_system {
         
     }
 
-    ;
+    int TestTestTest(){
+        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdPowerControl(24));
+
+        std::this_thread::sleep_for(1000ms);
+        _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdGMbus_Init(0, 115200, 0));
+        std::this_thread::sleep_for(1000ms);
+        for(int k = 0; k < 3; k++){
+            for(int f = 0; f < 6; f++){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdGMbus_Write_Single(1, 6, 1486 + 2 *f, 1000));
+                std::this_thread::sleep_for(10ms);
+            }
+            std::this_thread::sleep_for(1000ms);
+            for(int f = 0; f < 6; f++){
+                _gv_Handler_Lan->CAN_writeData(_gv_Handler_Toolflange->CmdGMbus_Write_Single(1, 6, 1486 + 2 *f, 0));
+                std::this_thread::sleep_for(10ms);
+            }
+            std::this_thread::sleep_for(1000ms);
+        }
+        return MSG_OK;
+    }
 
 }
 

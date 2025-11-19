@@ -30,11 +30,13 @@ struct tINFO{
 struct tCANS{
     int             CAN_CH;
     int             CAN_ID_CMD;
+    int             CAN_ID_GMBUS_SET;
+    int             CAN_ID_GMBUS_WRITE;
     int             CAN_ID_GYR;
     int             CAN_ID_ACC;
     int             CAN_ID_485;
-    int             CAN_ID_MBS;
-    int             CAN_ID_GMB;
+    int             CAN_ID_MBS_LEGACY_RX;
+    int             CAN_ID_GMBUS_READ_SINGLE;
     int             CAN_ID_PAR;
     int             CAN_ID_GEN;
     int             CAN_ID_BOOT;   
@@ -68,7 +70,17 @@ public:
     tGENS Get_GeneralData();
 
     CAN_MSG CmdRequestVersion();
+    CAN_MSG CmdPowerControl(int voltage);
+    CAN_MSG CmdDigitalOutput_Single(int port, int onoff);
+    CAN_MSG CmdDigitalOutput_Multi(int ch0, int ch1);
 
+    CAN_MSG CmdGMbus_Init(unsigned int parity, unsigned int buadrate, int readFrequncy);
+    CAN_MSG CmdGMbus_Read_List_Clear();
+    CAN_MSG CmdGMbus_Read_List_Add(unsigned int target_id, unsigned int target_fc, unsigned int target_dlc, unsigned int target_address);
+    CAN_MSG CmdGMbus_Read_Single(unsigned int target_id, unsigned int target_fc, unsigned int target_dlc, unsigned int target_address, unsigned int timeout_cnt);
+    CAN_MSG CmdGMbus_Write_Single(unsigned int target_id, unsigned int target_fc, unsigned int target_address, unsigned int target_data);
+    CAN_MSG CmdGMbus_Write_Multi(unsigned int target_id, unsigned int target_fc, unsigned int target_address, unsigned int target_data_0, unsigned int target_data_1);
+    
 
 private:
     tCANS       cans;

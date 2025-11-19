@@ -16,4 +16,6 @@ table Request_MotionResume {
 table Request_MotionResetOutColl {
 }
 
+table Request_MotionHalt {
+}
 

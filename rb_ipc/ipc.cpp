@@ -18,6 +18,7 @@
 #include "comm_generated/func_config_generated.h"
 #include "comm_generated/func_arm_generated.h"
 #include "comm_generated/func_box_generated.h"
+#include "comm_generated/func_flage_generated.h"
 #include "comm_generated/func_set_generated.h"
 #include "comm_generated/func_get_generated.h"
 
@@ -188,10 +189,19 @@ namespace rb_ipc {
                 return_int = rb_system::Save_Box_FilterCount_Din(req->port_num(), req->desired_count());
             });
             ADD_SERVE_SIMPLE("call_side_dout", IPC::Request_SideDout_General, IPC::Response_Functions, {
-                return_int = rb_system::Set_Digital_Output(req->port_num(), req->desired_out());
+                return_int = rb_system::Set_Box_Digital_Output(req->port_num(), req->desired_out());
             });
             ADD_SERVE_SIMPLE("call_side_aout", IPC::Request_SideAout_General, IPC::Response_Functions, {
-                return_int = rb_system::Set_Analog_Output(req->port_num(), req->desired_voltage());
+                return_int = rb_system::Set_Box_Analog_Output(req->port_num(), req->desired_voltage());
+            });
+            // -----------------------------------------------------------------------
+            // Flange
+            // -----------------------------------------------------------------------
+            ADD_SERVE_SIMPLE("call_flange_power", IPC::Request_Flange_Power, IPC::Response_Functions, {
+                return_int = rb_system::Set_Flange_Power(req->desired_voltage());
+            });
+            ADD_SERVE_SIMPLE("call_flange_dout", IPC::Request_Flange_Digital_Out, IPC::Response_Functions, {
+                return_int = rb_system::Set_Flange_Digital_Output(req->port_num(), req->desired_out());
             });
             // -----------------------------------------------------------------------
             // Servo
@@ -223,6 +233,9 @@ namespace rb_ipc {
             });
             ADD_SERVE_SIMPLE("call_reset_outcoll", IPC::Request_MotionResetOutColl, IPC::Response_Functions, {
                 return_int = rb_system::Call_Reset_Out_Coll();
+            });
+            ADD_SERVE_SIMPLE("call_halt", IPC::Request_MotionHalt, IPC::Response_Functions, {
+                return_int = rb_system::Call_Halt();
             });
             
             // -----------------------------------------------------------------------
@@ -453,22 +466,35 @@ namespace rb_ipc {
                 GET_SYSTEM_DATA_RET sys_ret = rb_system::Get_System_Data(req->option(), req->name()->c_str());
 
                 int return_valid = 0;
+                int return_type = 0;
+                float return_num = 0.0f;
                 std::array<float, 32> return_arr;
                 for(int i = 0; i < 32; i++){
                     return_arr[i] = 0.0f;
                 }
+                std::string return_str = "";
 
-                if(sys_ret.validity == 1){
+                if(sys_ret.type != GET_SYS_DATA_NO_EXIST){
                     return_valid = 1;
-                    for(int i = 0; i < sys_ret.payload_length; ++i){
-                        return_arr[i] = sys_ret.payload[i];
-                    }
+                    return_type = sys_ret.type;
+
+                    if(sys_ret.type == GET_SYS_DATA_NUMBER){
+                        return_num = sys_ret.payload_num;
+                    }else if(sys_ret.type == GET_SYS_DATA_ARRAY){
+                        for(int i = 0; i < sys_ret.payload_arr_length; ++i){
+                            return_arr[i] = sys_ret.payload_arr[i];
+                        }
+                    }else if(sys_ret.type == GET_SYS_DATA_STRING){
+                        return_str = sys_ret.payload_str;
+                    }                    
                 }
 
                 IPC::Response_Get_Core_DataT core_data_T;
                 core_data_T.valid = return_valid;
-                core_data_T.type = 1;
+                core_data_T.type = return_type;
+                core_data_T.payload_num = return_num;
                 core_data_T.payload_arr = std::make_unique<IPC::FloatArray32>(::flatbuffers::span<const float, 32>(return_arr.data(), 32));
+                core_data_T.payload_str = return_str;
                 return IPC::Response_Get_Core_Data::Pack(fbb, &core_data_T);
             });
 

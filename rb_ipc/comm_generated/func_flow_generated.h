@@ -34,6 +34,10 @@ struct Request_MotionResetOutColl;
 struct Request_MotionResetOutCollBuilder;
 struct Request_MotionResetOutCollT;
 
+struct Request_MotionHalt;
+struct Request_MotionHaltBuilder;
+struct Request_MotionHaltT;
+
 struct Request_MotionSpeedBarT : public ::flatbuffers::NativeTable {
   typedef Request_MotionSpeedBar TableType;
   float alpha = 0.0f;
@@ -203,6 +207,45 @@ inline ::flatbuffers::Offset<Request_MotionResetOutColl> CreateRequest_MotionRes
 
 ::flatbuffers::Offset<Request_MotionResetOutColl> CreateRequest_MotionResetOutColl(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionResetOutCollT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_MotionHaltT : public ::flatbuffers::NativeTable {
+  typedef Request_MotionHalt TableType;
+};
+
+struct Request_MotionHalt FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_MotionHaltT NativeTableType;
+  typedef Request_MotionHaltBuilder Builder;
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+  Request_MotionHaltT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_MotionHaltT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_MotionHalt> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionHaltT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_MotionHaltBuilder {
+  typedef Request_MotionHalt Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit Request_MotionHaltBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_MotionHalt> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_MotionHalt>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  Request_MotionHaltBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionHaltT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_MotionSpeedBarT *Request_MotionSpeedBar::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_MotionSpeedBarT>(new Request_MotionSpeedBarT());
   UnPackTo(_o.get(), _resolver);
@@ -295,6 +338,29 @@ inline ::flatbuffers::Offset<Request_MotionResetOutColl> CreateRequest_MotionRes
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_MotionResetOutCollT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   return IPC::CreateRequest_MotionResetOutColl(
+      _fbb);
+}
+
+inline Request_MotionHaltT *Request_MotionHalt::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_MotionHaltT>(new Request_MotionHaltT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_MotionHalt::UnPackTo(Request_MotionHaltT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+}
+
+inline ::flatbuffers::Offset<Request_MotionHalt> Request_MotionHalt::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionHaltT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_MotionHalt(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionHaltT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_MotionHaltT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  return IPC::CreateRequest_MotionHalt(
       _fbb);
 }
 

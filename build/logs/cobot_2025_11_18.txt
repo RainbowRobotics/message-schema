@@ -1,0 +1,102 @@
+I 14:52:37.280   [MAIN]         System Version: 1.0.0
+I 14:52:38.291   [LAN2CAN]      Succeed to create socket
+I 14:52:38.793   [DAEMON]       Succeed to start read thread
+I 14:52:38.793   [DAEMON]       Succeed to start real-time thread
+I 14:52:42.307   [MAIN]         SYSTEM STARTING
+I 14:55:32.738   [MAIN]         System Version: 1.0.0
+I 14:55:33.748   [LAN2CAN]      Succeed to create socket
+I 14:55:34.251   [DAEMON]       Succeed to start read thread
+I 14:55:34.251   [DAEMON]       Succeed to start real-time thread
+I 14:55:37.763   [MAIN]         SYSTEM STARTING
+W 14:58:12.534   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 14:58:12.545   [SYSTEM]       Servo Call: 1/1
+I 14:58:12.545   [SYSTEM]       ServoState: 0
+W 14:58:12.545   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 14:58:25.219   [SYSTEM]       Servo Call: 1/1
+I 14:58:25.219   [SYSTEM]       ServoState: 0
+W 14:58:25.219   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+W 14:58:33.551   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 14:58:33.555   [SYSTEM]       Servo Call: 1/1
+I 14:58:33.555   [SYSTEM]       ServoState: 0
+W 14:58:33.555   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 14:59:49.167   [MOTION]       Motion Mode Changed: 0->2
+E 14:59:49.170   [MOTION]       IK ERR ... !!! 5
+E 14:59:49.170   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 14:59:49.170   [MOTION]       Motion-Ik Problem
+I 14:59:49.170   [MOTION]       Motion Mode Changed: 2->0
+I 14:59:55.487   [MOTION]       Motion Mode Changed: 0->2
+E 14:59:55.490   [MOTION]       IK ERR ... !!! 5
+E 14:59:55.490   [MOTION]       MSG:317/MSG_MOVE_RUNTIME_TERMINATE_IK_ERR
+E 14:59:55.490   [MOTION]       Motion-Ik Problem
+I 14:59:55.490   [MOTION]       Motion Mode Changed: 2->0
+I 15:12:17.737   [MOTION]       Motion Mode Changed: 0->5
+I 15:12:17.740   [MOTION]       Motion-Time Done
+I 15:12:17.740   [MOTION]       Motion Mode Changed: 5->0
+I 15:20:52.267   [MAIN]         System Version: 1.0.0
+I 15:20:53.278   [LAN2CAN]      Succeed to create socket
+I 15:20:53.781   [DAEMON]       Succeed to start read thread
+I 15:20:53.781   [DAEMON]       Succeed to start real-time thread
+I 15:20:57.294   [MAIN]         SYSTEM STARTING
+I 16:30:59.244   [MOTION]       Motion Mode Changed: 0->1
+I 16:30:59.255   [MOTION]       Motion-Time Done
+I 16:30:59.255   [MOTION]       Motion Mode Changed: 1->0
+I 16:30:59.282   [MOTION]       Motion Mode Changed: 0->1
+I 16:31:00.209   [MOTION]       Motion-Time Done
+I 16:31:00.209   [MOTION]       Motion Mode Changed: 1->0
+I 16:31:15.520   [MOTION]       Motion Mode Changed: 0->1
+I 16:31:16.447   [MOTION]       Motion-Time Done
+I 16:31:16.447   [MOTION]       Motion Mode Changed: 1->0
+I 16:31:16.495   [MOTION]       Motion Mode Changed: 0->1
+I 16:31:17.423   [MOTION]       Motion-Time Done
+I 16:31:17.423   [MOTION]       Motion Mode Changed: 1->0
+W 16:45:55.730   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 16:45:55.731   [SYSTEM]       Servo Call: 1/1
+I 16:45:55.731   [SYSTEM]       ServoState: 0
+W 16:45:55.731   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+W 16:48:38.154   [MOTION]       MSG:301/MSG_MOVE_POINT_NUM_ERR
+I 16:56:15.111   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:16.039   [MOTION]       Motion-Time Done
+I 16:56:16.039   [MOTION]       Motion Mode Changed: 1->0
+I 16:56:16.084   [MOTION]       Motion Mode Changed: 0->1
+I 16:56:17.011   [MOTION]       Motion-Time Done
+I 16:56:17.011   [MOTION]       Motion Mode Changed: 1->0
+I 16:57:15.590   [MOTION]       Motion Mode Changed: 0->2
+I 16:57:17.939   [MOTION]       Motion Mode Changed: 2->0
+W 16:57:17.939   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_TOOL_OCCUR
+I 16:57:34.426   [MOTION]       Motion Mode Changed: 0->2
+I 16:57:34.487   [MOTION]       Motion Mode Changed: 2->0
+W 16:57:34.487   [SYSTEM]       MSG:130/MSG_SYSTEM_SELF_COLL_ARM_TOOL_OCCUR
+I 16:59:08.164   [MOTION]       Motion Mode Changed: 0->1
+I 16:59:09.553   [MOTION]       Motion-Time Done
+I 16:59:09.553   [MOTION]       Motion Mode Changed: 1->0
+I 16:59:09.604   [MOTION]       Motion Mode Changed: 0->1
+I 16:59:10.531   [MOTION]       Motion-Time Done
+I 16:59:10.531   [MOTION]       Motion Mode Changed: 1->0
+I 16:59:10.557   [MOTION]       Motion Mode Changed: 0->1
+I 16:59:11.485   [MOTION]       Motion-Time Done
+I 16:59:11.485   [MOTION]       Motion Mode Changed: 1->0
+W 19:14:17.393   [MOTION]       MSG:307/MSG_MOVE_PRE_IK_ERR
+I 19:14:26.337   [MOTION]       Motion Mode Changed: 0->5
+I 19:14:26.341   [MOTION]       Motion-Time Done
+I 19:14:26.341   [MOTION]       Motion Mode Changed: 5->0
+I 19:17:35.635   [MAIN]         System Version: 1.0.0
+I 19:17:36.653   [LAN2CAN]      Succeed to create socket
+I 19:17:37.155   [DAEMON]       Succeed to start read thread
+I 19:17:37.155   [DAEMON]       Succeed to start real-time thread
+I 19:17:40.668   [MAIN]         SYSTEM STARTING
+W 19:19:26.974   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 19:19:26.975   [SYSTEM]       Servo Call: 1/1
+I 19:19:26.975   [SYSTEM]       ServoState: 0
+W 19:19:26.975   [SYSTEM]       MSG:102/MSG_SYSTEM_NOT_CONNECT_INTERFACE
+I 20:13:32.898   [MAIN]         System Version: 1.0.0
+I 20:13:33.909   [LAN2CAN]      Succeed to create socket
+I 20:13:34.411   [DAEMON]       Succeed to start read thread
+I 20:13:34.411   [DAEMON]       Succeed to start real-time thread
+I 20:13:37.923   [MAIN]         SYSTEM STARTING
+I 20:26:28.880   [MAIN]         System Version: 1.0.0
+I 20:26:29.894   [LAN2CAN]      Succeed to create socket
+I 20:26:30.397   [DAEMON]       Succeed to start read thread
+I 20:26:30.397   [DAEMON]       Succeed to start real-time thread
+I 20:26:33.908   [MAIN]         SYSTEM STARTING
+W 20:29:29.091   [SYSTEM]       MSG:4/MSG_DESIRED_VALUE_IS_OVER_BOUND
+M 20:32:52.039   [SYSTEM]       MSG:0/MSG_OK

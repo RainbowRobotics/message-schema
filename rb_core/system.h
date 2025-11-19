@@ -97,11 +97,18 @@ struct AREA_CONFIG{
     // 2 : Capsule
     // 3 : Box
 };
-
+enum GET_SYSTE_DATA_TYPES{
+    GET_SYS_DATA_NO_EXIST = -1,
+    GET_SYS_DATA_NUMBER = 0,
+    GET_SYS_DATA_ARRAY = 1,
+    GET_SYS_DATA_STRING = 2
+};
 struct GET_SYSTEM_DATA_RET{
-    int validity;
-    float payload[32];
-    int payload_length;
+    int             type;
+    float           payload_num;
+    float           payload_arr[32];
+    int             payload_arr_length;
+    std::string     payload_str;
 };
 
 namespace rb_system {
@@ -186,6 +193,8 @@ namespace rb_system {
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
+    int             Call_Halt();
+
     int             Set_MoveSpeedBar(double alpha);
     double          Get_MoveSpeedBar();
     
@@ -221,8 +230,11 @@ namespace rb_system {
     std::array<uint8_t, NO_OF_DIN>      Get_Box_FilterCount_Din();
     int                                 Save_Box_FilterCount_Din(unsigned int p_num, unsigned int f_cnt);
 
-    int                                 Set_Digital_Output(int p_num, unsigned int value);
-    int                                 Set_Analog_Output(int p_num, float value);
+    int                                 Set_Box_Digital_Output(int p_num, unsigned int value);
+    int                                 Set_Box_Analog_Output(int p_num, float value);
+
+    int                                 Set_Flange_Power(int desired_voltage);
+    int                                 Set_Flange_Digital_Output(int p_num, int value);
     
 
     // ---------------------------------------------------------------
@@ -259,6 +271,7 @@ namespace rb_system {
     // RT
     // ---------------------------------------------------------------
     void            Task_RealTime();
+    int             TestTestTest();
 }
 
 #endif // SYSTEM_H
