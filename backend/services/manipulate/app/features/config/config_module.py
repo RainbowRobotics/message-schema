@@ -443,7 +443,7 @@ class ConfigService(BaseService):
         req.threshold = request.threshold
 
         res = zenoh_client.query_one(
-            f"{robot_model}/set_out_collision_parameter",
+            f"{robot_model}/set_out_collision_para",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=256,
@@ -460,7 +460,7 @@ class ConfigService(BaseService):
         req.distExt = request.dist_ext
 
         res = zenoh_client.query_one(
-            f"{robot_model}/set_self_collision_parameter",
+            f"{robot_model}/set_self_collision_para",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=256,
@@ -489,16 +489,14 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-
-    def set_free_drive(self, *, robot_model: str, request: Request_Set_Free_DrivePD):
+    def set_freedrive(self, *, robot_model: str, request: Request_Set_Free_DrivePD):
         req = Request_Set_Free_DriveT()
 
         req.onoff = request.onoff
         req.sensitivity = request.sensitivity
 
-
         res = zenoh_client.query_one(
-            f"{robot_model}/set_shift",
+            f"{robot_model}/set_freedrive",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=256,

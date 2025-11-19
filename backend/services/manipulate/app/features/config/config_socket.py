@@ -136,19 +136,19 @@ async def on_set_shift(data, robot_model: str):
     return to_json(res)
 
 
-@config_socket_router.on("{robot_model}/set_out_collision_parameter")
+@config_socket_router.on("{robot_model}/set_out_collision_para")
 async def on_set_out_collision_parameter(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_out_collision_parameter(robot_model=robot_model, request=dict_data)
     return to_json(res)
 
 
-@config_socket_router.on("{robot_model}/set_self_collision_parameter")
+@config_socket_router.on("{robot_model}/set_self_collision_para")
 async def on_set_self_collision_parameter(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_self_collision_parameter(robot_model=robot_model, request=dict_data)
     return to_json(res)
 
 
@@ -156,13 +156,13 @@ async def on_set_self_collision_parameter(data, robot_model: str):
 async def on_set_joint_impedance(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_joint_impedance(robot_model=robot_model, request=dict_data)
     return to_json(res)
 
 
-@config_socket_router.on("{robot_model}/set_free_drive")
-async def on_set_free_drive(data, robot_model: str):
+@config_socket_router.on("{robot_model}/set_freedrive")
+async def on_set_freedrive(data, robot_model: str):
     dict_data = t_to_dict(data)
     
-    res = await config_service.set_shift(robot_model=robot_model, request=dict_data)
+    res = await config_service.set_freedrive(robot_model=robot_model, request=dict_data)
     return to_json(res)
