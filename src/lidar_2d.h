@@ -11,7 +11,8 @@
 #include "mobile.h"
 
 #include "lidar/SICK/sick.h"
-#include "lidar/RP/rp_lidar.h"
+#include "lidar/LAKI/laki.h"
+#include "lidar/RP/rp_lidar.h"  
 
 #include <QObject>
 
@@ -80,6 +81,7 @@ private:
 
     // other modules
     SICK* sick;
+    LAKI* laki;
     CONFIG* config;
     LOGGER* logger;
     MOBILE* mobile;
