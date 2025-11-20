@@ -267,19 +267,22 @@ struct DATA_RANDOMSEQ
 
 struct DATA_CONTROL
 {
-    static constexpr const char* SetSafetyField = "setSafetyField";
-    static constexpr const char* GetSafetyField = "getSafetyField";
-    static constexpr const char* ResetSafetyField = "resetSafetyField";
-    static constexpr const char* Dock = "dock";
-    static constexpr const char* Undock = "undock";
-    static constexpr const char* RandomSeq = "randomSeq";
-    static constexpr const char* LedControl = "ledControl";
-    static constexpr const char* LidarOnOff = "lidarOnOff";
-    static constexpr const char* PathOnOff = "pathOnOff";
-    static constexpr const char* MotorOnOff = "motorOnOff";
-    static constexpr const char* safetyIO = "safetyIO";
-    static constexpr const char* setDigitalIO = "setDigitalIO";
-    static constexpr const char* getDigitalIO = "getDigitalIO";
+    static constexpr const char* SetSafetyField     = "setSafetyField";
+    static constexpr const char* GetSafetyField     = "getSafetyField";
+    static constexpr const char* ResetSafetyField   = "resetSafetyField";
+    static constexpr const char* Dock               = "dock";
+    static constexpr const char* Undock             = "undock";
+    static constexpr const char* RandomSeq          = "randomSeq";
+    static constexpr const char* LedControl         = "ledControl";
+    static constexpr const char* LidarOnOff         = "lidarOnOff";
+    static constexpr const char* PathOnOff          = "pathOnOff";
+    static constexpr const char* MotorOnOff         = "motorOnOff";
+    static constexpr const char* safetyIO           = "safetyIO";
+    static constexpr const char* setDigitalIO       = "setDigitalIO";
+    static constexpr const char* getDigitalIO       = "getDigitalIO";
+
+    static constexpr const char* setObsBox          = "setObsBox";
+    static constexpr const char* getObsBox          = "getObsBox";
 
     double time;
     QString id;
@@ -288,25 +291,50 @@ struct DATA_CONTROL
     bool onoff;
     QString color;
     int frequency;
+
+    // for pdu io
     unsigned char mcu0_dio[8] ={0,};
     unsigned char mcu1_dio[8] ={0,};
+
     QString safetyField;
     QString resetField;
+
+    // for obs box
+    double obs_box_min_x;
+    double obs_box_max_x;
+
+    double obs_box_min_y;
+    double obs_box_max_y;
+
+    double obs_box_min_z;
+    double obs_box_max_z;
+
+    double obs_box_map_range;
 
     QString result;
     QString message;
 
-    DATA_CONTROL(){
+    DATA_CONTROL()
+    {
         time = 0.0;
         command = "";
         id = "";
         onoff = false;
         color = "";
         frequency = 0;
+
         memset(mcu0_dio, 0, sizeof(mcu0_dio));
         memset(mcu1_dio, 0, sizeof(mcu1_dio));
         safetyField = "";
         resetField = "";
+
+        obs_box_min_x = 0.0;
+        obs_box_max_x = 0.0;
+        obs_box_min_y = 0.0;
+        obs_box_max_y = 0.0;
+        obs_box_min_z = 0.0;
+        obs_box_max_z = 0.0;
+        obs_box_map_range = 0.0;
 
         result = "";
         message = "";
@@ -324,6 +352,15 @@ struct DATA_CONTROL
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
         safetyField = p.safetyField;
         resetField = p.resetField;
+
+        obs_box_min_x = p.obs_box_min_x;
+        obs_box_max_x = p.obs_box_max_x;
+        obs_box_min_y = p.obs_box_min_y;
+        obs_box_max_y = p.obs_box_max_y;
+        obs_box_min_z = p.obs_box_min_z;
+        obs_box_max_z = p.obs_box_max_z;
+        obs_box_map_range = p.obs_box_map_range;
+
         result = p.result;
         message = p.message;
     }
@@ -340,11 +377,21 @@ struct DATA_CONTROL
         memcpy(mcu1_dio, p.mcu1_dio, sizeof(char)*8);
         safetyField = p.safetyField;
         resetField = p.resetField;
+
+        obs_box_min_x = p.obs_box_min_x;
+        obs_box_max_x = p.obs_box_max_x;
+        obs_box_min_y = p.obs_box_min_y;
+        obs_box_max_y = p.obs_box_max_y;
+        obs_box_min_z = p.obs_box_min_z;
+        obs_box_max_z = p.obs_box_max_z;
+        obs_box_map_range = p.obs_box_map_range;
+
         result = p.result;
         message = p.message;
         return *this;
     }
 };
+
 
 struct DATA_MAPPING
 {

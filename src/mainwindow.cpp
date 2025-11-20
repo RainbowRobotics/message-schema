@@ -4568,7 +4568,7 @@ void MainWindow::plot_obs()
         }
         else
         {
-            OBSMAP::instance()->reset_obs_box();
+            // OBSMAP::instance()->reset_obs_box();
         }
     }
 }

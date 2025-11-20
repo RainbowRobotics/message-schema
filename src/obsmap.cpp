@@ -169,37 +169,37 @@ void OBSMAP::reset_obs_box()
 
 double OBSMAP::get_obs_box_min_x()
 {
-     return config->get_robot_size_x_min() + obs_box_min_x.load();
+     return obs_box_min_x.load();
 }
 
 double OBSMAP::get_obs_box_max_x()
 {
-    return config->get_robot_size_x_max() + obs_box_max_x.load();
+    return obs_box_max_x.load();
 }
 
 double OBSMAP::get_obs_box_min_y()
 {
-     return config->get_robot_size_y_min() + obs_box_min_y.load();
+     return obs_box_min_y.load();
 }
 
 double OBSMAP::get_obs_box_max_y()
 {
-    return config->get_robot_size_y_max() + obs_box_max_y.load();
+    return obs_box_max_y.load();
 }
 
 double OBSMAP::get_obs_box_min_z()
 {
-     return config->get_obs_map_min_z() + obs_box_min_z.load();
+     return obs_box_min_z.load();
 }
 
 double OBSMAP::get_obs_box_max_z()
 {
-    return config->get_obs_map_max_z() + obs_box_max_z.load();
+    return obs_box_max_z.load();
 }
 
 double OBSMAP::get_obs_box_range()
 {
-    return config->get_obs_map_range() + obs_box_range.load();
+    return obs_box_range.load();
 }
 
 void OBSMAP::set_vobs_list_robots(const std::vector<Eigen::Vector3d>& _vobs_r_list)

@@ -740,6 +740,8 @@ void AUTOCONTROL::move(Eigen::Matrix4d goal_tf, int preset)
 
 void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
 {
+    stop();
+
     if(node_path.size() == 0 || preset == -1)
     {
         return;
@@ -1003,6 +1005,8 @@ void AUTOCONTROL::move(std::vector<QString> node_path, int preset)
 
 void AUTOCONTROL::move()
 {
+    stop();
+
     std::lock_guard<std::mutex> lock(path_mtx);
     if(global_node_path.size() == 0 || global_preset < 0)
     {
@@ -3603,6 +3607,14 @@ void AUTOCONTROL::control_loop()
         if(is_pause)
         {
             mobile->move(0, 0, 0);
+
+            // set ref_v as ST_V to already passed global path
+            int cur_global_idx = get_nn_idx(global_path.pos, cur_pos);
+            for(int ref_v_index=0; ref_v_index<cur_global_idx-1; ref_v_index++)
+            {
+                global_path.ref_v[ref_v_index] = params.ST_V;
+            }
+
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
@@ -4550,6 +4562,13 @@ void AUTOCONTROL::control_loop()
                         pre_err_th = 0;
 
                         obs_state = AUTO_OBS_CHECK;
+
+                        // set ref_v as ST_V to already passed global path
+                        int cur_global_idx = get_nn_idx(global_path.pos, cur_pos);
+                        for(int ref_v_index=0; ref_v_index<cur_global_idx-1; ref_v_index++)
+                        {
+                            global_path.ref_v[ref_v_index] = params.ST_V;
+                        }
 
                         fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
 
