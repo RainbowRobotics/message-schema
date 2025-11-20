@@ -202,8 +202,7 @@ class RBManipulateSDK(RBBaseSDK):
                         raise RuntimeError(e) from e
 
         except Exception as e:
-            if flow_manager_args is not None:
-                raise RuntimeError(f"Move failed: {e}") from e
+            raise RuntimeError(f"Move failed: {e}") from e
 
     def _on_state_core(self, obj: dict, flow_manager_args: FlowManagerArgs):
         """State Core 콜백 처리"""

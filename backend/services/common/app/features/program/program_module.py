@@ -40,6 +40,7 @@ from app.features.info.info_schema import RobotInfo
 from app.socket.socket_client import socket_client
 
 from .program_schema import (
+    Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
     Request_Create_Multiple_TaskPD,
     Request_Create_ProgramPD,
@@ -312,11 +313,7 @@ class ProgramService(BaseService):
         }
 
     async def upsert_steps(self, *, request: Request_Create_Multiple_StepPD, db: MongoDB):
-        req = (
-            request.model_dump(exclude_none=True, exclude_unset=True)
-            if hasattr(request, "model_dump")
-            else t_to_dict(request)
-        )
+        req = Request_Create_Multiple_StepPD.model_validate(t_to_dict(request)).model_dump()
         now = datetime.now(UTC).isoformat()
 
         steps_col = db["steps"]
@@ -764,7 +761,9 @@ class ProgramService(BaseService):
             tasks_col = db["tasks"]
             program_col = db["programs"]
 
-            request_dict = t_to_dict(request)
+            request_dict = Request_Create_Multiple_TaskPD.model_validate(
+                t_to_dict(request)
+            ).model_dump()
 
             tasks = request_dict["tasks"]
 
@@ -789,7 +788,10 @@ class ProgramService(BaseService):
                 record_find_program_ids.append(pid)
 
             existed = await tasks_col.find(
-                {"scriptName": {"$in": [task.get("scriptName") for task in tasks]}},
+                {
+                    "scriptName": {"$in": [task.get("scriptName") for task in tasks]},
+                    "type": TaskType.MAIN,
+                },
                 {"scriptName": 1},
             ).to_list(length=None)
 
@@ -808,9 +810,10 @@ class ProgramService(BaseService):
                 task["taskId"] = str(inserted_id)
                 task.pop("_id", None)
 
-                fire_and_log(
-                    self.write_script_context(task["taskId"], db), name="write_script_context"
-                )
+                if task["type"] == TaskType.MAIN:
+                    fire_and_log(
+                        self.write_script_context(task["taskId"], db), name="write_script_context"
+                    )
 
             return tasks
         except Exception as e:
@@ -948,7 +951,6 @@ class ProgramService(BaseService):
     async def get_program_list(
         self,
         *,
-        state: RB_Flow_Manager_ProgramState | None = None,
         search_name: str | None = None,
         db: MongoDB,
     ):
@@ -966,14 +968,14 @@ class ProgramService(BaseService):
 
             query = make_check_search_text_query("name", search_name, query=query)
 
-        query = make_check_include_query("state", state, query=query)
-
         program_docs = await program_col.find(query).to_list(length=None)
 
         for doc in program_docs:
             doc["programId"] = str(doc.pop("_id"))
 
-        return program_docs
+        return {
+            "programs": program_docs,
+        }
 
     async def create_program_and_tasks(self, *, request: Request_Create_ProgramPD, db: MongoDB):
         """
@@ -1081,6 +1083,81 @@ class ProgramService(BaseService):
             }
         except Exception as e:
             raise e
+
+    async def clone_program(self, *, request: Request_Clone_ProgramPD, db: MongoDB):
+        """
+        Program을 복제하는 함수.
+        """
+
+        now = datetime.now(UTC)
+
+        program_col = db["programs"]
+        tasks_col = db["tasks"]
+
+        request_dict = t_to_dict(request)
+        program_id = request_dict["programId"]
+        new_name = request_dict["newName"]
+
+        find_doc = await program_col.find_one({"_id": ObjectId(program_id)})
+
+        if not find_doc:
+            raise HTTPException(status_code=400, detail="Program not found")
+
+        tasks_docs = await tasks_col.find({"programId": program_id}).to_list(length=None)
+
+        new_program_id: str | None = None
+
+        try:
+            clone_program = find_doc.copy()
+            clone_program.pop("_id")
+            clone_program["name"] = new_name
+            clone_program["createdAt"] = now.isoformat()
+            clone_program["updatedAt"] = now.isoformat()
+
+            find_same_name_program = await program_col.find_one({"name": new_name})
+
+            if find_same_name_program:
+                raise HTTPException(
+                    status_code=400, detail="Program with the same name already exists"
+                )
+
+            program_insert_res = await program_col.insert_one(clone_program)
+            new_program_id = str(program_insert_res.inserted_id)
+        except Exception as e:
+            raise e
+
+        tasks_id_map: dict[str, str] = {}
+
+        try:
+            for task in tasks_docs:
+                pre_task_id = str(task.pop("_id"))
+                task["programId"] = new_program_id
+                task["scriptName"] = task["scriptName"].replace(find_doc["name"], new_name)
+                task["createdAt"] = now.isoformat()
+                task["updatedAt"] = now.isoformat()
+
+                new_task_res = await tasks_col.insert_one(task)
+
+                new_task_id = str(new_task_res.inserted_id)
+                tasks_id_map[pre_task_id] = new_task_id
+
+                if task["type"] == TaskType.MAIN:
+                    fire_and_log(
+                        self.write_script_context(new_task_id, db), name="write_script_context"
+                    )
+
+        except Exception as e:
+            if new_program_id:
+                await program_col.delete_one({"_id": ObjectId(new_program_id)})
+
+            await tasks_col.delete_many({"_id": {"$in": list(tasks_id_map.values())}})
+
+            raise e
+
+        return {
+            "new_program_id": new_program_id,
+            "tasks_id_map": tasks_id_map,
+        }
 
     async def delete_program(self, *, program_id: str, db: MongoDB):
         """

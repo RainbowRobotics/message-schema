@@ -228,6 +228,9 @@ class ScriptExecutor:
 
     def _drain_events(self):
         while True:
+            if self.manager is None:
+                break
+
             try:
                 evt = self.result_queue.get_nowait()
             except queue.Empty:
@@ -236,6 +239,9 @@ class ScriptExecutor:
             evt_type = evt.get("type")
             pid = evt.get("process_id")
             step_id = evt.get("step_id")
+
+            if self.state_dicts.get(pid) is None:
+                continue
 
             try:
 

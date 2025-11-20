@@ -1,11 +1,10 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from rb_database.mongo_db import MongoDB
-from rb_flow_manager.schema import RB_Flow_Manager_ProgramState
 
 from .program_module import ProgramService
 from .program_schema import (
-    Program_Base,
+    Request_Clone_ProgramPD,
     Request_Create_Multiple_StepPD,
     Request_Create_ProgramPD,
     Request_Delete_StepsPD,
@@ -16,9 +15,11 @@ from .program_schema import (
     Request_Program_ExecutionPD,
     Request_Tasks_ExecutionPD,
     Request_Update_ProgramPD,
+    Response_Clone_ProgramPD,
     Response_Create_Program_And_TasksPD,
     Response_Delete_Program_And_TasksPD,
     Response_Delete_StepsPD,
+    Response_Get_Program_ListPD,
     Response_Get_ProgramPD,
     Response_Get_Script_ContextPD,
     Response_Get_StepListPD,
@@ -46,11 +47,9 @@ async def get_program_info(program_id: str, db: MongoDB):
     return JSONResponse(res)
 
 
-@program_router.get("/programs", response_model=list[Program_Base])
-async def get_program_list(
-    db: MongoDB, state: RB_Flow_Manager_ProgramState | None = None, search_name: str | None = None
-):
-    res = await program_service.get_program_list(state=state, search_name=search_name, db=db)
+@program_router.get("/programs", response_model=Response_Get_Program_ListPD)
+async def get_program_list(db: MongoDB, search_name: str | None = None):
+    res = await program_service.get_program_list(search_name=search_name, db=db)
     return JSONResponse(res)
 
 
@@ -63,6 +62,12 @@ async def create_program_and_tasks(request: Request_Create_ProgramPD, db: MongoD
 @program_router.put("/program/edit", response_model=Response_Update_ProgramPD)
 async def update_program(request: Request_Update_ProgramPD, db: MongoDB):
     res = await program_service.update_program(request=request, db=db)
+    return JSONResponse(res)
+
+
+@program_router.post("/program/clone", response_model=Response_Clone_ProgramPD)
+async def clone_program(request: Request_Clone_ProgramPD, db: MongoDB):
+    res = await program_service.clone_program(request=request, db=db)
     return JSONResponse(res)
 
 

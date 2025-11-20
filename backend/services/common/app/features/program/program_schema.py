@@ -34,6 +34,11 @@ class Step_Base(BaseModel):
     highlight: bool = Field(default=False)
     disabled: bool = Field(default=False)
     memo: str | None = Field(default=None)
+    allowChildren: list[str] | None = Field(default=None)
+    allowParents: list[str] | None = Field(default=None)
+    fixChildren: bool = Field(default=False)
+    requireChildren: bool = Field(default=False)
+    requireParent: bool = Field(default=False)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
@@ -105,8 +110,8 @@ class Task_Base(BaseModel):
     parentTaskId: str | None = Field(default=None)
     robotModel: str
     type: TaskType = Field(default=TaskType.MAIN)
-    scriptName: str
-    scriptPath: str
+    scriptName: str | None = Field(default=None)
+    scriptPath: str | None = Field(default=None)
     extension: TaskExtension = Field(default=TaskExtension.PYTHON)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.IDLE)
     createdAt: str = Field(default_factory=lambda: datetime.now(UTC).isoformat(), exclude=True)
@@ -144,7 +149,7 @@ class Response_Delete_TasksPD(BaseModel):
 
 
 class Program_Base(BaseModel):
-    programId: str | None = Field(default=None)
+    programId: PyObjectId = Field(alias="_id")
     name: str | None = Field(default=None)
     repeatCnt: int = Field(default=1)
     state: RB_Flow_Manager_ProgramState = Field(default=RB_Flow_Manager_ProgramState.STOPPED)
@@ -161,6 +166,10 @@ class Response_Get_ProgramPD(BaseModel):
     program: Program_Base | None
     mainTasks: list[Task_Base] | None
     allSteps: dict[str, list[Step_Tree_Base]] | None
+
+
+class Response_Get_Program_ListPD(BaseModel):
+    programs: list[Program_Base]
 
 
 class Create_Program_With_TaskPD(
@@ -191,11 +200,11 @@ class Update_Program_With_TaskPD(
     model_config = ConfigDict(extra="allow")
 
 
-class Request_Create_ProgramPD(Omit(Program_Base, "_id")):
+class Request_Create_ProgramPD(Omit(Program_Base, "programId", "state", "createdAt", "updatedAt")):
     pass
 
 
-class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt")):
+class Request_Update_ProgramPD(Omit(Program_Base, "state", "createdAt", "updatedAt")):
     pass
 
 
@@ -207,6 +216,16 @@ class Response_Create_Program_And_TasksPD(BaseModel):
 
 class Response_Update_ProgramPD(BaseModel):
     program: Program_Base
+
+
+class Request_Clone_ProgramPD(BaseModel):
+    programId: str
+    newName: str
+
+
+class Response_Clone_ProgramPD(BaseModel):
+    new_program_id: str
+    tasks_id_map: dict[str, str]
 
 
 class Response_Delete_Program_And_TasksPD(BaseModel):
@@ -249,6 +268,8 @@ class Client_Script_InfoPD(BaseModel):
 
 class Request_Preview_Start_ProgramPD(BaseModel):
     scripts: list[Client_Script_InfoPD]
+
+    model_config = ConfigDict(extra="ignore")
 
 
 class Request_Preview_Stop_ProgramPD(BaseModel):
