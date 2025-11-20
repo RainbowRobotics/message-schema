@@ -274,6 +274,7 @@ public Q_SLOTS:
     void bt_DelNode();
     void bt_AnnotSave();
     void bt_QuickAddNode();
+    void bt_ReplaceNode();
     void bt_QuickAnnotStart();
     void bt_QuickAnnotStop();
     void bt_QuickAddAruco();

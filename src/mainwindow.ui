@@ -2799,22 +2799,6 @@ start</string>
               <string>Annot</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_10">
-              <item row="0" column="5" colspan="3">
-               <widget class="QPushButton" name="bt_AnnotSave">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Annot
-Save</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="0">
                <widget class="QPushButton" name="bt_QuickAnnotStart">
                 <property name="enabled">
@@ -2831,7 +2815,17 @@ Start</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="7">
+              <item row="3" column="4">
+               <widget class="QDoubleSpinBox" name="spb_NodeSizeY">
+                <property name="singleStep">
+                 <double>0.050000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.150000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="9">
                <widget class="QPushButton" name="bt_QuickAddAruco">
                 <property name="enabled">
                  <bool>false</bool>
@@ -2847,22 +2841,6 @@ Aruco</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="5" colspan="2">
-               <widget class="QPushButton" name="bt_QuickAddCloud">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>QA
-Cloud</string>
-                </property>
-               </widget>
-              </item>
               <item row="3" column="5">
                <widget class="QDoubleSpinBox" name="spb_NodeSizeZ">
                 <property name="singleStep">
@@ -2873,13 +2851,51 @@ Cloud</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="4">
-               <widget class="QDoubleSpinBox" name="spb_NodeSizeY">
-                <property name="singleStep">
-                 <double>0.050000000000000</double>
+              <item row="0" column="4">
+               <widget class="QPushButton" name="bt_DelNode">
+                <property name="enabled">
+                 <bool>true</bool>
                 </property>
-                <property name="value">
-                 <double>0.150000000000000</double>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>DEL
+Node</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5" colspan="5">
+               <widget class="QPushButton" name="bt_AnnotSave">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Annot
+Save</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QPushButton" name="bt_QuickAnnotStop">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>QA
+Stop</string>
                 </property>
                </widget>
               </item>
@@ -2909,32 +2925,16 @@ Node</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="4">
-               <spacer name="verticalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+              <item row="3" column="9">
+               <widget class="QDoubleSpinBox" name="spb_NodeOpacity">
+                <property name="maximum">
+                 <double>1.000000000000000</double>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
+                <property name="singleStep">
+                 <double>0.100000000000000</double>
                 </property>
-               </spacer>
-              </item>
-              <item row="0" column="4">
-               <widget class="QPushButton" name="bt_DelNode">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>DEL
-Node</string>
+                <property name="value">
+                 <double>1.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -2954,21 +2954,25 @@ Link2</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="2">
-               <widget class="QPushButton" name="bt_QuickAnnotStop">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                 </font>
-                </property>
+              <item row="3" column="0">
+               <widget class="QCheckBox" name="ckb_UseNodeSize">
                 <property name="text">
-                 <string>QA
-Stop</string>
+                 <string>Node</string>
                 </property>
                </widget>
+              </item>
+              <item row="4" column="4">
+               <spacer name="verticalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
               <item row="0" column="0">
                <widget class="QPushButton" name="bt_AddLink1">
@@ -2986,23 +2990,35 @@ Link1</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QCheckBox" name="ckb_UseNodeSize">
+              <item row="2" column="5">
+               <widget class="QPushButton" name="bt_ReplaceNode">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>Node</string>
+                 <string>Replace
+Node</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="7">
-               <widget class="QDoubleSpinBox" name="spb_NodeOpacity">
-                <property name="maximum">
-                 <double>1.000000000000000</double>
+              <item row="2" column="7">
+               <widget class="QPushButton" name="bt_QuickAddCloud">
+                <property name="enabled">
+                 <bool>false</bool>
                 </property>
-                <property name="singleStep">
-                 <double>0.100000000000000</double>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
                 </property>
-                <property name="value">
-                 <double>1.000000000000000</double>
+                <property name="text">
+                 <string>QA
+Cloud</string>
                 </property>
                </widget>
               </item>

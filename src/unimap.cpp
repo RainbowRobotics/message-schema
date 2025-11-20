@@ -1614,6 +1614,38 @@ void UNIMAP::update_node_in_maps(const NODE& node, size_t index)
     add_node_to_maps(node, index);
 }
 
+void UNIMAP::replace_node(PICKING pick)
+{
+    if(pick.pre_node.isEmpty() || pick.cur_node.isEmpty())
+    {
+        printf("[UNIMAP] replace_node, pre_node or cur_node empty\n");
+        return;
+    }
+
+    if(pick.pre_node == pick.cur_node)
+    {
+        printf("[UNIMAP] replace_node, pre_node == cur_node\n");
+        return;
+    }
+
+    NODE* pre = get_node_by_id(pick.pre_node);
+    NODE* cur = get_node_by_id(pick.cur_node);
+
+    if(pre == NULL || cur == NULL)
+    {
+        printf("[UNIMAP] replace_node, pre or cur not found\n");
+        return;
+    }
+
+    pre->tf = cur->tf;
+
+    remove_node(pick.cur_node);
+
+    printf("[UNIMAP] replace_node, pre:%s moved to cur:%s, cur deleted\n",
+           pick.pre_node.toLocal8Bit().data(),
+           pick.cur_node.toLocal8Bit().data());
+}
+
 bool UNIMAP::is_valid_node_index(size_t index)
 {
     return nodes && index < nodes->size();

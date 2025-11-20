@@ -128,6 +128,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
+    connect(ui->bt_ReplaceNode,      SIGNAL(clicked()), this, SLOT(bt_ReplaceNode()));
     connect(ui->bt_QuickAnnotStart,   SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
     connect(ui->bt_QuickAnnotStop,    SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStop()));
     connect(ui->bt_QuickAddAruco,     SIGNAL(clicked()), this, SLOT(bt_QuickAddAruco()));
@@ -2374,6 +2375,15 @@ void MainWindow::bt_QuickAddNode()
     //spdlog::info("[QA_Node] quick add node");
     log_info("quick add node");
 }
+
+void MainWindow::bt_ReplaceNode()
+{
+    UNIMAP::instance()->replace_node(pick);
+    topo_update();
+
+    log_info("replace node");
+}
+
 void MainWindow::bt_QuickAnnotStart()
 {
     if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)

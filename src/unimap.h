@@ -75,6 +75,7 @@ public:
     bool remove_node(const QString& id);
     void add_link1(PICKING pick);
     void add_link2(PICKING pick);
+    void replace_node(PICKING pick);
 
     /***********************
      * set other modules
