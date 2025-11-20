@@ -1003,7 +1003,6 @@ class ProgramService(BaseService):
             raise HTTPException(status_code=400, detail="Program already exists")
 
         try:
-
             program_res = await program_col.insert_one(program_doc)
 
             find_program_doc = await program_col.find_one({"_id": program_res.inserted_id})

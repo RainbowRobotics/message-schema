@@ -70,8 +70,10 @@ class ConfigService(BaseService):
             return {"speedbar": min_speedbar}
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"get_all_speedbar zenoh error: {e}", disable_db=True)
+            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
         except Exception as e:
             rb_log.error(f"get_all_speedbar {e}")
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}") from e
 
     async def repeat_get_all_speedbar(self):
         """
@@ -103,8 +105,10 @@ class ConfigService(BaseService):
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"repeat_get_all_speedbar zenoh error: {e}", disable_db=True)
+            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
         except Exception as e:
             rb_log.error(f"repeat_get_all_speedbar {e}")
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}") from e
 
     async def control_speed_bar(self, *, components: list[str], speedbar: int):
         try:
@@ -142,7 +146,7 @@ class ConfigService(BaseService):
 
         except (ZenohNoReply, ZenohReplyError, ZenohTransportError) as e:
             rb_log.error(f"control_speed_bar zenoh error: {e}", disable_db=True)
-            raise
+            raise HTTPException(status_code=503, detail="Zenoh communication error") from e
         except Exception as e:
             rb_log.error(f"control_speed_bar error: {e}", disable_db=True)
             raise HTTPException(status_code=502, detail=str(f"error: {e}")) from e

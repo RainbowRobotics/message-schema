@@ -13,6 +13,10 @@ class PauseRequestPD(BaseModel):
     pass
 
 
+class HaltRequestPD(BaseModel):
+    pass
+
+
 class SmoothJogJRequestPD(BaseModel):
     targetspeed: list[float]
     frame: int

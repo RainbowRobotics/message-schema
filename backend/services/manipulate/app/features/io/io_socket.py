@@ -19,3 +19,17 @@ def on_call_side_aout(data, robot_model: str):
     dict_data = t_to_dict(data)
     res = io_service.side_aout(robot_model, dict_data["port_num"], dict_data["desired_voltage"])
     return to_json(res)
+
+
+@io_socket_router.on("{robot_model}/call_flange_power")
+def on_flange_power(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    res = io_service.flange_power(robot_model, dict_data["desired_voltage"])
+    return to_json(res)
+
+
+@io_socket_router.on("{robot_model}/call_flange_dout")
+def on_flange_dout(data, robot_model: str):
+    dict_data = t_to_dict(data)
+    res = io_service.flange_dout(robot_model, dict_data["port_num"], dict_data["desired_out"])
+    return to_json(res)

@@ -4,6 +4,7 @@ from rb_schemas.base import Response_ReturnValuePD
 
 from .program_module import ProgramService
 from .program_schema import (
+    HaltRequestPD,
     PauseRequestPD,
     Request_MoveJBAddPD,
     Request_MoveJPD,
@@ -35,6 +36,12 @@ async def resume(robot_model: str, request: ResumeRequestPD):
 @program_router.post("/{robot_model}/call_pause", response_model=Response_ReturnValuePD)
 async def pause(robot_model: str, request: PauseRequestPD):
     res = await program_service.call_pause(robot_model=robot_model)
+    return JSONResponse(res)
+
+
+@program_router.post("/{robot_model}/call_halt", response_model=Response_ReturnValuePD)
+async def halt(robot_model: str, request: HaltRequestPD):
+    res = await program_service.call_halt(robot_model=robot_model)
     return JSONResponse(res)
 
 
