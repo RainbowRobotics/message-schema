@@ -3408,7 +3408,7 @@ void AUTOCONTROL::control_loop()
     // set flag
     is_moving = true;
     multi_inter_lock = false;
-
+    
     // set state
     set_multi_infomation(StateMultiReq::RECV_PATH, StateObsCondition::NONE, StateCurGoal::MOVE);
 
@@ -3972,8 +3972,18 @@ void AUTOCONTROL::control_loop()
                 double cur_velocity      = mobile->get_control_input()[0];
                 double stopping_distance = (cur_velocity * cur_velocity) / (2 * params.LIMIT_V_DCC + 1e-06);
                 double dynamic_deadzone  = stopping_distance + AUTOCONTROL_INFO::dynamic_deadzone_safety_margin;
-                dynamic_deadzone = std::max(dynamic_deadzone, config->get_obs_deadzone());
+                
+                // Use config value as lower limit for safety
+                double config_deadzone = config->get_obs_deadzone();
+                dynamic_deadzone = std::max(dynamic_deadzone, config_deadzone);
                 cur_deadzone = dynamic_deadzone;
+                
+                // Debug: Log deadzone values periodically to verify config is being read
+                static int debug_log_counter = 0;
+                if(debug_log_counter++ % 50 == 0) {
+                    log_info("Deadzone - config: {:.3f}, cur_vel: {:.3f}, stop_dist: {:.3f}, dynamic: {:.3f}, final: {:.3f}", 
+                              config_deadzone, cur_velocity, stopping_distance, dynamic_deadzone, cur_deadzone.load());
+                }
 
                 //if(config->get_use_multi())
                 //{
@@ -4499,80 +4509,80 @@ void AUTOCONTROL::control_loop()
             {
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
-                    
-                    //extend_dt = 0;
-                    //pre_err_th = 0;
+                    extend_dt = 0;
+                    pre_err_th = 0;
+
+                    obs_state = AUTO_OBS_CHECK;
+
+                    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+
+                    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+                    obs_value = OBS_NONE;
+
+                    logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
+                    log_info("OBS_WAIT -> FIRST_ALIGN");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+
+                    // Check path clear using config deadzone
+                    //bool path_clear = true;
+                    //if(local_path.pos.size() > 0)
+                    //{
+                    //    log_debug("check path clear in OBS_WAIT");
+                    //    int cur_idx = get_nn_idx(local_path.pos, cur_pos);
+                    //    double hold_deadzone = config->get_obs_deadzone();  // Use config value only when stopped
+                    //    int chk_idx = cur_idx + static_cast<int>(std::ceil(hold_deadzone / AUTOCONTROL_INFO::local_path_step));
+                    //    if(chk_idx > static_cast<int>(local_path.pos.size()) - 1)
+                    //    {
+                    //        chk_idx = static_cast<int>(local_path.pos.size()) - 1;
+                    //    }
 //
-                    //obs_state = AUTO_OBS_CHECK;
+                    //    std::vector<Eigen::Matrix4d> traj;
+                    //    traj.reserve(std::max(0, chk_idx - cur_idx + 1));
+                    //    for(int p = cur_idx; p <= chk_idx; ++p)
+                    //    {
+                    //        traj.push_back(local_path.pose[p]);
+                    //    }
 //
-                    //fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+                    //    if(traj.size() > 0)
+                    //    {
+                    //        int val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
+                    //        path_clear = (val == OBS_NONE);
+                    //        
+                    //        // Debug: Log why path is not clear
+                    //        log_info("OBS_WAIT path check - cur_idx: {}, chk_idx: {}, traj_size: {}, hold_deadzone: {:.3f}, cur_deadzone: {:.3f}, config_deadzone: {:.3f}, collision_val: {}, path_clear: {}", 
+                    //                 cur_idx, chk_idx, traj.size(), hold_deadzone, cur_deadzone.load(), config->get_obs_deadzone(), val, path_clear);
+                    //    }
+                    //}
 //
-                    //set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
-                    //obs_value = OBS_NONE;
+                    //if(path_clear)
+                    //{
+                    //    log_info("path cleared during OBS_WAIT");
+                    //    extend_dt = 0;
+                    //    pre_err_th = 0;
 //
-                    //logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN");
-                    //log_info("OBS_WAIT -> FIRST_ALIGN");
-                    //std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                    //continue;
-                    
-
-                    // test 10.18.25
-                    bool path_clear = true;
-                    if(local_path.pos.size() > 0)
-                    {
-                        log_debug("check path clear in OBS_WAIT");
-                        int cur_idx = get_nn_idx(local_path.pos, cur_pos);
-                        double hold_deadzone = std::max(cur_deadzone.load(), config->get_obs_deadzone());
-                        int chk_idx = cur_idx + static_cast<int>(std::ceil(hold_deadzone / AUTOCONTROL_INFO::local_path_step));
-                        if(chk_idx > static_cast<int>(local_path.pos.size()) - 1)
-                        {
-                            chk_idx = static_cast<int>(local_path.pos.size()) - 1;
-                        }
-
-                        std::vector<Eigen::Matrix4d> traj;
-                        traj.reserve(std::max(0, chk_idx - cur_idx + 1));
-                        for(int p = cur_idx; p <= chk_idx; ++p)
-                        {
-                            traj.push_back(local_path.pose[p]);
-                        }
-
-                        if(traj.size() > 0)
-                        {
-                            int val = obsmap->is_path_collision(traj, true, 0, 0, 0, 10);
-                            path_clear = (val == OBS_NONE);
-                        }
-                    }
-
-                    if(path_clear)
-                    {
-                        log_info("path cleared during OBS_WAIT");
-                        extend_dt = 0;
-                        pre_err_th = 0;
-
-                        obs_state = AUTO_OBS_CHECK;
-
-                        fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
-
-                        set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
-                        obs_value = OBS_NONE;
-
-                        //logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN (path cleared)");
-                        log_info("OBS_WAIT -> FIRST_ALIGN (path cleared)");
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                        continue;
-                    }
-                    else
-                    {
-                        obs_wait_st_time = get_time();
-                        //logger->write_log("[AUTO] OBS_WAIT hold (obstacle still detected)");
-                        log_info("OBS_WAIT hold (obstacle still detected)");
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                        continue;
-                    }
-                        
-                        
-                }
-            }
+                    //    obs_state = AUTO_OBS_CHECK;
+//
+                    //    fsm_state = ((cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE) ? AUTO_FSM_DRIVING : AUTO_FSM_FIRST_ALIGN);
+//
+                    //    set_multi_infomation(StateMultiReq::NO_CHANGE, StateObsCondition::NO_CHANGE, StateCurGoal::MOVE);
+                    //    obs_value = OBS_NONE;
+//
+                    //    logger->write_log("[AUTO] OBS_WAIT -> FIRST_ALIGN (path cleared)");
+                    //    log_info("OBS_WAIT -> FIRST_ALIGN (path cleared)");
+                    //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    //    continue;
+                    //}
+                    //else
+                    //{
+                    //    obs_wait_st_time = get_time();
+                    //    //logger->write_log("[AUTO] OBS_WAIT hold (obstacle still detected)");
+                    //    log_info("OBS_WAIT hold (obstacle still detected)");
+                    //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    //    continue;
+                    //}
+                }//
+            }//
             else if(obs_state == AUTO_OBS_WAIT2)
             {
                 
