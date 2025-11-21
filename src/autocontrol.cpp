@@ -1,6 +1,6 @@
 #include "autocontrol.h"
 
-namespace 
+namespace
 {
     const char* MODULE_NAME = "AUTO";
 }
@@ -600,7 +600,6 @@ void AUTOCONTROL::slot_backward_move(DATA_MOVE msg)
 
 void AUTOCONTROL::slot_path(DATA_PATH msg)
 {
-
     const QString path_str = msg.path;
     const QStringList path_str_list = path_str.split(",", Qt::SkipEmptyParts);
 
@@ -623,8 +622,8 @@ void AUTOCONTROL::slot_path(DATA_PATH msg)
     {
         cmd_method = CommandMethod::METHOD_PP;
     }
-        move(path, preset);
-//    }
+    move(path, preset);
+
 //    else if(msg.direction == "backward")
 //    {
 //        backwardmove(path, preset);
@@ -1550,7 +1549,7 @@ void AUTOCONTROL::backwardmove()
         logger->write_log("[AUTO] node_path.size() == 0 || preset < 0");
         //spdlog::info("[AUTO] node_path.size() == 0 || preset < 0");
         log_info("node_path.size() == 0 || preset < 0");
-        
+
         return;
     }
 
@@ -1647,7 +1646,7 @@ void AUTOCONTROL::backwardmove()
                 //spdlog::info("[AUTO] move_pp, charging, path set final");
                 log_info("move_pp, charging, path set final");
 
-                
+
             }
             else if(final_goal_node_name.contains("AMR-PACKING-01") && node->name.contains("AMR-PACKING-01"))
             {
@@ -2780,6 +2779,11 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
         double min_d = 99999999;
         for(size_t p = 0; p < path.size()-1; p++)
         {
+            // convert to 2D
+            path[p][2] = 0.0;
+            path[p+1][2] = 0.0;
+            cur_pos[2] = 0.0;
+
             double d = calc_seg_dist(path[p], path[p+1], cur_pos);
             if(d < min_d)
             {
@@ -2797,7 +2801,6 @@ int AUTOCONTROL::get_nn_idx(std::vector<Eigen::Vector3d>& path, Eigen::Vector3d 
                 }
             }
         }
-
         return min_idx;
     }
 }
@@ -3702,7 +3705,7 @@ void AUTOCONTROL::control_loop()
 
                 logger->write_log(QString("[AUTO] FIRST_ALIGN -> DRIVING, err_th:%1").arg(err_th*R2D));
                 log_info("FIRST_ALIGN -> DRIVING, err_th: {}", err_th*R2D);
-                
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 continue;
             }
@@ -4022,7 +4025,7 @@ void AUTOCONTROL::control_loop()
                 //{
                 //    if(target_deadzone < prev_deadzone)
                 //    {
-                //        effective_deadzone = std::max(target_deadzone,prev_deadzone - AUTOCONTROL_INFO::dynamic_deadzone_release_rate); // dynamic_deadzone_release_rate: default = 
+                //        effective_deadzone = std::max(target_deadzone,prev_deadzone - AUTOCONTROL_INFO::dynamic_deadzone_release_rate); // dynamic_deadzone_release_rate: default =
                 //        //log_info("tartet_deadzone < prev_deadzone, effective_deadzone: {}", effective_deadzone);
                 //    }
                 //    else
@@ -4038,7 +4041,7 @@ void AUTOCONTROL::control_loop()
                 // Dzon = deadzone, efct = effective
                 //log_info("DRIVING obs check, cur_velocity: {}, stopping_distance: {}, dynamic_deadzone: {}, chk_idx: {}", cur_velocity, stopping_distance, dynamic_deadzone, chk_idx);
                 log_debug("control_loop: obs check, obs_vel:{}, cur_vel:{},  stop_dist:{}, dyn_Dzon:{}", obs_decel_v, cur_velocity, stopping_distance, dynamic_deadzone);
-         
+
                 if(chk_idx > (int)local_path.pos.size()-1)
                 {
                     chk_idx = local_path.pos.size()-1;
@@ -4523,7 +4526,7 @@ void AUTOCONTROL::control_loop()
             {
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
-                    
+
                     //extend_dt = 0;
                     //pre_err_th = 0;
 //
@@ -4538,7 +4541,7 @@ void AUTOCONTROL::control_loop()
                     //log_info("OBS_WAIT -> FIRST_ALIGN");
                     //std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     //continue;
-                    
+
 
                     // test 10.18.25
                     bool path_clear = true;
@@ -4600,13 +4603,13 @@ void AUTOCONTROL::control_loop()
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         continue;
                     }
-                        
-                        
+
+
                 }
             }
             else if(obs_state == AUTO_OBS_WAIT2)
             {
-                
+
                 //if(get_time() - obs_wait_st_time > 2.5)
                 //{
                 //    extend_dt = 0;
@@ -4620,9 +4623,9 @@ void AUTOCONTROL::control_loop()
                 //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 //    continue;
                 //}
-                
+
                 // test 10.18.25
-                
+
                 if(get_time() - obs_wait_st_time > 2.5)
                 {
                     std::vector<Eigen::Matrix4d> traj = intp_tf(cur_tf, goal_tf, 0.2, 10.0*D2R);
@@ -4649,8 +4652,8 @@ void AUTOCONTROL::control_loop()
                         continue;
                     }
                 }
-            
-                    
+
+
             }
             else if(obs_state == AUTO_OBS_VIR)
             {
@@ -4911,9 +4914,9 @@ void AUTOCONTROL::obs_loop()
             {
                 //obs_decel_v = 0.0;
                 log_debug("obs_loop obs detected, obs_value: {}, obs_decel_v:{}", obs_value, obs_decel_v);
-                
+
             }
-            
+
             //            std::cout<<"obs loop obs_decel_v : "<<obs_decel_v<<std::endl;
 
             std::vector<Eigen::Vector3d> dyn_pts = obsmap->get_dyn_pts();
@@ -4975,18 +4978,18 @@ void AUTOCONTROL::obs_loop()
                 {
                     obs_value = OBS_NONE;
                     //obs_condition = "far";
-                    
-                    //double cur_vel = mobile->get_control_input()[0];
-                    
 
-                    //obs_value = OBS_DYN; 
+                    //double cur_vel = mobile->get_control_input()[0];
+
+
+                    //obs_value = OBS_DYN;
                     //obs_value = AUTO_OBS_CHECK;
-                    
+
                     log_debug("obs_loop: obs_condition = Non, obs_dist: {}", obs_dist);
                     //log_info("obs_loop dyn pts [far] obs detected, obs_dist: {}", obs_dist);
 
                 }
-                else if (obs_condition == "far") 
+                else if (obs_condition == "far")
                 {
                     //if(obs_dist >= but_deadzone)
                     //{

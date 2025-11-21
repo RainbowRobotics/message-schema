@@ -1526,7 +1526,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>6</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
