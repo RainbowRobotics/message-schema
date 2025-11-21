@@ -216,7 +216,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_tickjog_j(self, *, robot_model: str, request: Request_MoveTickJogJPD):
+    async def call_tickjog_j(self, *, robot_model: str, request: Request_MoveTickJogJPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
 
@@ -244,7 +244,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_tickjog_l(self, *, robot_model: str, request: Request_MoveTickJogLPD):
+    async def call_tickjog_l(self, *, robot_model: str, request: Request_MoveTickJogLPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
 
@@ -272,7 +272,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_jb_clr(self, *, robot_model: str):
+    async def call_move_jb_clr(self, *, robot_model: str):
         req = Request_Move_JB_CLRT()
 
         res = zenoh_client.query_one(
@@ -284,7 +284,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_jb_add(self, *, robot_model: str, request: Request_MoveJBAddPD):
+    async def call_move_jb_add(self, *, robot_model: str, request: Request_MoveJBAddPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
         type = t_to_dict(request.type)
@@ -317,7 +317,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_jb_run(self, *, robot_model: str):
+    async def call_move_jb_run(self, *, robot_model: str):
         req = Request_Move_JB_RUNT()
 
         res = zenoh_client.query_one(
@@ -329,7 +329,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_lb_clr(self, *, robot_model: str):
+    async def call_move_lb_clr(self, *, robot_model: str):
         req = Request_Move_LB_CLRT()
 
         res = zenoh_client.query_one(
@@ -341,7 +341,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_lb_add(self, *, robot_model: str, request: Request_MoveLBAddPD):
+    async def call_move_lb_add(self, *, robot_model: str, request: Request_MoveLBAddPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
         type = t_to_dict(request.type)
@@ -374,7 +374,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_lb_run(self, *, robot_model: str, request: Request_MoveLBRunPD):
+    async def call_move_lb_run(self, *, robot_model: str, request: Request_MoveLBRunPD):
         orientation = t_to_dict(request.orientation)
 
         req = Request_Move_LB_RUNT()
@@ -389,7 +389,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
 
-    def call_move_xb_clr(self, *, robot_model: str):
+    async def call_move_xb_clr(self, *, robot_model: str):
         req = Request_Move_XB_CLRT()
 
         res = zenoh_client.query_one(
@@ -401,7 +401,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
     
-    def call_move_xb_add(self, *, robot_model: str, request: Request_MoveXBAddPD):
+    async def call_move_xb_add(self, *, robot_model: str, request: Request_MoveXBAddPD):
         target = t_to_dict(request.target)
         speed = t_to_dict(request.speed)
         type = t_to_dict(request.type)
@@ -436,7 +436,7 @@ class ProgramService(BaseService):
 
         return res["dict_payload"]
     
-    def call_move_xb_run(self, *, robot_model: str, request: Request_MoveXBRunPD):
+    async def call_move_xb_run(self, *, robot_model: str, request: Request_MoveXBRunPD):
         running_mode = t_to_dict(request.running_mode)
 
         req = Request_Move_XB_RUNT()

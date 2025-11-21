@@ -12,7 +12,7 @@ class IoService:
     def __init__(self):
         pass
 
-    def side_dout(self, robot_model: str, port_num: int, desired_out: int):
+    async def side_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_SideDout_GeneralT()
         req.portNum = port_num
         req.desiredOut = desired_out
@@ -26,7 +26,7 @@ class IoService:
 
         return res["dict_payload"]
 
-    def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
+    async def side_aout(self, robot_model: str, port_num: int, desired_voltage: float):
         req = Request_SideAout_GeneralT()
         req.portNum = port_num
         req.desiredVoltage = desired_voltage
@@ -41,7 +41,7 @@ class IoService:
         return res["dict_payload"]
 
 
-    def flange_power(self, robot_model: str, desired_voltage: float):
+    async def flange_power(self, robot_model: str, desired_voltage: int):
         req = Request_Flange_PowerT()
         req.desiredVoltage = desired_voltage
 
@@ -55,7 +55,7 @@ class IoService:
         return res["dict_payload"]
 
 
-    def flange_dout(self, robot_model: str, port_num: int, desired_out: float):
+    async def flange_dout(self, robot_model: str, port_num: int, desired_out: int):
         req = Request_Flange_Digital_OutT()
         req.portNum = port_num
         req.desiredOut = desired_out

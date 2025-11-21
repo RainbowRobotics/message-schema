@@ -61,7 +61,7 @@ class ConfigService(BaseService):
     def __init__(self):
         pass
 
-    def config_tool_list(self, robot_model: str):
+    async def config_tool_list(self, robot_model: str):
         req = Request_CallConfigToolListT()
 
         res = zenoh_client.query_one(
@@ -73,6 +73,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
+
     def socket_emit_config_toollist(self, robot_model: str):
         config_toollist_res = self.config_tool_list(robot_model)
 
@@ -80,7 +81,8 @@ class ConfigService(BaseService):
             socket_client.emit(f"{robot_model}/call_config_toollist", to_json(config_toollist_res))
         )
 
-    def config_robot_arm(self, robot_model: str):
+
+    async def config_robot_arm(self, robot_model: str):
         req = Request_CallConfigRobotArmT()
 
         res = zenoh_client.query_one(
@@ -92,6 +94,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
+
     def socket_emit_config_robot_arm(self, robot_model: str):
         config_robot_arm_res = self.config_robot_arm(robot_model)
 
@@ -99,7 +102,38 @@ class ConfigService(BaseService):
             socket_client.emit(f"{robot_model}/call_config_robotarm", to_json(config_robot_arm_res))
         )
 
-    def set_toollist_num(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
+
+    async def config_control_box(self, robot_model: str):
+        req = Request_CallConfigControlBoxT()
+
+        res = zenoh_client.query_one(
+            f"{robot_model}/call_config_controlbox",
+            flatbuffer_req_obj=req,
+            flatbuffer_res_T_class=Response_CallConfigControlBoxT,
+            flatbuffer_buf_size=8,
+        )
+
+        return res["dict_payload"]
+
+
+    async def socket_emit_config_control_box(self, robot_model: str, *, emit_user_frames: bool = False):
+        config_control_box_res = await self.config_control_box(robot_model)
+
+        fire_and_log(
+            socket_client.emit(
+                f"{robot_model}/call_config_controlbox", to_json(config_control_box_res)
+            )
+        )
+
+        if emit_user_frames:
+            user_frames_res = self.parse_get_user_frames(config_control_box_res)
+
+            fire_and_log(
+                socket_client.emit(f"{robot_model}/rb_api/user_frames", to_json(user_frames_res))
+            )
+
+
+    async def set_toollist_num(self, robot_model: str, *, request: Request_Set_Tool_ListPD):
         request_dict = {**request.model_dump()}
 
         req = Request_Set_Tool_ListT()
@@ -113,19 +147,7 @@ class ConfigService(BaseService):
         )
 
         return res["dict_payload"]
-
-    def config_control_box(self, robot_model: str):
-        req = Request_CallConfigControlBoxT()
-
-        res = zenoh_client.query_one(
-            f"{robot_model}/call_config_controlbox",
-            flatbuffer_req_obj=req,
-            flatbuffer_res_T_class=Response_CallConfigControlBoxT,
-            flatbuffer_buf_size=8,
-        )
-
-        return res["dict_payload"]
-
+    
     def parse_get_user_frames(self, config_control_box_res: Response_CallConfigControlBoxPD):
         config_control_box_res_dict = t_to_dict(config_control_box_res)
         return {
@@ -141,23 +163,7 @@ class ConfigService(BaseService):
             ]
         }
 
-    def socket_emit_config_control_box(self, robot_model: str, *, emit_user_frames: bool = False):
-        config_control_box_res = self.config_control_box(robot_model)
-
-        fire_and_log(
-            socket_client.emit(
-                f"{robot_model}/call_config_controlbox", to_json(config_control_box_res)
-            )
-        )
-
-        if emit_user_frames:
-            user_frames_res = self.parse_get_user_frames(config_control_box_res)
-
-            fire_and_log(
-                socket_client.emit(f"{robot_model}/rb_api/user_frames", to_json(user_frames_res))
-            )
-
-    def save_area_parameter(self, robot_model: str, *, request: Request_Save_Area_ParameterPD):
+    async def save_area_parameter(self, robot_model: str, *, request: Request_Save_Area_ParameterPD):
         request_dict = {**request.model_dump()}
 
         req = Request_Save_Area_ParaT()
@@ -181,11 +187,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=100,
         )
 
-        self.socket_emit_config_control_box(robot_model)
+        await self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
-    def save_tool_list_parameter(
+    async def save_tool_list_parameter(
         self, robot_model: str, *, request: Request_Save_Tool_List_ParameterPD
     ):
         request_dict = {**request.model_dump()}
@@ -225,7 +231,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def save_direct_teach_sensitivity(
+    async def save_direct_teach_sensitivity(
         self, robot_model: str, *, request: Request_Save_Direct_Teach_SensitivityPD
     ):
         request_dict = t_to_dict(request)
@@ -244,7 +250,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def save_side_din_filter(self, robot_model: str, *, request: Request_Save_SideDin_FilterPD):
+    async def save_side_din_filter(self, robot_model: str, *, request: Request_Save_SideDin_FilterPD):
         request_dict = t_to_dict(request)
 
         req = Request_Save_SideDin_FilterCountT()
@@ -258,11 +264,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        self.socket_emit_config_control_box(robot_model)
+        await self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
-    def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_FunctionPD):
+    async def save_side_din_function(self, robot_model: str, *, request: Request_Save_SideDin_FunctionPD):
         request_dict = t_to_dict(request)
 
         req = Request_Save_SideDin_SpecialFuncT()
@@ -276,11 +282,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        self.socket_emit_config_control_box(robot_model)
+        await self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
-    def save_side_dout_function(
+    async def save_side_dout_function(
         self, robot_model: str, *, request: Request_Save_SideDout_FunctionPD
     ):
         request_dict = t_to_dict(request)
@@ -296,11 +302,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        self.socket_emit_config_control_box(robot_model)
+        await self.socket_emit_config_control_box(robot_model)
 
         return res["dict_payload"]
 
-    def save_collision_parameter(
+    async def save_collision_parameter(
         self, robot_model: str, *, request: Request_Save_Collision_ParameterPD
     ):
         request_dict = t_to_dict(request)
@@ -319,7 +325,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def save_selfcoll_parameter(
+    async def save_selfcoll_parameter(
         self, robot_model: str, *, request: Request_Save_SelfColl_ParameterPD
     ):
         request_dict = t_to_dict(request)
@@ -338,14 +344,14 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def get_user_frames(self, robot_model: str):
-        res = self.config_control_box(robot_model)
+    async def get_user_frames(self, robot_model: str):
+        res = await self.config_control_box(robot_model)
 
         user_frames_res = self.parse_get_user_frames(res)
 
         return user_frames_res
 
-    def save_user_frame_parameter(self, robot_model: str, *, request: Request_Save_User_FramePD):
+    async def save_user_frame_parameter(self, robot_model: str, *, request: Request_Save_User_FramePD):
         request_dict = t_to_dict(request)
 
         req = Request_Save_User_FrameT()
@@ -365,11 +371,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=32,
         )
 
-        self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
+        await self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
 
         return res["dict_payload"]
 
-    def set_userframe_num(self, robot_model: str, *, request: Request_Set_User_FramePD):
+    async def set_userframe_num(self, robot_model: str, *, request: Request_Set_User_FramePD):
         request_dict = t_to_dict(request)
 
         req = Request_Set_User_FrameT()
@@ -382,11 +388,11 @@ class ConfigService(BaseService):
             flatbuffer_buf_size=8,
         )
 
-        self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
+        await self.socket_emit_config_control_box(robot_model, emit_user_frames=True)
 
         return res["dict_payload"]
 
-    def save_gravity_parameter(
+    async def save_gravity_parameter(
         self, robot_model: str, *, request: Request_Save_Gravity_ParameterPD
     ):
         request_dict = t_to_dict(request)
@@ -410,7 +416,7 @@ class ConfigService(BaseService):
         pass
 
 
-    def set_shift(self, *, robot_model: str, request: Request_Set_ShiftPD):
+    async def set_shift(self, *, robot_model: str, request: Request_Set_ShiftPD):
         target = t_to_dict(request.target)
 
         req = Request_Set_ShiftT()
@@ -435,7 +441,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
     
-    def set_out_collision_parameter(self, *, robot_model: str, request: Request_Set_Out_Collision_ParaPD):
+    async def set_out_collision_parameter(self, *, robot_model: str, request: Request_Set_Out_Collision_ParaPD):
         req = Request_Set_Out_Collision_ParaT()
 
         req.onoff = request.onoff
@@ -452,7 +458,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
 
-    def set_self_collision_parameter(self, *, robot_model: str, request: Request_Set_Self_Collision_ParaPD):
+    async def set_self_collision_parameter(self, *, robot_model: str, request: Request_Set_Self_Collision_ParaPD):
         req = Request_Set_Self_Collision_ParaT()
 
         req.mode = request.mode
@@ -469,7 +475,7 @@ class ConfigService(BaseService):
         return res["dict_payload"]
 
 
-    def set_joint_impedance(self, *, robot_model: str, request: Request_Set_Joint_ImpedancePD):
+    async def set_joint_impedance(self, *, robot_model: str, request: Request_Set_Joint_ImpedancePD):
         req = Request_Set_Joint_ImpedanceT()
 
         req.onoff = request.onoff
@@ -489,7 +495,7 @@ class ConfigService(BaseService):
 
         return res["dict_payload"]
 
-    def set_freedrive(self, *, robot_model: str, request: Request_Set_Free_DrivePD):
+    async def set_freedrive(self, *, robot_model: str, request: Request_Set_Free_DrivePD):
         req = Request_Set_Free_DriveT()
 
         req.onoff = request.onoff
