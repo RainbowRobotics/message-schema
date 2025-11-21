@@ -3550,6 +3550,8 @@ void AUTOCONTROL::control_loop()
     PATH local_path;
     PATH avoid_path;
 
+    int max_goal_idx = 0;
+
     // loop params
     const double dt = 0.05; // 20hz
     double pre_loop_time = get_time();
@@ -3775,6 +3777,16 @@ void AUTOCONTROL::control_loop()
             // goal check
             int max_idx = global_path.pos.size()-1;
             int goal_idx = get_nn_idx(global_path.pos, cur_pos);
+
+            // keep nearest global idx from going backward
+            if(goal_idx < max_goal_idx)
+            {
+                goal_idx = max_goal_idx;
+            }
+            else
+            {
+                max_goal_idx = goal_idx;
+            }
 
             if(max_idx - goal_idx < 2)
             {

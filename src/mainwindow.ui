@@ -1526,7 +1526,7 @@ color: rgb(0, 0, 0);</string>
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>6</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -2958,6 +2958,9 @@ Link2</string>
                <widget class="QCheckBox" name="ckb_UseNodeSize">
                 <property name="text">
                  <string>Node</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
