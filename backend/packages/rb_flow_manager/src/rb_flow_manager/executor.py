@@ -355,6 +355,8 @@ class ScriptExecutor:
     def _auto_cleanup(self):
         """모든 스크립트가 끝났을 때만 실행되는 정리"""
         print("\n=== All processes completed, auto cleanup ===", flush=True)
+        self._clear_result_queue()
+
         if self.manager is not None:
             with contextlib.suppress(Exception):
                 self.manager.shutdown()
@@ -365,6 +367,15 @@ class ScriptExecutor:
 
         if self.controller is not None:
             self.controller.on_close()
+
+        self.result_queue.empty()
+
+    def _clear_result_queue(self):
+        while True:
+            try:
+                self.result_queue.get_nowait()
+            except queue.Empty:
+                break
 
     def _ensure_manager(self):
         if self.manager is None:

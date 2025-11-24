@@ -40,30 +40,30 @@ class Zenoh_Controller(BaseController):
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_stop(self, task_id: str, step_id: str) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.STOPPED)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.STOPPED)
         # TODO: zenoh publish stop
 
     def on_pause(self, task_id: str, step_id: str) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.PAUSED)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.PAUSED)
 
         if self._zenoh_client is not None:
             self._zenoh_client.publish("rrs/pause", payload={})
 
     def on_resume(self, task_id: str, step_id: str) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.RUNNING)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
         self.update_executor_state(RB_Flow_Manager_ProgramState.RUNNING)
 
         if self._zenoh_client is not None:
             self._zenoh_client.publish("rrs/resume", payload={})
 
     def on_next(self, task_id: str, step_id: str) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.RUNNING)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.RUNNING)
 
     def on_error(self, task_id: str, step_id: str, error: Exception) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.ERROR)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.ERROR)
 
     def on_done(self, task_id: str, step_id: str) -> None:
-        self.update_step_state(step_id, RB_Flow_Manager_ProgramState.COMPLETED)
+        self.update_step_state(step_id, task_id, RB_Flow_Manager_ProgramState.COMPLETED)
 
     def on_complete(self, task_id: str) -> None:
         self.update_all_task_step_state(task_id, RB_Flow_Manager_ProgramState.IDLE)
@@ -86,12 +86,13 @@ class Zenoh_Controller(BaseController):
     def on_all_pause(self) -> None:
         self.update_executor_state(state=RB_Flow_Manager_ProgramState.PAUSED)
 
-    def update_step_state(self, step_id: str, state: int) -> None:
+    def update_step_state(self, step_id: str, task_id: str, state: int) -> None:
         """Step 상태 업데이트"""
         try:
             if self._zenoh_client is not None:
                 req = Request_Update_Step_StateT()
                 req.stepId = step_id
+                req.taskId = task_id
                 req.state = state
 
                 self._zenoh_client.publish(

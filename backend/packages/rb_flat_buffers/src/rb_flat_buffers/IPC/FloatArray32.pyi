@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.FloatArray32 import FloatArray32
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,10 +20,6 @@ class FloatArray32(object):
   def ArrIsNone(self) -> bool: ...
 class FloatArray32T(object):
   arr: typing.List[float]
-  def __init__(
-    self,
-    arr: typing.List[float] | None = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> FloatArray32T: ...
   @classmethod

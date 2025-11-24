@@ -80,13 +80,9 @@ except:
 class Request_Move_LT(object):
 
     # Request_Move_LT
-    def __init__(
-        self,
-        target = None,
-        speed = None,
-    ):
-        self.target = target  # type: Optional[MoveInput_TargetT]
-        self.speed = speed  # type: Optional[MoveInput_SpeedT]
+    def __init__(self):
+        self.target = None  # type: Optional[MoveInput_TargetT]
+        self.speed = None  # type: Optional[MoveInput_SpeedT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

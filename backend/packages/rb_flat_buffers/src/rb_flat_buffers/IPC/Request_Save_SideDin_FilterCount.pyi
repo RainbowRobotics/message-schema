@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Save_SideDin_FilterCount import Request_Save_SideDin_FilterCount
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -18,11 +20,6 @@ class Request_Save_SideDin_FilterCount(object):
 class Request_Save_SideDin_FilterCountT(object):
   portNum: int
   desiredCount: int
-  def __init__(
-    self,
-    portNum: int = ...,
-    desiredCount: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Save_SideDin_FilterCountT: ...
   @classmethod

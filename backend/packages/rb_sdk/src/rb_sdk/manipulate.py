@@ -167,8 +167,6 @@ class RBManipulateSDK(RBBaseSDK):
                 timeout=2,
             )
 
-            print("res >>>", res, res.get("dict_payload"), flush=True)
-
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None:
                 if res.get("dict_payload") is None:

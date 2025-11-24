@@ -92,15 +92,10 @@ except:
 class Request_Set_Joint_ImpedanceT(object):
 
     # Request_Set_Joint_ImpedanceT
-    def __init__(
-        self,
-        onoff = 0,
-        stiffness = None,
-        torquelimit = None,
-    ):
-        self.onoff = onoff  # type: int
-        self.stiffness = stiffness  # type: Optional[N_JOINT_fT]
-        self.torquelimit = torquelimit  # type: Optional[N_JOINT_fT]
+    def __init__(self):
+        self.onoff = 0  # type: int
+        self.stiffness = None  # type: Optional[N_JOINT_fT]
+        self.torquelimit = None  # type: Optional[N_JOINT_fT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

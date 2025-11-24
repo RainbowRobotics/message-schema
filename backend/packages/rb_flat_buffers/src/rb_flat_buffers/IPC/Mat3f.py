@@ -54,11 +54,8 @@ except:
 class Mat3fT(object):
 
     # Mat3fT
-    def __init__(
-        self,
-        m = None,
-    ):
-        self.m = m  # type: Optional[List[float]]
+    def __init__(self):
+        self.m = None  # type: List[float]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

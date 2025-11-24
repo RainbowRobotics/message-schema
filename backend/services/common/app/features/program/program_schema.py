@@ -71,6 +71,7 @@ class Response_Get_StepListPD(BaseModel):
 
 class Request_Update_StepStatePD(BaseModel):
     stepId: str
+    taskId: str
     state: RB_Flow_Manager_ProgramState
 
 

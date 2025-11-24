@@ -34,14 +34,21 @@ class Request_Update_Step_State(object):
         return None
 
     # Request_Update_Step_State
-    def State(self):
+    def TaskId(self) -> Optional[str]:
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # Request_Update_Step_State
+    def State(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
 def Request_Update_Step_StateStart(builder: flatbuffers.Builder):
-    builder.StartObject(2)
+    builder.StartObject(3)
 
 def Start(builder: flatbuffers.Builder):
     Request_Update_Step_StateStart(builder)
@@ -52,8 +59,14 @@ def Request_Update_Step_StateAddStepId(builder: flatbuffers.Builder, stepId: int
 def AddStepId(builder: flatbuffers.Builder, stepId: int):
     Request_Update_Step_StateAddStepId(builder, stepId)
 
+def Request_Update_Step_StateAddTaskId(builder: flatbuffers.Builder, taskId: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(taskId), 0)
+
+def AddTaskId(builder: flatbuffers.Builder, taskId: int):
+    Request_Update_Step_StateAddTaskId(builder, taskId)
+
 def Request_Update_Step_StateAddState(builder: flatbuffers.Builder, state: int):
-    builder.PrependInt8Slot(1, state, 0)
+    builder.PrependInt8Slot(2, state, 0)
 
 def AddState(builder: flatbuffers.Builder, state: int):
     Request_Update_Step_StateAddState(builder, state)
@@ -68,13 +81,10 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Update_Step_StateT(object):
 
     # Request_Update_Step_StateT
-    def __init__(
-        self,
-        stepId = None,
-        state = 0,
-    ):
-        self.stepId = stepId  # type: Optional[str]
-        self.state = state  # type: int
+    def __init__(self):
+        self.stepId = None  # type: str
+        self.taskId = None  # type: str
+        self.state = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -98,15 +108,20 @@ class Request_Update_Step_StateT(object):
         if requestUpdateStepState is None:
             return
         self.stepId = requestUpdateStepState.StepId()
+        self.taskId = requestUpdateStepState.TaskId()
         self.state = requestUpdateStepState.State()
 
     # Request_Update_Step_StateT
     def Pack(self, builder):
         if self.stepId is not None:
             stepId = builder.CreateString(self.stepId)
+        if self.taskId is not None:
+            taskId = builder.CreateString(self.taskId)
         Request_Update_Step_StateStart(builder)
         if self.stepId is not None:
             Request_Update_Step_StateAddStepId(builder, stepId)
+        if self.taskId is not None:
+            Request_Update_Step_StateAddTaskId(builder, taskId)
         Request_Update_Step_StateAddState(builder, self.state)
         requestUpdateStepState = Request_Update_Step_StateEnd(builder)
         return requestUpdateStepState

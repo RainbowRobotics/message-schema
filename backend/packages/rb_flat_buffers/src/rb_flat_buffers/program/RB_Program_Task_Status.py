@@ -162,21 +162,13 @@ except:
 class RB_Program_Task_StatusT(object):
 
     # RB_Program_Task_StatusT
-    def __init__(
-        self,
-        taskId = None,
-        programId = None,
-        syncTaskIds = None,
-        nodePath = None,
-        status = None,
-        offset = 0,
-    ):
-        self.taskId = taskId  # type: Optional[str]
-        self.programId = programId  # type: Optional[str]
-        self.syncTaskIds = syncTaskIds  # type: Optional[List[Optional[str]]]
-        self.nodePath = nodePath  # type: Optional[List[Optional[str]]]
-        self.status = status  # type: Optional[str]
-        self.offset = offset  # type: int
+    def __init__(self):
+        self.taskId = None  # type: str
+        self.programId = None  # type: str
+        self.syncTaskIds = None  # type: List[str]
+        self.nodePath = None  # type: List[str]
+        self.status = None  # type: str
+        self.offset = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

@@ -3,8 +3,10 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import RB_Flow_Manager_ProgramState
+from rb_flat_buffers.flow_manager.Request_Update_Executor_State import Request_Update_Executor_State
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -17,10 +19,6 @@ class Request_Update_Executor_State(object):
   def State(self) -> typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED]: ...
 class Request_Update_Executor_StateT(object):
   state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED]
-  def __init__(
-    self,
-    state: typing.Literal[RB_Flow_Manager_ProgramState.IDLE, RB_Flow_Manager_ProgramState.RUNNING, RB_Flow_Manager_ProgramState.PAUSED, RB_Flow_Manager_ProgramState.STOPPED, RB_Flow_Manager_ProgramState.WAITING, RB_Flow_Manager_ProgramState.ERROR, RB_Flow_Manager_ProgramState.COMPLETED] = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Update_Executor_StateT: ...
   @classmethod

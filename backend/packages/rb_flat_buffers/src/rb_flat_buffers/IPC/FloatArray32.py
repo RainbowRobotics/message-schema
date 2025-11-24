@@ -54,11 +54,8 @@ except:
 class FloatArray32T(object):
 
     # FloatArray32T
-    def __init__(
-        self,
-        arr = None,
-    ):
-        self.arr = arr  # type: Optional[List[float]]
+    def __init__(self):
+        self.arr = None  # type: List[float]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

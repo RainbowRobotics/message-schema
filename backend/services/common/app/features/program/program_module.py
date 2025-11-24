@@ -485,9 +485,21 @@ class ProgramService(BaseService):
         request_dict = t_to_dict(request)
 
         step_id = request_dict["stepId"]
+        task_id = request_dict["taskId"]
         state = request_dict["state"]
 
         steps_col = db["steps"]
+
+        fire_and_log(
+            socket_client.emit(
+                f"program/task/{task_id}/update_state",
+                {
+                    "stepId": step_id,
+                    "state": state,
+                },
+            ),
+            name="emit_step_update_state",
+        )
 
         if not ObjectId.is_valid(step_id):
             return
@@ -502,17 +514,6 @@ class ProgramService(BaseService):
             await self.stop_program(
                 request=Request_Program_ExecutionPD(programId=find_step_doc["programId"]), db=db
             )
-
-        fire_and_log(
-            socket_client.emit(
-                f"program/task/{step_id}/update_state",
-                {
-                    "stepId": step_id,
-                    "state": state,
-                },
-            ),
-            name="emit_step_update_state",
-        )
 
         # visited = set()
 

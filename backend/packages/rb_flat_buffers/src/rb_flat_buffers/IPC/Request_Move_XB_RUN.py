@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_XB_RUNT(object):
 
     # Request_Move_XB_RUNT
-    def __init__(
-        self,
-        runningMode = 0,
-    ):
-        self.runningMode = runningMode  # type: int
+    def __init__(self):
+        self.runningMode = 0  # type: int
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

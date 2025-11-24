@@ -21,6 +21,7 @@ class Step:
         variable: dict[str, Any] | None = None,
         disabled: bool | None = None,
         func: Callable | None = None,
+        repeat_count: int | str | None = None,
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
         *,
@@ -164,16 +165,12 @@ class Step:
                         else:
                             self.done_script()
 
-                    ctx.emit_done(self.step_id)
                     done_event.set()
 
                 flow_manager_args = FlowManagerArgs(ctx=ctx, args=self.args, done=done)
 
                 try:
                     eval_args = {}
-
-                    print("[DEBUG] raw args in Step.execute:", self.args, flush=True)
-                    print("[DEBUG] resolved args in Step.execute:", args, flush=True)
 
                     for k, v in args.items():
                         eval_args[k] = safe_eval_expr(
@@ -213,6 +210,8 @@ class Step:
 
                 while not done_event.wait(timeout=0.01):
                     ctx.check_stop()
+
+            ctx.emit_done(self.step_id)
 
             # 자식 노드들을 순차 실행
             for child in self.children:

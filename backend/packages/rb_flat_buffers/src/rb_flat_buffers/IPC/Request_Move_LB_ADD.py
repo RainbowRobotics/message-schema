@@ -97,15 +97,10 @@ except:
 class Request_Move_LB_ADDT(object):
 
     # Request_Move_LB_ADDT
-    def __init__(
-        self,
-        target = None,
-        speed = None,
-        type = None,
-    ):
-        self.target = target  # type: Optional[MoveInput_TargetT]
-        self.speed = speed  # type: Optional[MoveInput_SpeedT]
-        self.type = type  # type: Optional[MoveInput_TypeT]
+    def __init__(self):
+        self.target = None  # type: Optional[MoveInput_TargetT]
+        self.speed = None  # type: Optional[MoveInput_SpeedT]
+        self.type = None  # type: Optional[MoveInput_TypeT]
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

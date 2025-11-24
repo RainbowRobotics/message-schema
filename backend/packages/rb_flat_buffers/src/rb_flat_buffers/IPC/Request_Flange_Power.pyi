@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Flange_Power import Request_Flange_Power
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,10 +18,6 @@ class Request_Flange_Power(object):
   def DesiredVoltage(self) -> int: ...
 class Request_Flange_PowerT(object):
   desiredVoltage: int
-  def __init__(
-    self,
-    desiredVoltage: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Flange_PowerT: ...
   @classmethod

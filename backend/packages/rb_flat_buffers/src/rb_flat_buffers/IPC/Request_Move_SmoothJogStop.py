@@ -54,11 +54,8 @@ def End(builder: flatbuffers.Builder) -> int:
 class Request_Move_SmoothJogStopT(object):
 
     # Request_Move_SmoothJogStopT
-    def __init__(
-        self,
-        stoptime = 0.0,
-    ):
-        self.stoptime = stoptime  # type: float
+    def __init__(self):
+        self.stoptime = 0.0  # type: float
 
     @classmethod
     def InitFromBuf(cls, buf, pos):

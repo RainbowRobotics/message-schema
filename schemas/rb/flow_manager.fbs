@@ -12,6 +12,7 @@ enum RB_Flow_Manager_ProgramState : byte {
 
 table Request_Update_Step_State {
   step_id: string;
+  task_id: string;
   state: RB_Flow_Manager_ProgramState;
 }
 

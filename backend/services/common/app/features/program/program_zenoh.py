@@ -53,9 +53,10 @@ async def on_update_step_state(*, topic, mv, obj, attachment):
     print("obj >>>", obj, to_json(mv), t_to_dict(mv), flush=True)
     db = await get_db()
     step_id = obj["stepId"]
+    task_id = obj["taskId"]
     state = convert_state_to_string(obj["state"])
     return await program_service.update_step_state(
-        request=Request_Update_StepStatePD(stepId=step_id, state=state),
+        request=Request_Update_StepStatePD(stepId=step_id, taskId=task_id, state=state),
         db=db,
     )
 

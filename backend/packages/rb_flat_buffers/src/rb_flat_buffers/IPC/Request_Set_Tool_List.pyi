@@ -3,7 +3,9 @@ from __future__ import annotations
 import flatbuffers
 import numpy as np
 
+import flatbuffers
 import typing
+from rb_flat_buffers.IPC.Request_Set_Tool_List import Request_Set_Tool_List
 
 uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
@@ -16,10 +18,6 @@ class Request_Set_Tool_List(object):
   def TargetToolNum(self) -> int: ...
 class Request_Set_Tool_ListT(object):
   targetToolNum: int
-  def __init__(
-    self,
-    targetToolNum: int = ...,
-  ) -> None: ...
   @classmethod
   def InitFromBuf(cls, buf: bytes, pos: int) -> Request_Set_Tool_ListT: ...
   @classmethod

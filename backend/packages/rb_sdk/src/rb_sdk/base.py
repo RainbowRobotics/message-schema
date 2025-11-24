@@ -5,8 +5,10 @@ import functools
 import os
 import sys
 import threading
+import time as time_module
 from typing import ClassVar, TypeVar
 
+from rb_schemas.sdk import FlowManagerArgs
 from rb_zenoh.client import ZenohClient
 from rb_zenoh.exeption import ZenohNoReply, ZenohTransportError
 
@@ -49,26 +51,30 @@ class RBBaseSDK:
                 return await fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
-                raise
+                raise RuntimeError(f"invalid param: {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
-                raise
+                raise RuntimeError(f"zenoh error: {e}") from e
+            except asyncio.CancelledError as e:
+                raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
                 print(f"[{fn.__name__}] unexpected: {e}", flush=True)
-                raise
+                raise RuntimeError(f"unexpected: {e}") from e
 
         def _sync_wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
-                raise
+                raise RuntimeError(f"invalid param: {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
-                raise
+                raise RuntimeError(f"zenoh error: {e}") from e
+            except asyncio.CancelledError as e:
+                raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
                 print(f"[{fn.__name__}] unexpected: {e}", flush=True)
-                raise
+                raise RuntimeError(f"unexpected: {e}") from e
 
         if asyncio.iscoroutinefunction(fn):
             return functools.wraps(fn)(_async_wrapper)
@@ -126,6 +132,45 @@ class RBBaseSDK:
                     self._tasks.discard(task)
 
         return asyncio.run_coroutine_threadsafe(_wrap(), self.loop)
+
+    async def wait(self, *, second: float, flow_manager_args: FlowManagerArgs | None = None):
+        """지정한 시간만큼 기다리는 함수."""
+
+        ctx = flow_manager_args.ctx if flow_manager_args is not None else None
+
+        # 0 이하 들어오면 그냥 바로 done 처리
+        if second <= 0:
+            if flow_manager_args is not None:
+                flow_manager_args.done()
+            else:
+                raise ValueError("time must be greater than 0")
+
+        interval = 0.05
+
+        end_at = time_module.monotonic() + second
+
+        while True:
+            # 정지 요청(PAUSE/STOP 등) 들어왔는지 확인
+            if ctx is not None:
+                ctx.check_stop()
+
+            now = time_module.monotonic()
+            remaining = end_at - now
+
+            if remaining <= 0:
+                break
+
+            sleep_for = interval if remaining > interval else remaining
+            await asyncio.sleep(sleep_for)
+
+        if flow_manager_args is not None:
+            flow_manager_args.done()
+
+    # async def repeat(self, *, count: int, flow_manager_args: FlowManagerArgs | None = None):
+    #     """지정한 횟수만큼 반복하는 함수."""
+    #     for i in range(count):
+    #         if flow_manager_args is not None:
+    #             flow_manager_args.done()
 
     def close(self):
         """SDK 종료 (현재 프로세스 + 현재 클래스용 인스턴스만)"""
