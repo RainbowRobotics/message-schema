@@ -142,8 +142,6 @@ class RBManipulateSDK(RBBaseSDK):
             move_input_target = MoveInput_TargetT()
             move_input_speed = MoveInput_SpeedT()
 
-            print("params >>>", flow_manager_args, flush=True)
-
             ni = N_INPUT_fT()
             ni.f = tar_values
 
@@ -167,6 +165,8 @@ class RBManipulateSDK(RBBaseSDK):
                 timeout=2,
             )
 
+            print("movej res >>>", res, flush=True)
+
             # 상태 구독 (flow_manager_args가 있는 경우)
             if flow_manager_args is not None:
                 if res.get("dict_payload") is None:
@@ -188,6 +188,8 @@ class RBManipulateSDK(RBBaseSDK):
                         topic, mv, obj, attachment = await self.zenoh_client.receive_one(
                             f"{robot_model}/state_core", flatbuffer_obj_t=State_CoreT
                         )
+
+                        print("movej state_core >>>", obj and obj.get("motionMode"), flush=True)
 
                         if obj is not None and obj.get("motionMode") == 0:
                             flow_manager_args.done()
