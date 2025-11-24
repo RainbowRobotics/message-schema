@@ -360,7 +360,7 @@ void TASK::a_loop()
                 QString target_id = (target_node != NULL) ? target_node->id : "unknown";
                 QString target_name = (target_node != NULL) ? target_node->name : "unknown";
                 QString target_type = (target_node != NULL) ? target_node->type : "unknown";
-                QString target_info = (target_node != NULL) ? target_node->info : "unknown";
+                QString target_info = (target_node != NULL) ? target_node->context : "unknown";
 
                 double planned_x = 0.0, planned_y = 0.0, planned_theta = 0.0;
                 if(target_node)

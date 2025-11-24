@@ -3321,32 +3321,46 @@ void MainWindow::plot_node()
                     }
                     else if(node.type == "OBS")
                     {
-                        QString info = node.info;
+                        // QString info = node.info;
 
-                        NODE_INFO res;
-                        if(parse_info(info, "SIZE", res))
-                        {
-                            pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                                    -res.sz[1]/2, res.sz[1]/2,
-                                    -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
+                        // NODE_INFO res;
+                        // if(parse_info(info, "SIZE", res))
+                        // {
+                        //     pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
+                        //             -res.sz[1]/2, res.sz[1]/2,
+                        //             -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
 
-                            pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
-                            pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
-                        }
+                        //     pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        //     pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        // }
+
+                        pcl_viewer->addCube(-node.size[0]/2, node.size[0]/2,
+                                -node.size[1]/2, node.size[1]/2,
+                                -node.size[2]/2, node.size[2]/2, 1.0, 0.0, 1.0, id.toStdString());
+
+                        pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
                     }
                     else if(node.type == "ZONE")
                     {
-                        QString info = node.info;
-                        NODE_INFO res;
-                        if(parse_info(info, "SIZE", res))
-                        {
-                            pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                                    -res.sz[1]/2, res.sz[1]/2,
-                                    -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
+                        // QString info = node.info;
+                        // NODE_INFO res;
+                        // if(parse_info(info, "SIZE", res))
+                        // {
+                        //     pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
+                        //             -res.sz[1]/2, res.sz[1]/2,
+                        //             -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
 
-                            pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
-                            pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
-                        }
+                        //     pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        //     pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
+                        // }
+
+                        pcl_viewer->addCube(-node.size[0]/2, node.size[0]/2,
+                                -node.size[1]/2, node.size[1]/2,
+                                -node.size[2]/2, node.size[2]/2, 0.5, 1.0, 0.0, id.toStdString());
+
+                        pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
+                        pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
                     }
                     else if(node.type == "ARUCO")
                     {
@@ -4771,14 +4785,73 @@ void MainWindow::plot_ctrl()
 
         // plot policy info
         {
-            QString text;
-            text.sprintf("node: %s, link: %s, zone:%s, info:%s, %s, %s",
-                         POLICY::instance()->get_cur_node().toLocal8Bit().data(),
-                         POLICY::instance()->get_cur_link().toLocal8Bit().data(),
-                         POLICY::instance()->get_cur_zone().toLocal8Bit().data(),
-                         POLICY::instance()->get_node_info().info.toLocal8Bit().data(),
-                         POLICY::instance()->get_link_info().info.toLocal8Bit().data(),
-                         POLICY::instance()->get_zone_info().info.toLocal8Bit().data());
+            NODE node = POLICY::instance()->get_cur_node();
+            LINK link = POLICY::instance()->get_cur_link();
+            NODE zone = POLICY::instance()->get_cur_zone();
+
+            QString node_str = node.id;
+
+            QString link_str = "";
+            if(!link.st_id.isEmpty() || !link.ed_id.isEmpty())
+            {
+                link_str = link.st_id + "->" + link.ed_id;
+            }
+
+            QString zone_str = zone.id;
+
+            // link
+            QString link_info_str = "";
+            if(!link.dir.isEmpty())
+            {
+                link_info_str += link.dir;
+            }
+            if(!link.method.isEmpty())
+            {
+                if(!link_info_str.isEmpty())
+                {
+                    link_info_str += ",";
+                }
+                link_info_str += link.method;
+            }
+            if(link.speed > 0.0)
+            {
+                if(!link_info_str.isEmpty())
+                {
+                    link_info_str += ",";
+                }
+                link_info_str += QString("speed=%1").arg(link.speed, 0, 'f', 2);
+            }
+
+            // node role
+            QString node_role_str = "";
+            if(node.role.conveyor)
+            {
+                node_role_str += "CONVEYOR,";
+            }
+
+            // zone role
+            QString zone_role_str = "";
+            if(zone.role.conveyor)
+            {
+                zone_role_str += "CONVEYOR,";
+            }
+
+
+            QString text = QString("node:%1, link:%2, zone:%3, link:%4")
+                    .arg(node_str)
+                    .arg(link_str)
+                    .arg(zone_str)
+                    .arg(link_info_str);
+
+            if(!node_role_str.isEmpty())
+            {
+                text += QString(", node_role:%1").arg(node_role_str);
+            }
+            if(!zone_role_str.isEmpty())
+            {
+                text += QString(", zone_role:%1").arg(zone_role_str);
+            }
+
             ui->lb_Policy->setText(text);
         }
     }

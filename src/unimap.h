@@ -59,7 +59,7 @@ public:
     std::shared_ptr<std::vector<Eigen::Vector3d>> get_map_3d_normal();      // get 3d map normal vectors
     std::shared_ptr<std::vector<Eigen::Vector3d>> get_map_3d_pts();         // get 3d map points
     std::shared_ptr<std::vector<NODE>> get_nodes_origin();                  // get nodes (shared ptr)
-    std::vector<LINK_INFO> get_special_links();
+    std::vector<LINK> get_special_links();
 
     // interface funcs (kdtree)
     void radius_search_kdtree_idx(double query[], double sq_radius,
@@ -104,7 +104,7 @@ private:
 
     // annotation
     std::shared_ptr<std::vector<NODE>> nodes;
-    std::vector<LINK_INFO> special_links;
+    std::vector<LINK> special_links;
 
     // kdtree for map icp (2D)
     std::shared_ptr<XYZR_CLOUD> kdtree_cloud_2d;

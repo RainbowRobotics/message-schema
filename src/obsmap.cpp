@@ -294,6 +294,45 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
         NODE* node = unimap->get_node_by_id(obs_nodes[i]);
         if(node == nullptr) continue;
 
+        Eigen::Matrix4d tf = node->tf;
+        double sx = node->size[0];
+        double sy = node->size[1];
+        double sz = node->size[2];
+
+        double step = 0.1;
+
+        for(double x = -sx/2.0; x <= sx/2.0; x += step)
+        {
+            for(double y = -sy/2.0; y <= sy/2.0; y += step)
+            {
+                for(double z = -sz/2.0; z <= sz/2.0; z += step)
+                {
+                    // global
+                    Eigen::Vector3d P = tf.block(0,0,3,3)*Eigen::Vector3d(x, y, z) + tf.block(0,3,3,1);
+
+                    // global to local
+                    Eigen::Vector3d _P = cur_tf_inv.block(0,0,3,3)*P + cur_tf_inv.block(0,3,3,1);
+                    if(_P[2] < obs_map_min_z || _P[2] > obs_map_max_z)
+                    {
+                        continue;
+                    }
+
+                    cv::Vec2i uv = xy_uv(_P[0], _P[1]);
+                    int u = uv[0];
+                    int v = uv[1];
+                    if(u < 0 || u >= w || v < 0 || v >= h)
+                    {
+                        continue;
+                    }
+
+                    _wall_map.ptr<uchar>(v)[u] = 255;
+                    _static_map.ptr<uchar>(v)[u] = 255;
+                    _vir_pts.push_back(P);
+                }
+            }
+        }
+
+        /*
         NODE_INFO info;
         if(parse_info(node->info, "SIZE", info))
         {
@@ -334,7 +373,7 @@ void OBSMAP::update_obs_map_sim(Eigen::Matrix4d tf)
                     }
                 }
             }
-        }
+        }*/
     }
 
     map_tf = cur_tf;
@@ -538,6 +577,46 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
             NODE* node = unimap->get_node_by_id(id);
             if(node != nullptr)
             {
+                Eigen::Matrix4d tf = node->tf;
+
+                Eigen::Vector3d P0( node->size[0]/2,  node->size[1]/2, -node->size[2]/2);
+                Eigen::Vector3d P1( node->size[0]/2, -node->size[1]/2,  node->size[2]/2); // for z range check
+                Eigen::Vector3d P2(-node->size[0]/2, -node->size[1]/2, -node->size[2]/2);
+                Eigen::Vector3d P3(-node->size[0]/2,  node->size[1]/2, -node->size[2]/2);
+
+                Eigen::Vector3d _P0 = tf.block(0,0,3,3)*P0 + tf.block(0,3,3,1);
+                Eigen::Vector3d _P1 = tf.block(0,0,3,3)*P1 + tf.block(0,3,3,1);
+                Eigen::Vector3d _P2 = tf.block(0,0,3,3)*P2 + tf.block(0,3,3,1);
+                Eigen::Vector3d _P3 = tf.block(0,0,3,3)*P3 + tf.block(0,3,3,1);
+
+                Eigen::Vector3d l_P0 = cur_tf_inv.block(0,0,3,3)*_P0 + cur_tf_inv.block(0,3,3,1);
+                Eigen::Vector3d l_P1 = cur_tf_inv.block(0,0,3,3)*_P1 + cur_tf_inv.block(0,3,3,1);
+                Eigen::Vector3d l_P2 = cur_tf_inv.block(0,0,3,3)*_P2 + cur_tf_inv.block(0,3,3,1);
+                Eigen::Vector3d l_P3 = cur_tf_inv.block(0,0,3,3)*_P3 + cur_tf_inv.block(0,3,3,1);
+
+                // check z overlap
+                if(l_P1[2] < config->get_obs_map_min_z() || l_P0[2] > config->get_obs_map_max_z())
+                {
+                    // no overlap
+                    continue;
+                }
+
+                cv::Vec2i uv0 = xy_uv(l_P0[0], l_P0[1]);
+                cv::Vec2i uv1 = xy_uv(l_P1[0], l_P1[1]);
+                cv::Vec2i uv2 = xy_uv(l_P2[0], l_P2[1]);
+                cv::Vec2i uv3 = xy_uv(l_P3[0], l_P3[1]);
+
+                std::vector<std::vector<cv::Point>> pts(1);
+                pts[0].push_back(cv::Point(uv0[0], uv0[1]));
+                pts[0].push_back(cv::Point(uv1[0], uv1[1]));
+                pts[0].push_back(cv::Point(uv2[0], uv2[1]));
+                pts[0].push_back(cv::Point(uv3[0], uv3[1]));
+
+                cv::fillPoly(_wall_map, pts, cv::Scalar(255));
+                cv::fillPoly(_static_map, pts, cv::Scalar(255));
+
+
+                /*
                 QString info = node->info;
                 Eigen::Matrix4d tf = node->tf;
 
@@ -579,7 +658,7 @@ void OBSMAP::update_obs_map(TIME_POSE_PTS& tpp)
 
                     cv::fillPoly(_wall_map, pts, cv::Scalar(255));
                     cv::fillPoly(_static_map, pts, cv::Scalar(255));
-                }
+                }*/
             }
         }
     }

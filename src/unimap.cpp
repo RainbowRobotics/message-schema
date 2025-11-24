@@ -418,7 +418,7 @@ bool UNIMAP::load_topo()
         return false;
     }
 
-    std::vector<LINK_INFO> links;
+    std::vector<LINK> links;
 
     QFile node_file(node_path);
     if(node_file.open(QIODevice::ReadOnly))
@@ -435,7 +435,7 @@ bool UNIMAP::load_topo()
             node.id     = obj["id"].toString();
             node.name   = obj["name"].toString();
             node.type   = obj["type"].toString();
-            node.info   = obj["info"].toString();
+            node.context    = obj["info"].toString();
             node.tf     = string_to_TF(obj["pose"].toString());
             node.linked = array_to_links(obj["links"].toArray());
 
@@ -462,10 +462,10 @@ bool UNIMAP::load_topo()
                             }
                             if(!ed.isEmpty())
                             {
-                                LINK_INFO link;
+                                LINK link;
                                 link.st_id = node.id;
                                 link.ed_id = ed;
-                                link.info  = lo["info"].toString();
+                                link.dir  = lo["dir"].toString();
 
                                 // speed parsing
                                 if(lo.contains("speed"))
@@ -504,7 +504,7 @@ bool UNIMAP::load_topo()
             special_links.reserve(links.size());
             for(size_t i = 0; i < links.size(); i++)
             {
-                LINK_INFO s = links[i];
+                LINK s = links[i];
 
                 Eigen::Vector3d st_pos(0.0, 0.0, 0.0);
                 Eigen::Vector3d ed_pos(0.0, 0.0, 0.0);
@@ -537,12 +537,12 @@ bool UNIMAP::load_topo()
                 {
                     for(size_t i = 0; i < special_links.size(); i++)
                     {
-                        const LINK_INFO &s = special_links[i];
+                        const LINK &s = special_links[i];
                         printf("[UNIMAP][SPECIAL_LINK][%zu]\n", i);
                         printf("  st_id = %s, ed_id = %s, info = %s\n",
                                s.st_id.toStdString().c_str(),
                                s.ed_id.toStdString().c_str(),
-                               s.info.toStdString().c_str());
+                               s.dir.toStdString().c_str());
                         if(s.speed > 0.0)
                         {
                             printf(", speed = %f", s.speed);
@@ -603,186 +603,262 @@ bool UNIMAP::load_node()
         return false;
     }
 
-    std::vector<LINK_INFO> links;
+    std::vector<LINK> temp_links;
 
     QFile node_file(node_path);
-    if(node_file.open(QIODevice::ReadOnly))
+    if(!node_file.open(QIODevice::ReadOnly))
     {
-        QByteArray data = node_file.readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-
-        QJsonArray arr = doc.array();
-        std::vector<NODE> temp_nodes;
-        Q_FOREACH(const QJsonValue &val, arr)
-        {
-            QJsonObject obj = val.toObject();
-            NODE node;
-            node.id     = obj["id"].toString();
-            node.name   = obj["name"].toString();
-            node.type   = obj["type"].toString();
-            node.info   = obj["info"].toString();
-            node.tf     = string_to_TF(obj["pose"].toString());
-
-            // link info
-            node.linked.clear();
-            if(obj.contains("links") && obj["links"].isArray())
-            {
-                QJsonArray link_arr = obj["links"].toArray();
-                for(int i = 0; i < link_arr.size(); i++)
-                {
-                    QJsonValue lv = link_arr.at(i);
-                    if(!lv.isObject())
-                    {
-                        continue;
-                    }
-
-                    QJsonObject lo = lv.toObject();
-                    QString ed = lo["id"].toString();
-
-                    if(ed.isEmpty())
-                    {
-                        continue;
-                    }
-                    node.linked.push_back(ed);
-
-                    // build LINK_INFO (for attributes like info/speed)
-                    LINK_INFO L;
-                    L.st_id = node.id;
-                    L.ed_id = ed;
-
-                    if(lo.contains("info") && lo["info"].isString())
-                    {
-                        L.info = lo["info"].toString();
-                    }
-                    else
-                    {
-                        L.info = "";
-                    }
-
-                    if(lo.contains("speed"))
-                    {
-                        L.speed = lo["speed"].toDouble();
-                    }
-                    else
-                    {
-                        L.speed = 0.0;
-                    }
-
-                    if(lo.contains("method") && lo["method"].isString())
-                    {
-                        L.method = lo["method"].toString();
-                    }
-                    else
-                    {
-                        L.method = "";
-                    }
-
-                    L.st.setZero();
-                    L.ed.setZero();
-                    L.mid.setZero();
-                    L.length = 0.0;
-
-                    links.push_back(L);
-                }
-            }
-            temp_nodes.push_back(node);
-        }
-        node_file.close();
-
-        // set fast find nodes instance
-        {
-            std::unique_lock<std::shared_mutex> lock(mtx);
-            if(nodes)
-            {
-                *nodes = temp_nodes;
-            }
-
-            // rebuild node maps with indices
-            rebuild_node_maps();
-
-            // link info
-            special_links.clear();
-            special_links.reserve(links.size());
-            for(size_t i = 0; i < links.size(); i++)
-            {
-                LINK_INFO s = links[i];
-
-                Eigen::Vector3d st_pos(0.0, 0.0, 0.0);
-                Eigen::Vector3d ed_pos(0.0, 0.0, 0.0);
-
-                auto it_st = nodes_id_map.find(s.st_id);
-                auto it_ed = nodes_id_map.find(s.ed_id);
-                if(it_st != nodes_id_map.end() && it_ed != nodes_id_map.end())
-                {
-                    size_t idx_st = it_st->second;
-                    size_t idx_ed = it_ed->second;
-
-                    if(is_valid_node_index(idx_st) && is_valid_node_index(idx_ed))
-                    {
-                        const NODE &nst = (*nodes)[idx_st];
-                        const NODE &ned = (*nodes)[idx_ed];
-
-                        st_pos = nst.tf.block(0, 3, 3, 1);
-                        ed_pos = ned.tf.block(0, 3, 3, 1);
-                    }
-                }
-
-                s.st = st_pos;
-                s.ed = ed_pos;
-                s.mid = 0.5 * (s.st + s.ed);
-                s.length = (s.ed - s.st).norm();
-
-                special_links.push_back(s);
-
-                // debug
-                // {
-                //     for(size_t i = 0; i < special_links.size(); i++)
-                //     {
-                //         const LINK_INFO &s = special_links[i];
-                //         if(s.info != "" || s.method != "" || s.speed > 0.0)
-                //         {
-                //             printf("[UNIMAP] %s -> %s, info = %s, method = %s",
-                //                    s.st_id.toStdString().c_str(),
-                //                    s.ed_id.toStdString().c_str(),
-                //                    s.info.toStdString().c_str(),
-                //                    s.method.toStdString().c_str());
-
-                //             if(s.speed > 0.0)
-                //             {
-                //                 printf(", speed = %f", s.speed);
-                //             }
-                //             printf("\n");
-                //         }
-                //     }
-                // }
-            }
-
-            // build KD-tree for nodes
-            std::vector<Eigen::Vector3d> node_pos;
-            std::vector<QString> node_id;
-
-            for(size_t p = 0; p < nodes->size(); p++)
-            {
-                const NODE& node = (*nodes)[p];
-                if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
-                {
-                    node_pos.push_back(node.tf.block(0,3,3,1));
-                    node_id.push_back(node.id);
-                }
-            }
-
-            // set kdtree info
-            kdtree_node.pos = node_pos;
-            kdtree_node.id = node_id;
-
-            // build kdtree
-            kdtree_node_index = std::make_unique<KD_TREE_NODE>(3, kdtree_node, nanoflann::KDTreeSingleIndexAdaptorParams(10));
-            kdtree_node_index->buildIndex();
-        }
-
-        logger->write_log(QString("[UNIMAP] %1 loaded").arg(node_path), "Green", true, false);
-        spdlog::info("[UNIMAP] {} loaded", node_path.toStdString());
+        return false;
     }
+
+
+    QByteArray data = node_file.readAll();
+    node_file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if(!doc.isArray())
+    {
+        spdlog::error("[UNIMAP] node.json root is not array");
+        return false;
+    }
+
+    QJsonArray arr = doc.array();
+    std::vector<NODE> temp_nodes;
+    temp_nodes.reserve(arr.size());
+
+    Q_FOREACH(const QJsonValue &val, arr)
+    {
+        if(!val.isObject())
+        {
+            continue;
+        }
+
+        QJsonObject obj = val.toObject();
+        NODE node;
+
+        // id, name, type, context
+        node.id     = obj["id"].toString();
+        node.name   = obj["name"].toString();
+        node.type   = obj["type"].toString();
+        node.context   = obj["context"].toString();
+
+        // pose
+        node.tf     = string_to_TF(obj["pose"].toString());
+
+        // size
+        node.size.setZero();
+        if(obj.contains("size"))
+        {
+            QString size = obj["size"].toString();
+            QStringList str_list = size.split(",", Qt::SkipEmptyParts);
+            if(str_list.size() >= 3)
+            {
+                node.size.x() = str_list[0].toDouble();
+                node.size.y() = str_list[1].toDouble();
+                node.size.z() = str_list[2].toDouble();
+            }
+        }
+
+        // role
+        node.role = NODE_ROLE();
+        if(obj.contains("role"))
+        {
+            QString role = obj["role"].toString();
+            QStringList str_list = role.split(",", Qt::SkipEmptyParts);
+            for(int i = 0; i < str_list.size(); i++)
+            {
+                QString str = str_list[i].trimmed();
+                if(str == "CONVEYOR")
+                {
+                    node.role.conveyor = true;
+                }
+                else if(str == "WARNING_BEEP")
+                {
+                     node.role.warning_beep = true;
+                }
+                else if(str == "IGNORE_2D")
+                {
+                    node.role.ignore_2d = true;
+                }
+                else if(str == "IGNORE_3D")
+                {
+                    node.role.ignore_3d = true;
+                }
+                else if(str == "IGNORE_CAM")
+                {
+                    node.role.ignore_cam = true;
+                }
+                else if(str == "IGNORE_OBS_2D")
+                {
+                    node.role.ignore_obs_2d = true;
+                }
+                else if(str == "IGNORE_OBS_3D")
+                {
+                    node.role.ignore_obs_3d = true;
+                }
+                else if(str == "IGNORE_OBS_CAM")
+                {
+                    node.role.ignore_obs_cam = true;
+                }
+            }
+        }
+
+        // links
+        node.linked.clear();
+        if(obj.contains("links") && obj["links"].isArray())
+        {
+            QJsonArray link_arr = obj["links"].toArray();
+            Q_FOREACH(const QJsonValue &lv, link_arr)
+            {
+                if(!lv.isObject())
+                {
+                    continue;
+                }
+
+                QJsonObject obj_link = lv.toObject();
+                QString ed = obj_link["id"].toString();
+                if(ed.isEmpty())
+                {
+                    continue;
+                }
+                node.linked.push_back(ed);
+
+                LINK L;
+                L.st_id = node.id;
+                L.ed_id = ed;
+
+                // dir
+                if(obj_link.contains("dir"))
+                {
+                    L.dir = obj_link["dir"].toString();
+                }
+                else
+                {
+                    L.dir = "";
+                }
+
+                // method
+                if(obj_link.contains("method"))
+                {
+                    L.method = obj_link["method"].toString();
+                }
+                else
+                {
+                    L.method = "";
+                }
+
+                // speed
+                if(obj_link.contains("speed"))
+                {
+                    L.speed = obj_link["speed"].toDouble();
+                }
+                else
+                {
+                    L.speed = 0.0;
+                }
+                L.st.setZero();
+                L.ed.setZero();
+                L.mid.setZero();
+                L.length = 0.0;
+
+                temp_links.push_back(L);
+            }
+        }
+        temp_nodes.push_back(node);
+    }
+
+    // set fast find nodes instance
+    {
+        std::unique_lock<std::shared_mutex> lock(mtx);
+        if(nodes)
+        {
+            *nodes = temp_nodes;
+        }
+
+        // rebuild node maps with indices
+        rebuild_node_maps();
+
+        special_links.clear();
+        special_links.reserve(temp_links.size());
+        for(size_t i = 0; i < temp_links.size(); i++)
+        {
+            LINK link = temp_links[i];
+
+            Eigen::Vector3d st_pos(0.0, 0.0, 0.0);
+            Eigen::Vector3d ed_pos(0.0, 0.0, 0.0);
+
+            auto it_st = nodes_id_map.find(link.st_id);
+            auto it_ed = nodes_id_map.find(link.ed_id);
+            if(it_st != nodes_id_map.end() && it_ed != nodes_id_map.end())
+            {
+                size_t idx_st = it_st->second;
+                size_t idx_ed = it_ed->second;
+
+                if(is_valid_node_index(idx_st) && is_valid_node_index(idx_ed))
+                {
+                    const NODE &node_st = (*nodes)[idx_st];
+                    const NODE &node_ed = (*nodes)[idx_ed];
+
+                    st_pos = node_st.tf.block(0,3,3,1);
+                    ed_pos = node_ed.tf.block(0,3,3,1);
+                }
+            }
+
+            link.st = st_pos;
+            link.ed = ed_pos;
+            link.mid = 0.5 * (link.st + link.ed);
+            link.length = (link.ed - link.st).norm();
+
+            special_links.push_back(link);
+
+            // debug
+            // {
+            //     for(size_t i = 0; i < special_links.size(); i++)
+            //     {
+            //         const LINK_INFO &s = special_links[i];
+            //         if(s.info != "" || s.method != "" || s.speed > 0.0)
+            //         {
+            //             printf("[UNIMAP] %s -> %s, info = %s, method = %s",
+            //                    s.st_id.toStdString().c_str(),
+            //                    s.ed_id.toStdString().c_str(),
+            //                    s.info.toStdString().c_str(),
+            //                    s.method.toStdString().c_str());
+
+            //             if(s.speed > 0.0)
+            //             {
+            //                 printf(", speed = %f", s.speed);
+            //             }
+            //             printf("\n");
+            //         }
+            //     }
+            // }
+        }
+
+        // build KD-tree for nodes
+        std::vector<Eigen::Vector3d> node_pos;
+        std::vector<QString> node_id;
+        for(size_t p = 0; p < nodes->size(); p++)
+        {
+            const NODE& node = (*nodes)[p];
+            if(node.type == "ROUTE" || node.type == "GOAL" || node.type == "INIT" || node.type == "STATION")
+            {
+                node_pos.push_back(node.tf.block(0,3,3,1));
+                node_id.push_back(node.id);
+            }
+        }
+
+        // set kdtree info
+        kdtree_node.pos = node_pos;
+        kdtree_node.id = node_id;
+
+        // build kdtree
+        kdtree_node_index = std::make_unique<KD_TREE_NODE>(3, kdtree_node, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+        kdtree_node_index->buildIndex();
+    }
+
+    logger->write_log(QString("[UNIMAP] %1 loaded").arg(node_path), "Green", true, false);
+    spdlog::info("[UNIMAP] {} loaded", node_path.toStdString());
+
     return true;
 }
 
@@ -810,7 +886,7 @@ void UNIMAP::save_node()
                 obj["id"]   = n.id;
                 obj["name"] = n.name;
                 obj["type"] = n.type;
-                obj["info"] = n.info;
+                obj["context"] = n.context;
                 obj["pose"] = TF_to_string(n.tf);
 
                 // build links array as objects
@@ -825,12 +901,12 @@ void UNIMAP::save_node()
                     // attach attributes from special_links if exists
                     for(size_t k = 0; k < special_links.size(); k++)
                     {
-                        const LINK_INFO &s = special_links[k];
+                        const LINK &s = special_links[k];
                         if(s.st_id == n.id && s.ed_id == ed)
                         {
-                            if(!s.info.isEmpty())
+                            if(!s.dir.isEmpty())
                             {
-                                lo["info"] = s.info;
+                                lo["dir"] = s.dir;
                             }
                             if(s.speed > 0.0)
                             {
@@ -873,7 +949,7 @@ void UNIMAP::save_node()
                 obj["id"] = (*nodes)[p].id;
                 obj["name"] = (*nodes)[p].name;
                 obj["type"] = (*nodes)[p].type;
-                obj["info"] = (*nodes)[p].info;
+                obj["info"] = (*nodes)[p].context;
                 obj["pose"] = TF_to_string((*nodes)[p].tf);
                 obj["links"] = links_to_array((*nodes)[p].linked);
 
@@ -939,7 +1015,7 @@ std::shared_ptr<std::vector<NODE>> UNIMAP::get_nodes_origin()
     return nodes;
 }
 
-std::vector<LINK_INFO> UNIMAP::get_special_links()
+std::vector<LINK> UNIMAP::get_special_links()
 {
     std::shared_lock<std::shared_mutex> lock(mtx);
     return special_links;
@@ -1426,24 +1502,38 @@ QString UNIMAP::get_cur_zone(Eigen::Matrix4d tf)
             continue;
         }
 
-        QString info = node->info;
-        NODE_INFO res;
-        if(parse_info(info, "SIZE", res))
+        Eigen::Matrix4d res_tf = node->tf.inverse()*tf;
+
+        double x = res_tf(0,3);
+        double y = res_tf(1,3);
+        double z = res_tf(2,3);
+
+        if(x > -node->size[0]/2 && x < node->size[0]/ 2 &&
+           y > -node->size[1]/2 && y < node->size[1]/ 2 &&
+           z > -node->size[2]/2 && z < node->size[2]/ 2)
         {
-            Eigen::Matrix4d res_tf = node->tf.inverse()*tf;
-
-            double x = res_tf(0,3);
-            double y = res_tf(1,3);
-            double z = res_tf(2,3);
-
-            if(x > -res.sz[0]/2 && x < res.sz[0]/ 2 &&
-                    y > -res.sz[1]/2 && y < res.sz[1]/ 2 &&
-                    z > -res.sz[2]/2 && z < res.sz[2]/ 2)
-            {
-                zone_type = node->type;
-                break;
-            }
+            zone_type = node->type;
+            break;
         }
+
+        // QString info = node->info;
+        // NODE_INFO res;
+        // if(parse_info(info, "SIZE", res))
+        // {
+        //     Eigen::Matrix4d res_tf = node->tf.inverse()*tf;
+
+        //     double x = res_tf(0,3);
+        //     double y = res_tf(1,3);
+        //     double z = res_tf(2,3);
+
+        //     if(x > -res.sz[0]/2 && x < res.sz[0]/ 2 &&
+        //             y > -res.sz[1]/2 && y < res.sz[1]/ 2 &&
+        //             z > -res.sz[2]/2 && z < res.sz[2]/ 2)
+        //     {
+        //         zone_type = node->type;
+        //         break;
+        //     }
+        // }
     }
 
     return zone_type;

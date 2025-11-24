@@ -115,7 +115,7 @@
         "USE_EKF": true
     },
     "map": {
-        "MAP_PATH": "/home/juyeon/maps/251119_SEC"
+        "MAP_PATH": "/home/juyeon/maps/251119_SEC_test"
     },
     "mapping": {
         "SLAM_ICP_COST_THRESHOLD": "0.5",

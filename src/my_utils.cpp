@@ -1057,6 +1057,7 @@ bool check_self_collision(double x, double y, double z,
     return false;
 }
 
+/*
 bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
 {
     bool matched = false;
@@ -1142,6 +1143,7 @@ bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result)
 
     return matched;
 }
+*/
 
 QJsonArray pose_to_array(Eigen::Vector3d pose)
 {
