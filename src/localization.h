@@ -138,7 +138,6 @@ private:
     // for loc
     std::vector<TIME_POSE> tp_storage;
     tbb::concurrent_queue<TIME_POSE> tp_que;
-    tbb::concurrent_queue<TIME_POSE_PTS> tpp_que;
 
     // loop processing time
     std::atomic<double> process_time_localization = {0.0};

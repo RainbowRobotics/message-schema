@@ -562,13 +562,6 @@ void LOCALIZATION::localization_loop_2d()
                 tp.tf = G;
                 tp_que.push(tp);
 
-                // for obs loop
-                TIME_POSE_PTS tpp;
-                tpp.t = frm.t;
-                tpp.tf = G;
-                tpp.pts = frm.pts;
-                tpp_que.push(tpp);
-
                 // update
                 set_cur_tf(G);
 
@@ -657,13 +650,6 @@ void LOCALIZATION::localization_loop_3d()
                 tp.t = frm.t;
                 tp.tf = G;
                 tp_que.push(tp);
-
-                // for obs loop
-                TIME_POSE_PTS tpp;
-                tpp.t = frm.t;
-                tpp.tf = G;
-                tpp.pts = dsk;
-                //tpp_que.push(tpp);
 
                 // update
                 set_cur_tf(G);
@@ -908,13 +894,6 @@ void LOCALIZATION::ekf_loop()
                 }
                 G = ekf.get_cur_tf();
 
-                // for obs loop
-                TIME_POSE_PTS tpp;
-                tpp.t = frm.t;
-                tpp.tf = G;
-                tpp.pts = frm.pts;
-                tpp_que.push(tpp);
-
                 // local to global deskewed point
                 std::vector<Eigen::Vector3d> pts(frm.pts.size());
                 for(size_t p = 0; p < frm.pts.size(); p++)
@@ -1011,13 +990,6 @@ void LOCALIZATION::ekf_loop_3d()
                     ekf_3d.estimate(G, cur_ieir);
                 }
                 G = ekf_3d.get_cur_tf();
-
-                // for obs loop
-                TIME_POSE_PTS tpp;
-                tpp.t = frm.t;
-                tpp.tf = G;
-                tpp.pts = frm.pts;
-                tpp_que.push(tpp);
 
                 // local to global deskewed point
                 std::vector<Eigen::Vector3d> pts(frm.pts.size());
