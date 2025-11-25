@@ -181,7 +181,7 @@ void LAKI::grab_loop(int idx)
         repark_t pack;
         if(!laki_udp[idx]->get_repackedpack(pack))
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
 
