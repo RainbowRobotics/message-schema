@@ -435,126 +435,119 @@ void POLICY::link_loop()
             continue;
         }
 
-        Eigen::Matrix4d cur_tf = loc->get_cur_tf();
-        Eigen::Vector2d pos(cur_tf(0,3), cur_tf(1,3));
+        std::vector<LINK> links = unimap->get_links();
+        QString node_id = get_cur_node().id;
 
-        QString cur_node_id = get_cur_node().id;
-
-        QString link_str = "";
         LINK link;
-        bool link_found = false;
+        bool has_link = false;
 
         if(global_path.node.size() < 2)
         {
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_link = LINK();
-            }
             last_link_str.clear();
             last_link = LINK();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
+            has_link = false;
         }
 
-        if(cur_node_id.isEmpty())
+        if(node_id.isEmpty())
         {
-            std::lock_guard<std::mutex> lock(mtx);
             if(!last_link_str.isEmpty())
             {
-                cur_link = last_link;
+                link = last_link;
+                has_link = true;
+            }
+            else
+            {
+                has_link = false;
+            }
+        }
+        else
+        {
+            // find the idx of the cur_node in path
+            int idx = -1;
+            for(size_t i = 0; i < global_path.node.size(); i++)
+            {
+                if(global_path.node[i] == node_id)
+                {
+                    idx = i;
+                    break;
+                }
+            }
+
+            // if there is no cur_node on the path, the link is terminated
+            if(idx < 0)
+            {
+                // update
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    cur_link = LINK();
+                }
+                last_link_str.clear();
+                last_link = LINK();
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
+            if(idx + 1 < (int)global_path.node.size())
+            {
+                // if there is a next node -> activate link (st=cur_node, ed=next_node)
+                QString st_id = global_path.node[idx];
+                QString ed_id = global_path.node[idx + 1];
+
+                QString link_str = st_id + "->" + ed_id;
+
+                if(link_str != last_link_str)
+                {
+                    LINK found_link;
+                    bool link_found = false;
+
+                    for(size_t i = 0; i < links.size(); i++)
+                    {
+                        const LINK &lk = links[i];
+                        if(lk.st_id == st_id && lk.ed_id == ed_id)
+                        {
+                            found_link = lk;
+                            link_found = true;
+                            break;
+                        }
+                    }
+
+                    if(link_found)
+                    {
+                        last_link = found_link;
+                    }
+                    else
+                    {
+                        last_link = LINK();
+                    }
+
+                    last_link_str = link_str;
+                }
+
+                link = last_link;
+                has_link = true;
+            }
+            else
+            {
+                // if there is no next node -> end of link
+                last_link_str.clear();
+                last_link = LINK();
+                has_link = false;
+            }
+        }
+
+        // update
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            if(has_link)
+            {
+                cur_link = link;
             }
             else
             {
                 cur_link = LINK();
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-
-        // find the idx of the cur_node in path
-        int idx = -1;
-        for(size_t i = 0; i < global_path.node.size(); i++)
-        {
-            if(global_path.node[i] == cur_node_id)
-            {
-                idx = i;
-                break;
-            }
-        }
-
-        // if there is no cur_node on the path, the link is terminated
-        if(idx < 0)
-        {
-            // update
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_link = LINK();
-            }
-            last_link_str.clear();
-            last_link = LINK();
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-
-        if(idx + 1 < (int)global_path.node.size())
-        {
-            // if there is a next node -> activate link (st=cur_node, ed=next_node)
-            QString st_id = global_path.node[idx];
-            QString ed_id = global_path.node[idx + 1];
-
-            link_str = st_id + "->" + ed_id;
-
-            if(link_str != last_link_str)
-            {
-                link_found = false;
-                link = LINK();
-                for(size_t i = 0; i < links.size(); i++)
-                {
-                    const LINK &lk = links[i];
-                    if(lk.st_id == st_id && lk.ed_id == ed_id)
-                    {
-                        link = lk;
-                        link_found = true;
-                        break;
-                    }
-                }
-
-                if(link_found)
-                {
-                    last_link = link;
-                }
-                else
-                {
-                    last_link = LINK();
-                }
-
-                last_link_str = link_str;
-            }
-
-            // update
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                if(link_str == last_link_str)
-                {
-                    cur_link = last_link;
-                }
-                else
-                {
-                    cur_link = last_link;
-                }
-            }
-        }
-        else
-        {
-            // if there is no next node -> end of link
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                cur_link = LINK();
-            }
-            last_link_str.clear();
-            last_link = LINK();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

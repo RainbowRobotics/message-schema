@@ -4762,9 +4762,9 @@ void MainWindow::plot_ctrl()
 
         // plot policy info
         {
-            NODE node; // = POLICY::instance()->get_cur_node();
-            LINK link; // = POLICY::instance()->get_cur_link();
-            NODE zone; // = POLICY::instance()->get_cur_zone();
+            NODE node = POLICY::instance()->get_cur_node();
+            LINK link = POLICY::instance()->get_cur_link();
+            NODE zone = POLICY::instance()->get_cur_zone();
 
             QString node_str = node.id;
 

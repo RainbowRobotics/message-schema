@@ -34,8 +34,8 @@ public:
      * interface funcs
      ***********************/
     NODE get_cur_node();
-    LINK get_cur_link();
     NODE get_cur_zone();
+    LINK get_cur_link();
 
     /***********************
      * set other modules
@@ -87,8 +87,8 @@ private:
     void apply_ignore_obs_cam(bool on);
 
     NODE cur_node;
-    LINK cur_link;
     NODE cur_zone;
+    LINK cur_link;
 
     PATH global_path;
 
