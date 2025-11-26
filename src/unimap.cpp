@@ -409,6 +409,7 @@ bool UNIMAP::load_topo()
         {
             nodes->clear();
         }
+        links.clear();
     }
     
     QString node_path = map_path + "/topo.json";
@@ -418,7 +419,7 @@ bool UNIMAP::load_topo()
         return false;
     }
 
-    std::vector<LINK> links;
+    std::vector<LINK> temp_links;
 
     QFile node_file(node_path);
     if(node_file.open(QIODevice::ReadOnly))
@@ -438,7 +439,7 @@ bool UNIMAP::load_topo()
             node.context    = obj["info"].toString();
             node.tf     = string_to_TF(obj["pose"].toString());
 
-            // link info
+            // link
             {
                 QJsonArray link_arr = obj["links"].toArray();
                 QString last_link = "";
@@ -447,34 +448,16 @@ bool UNIMAP::load_topo()
                     const QJsonValue &lv = link_arr.at(i);
                     if(lv.isString())
                     {
-                        last_link = lv.toString();
-                    }
-                    else if(lv.isObject())
-                    {
-                        QJsonObject lo = lv.toObject();
-                        if(lo.contains("info"))
+                        QString ed = lv.toString().trimmed();
+                        if(ed.isEmpty())
                         {
-                            QString ed = last_link;
-                            if(lo.contains("id") && lo["id"].isString())
-                            {
-                                ed = lo["id"].toString();
-                            }
-                            if(!ed.isEmpty())
-                            {
-                                LINK link;
-                                link.st_id = node.id;
-                                link.ed_id = ed;
-                                link.dir  = lo["dir"].toString();
-
-                                // speed parsing
-                                if(lo.contains("speed"))
-                                {
-                                    link.speed  = lo["speed"].toDouble();
-                                }
-
-                                links.push_back(link);
-                            }
+                            continue;
                         }
+
+                        LINK L;
+                        L.st_id = node.id;
+                        L.ed_id = ed;
+                        temp_links.push_back(L);
                     }
                 }
             }
@@ -490,7 +473,8 @@ bool UNIMAP::load_topo()
             {
                 *nodes = temp_nodes;
             }
-            
+            links = temp_links;
+
             // rebuild node maps with indices
             rebuild_node_maps();
 
@@ -532,6 +516,7 @@ bool UNIMAP::load_node()
         {
             nodes->clear();
         }
+        links.clear();
     }
 
     QString node_path = map_path + "/node.json";
@@ -778,9 +763,8 @@ void UNIMAP::save_node()
     QString node_path = path + "/node.json";
     QFileInfo node_info(node_path);
 
-    // if(node_info.exists() && node_info.isFile())
+    // save as node.json
     {
-        // save as node.json
         QFile node_file(node_path);
         if(node_file.open(QIODevice::WriteOnly | QFile::Truncate))
         {
@@ -887,9 +871,9 @@ void UNIMAP::save_node()
 
             spdlog::info("[UNIMAP] {} saved", node_path.toStdString());
         }
-        return;
     }
-    // else
+
+    // save as topo.json
     {
         // save as topo.json
         QString topo_path = path + "/topo.json";
@@ -910,14 +894,17 @@ void UNIMAP::save_node()
                 for(size_t k = 0; k < links.size(); k++)
                 {
                     const LINK &lk = links[k];
+
                     if(lk.st_id == (*nodes)[p].id)
                     {
                         link_arr.append(lk.ed_id);
                     }
                 }
 
-                obj["links"] = link_arr;
-                arr.append(obj);
+                if(!link_arr.isEmpty())
+                {
+                    obj["links"] = link_arr;
+                }
 
                 arr.append(obj);
             }
