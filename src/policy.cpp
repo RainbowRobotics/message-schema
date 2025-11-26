@@ -131,7 +131,7 @@ std::vector<PATH> POLICY::drive_policy(PATH path)
     size_t edge_cnt = path.node.size() - 1;
 
     // determine mode for each edge
-    std::vector<LINK> links = unimap->get_special_links();
+    std::vector<LINK> links = unimap->get_links();
     std::vector<DriveDir> dir;
     std::vector<QString> method;
     dir.reserve(path.node.size() - 1);
@@ -294,7 +294,7 @@ void POLICY::speed_policy(const PATH& path, std::vector<double>& ref_v)
     // make speed_map (link, speed)
     std::unordered_map<std::string, double> speed_map;
     {
-        std::vector<LINK> links = unimap->get_special_links();
+        std::vector<LINK> links = unimap->get_links();
         for(size_t j = 0; j < links.size(); j++)
         {
             if(links[j].speed <= 0.0)
@@ -424,7 +424,7 @@ void POLICY::link_loop()
     QString last_link_str = "";
     LINK last_link;
 
-    std::vector<LINK> links = unimap->get_special_links();
+    std::vector<LINK> links = unimap->get_links();
 
     printf("[POLICY] link_loop start\n");
     while(link_flag)

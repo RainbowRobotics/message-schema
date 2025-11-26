@@ -86,10 +86,6 @@ private:
     void apply_ignore_obs_3d(bool on);
     void apply_ignore_obs_cam(bool on);
 
-    // QString cur_node_id = "";
-    // QString cur_link_id = "";
-    // QString cur_zone_id = "";
-
     NODE cur_node;
     LINK cur_link;
     NODE cur_zone;

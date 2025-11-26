@@ -3321,19 +3321,6 @@ void MainWindow::plot_node()
                     }
                     else if(node.type == "OBS")
                     {
-                        // QString info = node.info;
-
-                        // NODE_INFO res;
-                        // if(parse_info(info, "SIZE", res))
-                        // {
-                        //     pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                        //             -res.sz[1]/2, res.sz[1]/2,
-                        //             -res.sz[2]/2, res.sz[2]/2, 1.0, 0.0, 1.0, id.toStdString());
-
-                        //     pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
-                        //     pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
-                        // }
-
                         pcl_viewer->addCube(-node.size[0]/2, node.size[0]/2,
                                 -node.size[1]/2, node.size[1]/2,
                                 -node.size[2]/2, node.size[2]/2, 1.0, 0.0, 1.0, id.toStdString());
@@ -3343,18 +3330,6 @@ void MainWindow::plot_node()
                     }
                     else if(node.type == "ZONE")
                     {
-                        // QString info = node.info;
-                        // NODE_INFO res;
-                        // if(parse_info(info, "SIZE", res))
-                        // {
-                        //     pcl_viewer->addCube(-res.sz[0]/2, res.sz[0]/2,
-                        //             -res.sz[1]/2, res.sz[1]/2,
-                        //             -res.sz[2]/2, res.sz[2]/2, 0.5, 1.0, 0.0, id.toStdString());
-
-                        //     pcl_viewer->updateShapePose(id.toStdString(), Eigen::Affine3f(tf.cast<float>()));
-                        //     pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.1, id.toStdString());
-                        // }
-
                         pcl_viewer->addCube(-node.size[0]/2, node.size[0]/2,
                                 -node.size[1]/2, node.size[1]/2,
                                 -node.size[2]/2, node.size[2]/2, 0.5, 1.0, 0.0, id.toStdString());
@@ -3394,62 +3369,64 @@ void MainWindow::plot_node()
             if(ui->ckb_PlotEdges->isChecked())
             {
                 auto unimap_nodes = UNIMAP::instance()->get_nodes_origin();
+                std::vector<LINK> links = UNIMAP::instance()->get_links();
 
                 // draw edges
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
-                for(const auto node0 : (*unimap_nodes))
+
+                for(size_t i = 0; i < links.size(); i++)
                 {
-                    for(const auto node1_id : node0.linked)
+                    const LINK &link = links[i];
+
+                    NODE* node0 = UNIMAP::instance()->get_node_by_id(link.st_id);
+                    NODE* node1 = UNIMAP::instance()->get_node_by_id(link.ed_id);
+                    if(node0 == NULL || node1 == NULL)
                     {
-                        NODE* node1 = UNIMAP::instance()->get_node_by_id(node1_id);
-                        if(node1 == nullptr)
-                        {
-                            continue;
-                        }
-
-                        Eigen::Vector3d P0 = node0.tf.block(0,3,3,1);
-                        Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
-                        Eigen::Vector3d P_mid = (P0+P1)/2;
-
-                        std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
-                        for(size_t i = 0; i < pts0.size(); i++)
-                        {
-                            pcl::PointXYZRGB pt;
-                            pt.x = pts0[i][0];
-                            pt.y = pts0[i][1];
-                            pt.z = pts0[i][2];
-                            pt.r = 255;
-                            pt.g = 0;
-                            pt.b = 0;
-
-                            cloud->push_back(pt);
-                        }
-
-                        std::vector<Eigen::Vector3d> pts1 = sampling_line(P1, P_mid, 0.05);
-                        for(size_t i = 0; i < pts1.size(); i++)
-                        {
-                            pcl::PointXYZRGB pt;
-                            pt.x = pts1[i][0];
-                            pt.y = pts1[i][1];
-                            pt.z = pts1[i][2];
-                            pt.r = 0;
-                            pt.g = 255;
-                            pt.b = 0;
-
-                            cloud->push_back(pt);
-                        }
-
-                        pcl::PointXYZRGB pt;
-                        pt.x = P_mid[0];
-                        pt.y = P_mid[1];
-                        pt.z = P_mid[2] + 0.05;
-                        pt.r = 0;
-                        pt.g = 0;
-                        pt.b = 255;
-
-                        cloud2->push_back(pt);
+                        continue;
                     }
+
+                    Eigen::Vector3d P0 = node0->tf.block(0,3,3,1);
+                    Eigen::Vector3d P1 = node1->tf.block(0,3,3,1);
+                    Eigen::Vector3d P_mid = (P0 + P1) / 2.0;
+
+                    std::vector<Eigen::Vector3d> pts0 = sampling_line(P0, P_mid, 0.05);
+                    for(size_t j = 0; j < pts0.size(); j++)
+                    {
+                        pcl::PointXYZRGB pt;
+                        pt.x = pts0[j][0];
+                        pt.y = pts0[j][1];
+                        pt.z = pts0[j][2];
+                        pt.r = 255;
+                        pt.g = 0;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
+                    }
+
+                    std::vector<Eigen::Vector3d> pts1 = sampling_line(P1, P_mid, 0.05);
+                    for(size_t j = 0; j < pts1.size(); j++)
+                    {
+                        pcl::PointXYZRGB pt;
+                        pt.x = pts1[j][0];
+                        pt.y = pts1[j][1];
+                        pt.z = pts1[j][2];
+                        pt.r = 0;
+                        pt.g = 255;
+                        pt.b = 0;
+
+                        cloud->push_back(pt);
+                    }
+
+                    pcl::PointXYZRGB pt_mid;
+                    pt_mid.x = P_mid[0];
+                    pt_mid.y = P_mid[1];
+                    pt_mid.z = P_mid[2] + 0.05;
+                    pt_mid.r = 0;
+                    pt_mid.g = 0;
+                    pt_mid.b = 255;
+
+                    cloud2->push_back(pt_mid);
                 }
 
                 if(!pcl_viewer->updatePointCloud(cloud, "edge_dots"))
@@ -4785,9 +4762,9 @@ void MainWindow::plot_ctrl()
 
         // plot policy info
         {
-            NODE node = POLICY::instance()->get_cur_node();
-            LINK link = POLICY::instance()->get_cur_link();
-            NODE zone = POLICY::instance()->get_cur_zone();
+            NODE node; // = POLICY::instance()->get_cur_node();
+            LINK link; // = POLICY::instance()->get_cur_link();
+            NODE zone; // = POLICY::instance()->get_cur_zone();
 
             QString node_str = node.id;
 

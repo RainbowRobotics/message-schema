@@ -1320,7 +1320,6 @@ struct NODE
     QString context;                // additional info
 
     Eigen::Matrix4d tf;             // node tf
-    std::vector<QString> linked;    // neightbor node ids
 
     NODE_ROLE role;
 
@@ -1334,7 +1333,6 @@ struct NODE
         context = "";
 
         tf.setIdentity();
-        linked.clear();
     }
 
     NODE(const NODE& p)
@@ -1346,7 +1344,6 @@ struct NODE
         context = p.context;
 
         tf = p.tf;
-        linked = p.linked;
 
         role = p.role;
     }
@@ -1360,7 +1357,6 @@ struct NODE
         context = p.context;
 
         tf = p.tf;
-        linked = p.linked;
 
         role = p.role;
 
@@ -1382,36 +1378,19 @@ struct LINK
     QString st_id;
     QString ed_id;
 
-    Eigen::Vector3d st;
-    Eigen::Vector3d ed;
-    Eigen::Vector3d mid;
-
-    double length = 0.0;
-
     QString dir;
     QString method;
     double speed = 0.0;
 
     LINK()
     {
-        st.setZero();
-        ed.setZero();
-        mid.setZero();
 
-        length = 0.0;
-        speed  = 0.0;
     }
 
     LINK(const LINK& p)
     {
         st_id = p.st_id;
         ed_id = p.ed_id;
-
-        st = p.st;
-        ed = p.ed;
-        mid = p.mid;
-
-        length = p.length;
 
         dir = p.dir;
         method = p.method;
@@ -1422,12 +1401,6 @@ struct LINK
     {
         st_id = p.st_id;
         ed_id = p.ed_id;
-
-        st = p.st;
-        ed = p.ed;
-        mid = p.mid;
-
-        length = p.length;
 
         dir = p.dir;
         method = p.method;
