@@ -2867,22 +2867,6 @@ Node</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="5" colspan="5">
-               <widget class="QPushButton" name="bt_AnnotSave">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>8</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Annot
-Save</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="2">
                <widget class="QPushButton" name="bt_QuickAnnotStop">
                 <property name="enabled">
@@ -3022,6 +3006,30 @@ Node</string>
                 <property name="text">
                  <string>QA
 Cloud</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="9">
+               <widget class="QPushButton" name="bt_AnnotReload">
+                <property name="text">
+                 <string>Annot
+Reload</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5" colspan="3">
+               <widget class="QPushButton" name="bt_AnnotSave">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>8</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Annot
+Save</string>
                 </property>
                </widget>
               </item>

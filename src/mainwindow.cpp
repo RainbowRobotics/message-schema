@@ -127,6 +127,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ui->bt_AddLink2,          SIGNAL(clicked()), this, SLOT(bt_AddLink2()));
     connect(ui->bt_DelNode,           SIGNAL(clicked()), this, SLOT(bt_DelNode()));
     connect(ui->bt_AnnotSave,         SIGNAL(clicked()), this, SLOT(bt_AnnotSave()));
+    connect(ui->bt_AnnotReload,         SIGNAL(clicked()), this, SLOT(bt_AnnotReload()));
     connect(ui->bt_QuickAddNode,      SIGNAL(clicked()), this, SLOT(bt_QuickAddNode()));
     connect(ui->bt_ReplaceNode,      SIGNAL(clicked()), this, SLOT(bt_ReplaceNode()));
     connect(ui->bt_QuickAnnotStart,   SIGNAL(clicked()), this, SLOT(bt_QuickAnnotStart()));
@@ -2348,6 +2349,32 @@ void MainWindow::bt_AnnotSave()
 
     UNIMAP::instance()->save_node();
 }
+
+void MainWindow::bt_AnnotReload()
+{
+    if(UNIMAP::instance()->get_is_loaded() != MAP_LOADED)
+    {
+        //printf("[Del_Node] check map load\n");
+        //spdlog::warn("[Del_Node] check map load");
+        log_warn("check map load");
+        return;
+    }
+
+    // topo or node load
+    QFileInfo node_info(QString(UNIMAP::instance()->map_path + "/node.json"));
+    QFileInfo topo_info(QString(UNIMAP::instance()->map_path + "/topo.json"));
+    if(node_info.exists() && node_info.isFile())
+    {
+        UNIMAP::instance()->load_node();
+    }
+    else if(topo_info.exists() && topo_info.isFile())
+    {
+        UNIMAP::instance()->load_topo();
+    }
+
+    topo_update();
+}
+
 
 void MainWindow::bt_QuickAddNode()
 {

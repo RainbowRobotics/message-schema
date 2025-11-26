@@ -83,15 +83,15 @@ public:
     void set_config_module(CONFIG* _config);
     void set_logger_module(LOGGER* _logger);
 
+    // map dir
+    QString map_path;
+
 private:
     explicit UNIMAP(QObject *parent = nullptr);
     ~UNIMAP();
 
     // mutex
     std::shared_mutex mtx;
-
-    // map dir
-    QString map_path;
 
     // load 2d map
     bool load_2d();
