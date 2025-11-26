@@ -1261,33 +1261,78 @@ struct TIME_POSE_ID
 };
 
 // topomap node
+struct NODE_ROLE
+{
+    bool conveyor;
+    bool warning_beep;
+    bool ignore_2d;
+    bool ignore_3d;
+    bool ignore_cam;
+    bool ignore_obs_2d;
+    bool ignore_obs_3d;
+    bool ignore_obs_cam;
+
+    NODE_ROLE()
+    {
+        conveyor       = false;
+        warning_beep   = false;
+        ignore_2d      = false;
+        ignore_3d      = false;
+        ignore_cam     = false;
+        ignore_obs_2d  = false;
+        ignore_obs_3d  = false;
+        ignore_obs_cam = false;
+    }
+
+    NODE_ROLE(const NODE_ROLE& p)
+    {
+        conveyor       = p.conveyor;
+        warning_beep   = p.warning_beep;
+        ignore_2d      = p.ignore_2d;
+        ignore_3d      = p.ignore_3d;
+        ignore_cam     = p.ignore_cam;
+        ignore_obs_2d  = p.ignore_obs_2d;
+        ignore_obs_3d  = p.ignore_obs_3d;
+        ignore_obs_cam = p.ignore_obs_cam;
+    }
+
+    NODE_ROLE& operator=(const NODE_ROLE& p)
+    {
+        conveyor       = p.conveyor;
+        warning_beep   = p.warning_beep;
+        ignore_2d      = p.ignore_2d;
+        ignore_3d      = p.ignore_3d;
+        ignore_cam     = p.ignore_cam;
+        ignore_obs_2d  = p.ignore_obs_2d;
+        ignore_obs_3d  = p.ignore_obs_3d;
+        ignore_obs_cam = p.ignore_obs_cam;
+
+        return *this;
+    }
+};
+
 struct NODE
 {
     QString id;
     QString name;
     QString type;                   // ROUTE, GOAL, OBS, ZONE
-    QString info;                   // additional info
-    Eigen::Matrix4d tf;             // node tf
-    std::vector<QString> linked;    // neightbor node ids
-
-    QString subtype_name;
-    QString subtype_index;
-
     Eigen::Vector3d size;
+    QString context;                // additional info
+
+    Eigen::Matrix4d tf;             // node tf
+
+    NODE_ROLE role;
 
     NODE()
     {
         id = "";
         name = "";
         type = "";
-        info = "";
-        tf.setIdentity();
-        linked.clear();
-
-        subtype_name = "";
-        subtype_index = "";
-
         size.setZero();
+
+        context = "";
+
+        tf.setIdentity();
     }
 
     NODE(const NODE& p)
@@ -1295,14 +1340,12 @@ struct NODE
         id = p.id;
         name = p.name;
         type = p.type;
-        info = p.info;
-        tf = p.tf;
-        linked = p.linked;
-
-        subtype_name = p.subtype_name;
-        subtype_index = p.subtype_index;
-
         size = p.size;
+        context = p.context;
+
+        tf = p.tf;
+
+        role = p.role;
     }
 
     NODE& operator=(const NODE& p)
@@ -1310,14 +1353,12 @@ struct NODE
         id = p.id;
         name = p.name;
         type = p.type;
-        info = p.info;
-        tf = p.tf;
-        linked = p.linked;
-
-        subtype_name = p.subtype_name;
-        subtype_index = p.subtype_index;
-
         size = p.size;
+        context = p.context;
+
+        tf = p.tf;
+
+        role = p.role;
 
         return *this;
     }
@@ -1329,6 +1370,43 @@ struct NODE
             return true;
         }
         return false;
+    }
+};
+
+struct LINK
+{
+    QString st_id;
+    QString ed_id;
+
+    QString dir;
+    QString method;
+    double speed = 0.0;
+
+    LINK()
+    {
+
+    }
+
+    LINK(const LINK& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        dir = p.dir;
+        method = p.method;
+        speed = p.speed;
+    }
+
+    LINK& operator=(const LINK& p)
+    {
+        st_id = p.st_id;
+        ed_id = p.ed_id;
+
+        dir = p.dir;
+        method = p.method;
+        speed = p.speed;
+
+        return *this;
     }
 };
 
@@ -1706,144 +1784,6 @@ struct COPY_INFO
         id = p.id;
         original_idx = p.original_idx;
         original_links = p.original_links;
-        return *this;
-    }
-};
-
-struct NODE_INFO
-{
-    QString info;
-
-    Eigen::Vector3d sz;
-
-    bool slow;
-    bool fast;
-    bool reverse;
-
-    bool warning_beep;
-    bool ignore_2d;
-    bool ignore_3d;
-    bool ignore_cam;
-    bool ignore_obs_2d;
-    bool ignore_obs_3d;
-    bool ignore_obs_cam;
-
-    NODE_INFO()
-    {
-        info = "";
-
-        sz.setZero();
-
-        slow           = false;
-        fast           = false;
-        reverse        = false;
-
-        warning_beep   = false;
-        ignore_2d      = false;
-        ignore_3d      = false;
-        ignore_cam     = false;
-        ignore_obs_2d  = false;
-        ignore_obs_3d  = false;
-        ignore_obs_cam = false;
-    }
-
-    NODE_INFO(const NODE_INFO& p)
-    {
-        info = p.info;
-
-        sz = p.sz;
-
-        slow           = p.slow;
-        fast           = p.fast;
-        reverse        = p.reverse;
-
-        warning_beep   = p.warning_beep;
-        ignore_2d      = p.ignore_2d;
-        ignore_3d      = p.ignore_3d;
-        ignore_cam     = p.ignore_cam;
-        ignore_obs_2d  = p.ignore_obs_2d;
-        ignore_obs_3d  = p.ignore_obs_3d;
-        ignore_obs_cam = p.ignore_obs_cam;
-    }
-
-    NODE_INFO& operator=(const NODE_INFO& p)
-    {
-        info = p.info;
-
-        sz = p.sz;
-
-        slow           = p.slow;
-        fast           = p.fast;
-        reverse        = p.reverse;
-
-        warning_beep   = p.warning_beep;
-        ignore_2d      = p.ignore_2d;
-        ignore_3d      = p.ignore_3d;
-        ignore_cam     = p.ignore_cam;
-        ignore_obs_2d  = p.ignore_obs_2d;
-        ignore_obs_3d  = p.ignore_obs_3d;
-        ignore_obs_cam = p.ignore_obs_cam;
-
-        return *this;
-    }
-};
-
-struct LINK_INFO
-{
-    QString st_id;
-    QString ed_id;
-
-    Eigen::Vector3d st;
-    Eigen::Vector3d ed;
-    Eigen::Vector3d mid;
-
-    double length = 0.0;
-
-    QString info;
-    double speed = 0.0;
-    QString method;
-
-    LINK_INFO()
-    {
-        st.setZero();
-        ed.setZero();
-        mid.setZero();
-
-        length = 0.0;
-        speed  = 0.0;
-    }
-
-    LINK_INFO(const LINK_INFO& p)
-    {
-        st_id = p.st_id;
-        ed_id = p.ed_id;
-
-        st = p.st;
-        ed = p.ed;
-        mid = p.mid;
-
-        length = p.length;
-
-        info = p.info;
-        speed = p.speed;
-        method = p.method;
-    }
-
-    LINK_INFO& operator=(const LINK_INFO& p)
-    {
-        st_id = p.st_id;
-        ed_id = p.ed_id;
-
-        st = p.st;
-        ed = p.ed;
-        mid = p.mid;
-
-        length = p.length;
-
-        info = p.info;
-        speed = p.speed;
-        method = p.method;
-
         return *this;
     }
 };

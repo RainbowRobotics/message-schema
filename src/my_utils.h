@@ -75,7 +75,7 @@ bool check_self_collision(double x, double y, double z,
                           double robot_min_y, double robot_max_y,
                           double robot_min_z, double robot_max_z);
 
-bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
+// bool parse_info(const QString& info, const QString& info_key, NODE_INFO& result);
 
 QJsonArray pose_to_array(Eigen::Vector3d pose);
 Eigen::Vector3d array_to_pose(QJsonArray arr);
