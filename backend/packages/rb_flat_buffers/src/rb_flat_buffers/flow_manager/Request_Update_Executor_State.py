@@ -5,6 +5,7 @@
 import flatbuffers
 from flatbuffers.compat import import_numpy
 from typing import Any
+from typing import Optional
 np = import_numpy()
 
 class Request_Update_Executor_State(object):
@@ -32,8 +33,15 @@ class Request_Update_Executor_State(object):
             return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
+    # Request_Update_Executor_State
+    def Error(self) -> Optional[str]:
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def Request_Update_Executor_StateStart(builder: flatbuffers.Builder):
-    builder.StartObject(1)
+    builder.StartObject(2)
 
 def Start(builder: flatbuffers.Builder):
     Request_Update_Executor_StateStart(builder)
@@ -43,6 +51,12 @@ def Request_Update_Executor_StateAddState(builder: flatbuffers.Builder, state: i
 
 def AddState(builder: flatbuffers.Builder, state: int):
     Request_Update_Executor_StateAddState(builder, state)
+
+def Request_Update_Executor_StateAddError(builder: flatbuffers.Builder, error: int):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(error), 0)
+
+def AddError(builder: flatbuffers.Builder, error: int):
+    Request_Update_Executor_StateAddError(builder, error)
 
 def Request_Update_Executor_StateEnd(builder: flatbuffers.Builder) -> int:
     return builder.EndObject()
@@ -56,6 +70,7 @@ class Request_Update_Executor_StateT(object):
     # Request_Update_Executor_StateT
     def __init__(self):
         self.state = 0  # type: int
+        self.error = None  # type: str
 
     @classmethod
     def InitFromBuf(cls, buf, pos):
@@ -79,10 +94,15 @@ class Request_Update_Executor_StateT(object):
         if requestUpdateExecutorState is None:
             return
         self.state = requestUpdateExecutorState.State()
+        self.error = requestUpdateExecutorState.Error()
 
     # Request_Update_Executor_StateT
     def Pack(self, builder):
+        if self.error is not None:
+            error = builder.CreateString(self.error)
         Request_Update_Executor_StateStart(builder)
         Request_Update_Executor_StateAddState(builder, self.state)
+        if self.error is not None:
+            Request_Update_Executor_StateAddError(builder, error)
         requestUpdateExecutorState = Request_Update_Executor_StateEnd(builder)
         return requestUpdateExecutorState

@@ -51,30 +51,30 @@ class RBBaseSDK:
                 return await fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
-                raise RuntimeError(f"invalid param: {e}") from e
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
-                raise RuntimeError(f"zenoh error: {e}") from e
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
                 raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
-                print(f"[{fn.__name__}] unexpected: {e}", flush=True)
-                raise RuntimeError(f"unexpected: {e}") from e
+                print(f"[{fn.__name__}] {e}", flush=True)
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
 
         def _sync_wrapper(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 print(f"[{fn.__name__}] invalid param: {e}", flush=True)
-                raise RuntimeError(f"invalid param: {e}") from e
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 print(f"[{fn.__name__}] zenoh error: {e}", flush=True)
-                raise RuntimeError(f"zenoh error: {e}") from e
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
             except asyncio.CancelledError as e:
                 raise RuntimeError(f"cancelled: {e}") from e
             except Exception as e:  # noqa: BLE001
-                print(f"[{fn.__name__}] unexpected: {e}", flush=True)
-                raise RuntimeError(f"unexpected: {e}") from e
+                print(f"[{fn.__name__}] {e}", flush=True)
+                raise RuntimeError(f"[{fn.__name__}] {e}") from e
 
         if asyncio.iscoroutinefunction(fn):
             return functools.wraps(fn)(_async_wrapper)
@@ -96,6 +96,7 @@ class RBBaseSDK:
         if getattr(self, "_initialized", False):
             return
 
+        self._is_alive = True
         self._initialized = True
         self._pid = os.getpid()
 
@@ -110,6 +111,7 @@ class RBBaseSDK:
         self._loop_thread.start()
 
         # zenoh client 생성 + 루프 설정
+        # self.zenoh_client = ZenohManager.get_client(self.loop)
         self.zenoh_client = ZenohClient()
         self.zenoh_client.set_loop(self.loop)
 
@@ -179,6 +181,7 @@ class RBBaseSDK:
             if hasattr(self, "zenoh_client") and self.zenoh_client is not None:
                 with contextlib.suppress(Exception, TimeoutError):
                     self.zenoh_client.close()
+            # ZenohManager.close_local()
 
             # 루프 위에서 돌고 있는 task 취소
             if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
@@ -204,6 +207,8 @@ class RBBaseSDK:
             # 루프 close
             if hasattr(self, "loop") and self.loop is not None and not self.loop.is_closed():
                 self.loop.close()
+
+            self._is_alive = False
 
             print(f"[SDK Base] Closed for PID {self._pid} ({self.__class__.__name__})")
 

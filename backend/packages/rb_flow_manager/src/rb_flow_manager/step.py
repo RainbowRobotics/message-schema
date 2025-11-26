@@ -1,3 +1,4 @@
+import time
 import uuid
 from collections.abc import Callable
 from multiprocessing import Event
@@ -21,7 +22,7 @@ class Step:
         variable: dict[str, Any] | None = None,
         disabled: bool | None = None,
         func: Callable | None = None,
-        repeat_count: int | str | None = None,
+        # repeat_count: int | str | None = None,
         done_script: Callable | str | None = None,
         children: list["Step"] | None = None,
         *,
@@ -127,11 +128,15 @@ class Step:
 
     def execute(self, ctx: ExecutionContext):
         """단계 실행"""
+        _start_ts = time.monotonic()
+
+        ctx.emit_next(self.step_id)
+
+        # ctx.initialize_sdk_functions()
 
         done_called = False
 
         ctx.push_args(self.args)
-        ctx.emit_next(self.step_id)
         ctx.check_stop()
 
         try:
@@ -140,7 +145,7 @@ class Step:
             args = _resolve_arg_scope_value(self.args, ctx) if self.args else {}
 
             if fn is None and func_name and not self.disabled:
-                fn = ctx.sdk_functions.get(func_name)
+                fn = ctx.sdk_functions.get(func_name) if ctx.sdk_functions is not None else None
                 if fn is None:
                     raise StopExecution(f"unknown flow function: {func_name}")
 
@@ -200,11 +205,14 @@ class Step:
                     call_with_matching_args(fn, **eval_args, flow_manager_args=flow_manager_args)
                 except RuntimeError as e:
                     ctx.emit_error(self.step_id, RuntimeError(str(e)))
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    time.sleep(0.1)
                     ctx.stop()
                     raise StopExecution(str(e)) from e
                 except Exception as e:  # noqa: BLE001
                     ctx.emit_error(self.step_id, e)
-                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}")
+                    print(f"[{ctx.process_id}] Step '{self.name}' error: {e}", flush=True)
+                    time.sleep(0.1)
                     ctx.stop()
                     raise StopExecution(str(e)) from e
 
@@ -219,6 +227,13 @@ class Step:
                 child.execute(ctx)
         finally:
             ctx.pop_args()
+
+            min_step_interval = getattr(ctx, "min_step_interval", 0)
+            elapsed = time.monotonic() - _start_ts
+            remaining = min_step_interval - elapsed
+
+            if remaining > 0:
+                time.sleep(remaining)
 
 
 class RepeatStep(Step):

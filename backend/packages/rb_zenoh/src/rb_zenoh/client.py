@@ -52,14 +52,18 @@ class FBRootReadable(Protocol):
 
 
 class ZenohClient:
-    _instance = None
+    _instances: dict[int, "ZenohClient"] = {}
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
+        pid = os.getpid()
         with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-        return cls._instance
+            if pid not in cls._instances:
+                inst = super().__new__(cls)
+                inst._init_done = False
+                inst._owner_pid = pid
+                cls._instances[pid] = inst
+            return cls._instances[pid]
 
     def __init__(self):
         if getattr(self, "_init_done", False):
@@ -88,15 +92,19 @@ class ZenohClient:
         self.connect()
 
     def connect(self):
-        if self.session is None:
+        if self.session is not None:
+            return
+
+        delay = 0.5
+
+        for _ in range(8):
+            # 🔴 매 시도마다 새로운 Config 생성
             conf = Config()
             conf.insert_json5("mode", '"peer"')
             conf.insert_json5("scouting/multicast/enabled", "true")
             conf.insert_json5("scouting/multicast/ttl", "1")
-            # conf.insert_json5("scouting/multicast/interface", '"rb_internal"')
-            conf.insert_json5("transport/shared_memory/enabled", "true")
+            conf.insert_json5("transport/shared_memory/enabled", "false")  # SHM 일단 끔(선택)
 
-            # rb_internal에 글로벌 IPv6/IPv4를 안 주면, 보통 IPv6 링크-로컬(fe80::/64) 만 존재한다.
             conf.insert_json5(
                 "listen/endpoints",
                 '{ "peer": ["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447", "tcp/[::]:7447#iface=rb_internal"] }',
@@ -107,28 +115,30 @@ class ZenohClient:
                 "connect/endpoints", '["tcp/127.0.0.1:7447", "tcp/zenoh-router:7447"]'
             )
 
-            delay = 0.5
-            for _ in range(8):
-                try:
-                    self.session = zenoh_open(conf)
-                    print("✅ zenoh peer session opened")
-                    try:
-                        self.is_shm_active()
-                    except Exception as e:
-                        print(f"[shm-check] skipped: {e}")
-                    break
-                except ZError as e:
-                    print(f"[zenoh] open failed: {e}; retry...")
-                    time.sleep(delay)
-                    delay = min(delay * 2, 3.0)
-            if self.session is None:
-                raise RuntimeError("zenoh peer open failed")
-
-            # 디폴트 루프 캐싱(있으면)
             try:
-                self._loop = asyncio.get_running_loop()
-            except RuntimeError:
-                self._loop = None
+                self.session = zenoh_open(conf)
+                print("✅ zenoh peer session opened", flush=True)
+
+                # SHM 체크는 일단 비활성
+                # try:
+                #     self.is_shm_active()
+                # except Exception as e:
+                #     print(f"[shm-check] skipped: {e}")
+
+                # 디폴트 루프 캐싱
+                try:
+                    self._loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    self._loop = None
+
+                return
+            except ZError as e:
+                print(f"[zenoh] open failed: {e}; retry...", flush=True)
+                time.sleep(delay)
+                delay = min(delay * 2, 3.0)
+
+        # 여기까지 왔으면 8번 다 실패
+        raise RuntimeError("zenoh peer open failed")
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         self._loop = loop
@@ -462,14 +472,17 @@ class ZenohClient:
         # dict_params = dict(params or {})
         # sel = Selector(keyexpr, dict_params)
 
-        get_result = cast(Session, self.session).get(
-            keyexpr, payload=payload, target=target, timeout=timeout
-        )
-
-        seen_any = False
-
         try:
+            get_result = cast(Session, self.session).get(
+                keyexpr, payload=payload, target=target, timeout=timeout
+            )
+
+            print("get_result >>>", get_result, flush=True)
+
+            seen_any = False
+
             for rep in get_result:
+                print("rep >>>", rep, flush=True)
                 seen_any = True
 
                 if rep.ok is not None:
@@ -537,11 +550,15 @@ class ZenohClient:
                     }
                     yield err_result
 
+            print("seen_any >>>", seen_any, flush=True)
+
             if not seen_any:
                 raise ZenohNoReply(timeout)
 
         except ZError as ze:
             raise ZenohTransportError(str(ze)) from ze
+        except Exception as e:
+            raise e
 
     def query_one(
         self,

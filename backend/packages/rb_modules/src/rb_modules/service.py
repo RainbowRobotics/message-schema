@@ -34,13 +34,13 @@ class BaseService:
                 return await fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
-                raise
+                raise RuntimeError(e) from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
-                raise
+                raise RuntimeError(e) from e
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
-                raise
+                raise RuntimeError(e) from e
 
         @functools.wraps(fn)
         def sync_wrapper(*args, **kwargs):
@@ -48,12 +48,12 @@ class BaseService:
                 return fn(*args, **kwargs)
             except (TypeError, ValueError, AttributeError, KeyError) as e:
                 rb_log.error(f"[{fn.__name__}] invalid param: {e}")
-                raise
+                raise RuntimeError(e) from e
             except (ZenohNoReply, ZenohTransportError) as e:
                 rb_log.error(f"[{fn.__name__}] zenoh error: {e}")
-                raise
+                raise RuntimeError(e) from e
             except Exception as e:
                 rb_log.error(f"[{fn.__name__}] unexpected: {e}")
-                raise
+                raise RuntimeError(e) from e
 
         return async_wrapper if asyncio.iscoroutinefunction(fn) else sync_wrapper

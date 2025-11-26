@@ -156,6 +156,9 @@ class RBManipulateSDK(RBBaseSDK):
             req.target = move_input_target
             req.speed = move_input_speed
 
+            print("movej req >>>", req, flush=True)
+            print("zenoh_client session >>>", self.zenoh_client.session, flush=True)
+
             # 명령 전송
             res = self.zenoh_client.query_one(
                 f"{robot_model}/call_move_j",
@@ -174,6 +177,9 @@ class RBManipulateSDK(RBBaseSDK):
 
                 while True:
                     try:
+                        if not self._is_alive:
+                            break
+
                         stop_move = await self.move_finish_at_stop(
                             robot_model=robot_model,
                             finish_at=finish_at,
@@ -263,6 +269,9 @@ class RBManipulateSDK(RBBaseSDK):
         if flow_manager_args is not None and res.get("dict_payload"):
             while True:
                 try:
+                    if not self._is_alive:
+                        break
+
                     stop_move = await self.move_finish_at_stop(
                         robot_model=robot_model,
                         finish_at=finish_at,
@@ -359,8 +368,6 @@ class RBManipulateSDK(RBBaseSDK):
             flow_manager_args: Flow Manager 인자 (done 콜백 등)
         """
 
-        print("flow_manager_arg", flow_manager_args, flush=True)
-
         if tcp_num != -1:
             self.set_toolist_num(robot_model=robot_model, tool_num=tcp_num)
 
@@ -436,7 +443,7 @@ class RBManipulateSDK(RBBaseSDK):
         req.targetToolNum = tool_num
 
         res = self.zenoh_client.query_one(
-            f"{robot_model}/set_toolist_num",
+            f"{robot_model}/set_toollist_num",
             flatbuffer_req_obj=req,
             flatbuffer_res_T_class=Response_FunctionsT,
             flatbuffer_buf_size=8,

@@ -20,6 +20,7 @@ from rb_database.utils import make_check_include_query, make_check_search_text_q
 from rb_flat_buffers.flow_manager.RB_Flow_Manager_ProgramState import (
     RB_Flow_Manager_ProgramState as RB_Flow_Manager_ProgramState_FB,
 )
+from rb_flat_buffers.IPC.Request_MotionHalt import Request_MotionHaltT
 from rb_flat_buffers.IPC.Request_MotionPause import Request_MotionPauseT
 from rb_flat_buffers.IPC.Request_Move_SmoothJogStop import Request_Move_SmoothJogStopT
 from rb_flat_buffers.IPC.Response_Functions import Response_FunctionsT
@@ -59,6 +60,24 @@ from .program_schema import (
     TaskType,
 )
 
+_executor: ScriptExecutor | None = None
+_zenoh_controller: Zenoh_Controller | None = None
+
+
+def _get_zenoh_controller() -> Zenoh_Controller:
+    global _zenoh_controller
+    if _zenoh_controller is None:
+        _zenoh_controller = Zenoh_Controller()
+    return _zenoh_controller
+
+
+def _get_executor() -> ScriptExecutor:
+    global _executor
+    if _executor is None:
+        _executor = ScriptExecutor(controller=_get_zenoh_controller())
+    return _executor
+
+
 zenoh_client = ZenohClient()
 
 info_service = InfoService()
@@ -66,15 +85,18 @@ info_service = InfoService()
 
 class ProgramService(BaseService):
     def __init__(self) -> None:
-        # multiprocessing.set_start_method("spawn", force=True)
-
-        zenoh_controller = Zenoh_Controller()
+        # print(
+        #     f"[ProgramService.__init__] pid={os.getpid()} "
+        #     f"id={id(self)} thread={threading.current_thread().name}",
+        #     flush=True,
+        # )
+        # traceback.print_stack(limit=5)
 
         self._robot_models = read_json_file("data", "robot_models.json")
 
         self._play_state = "stop"
 
-        self.script_executor = ScriptExecutor(controller=zenoh_controller)
+        self.script_executor = _get_executor()
         self._script_base_path = Path("/app/data/common/scripts")
 
     async def call_resume_or_pause(
@@ -129,6 +151,23 @@ class ProgramService(BaseService):
             ),
         }
 
+    def call_stop(self):
+        manipulate_req = Request_MotionHaltT()
+
+        res_manipulate_halt = zenoh_client.query_one(
+            "*/call_halt",
+            flatbuffer_req_obj=manipulate_req,
+            flatbuffer_res_T_class=Response_FunctionsT,
+            flatbuffer_buf_size=2,
+        )
+        return {
+            "manipulateReturnValue": (
+                res_manipulate_halt["dict_payload"]["returnValue"]
+                if res_manipulate_halt and res_manipulate_halt.get("dict_payload")
+                else None
+            ),
+        }
+
     async def call_smoothjog_stop(self, *, stoptime: float):
         """
         SmoothJog Stop을 호출하는 함수.
@@ -177,7 +216,7 @@ class ProgramService(BaseService):
     def get_play_state(self):
         return self._play_state
 
-    def update_executor_state(self, state: int) -> None:
+    def update_executor_state(self, state: int, error: str | None = None) -> None:
         str_state = self.convert_state_to_string(state)
 
         if (
@@ -190,11 +229,16 @@ class ProgramService(BaseService):
         elif (
             str_state == RB_Flow_Manager_ProgramState.STOPPED
             or str_state == RB_Flow_Manager_ProgramState.ERROR
-            or str_state == RB_Flow_Manager_ProgramState.IDLE
         ):
             self._play_state = "stop"
+        elif str_state == RB_Flow_Manager_ProgramState.IDLE:
+            self._play_state = "idle"
 
-        fire_and_log(socket_client.emit("program/play_state", {"playState": self._play_state}))
+        fire_and_log(
+            socket_client.emit(
+                "program/play_state", {"playState": self._play_state, "error": error}
+            )
+        )
 
     async def load_program(self, *, request: Request_Load_ProgramPD, db: MongoDB):
         """
@@ -487,6 +531,7 @@ class ProgramService(BaseService):
         step_id = request_dict["stepId"]
         task_id = request_dict["taskId"]
         state = request_dict["state"]
+        error_value: str | None = request_dict.get("error")
 
         steps_col = db["steps"]
 
@@ -496,6 +541,7 @@ class ProgramService(BaseService):
                 {
                     "stepId": step_id,
                     "state": state,
+                    "error": error_value,
                 },
             ),
             name="emit_step_update_state",

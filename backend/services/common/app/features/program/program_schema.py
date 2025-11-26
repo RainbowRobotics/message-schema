@@ -73,6 +73,7 @@ class Request_Update_StepStatePD(BaseModel):
     stepId: str
     taskId: str
     state: RB_Flow_Manager_ProgramState
+    error: str | None = None
 
 
 class Request_Create_Multiple_StepPD(BaseModel):
