@@ -3135,7 +3135,7 @@ void COMM_MSA::send_status_loop()
 
 
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
@@ -3180,10 +3180,10 @@ void COMM_MSA::send_status()
     motorArray->get_vector().push_back(motorObj1);
 
     sio::object_message::ptr motorObj2 = sio::object_message::create();
-    motorObj2->get_map()["connection"] = sio::string_message::create((ms.connection_m1 == 1) ? "true" : "false");
-    motorObj2->get_map()["status"]     = sio::string_message::create(QString::number(ms.status_m1).toStdString());
-    motorObj2->get_map()["temp"]       = sio::string_message::create(QString::number(ms.temp_m1, 'f', 3).toStdString());
-    motorObj2->get_map()["current"]    = sio::string_message::create(QString::number(static_cast<double>(ms.cur_m1) / 10.0, 'f', 3).toStdString());
+    motorObj2->get_map()["connection"] = sio::bool_message::create((ms.connection_m1 == 1) ? "true" : "false");
+    motorObj2->get_map()["status"]     = sio::double_message::create(ms.status_m1);
+    motorObj2->get_map()["temp"]       = sio::double_message::create(ms.temp_m1);
+    motorObj2->get_map()["current"]    = sio::double_message::create(static_cast<double>(ms.cur_m1) / 10.0);
     motorArray->get_vector().push_back(motorObj2);
 
     rootObj->get_map()["motor"] = motorArray;
@@ -4819,10 +4819,56 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
 
 void COMM_MSA::handle_common_load_topo(DATA_LOAD& msg)
 {
-    msg.result = "reject";
-    //msg.message = "[R0Sx0301]not support yet";
-    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
-    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_TOPO_LOAD_FAILED, ERROR_MANAGER::LOAD_MAP);
+    if(!unimap)
+    {
+        msg.result = "reject";
+        send_load_response(msg);
+        return;
+    }
+
+    // Check if map is loaded
+    if(unimap->get_is_loaded() != MAP_LOADED)
+    {
+        msg.result = "reject";
+        send_load_response(msg);
+        return;
+    }
+
+    // Get current map path
+    QString map_dir = unimap->get_map_path();
+    if(map_dir.isEmpty())
+    {
+        msg.result = "reject";
+        send_load_response(msg);
+        return;
+    }
+
+    // Check if topo.json exists
+    QString topo_path = map_dir + "/topo.json";
+    QFileInfo topo_info(topo_path);
+    if(!topo_info.exists() || !topo_info.isFile())
+    {
+        msg.result = "reject";
+        send_load_response(msg);
+        return;
+    }
+
+    // Load topo
+    spdlog::info("[LOAD_TOPO] Loading topo from: {}", topo_path.toStdString());
+    bool success = unimap->load_topo();
+    
+    if(success)
+    {
+        msg.result = "accept";
+        msg.message = "";
+        spdlog::info("[LOAD_TOPO] Successfully loaded topo.json");
+    }
+    else
+    {
+        msg.result = "reject";
+        spdlog::error("[LOAD_TOPO] Failed to load topo.json");
+    }
+    
     send_load_response(msg);
 }
 
