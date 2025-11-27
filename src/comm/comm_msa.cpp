@@ -2790,6 +2790,13 @@ void COMM_MSA::send_lidar_2d()
 
     Eigen::Matrix4d cur_tf = loc->get_cur_tf();
     Eigen::Vector3d cur_xi = TF_to_se2(cur_tf);
+    
+    // Validate pose data
+    if(std::isnan(cur_xi[0]) || std::isnan(cur_xi[1]) || std::isnan(cur_xi[2]))
+    {
+        return;
+    }
+    
     if(pts.size() > 0)
     {
         sio::object_message::ptr rootObject = sio::object_message::create();
@@ -2807,6 +2814,12 @@ void COMM_MSA::send_lidar_2d()
 
         for(size_t p=0; p<pts.size(); p++)
         {
+            // Skip invalid points
+            if(std::isnan(pts[p][0]) || std::isnan(pts[p][1]) || std::isnan(pts[p][2]))
+            {
+                continue;
+            }
+
             double yaw_rad = std::atan2(pts[p][1], pts[p][0]);
             double yaw_deg = yaw_rad * R2D;
             if(yaw_deg < 0)
@@ -2824,23 +2837,33 @@ void COMM_MSA::send_lidar_2d()
             }
         }
 
+        // Fill missing points and create json array
+        Eigen::Vector3d last_valid_pt(0, 0, 0);
+        bool has_valid_pt = false;
+        
         for(int i=0; i<360; i++)
         {
-            // fill missing sample point with previous point
-            if(std::isnan(sample_pts[i][0]))
+            // Update last valid point if current point is valid
+            if(!std::isnan(sample_pts[i][0]))
             {
-                int prev = (i-1+360)%360;
-                sample_pts[i] = sample_pts[prev];  // add pre pts
+                last_valid_pt = sample_pts[i];
+                has_valid_pt = true;
+            }
+            // Fill missing sample point with previous valid point
+            else if(has_valid_pt)
+            {
+                sample_pts[i] = last_valid_pt;
+            }
+            // No valid points found yet, use zero
+            else
+            {
+                sample_pts[i] = Eigen::Vector3d(0, 0, 0);
             }
 
             sio::array_message::ptr jsonObj = sio::array_message::create();
-            if(!std::isnan(sample_pts[i][0]))
-            {
-                jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][0]));
-                jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][1]));
-                jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][2]));
-            }
-            //            jsonObj->get_vector().push_back(sio::double_message::create(100));
+            jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][0]));
+            jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][1]));
+            jsonObj->get_vector().push_back(sio::double_message::create(sample_pts[i][2]));
             jsonArray->get_vector().push_back(jsonObj);
         }
 
@@ -2937,7 +2960,11 @@ void COMM_MSA::send_mapping_cloud()
         rootObj->get_map()["time"] = sio::double_message::create(static_cast<long long>(time * 1000));
 
         // send
-        io->socket()->emit("mappingCloud", rootObj);
+        SOCKET_MESSAGE socket_msg;
+        socket_msg.event = "mappingCloud";
+        socket_msg.data = rootObj;
+
+        send_queue.push(socket_msg);
         last_send_kfrm_idx++;
     }
 }
@@ -3029,7 +3056,7 @@ void COMM_MSA::send_status_loop()
         {
             send_status();
             //            send_system_status(cpu_use, cpu_temp);
-            //            send_mapping_cloud();
+            send_mapping_cloud();
         }
 
         // for variable loop
@@ -4744,15 +4771,27 @@ void COMM_MSA::handle_common_load_map(DATA_LOAD& msg)
             send_load_response(msg);
             return;
         }
-        else if(map_exist_msg == "no 3d map!")
+        if(config->get_use_lidar_3d() == true)
         {
-            msg.result = "reject";
-            msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
-            ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
+            if(map_exist_msg == "no 3d map!")
+            {
+                msg.result = "reject";
+                msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
+                ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
 
-            send_load_response(msg);
-            return;
+                send_load_response(msg);
+                return;
+            }
         }
+        //else if(map_exist_msg == "no 3d map!")
+        //{
+        //    msg.result = "reject";
+        //    msg.message = ERROR_MANAGER::instance()->getErrorMessage(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
+        //    ERROR_MANAGER::instance()->logError(ERROR_MANAGER::MAP_LOAD_NO_3D_MAP, ERROR_MANAGER::LOAD_MAP);
+//
+        //    send_load_response(msg);
+        //    return;
+        //}
 
         loc->stop();
         obsmap->clear();
