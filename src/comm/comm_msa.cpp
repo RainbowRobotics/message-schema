@@ -3611,7 +3611,7 @@ void COMM_MSA::handle_move_jog(const DATA_MOVE& msg)
 {
     double vx = msg.jog_val[0];
     double vy = msg.jog_val[1];
-    double wz = msg.jog_val[2];
+    double wz = msg.jog_val[2]*D2R;
 
     MainWindow* _main = qobject_cast<MainWindow*>(main);
     if(_main)
