@@ -2015,9 +2015,9 @@ void COMM_MSA::control_loop()
             }
             else
             {
-                mobile->motor_off();
+                //mobile->motor_off();
 
-                msg.result = "accept";
+                msg.result = "reject";
                 msg.message = "";
             }
         }
@@ -2541,7 +2541,8 @@ void COMM_MSA::common_loop()
             {
                 mobile->motor_off();
 
-                msg.result = "accept";
+                //msg.result = "accept";
+                msg.result = "reject";
                 msg.message = "";
             }
         }
