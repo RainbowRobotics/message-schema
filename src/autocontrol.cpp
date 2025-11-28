@@ -4086,7 +4086,7 @@ void AUTOCONTROL::control_loop()
             //                    if(robot_model == RobotModel::MECANUM)
             if(cmd_method == CommandMethod::METHOD_HPP || cmd_method == CommandMethod::METHOD_SIDE)
             {
-                Eigen::Vector3d local_tgt_pos = _tgt_tf.block(0,3,3,1);
+                Eigen::Vector3d local_tgt_pos = cur_tf_inv.block(0,0,3,3)*tgt_pos + cur_tf_inv.block(0,3,3,1);
 
                 double local_dx = local_tgt_pos[0];
                 double local_dy = local_tgt_pos[1];
@@ -4095,7 +4095,7 @@ void AUTOCONTROL::control_loop()
                 dir_x = local_dx / (local_d + 1.0e-6);
                 dir_y = local_dy / (local_d + 1.0e-6);
 
-//                err_d = calc_dist_2d(goal_pos - cur_pos);
+                // err_d = calc_dist_2d(goal_pos - cur_pos);
                 err_d  = calc_dist_2d(_tgt_xi);
             }
             else
@@ -4247,7 +4247,27 @@ void AUTOCONTROL::control_loop()
         {
             // calc heading error
             double err_th = deltaRad(goal_xi[2], cur_xi[2]);
-//            qDebug()<<"err_th : "<<err_th;
+
+            // skip (hpp)
+            if(cmd_method == CommandMethod::METHOD_HPP)
+            {
+                clear_control_params();
+
+                fsm_state = AUTO_FSM_COMPLETE;
+                set_multi_infomation(StateMultiReq::NONE, StateObsCondition::NONE, StateCurGoal::COMPLETE);
+
+                // update move info
+                {
+                    std::lock_guard<std::recursive_mutex> lock(mtx);
+                    cur_move_info.time    = get_time();
+                    cur_move_info.result  = "success";
+                    cur_move_info.message = "very good";
+                    cur_move_info.cur_pos = cur_pos;
+                    Q_EMIT signal_move_response(cur_move_info);
+                }
+                log_info("FINAL ALIGN COMPLETE(HPP, SKIP), err_d: {}, err_th: {}", calc_dist_2d(goal_pos - cur_pos), err_th*R2D);
+                return;
+            }
 
             //spdlog::debug("err_th: {}", err_th);
             log_debug("FINAL ALIGN err_th: {}", err_th);
