@@ -974,9 +974,7 @@ namespace rb_system {
         return parameter_userf[u_num];
     }
     int Save_UserFrameParameter(unsigned int u_num, USERF_CONFIG u_conf){
-        if(u_num >= NO_OF_USERF){
-            return MSG_DESIRED_INDEX_IS_OVER_BOUND;
-        }
+        if(u_num >= NO_OF_USERF)    return MSG_DESIRED_INDEX_IS_OVER_BOUND;
 
         if(!rb_config::WRITE_User_Frame(u_num, u_conf)){
             return MSG_SAVE_TO_DB_FAIL;
@@ -986,6 +984,34 @@ namespace rb_system {
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
     }
+    int Set_UserFrame_6DOF(unsigned int u_num, unsigned int option, float x, float y, float z, float rx, float ry, float rz){
+        // option
+        // 0 : temporary
+        // 1 : temporary + change 
+        if(u_num >= NO_OF_USERF)    return MSG_DESIRED_INDEX_IS_OVER_BOUND;
+        
+        USERF_CONFIG current_config = parameter_userf[u_num];
+        current_config.userf_offset = Eigen::Vector3d(x, y, z);
+        current_config.userf_rotation = rb_math::RPY_to_R(rx, ry, rz);
+
+        if(option == 1){
+            if(!rb_config::WRITE_User_Frame(u_num, current_config)){
+                return MSG_SAVE_TO_DB_FAIL;
+            }
+        }
+        parameter_userf[u_num] = current_config;
+
+        return MSG_OK;
+    }
+    int Set_UserFrame_TCP(unsigned int u_num, unsigned int option){
+        return Set_UserFrame_6DOF(u_num, option
+            , rb_motion::Get_Wrapper_X()[0], rb_motion::Get_Wrapper_X()[1], rb_motion::Get_Wrapper_X()[2]
+            , rb_motion::Get_Wrapper_X()[3], rb_motion::Get_Wrapper_X()[4], rb_motion::Get_Wrapper_X()[5]);
+    }
+    int Set_UserFrame_3Points(unsigned int u_num, unsigned int option, unsigned int point_mode, float p1x, float p1y, float p1z, float p2x, float p2y, float p2z, float p3x, float p3y, float p3z){
+        return MSG_OK;
+    }
+
     // ---------------------------------------------------------------
     // AREA
     // ---------------------------------------------------------------
@@ -1540,7 +1566,7 @@ namespace rb_system {
             return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
         }
         t3 = rb_math::saturation_Low(t3, 0.003);
-        
+
         _gv_Handler_Side->Set_Dout_Pulse(p_num, direction, t1, (t1 + t2), (t1 + t2 + t3));
         if(mode == 0){
             float timeout_sec = 0.;

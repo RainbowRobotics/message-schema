@@ -1,0 +1,87 @@
+I 06:55:41.539   [MAIN]         System Version: 1.0.0
+I 06:55:42.549   [LAN2CAN]      Succeed to create socket
+I 06:55:43.051   [DAEMON]       Succeed to start real-time thread
+I 06:55:43.051   [DAEMON]       Succeed to start read thread
+I 06:55:43.549   [LAN2CAN]      Succeed to connect l2c
+I 06:55:46.562   [MAIN]         SYSTEM STARTING
+I 07:12:38.353   [SYSTEM]       CMD Power On
+I 07:12:38.585   [TOOLFLANGE]   TFB RST 92 0 1 1 145
+I 07:12:38.595   [SYSTEM]       STATE POWER ENGAGED
+I 07:12:39.114   [MOTOR]        BNO 5 TYP:140 MDR:1 BLM:0 SEN:1 SLE:0.000000
+I 07:12:39.114   [MOTOR]        BNO 4 TYP:140 MDR:0 BLM:0 SEN:1 SLE:0.005656
+I 07:12:39.114   [MOTOR]        BNO 6 TYP:140 MDR:0 BLM:0 SEN:1 SLE:-0.000218
+I 07:12:39.114   [MOTOR]        BNO 0 TYP:250 MDR:1 BLM:0 SEN:1 SLE:0.001740
+I 07:12:39.114   [MOTOR]        BNO 1 TYP:250 MDR:0 BLM:0 SEN:1 SLE:0.000653
+I 07:12:39.114   [MOTOR]        BNO 2 TYP:250 MDR:1 BLM:0 SEN:1 SLE:-0.000218
+I 07:12:39.114   [MOTOR]        BNO 3 TYP:250 MDR:1 BLM:0 SEN:1 SLE:90.000653
+I 07:12:39.626   [SYSTEM]       Servo Call: 1/1
+I 07:12:39.626   [SYSTEM]       ServoState: 0
+I 07:12:39.626   [SYSTEM]       ServoState: 1
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 0 : 1250919
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 1 : 1250313
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 2 : 1250313
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 3 : 1250313
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 4 : 1250313
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 5 : 1250313
+I 07:12:39.721   [SYSTEM]       Motor Firmware: 6 : 1250313
+I 07:12:39.721   [SYSTEM]       Side Firmware : 29
+I 07:12:39.721   [SYSTEM]       ToolFlange Firmware : 92
+I 07:12:39.721   [SYSTEM]       Motor PGain: 0 : 360/34/400
+I 07:12:39.721   [SYSTEM]       Motor PGain: 1 : 360/34/400
+I 07:12:39.721   [SYSTEM]       Motor PGain: 2 : 220/40/400
+I 07:12:39.721   [SYSTEM]       Motor PGain: 3 : 360/34/400
+I 07:12:39.721   [SYSTEM]       Motor PGain: 4 : 35/5/80
+I 07:12:39.721   [SYSTEM]       Motor PGain: 5 : 35/5/80
+I 07:12:39.721   [SYSTEM]       Motor PGain: 6 : 35/5/80
+I 07:12:39.721   [SYSTEM]       ServoState: 2
+I 07:12:39.721   [SYSTEM]       ServoState: 3
+I 07:12:41.282   [SYSTEM]       Motor Acts: 0[-0.172083,0.171865/0.174041]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 1[-0.171865,0.172083/0.174041]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 2[-0.170560,0.170995/0.174041]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 3[-0.171213,0.171648/0.174041]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 4[-0.116172,0.124004/0.130531]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 5[-0.116390,0.120741/0.130531]
+I 07:12:41.282   [SYSTEM]       Motor Acts: 6[-0.119436,0.122481/0.130531]
+I 07:12:41.282   [SYSTEM]       ServoState: 4
+I 07:12:41.282   [SYSTEM]       ServoState: 5
+I 07:12:41.282   [SYSTEM]       ServoState: 6
+I 07:12:41.282   [SYSTEM]       Reference On
+I 07:14:29.506   [MOTION]       Motion Mode Changed: 0->1
+I 07:14:30.367   [MOTION]       Motion-Time Done
+I 07:14:30.367   [MOTION]       Motion Mode Changed: 1->0
+I 07:14:30.415   [MOTION]       Motion Mode Changed: 0->1
+I 07:14:36.561   [MOTION]       Motion-Time Done
+I 07:14:36.561   [MOTION]       Motion Mode Changed: 1->0
+I 07:14:41.540   [MOTION]       Motion Mode Changed: 0->1
+I 07:14:44.305   [MOTION]       Motion-Time Done
+I 07:14:44.305   [MOTION]       Motion Mode Changed: 1->0
+I 07:14:44.310   [MOTION]       Motion Mode Changed: 0->1
+I 07:14:46.999   [MOTION]       Motion-Time Done
+I 07:14:46.999   [MOTION]       Motion Mode Changed: 1->0
+W 07:40:35.020   [LAN2CAN]      Header footer not match
+W 07:40:39.666   [LAN2CAN]      Header footer not match
+W 07:40:39.684   [LAN2CAN]      Header footer not match
+W 07:40:41.018   [LAN2CAN]      Header footer not match
+W 07:40:41.018   [LAN2CAN]      Header footer not match
+I 08:25:03.721   [SYSTEM]       RUN DT Mode
+I 08:25:09.099   [SYSTEM]       STOP DT Mode
+I 08:25:09.511   [SYSTEM]       RUN DT Mode
+I 08:25:12.979   [SYSTEM]       STOP DT Mode
+I 08:25:17.821   [SYSTEM]       RUN DT Mode
+I 08:25:33.149   [SYSTEM]       STOP DT Mode
+I 08:40:56.139   [SYSTEM]       RUN DT Mode
+I 08:41:11.987   [SYSTEM]       STOP DT Mode
+I 08:41:13.407   [SYSTEM]       RUN DT Mode
+I 08:41:29.937   [SYSTEM]       STOP DT Mode
+I 08:41:30.287   [SYSTEM]       RUN DT Mode
+I 08:41:35.627   [SYSTEM]       STOP DT Mode
+I 08:41:36.489   [SYSTEM]       RUN DT Mode
+I 08:41:43.945   [SYSTEM]       STOP DT Mode
+I 08:43:58.709   [SYSTEM]       RUN DT Mode
+I 08:44:02.907   [SYSTEM]       STOP DT Mode
+I 08:44:03.029   [SYSTEM]       RUN DT Mode
+I 08:44:05.957   [SYSTEM]       STOP DT Mode
+I 08:44:06.499   [SYSTEM]       RUN DT Mode
+I 08:44:10.267   [SYSTEM]       STOP DT Mode
+I 08:44:10.319   [SYSTEM]       RUN DT Mode
+I 08:44:16.647   [SYSTEM]       STOP DT Mode
