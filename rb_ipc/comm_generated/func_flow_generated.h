@@ -38,6 +38,14 @@ struct Request_MotionHalt;
 struct Request_MotionHaltBuilder;
 struct Request_MotionHaltT;
 
+struct Request_ProgramBefore;
+struct Request_ProgramBeforeBuilder;
+struct Request_ProgramBeforeT;
+
+struct Request_ProgramAfter;
+struct Request_ProgramAfterBuilder;
+struct Request_ProgramAfterT;
+
 struct Request_MotionSpeedBarT : public ::flatbuffers::NativeTable {
   typedef Request_MotionSpeedBar TableType;
   float alpha = 0.0f;
@@ -246,6 +254,110 @@ inline ::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(
 
 ::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(::flatbuffers::FlatBufferBuilder &_fbb, const Request_MotionHaltT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Request_ProgramBeforeT : public ::flatbuffers::NativeTable {
+  typedef Request_ProgramBefore TableType;
+  int32_t option = 0;
+};
+
+struct Request_ProgramBefore FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_ProgramBeforeT NativeTableType;
+  typedef Request_ProgramBeforeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OPTION = 4
+  };
+  int32_t option() const {
+    return GetField<int32_t>(VT_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_ProgramBeforeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_ProgramBeforeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_ProgramBefore> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramBeforeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_ProgramBeforeBuilder {
+  typedef Request_ProgramBefore Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_option(int32_t option) {
+    fbb_.AddElement<int32_t>(Request_ProgramBefore::VT_OPTION, option, 0);
+  }
+  explicit Request_ProgramBeforeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_ProgramBefore> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_ProgramBefore>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_ProgramBefore> CreateRequest_ProgramBefore(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t option = 0) {
+  Request_ProgramBeforeBuilder builder_(_fbb);
+  builder_.add_option(option);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_ProgramBefore> CreateRequest_ProgramBefore(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramBeforeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Request_ProgramAfterT : public ::flatbuffers::NativeTable {
+  typedef Request_ProgramAfter TableType;
+  int32_t option = 0;
+};
+
+struct Request_ProgramAfter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Request_ProgramAfterT NativeTableType;
+  typedef Request_ProgramAfterBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OPTION = 4
+  };
+  int32_t option() const {
+    return GetField<int32_t>(VT_OPTION, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_OPTION, 4) &&
+           verifier.EndTable();
+  }
+  Request_ProgramAfterT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Request_ProgramAfterT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Request_ProgramAfter> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramAfterT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Request_ProgramAfterBuilder {
+  typedef Request_ProgramAfter Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_option(int32_t option) {
+    fbb_.AddElement<int32_t>(Request_ProgramAfter::VT_OPTION, option, 0);
+  }
+  explicit Request_ProgramAfterBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Request_ProgramAfter> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Request_ProgramAfter>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Request_ProgramAfter> CreateRequest_ProgramAfter(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t option = 0) {
+  Request_ProgramAfterBuilder builder_(_fbb);
+  builder_.add_option(option);
+  return builder_.Finish();
+}
+
+::flatbuffers::Offset<Request_ProgramAfter> CreateRequest_ProgramAfter(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramAfterT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 inline Request_MotionSpeedBarT *Request_MotionSpeedBar::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<Request_MotionSpeedBarT>(new Request_MotionSpeedBarT());
   UnPackTo(_o.get(), _resolver);
@@ -362,6 +474,58 @@ inline ::flatbuffers::Offset<Request_MotionHalt> CreateRequest_MotionHalt(::flat
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_MotionHaltT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   return IPC::CreateRequest_MotionHalt(
       _fbb);
+}
+
+inline Request_ProgramBeforeT *Request_ProgramBefore::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_ProgramBeforeT>(new Request_ProgramBeforeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_ProgramBefore::UnPackTo(Request_ProgramBeforeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = option(); _o->option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_ProgramBefore> Request_ProgramBefore::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramBeforeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_ProgramBefore(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_ProgramBefore> CreateRequest_ProgramBefore(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramBeforeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_ProgramBeforeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _option = _o->option;
+  return IPC::CreateRequest_ProgramBefore(
+      _fbb,
+      _option);
+}
+
+inline Request_ProgramAfterT *Request_ProgramAfter::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<Request_ProgramAfterT>(new Request_ProgramAfterT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Request_ProgramAfter::UnPackTo(Request_ProgramAfterT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = option(); _o->option = _e; }
+}
+
+inline ::flatbuffers::Offset<Request_ProgramAfter> Request_ProgramAfter::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramAfterT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRequest_ProgramAfter(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Request_ProgramAfter> CreateRequest_ProgramAfter(::flatbuffers::FlatBufferBuilder &_fbb, const Request_ProgramAfterT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Request_ProgramAfterT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _option = _o->option;
+  return IPC::CreateRequest_ProgramAfter(
+      _fbb,
+      _option);
 }
 
 }  // namespace IPC

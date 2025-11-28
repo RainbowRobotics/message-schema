@@ -720,46 +720,19 @@ namespace rb_system {
         parameter_code = rb_config::READ_Robot_Model();
         parameter_robot = rb_config::READ_Robot_Parameter(parameter_code);
 
-        auto [t_out_coll_onoff, t_out_coll_react, t_out_coll_limit] = rb_config::READ_Out_Collision_Para();
-        parameter_out_coll_onoff = t_out_coll_onoff;
-        parameter_out_coll_react = t_out_coll_react;
-        parameter_out_coll_limit = t_out_coll_limit;
-
-        auto [t_self_coll_mode, t_self_coll_dist_int, t_self_coll_dist_ext] = rb_config::READ_Self_Collision_Para();
-        parameter_self_coll_mode = t_self_coll_mode;
-        parameter_self_coll_dist_int = t_self_coll_dist_int;
-        parameter_self_coll_dist_ext = t_self_coll_dist_ext;
-
-        auto [t_grav_mode, t_grav_x, t_grav_y, t_grav_z] = rb_config::READ_Gravity_Vector();
-        parameter_gravity_mode = t_grav_mode;
-        parameter_gravity_direction = Vector3d(t_grav_x, t_grav_y, t_grav_z);
-
-        for(int i = 0; i < NO_OF_JOINT; ++ i){
-            parameter_direct_teach_sensitivity(i) = rb_config::READ_Direct_Teach_Sensitivity(i);
-        }
-
-        for(int i = 0; i < NO_OF_TOOL; ++i){
-            parameter_tcp[i] = rb_config::READ_Tcp_Parameter(i);
-            // std::cout<<"Tool : "<<i<<std::endl;
-            // std::cout<<parameter_tcp[i].tool_name<<std::endl;
-            // std::cout<<parameter_tcp[i].tcp_offset.transpose()<<std::endl;
-            // std::cout<<parameter_tcp[i].com_mass<<std::endl;
-        }
-        for(int i = 0; i < NO_OF_USERF; ++i){
-            parameter_userf[i] = rb_config::READ_User_Frame(i);
-        }
-        for(int i = 0; i < NO_OF_AREA; ++i){
-            parameter_area[i] = rb_config::READ_Area_Parameter(i);
-        }
-        for(int i = 0; i < NO_OF_DOUT; ++i){
-            parameter_special_dout_box[i] = rb_config::READ_IO_Special_BOX(0, i);
-        }
-        for(int i = 0; i < NO_OF_DIN; ++i){
-            parameter_special_din_box[i] = rb_config::READ_IO_Special_BOX(1, i);
-            parameter_filter_count_din_box[i] = rb_config::READ_DIN_Filter_Count(i);
-        }
-
         std::cout<<"ARM: "<<parameter_robot.arm_name<<std::endl;
+
+        Recover_Out_Coll_Para();
+        Recover_Self_Coll_Para();
+        Recover_Gravity_Para();
+        Recover_Direct_Teaching_Sensitivity();
+        Recover_TcpParameter(-1);
+        Recover_UserFrameParameter(-1);
+        Recover_AreaParameter(-1);
+
+        Recover_Box_Special_Dout(-1);
+        Recover_Box_Special_Din(-1);
+        Recover_Box_FilterCount_Din(-1);
 
         _gv_Handler_Lan = new lan2can();
         _gv_Handler_SCB = new scb_v1();
@@ -980,9 +953,19 @@ namespace rb_system {
             return MSG_SAVE_TO_DB_FAIL;
         }
         // ADJUST
-        parameter_userf[u_num] = u_conf;
+        Recover_UserFrameParameter(u_num);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_UserFrameParameter(int u_num){
+        if(u_num >= 0 && u_num < NO_OF_USERF){
+            parameter_userf[u_num] = rb_config::READ_User_Frame(u_num);
+        }else{
+            for(int i = 0; i < NO_OF_USERF; ++i){
+                parameter_userf[i] = rb_config::READ_User_Frame(i);
+            }
+        }
+        return MSG_OK;
     }
     int Set_UserFrame_6DOF(unsigned int u_num, unsigned int option, float x, float y, float z, float rx, float ry, float rz){
         // option
@@ -1084,7 +1067,6 @@ namespace rb_system {
         if(a_num >= NO_OF_AREA)    a_num = 0;
         return parameter_area[a_num];
     }
-
     int Save_AreaParameter(unsigned int a_num, AREA_CONFIG a_conf){
         if(a_num >= NO_OF_AREA){
             return MSG_DESIRED_INDEX_IS_OVER_BOUND;
@@ -1094,9 +1076,19 @@ namespace rb_system {
             return MSG_SAVE_TO_DB_FAIL;
         }
         // ADJUST
-        parameter_area[a_num] = a_conf;
+        Recover_AreaParameter(a_num);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_AreaParameter(int a_num){
+        if(a_num >= 0 && a_num < NO_OF_AREA){
+            parameter_area[a_num] = rb_config::READ_Area_Parameter(a_num);
+        }else{
+            for(int i = 0; i < NO_OF_AREA; ++i){
+                parameter_area[i] = rb_config::READ_Area_Parameter(i);
+            }
+        }
+        return MSG_OK;
     }
     // ---------------------------------------------------------------
     // TCP 
@@ -1145,9 +1137,19 @@ namespace rb_system {
             return MSG_SAVE_TO_DB_FAIL;
         }
         // ADJUST
-        parameter_tcp[t_num] = t_conf;
+        Recover_TcpParameter(t_num);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_TcpParameter(int t_num){
+        if(t_num >= 0 && t_num < NO_OF_TOOL){
+            parameter_tcp[t_num] = rb_config::READ_Tcp_Parameter(t_num);
+        }else{
+            for(int i = 0; i < NO_OF_TOOL; ++i){
+                parameter_tcp[i] = rb_config::READ_Tcp_Parameter(i);
+            }
+        }
+        return MSG_OK;
     }
     // ---------------------------------------------------------------
     // Collision 
@@ -1156,7 +1158,6 @@ namespace rb_system {
         flag_collision_out_occur = false;
         return MSG_OK;
     }
-
     int Set_Out_Coll_Para(int onoff, int react, float th){
         parameter_out_coll_react = react;
         parameter_out_coll_limit = rb_math::saturation_L_and_U(th, 0, 1);
@@ -1165,7 +1166,6 @@ namespace rb_system {
         flag_collision_out_occur = false;
         return MSG_OK;
     }
-
     std::tuple<int, int, float> Get_Out_Coll_Para(){
         return {parameter_out_coll_onoff, parameter_out_coll_react, parameter_out_coll_limit};
     }
@@ -1176,9 +1176,14 @@ namespace rb_system {
             return MSG_SAVE_TO_DB_FAIL;
         }
         // ADJUST
-        Set_Out_Coll_Para(onoff, react, th);
+        Recover_Out_Coll_Para();
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_Out_Coll_Para(){
+        auto [t_out_coll_onoff, t_out_coll_react, t_out_coll_limit] = rb_config::READ_Out_Collision_Para();
+        Set_Out_Coll_Para(t_out_coll_onoff, t_out_coll_react, t_out_coll_limit);
+        return MSG_OK;
     }
 
     int Set_Self_Coll_Para(int mode, float dist_int, float dist_ext){
@@ -1200,11 +1205,48 @@ namespace rb_system {
             return MSG_SAVE_TO_DB_FAIL;
         }
         // ADJUST
-        Set_Self_Coll_Para(mode, dist_int, dist_ext);
+        Recover_Self_Coll_Para();
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
     }
+     int Recover_Self_Coll_Para(){
+        auto [t_self_coll_mode, t_self_coll_dist_int, t_self_coll_dist_ext] = rb_config::READ_Self_Collision_Para();
+        Set_Self_Coll_Para(t_self_coll_mode, t_self_coll_dist_int, t_self_coll_dist_ext);
+        return MSG_OK;
+     }
+    
+    std::tuple<int, float, float, float> Get_Gravity_Para(){
+        return {parameter_gravity_mode, ((float)parameter_gravity_direction(0)), ((float)parameter_gravity_direction(1)), ((float)parameter_gravity_direction(2))};
+    }
+    int Save_Gravity_Para(int mode, float gx, float gy, float gz){
+        if(mode < 0 || mode >= 1){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
+        }
 
+        Vector3d t_v = Vector3d(gx, gy, gz);
+        if(t_v.norm() < 0.1){
+            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
+        }
+        t_v /= t_v.norm();
+
+        if(!rb_config::WRITE_Gravity_Vector(mode, t_v(0), t_v(1), t_v(2))){
+            return MSG_SAVE_TO_DB_FAIL;
+        }
+        // ADJUST
+        Recover_Gravity_Para();
+
+        return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    Eigen::Vector3d Get_CurrentGravityParameter(){
+        return parameter_gravity_direction;
+    }
+    int Recover_Gravity_Para(){
+        auto [t_grav_mode, t_grav_x, t_grav_y, t_grav_z] = rb_config::READ_Gravity_Vector();
+        parameter_gravity_mode = t_grav_mode;
+        parameter_gravity_direction = Eigen::Vector3d(t_grav_x, t_grav_y, t_grav_z);
+        return MSG_OK;
+    }
+    
     std::array<float, NO_OF_JOINT> Get_Direct_Teaching_Sensitivity(){
         std::array<float, NO_OF_JOINT> ret;
         for(int i = 0; i < NO_OF_JOINT; ++i){
@@ -1219,11 +1261,15 @@ namespace rb_system {
             }
         }
         // ADJUST
-        for(int i = 0; i < NO_OF_JOINT; ++i){
-            parameter_direct_teach_sensitivity[i]= f_targets[i];
-        }
+        Recover_Direct_Teaching_Sensitivity();
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_Direct_Teaching_Sensitivity(){
+        for(int i = 0; i < NO_OF_JOINT; ++ i){
+            parameter_direct_teach_sensitivity(i) = rb_config::READ_Direct_Teach_Sensitivity(i);
+        }
+        return MSG_OK;
     }
 
     int Set_Joint_Impedance_On(std::array<float, NO_OF_JOINT> rate_gain, std::array<float, NO_OF_JOINT> rate_torque){
@@ -1312,33 +1358,6 @@ namespace rb_system {
         }
         return MSG_OK;
     }
-    
-    std::tuple<int, float, float, float> Get_Gravity_Para(){
-        return {parameter_gravity_mode, ((float)parameter_gravity_direction(0)), ((float)parameter_gravity_direction(1)), ((float)parameter_gravity_direction(2))};
-    }
-    int Save_Gravity_Para(int mode, float gx, float gy, float gz){
-        if(mode < 0 || mode >= 1){
-            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
-        }
-
-        Vector3d t_v = Vector3d(gx, gy, gz);
-        if(t_v.norm() < 0.1){
-            return MESSAGE(MSG_LEVEL_WARN, MSG_DESIRED_VALUE_IS_OVER_BOUND);
-        }
-        t_v /= t_v.norm();
-
-        if(!rb_config::WRITE_Gravity_Vector(mode, t_v(0), t_v(1), t_v(2))){
-            return MSG_SAVE_TO_DB_FAIL;
-        }
-        // ADJUST
-        parameter_gravity_mode = mode;
-        parameter_gravity_direction = t_v;
-
-        return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
-    }
-    Eigen::Vector3d Get_CurrentGravityParameter(){
-        return parameter_gravity_direction;
-    }
     // ---------------------------------------------------------------
     // MoveFlow
     // ---------------------------------------------------------------
@@ -1407,6 +1426,30 @@ namespace rb_system {
         _sys_timescale[(int)SystemTimeScaler::BREAK].output = 1.;
         _sys_timescale[(int)SystemTimeScaler::BREAK].lpf_alpha = 0.;
         flag_is_break;
+    }
+
+    int Call_Program_Before(int option){
+        (void)option;
+
+        std::cout<<"---------------------------"<<std::endl;
+        std::cout<<"- Program Start"<<std::endl;
+        std::cout<<"---------------------------"<<std::endl;
+        return MSG_OK;
+    }
+    int Call_Program_After(int option){
+        (void)option;
+
+        rb_system::Recover_UserFrameParameter(-1);
+        rb_system::Recover_AreaParameter(-1);
+        rb_motion::Clear_Motion_Shift(-1);
+        rb_system::Recover_Out_Coll_Para();
+        rb_system::Recover_Self_Coll_Para();
+        rb_system::Recover_TcpParameter(-1);
+
+        std::cout<<"---------------------------"<<std::endl;
+        std::cout<<"- Program End"<<std::endl;
+        std::cout<<"---------------------------"<<std::endl;
+        return MSG_OK;
     }
 
     // ---------------------------------------------------------------
@@ -1478,7 +1521,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     int Save_Box_Special_Dout(unsigned int p_num, unsigned int func_no){
         if(p_num >= NO_OF_DOUT){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
@@ -1491,9 +1533,19 @@ namespace rb_system {
         }
 
         // ADJUST
-        parameter_special_dout_box[p_num] = func_no;
+        Recover_Box_Special_Dout(p_num);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_Box_Special_Dout(int p_num){
+        if(p_num >= 0 && p_num < NO_OF_DOUT){
+            parameter_special_dout_box[p_num] = rb_config::READ_IO_Special_BOX(0, p_num);
+        }else{
+            for(int i = 0; i < NO_OF_DOUT; ++i){
+                parameter_special_dout_box[i] = rb_config::READ_IO_Special_BOX(0, i);
+            }
+        }
+        return MSG_OK;
     }
 
     std::array<uint8_t, NO_OF_DIN> Get_Box_Special_Din(){
@@ -1503,7 +1555,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     int Save_Box_Special_Din(unsigned int p_num, unsigned int func_no){
         if(p_num >= NO_OF_DIN){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
@@ -1516,9 +1567,19 @@ namespace rb_system {
         }
 
         // ADJUST
-        parameter_special_din_box[p_num] = func_no;
+        Recover_Box_Special_Din(p_num);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_Box_Special_Din(int p_num){
+        if(p_num >= 0 && p_num < NO_OF_DIN){
+            parameter_special_din_box[p_num] = rb_config::READ_IO_Special_BOX(1, p_num);
+        }else{
+            for(int i = 0; i < NO_OF_DIN; ++i){
+                parameter_special_din_box[i] = rb_config::READ_IO_Special_BOX(1, i);
+            }
+        }
+        return MSG_OK;
     }
 
     std::array<uint8_t, NO_OF_DIN> Get_Box_FilterCount_Din(){
@@ -1528,7 +1589,6 @@ namespace rb_system {
         }
         return ret;
     }
-
     int Save_Box_FilterCount_Din(unsigned int p_num, unsigned int f_cnt){
         if(p_num >= NO_OF_DIN){
             return MSG_DESIRED_PORT_IS_OVER_BOUND;
@@ -1541,10 +1601,20 @@ namespace rb_system {
         }
 
         // ADJUST
-        parameter_filter_count_din_box[p_num] = f_cnt;
+        Recover_Box_FilterCount_Din(p_num);
         _gv_Handler_Side->Set_Din_Filter_Count(p_num, parameter_filter_count_din_box[p_num]);
 
         return MESSAGE(MSG_LEVEL_INFO, MSG_OK);
+    }
+    int Recover_Box_FilterCount_Din(int p_num){
+        if(p_num >= 0 && p_num < NO_OF_DIN){
+            parameter_filter_count_din_box[p_num] = rb_config::READ_DIN_Filter_Count(p_num);
+        }else{
+            for(int i = 0; i < NO_OF_DIN; ++i){
+                parameter_filter_count_din_box[i] = rb_config::READ_DIN_Filter_Count(i);
+            }
+        }
+        return MSG_OK;
     }
     
     int Set_Box_Digital_Output(int p_num, unsigned int value){

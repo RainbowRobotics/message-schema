@@ -71,6 +71,7 @@ namespace rb_motion {
     int         Start_Motion_SPEED_L(TARGET_INPUT tar, double l_acc_alpha);
 
     int         Set_Motion_Shift(int shift_no, int shift_mode, TARGET_INPUT shift_target);    
+    int         Clear_Motion_Shift(int shift_no);
 
     //--------------------------------------------------------------------------------------
     // Sector Wrapper

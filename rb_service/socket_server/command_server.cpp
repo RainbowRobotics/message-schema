@@ -256,6 +256,18 @@ namespace rb_socket_command_server {
                     }
                     return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
                 }),
+                ADD_CMD_HANDLER("call_program_before", {
+                    if (a.size() == 1){
+                        return {rb_system::Call_Program_Before(std::stoi(a[0])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
+                ADD_CMD_HANDLER("call_program_after", {
+                    if (a.size() == 1){
+                        return {rb_system::Call_Program_After(std::stoi(a[0])), ""};
+                    }
+                    return {MSG_NOT_VALID_COMMAND_FORMAT, ""};
+                }),
                 // -----------------------------------------------------------------------
                 // Set Call
                 // -----------------------------------------------------------------------

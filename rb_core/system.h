@@ -153,6 +153,7 @@ namespace rb_system {
     USERF_CONFIG    Get_CurrentUserFrameParameter();
     USERF_CONFIG    Get_DesiredUserFrameParameter(unsigned int u_num);
     int             Save_UserFrameParameter(unsigned int u_num, USERF_CONFIG u_conf);
+    int             Recover_UserFrameParameter(int u_num);
 
     int             Set_UserFrame_6DOF(unsigned int u_num, unsigned int option, float x, float y, float z, float rx, float ry, float rz);
     int             Set_UserFrame_TCP(unsigned int u_num, unsigned int option);
@@ -162,6 +163,7 @@ namespace rb_system {
     // ---------------------------------------------------------------
     AREA_CONFIG     Get_DesiredAreaParameter(unsigned int a_num);
     int             Save_AreaParameter(unsigned int a_num, AREA_CONFIG a_conf);
+    int             Recover_AreaParameter(int a_num);
 
     // ---------------------------------------------------------------
     // TCP 
@@ -171,6 +173,7 @@ namespace rb_system {
     TCP_CONFIG      Get_CurrentTcpParameter();
     TCP_CONFIG      Get_DesiredTcpParameter(int t_num);
     int             Save_TcpParameter(unsigned int t_num, TCP_CONFIG t_conf);
+    int             Recover_TcpParameter(int t_num);
     // ---------------------------------------------------------------
     // Collision 
     // ---------------------------------------------------------------
@@ -178,17 +181,21 @@ namespace rb_system {
     int                             Set_Out_Coll_Para(int onoff, int react, float th);
     std::tuple<int, int, float>     Get_Out_Coll_Para();
     int                             Save_Out_Coll_Para(int onoff, int react, float th);
+    int                             Recover_Out_Coll_Para();
 
     int                             Set_Self_Coll_Para(int mode, float dist_int, float dist_ext);
     std::tuple<int, float, float>   Get_Self_Coll_Para();
     int                             Save_Self_Coll_Para(int mode, float dist_int, float dist_ext);
+    int                             Recover_Self_Coll_Para();
 
     std::tuple<int, float, float, float>    Get_Gravity_Para();
     int                                     Save_Gravity_Para(int mode, float gx, float gy, float gz);
-    Eigen::Vector3d                                Get_CurrentGravityParameter();
+    Eigen::Vector3d                         Get_CurrentGravityParameter();
+    int                                     Recover_Gravity_Para();
 
     std::array<float, NO_OF_JOINT>  Get_Direct_Teaching_Sensitivity();
     int                             Save_Direct_Teaching_Sensitivity(std::array<float, NO_OF_JOINT> f_targets);
+    int                             Recover_Direct_Teaching_Sensitivity();
 
     int                             Set_Joint_Impedance_On(std::array<float, NO_OF_JOINT> rate_gain, std::array<float, NO_OF_JOINT> rate_torque);
     int                             Set_Joint_Impedance_Off();
@@ -212,6 +219,9 @@ namespace rb_system {
     int             Call_MoveBreak(double t_time);
     void            Reset_MoveBreak();
 
+    int             Call_Program_Before(int option);
+    int             Call_Program_After(int option);
+
     // ---------------------------------------------------------------
     // IO
     // ---------------------------------------------------------------
@@ -227,12 +237,15 @@ namespace rb_system {
     
     std::array<uint8_t, NO_OF_DOUT>     Get_Box_Special_Dout();
     int                                 Save_Box_Special_Dout(unsigned int p_num, unsigned int func_no);
+    int                                 Recover_Box_Special_Dout(int p_num);
 
     std::array<uint8_t, NO_OF_DIN>      Get_Box_Special_Din();
     int                                 Save_Box_Special_Din(unsigned int p_num, unsigned int func_no);
+    int                                 Recover_Box_Special_Din(int p_num);
 
     std::array<uint8_t, NO_OF_DIN>      Get_Box_FilterCount_Din();
     int                                 Save_Box_FilterCount_Din(unsigned int p_num, unsigned int f_cnt);
+    int                                 Recover_Box_FilterCount_Din(int p_num);
 
     int                                 Set_Box_Digital_Output(int p_num, unsigned int value);
     int                                 Set_Box_Digital_Output_Toggle(int p_num);

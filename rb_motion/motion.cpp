@@ -1168,6 +1168,22 @@ namespace rb_motion {
         _motion_shift[shift_no] = temp_line;
         return MSG_OK;
     }
+    int Clear_Motion_Shift(int shift_no){
+        SHIFT_INPUT temp_line;
+        temp_line.mode = 0;
+        temp_line.value = rb_math::Make_Input_Zero(FRAME_GLOBAL);
+
+        if(shift_no < 0){
+            for(int k = 0; k < NO_OF_SHIFT; ++k){
+                _motion_shift[k] = temp_line;
+            }
+        }else if(shift_no < NO_OF_SHIFT){
+            _motion_shift[shift_no] = temp_line;
+        }else{
+            return MSG_DESIRED_INDEX_IS_OVER_BOUND;
+        }
+        return MSG_OK;
+    }
     //--------------------------------------------------------------------------------------
     // Sector Wrapper
     //--------------------------------------------------------------------------------------

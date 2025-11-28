@@ -246,6 +246,12 @@ namespace rb_ipc {
             ADD_SERVE_SIMPLE("call_halt", IPC::Request_MotionHalt, IPC::Response_Functions, {
                 return_int = rb_system::Call_Halt();
             });
+            ADD_SERVE_SIMPLE("call_program_before", IPC::Request_ProgramBefore, IPC::Response_Functions, {
+                return_int = rb_system::Call_Program_Before(req->option());
+            });
+            ADD_SERVE_SIMPLE("call_program_after", IPC::Request_ProgramAfter, IPC::Response_Functions, {
+                return_int = rb_system::Call_Program_After(req->option());
+            });
             
             // -----------------------------------------------------------------------
             // Config call

@@ -19,3 +19,9 @@ table Request_MotionResetOutColl {
 table Request_MotionHalt {
 }
 
+table Request_ProgramBefore {
+  option: int;
+}
+table Request_ProgramAfter {
+  option: int;
+}
